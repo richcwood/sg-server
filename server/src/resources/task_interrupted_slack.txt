@@ -1,0 +1,9 @@
+Saas glue alert notification
+
+A saas glue Task was interrupted
+
+Task: {task_name}
+Job: {job_name} - {job_url}
+
+Best,
+The team at saas glue

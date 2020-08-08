@@ -1,0 +1,42 @@
+SaasGlue, Inc.
+12345 Sunny Road
+Sunnyville, CA 12345
+                				
+{customer_info}
+
+Start Date: {start_date}
+End Date: {end_date}
+                    
+Payment Method: {payment_method}
+Payment Details: {payment_details{
+           
+Scripts
+Quantity: {scripts_qty}
+Rate: ${scripts_rate}
+Total: ${scripts_total}
+
+Interactive Console Scripts (free)
+Quantity: {ic_scripts_qty}
+
+Storage
+Quantity: {storage_qty}
+Rate: ${storage_rate}
+Total: ${storage_total}
+            
+New Agents
+Quantity: {new_agents_qty}
+Rate: ${new_agents_rate}
+Total: ${new_agents_total}
+            
+Artifacts Downloaded GB
+Quantity: {artifacts_downloaded_qty}
+Rate: ${artifacts_downloaded_rate}
+Total: ${artifacts_downloaded_total}
+            
+Artifacts Storage GB
+Quantity: {artifacts_storage_qty}
+Rate: ${artifacts_storage_rate}
+Total: ${artifacts_storage_total}
+            
+                   
+Total: ${total}

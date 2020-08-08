@@ -1,0 +1,15 @@
+Join {org_name} on saas glue
+
+{inviter_name} has created the new saas glue team {org_name}. You can use the link
+below to join this team — it only takes a minute to create an
+account!
+
+Use this link to get started:
+
+{accept_invite_link}
+What is saas glue? [https://saasglue.com/is]
+
+saas glue makes it easy to run any script, on any device, anywhere.
+See saas glue in action. [https://saasglue.com/is]
+
+https://saasglue.com/is

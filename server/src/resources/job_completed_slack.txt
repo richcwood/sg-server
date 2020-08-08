@@ -1,0 +1,8 @@
+Saas glue alert notification
+
+A saas glue Job completed with status {job_status}
+
+Job: {job_name} - {job_url}
+
+Best,
+The team at saas glue

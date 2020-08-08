@@ -1,0 +1,288 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><link href="https://fonts.googleapis.com/css?family=Lato:400,700,900" rel="stylesheet"><title>{inviter_name} has invited you to join a saas glue workspace</title><style type="text/css">/* Global Resets */
+	body, .background_main, p, table, td, div {font-family: 'Lato', 'Helvetica Neue', Helvetica, Arial, sans-serif;}
+
+	img {
+		border: none;
+		-ms-interpolation-mode: bicubic;
+		max-width: 100%;
+	}
+
+	p {padding-bottom: 2px;}
+
+	body {
+		background: #fff;
+		font-size: 17px;
+		line-height: 24px;
+		margin: 0;
+		padding: 0;
+		-ms-text-size-adjust: 100%;
+		-webkit-text-size-adjust: 100%;
+	}
+
+	table {
+		border-collapse: collapse;
+		mso-table-lspace: 0pt;
+		mso-table-rspace: 0pt;
+		width: 100%;
+	}
+
+	td {
+		font-size: 17px;
+		line-height: 24px;
+		vertical-align: top;
+	}
+
+	/* Footer */
+	.email_footer td, .email_footer p, .email_footer span, .email_footer a {
+		font-size: 15px;
+		text-align: center;
+		color: #434245;
+	}
+
+	.email_footer td {padding-top: 20px;}
+
+	/* Typography */
+	h1, h2, h3, h4 {
+		color: #434245;
+		font-weight: 400;
+		line-height: 1.4;
+		margin: 0;
+		margin-bottom: 12px;
+	}
+
+	h1 {
+		font-size: 30px;
+		line-height: 36px;
+		font-weight: 900;
+		letter-spacing: -.75px;
+		text-align: left;
+	}
+
+	p, ul, ol {
+		font-size: 17px;
+		line-height: 24px;
+		font-weight: normal;
+		margin: 0;
+		margin-bottom: 15px;
+	}
+
+	p li, ul li, ol li {
+		list-style-position: inside;
+		margin-left: 5px;
+	}
+
+	a {
+		color: #3498db;
+		text-decoration: none;
+	}
+
+	a:hover {text-decoration: underline;}
+
+	.button_link::after {
+		position: absolute;
+		content: '';
+		top: 0;
+		right: 0;
+		bottom: 0;
+		left: 0;
+		border-radius: 4px;
+	}
+
+	.button_link:hover::after {
+		box-shadow: inset 0 -2px #237c4a;
+	}
+
+	.button_link.is_secondary:hover::after {
+		box-shadow: none;
+	}
+
+
+	.preview_text {
+		color: transparent;
+		display: none;
+		height: 0;
+		max-height: 0;
+		max-width: 0;
+		opacity: 0;
+		overflow: hidden;
+		mso-hide: all;
+		visibility: hidden;
+		width: 0;
+		font-size: 1px;
+		line-height:1px;
+	}
+
+	.preview_text a {
+		color: #3AA3E3 !important;
+		font-weight: bold;
+	}
+
+	/* Responsive and Mobile Friendly Styles */
+	/* Yahoo Mail has a history of rendering all media query styles with class selectors unless class is used as an attribute */
+	@media only screen and (max-width: 600px) {
+		table[class="background_main"] .sm_full_width {
+			width: 100% !important;
+		}
+		table[class="background_main"] .sm_align_center {
+			text-align: center !important;
+		}
+		table[class="background_main"] .sm_auto_width {
+			width: auto !important;
+		}
+		table[class="background_main"] .sm_auto_height {
+			height: auto !important;
+		}
+
+		table[class="background_main"] .sm_border_box {
+			box-sizing: border-box !important;
+		}
+
+		table[class="background_main"] .sm_block {
+			display: block !important;
+		}
+		table[class="background_main"] .sm_inline_block {
+			display: inline-block !important;
+		}
+		table[class="background_main"] .sm_table {
+			display: table !important;
+		}
+
+		table[class="background_main"] .sm_no_side_padding {
+			padding-right: 0 !important;
+			padding-left: 0 !important;
+		}
+		table[class="background_main"] .sm_no_border_radius {
+			border-radius: 0 !important;
+		}
+		table[class="background_main"] .sm_no_padding {
+			padding-right: 0 !important;
+			padding-left: 0 !important;
+		}
+		table[class="background_main"] .sm_os_icons_height {
+			/* this is to make the parent element the same height as the inline-block img inside */
+			height: 44px;
+		}
+		.social_img_bottom_margin {
+			/*this class is for social_user_outreach email only*/
+			margin-bottom: 20px !important;
+		}
+		.social_p_bottom_margin {
+			/*this class is for social_user_outreach email only*/
+			margin-bottom: 40px !important;
+		}
+	}
+
+	/* More client-specific styles */
+	@media all {
+		.ExternalClass {
+			width: 100%;
+		}
+		.ExternalClass, .ExternalClass p, .ExternalClass span, .ExternalClass font, .ExternalClass td, .ExternalClass div {
+			line-height: 100%;
+		}
+		.email_footer a {
+			color: #434245 !important;
+			font-family: inherit !important;
+			font-size: inherit !important;
+			font-weight: inherit !important;
+			line-height: inherit !important;
+			text-decoration: none !important;
+		}
+	}
+	a:hover {
+		text-decoration: underline !important;
+	}
+
+	pre, code {
+		--saf-0: rgba(var(--sk_foreground_low, 29, 28, 29), 0.13);
+		border: 1px solid var(--saf-0);
+		background: rgba(var(--sk_foreground_min, 29, 28, 29), 0.04);
+		font-family: 'Monaco', 'Menlo', 'Consolas', 'Courier New', monospace !important;
+		font-size: 12px;
+		line-height: 1.50001;
+		font-variant-ligatures: none;
+		white-space: pre;
+		white-space: pre-wrap;
+		word-wrap: break-word;
+		word-break: normal;
+		-webkit-tab-size: 4;
+		-moz-tab-size: 4;
+		-o-tab-size: 4;
+		tab-size: 4;
+	}
+
+	code {
+		color: #e01e5a;
+		padding: 2px 3px 1px;
+		border-radius: 3px;
+	}
+
+	pre {
+		margin-bottom: 16px;
+		padding: 8px;
+		border-radius: 4px;
+	}
+
+	blockquote {
+		position: relative;
+		margin-bottom: 16px;
+		padding-left: 16px;
+		border-left: rgba(var(--sk_foreground_low_solid, 221, 221, 221), 1);
+		border-left-width: 4px;
+		border-left-style: solid;
+	}
+</style></head><body><!--[if mso]><style type="text/css">.background_main, table, table td, p, div, h1, h2, h3, h4, h5, h6 {
+								font-family: Arial, sans-serif !important;
+							}</style><![endif]--><table style="background-color: #ffffff; padding-top: 20px;color: #434245;width: 100%;-webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale;   border: 0; text-align: center; border-collapse: collapse;" class="background_main"><tr><td style="vertical-align: top; padding: 0"><center><table id="body" class="card" style="border: 0; border-collapse: collapse; margin: 0 auto; background: white; border-radius: 8px; margin-bottom: 16px;"><tr><td style="width: 546px; vertical-align: top; padding-top: 32px"><div style="max-width: 600px; margin: 0 auto;"><!--[if mso]>
+<table cellpadding="0" cellspacing="0" border="0" style="padding: 0; margin: 0; width: 100%;">
+    <tr>
+        <td colspan="3" style="padding: 0; margin: 0; font-size: 20px; height: 20px;" height="20">&nbsp;</td>
+    </tr>
+    <tr>
+        <td style="padding: 0; margin: 0;">&nbsp;</td>
+        <td style="padding: 0; margin: 0;" width="540">
+<![endif]--><img style="width: 38px; height: 38px; margin: 0 0 15px 0; padding-right: 30px; padding-left: 30px;" src="{saasglue_favicon_png}" alt="" width="38" height="38"><h1 style="font-size: 30px; padding-right: 30px; padding-left: 30px;">Join {org_name} on saas glue</h1><p style="font-size: 17px; padding-right: 30px; padding-left: 30px;"> You are invited to join the saas glue team <strong>{org_name}</strong>. Join now to start automating!</p><!--[if mso]>
+		</td>
+		<td style="padding: 0; margin: 0; font-size: 20px; height: 20px;">&nbsp;</td>
+	</tr>
+	<tr>
+		<td colspan="3" style="padding: 0; margin: 0; font-size: 20px; height: 20px; height: 20px;">&nbsp;</td>
+	</tr>
+</table>
+<![endif]--><!--[if mso]>
+<table cellpadding="0" cellspacing="0" border="0" style="padding: 0; margin: 0; width: 100%;">
+    <tr>
+        <td colspan="3" style="padding: 0; margin: 0; font-size: 20px; height: 20px;" height="20">&nbsp;</td>
+    </tr>
+    <tr>
+        <td style="padding: 0; margin: 0;">&nbsp;</td>
+        <td style="padding: 0; margin: 0;" width="540">
+<![endif]--><div style="padding-right: 30px; padding-left: 30px; padding-bottom: 20px;"><table style="width: 100%; " class="sm_table"><tr style="width: 100%;"><td style="width: 100%;"><span style="display: inline-block; position:relative; border-radius:4px; background-color:#2ea664; " class="sm_full_width"><a class="button_link sm_full_width sm_border_box" href="{accept_invite_link}" style="min-width:196px; border-top:13px solid; border-bottom:13px solid; border-right:24px solid; border-left:24px solid; border-color:#2ea664; border-radius:4px; background-color:#2ea664; color:#ffffff; font-size:18px; line-height:18px; word-break:break-word; text-shadow:0 1px 1px #2e9a5f;  display: inline-block; text-align: center; font-weight: 900; text-decoration: none !important;">Join Now</a></span></td></tr></table></div><!--[if mso]>
+		</td>
+		<td style="padding: 0; margin: 0; font-size: 20px; height: 20px;">&nbsp;</td>
+	</tr>
+	<tr>
+		<td colspan="3" style="padding: 0; margin: 0; font-size: 20px; height: 20px; height: 20px;">&nbsp;</td>
+	</tr>
+</table>
+<![endif]--><table style="margin: 0 auto; width: 100%; max-width: 600px;"><tr><td style="box-sizing: border-box; padding: 0; padding-right: 30px; padding-left: 30px; padding-top: 20px; width: 100%; margin: 0 auto;"><div style="color: #434245; text-align: left; width: 100%; font-size: 15px;"><table style="display: inline-table; vertical-align: top; width: 100%; border: 0px; border-collapse: collapse;"><tbody class="sm_full_width"><tr class="sm_full_width" style="border-top: 1px solid #E1E1E4;"><td class="sm_full_width" style="padding-top: 10px;"><!--[if mso]>
+<table cellpadding="0" cellspacing="0" border="0" style="padding: 0; margin: 0; width: 100%;">
+    <tr>
+        <td colspan="3" style="padding: 0; margin: 0; font-size: 20px; height: 20px;" height="20">&nbsp;</td>
+    </tr>
+    <tr>
+        <td style="padding: 0; margin: 0;">&nbsp;</td>
+        <td style="padding: 0; margin: 0;" width="540">
+<![endif]--><table class="sm_full_width" style="display: inline-table; width: 434px; max-width: 100%; border: 0px; border-collapse: collapse; width: 434px;"><tr><td style="width: 38px; padding-right: 15px; padding-top: 20px; width: 38px;"><a class="plaintext_ignore" href="{org_url}" style="height: 38px; width: 38px; min-width: 38px; border-radius: 4px; color: #FFFFFF; font-size: 18px; line-height: 38px; vertical-align: middle; text-align: center; text-decoration: none !important; display: block; background-color: #0576b9;">{org_first_letter}</a></td><div class="plaintext_only" style="display: none">Team name: {org_name}</div><td class="sm_auto_width" style="padding-top: 20px; font-size: 15px; width=378px;"> <strong class="plaintext_ignore">{org_name}</strong><br/>
+						Team URL: {org_name}.saasglue.com<br/>
+						Email: {to_address} </td></tr></table><div style="clear: both;"></div><!--[if mso]>
+		</td>
+		<td style="padding: 0; margin: 0; font-size: 20px; height: 20px;">&nbsp;</td>
+	</tr>
+	<tr>
+		<td colspan="3" style="padding: 0; margin: 0; font-size: 20px; height: 20px; height: 20px;">&nbsp;</td>
+	</tr>
+</table>
+<![endif]--></td></tr></tbody></table></div></td></tr></table></div></td></tr></table></center></td></tr><tr><td class="email_footer" style="font-size: 15px;color: #717274;text-align: center;width: 100%; border-top: 1px solid #E1E1E4"><table style="margin-top: 20px; background-color: white; border: 0; text-align: center; border-collapse: collapse;"><tr><td> </td><td><span style="display: block; color: #434245; font-size: 15px;"> Made by <a href="https://saasglue.com" style="text-decoration: none; color: #434245;">{saasglue_corporate_name}</a>
+                <br/>
+                {saasglue_address} </span></td><td> </td></tr><tr><td> </td><td style="font-size: 15px; padding: 16px 8px 24px; vertical-align: top; text-align: center;"><span><a href="https://saasgluehq.com" style="text-decoration: none;color: #434245;">Our Blog</a> <span style="color: #D8D8D8;"> • </span> <a href="https://saasglue.com/legal" style="text-decoration: none;color: #434245;">Policies</a></span></td></tr></table></td></tr></table></body></html>

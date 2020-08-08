@@ -1,0 +1,12 @@
+Saas glue alert notification
+
+A saas glue Task failed
+
+Job: {job_name} - {job_url}
+Task Name: {task_name}
+Error: {error_message}
+Exit code: {exit_code}
+Signal: {signal}
+
+Best,
+The team at saas glue

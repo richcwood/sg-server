@@ -1,0 +1,89 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Python: Current File",
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal"
+        },
+        {
+            "type": "node",
+            "request": "attach",
+            "name": "Attach to Server",
+            "processId": "${command:PickProcess}",
+            "skipFiles": [
+                "<node_internals>/**"
+            ],
+            "outFiles": [
+                "${workspaceFolder}/server/dist/server/**/*.js"
+            ]
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "sourceMaps": true,
+            "name": "Debug Server",
+            "skipFiles": [
+                "<node_internals>/**"
+            ],
+            "program": "${workspaceFolder}/server/dist/api/StartServer.js",
+            "outFiles": [
+                "${workspaceFolder}/server/dist/**/*.js"
+            ],
+            "env": {
+                "KIKI_GIT_USERNAME": "richwifunds",
+                "KIKI_GIT_PASSWORD": "7d7bd8bab95c40937f8f8bfdcc336bad2d990f11",
+                "KIKI_GIT_URL": "github.com/theironcook/Kiki.git",
+                "S3_BUCKET_ORG_ARTIFACTS": "sg-team-artifacts",
+                "S3_BUCKET_AGENT_BINARIES": "sg-agent-binaries",
+                "AWS_SECRET_ACCESS_KEY": "m3xRjfURCoEgI472JvwtPz+EedS3CYLwxJ7hspmO",
+                "AWS_ACCESS_KEY_ID": "AKIATV2XO2YFWAJMQJSN",
+                "AGENT_CREATE_TIMEOUT": "240",
+                "environment": "debug",
+                "NODE_ENV": "debug",
+                "SENDGRID_API_KEY": "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"
+            }
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "sourceMaps": true,
+            "name": "Debug Server Workers",
+            "skipFiles": [
+                "<node_internals>/**"
+            ],
+            "program": "${workspaceFolder}/server/dist/RunServerWorkers.js",
+            "outFiles": [
+                "${workspaceFolder}/server/dist/*.js"
+            ],
+            "env": {
+                "environment": "debug",
+                "NODE_ENV": "debug"
+            }
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "sourceMaps": true,
+            "name": "Debug Tests",
+            "skipFiles": [
+                "<node_internals>/**"
+            ],
+            "program": "${workspaceFolder}/test/dist/test/src/RunUnitTestsHarness.js",
+            "args": [
+                "Test46.js"
+            ],
+            "outFiles": [
+                "${workspaceFolder}/test/dist/test/**/*.js"
+            ],
+            "env": {
+                "NODE_ENV": "debug"
+            }
+        }
+    ]
+}

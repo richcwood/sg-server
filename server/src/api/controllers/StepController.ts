@@ -1,0 +1,101 @@
+import { Request, Response, NextFunction, response } from 'express';
+import { ResponseWrapper, ResponseCode } from '../utils/Types';
+import { StepSchema, StepModel } from '../domain/Step';
+import { defaultBulkGet } from '../utils/BulkGet';
+import { stepService } from '../services/StepService';
+import { MissingObjectError } from '../utils/Errors';
+import { CastError } from 'mongoose';
+import { convertData as convertResponseData } from '../utils/ResponseConverters';
+import { convertData as convertRequestData } from '../utils/RequestConverters';
+import * as _ from 'lodash';
+import * as mongodb from 'mongodb';
+
+
+export class StepController {
+
+  public async getManySteps(req: Request, resp: Response, next: NextFunction): Promise<void> {
+    const _orgId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._orgid);
+    defaultBulkGet({ _orgId }, req, resp, next, StepSchema, StepModel, stepService);
+  }
+
+
+  // public async getStepsForTask(req: Request, resp: Response, next: NextFunction): Promise<void> {
+  //   const _orgId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._orgid);
+  //   const _taskId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.params.taskId);
+  //   const response: ResponseWrapper = (resp as any).body;
+
+  //   const steps = await stepService.findAllTaskSteps(_orgId, _taskId, req.query.responseFields);
+
+  //   if (_.isArray(steps) && steps.length === 0) {
+  //     next(new MissingObjectError(`No step found for task ${_taskId}.`));
+  //   }
+  //   else {
+  //     response.data = convertResponseData(StepSchema, steps);
+  //     next();
+  //   }
+  // }
+
+
+  public async getStep(req: Request, resp: Response, next: NextFunction): Promise<void> {
+    try {
+      const _orgId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._orgid);
+      const response: ResponseWrapper = (resp as any).body;
+      const step = await stepService.findStep(_orgId, new mongodb.ObjectId(req.params.stepId), req.query.responseFields);
+
+      if (_.isArray(step) && step.length === 0) {
+        next(new MissingObjectError(`Step ${req.params.stepId} not found.`));
+      }
+      else {
+        response.data = convertResponseData(StepSchema, step[0]);
+        next();
+      }
+    }
+    catch (err) {
+      // If req.params.stepId wasn't a mongo id then we will get a CastError - basically same as if the id wasn't found
+      if (err instanceof CastError) {
+        next(new MissingObjectError(`Step ${req.params.stepId} not found.`));
+      }
+      else {
+        next(err);
+      }
+    }
+  }
+
+
+  public async createStep(req: Request, resp: Response, next: NextFunction): Promise<void> {
+    const _orgId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._orgid);
+    const response: ResponseWrapper = resp['body'];
+    try {
+      const newStep = await stepService.createStep(_orgId, convertRequestData(StepSchema, req.body), req.header('correlationId'), req.query.responseFields);
+      response.data = convertResponseData(StepSchema, newStep);
+      response.statusCode = ResponseCode.CREATED;
+      next();
+    }
+    catch (err) {
+      next(err);
+    }
+  }
+
+
+  public async updateStep(req: Request, resp: Response, next: NextFunction): Promise<void> {
+    const _orgId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._orgid);
+    const response: ResponseWrapper = resp['body'];
+    try {
+      const updatedStep: any = await stepService.updateStep(_orgId, new mongodb.ObjectId(req.params.stepId), convertRequestData(StepSchema, req.body), req.header('correlationId'), req.query.responseFields);
+
+      if (_.isArray(updatedStep) && updatedStep.length === 0) {
+        next(new MissingObjectError(`Step ${req.params.stepId} not found.`));
+      }
+      else {
+        response.data = convertResponseData(StepSchema, updatedStep);
+        response.statusCode = ResponseCode.OK;
+        next();
+      }
+    }
+    catch (err) {
+      next(err);
+    }
+  }
+}
+
+export const stepController = new StepController();

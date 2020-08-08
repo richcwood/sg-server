@@ -1,0 +1,33 @@
+{
+  "name": "kiki",
+  "version": "1.0.0",
+  "description": "",
+  "engines": {
+    "node": "10.15.1"
+  },
+  "main": "index.js",
+  "scripts": {
+    "buildServer": "tsc",
+    "buildAll": "cd server && npm i && cd ../clientv3 && npm i && npm run build && cd ../agent && npm i && cd ../test && npm i",
+    "postinstall": "npm run buildAll",
+    "start": "node ./server/dist/api/StartServer.js",
+    "startTest": "node ./test/dist/test/src/RunWorkersTestHarness.js",
+    "dev": "concurrently \"npm:dev-*\"",
+    "dev-buildserver": "cd server && npm run watch-build",
+    "dev-redeployserver": "nodemon --watch ./server/dist ./server/dist/server/src/api/StartServer.js",
+    "dev-client": "cd clientv3 && npm run serve"
+  },
+  "nodemonConfig": {
+    "watch": [
+      "clientv3/src/**/*.ts"
+    ],
+    "delay": "2500"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@types/node": "12.0.4",
+    "pkg": "4.4.8"
+  }
+}

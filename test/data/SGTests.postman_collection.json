@@ -1,0 +1,5812 @@
+{
+	"info": {
+		"_postman_id": "82eea6f6-24f4-4630-bd67-f9543db9dc8d",
+		"name": "SGTests",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "init",
+			"item": [
+				{
+					"name": "user-post",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "e39721db-4553-4adb-ba8a-3212ca16d20a",
+								"exec": [
+									"pm.environment.set('Auth', pm.cookies.get('Auth'));",
+									"",
+									"var jsonData = pm.response.json();",
+									"pm.environment.set('_userId', jsonData.data.id);",
+									"pm.test(\"Data values\", function () {",
+									"    pm.expect(jsonData.data.email).to.eql(pm.environment.get(\"sgUser\"));",
+									"});",
+									"",
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "auth",
+								"value": "{{Auth}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"{{sgUser}}\",\n    \"password\": \"{{sgPassword}}\",\n    \"hasAcceptedTerms\": true\n}"
+						},
+						"url": {
+							"raw": "{{api-url}}/api/v0/user",
+							"host": [
+								"{{api-url}}"
+							],
+							"path": [
+								"api",
+								"v0",
+								"user"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "user-login",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "12640cdb-0b98-43f4-9a14-8ca3593b3ab3",
+								"exec": [
+									"pm.environment.set('userAuth', pm.cookies.get('Auth'));",
+									"",
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"email\": \"{{sgUser}}\",\n\t\"password\": \"{{sgPassword}}\"\n}"
+						},
+						"url": {
+							"raw": "{{api-url}}/login/apiLogin",
+							"host": [
+								"{{api-url}}"
+							],
+							"path": [
+								"login",
+								"apiLogin"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "org-post",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "f809ab9c-28c2-499d-bb3d-cfbac783d177",
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"console.log(jsonData);",
+									"pm.environment.set('Auth', pm.cookies.get(\"Auth\"));",
+									"pm.environment.set(\"org\", jsonData.data.id);",
+									"pm.test(\"Data values\", function () {",
+									"    pm.expect(jsonData.data.name).to.eql(\"TestOrg\");",
+									"    pm.expect(jsonData.data.rmqPassword).to.eql(\"testorg_rmqpassword\");",
+									"});",
+									"",
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Auth",
+								"value": "{{Auth}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"id\": \"{{org}}\",\n\t\"name\": \"TestOrg\", \n\t\"isActive\": \"true\", \n\t\"rmqPassword\": \"testorg_rmqpassword\"\n}"
+						},
+						"url": {
+							"raw": "{{api-url}}/api/v0/org",
+							"host": [
+								"{{api-url}}"
+							],
+							"path": [
+								"api",
+								"v0",
+								"org"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"protocolProfileBehavior": {}
+		},
+		{
+			"name": "user",
+			"item": [
+				{
+					"name": "new-user-signup",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "e39721db-4553-4adb-ba8a-3212ca16d20a",
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"pm.test(\"Data values\", function () {",
+									"    pm.expect(jsonData.data.email).to.eql(pm.environment.get(\"newUserEmail\"));",
+									"});",
+									"",
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "auth",
+								"type": "text",
+								"value": "{{Auth}}",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"{{newUserEmail}}\"\n}"
+						},
+						"url": {
+							"raw": "{{api-url}}/api/v0/signup",
+							"host": [
+								"{{api-url}}"
+							],
+							"path": [
+								"api",
+								"v0",
+								"signup"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "new-user-confirm",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "e39721db-4553-4adb-ba8a-3212ca16d20a",
+								"exec": [
+									"pm.environment.set('newUserAuth', pm.cookies.get('Auth'));",
+									"",
+									"var jsonData = pm.response.json();",
+									"pm.environment.set('newUserId', jsonData.data.id);",
+									"pm.test(\"Data values\", function () {",
+									"    pm.expect(jsonData.data.email).to.eql(pm.environment.get(\"newUserEmail\"));",
+									"});",
+									"",
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "auth",
+								"type": "text",
+								"value": "{{Auth}}",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"email\": \"{{newUserEmail}}\",\n    \"emailConfirmCode\": \"674545\"\n}"
+						},
+						"url": {
+							"raw": "{{api-url}}/api/v0/signup/confirm",
+							"host": [
+								"{{api-url}}"
+							],
+							"path": [
+								"api",
+								"v0",
+								"signup",
+								"confirm"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "new-user-details",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "e39721db-4553-4adb-ba8a-3212ca16d20a",
+								"exec": [
+									"pm.environment.set('newUserAuth', pm.cookies.get('Auth'));",
+									"",
+									"var jsonData = pm.response.json();",
+									"pm.test(\"Data values\", function () {",
+									"    pm.expect(jsonData.data.email).to.eql(pm.environment.get(\"newUserEmail\"));",
+									"});",
+									"",
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "auth",
+								"type": "text",
+								"value": "{{Auth}}",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"name\": \"New User\",\n\t\"companyName\": \"My Company\",\n    \"password\": \"mypass\"\n}"
+						},
+						"url": {
+							"raw": "{{api-url}}/api/v0/signup/details/{{newUserId}}",
+							"host": [
+								"{{api-url}}"
+							],
+							"path": [
+								"api",
+								"v0",
+								"signup",
+								"details",
+								"{{newUserId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "new-user-create-org",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "e39721db-4553-4adb-ba8a-3212ca16d20a",
+								"exec": [
+									"pm.environment.set('newUserAuth', pm.cookies.get('Auth'));",
+									"",
+									"var jsonData = pm.response.json();",
+									"pm.environment.set('newUserOrgId', jsonData.data.id);",
+									"pm.test(\"Data values\", function () {",
+									"    pm.expect(jsonData.data.ownerId).to.eql(pm.environment.get(\"newUserId\"));",
+									"});",
+									"",
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "auth",
+								"type": "text",
+								"value": "{{newUserAuth}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"name\": \"New User Test Org\", \n\t\"isActive\": \"true\", \n\t\"rmqPassword\": \"testorg_rmqpassword\"\n}"
+						},
+						"url": {
+							"raw": "{{api-url}}/api/v0/org",
+							"host": [
+								"{{api-url}}"
+							],
+							"path": [
+								"api",
+								"v0",
+								"org"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "user-org-invite",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "e39721db-4553-4adb-ba8a-3212ca16d20a",
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"pm.test(\"Data values\", function () {",
+									"    pm.expect(jsonData.data.result).to.eql(\"success\");",
+									"});",
+									"",
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "auth",
+								"type": "text",
+								"value": "{{newUserAuth}}"
+							},
+							{
+								"key": "_orgId",
+								"value": "{{newUserOrgId}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"{{invitedUserEmail}}\",\n    \"_userId\": \"{{newUserId}}\"\n}"
+						},
+						"url": {
+							"raw": "{{api-url}}/api/v0/invite/direct",
+							"host": [
+								"{{api-url}}"
+							],
+							"path": [
+								"api",
+								"v0",
+								"invite",
+								"direct"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "invited-user-signup",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "e39721db-4553-4adb-ba8a-3212ca16d20a",
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"pm.test(\"Data values\", function () {",
+									"    pm.expect(jsonData.data.email).to.eql(pm.environment.get(\"invitedUserEmail\"));",
+									"});",
+									"",
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "auth",
+								"type": "text",
+								"value": "{{Auth}}",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"{{invitedUserEmail}}\"\n}"
+						},
+						"url": {
+							"raw": "{{api-url}}/api/v0/signup",
+							"host": [
+								"{{api-url}}"
+							],
+							"path": [
+								"api",
+								"v0",
+								"signup"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "invited-user-confirm",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "e39721db-4553-4adb-ba8a-3212ca16d20a",
+								"exec": [
+									"pm.environment.set('invitedUserAuth', pm.cookies.get('Auth'));",
+									"",
+									"var jsonData = pm.response.json();",
+									"pm.environment.set('invitedUserId', jsonData.data.id);",
+									"pm.test(\"Data values\", function () {",
+									"    pm.expect(jsonData.data.email).to.eql(pm.environment.get(\"invitedUserEmail\"));",
+									"});",
+									"",
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "auth",
+								"type": "text",
+								"value": "{{Auth}}",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"email\": \"{{invitedUserEmail}}\",\n    \"emailConfirmCode\": \"764569\"\n}"
+						},
+						"url": {
+							"raw": "{{api-url}}/api/v0/signup/confirm",
+							"host": [
+								"{{api-url}}"
+							],
+							"path": [
+								"api",
+								"v0",
+								"signup",
+								"confirm"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "invited-user-details",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "e39721db-4553-4adb-ba8a-3212ca16d20a",
+								"exec": [
+									"pm.environment.set('invitedUserAuth', pm.cookies.get('Auth'));",
+									"",
+									"var jsonData = pm.response.json();",
+									"pm.test(\"Data values\", function () {",
+									"    pm.expect(jsonData.data.email).to.eql(pm.environment.get(\"invitedUserEmail\"));",
+									"});",
+									"",
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "auth",
+								"type": "text",
+								"value": "{{invitedUserAuth}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"name\": \"Invited User\",\n\t\"companyName\": \"My Company\",\n    \"password\": \"mypass\"\n}"
+						},
+						"url": {
+							"raw": "{{api-url}}/api/v0/signup/details/{{invitedUserId}}",
+							"host": [
+								"{{api-url}}"
+							],
+							"path": [
+								"api",
+								"v0",
+								"signup",
+								"details",
+								"{{invitedUserId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "user-org-invite-accept",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "e39721db-4553-4adb-ba8a-3212ca16d20a",
+								"exec": [
+									"pm.environment.set('invitedUserAuth', pm.cookies.get('Auth'));",
+									"",
+									"var jsonData = pm.response.json();",
+									"pm.environment.set('invitedUserId', jsonData.data.id);",
+									"pm.test(\"Data values\", function () {",
+									"    pm.expect(jsonData.data.email).to.eql(pm.environment.get(\"invitedUserEmail\"));",
+									"});",
+									"",
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "auth",
+								"type": "text",
+								"value": "{{invitedUserAuth}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "{{api-url}}/api/v0/user/{{invitedUserId}}/join/5e4e08ff7a8082e58bcce763/",
+							"host": [
+								"{{api-url}}"
+							],
+							"path": [
+								"api",
+								"v0",
+								"user",
+								"{{invitedUserId}}",
+								"join",
+								"5e4e08ff7a8082e58bcce763",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "new-user-request-reset-password",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "e39721db-4553-4adb-ba8a-3212ca16d20a",
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"pm.test(\"Data values\", function () {",
+									"    pm.expect(jsonData.data.email).to.eql(pm.environment.get(\"newUserEmail\"));",
+									"});",
+									"",
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "auth",
+								"type": "text",
+								"value": "{{Auth}}",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"{{newUserEmail}}\"\n}"
+						},
+						"url": {
+							"raw": "{{api-url}}/api/v0/forgot/",
+							"host": [
+								"{{api-url}}"
+							],
+							"path": [
+								"api",
+								"v0",
+								"forgot",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "reset-password-invalid-email",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "e39721db-4553-4adb-ba8a-3212ca16d20a",
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"pm.test(\"Data values\", function () {",
+									"    pm.expect(jsonData.data.email).to.eql(pm.environment.get(\"newUserEmail\"));",
+									"});",
+									"",
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "auth",
+								"type": "text",
+								"value": "{{Auth}}",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"rich@wifunds.com\"\n}"
+						},
+						"url": {
+							"raw": "{{api-url}}/api/v0/forgot/",
+							"host": [
+								"{{api-url}}"
+							],
+							"path": [
+								"api",
+								"v0",
+								"forgot",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "user-bulk-get-org",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "795e2806-8aec-415c-9f19-e1c04ce55f14",
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"",
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "auth",
+								"type": "text",
+								"value": "{{newUserAuth}}"
+							},
+							{
+								"key": "_orgId",
+								"type": "text",
+								"value": "{{newUserOrgId}}"
+							}
+						],
+						"url": {
+							"raw": "{{api-url}}/api/v0/user",
+							"host": [
+								"{{api-url}}"
+							],
+							"path": [
+								"api",
+								"v0",
+								"user"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"protocolProfileBehavior": {}
+		},
+		{
+			"name": "org",
+			"item": [
+				{
+					"name": "org-bulk-get",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "0df39fc6-6b96-4597-8395-4e7ed3253b8e",
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "auth",
+								"type": "text",
+								"value": "{{Auth}}"
+							},
+							{
+								"key": "_orgId",
+								"value": "{{org}}",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "{{api-url}}/api/v0/org?filter=paymentStatusDate<1679132812171&limit=2&responseFields=id isActive billing_address1",
+							"host": [
+								"{{api-url}}"
+							],
+							"path": [
+								"api",
+								"v0",
+								"org"
+							],
+							"query": [
+								{
+									"key": "filter",
+									"value": "paymentStatusDate<1679132812171"
+								},
+								{
+									"key": "limit",
+									"value": "2"
+								},
+								{
+									"key": "responseFields",
+									"value": "id isActive billing_address1"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "org-single-get",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "0df39fc6-6b96-4597-8395-4e7ed3253b8e",
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "auth",
+								"type": "text",
+								"value": "{{Auth}}"
+							},
+							{
+								"key": "_orgId",
+								"type": "text",
+								"value": "{{org}}",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "{{api-url}}/api/v0/org/{{org}}",
+							"host": [
+								"{{api-url}}"
+							],
+							"path": [
+								"api",
+								"v0",
+								"org",
+								"{{org}}"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"protocolProfileBehavior": {}
+		},
+		{
+			"name": "agent",
+			"item": [
+				{
+					"name": "post",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "912ddad5-8c15-4c2b-8fc2-3e14239ce43e",
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"console.log(jsonData);",
+									"pm.environment.set(\"_agentId\", jsonData.data.id);",
+									"pm.test(\"Data values\", function () {",
+									"    pm.expect(jsonData.data._orgId).to.eql(pm.environment.get(\"org\"));",
+									"    pm.expect(jsonData.data.machineId).to.eql(\"0klAO\");",
+									"    pm.expect(jsonData.data.ipAddress).to.eql(\"192.168.10.26,10.96.8.135\");",
+									"    pm.expect(jsonData.data.name).to.eql(\"0klAO\");",
+									"    pm.expect(jsonData.data.reportedVersion).to.eql(\"v0.0.0.118\");",
+									"    pm.expect(jsonData.data.targetVersion).to.eql(\"v0.0.0.118\");",
+									"});",
+									"",
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "auth",
+								"value": "{{Auth}}",
+								"type": "text"
+							},
+							{
+								"key": "_orgId",
+								"value": "{{org}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"_orgId\": \"{{org}}\",\n    \"machineId\": \"0klAO\",\n    \"ipAddress\": \"192.168.10.26,10.96.8.135\",\n    \"name\": \"0klAO\",\n    \"reportedVersion\": \"v0.0.0.177\",\n    \"targetVersion\": \"v0.0.0.177\",\n    \"tags\": [],\n    \"numActiveTasks\": 0,\n    \"lastHeartbeatTime\": 1574274842480,\n    \"propertyOverrides\": {\n        \"trackSysInfo\": false\n    },\n    \"sysInfo\": {}\n}"
+						},
+						"url": {
+							"raw": "{{api-url}}/api/v0/agent",
+							"host": [
+								"{{api-url}}"
+							],
+							"path": [
+								"api",
+								"v0",
+								"agent"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "create-agent-install-stub",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "912ddad5-8c15-4c2b-8fc2-3e14239ce43e",
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"console.log(jsonData);",
+									"pm.environment.set(\"_agentId\", jsonData.data.id);",
+									"pm.test(\"Data values\", function () {",
+									"    pm.expect(jsonData.data._orgId).to.eql(pm.environment.get(\"org\"));",
+									"    pm.expect(jsonData.data.machineId).to.eql(\"0klAO\");",
+									"    pm.expect(jsonData.data.ipAddress).to.eql(\"192.168.10.26,10.96.8.135\");",
+									"    pm.expect(jsonData.data.name).to.eql(\"0klAO\");",
+									"    pm.expect(jsonData.data.reportedVersion).to.eql(\"v0.0.0.118\");",
+									"    pm.expect(jsonData.data.targetVersion).to.eql(\"v0.0.0.118\");",
+									"});",
+									"",
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "auth",
+								"type": "text",
+								"value": "{{Auth}}"
+							},
+							{
+								"key": "_orgId",
+								"type": "text",
+								"value": "{{org}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "{{api-url}}/api/v0/agentDownload/agentstub/{{org}}/linux",
+							"host": [
+								"{{api-url}}"
+							],
+							"path": [
+								"api",
+								"v0",
+								"agentDownload",
+								"agentstub",
+								"{{org}}",
+								"linux"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "get-agent-stub-install-linux",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "912ddad5-8c15-4c2b-8fc2-3e14239ce43e",
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"console.log(jsonData);",
+									"pm.environment.set(\"_agentId\", jsonData.data.id);",
+									"pm.test(\"Data values\", function () {",
+									"    pm.expect(jsonData.data._orgId).to.eql(pm.environment.get(\"org\"));",
+									"    pm.expect(jsonData.data.machineId).to.eql(\"0klAO\");",
+									"    pm.expect(jsonData.data.ipAddress).to.eql(\"192.168.10.26,10.96.8.135\");",
+									"    pm.expect(jsonData.data.name).to.eql(\"0klAO\");",
+									"    pm.expect(jsonData.data.reportedVersion).to.eql(\"v0.0.0.118\");",
+									"    pm.expect(jsonData.data.targetVersion).to.eql(\"v0.0.0.118\");",
+									"});",
+									"",
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "auth",
+								"type": "text",
+								"value": "{{Auth}}"
+							},
+							{
+								"key": "_orgId",
+								"type": "text",
+								"value": "{{org}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"_orgId\": \"{{org}}\",\n    \"machineId\": \"0klAO\",\n    \"ipAddress\": \"192.168.10.26,10.96.8.135\",\n    \"name\": \"0klAO\",\n    \"reportedVersion\": \"v0.0.0.118\",\n    \"targetVersion\": \"v0.0.0.118\",\n    \"tags\": [],\n    \"numActiveTasks\": 0,\n    \"lastHeartbeatTime\": 1574274842480,\n    \"propertyOverrides\": {\n        \"trackSysInfo\": false\n    },\n    \"sysInfo\": {}\n}"
+						},
+						"url": {
+							"raw": "{{api-url}}/api/v0/agentDownload/agentstub/{{org}}/linux",
+							"host": [
+								"{{api-url}}"
+							],
+							"path": [
+								"api",
+								"v0",
+								"agentDownload",
+								"agentstub",
+								"{{org}}",
+								"linux"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "get-agent-install-linux",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "912ddad5-8c15-4c2b-8fc2-3e14239ce43e",
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"console.log(jsonData);",
+									"pm.environment.set(\"_agentId\", jsonData.data.id);",
+									"pm.test(\"Data values\", function () {",
+									"    pm.expect(jsonData.data._orgId).to.eql(pm.environment.get(\"org\"));",
+									"    pm.expect(jsonData.data.machineId).to.eql(\"0klAO\");",
+									"    pm.expect(jsonData.data.ipAddress).to.eql(\"192.168.10.26,10.96.8.135\");",
+									"    pm.expect(jsonData.data.name).to.eql(\"0klAO\");",
+									"    pm.expect(jsonData.data.reportedVersion).to.eql(\"v0.0.0.118\");",
+									"    pm.expect(jsonData.data.targetVersion).to.eql(\"v0.0.0.118\");",
+									"});",
+									"",
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "auth",
+								"type": "text",
+								"value": "{{Auth}}"
+							},
+							{
+								"key": "_orgId",
+								"type": "text",
+								"value": "5de9691f53162e8891f5aa99"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"_orgId\": \"{{org}}\",\n    \"machineId\": \"0klAO\",\n    \"ipAddress\": \"192.168.10.26,10.96.8.135\",\n    \"name\": \"0klAO\",\n    \"reportedVersion\": \"v0.0.0.118\",\n    \"targetVersion\": \"v0.0.0.118\",\n    \"tags\": [],\n    \"numActiveTasks\": 0,\n    \"lastHeartbeatTime\": 1574274842480,\n    \"propertyOverrides\": {\n        \"trackSysInfo\": false\n    },\n    \"sysInfo\": {}\n}"
+						},
+						"url": {
+							"raw": "{{api-url}}/api/v0/agentDownload/agent/{{org}}/0klAO/linux",
+							"host": [
+								"{{api-url}}"
+							],
+							"path": [
+								"api",
+								"v0",
+								"agentDownload",
+								"agent",
+								"{{org}}",
+								"0klAO",
+								"linux"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "agent-bulk-get",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "0df39fc6-6b96-4597-8395-4e7ed3253b8e",
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "Auth",
+								"type": "text",
+								"value": "{{Auth}}"
+							},
+							{
+								"key": "_orgId",
+								"type": "text",
+								"value": "{{org}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "{{api-url}}/api/v0/agent",
+							"host": [
+								"{{api-url}}"
+							],
+							"path": [
+								"api",
+								"v0",
+								"agent"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "agent-put",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "25a32d5d-3c08-4c01-9213-9ef3b142aee8",
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"console.log(jsonData);",
+									"pm.test(\"Data values\", function () {",
+									"    pm.expect(jsonData.data.tags).to.eql({\"numchucks\": \"true\"});",
+									"});",
+									"",
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "auth",
+								"value": "{{Auth}}",
+								"type": "text"
+							},
+							{
+								"key": "_orgId",
+								"value": "{{org}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"propertyOverrides\": {\n        \"trackSysInfo\": false\n    }\n}"
+						},
+						"url": {
+							"raw": "{{api-url}}/api/v0/agent/{{_agentId}}",
+							"host": [
+								"{{api-url}}"
+							],
+							"path": [
+								"api",
+								"v0",
+								"agent",
+								"{{_agentId}}"
+							],
+							"query": [
+								{
+									"key": "responseFields",
+									"value": "firstName lastName age",
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "agent-single-get",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "795e2806-8aec-415c-9f19-e1c04ce55f14",
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"console.log(jsonData);",
+									"pm.test(\"Data values\", function () {",
+									"    pm.expect(jsonData.data.id).to.eql(pm.environment.get(\"_agentId\"));",
+									"    pm.expect(jsonData.data.tags).to.eql({\"numchucks\": \"true\"});",
+									"});",
+									"",
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "auth",
+								"value": "{{Auth}}",
+								"type": "text"
+							},
+							{
+								"key": "_orgId",
+								"value": "{{org}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{api-url}}/api/v0/agent/5e56a1643437017be5211164",
+							"host": [
+								"{{api-url}}"
+							],
+							"path": [
+								"api",
+								"v0",
+								"agent",
+								"5e56a1643437017be5211164"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"protocolProfileBehavior": {}
+		},
+		{
+			"name": "paymentmethod",
+			"item": [
+				{
+					"name": "post-paymentmethod",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "912ddad5-8c15-4c2b-8fc2-3e14239ce43e",
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"console.log(jsonData);",
+									"pm.environment.set(\"_paymentMethodId\", jsonData.data.id);",
+									"pm.test(\"Data values\", function () {",
+									"    pm.expect(jsonData.data._orgId).to.eql(pm.environment.get(\"dockerOrg\"));",
+									"    pm.expect(jsonData.data.name).to.eql(\"Visa credit card\");",
+									"    pm.expect(jsonData.data.token).to.eql(\"5jk9dv\");",
+									"    pm.expect(jsonData.data.billingAddressId).to.eql(\"4w\");",
+									"});",
+									"",
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "auth",
+								"value": "{{Auth}}",
+								"type": "text"
+							},
+							{
+								"key": "_orgId",
+								"value": "{{org}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"_orgId\": \"{{org}}\",\n    \"name\": \"Visa credit card\",\n    \"token\": \"5jk9dv\",\n    \"billingAddressId\": \"4w\",\n    \"default\": \"true\",\n    \"type\": 0\n}"
+						},
+						"url": {
+							"raw": "{{api-url}}/api/v0/paymentmethod",
+							"host": [
+								"{{api-url}}"
+							],
+							"path": [
+								"api",
+								"v0",
+								"paymentmethod"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "paymentmethod-bulk-get",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "0df39fc6-6b96-4597-8395-4e7ed3253b8e",
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "Auth",
+								"type": "text",
+								"value": "{{Auth}}"
+							},
+							{
+								"key": "_orgId",
+								"type": "text",
+								"value": "{{org}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "{{api-url}}/api/v0/paymentmethod",
+							"host": [
+								"{{api-url}}"
+							],
+							"path": [
+								"api",
+								"v0",
+								"paymentmethod"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "paymentmethod-put",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "25a32d5d-3c08-4c01-9213-9ef3b142aee8",
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"console.log(jsonData);",
+									"pm.test(\"Data values\", function () {",
+									"    pm.expect(jsonData.data.name).to.eql(\"New visa credit card\");",
+									"});",
+									"",
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "auth",
+								"value": "{{Auth}}",
+								"type": "text"
+							},
+							{
+								"key": "_orgId",
+								"value": "{{org}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"New visa credit card\"\n}"
+						},
+						"url": {
+							"raw": "{{api-url}}/api/v0/paymentmethod/{{_paymentMethodId}}?",
+							"host": [
+								"{{api-url}}"
+							],
+							"path": [
+								"api",
+								"v0",
+								"paymentmethod",
+								"{{_paymentMethodId}}"
+							],
+							"query": [
+								{
+									"key": "responseFields",
+									"value": "firstName lastName age",
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "paymentmethod-single-get",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "795e2806-8aec-415c-9f19-e1c04ce55f14",
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"console.log(jsonData);",
+									"pm.test(\"Data values\", function () {",
+									"    pm.expect(jsonData.data.id).to.eql(pm.environment.get(\"_paymentMethodId\"));",
+									"    pm.expect(jsonData.data.name).to.eql(\"New visa credit card\");",
+									"});",
+									"",
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "auth",
+								"type": "text",
+								"value": "{{Auth}}"
+							},
+							{
+								"key": "_orgId",
+								"type": "text",
+								"value": "{{org}}"
+							}
+						],
+						"url": {
+							"raw": "{{api-url}}/api/v0/paymentmethod/{{_paymentMethodId}}",
+							"host": [
+								"{{api-url}}"
+							],
+							"path": [
+								"api",
+								"v0",
+								"paymentmethod",
+								"{{_paymentMethodId}}"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"protocolProfileBehavior": {}
+		},
+		{
+			"name": "invoice",
+			"item": [
+				{
+					"name": "invoice-post",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "912ddad5-8c15-4c2b-8fc2-3e14239ce43e",
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"console.log(jsonData);",
+									"pm.environment.set(\"_invoiceId\", jsonData.data.id);",
+									"pm.test(\"Data values\", function () {",
+									"    pm.expect(jsonData.data._orgId).to.eql(pm.environment.get(\"dockerOrg\"));",
+									"});",
+									"",
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "auth",
+								"type": "text",
+								"value": "{{Auth}}"
+							},
+							{
+								"key": "_orgId",
+								"type": "text",
+								"value": "{{org}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"_orgId\": \"{{org}}\",\n    \"startDate\": \"2020-02-01\",\n    \"endDate\": \"2020-03-01\"\n}"
+						},
+						"url": {
+							"raw": "{{api-url}}/api/v0/invoice",
+							"host": [
+								"{{api-url}}"
+							],
+							"path": [
+								"api",
+								"v0",
+								"invoice"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "invoice-bulk-get",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "0df39fc6-6b96-4597-8395-4e7ed3253b8e",
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "Auth",
+								"type": "text",
+								"value": "{{Auth}}"
+							},
+							{
+								"key": "_orgId",
+								"type": "text",
+								"value": "{{org}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "{{api-url}}/api/v0/invoice",
+							"host": [
+								"{{api-url}}"
+							],
+							"path": [
+								"api",
+								"v0",
+								"invoice"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "invoice-put",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "25a32d5d-3c08-4c01-9213-9ef3b142aee8",
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"console.log(jsonData);",
+									"pm.test(\"Data values\", function () {",
+									"    pm.expect(jsonData.data.name).to.eql(\"New visa credit card\");",
+									"});",
+									"",
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "auth",
+								"type": "text",
+								"value": "{{Auth}}"
+							},
+							{
+								"key": "_orgId",
+								"type": "text",
+								"value": "{{org}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"paidAmount\": \"10\",\n    \"note\": {\"date\": \"2019-12-16T21:50:51.583Z\", \"by\": \"rich\", \"note\": \"adjusted paid amount\"}\n}"
+						},
+						"url": {
+							"raw": "{{api-url}}/api/v0/invoice/{{_invoiceId}}?",
+							"host": [
+								"{{api-url}}"
+							],
+							"path": [
+								"api",
+								"v0",
+								"invoice",
+								"{{_invoiceId}}"
+							],
+							"query": [
+								{
+									"key": "responseFields",
+									"value": "firstName lastName age",
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "invoice-put-rate-update",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "25a32d5d-3c08-4c01-9213-9ef3b142aee8",
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"console.log(jsonData);",
+									"pm.test(\"Data values\", function () {",
+									"    pm.expect(jsonData.data.name).to.eql(\"New visa credit card\");",
+									"});",
+									"",
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "auth",
+								"type": "text",
+								"value": "{{Auth}}"
+							},
+							{
+								"key": "_orgId",
+								"type": "text",
+								"value": "{{org}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"scriptRate\": \".08\"\n}"
+						},
+						"url": {
+							"raw": "{{api-url}}/api/v0/invoice/{{_invoiceId}}?",
+							"host": [
+								"{{api-url}}"
+							],
+							"path": [
+								"api",
+								"v0",
+								"invoice",
+								"{{_invoiceId}}"
+							],
+							"query": [
+								{
+									"key": "responseFields",
+									"value": "firstName lastName age",
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "invoice-single-get",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "795e2806-8aec-415c-9f19-e1c04ce55f14",
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"console.log(jsonData);",
+									"pm.test(\"Data values\", function () {",
+									"    pm.expect(jsonData.data.id).to.eql(pm.environment.get(\"_invoiceId\"));",
+									"    pm.expect(jsonData.data.billAmount).to.eql(10);",
+									"    pm.expect(jsonData.data.paidAmount).to.eql(10);",
+									"});",
+									"",
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "auth",
+								"type": "text",
+								"value": "{{Auth}}"
+							},
+							{
+								"key": "_orgId",
+								"type": "text",
+								"value": "{{org}}"
+							}
+						],
+						"url": {
+							"raw": "{{api-url}}/api/v0/invoice/{{_invoiceId}}",
+							"host": [
+								"{{api-url}}"
+							],
+							"path": [
+								"api",
+								"v0",
+								"invoice",
+								"{{_invoiceId}}"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"protocolProfileBehavior": {}
+		},
+		{
+			"name": "paymenttransaction",
+			"item": [
+				{
+					"name": "post-paymenttransaction",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "912ddad5-8c15-4c2b-8fc2-3e14239ce43e",
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"console.log(jsonData);",
+									"pm.environment.set(\"_paymentTransactionId\", jsonData.data.id);",
+									"pm.test(\"Data values\", function () {",
+									"    pm.expect(jsonData.data._orgId).to.eql(pm.environment.get(\"dockerOrg\"));",
+									"    pm.expect(jsonData.data._invoiceId).to.eql(pm.environment.get(\"_invoiceId\"));",
+									"});",
+									"",
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "auth",
+								"value": "{{Auth}}",
+								"type": "text"
+							},
+							{
+								"key": "_orgId",
+								"value": "{{org}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"_orgId\": \"{{org}}\",\n    \"_invoiceId\": \"{{_invoiceId}}\"\n}"
+						},
+						"url": {
+							"raw": "{{api-url}}/api/v0/paymenttransaction",
+							"host": [
+								"{{api-url}}"
+							],
+							"path": [
+								"api",
+								"v0",
+								"paymenttransaction"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "paymenttransaction-bulk-get",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "0df39fc6-6b96-4597-8395-4e7ed3253b8e",
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "Auth",
+								"type": "text",
+								"value": "{{Auth}}"
+							},
+							{
+								"key": "_orgId",
+								"type": "text",
+								"value": "{{org}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "{{api-url}}/api/v0/paymenttransaction",
+							"host": [
+								"{{api-url}}"
+							],
+							"path": [
+								"api",
+								"v0",
+								"paymenttransaction"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "paymenttransaction-put",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "25a32d5d-3c08-4c01-9213-9ef3b142aee8",
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"console.log(jsonData);",
+									"pm.test(\"Data values\", function () {",
+									"    pm.expect(jsonData.data.name).to.eql(\"New visa credit card\");",
+									"});",
+									"",
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "auth",
+								"value": "{{Auth}}",
+								"type": "text"
+							},
+							{
+								"key": "_orgId",
+								"value": "{{org}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"status\": \"1\"\n}"
+						},
+						"url": {
+							"raw": "{{api-url}}/api/v0/paymenttransaction/{{_paymentTransactionId}}?",
+							"host": [
+								"{{api-url}}"
+							],
+							"path": [
+								"api",
+								"v0",
+								"paymenttransaction",
+								"{{_paymentTransactionId}}"
+							],
+							"query": [
+								{
+									"key": "responseFields",
+									"value": "firstName lastName age",
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "paymenttransaction-single-get",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "795e2806-8aec-415c-9f19-e1c04ce55f14",
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"console.log(jsonData);",
+									"pm.test(\"Data values\", function () {",
+									"    pm.expect(jsonData.data.id).to.eql(pm.environment.get(\"_paymentMethodId\"));",
+									"    pm.expect(jsonData.data.name).to.eql(\"New visa credit card\");",
+									"});",
+									"",
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "auth",
+								"type": "text",
+								"value": "{{Auth}}"
+							},
+							{
+								"key": "_orgId",
+								"type": "text",
+								"value": "{{org}}"
+							}
+						],
+						"url": {
+							"raw": "{{api-url}}/api/v0/paymenttransaction/{{_paymentTransactionId}}",
+							"host": [
+								"{{api-url}}"
+							],
+							"path": [
+								"api",
+								"v0",
+								"paymenttransaction",
+								"{{_paymentTransactionId}}"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"protocolProfileBehavior": {}
+		},
+		{
+			"name": "jobdef",
+			"item": [
+				{
+					"name": "jobdef-post",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "8d127994-8f35-42f9-a869-4bc0bbd6d8f5",
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"console.log(jsonData);",
+									"pm.environment.set(\"_jobDefId\", jsonData.data.id);",
+									"pm.test(\"Data values\", function () {",
+									"    pm.expect(jsonData.data._orgId).to.eql(pm.environment.get(\"org\"));",
+									"    pm.expect(jsonData.data.name).to.eql(\"Job 1\");",
+									"    pm.expect(jsonData.data.createdBy).to.eql(pm.environment.get(\"sgUser\"));",
+									"});",
+									"",
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"    pm.environment.set('_jobDefId', jsonData.data.id);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "auth",
+								"value": "{{Auth}}",
+								"type": "text"
+							},
+							{
+								"key": "_orgId",
+								"value": "{{org}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"_orgId\" : \"{{org}}\",\n\t\"name\" : \"Job 1\",\n\t\"createdBy\" : \"{{sgUser}}\",\n\t\"lastRunId\" : 0,\n\t\"dateCreated\" : \"2019-11-27T21:41:51.980Z\"\n}"
+						},
+						"url": {
+							"raw": "{{api-url}}/api/v0/jobdef",
+							"host": [
+								"{{api-url}}"
+							],
+							"path": [
+								"api",
+								"v0",
+								"jobdef"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "jobdef-single-get",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "795e2806-8aec-415c-9f19-e1c04ce55f14",
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"console.log(jsonData);",
+									"pm.test(\"Data values\", function () {",
+									"    pm.expect(jsonData.data._orgId).to.eql(pm.environment.get(\"org\"));",
+									"    pm.expect(jsonData.data.id).to.eql(pm.environment.get(\"_jobDefId\"));",
+									"    pm.expect(jsonData.data.name).to.eql(\"Job 1\");",
+									"    pm.expect(jsonData.data.createdBy).to.eql(pm.environment.get(\"sgUser\"));",
+									"});",
+									"",
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "auth",
+								"type": "text",
+								"value": "{{Auth}}"
+							},
+							{
+								"key": "_orgId",
+								"type": "text",
+								"value": "{{org}}"
+							}
+						],
+						"url": {
+							"raw": "{{api-url}}/api/v0/jobdef/{{_jobDefId}}",
+							"host": [
+								"{{api-url}}"
+							],
+							"path": [
+								"api",
+								"v0",
+								"jobdef",
+								"{{_jobDefId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "taskdef-post",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "ea0199f5-d3ad-45d7-aa02-21357b17f8ef",
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"pm.test(\"Data values\", function () {",
+									"    pm.expect(jsonData.data._orgId).to.eql(pm.environment.get(\"org\"));",
+									"    pm.expect(jsonData.data._jobDefId).to.eql(pm.environment.get(\"_jobDefId\"));",
+									"    pm.expect(jsonData.data.name).to.eql(\"Task1\");",
+									"});",
+									"",
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"    pm.environment.set('_taskDefId', jsonData.data.id);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "auth",
+								"type": "text",
+								"value": "{{Auth}}"
+							},
+							{
+								"key": "_orgId",
+								"type": "text",
+								"value": "{{org}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{ \n\t\"name\": \"Task1\",\n\t\"_orgId\": \"{{org}}\",\n\t\"_jobDefId\": \"{{_jobDefId}}\",\n\t\"requiredTags\": {},\n\t\"runOnAllAgents\": \"false\",\n\t\"fromRoutes\": [],\n\t\"target\": 0\n}"
+						},
+						"url": {
+							"raw": "{{api-url}}/api/v0/jobdef/{{_jobDefId}}/taskdef",
+							"host": [
+								"{{api-url}}"
+							],
+							"path": [
+								"api",
+								"v0",
+								"jobdef",
+								"{{_jobDefId}}",
+								"taskdef"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "taskdef-single-get",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "795e2806-8aec-415c-9f19-e1c04ce55f14",
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"console.log(jsonData);",
+									"pm.test(\"Data values\", function () {",
+									"    pm.expect(jsonData.data._orgId).to.eql(pm.environment.get(\"org\"));",
+									"    pm.expect(jsonData.data.id).to.eql(pm.environment.get(\"_taskDefId\"));",
+									"    pm.expect(jsonData.data.name).to.eql(\"Task1\");",
+									"});",
+									"",
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "auth",
+								"type": "text",
+								"value": "{{Auth}}"
+							},
+							{
+								"key": "_orgId",
+								"type": "text",
+								"value": "{{org}}"
+							}
+						],
+						"url": {
+							"raw": "{{api-url}}/api/v0/jobdef/{{_jobDefId}}/taskdef/{{_taskDefId}}",
+							"host": [
+								"{{api-url}}"
+							],
+							"path": [
+								"api",
+								"v0",
+								"jobdef",
+								"{{_jobDefId}}",
+								"taskdef",
+								"{{_taskDefId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "script-post",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "0e4cb819-86b5-49c6-b358-f377670ec567",
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"pm.test(\"Data values\", function () {",
+									"    pm.expect(jsonData.data._orgId).to.eql(pm.environment.get(\"org\"));",
+									"    pm.expect(jsonData.data._originalAuthorUserId).to.eql(pm.environment.get(\"_userId\"));",
+									"    pm.expect(jsonData.data._lastEditedUserId).to.eql(pm.environment.get(\"_userId\"));",
+									"    pm.expect(jsonData.data.name).to.eql(\"Python Test\");",
+									"});",
+									"",
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"    pm.environment.set('_scriptId', jsonData.data.id);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "auth",
+								"value": "{{Auth}}",
+								"type": "text"
+							},
+							{
+								"key": "_orgId",
+								"value": "{{org}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{ \n\t\"_orgId\": \"{{org}}\", \n\t\"name\": \"Python Test\", \n\t\"scriptType\": \"0\", \n\t\"code\": \"\\\"\\\\nimport time\\\\nprint 'start'\\\\ntime.sleep(5)\\\\nprint 'done'\\\\nprint '@kpo{\\\\\\\"route\\\\\\\": \\\\\\\"ok\\\\\\\"}'\\\\n\\\"\", \n\t\"_originalAuthorUserId\": \"{{_userId}}\", \n\t\"_lastEditedUserId\": \"{{_userId}}\", \n\t\"lastEditedDate\": \"2019-11-27T21:41:51.980Z\", \n\t\"shadowCopyCode\": \"\\nimport time\\nprint 'start'\\ntime.sleep(5)\\nprint 'done'\\nprint '@kpo{\\\"route\\\": \\\"ok\\\"}'\\n\" \n}"
+						},
+						"url": {
+							"raw": "{{api-url}}/api/v0/script",
+							"host": [
+								"{{api-url}}"
+							],
+							"path": [
+								"api",
+								"v0",
+								"script"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "script-single-get",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "795e2806-8aec-415c-9f19-e1c04ce55f14",
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"console.log(jsonData);",
+									"pm.test(\"Data values\", function () {",
+									"    pm.expect(jsonData.data._orgId).to.eql(pm.environment.get(\"org\"));",
+									"    pm.expect(jsonData.data._originalAuthorUserId).to.eql(pm.environment.get(\"_userId\"));",
+									"    pm.expect(jsonData.data._lastEditedUserId).to.eql(pm.environment.get(\"_userId\"));",
+									"    pm.expect(jsonData.data.name).to.eql(\"Python Test\");",
+									"});",
+									"",
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "auth",
+								"type": "text",
+								"value": "{{Auth}}"
+							},
+							{
+								"key": "_orgId",
+								"type": "text",
+								"value": "{{org}}"
+							}
+						],
+						"url": {
+							"raw": "{{api-url}}/api/v0/script/{{_scriptId}}",
+							"host": [
+								"{{api-url}}"
+							],
+							"path": [
+								"api",
+								"v0",
+								"script",
+								"{{_scriptId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "stepdef-post",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "ea0199f5-d3ad-45d7-aa02-21357b17f8ef",
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"pm.test(\"Data values\", function () {",
+									"    pm.expect(jsonData.data._orgId).to.eql(pm.environment.get(\"org\"));",
+									"    pm.expect(jsonData.data._taskDefId).to.eql(pm.environment.get(\"_taskDefId\"));",
+									"    pm.expect(jsonData.data.name).to.eql(\"step1\");",
+									"});",
+									"",
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"    pm.environment.set('_stepDefId', jsonData.data.id);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "auth",
+								"type": "text",
+								"value": "{{Auth}}"
+							},
+							{
+								"key": "_orgId",
+								"type": "text",
+								"value": "{{org}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{ \n\t\"_orgId\": \"{{org}}\", \n\t\"_taskDefId\": \"{{_taskDefId}}\", \n\t\"name\": \"step1\", \n\t\"script\": { \"id\": \"{{_scriptId}}\" }, \n\t\"order\": \"0\", \n\t\"arguments\": \"\", \n\t\"variables\": \"\" \n}"
+						},
+						"url": {
+							"raw": "{{api-url}}/api/v0/jobdef/{{_jobDefId}}/taskdef/{{_taskDefId}}/stepdef",
+							"host": [
+								"{{api-url}}"
+							],
+							"path": [
+								"api",
+								"v0",
+								"jobdef",
+								"{{_jobDefId}}",
+								"taskdef",
+								"{{_taskDefId}}",
+								"stepdef"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "stepdef-single-get",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "795e2806-8aec-415c-9f19-e1c04ce55f14",
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"console.log(jsonData);",
+									"pm.test(\"Data values\", function () {",
+									"    pm.expect(jsonData.data._orgId).to.eql(pm.environment.get(\"org\"));",
+									"    pm.expect(jsonData.data.id).to.eql(pm.environment.get(\"_stepDefId\"));",
+									"    pm.expect(jsonData.data.name).to.eql(\"step1\");",
+									"});",
+									"",
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "auth",
+								"type": "text",
+								"value": "{{Auth}}"
+							},
+							{
+								"key": "_orgId",
+								"type": "text",
+								"value": "{{org}}"
+							}
+						],
+						"url": {
+							"raw": "{{api-url}}/api/v0/jobdef/{{_jobDefId}}/taskdef/{{_taskDefId}}/stepdef/{{_stepDefId}}",
+							"host": [
+								"{{api-url}}"
+							],
+							"path": [
+								"api",
+								"v0",
+								"jobdef",
+								"{{_jobDefId}}",
+								"taskdef",
+								"{{_taskDefId}}",
+								"stepdef",
+								"{{_stepDefId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "jobdef-bulk-get",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "0df39fc6-6b96-4597-8395-4e7ed3253b8e",
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "Auth",
+								"type": "text",
+								"value": "{{Auth}}"
+							},
+							{
+								"key": "_orgId",
+								"type": "text",
+								"value": "{{org}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "{{api-url}}/api/v0/jobdef",
+							"host": [
+								"{{api-url}}"
+							],
+							"path": [
+								"api",
+								"v0",
+								"jobdef"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "taskdef-bulk-get",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "0df39fc6-6b96-4597-8395-4e7ed3253b8e",
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "Auth",
+								"type": "text",
+								"value": "{{Auth}}"
+							},
+							{
+								"key": "_orgId",
+								"type": "text",
+								"value": "{{org}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "{{api-url}}/api/v0/jobdef/{{_jobDefId}}/taskdef",
+							"host": [
+								"{{api-url}}"
+							],
+							"path": [
+								"api",
+								"v0",
+								"jobdef",
+								"{{_jobDefId}}",
+								"taskdef"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "script-bulk-get",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "0df39fc6-6b96-4597-8395-4e7ed3253b8e",
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "Auth",
+								"type": "text",
+								"value": "{{Auth}}"
+							},
+							{
+								"key": "_orgId",
+								"type": "text",
+								"value": "{{org}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "{{api-url}}/api/v0/script",
+							"host": [
+								"{{api-url}}"
+							],
+							"path": [
+								"api",
+								"v0",
+								"script"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "stepdef-bulk-get",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "0df39fc6-6b96-4597-8395-4e7ed3253b8e",
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "Auth",
+								"type": "text",
+								"value": "{{Auth}}"
+							},
+							{
+								"key": "_orgId",
+								"type": "text",
+								"value": "{{org}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "{{api-url}}/api/v0/jobdef/{{_jobDefId}}/taskdef/{{_taskDefId}}/stepdef",
+							"host": [
+								"{{api-url}}"
+							],
+							"path": [
+								"api",
+								"v0",
+								"jobdef",
+								"{{_jobDefId}}",
+								"taskdef",
+								"{{_taskDefId}}",
+								"stepdef"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"protocolProfileBehavior": {}
+		},
+		{
+			"name": "job-docker-org",
+			"item": [
+				{
+					"name": "job-post-jobdefid",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "cd084396-d2f8-439e-b5fe-8cf63823d9a3",
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"console.log(jsonData);",
+									"pm.test(\"Data values\", function () {",
+									"    pm.expect(jsonData.data._orgId).to.eql(pm.environment.get(\"org\"));",
+									"    pm.expect(jsonData.data.name).to.eql(\"Job 1\");",
+									"    pm.expect(jsonData.data.status).to.eql(10);",
+									"    pm.expect(jsonData.data.createdBy).to.eql(pm.environment.get(\"sgUser\"));",
+									"});",
+									"",
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"    pm.environment.set('_jobId', jsonData.data.id);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "auth",
+								"value": "{{Auth}}",
+								"type": "text"
+							},
+							{
+								"key": "_orgId",
+								"value": "{{org}}",
+								"type": "text"
+							},
+							{
+								"key": "_jobDefId",
+								"value": "{{_jobDefId}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "{{api-url}}/api/v0/job",
+							"host": [
+								"{{api-url}}"
+							],
+							"path": [
+								"api",
+								"v0",
+								"job"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "job-post-ruby",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "4398d8bf-7a45-4cf6-81df-cf2ea5075b2c",
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"console.log(jsonData);",
+									"pm.test(\"Data values\", function () {",
+									"    pm.expect(jsonData.data._orgId).to.eql(pm.environment.get(\"org\"));",
+									"    pm.expect(jsonData.data.name).to.eql(\"RunRubyScript\");",
+									"    pm.expect(jsonData.data.status).to.eql(10);",
+									"    pm.expect(jsonData.data.createdBy).to.eql(pm.environment.get(\"sgUser\"));",
+									"});",
+									"",
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"    pm.environment.set('_jobId', jsonData.data.id);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "auth",
+								"type": "text",
+								"value": "{{Auth}}"
+							},
+							{
+								"key": "_orgId",
+								"type": "text",
+								"value": "{{org}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"job\": {\n        \"name\": \"RunRubyScript\",\n        \"dateCreated\": \"2019-12-11T22:28:41.984Z\",\n        \"tasks\": [\n            {\n                \"_orgId\": \"5de9691f53162e8891f5aa99\",\n                \"name\": \"Task1\",\n                \"source\": 0,\n                \"requiredTags\": {\"ruby\": \"true\"},\n                \"runOnAllAgents\": false,\n                \"fromRoutes\": [],\n                \"steps\": [\n                    {\n                        \"name\": \"Step1\",\n                        \"script\": {\n                            \"scriptType\": \"RUBY\",\n                            \"code\": \"\\\"\\\\nprint 'start\\\\n'\\\\nsleep(5)\\\\nprint 'done\\\\n'\\\\nprint '@kpo{\\\\\\\"route\\\\\\\": \\\\\\\"ok\\\\\\\"}\\\\n'\\\\n\\\"\"\n                        },\n                        \"order\": 0,\n                        \"arguments\": \"\",\n                        \"variables\": \"\"\n                    }\n                ],\n                \"correlationId\": \"5df16d311213e233aeaa9941\"\n            }\n        ]\n    }\n}"
+						},
+						"url": {
+							"raw": "{{api-url}}/api/v0/job",
+							"host": [
+								"{{api-url}}"
+							],
+							"path": [
+								"api",
+								"v0",
+								"job"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "job-post-cycle-error",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "4398d8bf-7a45-4cf6-81df-cf2ea5075b2c",
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"console.log(jsonData);",
+									"pm.test(\"Data values\", function () {",
+									"    pm.expect(jsonData.data._orgId).to.eql(pm.environment.get(\"org\"));",
+									"    pm.expect(jsonData.data.name).to.eql(\"RunRubyScript\");",
+									"    pm.expect(jsonData.data.status).to.eql(10);",
+									"    pm.expect(jsonData.data.createdBy).to.eql(pm.environment.get(\"sgUser\"));",
+									"});",
+									"",
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"    pm.environment.set('_jobId', jsonData.data.id);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "auth",
+								"type": "text",
+								"value": "{{Auth}}"
+							},
+							{
+								"key": "_orgId",
+								"type": "text",
+								"value": "{{org}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"job\": {\n        \"name\": \"JobWithCycles\",\n        \"tasks\": [\n            {\n                \"_orgId\": \"5de9691f53162e8891f5aa99\",\n                \"name\": \"Task1\",\n                \"source\": 0,\n                \"requiredTags\": {},\n                \"runOnAllAgents\": false,\n                \"fromRoutes\": [[\"Task2\"]],\n                \"steps\": [\n                    {\n                        \"name\": \"Step1\",\n                        \"script\": {\n                            \"scriptType\": \"RUBY\",\n                            \"code\": \"\\\"\\\\nprint 'start\\\\n'\\\\nsleep(5)\\\\nprint 'done\\\\n'\\\\nprint '@kpo{\\\\\\\"route\\\\\\\": \\\\\\\"ok\\\\\\\"}\\\\n'\\\\n\\\"\"\n                        },\n                        \"order\": 0,\n                        \"arguments\": \"\",\n                        \"variables\": \"\"\n                    }\n                ],\n                \"correlationId\": \"5df16d311213e233aeaa9941\"\n            },\n            {\n                \"_orgId\": \"5de9691f53162e8891f5aa99\",\n                \"name\": \"Task2\",\n                \"source\": 0,\n                \"requiredTags\": {},\n                \"runOnAllAgents\": false,\n                \"fromRoutes\": [[\"Task1\"]],\n                \"steps\": [\n                    {\n                        \"name\": \"Step1\",\n                        \"script\": {\n                            \"type\": \"RUBY\",\n                            \"code\": \"\\\"\\\\nprint 'start\\\\n'\\\\nsleep(5)\\\\nprint 'done\\\\n'\\\\nprint '@kpo{\\\\\\\"route\\\\\\\": \\\\\\\"ok\\\\\\\"}\\\\n'\\\\n\\\"\"\n                        },\n                        \"order\": 0,\n                        \"arguments\": \"\",\n                        \"variables\": \"\"\n                    }\n                ],\n                \"correlationId\": \"5df16d311213e233aeaa9941\"\n            }\n        ]\n    }\n}"
+						},
+						"url": {
+							"raw": "{{api-url}}/api/v0/job",
+							"host": [
+								"{{api-url}}"
+							],
+							"path": [
+								"api",
+								"v0",
+								"job"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "job-post-lua",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "cd084396-d2f8-439e-b5fe-8cf63823d9a3",
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"console.log(jsonData);",
+									"pm.test(\"Data values\", function () {",
+									"    pm.expect(jsonData.data._orgId).to.eql(pm.environment.get(\"org\"));",
+									"    pm.expect(jsonData.data.name).to.eql(\"RunRubyScript\");",
+									"    pm.expect(jsonData.data.status).to.eql(10);",
+									"    pm.expect(jsonData.data.createdBy).to.eql(pm.environment.get(\"sgUser\"));",
+									"});",
+									"",
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"    pm.environment.set('_jobId', jsonData.data.id);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "auth",
+								"type": "text",
+								"value": "{{Auth}}"
+							},
+							{
+								"key": "_orgId",
+								"type": "text",
+								"value": "{{org}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"job\": {\n        \"name\": \"RunLuaScript\",\n        \"dateCreated\": \"2019-12-11T22:28:41.984Z\",\n        \"tasks\": [\n            {\n                \"_orgId\": \"5de9691f53162e8891f5aa99\",\n                \"name\": \"Task1\",\n                \"source\": 0,\n                \"requiredTags\": {\"lua\": \"true\"},\n                \"runOnAllAgents\": false,\n                \"fromRoutes\": [],\n                \"steps\": [\n                    {\n                        \"name\": \"Step1\",\n                        \"script\": {\n                            \"type\": \"LUA\",\n                            \"code\": \"\\\"\\\\nfunction sleep(n)\\\\n  os.execute(\\\\\\\"sleep \\\\\\\" .. tonumber(n))\\\\nend\\\\n\\\\nprint 'start'\\\\nsleep(5)\\\\nprint 'done'\\\\nprint '@kpo{\\\\\\\"route\\\\\\\": \\\\\\\"ok\\\\\\\"}'\\\\n\\\"\"\n                        },\n                        \"order\": 0,\n                        \"arguments\": \"\",\n                        \"variables\": \"\"\n                    }\n                ],\n                \"correlationId\": \"5df16d311213e233aeaa9941\"\n            }\n        ]\n    }\n}"
+						},
+						"url": {
+							"raw": "{{api-url}}/api/v0/job",
+							"host": [
+								"{{api-url}}"
+							],
+							"path": [
+								"api",
+								"v0",
+								"job"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "job-post-perl",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "cd084396-d2f8-439e-b5fe-8cf63823d9a3",
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"console.log(jsonData);",
+									"pm.test(\"Data values\", function () {",
+									"    pm.expect(jsonData.data._orgId).to.eql(pm.environment.get(\"org\"));",
+									"    pm.expect(jsonData.data.name).to.eql(\"RunRubyScript\");",
+									"    pm.expect(jsonData.data.status).to.eql(10);",
+									"    pm.expect(jsonData.data.createdBy).to.eql(pm.environment.get(\"sgUser\"));",
+									"});",
+									"",
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"    pm.environment.set('_jobId', jsonData.data.id);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "auth",
+								"type": "text",
+								"value": "{{Auth}}"
+							},
+							{
+								"key": "_orgId",
+								"type": "text",
+								"value": "{{org}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"job\": {\n        \"name\": \"RunPerlScript\",\n        \"dateCreated\": \"2019-12-11T22:28:41.984Z\",\n        \"tasks\": [\n            {\n                \"_orgId\": \"5de9691f53162e8891f5aa99\",\n                \"name\": \"Task1\",\n                \"source\": 0,\n                \"requiredTags\": {},\n                \"runOnAllAgents\": false,\n                \"fromRoutes\": [],\n                \"steps\": [\n                    {\n                        \"name\": \"Step1\",\n                        \"script\": {\n                            \"type\": \"SH\",\n                            \"code\": \"\\\"\\\\nuse feature qw(say);\\\\n\\\\nsay 'start';\\\\nsleep(5);\\\\nsay 'done';\\\\nsay '@kpo{\\\\\\\"route\\\\\\\": \\\\\\\"ok\\\\\\\"}';\\\\n\\\"\"\n                        },\n                        \"order\": 0,\n                        \"arguments\": \"\",\n                        \"variables\": \"\",\n                        \"command\": \"perl\"\n                    }\n                ],\n                \"correlationId\": \"5df16d311213e233aeaa9941\"\n            }\n        ]\n    }\n}"
+						},
+						"url": {
+							"raw": "{{api-url}}/api/v0/job",
+							"host": [
+								"{{api-url}}"
+							],
+							"path": [
+								"api",
+								"v0",
+								"job"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "job-bulk-get",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "0df39fc6-6b96-4597-8395-4e7ed3253b8e",
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "Auth",
+								"type": "text",
+								"value": "{{Auth}}"
+							},
+							{
+								"key": "_orgId",
+								"type": "text",
+								"value": "{{org}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "{{api-url}}/api/v0/job?filter=dateCompleted<1582934400000,name~=Job&limit=2",
+							"host": [
+								"{{api-url}}"
+							],
+							"path": [
+								"api",
+								"v0",
+								"job"
+							],
+							"query": [
+								{
+									"key": "filter",
+									"value": "dateCompleted<1582934400000,name~=Job"
+								},
+								{
+									"key": "limit",
+									"value": "2"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "job-single-get",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "795e2806-8aec-415c-9f19-e1c04ce55f14",
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"console.log(jsonData);",
+									"pm.test(\"Data values\", function () {",
+									"    pm.expect(jsonData.data._orgId).to.eql(pm.environment.get(\"org\"));",
+									"    pm.expect(jsonData.data.id).to.eql(pm.environment.get(\"_jobId\"));",
+									"    pm.expect(jsonData.data.name).to.eql(\"RunRubyScript\");",
+									"    pm.expect(jsonData.data.createdBy).to.eql(pm.environment.get(\"sgAdminUser\"));",
+									"});",
+									"",
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "auth",
+								"type": "text",
+								"value": "{{Auth}}"
+							},
+							{
+								"key": "_orgId",
+								"type": "text",
+								"value": "{{org}}"
+							}
+						],
+						"url": {
+							"raw": "{{api-url}}/api/v0/job/{{_jobId}}",
+							"host": [
+								"{{api-url}}"
+							],
+							"path": [
+								"api",
+								"v0",
+								"job",
+								"{{_jobId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "task-job-get",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "795e2806-8aec-415c-9f19-e1c04ce55f14",
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"console.log(jsonData);",
+									"",
+									"var task = jsonData.data[0];",
+									"pm.test(\"Data values\", function () {",
+									"    pm.expect(task._orgId).to.eql(pm.environment.get(\"org\"));",
+									"    pm.expect(task._jobId).to.eql(pm.environment.get(\"_jobId\"));",
+									"    pm.expect(task.name).to.eql(\"Task1\");",
+									"});",
+									"",
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"    pm.environment.set('_taskId', task.id);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "auth",
+								"type": "text",
+								"value": "{{Auth}}"
+							},
+							{
+								"key": "_orgId",
+								"type": "text",
+								"value": "{{org}}"
+							}
+						],
+						"url": {
+							"raw": "{{api-url}}/api/v0/job/{{_jobId}}/task",
+							"host": [
+								"{{api-url}}"
+							],
+							"path": [
+								"api",
+								"v0",
+								"job",
+								"{{_jobId}}",
+								"task"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "step-job-get",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "795e2806-8aec-415c-9f19-e1c04ce55f14",
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"console.log(jsonData);",
+									"",
+									"var step = jsonData.data[0];",
+									"pm.test(\"Data values\", function () {",
+									"    pm.expect(step._orgId).to.eql(pm.environment.get(\"org\"));",
+									"    pm.expect(step._taskId).to.eql(pm.environment.get(\"_taskId\"));",
+									"    pm.expect(step.name).to.eql(\"Step1\");",
+									"    pm.expect(step.script.type).to.eql(4);",
+									"});",
+									"",
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"    pm.environment.set('_stepId', step.id);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "auth",
+								"type": "text",
+								"value": "{{Auth}}"
+							},
+							{
+								"key": "_orgId",
+								"type": "text",
+								"value": "{{org}}"
+							}
+						],
+						"url": {
+							"raw": "{{api-url}}/api/v0/job/{{_jobId}}/task/{{_taskId}}/step",
+							"host": [
+								"{{api-url}}"
+							],
+							"path": [
+								"api",
+								"v0",
+								"job",
+								"{{_jobId}}",
+								"task",
+								"{{_taskId}}",
+								"step"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "taskOutcome-job-get",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "795e2806-8aec-415c-9f19-e1c04ce55f14",
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"console.log(jsonData);",
+									"",
+									"var task = jsonData.data[0];",
+									"pm.test(\"Data values\", function () {",
+									"    pm.expect(task._orgId).to.eql(pm.environment.get(\"org\"));",
+									"    pm.expect(task._jobId).to.eql(pm.environment.get(\"_jobId\"));",
+									"    pm.expect(task._taskId).to.eql(pm.environment.get(\"_taskId\"));",
+									"});",
+									"",
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"    pm.environment.set('_taskOutcomeId', task.id);",
+									"    pm.environment.set('_taskOutcomeAgentId', task._agentId);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "auth",
+								"type": "text",
+								"value": "{{Auth}}"
+							},
+							{
+								"key": "_orgId",
+								"type": "text",
+								"value": "{{org}}"
+							}
+						],
+						"url": {
+							"raw": "{{api-url}}/api/v0/job/{{_jobId}}/task/{{_taskId}}/taskOutcome",
+							"host": [
+								"{{api-url}}"
+							],
+							"path": [
+								"api",
+								"v0",
+								"job",
+								"{{_jobId}}",
+								"task",
+								"{{_taskId}}",
+								"taskOutcome"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "stepOutcome-job-get",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "795e2806-8aec-415c-9f19-e1c04ce55f14",
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"console.log(jsonData);",
+									"",
+									"var step = jsonData.data[0];",
+									"pm.test(\"Data values\", function () {",
+									"    pm.expect(step._taskOutcomeId).to.eql(pm.environment.get(\"_taskOutcomeId\"));",
+									"    pm.expect(step.name).to.eql(\"Step1\");",
+									"});",
+									"",
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"    pm.environment.set('_stepOutcomeId', step.id);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "auth",
+								"type": "text",
+								"value": "{{Auth}}"
+							},
+							{
+								"key": "_orgId",
+								"type": "text",
+								"value": "{{org}}"
+							}
+						],
+						"url": {
+							"raw": "{{api-url}}/api/v0/job/{{_jobId}}/task/{{_taskId}}/taskOutcome/{{_taskOutcomeId}}/stepOutcome",
+							"host": [
+								"{{api-url}}"
+							],
+							"path": [
+								"api",
+								"v0",
+								"job",
+								"{{_jobId}}",
+								"task",
+								"{{_taskId}}",
+								"taskOutcome",
+								"{{_taskOutcomeId}}",
+								"stepOutcome"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"protocolProfileBehavior": {}
+		},
+		{
+			"name": "cancel-test",
+			"item": [
+				{
+					"name": "tc-job-post",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "cd084396-d2f8-439e-b5fe-8cf63823d9a3",
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"console.log(jsonData);",
+									"pm.test(\"Data values\", function () {",
+									"    pm.expect(jsonData.data._orgId).to.eql(pm.environment.get(\"org\"));",
+									"    pm.expect(jsonData.data.name).to.eql(\"RunLongRunningScript\");",
+									"    pm.expect(jsonData.data.status).to.eql(10);",
+									"    pm.expect(jsonData.data.createdBy).to.eql(pm.environment.get(\"sgAdminUser\"));",
+									"});",
+									"",
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"    pm.environment.set('_jobId', jsonData.data.id);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "auth",
+								"type": "text",
+								"value": "{{Auth}}"
+							},
+							{
+								"key": "_orgId",
+								"type": "text",
+								"value": "{{org}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"job\": {\n        \"name\": \"RunLongRunningScript\",\n        \"tasks\": [\n            {\n                \"_orgId\": \"{{org}}\",\n                \"name\": \"Task1\",\n                \"source\": 0,\n                \"requiredTags\": {},\n                \"runOnAllAgents\": false,\n                \"fromRoutes\": [],\n                \"steps\": [\n                    {\n                        \"name\": \"Step1\",\n                        \"script\": {\n                            \"scriptType\": \"PYTHON\",\n                            \"code\": \"\\\"\\\\nimport sys\\\\nimport time\\\\nprint 'start'\\\\ncnt = 0\\\\nwhile(True):\\\\n  time.sleep(5)\\\\n  print 'loop {}'.format(cnt)\\\\n  sys.stdout.flush()\\\\n  cnt += 1\\\\nprint 'done'\\\\nprint '@kpo{\\\\\\\"route\\\\\\\": \\\\\\\"ok\\\\\\\"}'\\\"\"\n                        },\n                        \"order\": 0,\n                        \"arguments\": \"\",\n                        \"variables\": \"\"\n                    }\n                ],\n                \"correlationId\": \"1\"\n            }\n        ]\n    }\n}"
+						},
+						"url": {
+							"raw": "{{api-url}}/api/v0/job",
+							"host": [
+								"{{api-url}}"
+							],
+							"path": [
+								"api",
+								"v0",
+								"job"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "tc-job-cancel",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "cd084396-d2f8-439e-b5fe-8cf63823d9a3",
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"console.log(jsonData);",
+									"pm.test(\"Data values\", function () {",
+									"    pm.expect(jsonData.data._orgId).to.eql(pm.environment.get(\"org\"));",
+									"    pm.expect(jsonData.data.name).to.eql(\"RunRubyScript\");",
+									"    pm.expect(jsonData.data.status).to.eql(10);",
+									"    pm.expect(jsonData.data.createdBy).to.eql(pm.environment.get(\"sgUser\"));",
+									"});",
+									"",
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"    pm.environment.set('_jobId', jsonData.data.id);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "auth",
+								"type": "text",
+								"value": "{{Auth}}"
+							},
+							{
+								"key": "_orgId",
+								"type": "text",
+								"value": "{{org}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "{{api-url}}/api/v0/jobaction/cancel/{{_jobId}}",
+							"host": [
+								"{{api-url}}"
+							],
+							"path": [
+								"api",
+								"v0",
+								"jobaction",
+								"cancel",
+								"{{_jobId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "tc-task-cancel",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "cd084396-d2f8-439e-b5fe-8cf63823d9a3",
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"console.log(jsonData);",
+									"pm.test(\"Data values\", function () {",
+									"    pm.expect(jsonData.data._orgId).to.eql(pm.environment.get(\"org\"));",
+									"    pm.expect(jsonData.data.name).to.eql(\"RunRubyScript\");",
+									"    pm.expect(jsonData.data.status).to.eql(10);",
+									"    pm.expect(jsonData.data.createdBy).to.eql(pm.environment.get(\"sgUser\"));",
+									"});",
+									"",
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"    pm.environment.set('_jobId', jsonData.data.id);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "auth",
+								"type": "text",
+								"value": "{{Auth}}"
+							},
+							{
+								"key": "_orgId",
+								"type": "text",
+								"value": "{{org}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "{{api-url}}/api/v0/taskaction/interrupt/5e791901eefc8a0a73206929",
+							"host": [
+								"{{api-url}}"
+							],
+							"path": [
+								"api",
+								"v0",
+								"taskaction",
+								"interrupt",
+								"5e791901eefc8a0a73206929"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"protocolProfileBehavior": {}
+		},
+		{
+			"name": "job-run-as-service",
+			"item": [
+				{
+					"name": "job-as-service-post",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "cd084396-d2f8-439e-b5fe-8cf63823d9a3",
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"console.log(jsonData);",
+									"pm.test(\"Data values\", function () {",
+									"    pm.expect(jsonData.data._orgId).to.eql(pm.environment.get(\"org\"));",
+									"    pm.expect(jsonData.data.name).to.eql(\"RunLongRunningScript\");",
+									"    pm.expect(jsonData.data.status).to.eql(10);",
+									"    pm.expect(jsonData.data.createdBy).to.eql(pm.environment.get(\"sgAdminUser\"));",
+									"});",
+									"",
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"    pm.environment.set('_jobId', jsonData.data.id);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "auth",
+								"type": "text",
+								"value": "{{Auth}}"
+							},
+							{
+								"key": "_orgId",
+								"type": "text",
+								"value": "{{org}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"job\": {\n        \"name\": \"RunLongRunningScript\",\n        \"runAsService\": true,\n        \"tasks\": [\n            {\n                \"_orgId\": \"{{org}}\",\n                \"name\": \"Task1\",\n                \"source\": 0,\n                \"requiredTags\": {},\n                \"runOnAllAgents\": false,\n                \"fromRoutes\": [],\n                \"steps\": [\n                    {\n                        \"name\": \"Step1\",\n                        \"script\": {\n                            \"scriptType\": \"PYTHON\",\n                            \"code\": \"\\\"\\\\nimport sys\\\\nimport time\\\\nprint 'start'\\\\ncnt = 0\\\\nwhile(True):\\\\n  time.sleep(5)\\\\n  print 'loop {}'.format(cnt)\\\\n  sys.stdout.flush()\\\\n  cnt += 1\\\\nprint 'done'\\\\nprint '@kpo{\\\\\\\"route\\\\\\\": \\\\\\\"ok\\\\\\\"}'\\\"\"\n                        },\n                        \"order\": 0,\n                        \"arguments\": \"\",\n                        \"variables\": \"\"\n                    }\n                ],\n                \"correlationId\": \"1\"\n            }\n        ]\n    }\n}"
+						},
+						"url": {
+							"raw": "{{api-url}}/api/v0/job",
+							"host": [
+								"{{api-url}}"
+							],
+							"path": [
+								"api",
+								"v0",
+								"job"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "invalid-job-as-service-post",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "cd084396-d2f8-439e-b5fe-8cf63823d9a3",
+								"exec": [
+									"pm.test(\"Status code is 400\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "auth",
+								"type": "text",
+								"value": "{{Auth}}"
+							},
+							{
+								"key": "_orgId",
+								"type": "text",
+								"value": "{{org}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"job\": {\n        \"name\": \"RunLongRunningScript\",\n        \"runAsService\": true,\n        \"tasks\": [\n            {\n                \"_orgId\": \"{{org}}\",\n                \"name\": \"Task1\",\n                \"source\": 0,\n                \"requiredTags\": {},\n                \"runOnAllAgents\": false,\n                \"fromRoutes\": [],\n                \"steps\": [\n                    {\n                        \"name\": \"Step1\",\n                        \"script\": {\n                            \"scriptType\": \"PYTHON\",\n                            \"code\": \"\\\"\\\\nimport sys\\\\nimport time\\\\nprint 'start'\\\\ncnt = 0\\\\nwhile(True):\\\\n  time.sleep(5)\\\\n  print 'loop {}'.format(cnt)\\\\n  sys.stdout.flush()\\\\n  cnt += 1\\\\nprint 'done'\\\\nprint '@kpo{\\\\\\\"route\\\\\\\": \\\\\\\"ok\\\\\\\"}'\\\"\"\n                        },\n                        \"order\": 0,\n                        \"arguments\": \"\",\n                        \"variables\": \"\"\n                    }\n                ],\n                \"correlationId\": \"1\"\n            },\n            {\n                \"_orgId\": \"{{org}}\",\n                \"name\": \"Task2\",\n                \"source\": 0,\n                \"requiredTags\": {},\n                \"runOnAllAgents\": false,\n                \"fromRoutes\": [],\n                \"steps\": [\n                    {\n                        \"name\": \"Step1\",\n                        \"script\": {\n                            \"scriptType\": \"PYTHON\",\n                            \"code\": \"\\\"\\\\nimport sys\\\\nimport time\\\\nprint 'start'\\\\ncnt = 0\\\\nwhile(True):\\\\n  time.sleep(5)\\\\n  print 'loop {}'.format(cnt)\\\\n  sys.stdout.flush()\\\\n  cnt += 1\\\\nprint 'done'\\\\nprint '@kpo{\\\\\\\"route\\\\\\\": \\\\\\\"ok\\\\\\\"}'\\\"\"\n                        },\n                        \"order\": 0,\n                        \"arguments\": \"\",\n                        \"variables\": \"\"\n                    }\n                ],\n                \"correlationId\": \"1\"\n            }\n        ]\n    }\n}"
+						},
+						"url": {
+							"raw": "{{api-url}}/api/v0/job",
+							"host": [
+								"{{api-url}}"
+							],
+							"path": [
+								"api",
+								"v0",
+								"job"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"protocolProfileBehavior": {}
+		},
+		{
+			"name": "job-scheduling",
+			"item": [
+				{
+					"name": "js-jobdef-coalesce-post",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "8d127994-8f35-42f9-a869-4bc0bbd6d8f5",
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"console.log(jsonData);",
+									"pm.test(\"Data values\", function () {",
+									"    pm.expect(jsonData.data._orgId).to.eql(pm.environment.get(\"org\"));",
+									"    pm.expect(jsonData.data.name).to.eql(\"Job 1\");",
+									"    pm.expect(jsonData.data.createdBy).to.eql(pm.environment.get(\"sgUser\"));",
+									"});",
+									"",
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"    pm.environment.set('_jobDefId', jsonData.data.id);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "auth",
+								"value": "{{Auth}}",
+								"type": "text"
+							},
+							{
+								"key": "_orgId",
+								"value": "{{org}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"_orgId\" : \"{{org}}\",\n\t\"name\" : \"Job 1\",\n\t\"createdBy\" : \"{{sgUser}}\",\n\t\"coalesce\": true,\n\t\"lastRunId\" : 0,\n\t\"dateCreated\" : \"2019-11-27T21:41:51.980Z\"\n}"
+						},
+						"url": {
+							"raw": "{{api-url}}/api/v0/jobdef",
+							"host": [
+								"{{api-url}}"
+							],
+							"path": [
+								"api",
+								"v0",
+								"jobdef"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "js-jobdef-max-inst-post",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "8d127994-8f35-42f9-a869-4bc0bbd6d8f5",
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"console.log(jsonData);",
+									"pm.test(\"Data values\", function () {",
+									"    pm.expect(jsonData.data._orgId).to.eql(pm.environment.get(\"org\"));",
+									"    pm.expect(jsonData.data.name).to.eql(\"Job 1\");",
+									"    pm.expect(jsonData.data.createdBy).to.eql(pm.environment.get(\"sgUser\"));",
+									"});",
+									"",
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"    pm.environment.set('_jobDefId', jsonData.data.id);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "auth",
+								"type": "text",
+								"value": "{{Auth}}"
+							},
+							{
+								"key": "_orgId",
+								"type": "text",
+								"value": "{{org}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"_orgId\" : \"{{org}}\",\n\t\"name\" : \"Job 1\",\n\t\"createdBy\" : \"{{sgUser}}\",\n\t\"maxInstances\": 2,\n\t\"misfireGraceTime\": 5,\n\t\"lastRunId\" : 0,\n\t\"dateCreated\" : \"2019-11-27T21:41:51.980Z\"\n}"
+						},
+						"url": {
+							"raw": "{{api-url}}/api/v0/jobdef",
+							"host": [
+								"{{api-url}}"
+							],
+							"path": [
+								"api",
+								"v0",
+								"jobdef"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "js-taskdef-post",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "ea0199f5-d3ad-45d7-aa02-21357b17f8ef",
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"pm.test(\"Data values\", function () {",
+									"    pm.expect(jsonData.data._orgId).to.eql(pm.environment.get(\"org\"));",
+									"    pm.expect(jsonData.data._jobDefId).to.eql(pm.environment.get(\"_jobDefId\"));",
+									"    pm.expect(jsonData.data.name).to.eql(\"Task1\");",
+									"});",
+									"",
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"    pm.environment.set('_taskDefId', jsonData.data.id);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "auth",
+								"type": "text",
+								"value": "{{Auth}}"
+							},
+							{
+								"key": "_orgId",
+								"type": "text",
+								"value": "{{org}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{ \n\t\"name\": \"Task1\",\n\t\"_orgId\": \"{{org}}\",\n\t\"_jobDefId\": \"{{_jobDefId}}\",\n\t\"requiredTags\": {},\n\t\"runOnAllAgents\": \"false\",\n\t\"fromRoutes\": [],\n\t\"target\": 0\n}"
+						},
+						"url": {
+							"raw": "{{api-url}}/api/v0/jobdef/{{_jobDefId}}/taskdef",
+							"host": [
+								"{{api-url}}"
+							],
+							"path": [
+								"api",
+								"v0",
+								"jobdef",
+								"{{_jobDefId}}",
+								"taskdef"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "js-script-post",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "0e4cb819-86b5-49c6-b358-f377670ec567",
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"pm.test(\"Data values\", function () {",
+									"    pm.expect(jsonData.data._orgId).to.eql(pm.environment.get(\"org\"));",
+									"    pm.expect(jsonData.data._originalAuthorUserId).to.eql(pm.environment.get(\"_userId\"));",
+									"    pm.expect(jsonData.data._lastEditedUserId).to.eql(pm.environment.get(\"_userId\"));",
+									"    pm.expect(jsonData.data.name).to.eql(\"Python Test\");",
+									"});",
+									"",
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"    pm.environment.set('_scriptId', jsonData.data.id);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "auth",
+								"value": "{{Auth}}",
+								"type": "text"
+							},
+							{
+								"key": "_orgId",
+								"value": "{{org}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{ \n\t\"_orgId\": \"{{org}}\", \n\t\"name\": \"Python Test\", \n\t\"scriptType\": \"0\", \n\t\"code\": \"\\\"import time\\\\nimport sys\\\\nprint 'start'\\\\nsys.stdout.flush()\\\\nfor i in range(5):\\\\n    time.sleep(5)\\\\nprint 'done'\\\\nprint '@kpo{\\\\\\\"route\\\\\\\": \\\\\\\"ok\\\\\\\"}'\\\"\", \n\t\"_originalAuthorUserId\": \"{{_userId}}\", \n\t\"_lastEditedUserId\": \"{{_userId}}\", \n\t\"lastEditedDate\": \"2019-11-27T21:41:51.980Z\", \n\t\"shadowCopyCode\": \"\\nimport time\\nprint 'start'\\ntime.sleep(5)\\nprint 'done'\\nprint '@kpo{\\\"route\\\": \\\"ok\\\"}'\\n\" \n}"
+						},
+						"url": {
+							"raw": "{{api-url}}/api/v0/script",
+							"host": [
+								"{{api-url}}"
+							],
+							"path": [
+								"api",
+								"v0",
+								"script"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "js-stepdef-post",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "ea0199f5-d3ad-45d7-aa02-21357b17f8ef",
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"pm.test(\"Data values\", function () {",
+									"    pm.expect(jsonData.data._orgId).to.eql(pm.environment.get(\"org\"));",
+									"    pm.expect(jsonData.data._taskDefId).to.eql(pm.environment.get(\"_taskDefId\"));",
+									"    pm.expect(jsonData.data.name).to.eql(\"step1\");",
+									"});",
+									"",
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"    pm.environment.set('_stepDefId', jsonData.data.id);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "auth",
+								"type": "text",
+								"value": "{{Auth}}"
+							},
+							{
+								"key": "_orgId",
+								"type": "text",
+								"value": "{{org}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{ \n\t\"_orgId\": \"{{org}}\", \n\t\"_taskDefId\": \"{{_taskDefId}}\", \n\t\"name\": \"step1\", \n\t\"script\": { \"id\": \"{{_scriptId}}\" }, \n\t\"order\": \"0\", \n\t\"arguments\": \"\", \n\t\"variables\": \"\" \n}"
+						},
+						"url": {
+							"raw": "{{api-url}}/api/v0/jobdef/{{_jobDefId}}/taskdef/{{_taskDefId}}/stepdef",
+							"host": [
+								"{{api-url}}"
+							],
+							"path": [
+								"api",
+								"v0",
+								"jobdef",
+								"{{_jobDefId}}",
+								"taskdef",
+								"{{_taskDefId}}",
+								"stepdef"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "js-schedule-interval-post",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "cd084396-d2f8-439e-b5fe-8cf63823d9a3",
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"console.log(jsonData);",
+									"pm.test(\"Data values\", function () {",
+									"    pm.expect(jsonData.data._orgId).to.eql(pm.environment.get(\"org\"));",
+									"    pm.expect(jsonData.data.name).to.eql(\"Schedule_1\");",
+									"});",
+									"",
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"    pm.environment.set(\"_scheduleId\", jsonData.data.id);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "auth",
+								"type": "text",
+								"value": "{{Auth}}"
+							},
+							{
+								"key": "_orgId",
+								"type": "text",
+								"value": "{{org}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"_orgId\": \"{{org}}\",\n    \"name\": \"Schedule_1\",\n    \"isActive\": true,\n    \"TriggerType\": \"interval\",\n    \"interval\": {\n        \"Seconds\": 5\n    },\n    \"FunctionKwargs\": {\n        \"_orgId\": \"{{org}}\",\n        \"targetId\": \"{{_jobDefId}}\"\n    }\n}"
+						},
+						"url": {
+							"raw": "{{api-url}}/api/v0/schedule",
+							"host": [
+								"{{api-url}}"
+							],
+							"path": [
+								"api",
+								"v0",
+								"schedule"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "js-schedule-interval-pause",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "cd084396-d2f8-439e-b5fe-8cf63823d9a3",
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"console.log(jsonData);",
+									"pm.test(\"Data values\", function () {",
+									"    pm.expect(jsonData.data._orgId).to.eql(pm.environment.get(\"org\"));",
+									"    pm.expect(jsonData.data.name).to.eql(\"Schedule_1\");",
+									"});",
+									"",
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"    pm.environment.set(\"_scheduleId\", jsonData.data.id);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "auth",
+								"type": "text",
+								"value": "{{Auth}}"
+							},
+							{
+								"key": "_orgId",
+								"type": "text",
+								"value": "{{org}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"isActive\": false\n}"
+						},
+						"url": {
+							"raw": "{{api-url}}/api/v0/schedule/{{_scheduleId}}",
+							"host": [
+								"{{api-url}}"
+							],
+							"path": [
+								"api",
+								"v0",
+								"schedule",
+								"{{_scheduleId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "js-schedule-interval-delete",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "cd084396-d2f8-439e-b5fe-8cf63823d9a3",
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"console.log(jsonData);",
+									"pm.test(\"Data values\", function () {",
+									"    pm.expect(jsonData.data._orgId).to.eql(pm.environment.get(\"org\"));",
+									"    pm.expect(jsonData.data.name).to.eql(\"Schedule_1\");",
+									"});",
+									"",
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"    pm.environment.set(\"_scheduleId\", jsonData.data.id);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "auth",
+								"type": "text",
+								"value": "{{Auth}}"
+							},
+							{
+								"key": "_orgId",
+								"type": "text",
+								"value": "{{org}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "{{api-url}}/api/v0/schedule/{{_scheduleId}}",
+							"host": [
+								"{{api-url}}"
+							],
+							"path": [
+								"api",
+								"v0",
+								"schedule",
+								"{{_scheduleId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "js-jobdef-pause",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "8d127994-8f35-42f9-a869-4bc0bbd6d8f5",
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"console.log(jsonData);",
+									"pm.test(\"Data values\", function () {",
+									"    pm.expect(jsonData.data._orgId).to.eql(pm.environment.get(\"org\"));",
+									"    pm.expect(jsonData.data.name).to.eql(\"Job 1\");",
+									"    pm.expect(jsonData.data.createdBy).to.eql(pm.environment.get(\"sgUser\"));",
+									"});",
+									"",
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"    pm.environment.set('_jobDefId', jsonData.data.id);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "auth",
+								"type": "text",
+								"value": "{{Auth}}"
+							},
+							{
+								"key": "_orgId",
+								"type": "text",
+								"value": "{{org}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"status\" : 15\n}"
+						},
+						"url": {
+							"raw": "{{api-url}}/api/v0/jobdef/{{_jobDefId}}",
+							"host": [
+								"{{api-url}}"
+							],
+							"path": [
+								"api",
+								"v0",
+								"jobdef",
+								"{{_jobDefId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "js-jobdef-resume",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "8d127994-8f35-42f9-a869-4bc0bbd6d8f5",
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"console.log(jsonData);",
+									"pm.test(\"Data values\", function () {",
+									"    pm.expect(jsonData.data._orgId).to.eql(pm.environment.get(\"org\"));",
+									"    pm.expect(jsonData.data.name).to.eql(\"Job 1\");",
+									"    pm.expect(jsonData.data.createdBy).to.eql(pm.environment.get(\"sgUser\"));",
+									"});",
+									"",
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"    pm.environment.set('_jobDefId', jsonData.data.id);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "auth",
+								"type": "text",
+								"value": "{{Auth}}"
+							},
+							{
+								"key": "_orgId",
+								"type": "text",
+								"value": "{{org}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"status\" : 10\n}"
+						},
+						"url": {
+							"raw": "{{api-url}}/api/v0/jobdef/{{_jobDefId}}",
+							"host": [
+								"{{api-url}}"
+							],
+							"path": [
+								"api",
+								"v0",
+								"jobdef",
+								"{{_jobDefId}}"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"protocolProfileBehavior": {}
+		},
+		{
+			"name": "job-pause-on-fail",
+			"item": [
+				{
+					"name": "pof-jobdef",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "8d127994-8f35-42f9-a869-4bc0bbd6d8f5",
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"console.log(jsonData);",
+									"pm.test(\"Data values\", function () {",
+									"    pm.expect(jsonData.data._orgId).to.eql(pm.environment.get(\"org\"));",
+									"    pm.expect(jsonData.data.name).to.eql(\"Failed Job\");",
+									"    pm.expect(jsonData.data.createdBy).to.eql(pm.environment.get(\"sgUser\"));",
+									"});",
+									"",
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"    pm.environment.set('_jobDefId', jsonData.data.id);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "auth",
+								"type": "text",
+								"value": "{{Auth}}"
+							},
+							{
+								"key": "_orgId",
+								"type": "text",
+								"value": "{{org}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"_orgId\" : \"{{org}}\",\n\t\"name\" : \"Failed Job\",\n\t\"createdBy\" : \"{{sgUser}}\",\n\t\"lastRunId\" : 0,\n\t\"dateCreated\" : \"2019-11-27T21:41:51.980Z\",\n\t\"pauseOnFailedJob\": true\n}"
+						},
+						"url": {
+							"raw": "{{api-url}}/api/v0/jobdef",
+							"host": [
+								"{{api-url}}"
+							],
+							"path": [
+								"api",
+								"v0",
+								"jobdef"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "pof-taskdef-post",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "ea0199f5-d3ad-45d7-aa02-21357b17f8ef",
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"pm.test(\"Data values\", function () {",
+									"    pm.expect(jsonData.data._orgId).to.eql(pm.environment.get(\"org\"));",
+									"    pm.expect(jsonData.data._jobDefId).to.eql(pm.environment.get(\"_jobDefId\"));",
+									"    pm.expect(jsonData.data.name).to.eql(\"Task1\");",
+									"});",
+									"",
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"    pm.environment.set('_taskDefId', jsonData.data.id);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "auth",
+								"type": "text",
+								"value": "{{Auth}}"
+							},
+							{
+								"key": "_orgId",
+								"type": "text",
+								"value": "{{org}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{ \n\t\"name\": \"Task1\",\n\t\"_orgId\": \"{{org}}\",\n\t\"_jobDefId\": \"{{_jobDefId}}\",\n\t\"requiredTags\": {},\n\t\"runOnAllAgents\": \"false\",\n\t\"fromRoutes\": [],\n\t\"target\": 0\n}"
+						},
+						"url": {
+							"raw": "{{api-url}}/api/v0/jobdef/{{_jobDefId}}/taskdef",
+							"host": [
+								"{{api-url}}"
+							],
+							"path": [
+								"api",
+								"v0",
+								"jobdef",
+								"{{_jobDefId}}",
+								"taskdef"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "pof-script-post",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "0e4cb819-86b5-49c6-b358-f377670ec567",
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"pm.test(\"Data values\", function () {",
+									"    pm.expect(jsonData.data._orgId).to.eql(pm.environment.get(\"org\"));",
+									"    pm.expect(jsonData.data._originalAuthorUserId).to.eql(pm.environment.get(\"_userId\"));",
+									"    pm.expect(jsonData.data._lastEditedUserId).to.eql(pm.environment.get(\"_userId\"));",
+									"    pm.expect(jsonData.data.name).to.eql(\"Python Test\");",
+									"});",
+									"",
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"    pm.environment.set('_scriptId', jsonData.data.id);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "auth",
+								"value": "{{Auth}}",
+								"type": "text"
+							},
+							{
+								"key": "_orgId",
+								"value": "{{org}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{ \n\t\"_orgId\": \"{{org}}\", \n\t\"name\": \"Python Test\", \n\t\"scriptType\": \"0\", \n\t\"code\": \"\\\"\\\\nimport time\\\\nimport sys\\\\nprint 'start'\\\\ntime.sleep(5)\\\\nprint 'done'\\\\nprint '@kpo{\\\\\\\"route\\\\\\\": \\\\\\\"ok\\\\\\\"}'\\\\nsys.exit(1)\\\\n\\\"\", \n\t\"_originalAuthorUserId\": \"{{_userId}}\", \n\t\"_lastEditedUserId\": \"{{_userId}}\", \n\t\"lastEditedDate\": \"2019-11-27T21:41:51.980Z\", \n\t\"shadowCopyCode\": \"\\nimport time\\nprint 'start'\\ntime.sleep(5)\\nprint 'done'\\nprint '@kpo{\\\"route\\\": \\\"ok\\\"}'\\n\" \n}"
+						},
+						"url": {
+							"raw": "{{api-url}}/api/v0/script",
+							"host": [
+								"{{api-url}}"
+							],
+							"path": [
+								"api",
+								"v0",
+								"script"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "pof-stepdef-post",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "ea0199f5-d3ad-45d7-aa02-21357b17f8ef",
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"pm.test(\"Data values\", function () {",
+									"    pm.expect(jsonData.data._orgId).to.eql(pm.environment.get(\"org\"));",
+									"    pm.expect(jsonData.data._taskDefId).to.eql(pm.environment.get(\"_taskDefId\"));",
+									"    pm.expect(jsonData.data.name).to.eql(\"step1\");",
+									"});",
+									"",
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"    pm.environment.set('_stepDefId', jsonData.data.id);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "auth",
+								"type": "text",
+								"value": "{{Auth}}"
+							},
+							{
+								"key": "_orgId",
+								"type": "text",
+								"value": "{{org}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{ \n\t\"_orgId\": \"{{org}}\", \n\t\"_taskDefId\": \"{{_taskDefId}}\", \n\t\"name\": \"step1\", \n\t\"script\": { \"id\": \"{{_scriptId}}\" }, \n\t\"order\": \"0\", \n\t\"arguments\": \"\", \n\t\"variables\": \"\" \n}"
+						},
+						"url": {
+							"raw": "{{api-url}}/api/v0/jobdef/{{_jobDefId}}/taskdef/{{_taskDefId}}/stepdef",
+							"host": [
+								"{{api-url}}"
+							],
+							"path": [
+								"api",
+								"v0",
+								"jobdef",
+								"{{_jobDefId}}",
+								"taskdef",
+								"{{_taskDefId}}",
+								"stepdef"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "pof-job-post",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "cd084396-d2f8-439e-b5fe-8cf63823d9a3",
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"console.log(jsonData);",
+									"pm.test(\"Data values\", function () {",
+									"    pm.expect(jsonData.data._orgId).to.eql(pm.environment.get(\"org\"));",
+									"    pm.expect(jsonData.data.name).to.eql(\"Failed Job\");",
+									"    pm.expect(jsonData.data.status).to.eql(10);",
+									"    pm.expect(jsonData.data.createdBy).to.eql(pm.environment.get(\"sgUser\"));",
+									"});",
+									"",
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"    pm.environment.set('_jobId', jsonData.data.id);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "auth",
+								"value": "{{Auth}}",
+								"type": "text"
+							},
+							{
+								"key": "_orgId",
+								"value": "{{org}}",
+								"type": "text"
+							},
+							{
+								"key": "_jobDefId",
+								"value": "{{_jobDefId}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "{{api-url}}/api/v0/job",
+							"host": [
+								"{{api-url}}"
+							],
+							"path": [
+								"api",
+								"v0",
+								"job"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "pof-job-cancel",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "cd084396-d2f8-439e-b5fe-8cf63823d9a3",
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"console.log(jsonData);",
+									"pm.test(\"Data values\", function () {",
+									"    pm.expect(jsonData.data._orgId).to.eql(pm.environment.get(\"org\"));",
+									"    pm.expect(jsonData.data.name).to.eql(\"Failed Job\");",
+									"    pm.expect(jsonData.data.status).to.eql(10);",
+									"    pm.expect(jsonData.data.createdBy).to.eql(pm.environment.get(\"sgUser\"));",
+									"});",
+									"",
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"    pm.environment.set('_jobId', jsonData.data.id);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "auth",
+								"type": "text",
+								"value": "{{Auth}}"
+							},
+							{
+								"key": "_orgId",
+								"type": "text",
+								"value": "{{org}}"
+							},
+							{
+								"key": "_jobDefId",
+								"type": "text",
+								"value": "{{_jobDefId}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"status\": 21\n}"
+						},
+						"url": {
+							"raw": "{{api-url}}/api/v0/job/{{_jobId}}",
+							"host": [
+								"{{api-url}}"
+							],
+							"path": [
+								"api",
+								"v0",
+								"job",
+								"{{_jobId}}"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"protocolProfileBehavior": {}
+		},
+		{
+			"name": "org-variables",
+			"item": [
+				{
+					"name": "org-var-post",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "8d127994-8f35-42f9-a869-4bc0bbd6d8f5",
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"console.log(jsonData);",
+									"pm.test(\"Data values\", function () {",
+									"    pm.expect(jsonData.data._orgId).to.eql(pm.environment.get(\"org\"));",
+									"    pm.expect(jsonData.data.name).to.eql(\"keyName\");",
+									"    pm.expect(jsonData.data.value).to.eql(\"keyValue\");",
+									"});",
+									"",
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"    pm.environment.set('_orgVarId', jsonData.data.id);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "auth",
+								"type": "text",
+								"value": "{{Auth}}"
+							},
+							{
+								"key": "_orgId",
+								"type": "text",
+								"value": "{{org}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"name\" : \"keyName\",\n\t\"value\" : \"keyValue\"\n}"
+						},
+						"url": {
+							"raw": "{{api-url}}/api/v0/orgvar",
+							"host": [
+								"{{api-url}}"
+							],
+							"path": [
+								"api",
+								"v0",
+								"orgvar"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "org-var-modify",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "8d127994-8f35-42f9-a869-4bc0bbd6d8f5",
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"console.log(jsonData);",
+									"pm.test(\"Data values\", function () {",
+									"    pm.expect(jsonData.data._orgId).to.eql(pm.environment.get(\"org\"));",
+									"    pm.expect(jsonData.data.value).to.eql(\"keyValueOne\");",
+									"});",
+									"",
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "auth",
+								"type": "text",
+								"value": "{{Auth}}"
+							},
+							{
+								"key": "_orgId",
+								"type": "text",
+								"value": "{{org}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"value\" : \"keyValueOne\"\n}"
+						},
+						"url": {
+							"raw": "{{api-url}}/api/v0/orgvar/{{_orgVarId}}",
+							"host": [
+								"{{api-url}}"
+							],
+							"path": [
+								"api",
+								"v0",
+								"orgvar",
+								"{{_orgVarId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "org-var-bulk-get",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "0df39fc6-6b96-4597-8395-4e7ed3253b8e",
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "Auth",
+								"type": "text",
+								"value": "{{Auth}}"
+							},
+							{
+								"key": "_orgId",
+								"type": "text",
+								"value": "{{org}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "{{api-url}}/api/v0/orgvar",
+							"host": [
+								"{{api-url}}"
+							],
+							"path": [
+								"api",
+								"v0",
+								"orgvar"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "org-var-delete",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "cd084396-d2f8-439e-b5fe-8cf63823d9a3",
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"console.log(jsonData);",
+									"pm.test(\"Data values\", function () {",
+									"    pm.expect(jsonData.data.deletedCount).to.eql(1);",
+									"});",
+									"",
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "auth",
+								"type": "text",
+								"value": "{{Auth}}"
+							},
+							{
+								"key": "_orgId",
+								"type": "text",
+								"value": "{{org}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "{{api-url}}/api/v0/orgvar/{{_orgVarId}}",
+							"host": [
+								"{{api-url}}"
+							],
+							"path": [
+								"api",
+								"v0",
+								"orgvar",
+								"{{_orgVarId}}"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"protocolProfileBehavior": {}
+		},
+		{
+			"name": "interrupt-resume-task",
+			"item": [
+				{
+					"name": "irt-job-post",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "cd084396-d2f8-439e-b5fe-8cf63823d9a3",
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"console.log(jsonData);",
+									"pm.test(\"Data values\", function () {",
+									"    pm.expect(jsonData.data._orgId).to.eql(pm.environment.get(\"org\"));",
+									"    pm.expect(jsonData.data.name).to.eql(\"RunLongRunningScript\");",
+									"    pm.expect(jsonData.data.status).to.eql(10);",
+									"    pm.expect(jsonData.data.createdBy).to.eql(pm.environment.get(\"sgAdminUser\"));",
+									"});",
+									"",
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"    pm.environment.set('_jobId', jsonData.data.id);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "auth",
+								"type": "text",
+								"value": "{{Auth}}"
+							},
+							{
+								"key": "_orgId",
+								"type": "text",
+								"value": "{{org}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"job\": {\n        \"name\": \"RunLongRunningScript\",\n        \"runAsService\": true,\n        \"tasks\": [\n            {\n                \"_orgId\": \"{{org}}\",\n                \"name\": \"Task1\",\n                \"source\": 0,\n                \"requiredTags\": {},\n                \"runOnAllAgents\": false,\n                \"fromRoutes\": [],\n                \"steps\": [\n                    {\n                        \"name\": \"Step1\",\n                        \"script\": {\n                            \"scriptType\": \"PYTHON\",\n                            \"code\": \"\\\"\\\\nimport time\\\\nimport sys\\\\nprint 'start'\\\\ntime.sleep(5)\\\\nfor i in range(40):\\\\n  print '@kpo{\\\\\\\"globalParam1\\\\\\\": \\\\\\\"globalParam1_val\\\\\\\"}'\\\\n  sys.stdout.flush()\\\\n  time.sleep(2)\\\\nprint 'done'\\\\n  \\\"\"\n                        },\n                        \"order\": 0,\n                        \"arguments\": \"\",\n                        \"variables\": \"\"\n                    }\n                ],\n                \"correlationId\": \"1\"\n            }\n        ]\n    }\n}"
+						},
+						"url": {
+							"raw": "{{api-url}}/api/v0/job",
+							"host": [
+								"{{api-url}}"
+							],
+							"path": [
+								"api",
+								"v0",
+								"job"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "tc-task-interrupt",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "cd084396-d2f8-439e-b5fe-8cf63823d9a3",
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"console.log(jsonData);",
+									"pm.test(\"Data values\", function () {",
+									"    pm.expect(jsonData.data._orgId).to.eql(pm.environment.get(\"org\"));",
+									"    pm.expect(jsonData.data.name).to.eql(\"RunRubyScript\");",
+									"    pm.expect(jsonData.data.status).to.eql(10);",
+									"    pm.expect(jsonData.data.createdBy).to.eql(pm.environment.get(\"sgUser\"));",
+									"});",
+									"",
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"    pm.environment.set('_jobId', jsonData.data.id);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "auth",
+								"type": "text",
+								"value": "{{Auth}}"
+							},
+							{
+								"key": "_orgId",
+								"type": "text",
+								"value": "{{org}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "{{api-url}}/api/v0/taskaction/interrupt/5e792176d285831091c1115f",
+							"host": [
+								"{{api-url}}"
+							],
+							"path": [
+								"api",
+								"v0",
+								"taskaction",
+								"interrupt",
+								"5e792176d285831091c1115f"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "tc-task-restart",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "cd084396-d2f8-439e-b5fe-8cf63823d9a3",
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"console.log(jsonData);",
+									"pm.test(\"Data values\", function () {",
+									"    pm.expect(jsonData.data._orgId).to.eql(pm.environment.get(\"org\"));",
+									"    pm.expect(jsonData.data.name).to.eql(\"RunRubyScript\");",
+									"    pm.expect(jsonData.data.status).to.eql(10);",
+									"    pm.expect(jsonData.data.createdBy).to.eql(pm.environment.get(\"sgUser\"));",
+									"});",
+									"",
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"    pm.environment.set('_jobId', jsonData.data.id);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "auth",
+								"type": "text",
+								"value": "{{Auth}}"
+							},
+							{
+								"key": "_orgId",
+								"type": "text",
+								"value": "{{org}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "{{api-url}}/api/v0/taskaction/restart/5e792176d285831091c1115f",
+							"host": [
+								"{{api-url}}"
+							],
+							"path": [
+								"api",
+								"v0",
+								"taskaction",
+								"restart",
+								"5e792176d285831091c1115f"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "tc-task-cancel",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "cd084396-d2f8-439e-b5fe-8cf63823d9a3",
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"console.log(jsonData);",
+									"pm.test(\"Data values\", function () {",
+									"    pm.expect(jsonData.data._orgId).to.eql(pm.environment.get(\"org\"));",
+									"    pm.expect(jsonData.data.name).to.eql(\"RunRubyScript\");",
+									"    pm.expect(jsonData.data.status).to.eql(10);",
+									"    pm.expect(jsonData.data.createdBy).to.eql(pm.environment.get(\"sgUser\"));",
+									"});",
+									"",
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"    pm.environment.set('_jobId', jsonData.data.id);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "auth",
+								"type": "text",
+								"value": "{{Auth}}"
+							},
+							{
+								"key": "_orgId",
+								"type": "text",
+								"value": "{{org}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "{{api-url}}/api/v0/taskaction/cancel/5e792176d285831091c1115f",
+							"host": [
+								"{{api-url}}"
+							],
+							"path": [
+								"api",
+								"v0",
+								"taskaction",
+								"cancel",
+								"5e792176d285831091c1115f"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "irt-job-interrupt",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "cd084396-d2f8-439e-b5fe-8cf63823d9a3",
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"console.log(jsonData);",
+									"pm.test(\"Data values\", function () {",
+									"    pm.expect(jsonData.data._orgId).to.eql(pm.environment.get(\"org\"));",
+									"    pm.expect(jsonData.data.name).to.eql(\"RunRubyScript\");",
+									"    pm.expect(jsonData.data.status).to.eql(10);",
+									"    pm.expect(jsonData.data.createdBy).to.eql(pm.environment.get(\"sgUser\"));",
+									"});",
+									"",
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"    pm.environment.set('_jobId', jsonData.data.id);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "auth",
+								"type": "text",
+								"value": "{{Auth}}"
+							},
+							{
+								"key": "_orgId",
+								"type": "text",
+								"value": "{{org}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "{{api-url}}/api/v0/jobaction/interrupt/{{_jobId}}",
+							"host": [
+								"{{api-url}}"
+							],
+							"path": [
+								"api",
+								"v0",
+								"jobaction",
+								"interrupt",
+								"{{_jobId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "irt-job-restart",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "cd084396-d2f8-439e-b5fe-8cf63823d9a3",
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"console.log(jsonData);",
+									"pm.test(\"Data values\", function () {",
+									"    pm.expect(jsonData.data._orgId).to.eql(pm.environment.get(\"org\"));",
+									"    pm.expect(jsonData.data.name).to.eql(\"RunRubyScript\");",
+									"    pm.expect(jsonData.data.status).to.eql(10);",
+									"    pm.expect(jsonData.data.createdBy).to.eql(pm.environment.get(\"sgUser\"));",
+									"});",
+									"",
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"    pm.environment.set('_jobId', jsonData.data.id);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "auth",
+								"type": "text",
+								"value": "{{Auth}}"
+							},
+							{
+								"key": "_orgId",
+								"type": "text",
+								"value": "{{org}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "{{api-url}}/api/v0/jobaction/restart/{{_jobId}}",
+							"host": [
+								"{{api-url}}"
+							],
+							"path": [
+								"api",
+								"v0",
+								"jobaction",
+								"restart",
+								"{{_jobId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "irt-job-cancel",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "cd084396-d2f8-439e-b5fe-8cf63823d9a3",
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"pm.test(\"Data values\", function () {",
+									"    pm.expect(jsonData.data._orgId).to.eql(pm.environment.get(\"org\"));",
+									"    pm.expect(jsonData.data.name).to.eql(\"RunLongRunningScript\");",
+									"    pm.expect(jsonData.data.status).to.eql(21);",
+									"    pm.expect(jsonData.data.createdBy).to.eql(pm.environment.get(\"sgUser\"));",
+									"});",
+									"",
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "auth",
+								"type": "text",
+								"value": "{{Auth}}"
+							},
+							{
+								"key": "_orgId",
+								"type": "text",
+								"value": "{{org}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "{{api-url}}/api/v0/jobaction/cancel/{{_jobId}}",
+							"host": [
+								"{{api-url}}"
+							],
+							"path": [
+								"api",
+								"v0",
+								"jobaction",
+								"cancel",
+								"{{_jobId}}"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"protocolProfileBehavior": {}
+		}
+	],
+	"protocolProfileBehavior": {}
+}
