@@ -2,7 +2,7 @@ import { convertData } from '../utils/ResponseConverters';
 import { TaskDefSchema, TaskDefModel } from '../domain/TaskDef';
 import { rabbitMQPublisher, PayloadOperation } from '../utils/RabbitMQPublisher';
 import { MissingObjectError, ValidationError } from '../utils/Errors';
-import { KikiUtils } from '../../shared/KikiUtils';
+import { SGUtils } from '../../shared/SGUtils';
 import * as Enums from '../../shared/Enums';
 import * as mongodb from 'mongodb';
 import * as _ from 'lodash';
@@ -66,7 +66,7 @@ export class TaskDefService {
     }
 
     taskDefs.push(data);
-    let cd = KikiUtils.isJobDefCyclical(taskDefs);
+    let cd = SGUtils.isJobDefCyclical(taskDefs);
     if (Object.keys(cd).length > 0)
       throw new ValidationError(`New task would create cyclic dependency with the following tasks: ${Object.keys(cd).filter((key) => cd[key])}`)
 
@@ -115,7 +115,7 @@ export class TaskDefService {
         throw new ValidationError(`Task "${taskDef.name}" has autoRestart=true but target is "ALL_AGENTS" or "ALL_AGENTS_WITH_TAGS" - autoRestart tasks must target any single agent, a specific agent or a single agent with required tags`);
       }
 
-      let cd = KikiUtils.isJobDefCyclical(taskDefs);
+      let cd = SGUtils.isJobDefCyclical(taskDefs);
       if (Object.keys(cd).length > 0)
         throw new ValidationError(`Task update would create a cyclic dependency with the following tasks: ${Object.keys(cd).filter((key) => cd[key])}`)
     }

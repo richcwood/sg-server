@@ -1,7 +1,7 @@
 
-import { KikiUtils } from '../../server/src/shared/KikiUtils';
+import { SGUtils } from '../../server/src/shared/SGUtils';
 
 
 const json = JSON.parse(process.argv[2]);
 
-console.log(KikiUtils.btoa(json));
+console.log(SGUtils.btoa(json));

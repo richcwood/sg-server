@@ -1,6 +1,6 @@
 import * as os from 'os';
 import { exec } from 'child_process';
-import { KikiStrings } from './KikiStrings';
+import { SGStrings } from './SGStrings';
 import { TaskDefSchema } from '../api/domain/TaskDef';
 import { orgService } from '../api/services/OrgService';
 import { jobService } from '../api/services/JobService';
@@ -10,7 +10,7 @@ import { OrgSchema } from '../api/domain/Org';
 import { InvoiceSchema } from '../api/domain/Invoice';
 import { JobSchema } from '../api/domain/Job';
 import { orgVariableService } from '../api/services/OrgVariableService';
-import { BaseLogger } from './KikiLogger';
+import { BaseLogger } from './SGLogger';
 import { S3Access } from './S3Access';
 import * as mongodb from 'mongodb';
 import * as fs from 'fs';
@@ -68,13 +68,13 @@ Content-Disposition: inline
 `;
 
 
-export class KikiUtils {
+export class SGUtils {
     static concat = (x, y) =>
         x.concat(y)
 
 
     static flatMap = (f, xs) =>
-        xs.map(f).reduce(KikiUtils.concat, [])
+        xs.map(f).reduce(SGUtils.concat, [])
 
 
     static btoa(str: string) {
@@ -220,9 +220,9 @@ export class KikiUtils {
 
         for (let i = 0; i < tasks.length; i++) {
             let task: TaskDefSchema = tasks[i];
-            if (task[KikiStrings.fromRoutes]) {
-                for (let i = 0; i < task[KikiStrings.fromRoutes].length; i++) {
-                    let taskRoute = task[KikiStrings.fromRoutes][i];
+            if (task[SGStrings.fromRoutes]) {
+                for (let i = 0; i < task[SGStrings.fromRoutes].length; i++) {
+                    let taskRoute = task[SGStrings.fromRoutes][i];
                     let routePattern = '';
                     if (taskRoute[1])
                         routePattern = taskRoute[1];
@@ -300,8 +300,8 @@ export class KikiUtils {
                     const scriptQuery: any = await scriptService.findAllScriptsInternal({ _orgId, name: scriptKey });
                     if (!scriptQuery || (_.isArray(scriptQuery) && scriptQuery.length === 0))
                         throw new MissingObjectError(`Script ${scriptKey} not found.`);
-                    const injectedScriptCode = KikiUtils.atob(scriptQuery[0].code);
-                    let subScriptsToInject = await KikiUtils.getInjectedScripts(_orgId, injectedScriptCode);
+                    const injectedScriptCode = SGUtils.atob(scriptQuery[0].code);
+                    let subScriptsToInject = await SGUtils.getInjectedScripts(_orgId, injectedScriptCode);
                     scriptsToInject[scriptKey] = scriptQuery[0].code;
                     scriptsToInject = Object.assign(scriptsToInject, subScriptsToInject);
                 } catch (e) {
@@ -359,7 +359,7 @@ export class KikiUtils {
         for (let i = 0; i < graph[node].length; i++) {
             let neighbor = graph[node][i];
             if (!visited[neighbor]) {
-                if (KikiUtils.isCyclicUtil(neighbor, graph, visited, recStack)) {
+                if (SGUtils.isCyclicUtil(neighbor, graph, visited, recStack)) {
                     return true;
                 }
             } else if (recStack[neighbor]) {
@@ -409,7 +409,7 @@ export class KikiUtils {
         for (let i = 0; i < Object.keys(graph).length; i++) {
             let node = Object.keys(graph)[i];
             if (!visited[node]) {
-                if (KikiUtils.isCyclicUtil(node, graph, visited, recStack)) {
+                if (SGUtils.isCyclicUtil(node, graph, visited, recStack)) {
                     return recStack;
                 }
             }
@@ -428,7 +428,7 @@ export class KikiUtils {
         }
 
         /// Verify tasks don't have cyclical dependency
-        let cd = KikiUtils.isJobDefCyclical(job.tasks);
+        let cd = SGUtils.isJobDefCyclical(job.tasks);
         if (Object.keys(cd).length > 0)
             throw new ValidationError(`job contains a cyclic dependency with the following tasks: ${Object.keys(cd).filter((key) => cd[key])}`)
 
@@ -530,9 +530,9 @@ export class KikiUtils {
         const invoiceDateString = `${moment(invoiceModel.endDate).format('MMMM')}_${moment(invoiceModel.endDate).format('YYYY')}`;
         const invoicePDFFileName = `invoice_${org._id}_${invoiceDateString}.pdf`;
         const localInvoicePDFPath = `./${invoicePDFFileName}`;
-        const invoice_html: string = await KikiUtils.GenerateInvoice(org._id, invoiceModel, paymentTransaction, "html");
-        const invoice_text: string = await KikiUtils.GenerateInvoice(org._id, invoiceModel, paymentTransaction, "text");
-        await KikiUtils.GenerateInvoicePDF(invoice_html, localInvoicePDFPath);
+        const invoice_html: string = await SGUtils.GenerateInvoice(org._id, invoiceModel, paymentTransaction, "html");
+        const invoice_text: string = await SGUtils.GenerateInvoice(org._id, invoiceModel, paymentTransaction, "text");
+        await SGUtils.GenerateInvoicePDF(invoice_html, localInvoicePDFPath);
 
         let s3Path = `invoice/${config.get('environment')}/${org._id}/${invoiceDateString}/${invoicePDFFileName}`;
         const s3Access = new S3Access();
@@ -603,7 +603,7 @@ export class KikiUtils {
 
 
     static GunzipFile = async (filePath: string) => {
-        const uncompressedFilePath = KikiUtils.ChangeFileExt(filePath, "");
+        const uncompressedFilePath = SGUtils.ChangeFileExt(filePath, "");
         await new Promise((resolve, reject) => {
             compressing.gzip.uncompress(filePath, uncompressedFilePath)
                 .then(() => { resolve(); })
@@ -652,7 +652,7 @@ export class KikiUtils {
         contentText = contentText.replace(/{job_url}/g, '' + job_url);
         contentText = contentText.replace(/{job_name}/g, '' + job_name);
 
-        await KikiUtils.SendCustomerSlack(url, contentText, logger);
+        await SGUtils.SendCustomerSlack(url, contentText, logger);
     }
 
 
@@ -662,7 +662,7 @@ export class KikiUtils {
         contentText = contentText.replace(/{job_url}/g, '' + job_url);
         contentText = contentText.replace(/{job_name}/g, '' + job_name);
 
-        await KikiUtils.SendCustomerSlack(url, contentText, logger);
+        await SGUtils.SendCustomerSlack(url, contentText, logger);
     }
 
 
@@ -672,7 +672,7 @@ export class KikiUtils {
         contentText = contentText.replace(/{job_url}/g, '' + job_url);
         contentText = contentText.replace(/{job_name}/g, '' + job_name);
 
-        await KikiUtils.SendCustomerSlack(url, contentText, logger);
+        await SGUtils.SendCustomerSlack(url, contentText, logger);
     }
 
 
@@ -711,7 +711,7 @@ export class KikiUtils {
         else
             content = fs.readFileSync('server/src/resources/confirm_email_already_exists.txt', 'utf8');
 
-        content = KikiUtils.ApplyStandardEmailReplacements(content, recipientAddress);
+        content = SGUtils.ApplyStandardEmailReplacements(content, recipientAddress);
 
         content = content.replace(/{user_name}/g, '' + userName);
 
@@ -724,13 +724,13 @@ export class KikiUtils {
 
         let rawMsg = base64EncodedEmailTemplate;
 
-        let contentHtml: string = KikiUtils.GenerateConfirmEmailAlreadyExistsContent('html', userName, recipientAddress);
+        let contentHtml: string = SGUtils.GenerateConfirmEmailAlreadyExistsContent('html', userName, recipientAddress);
         rawMsg = rawMsg.replace('{content_html}', '' + Buffer.from(contentHtml).toString('base64'));
 
-        let contentText: string = KikiUtils.GenerateConfirmEmailAlreadyExistsContent('text', userName, recipientAddress);
+        let contentText: string = SGUtils.GenerateConfirmEmailAlreadyExistsContent('text', userName, recipientAddress);
         rawMsg = rawMsg.replace('{content_text}', '' + Buffer.from(contentText).toString('base64'));
 
-        await KikiUtils.SendCustomerEmail(recipientAddress, subject, rawMsg, logger);
+        await SGUtils.SendCustomerEmail(recipientAddress, subject, rawMsg, logger);
     }
 
 
@@ -741,7 +741,7 @@ export class KikiUtils {
         else
             content = fs.readFileSync('server/src/resources/password_reset_email_invalid.txt', 'utf8');
 
-        content = KikiUtils.ApplyStandardEmailReplacements(content, recipientAddress);
+        content = SGUtils.ApplyStandardEmailReplacements(content, recipientAddress);
 
         let apiUrl = config.get('API_BASE_URL');
         const apiVersion = config.get('API_VERSION');
@@ -762,13 +762,13 @@ export class KikiUtils {
 
         let rawMsg = base64EncodedEmailTemplate;
 
-        let contentHtml: string = KikiUtils.GeneratePasswordResetInvalidEmailContent('html', recipientAddress);
+        let contentHtml: string = SGUtils.GeneratePasswordResetInvalidEmailContent('html', recipientAddress);
         rawMsg = rawMsg.replace('{content_html}', '' + Buffer.from(contentHtml).toString('base64'));
 
-        let contentText: string = KikiUtils.GeneratePasswordResetInvalidEmailContent('text', recipientAddress);
+        let contentText: string = SGUtils.GeneratePasswordResetInvalidEmailContent('text', recipientAddress);
         rawMsg = rawMsg.replace('{content_text}', '' + Buffer.from(contentText).toString('base64'));
 
-        await KikiUtils.SendCustomerEmail(recipientAddress, subject, rawMsg, logger);
+        await SGUtils.SendCustomerEmail(recipientAddress, subject, rawMsg, logger);
     }
 
 
@@ -779,7 +779,7 @@ export class KikiUtils {
         else
             content = fs.readFileSync('server/src/resources/password_reset_confirmation_email.txt', 'utf8');
 
-        content = KikiUtils.ApplyStandardEmailReplacements(content, recipientAddress);
+        content = SGUtils.ApplyStandardEmailReplacements(content, recipientAddress);
 
         let apiUrl = config.get('API_BASE_URL');
         const apiVersion = config.get('API_VERSION');
@@ -800,13 +800,13 @@ export class KikiUtils {
 
         let rawMsg = base64EncodedEmailTemplate;
 
-        let contentHtml: string = KikiUtils.GeneratePasswordResetConfirmationContent('html', recipientAddress);
+        let contentHtml: string = SGUtils.GeneratePasswordResetConfirmationContent('html', recipientAddress);
         rawMsg = rawMsg.replace('{content_html}', '' + Buffer.from(contentHtml).toString('base64'));
 
-        let contentText: string = KikiUtils.GeneratePasswordResetConfirmationContent('text', recipientAddress);
+        let contentText: string = SGUtils.GeneratePasswordResetConfirmationContent('text', recipientAddress);
         rawMsg = rawMsg.replace('{content_text}', '' + Buffer.from(contentText).toString('base64'));
 
-        await KikiUtils.SendCustomerEmail(recipientAddress, subject, rawMsg, logger);
+        await SGUtils.SendCustomerEmail(recipientAddress, subject, rawMsg, logger);
     }
 
 
@@ -817,7 +817,7 @@ export class KikiUtils {
         else
             content = fs.readFileSync('server/src/resources/password_reset_email_valid.txt', 'utf8');
 
-        content = KikiUtils.ApplyStandardEmailReplacements(content, email);
+        content = SGUtils.ApplyStandardEmailReplacements(content, email);
         content = content.replace(/{email}/g, '' + email);
         content = content.replace(/{reset_password_link}/g, '' + resetPasswordLink);
 
@@ -830,13 +830,13 @@ export class KikiUtils {
 
         let rawMsg = base64EncodedEmailTemplate;
 
-        let contentHtml: string = KikiUtils.GeneratePasswordResetContent('html', email, resetPasswordLink);
+        let contentHtml: string = SGUtils.GeneratePasswordResetContent('html', email, resetPasswordLink);
         rawMsg = rawMsg.replace('{content_html}', '' + Buffer.from(contentHtml).toString('base64'));
 
-        let contentText: string = KikiUtils.GeneratePasswordResetContent('text', email, resetPasswordLink);
+        let contentText: string = SGUtils.GeneratePasswordResetContent('text', email, resetPasswordLink);
         rawMsg = rawMsg.replace('{content_text}', '' + Buffer.from(contentText).toString('base64'));
 
-        await KikiUtils.SendCustomerEmail(email, subject, rawMsg, logger);
+        await SGUtils.SendCustomerEmail(email, subject, rawMsg, logger);
     }
 
 
@@ -847,7 +847,7 @@ export class KikiUtils {
         else
             content = fs.readFileSync('server/src/resources/email_shared_invite_template.txt', 'utf8');
 
-        content = KikiUtils.ApplyStandardEmailReplacements(content, recipientAddress);
+        content = SGUtils.ApplyStandardEmailReplacements(content, recipientAddress);
         content = content.replace(/{org_name}/g, '' + org.name);
         content = content.replace(/{org_first_letter}/g, '' + org.name.substring(0, 1));
         content = content.replace(/{accept_invite_link}/g, '' + acceptInviteLink);
@@ -861,13 +861,13 @@ export class KikiUtils {
 
         let rawMsg = base64EncodedEmailTemplate;
 
-        let contentHtml: string = KikiUtils.GenerateOrgSharedInviteContent('html', org, acceptInviteLink, recipientAddress);
+        let contentHtml: string = SGUtils.GenerateOrgSharedInviteContent('html', org, acceptInviteLink, recipientAddress);
         rawMsg = rawMsg.replace('{content_html}', '' + Buffer.from(contentHtml).toString('base64'));
 
-        let contentText: string = KikiUtils.GenerateOrgSharedInviteContent('text', org, acceptInviteLink, recipientAddress);
+        let contentText: string = SGUtils.GenerateOrgSharedInviteContent('text', org, acceptInviteLink, recipientAddress);
         rawMsg = rawMsg.replace('{content_text}', '' + Buffer.from(contentText).toString('base64'));
 
-        await KikiUtils.SendCustomerEmail(recipientAddress, subject, rawMsg, logger);
+        await SGUtils.SendCustomerEmail(recipientAddress, subject, rawMsg, logger);
     }
 
 
@@ -878,7 +878,7 @@ export class KikiUtils {
         else
             content = fs.readFileSync('server/src/resources/email_invite_template.txt', 'utf8');
 
-        content = KikiUtils.ApplyStandardEmailReplacements(content, recipientAddress);
+        content = SGUtils.ApplyStandardEmailReplacements(content, recipientAddress);
         content = content.replace(/{org_name}/g, '' + org.name);
         content = content.replace(/{inviter_name}/g, '' + inviter.name);
         content = content.replace(/{inviter_email}/g, '' + inviter.email);
@@ -894,13 +894,13 @@ export class KikiUtils {
 
         let rawMsg = base64EncodedEmailTemplate;
 
-        let contentHtml: string = KikiUtils.GenerateOrgInviteContent('html', org, inviter, acceptInviteLink, recipientAddress);
+        let contentHtml: string = SGUtils.GenerateOrgInviteContent('html', org, inviter, acceptInviteLink, recipientAddress);
         rawMsg = rawMsg.replace('{content_html}', '' + Buffer.from(contentHtml).toString('base64'));
 
-        let contentText: string = KikiUtils.GenerateOrgInviteContent('text', org, inviter, acceptInviteLink, recipientAddress);
+        let contentText: string = SGUtils.GenerateOrgInviteContent('text', org, inviter, acceptInviteLink, recipientAddress);
         rawMsg = rawMsg.replace('{content_text}', '' + Buffer.from(contentText).toString('base64'));
 
-        await KikiUtils.SendCustomerEmail(recipientAddress, subject, rawMsg, logger);
+        await SGUtils.SendCustomerEmail(recipientAddress, subject, rawMsg, logger);
     }
 
 
@@ -914,15 +914,15 @@ export class KikiUtils {
 
         let contentHtml: string = fs.readFileSync('server/src/resources/email_confirm_template.html', 'utf8');
         contentHtml = contentHtml.replace(/{confirmation_code}/g, '' + confirmationCode.substring(0, 3) + '-' + confirmationCode.substring(3, 6));
-        contentHtml = KikiUtils.ApplyStandardEmailReplacements(contentHtml, recipientAddress);
+        contentHtml = SGUtils.ApplyStandardEmailReplacements(contentHtml, recipientAddress);
         rawMsg = rawMsg.replace('{content_html}', '' + Buffer.from(contentHtml).toString('base64'));
 
         let contentText: string = fs.readFileSync('server/src/resources/email_confirm_template.txt', 'utf8');
         contentText = contentText.replace(/{confirmation_code}/g, '' + confirmationCode.substring(0, 3) + '-' + confirmationCode.substring(3, 6));
-        contentText = KikiUtils.ApplyStandardEmailReplacements(contentText, recipientAddress);
+        contentText = SGUtils.ApplyStandardEmailReplacements(contentText, recipientAddress);
         rawMsg = rawMsg.replace('{content_text}', '' + Buffer.from(contentText).toString('base64'));
 
-        await KikiUtils.SendCustomerEmail(recipientAddress, subject, rawMsg, logger);
+        await SGUtils.SendCustomerEmail(recipientAddress, subject, rawMsg, logger);
     }
 
 
@@ -938,7 +938,7 @@ export class KikiUtils {
         contentHtml = contentHtml.replace(/{error_message}/g, '' + error);
         contentHtml = contentHtml.replace(/{job_url}/g, '' + job_url);
         contentHtml = contentHtml.replace(/{job_name}/g, '' + job_name);
-        contentHtml = KikiUtils.ApplyStandardEmailReplacements(contentHtml, recipientAddress);
+        contentHtml = SGUtils.ApplyStandardEmailReplacements(contentHtml, recipientAddress);
         rawMsg = rawMsg.replace('{content_html}', '' + Buffer.from(contentHtml).toString('base64'));
 
         let contentText: string = fs.readFileSync('server/src/resources/task_error_email.txt', 'utf8');
@@ -948,10 +948,10 @@ export class KikiUtils {
         contentText = contentText.replace(/{error_message}/g, '' + error);
         contentText = contentText.replace(/{job_url}/g, '' + job_url);
         contentText = contentText.replace(/{job_name}/g, '' + job_name);
-        contentText = KikiUtils.ApplyStandardEmailReplacements(contentText, recipientAddress);
+        contentText = SGUtils.ApplyStandardEmailReplacements(contentText, recipientAddress);
         rawMsg = rawMsg.replace('{content_text}', '' + Buffer.from(contentText).toString('base64'));
 
-        await KikiUtils.SendCustomerEmail(recipientAddress, subject, rawMsg, logger);
+        await SGUtils.SendCustomerEmail(recipientAddress, subject, rawMsg, logger);
     }
 
 
@@ -964,17 +964,17 @@ export class KikiUtils {
         contentHtml = contentHtml.replace(/{task_name}/g, '' + task_name);
         contentHtml = contentHtml.replace(/{job_url}/g, '' + job_url);
         contentHtml = contentHtml.replace(/{job_name}/g, '' + job_name);
-        contentHtml = KikiUtils.ApplyStandardEmailReplacements(contentHtml, recipientAddress);
+        contentHtml = SGUtils.ApplyStandardEmailReplacements(contentHtml, recipientAddress);
         rawMsg = rawMsg.replace('{content_html}', '' + Buffer.from(contentHtml).toString('base64'));
 
         let contentText: string = fs.readFileSync('server/src/resources/task_interrupted_email.txt', 'utf8');
         contentText = contentText.replace(/{task_name}/g, '' + task_name);
         contentText = contentText.replace(/{job_url}/g, '' + job_url);
         contentText = contentText.replace(/{job_name}/g, '' + job_name);
-        contentText = KikiUtils.ApplyStandardEmailReplacements(contentText, recipientAddress);
+        contentText = SGUtils.ApplyStandardEmailReplacements(contentText, recipientAddress);
         rawMsg = rawMsg.replace('{content_text}', '' + Buffer.from(contentText).toString('base64'));
 
-        await KikiUtils.SendCustomerEmail(recipientAddress, subject, rawMsg, logger);
+        await SGUtils.SendCustomerEmail(recipientAddress, subject, rawMsg, logger);
     }
 
 
@@ -987,17 +987,17 @@ export class KikiUtils {
         contentHtml = contentHtml.replace(/{job_status}/g, '' + job_status);
         contentHtml = contentHtml.replace(/{job_url}/g, '' + job_url);
         contentHtml = contentHtml.replace(/{job_name}/g, '' + job_name);
-        contentHtml = KikiUtils.ApplyStandardEmailReplacements(contentHtml, recipientAddress);
+        contentHtml = SGUtils.ApplyStandardEmailReplacements(contentHtml, recipientAddress);
         rawMsg = rawMsg.replace('{content_html}', '' + Buffer.from(contentHtml).toString('base64'));
 
         let contentText: string = fs.readFileSync('server/src/resources/job_completed_email.txt', 'utf8');
         contentText = contentText.replace(/{job_status}/g, '' + job_status);
         contentText = contentText.replace(/{job_url}/g, '' + job_url);
         contentText = contentText.replace(/{job_name}/g, '' + job_name);
-        contentText = KikiUtils.ApplyStandardEmailReplacements(contentText, recipientAddress);
+        contentText = SGUtils.ApplyStandardEmailReplacements(contentText, recipientAddress);
         rawMsg = rawMsg.replace('{content_text}', '' + Buffer.from(contentText).toString('base64'));
 
-        await KikiUtils.SendCustomerEmail(recipientAddress, subject, rawMsg, logger);
+        await SGUtils.SendCustomerEmail(recipientAddress, subject, rawMsg, logger);
     }
 
 
@@ -1041,10 +1041,10 @@ export class KikiUtils {
                         const url = `${webUrl}/#/jobDetailsMonitor/${job._id.toHexString()}`;
 
                         if (taskFailAlertEmail)
-                            KikiUtils.SendTaskErrorAlertEmail(taskName, updatedStepOutcome.stderr, updatedStepOutcome.exitCode, updatedStepOutcome.signal, url, jobName, taskFailAlertEmail, logger);
+                            SGUtils.SendTaskErrorAlertEmail(taskName, updatedStepOutcome.stderr, updatedStepOutcome.exitCode, updatedStepOutcome.signal, url, jobName, taskFailAlertEmail, logger);
 
                         if (taskFailAlertSlackURL)
-                            KikiUtils.SendTaskErrorAlertSlack(taskName, updatedStepOutcome.stderr, updatedStepOutcome.exitCode, updatedStepOutcome.signal, url, jobName, taskFailAlertSlackURL, logger);
+                            SGUtils.SendTaskErrorAlertSlack(taskName, updatedStepOutcome.stderr, updatedStepOutcome.exitCode, updatedStepOutcome.signal, url, jobName, taskFailAlertSlackURL, logger);
                     }
                 }
             }
@@ -1083,10 +1083,10 @@ export class KikiUtils {
                 const url = `${webUrl}/#/jobDetailsMonitor/${job._id.toHexString()}`;
 
                 if (taskFailAlertEmail)
-                    KikiUtils.SendTaskErrorAlertEmail(task.name, error, '', '', url, jobName, taskFailAlertEmail, logger);
+                    SGUtils.SendTaskErrorAlertEmail(task.name, error, '', '', url, jobName, taskFailAlertEmail, logger);
 
                 if (taskFailAlertSlackURL)
-                    KikiUtils.SendTaskErrorAlertSlack(task.name, error, '', '', url, jobName, taskFailAlertSlackURL, logger);
+                    SGUtils.SendTaskErrorAlertSlack(task.name, error, '', '', url, jobName, taskFailAlertSlackURL, logger);
             }
         }
     }
@@ -1126,10 +1126,10 @@ export class KikiUtils {
         }
 
         if (jobTaskInterruptedAlertEmail)
-            KikiUtils.SendTaskInterruptedAlertEmail(taskName, url, jobName, jobTaskInterruptedAlertEmail, logger);
+            SGUtils.SendTaskInterruptedAlertEmail(taskName, url, jobName, jobTaskInterruptedAlertEmail, logger);
 
         if (jobTaskInterruptedAlertSlackURL)
-            KikiUtils.SendTaskInterruptedAlertSlack(taskName, url, jobName, jobTaskInterruptedAlertSlackURL, logger);
+            SGUtils.SendTaskInterruptedAlertSlack(taskName, url, jobName, jobTaskInterruptedAlertSlackURL, logger);
     }
 
     static OnJobComplete = async (_orgId: mongodb.ObjectId, job: any, logger: BaseLogger) => {
@@ -1161,10 +1161,10 @@ export class KikiUtils {
         }
 
         if (jobCompleteAlertEmail)
-            KikiUtils.SendJobCompleteAlertEmail(Enums.JobStatus[job.status], url, jobName, jobCompleteAlertEmail, logger);
+            SGUtils.SendJobCompleteAlertEmail(Enums.JobStatus[job.status], url, jobName, jobCompleteAlertEmail, logger);
 
         if (jobCompleteAlertSlackURL)
-            KikiUtils.SendJobCompleteAlertSlack(Enums.JobStatus[job.status], url, jobName, jobCompleteAlertSlackURL, logger);
+            SGUtils.SendJobCompleteAlertSlack(Enums.JobStatus[job.status], url, jobName, jobCompleteAlertSlackURL, logger);
     }
 
 
@@ -1173,7 +1173,7 @@ export class KikiUtils {
         const replyTo = config.get('NoReplyEmailAddress');
         const from = config.get('CustomerEmailFromAddress')
 
-        const boundaryId = `__saasglue_${KikiUtils.makeNumericId(9)}__`;
+        const boundaryId = `__saasglue_${SGUtils.makeNumericId(9)}__`;
 
         rawMessage = rawMessage.replace(/{boundary_id}/g, '' + boundaryId);
         rawMessage = rawMessage.replace(/{subject}/g, '' + subject);

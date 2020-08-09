@@ -1269,7 +1269,7 @@ import { StepDef } from '@/store/stepDef/types';
 import { Script, ScriptType, scriptTypesForMonaco } from '@/store/script/types';
 import { BindStoreModel, BindSelected, BindSelectedCopy, BindProp } from '@/decorator';
 import { JobStatus, TaskStatus, enumKeyToPretty, enumKeys } from '@/utils/Enums';
-import { KikiAlert, AlertPlacement, AlertCategory } from '@/store/alert/types';
+import { SgAlert, AlertPlacement, AlertCategory } from '@/store/alert/types';
 import { ValidationProvider, ValidationObserver } from 'vee-validate';
 import { focusElement, stringToMap, mapToString } from '@/utils/Shared';
 import AgentSearch from '@/components/AgentSearch.vue';
@@ -1398,7 +1398,7 @@ export default class JobDesigner extends Vue {
     try {
       const userEmail = this.$store.state[StoreType.OrgStore].userEmail;
 
-      this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new KikiAlert(`Creating job - ${this.newJobName}`, AlertPlacement.FOOTER));
+      this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Creating job - ${this.newJobName}`, AlertPlacement.FOOTER));
       const newJob: JobDef = {
         name: this.newJobName
       }
@@ -1638,7 +1638,7 @@ export default class JobDesigner extends Vue {
         return;
       }
 
-      this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new KikiAlert(`Saving job - ${this.jobDefForEdit.name}`, AlertPlacement.FOOTER));      
+      this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Saving job - ${this.jobDefForEdit.name}`, AlertPlacement.FOOTER));      
       await this.$store.dispatch(`${StoreType.JobDefStore}/save`);
     }
     catch(err){
@@ -1673,7 +1673,7 @@ export default class JobDesigner extends Vue {
         this.$modal.hide('delete-taskdef-modal');
         
         await this.$store.dispatch(`${StoreType.TaskDefStore}/delete`, this.taskDefToDelete);
-        this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new KikiAlert(`Deleted task - ${this.taskDefToDelete.name}`, AlertPlacement.FOOTER));
+        this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Deleted task - ${this.taskDefToDelete.name}`, AlertPlacement.FOOTER));
         this.selectedTaskDefForDesigner = null;
       }
     }
@@ -1701,7 +1701,7 @@ export default class JobDesigner extends Vue {
     }
 
     try {
-      this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new KikiAlert(`Creating task - ${this.newTaskName}`, AlertPlacement.FOOTER));
+      this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Creating task - ${this.newTaskName}`, AlertPlacement.FOOTER));
      
       const newTask: TaskDef = {
         _jobDefId: this.jobDefForEdit.id,
@@ -1740,7 +1740,7 @@ export default class JobDesigner extends Vue {
           return;
         }
 
-        this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new KikiAlert(`Saving task - ${this.selectedTaskDefForEdit.name}`, AlertPlacement.FOOTER));      
+        this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Saving task - ${this.selectedTaskDefForEdit.name}`, AlertPlacement.FOOTER));      
         await this.$store.dispatch(`${StoreType.TaskDefStore}/save`);
       }
     }
@@ -1771,7 +1771,7 @@ export default class JobDesigner extends Vue {
     try {
       const stepDefs = this.stepDefsForTaskDef(this.selectedTaskDef);
 
-      this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new KikiAlert(`Creating step - ${this.newStepName}`, AlertPlacement.FOOTER));
+      this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Creating step - ${this.newStepName}`, AlertPlacement.FOOTER));
       const newStep: StepDef = {
         _taskDefId: <string>this.selectedTaskDef.id,
         name: this.newStepName,
@@ -1808,7 +1808,7 @@ export default class JobDesigner extends Vue {
       if(this.stepDefToDelete){
         await this.$store.dispatch(`${StoreType.StepDefStore}/delete`, this.stepDefToDelete);
         this.selectedStepDefsForOrder = [];
-        this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new KikiAlert(`Deleted step - ${this.stepDefToDelete.name}`, AlertPlacement.FOOTER));
+        this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Deleted step - ${this.stepDefToDelete.name}`, AlertPlacement.FOOTER));
       }
     }
     catch(err){
@@ -1860,7 +1860,7 @@ export default class JobDesigner extends Vue {
 
     try {
       await this.$store.dispatch(`${StoreType.StepDefStore}/save`, tempStepDef);
-      this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new KikiAlert(`Updated step order`, AlertPlacement.FOOTER));
+      this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Updated step order`, AlertPlacement.FOOTER));
     }
     catch(err){
       console.error(err);
@@ -1943,7 +1943,7 @@ export default class JobDesigner extends Vue {
           return;
         }
 
-        this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new KikiAlert(`Saving step - ${this.selectedStepDefForEdit.name}`, AlertPlacement.FOOTER));      
+        this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Saving step - ${this.selectedStepDefForEdit.name}`, AlertPlacement.FOOTER));      
         await this.$store.dispatch(`${StoreType.StepDefStore}/save`);
       }
     }
@@ -1970,7 +1970,7 @@ export default class JobDesigner extends Vue {
           return;
         }
 
-        this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new KikiAlert(`Creating script - ${this.newScriptName}`, AlertPlacement.FOOTER));      
+        this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Creating script - ${this.newScriptName}`, AlertPlacement.FOOTER));      
         const newScript = {
           name: this.newScriptName, 
           scriptType: this.newScriptType, 
@@ -2021,7 +2021,7 @@ export default class JobDesigner extends Vue {
           return;
         }
 
-        this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new KikiAlert(`Cloning script - ${this.cloneScriptName}`, AlertPlacement.FOOTER));      
+        this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Cloning script - ${this.cloneScriptName}`, AlertPlacement.FOOTER));      
         const newScript = {
           name: this.cloneScriptName,
           scriptType: this.selectedScript.scriptType,
@@ -2077,7 +2077,7 @@ export default class JobDesigner extends Vue {
         };
 
         this.jobDef = await this.$store.dispatch(`${StoreType.JobDefStore}/save`, jobDefUpdate);
-        this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new KikiAlert(`Saved job`, AlertPlacement.FOOTER));
+        this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Saved job`, AlertPlacement.FOOTER));
       }
       catch(err){
         console.error(err);
@@ -2097,7 +2097,7 @@ export default class JobDesigner extends Vue {
         };
 
         this.jobDef = await this.$store.dispatch(`${StoreType.JobDefStore}/save`, jobDefUpdate);
-        this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new KikiAlert(`Saved job`, AlertPlacement.FOOTER));
+        this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Saved job`, AlertPlacement.FOOTER));
       }
       catch(err){
         showErrors('Error saving the job', err);
@@ -2182,7 +2182,7 @@ export default class JobDesigner extends Vue {
           return;
         }
         // todo - possibly conditional validation based on Schedule.TriggerType
-        this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new KikiAlert(`Saving schedule - ${this.editSchedule.name}`, AlertPlacement.FOOTER));
+        this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Saving schedule - ${this.editSchedule.name}`, AlertPlacement.FOOTER));
         
         const scheduleToSave: any = _.clone(this.editSchedule);
         scheduleToSave['_jobDefId'] = this.jobDefForEdit.id;
@@ -2223,7 +2223,7 @@ export default class JobDesigner extends Vue {
   private async deleteSchedule(){
     try {
       await this.$store.dispatch(`${StoreType.ScheduleStore}/delete`, this.scheduleToDelete);
-      this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new KikiAlert(`Schedule deleted`, AlertPlacement.FOOTER));
+      this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Schedule deleted`, AlertPlacement.FOOTER));
     }
     catch(err){
       console.error(err);
@@ -2243,7 +2243,7 @@ export default class JobDesigner extends Vue {
   private async onScheduleIsActiveChanged(schedule: Schedule){
     try {
       await this.$store.dispatch(`${StoreType.ScheduleStore}/save`, {id: schedule.id, isActive: schedule.isActive});
-      this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new KikiAlert(`Schedule saved`, AlertPlacement.FOOTER));
+      this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Schedule saved`, AlertPlacement.FOOTER));
     }
     catch(err){
       console.error(err);
@@ -2284,7 +2284,7 @@ export default class JobDesigner extends Vue {
           };
 
           this.selectedTaskDef = await this.$store.dispatch(`${StoreType.TaskDefStore}/save`, newTask);
-          this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new KikiAlert(`Saved task with the artifact`, AlertPlacement.FOOTER));
+          this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Saved task with the artifact`, AlertPlacement.FOOTER));
         }
       }
       catch(err){
@@ -2345,7 +2345,7 @@ export default class JobDesigner extends Vue {
           };
 
           this.selectedTaskDef = await this.$store.dispatch(`${StoreType.TaskDefStore}/save`, newTask);
-          this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new KikiAlert(`Saved task with the artifact`, AlertPlacement.FOOTER));
+          this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Saved task with the artifact`, AlertPlacement.FOOTER));
         }
       }
       catch(err){
@@ -2366,12 +2366,12 @@ export default class JobDesigner extends Vue {
         }
 
         await this.$store.dispatch(`${StoreType.JobDefStore}/save`);
-        this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new KikiAlert('Updated job status', AlertPlacement.FOOTER, AlertCategory.INFO));
+        this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert('Updated job status', AlertPlacement.FOOTER, AlertCategory.INFO));
       }
     }
     catch(err){
       console.error(err);
-      this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new KikiAlert('Error updating job status', AlertPlacement.WINDOW, AlertCategory.ERROR));
+      this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert('Error updating job status', AlertPlacement.WINDOW, AlertCategory.ERROR));
     }
   }
 
@@ -2416,7 +2416,7 @@ export default class JobDesigner extends Vue {
         await Promise.all(savePromises);
 
         if(savePromises.length > 0){
-          this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new KikiAlert(`Added out bound routes for all tasks to ${targetTaskDef.name}`, AlertPlacement.FOOTER, AlertCategory.INFO));
+          this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Added out bound routes for all tasks to ${targetTaskDef.name}`, AlertPlacement.FOOTER, AlertCategory.INFO));
         }
 
         this.$modal.hide('route-all-to-taskdef-modal');
@@ -2424,7 +2424,7 @@ export default class JobDesigner extends Vue {
     }
     catch(err){
       console.error(err);
-      this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new KikiAlert('Error creating routes', AlertPlacement.WINDOW, AlertCategory.ERROR));
+      this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert('Error creating routes', AlertPlacement.WINDOW, AlertCategory.ERROR));
     }
   }
 
@@ -2533,7 +2533,7 @@ export default class JobDesigner extends Vue {
   private async onCloneJobDefClicked(){
     if(this.jobDefForEdit){
       try {
-        this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new KikiAlert(`Cloning job - ${this.jobDefForEdit.name}`, AlertPlacement.FOOTER));      
+        this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Cloning job - ${this.jobDefForEdit.name}`, AlertPlacement.FOOTER));      
         
         const {data: {data}} = await axios.post(`/api/v0/jobdef/copy/`, {_jobDefId: this.jobDefForEdit.id});
         const routeData = this.$router.resolve({name: 'jobDesigner', params: {jobId: data.id}});

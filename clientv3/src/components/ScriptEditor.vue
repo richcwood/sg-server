@@ -157,7 +157,7 @@ import _ from 'lodash';
 import { Component, Prop, Vue, Watch } from 'vue-property-decorator';
 import { Script, ScriptType, scriptTypesForMonaco } from "@/store/script/types";
 import { StoreType } from '@/store/types';
-import { KikiAlert, AlertPlacement, AlertCategory } from '@/store/alert/types';
+import { SgAlert, AlertPlacement, AlertCategory } from '@/store/alert/types';
 import { showErrors } from '@/utils/ErrorHandler'; 
 import { JobDef } from '@/store/jobDef/types';
 import { OrgVar } from '@/store/orgVar/types';
@@ -211,7 +211,7 @@ export default class ScriptEditor extends Vue {
   private async tryToSaveScriptShadowCopy(){
     if(    this.script
         && this.script.code !== this.script.shadowCopyCode){
-      this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new KikiAlert(`Saving backup of script - ${this.script.name}`, AlertPlacement.FOOTER));
+      this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Saving backup of script - ${this.script.name}`, AlertPlacement.FOOTER));
     
       try {
         const scriptForSave = {
@@ -222,7 +222,7 @@ export default class ScriptEditor extends Vue {
         await this.$store.dispatch(`${StoreType.ScriptStore}/save`, scriptForSave);
       }
       catch(err){
-        this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new KikiAlert(`Saving backup of script - ${this.script.name} failed`, AlertPlacement.FOOTER, AlertCategory.ERROR));
+        this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Saving backup of script - ${this.script.name} failed`, AlertPlacement.FOOTER, AlertCategory.ERROR));
         console.error(err);
       }
     }
@@ -278,7 +278,7 @@ export default class ScriptEditor extends Vue {
     try {
       if(this.script){
         //revert the shadow copy
-        this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new KikiAlert(`Reverting script - ${this.script.name}`, AlertPlacement.FOOTER));      
+        this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Reverting script - ${this.script.name}`, AlertPlacement.FOOTER));      
         
         const revertedScript = {
           id: this.script.id,
@@ -287,7 +287,7 @@ export default class ScriptEditor extends Vue {
         await this.$store.dispatch(`${StoreType.ScriptStore}/save`, revertedScript);
         this.script.shadowCopyCode = this.script.code;
         this.onScriptChanged(); // will reset the editor
-        this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new KikiAlert(`Script reverted`, AlertPlacement.FOOTER));
+        this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Script reverted`, AlertPlacement.FOOTER));
       }
     }
     catch(err){
@@ -303,7 +303,7 @@ export default class ScriptEditor extends Vue {
   private async onPublishScriptClicked(){
     try {
       if(this.script){
-        this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new KikiAlert(`Saving script - ${this.script.name}`, AlertPlacement.FOOTER));      
+        this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Saving script - ${this.script.name}`, AlertPlacement.FOOTER));      
         
         const updatedScript = {
           id: this.script.id,
@@ -312,7 +312,7 @@ export default class ScriptEditor extends Vue {
         };
         await this.$store.dispatch(`${StoreType.ScriptStore}/save`, updatedScript);
         this.script.code = this.script.shadowCopyCode;
-        this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new KikiAlert(`Script published`, AlertPlacement.FOOTER));
+        this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Script published`, AlertPlacement.FOOTER));
       }
     }
     catch(err){

@@ -9,7 +9,7 @@ const multer = require('multer');
 import * as config from 'config';
 import { MongoRepo } from '../shared/MongoLib';
 import * as mongodb from 'mongodb';
-import { BaseLogger } from '../shared/KikiLogger';
+import { BaseLogger } from '../shared/SGLogger';
 import LoginRouter from './routes/LoginRouter';
 const jwt = require('jsonwebtoken');
 import * as mongoose from 'mongoose';

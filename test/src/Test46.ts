@@ -2,7 +2,7 @@ import * as util from 'util';
 import * as config from 'config';
 import * as TestBase from './TestBase';
 import { InteractiveConsoleJob } from './TestArtifacts';
-import { KikiUtils } from '../../server/src/shared/KikiUtils';
+import { SGUtils } from '../../server/src/shared/SGUtils';
 import { TaskDefTarget, TaskStatus, JobStatus, TaskFailureCode } from '../../server/src/shared/Enums';
 import * as _ from 'lodash';
 import * as mongodb from 'mongodb';
@@ -15,7 +15,7 @@ time.sleep(10)
 print 'done'
 print '@kpo{"route": "ok"}'
 `;
-const script1_b64 = KikiUtils.btoa(script1);
+const script1_b64 = SGUtils.btoa(script1);
 
 
 let self: Test46;

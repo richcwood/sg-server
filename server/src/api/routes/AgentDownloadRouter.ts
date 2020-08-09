@@ -1,8 +1,8 @@
 import { NextFunction, Request, Response, Router, response } from 'express';
 import { MongoRepo } from '../../shared/MongoLib';
 import { S3Access } from '../../shared/S3Access';
-import { KikiUtils } from '../../shared/KikiUtils';
-import { BaseLogger } from '../../shared/KikiLogger';
+import { SGUtils } from '../../shared/SGUtils';
+import { BaseLogger } from '../../shared/SGLogger';
 import { ValidationError, MissingObjectError } from '../utils/Errors';
 import { ResponseWrapper, ResponseCode } from '../utils/Types';
 import { localRestAccess } from '../utils/LocalRestAccess';
@@ -203,7 +203,7 @@ export class AgentDownloadRouter {
     const agentCreateTimeout = new Date().getTime() - parseInt(config.get('AGENT_CREATE_TIMEOUT'), 10) * 1000;
     queryAgentCreateTimeout[lastUpdateTimeKey] = { $lt: agentCreateTimeout };
 
-    // let s3Path = `agent-stub/${environment}/${_orgId}/${platform}${arch}/${agentStubVersion}/kiki-agent-launcher`;
+    // let s3Path = `agent-stub/${environment}/${_orgId}/${platform}${arch}/${agentStubVersion}/sg-agent-launcher`;
     // if (platform == 'win')
     //   s3Path += '.exe';
     // s3Path += '.gz';
@@ -228,7 +228,7 @@ export class AgentDownloadRouter {
 
     if ((org != null) && (org.lastErrorObject.updatedExisting)) {
       // Create the agent stub install and upload it to s3
-      // let out_path = `/tmp/kiki-agent-stub-install/`;
+      // let out_path = `/tmp/sg-agent-stub-install/`;
       // let createAgentStubRes;
       try {
         // createAgentStubRes = await this.CreateAgentStubInstall(_orgId, agentStubVersion, 'node10', platform, arch, out_path, logger);
@@ -259,7 +259,7 @@ export class AgentDownloadRouter {
       }
 
       // let stubPath = createAgentStubRes;
-      // let compressedStubPath = await KikiUtils.GzipFile(stubPath);
+      // let compressedStubPath = await SGUtils.GzipFile(stubPath);
       // let ret = await this.s3Access.uploadFileToS3(compressedStubPath, s3Path, config.get('S3_BUCKET_AGENT_BINARIES'));
       // logger.LogInfo(`AgentStub ${agentStubVersion} loaded from ${stubPath} to ${s3Path}`, {});
       // // todo: delete local agent install files after upload to s3
@@ -304,9 +304,9 @@ export class AgentDownloadRouter {
 
 
     let pkg_json = {
-      "name": "kiki-agent-launcher",
+      "name": "sg-agent-launcher",
       "version": "1.0.0",
-      "description": "KiKi agent launcher",
+      "description": "Saas glue agent launcher",
       "keywords": [],
       "author": "",
       "license": "ISC",
@@ -334,18 +334,18 @@ export class AgentDownloadRouter {
 
     // let out_path = `.`;
     await fse.ensureDir(out_path);
-    out_path += KikiUtils.makeid(10);
+    out_path += SGUtils.makeid(10);
 
-    const url = `https://${config.get('KIKI_GIT_USERNAME')}:${config.get('KIKI_GIT_PASSWORD')}@${config.get('KIKI_GIT_URL')}`;
+    const url = `https://${config.get('SG_GIT_USERNAME')}:${config.get('SG_GIT_PASSWORD')}@${config.get('SG_GIT_URL')}`;
 
     await fse.remove(out_path);
     const cmdClone = `git clone --branch ${agentStubVersion} --depth 1 ${url} ${out_path}/`;
     logger.LogInfo(`Cloning git repo`, { 'Method': 'CreateAgentInstall', 'Command': cmdClone });
-    let cloneRes: any = await KikiUtils.RunCommand(cmdClone, {});
+    let cloneRes: any = await SGUtils.RunCommand(cmdClone, {});
     if (cloneRes.code != 0)
       throw new Error(cloneRes.stderr);
 
-    await KikiUtils.RunCommand(`npm i`, { cwd: out_path + '/agent' });
+    await SGUtils.RunCommand(`npm i`, { cwd: out_path + '/agent' });
 
     out_path += '/agent/dist';
     const pkg_path = `${out_path}/pkg_agent_stub`;
@@ -359,7 +359,7 @@ export class AgentDownloadRouter {
 
     let res = await exec([`${out_path}/LaunchAgentStub.js`, '--config', pkg_path + '/package.json', '--targets', target, '--out-path', pkg_path]);
 
-    let outFileName = `${pkg_path}/kiki-agent-launcher`;
+    let outFileName = `${pkg_path}/sg-agent-launcher`;
     if (platform == 'win')
       outFileName += '.exe';
 
@@ -377,9 +377,9 @@ export class AgentDownloadRouter {
     let agentLogsAPIVersion = queryRes.Values.agentLogs;
 
     let pkg_json = {
-      "name": "kiki-agent",
+      "name": "sg-agent",
       "version": "1.0.0",
-      "description": "KiKi agent",
+      "description": "Saas glue agent",
       "keywords": [],
       "author": "",
       "license": "ISC",
@@ -405,18 +405,18 @@ export class AgentDownloadRouter {
 
     // let out_path = `.`;
     await fse.ensureDir(out_path);
-    out_path += KikiUtils.makeid();
+    out_path += SGUtils.makeid();
 
-    const url = `https://${config.get('KIKI_GIT_USERNAME')}:${config.get('KIKI_GIT_PASSWORD')}@${config.get('KIKI_GIT_URL')}`;
+    const url = `https://${config.get('SG_GIT_USERNAME')}:${config.get('SG_GIT_PASSWORD')}@${config.get('SG_GIT_URL')}`;
 
     await fse.remove(out_path);
     const cmdClone = `git clone --branch ${agentVersion} --depth 1 ${url} ${out_path}/`;
     logger.LogInfo(`Cloning git repo`, { 'Method': 'CreateAgentInstall', 'Command': cmdClone });
-    let cloneRes: any = await KikiUtils.RunCommand(cmdClone, {});
+    let cloneRes: any = await SGUtils.RunCommand(cmdClone, {});
     if (cloneRes.code != 0)
       throw new Error(cloneRes.stderr);
 
-    await KikiUtils.RunCommand(`npm i`, { cwd: out_path + '/agent' });
+    await SGUtils.RunCommand(`npm i`, { cwd: out_path + '/agent' });
 
     out_path += '/agent/dist';
     const pkg_path = `${out_path}/pkg_agent`;
@@ -430,7 +430,7 @@ export class AgentDownloadRouter {
 
     let res = await exec([`${out_path}/LaunchAgent.js`, '--config', pkg_path + '/package.json', '--targets', target, '--out-path', pkg_path]);
 
-    let outFileName = `${pkg_path}/kiki-agent`;
+    let outFileName = `${pkg_path}/sg-agent`;
     if (platform == 'win')
       outFileName += '.exe';
 
@@ -496,7 +496,7 @@ export class AgentDownloadRouter {
     const agentCreateTimeout = new Date().getTime() - parseInt(config.get('AGENT_CREATE_TIMEOUT'), 10) * 1000;
     queryAgentCreateTimeout[lastUpdateTimeKey] = { $lt: agentCreateTimeout };
 
-    // let s3Path = `agent/${environment}/${_orgId}/${platform}${arch}/${agentVersion}/kiki-agent`;
+    // let s3Path = `agent/${environment}/${_orgId}/${platform}${arch}/${agentVersion}/sg-agent`;
     // if (platform == 'win')
     //   s3Path += '.exe';
     // s3Path += '.gz';
@@ -521,7 +521,7 @@ export class AgentDownloadRouter {
 
     if ((org != null) && (org.lastErrorObject.updatedExisting)) {
       // Create the agent install and upload it to s3
-      // let out_path = `/tmp/kiki-agent-install/`;
+      // let out_path = `/tmp/sg-agent-install/`;
       // let createAgentRes;
       try {
         // createAgentRes = await this.CreateAgentInstall(_orgId, agentVersion, 'node10', platform, arch, req.cookies.Auth, out_path, logger);
@@ -553,7 +553,7 @@ export class AgentDownloadRouter {
 
       // let agentPath = createAgentRes;
 
-      // let compressedStubPath = await KikiUtils.GzipFile(agentPath);
+      // let compressedStubPath = await SGUtils.GzipFile(agentPath);
       // let ret = await this.s3Access.uploadFileToS3(compressedStubPath, s3Path, config.get('S3_BUCKET_AGENT_BINARIES'));
       // logger.LogInfo(`Agent ${agentVersion} loaded from ${agentPath} to ${s3Path}`, {});
       // if (fs.existsSync(out_path))

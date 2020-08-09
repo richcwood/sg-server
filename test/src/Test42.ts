@@ -1,6 +1,6 @@
 import * as config from 'config';
 import * as TestBase from './TestBase';
-import { KikiUtils } from '../../server/src/shared/KikiUtils';
+import { SGUtils } from '../../server/src/shared/SGUtils';
 import { ScriptType, JobDefStatus, JobStatus } from '../../server/src/shared/Enums';
 import * as _ from 'lodash';
 
@@ -13,7 +13,7 @@ time.sleep(5)
 print 'done'
 sys.exit(1)
 `;
-const script1_b64 = KikiUtils.btoa(script1);
+const script1_b64 = SGUtils.btoa(script1);
 
 
 let self: Test42;

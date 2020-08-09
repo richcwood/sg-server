@@ -109,7 +109,7 @@ import { Component, Vue } from 'vue-property-decorator';
 import { BindStoreModel, BindSelected, BindSelectedCopy } from '@/decorator';
 import { StoreType } from '@/store/types';
 import { Artifact } from '@/store/artifact/types';
-import { KikiAlert, AlertPlacement, AlertCategory } from '@/store/alert/types';
+import { SgAlert, AlertPlacement, AlertCategory } from '@/store/alert/types';
 import { showErrors } from '@/utils/ErrorHandler';
 import { ValidationProvider, ValidationObserver } from 'vee-validate';
 import axios from 'axios';
@@ -260,11 +260,11 @@ export default class Artifacts extends Vue {
       }
 
       await Promise.all(promises);
-      this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new KikiAlert(`Deleted the artifacts`, AlertPlacement.FOOTER));
+      this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Deleted the artifacts`, AlertPlacement.FOOTER));
     }
     catch(err){
       console.error(err);
-      this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new KikiAlert(`Error deleting the artifacts.<br><br> ${failures.join('<br>')}`, AlertPlacement.WINDOW));
+      this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Error deleting the artifacts.<br><br> ${failures.join('<br>')}`, AlertPlacement.WINDOW));
     }
     finally {
       this.selectedArtifacts = [];

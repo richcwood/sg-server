@@ -1,6 +1,6 @@
 import * as config from 'config';
-import { KikiStrings } from '../../shared/KikiStrings';
-import { BaseLogger } from '../../shared/KikiLogger';
+import { SGStrings } from '../../shared/SGStrings';
+import { BaseLogger } from '../../shared/SGLogger';
 import { TaskSchema, TaskModel } from '../domain/Task';
 import { agentService } from '../services/AgentService';
 import * as Enums from '../../shared/Enums';
@@ -36,7 +36,7 @@ let GetTaskRoutes = async (_orgId: mongodb.ObjectId, task: TaskSchema, logger: B
             return { routes: null, error: errMsg, failureCode: Enums.TaskFailureCode.NO_AGENT_AVAILABLE };
         }
 
-        routes.push({ route: KikiStrings.GetAgentQueue(_orgId.toHexString(), task.targetAgentId), type: 'queue', queueAssertArgs: agentQueueProperties, targetAgentId: task.targetAgentId });
+        routes.push({ route: SGStrings.GetAgentQueue(_orgId.toHexString(), task.targetAgentId), type: 'queue', queueAssertArgs: agentQueueProperties, targetAgentId: task.targetAgentId });
     }
     /// For tasks requiring agents with designated tags, get a list of all active agents with all required tags. If no agents exist with all
     ///     required tags, log an error and return.
@@ -58,7 +58,7 @@ let GetTaskRoutes = async (_orgId: mongodb.ObjectId, task: TaskSchema, logger: B
             /// Publish the task in the queue of each agent. Otherwise, pick the agent that is currently the least utilized and send the task to it.
             if (task.target & (Enums.TaskDefTarget.ALL_AGENTS | (Enums.TaskDefTarget.ALL_AGENTS_WITH_TAGS))) {
                 for (let i = 0; i < agentsWithRequiredTags.length; i++) {
-                    const agentQueue = KikiStrings.GetAgentQueue(_orgId.toHexString(), agentsWithRequiredTags[i]._id);
+                    const agentQueue = SGStrings.GetAgentQueue(_orgId.toHexString(), agentsWithRequiredTags[i]._id);
                     routes.push({ route: agentQueue, type: 'queue', queueAssertArgs: agentQueueProperties, targetAgentId: agentsWithRequiredTags[0]._id });
                 }
             }
@@ -78,7 +78,7 @@ let GetTaskRoutes = async (_orgId: mongodb.ObjectId, task: TaskSchema, logger: B
                     return (b_unusedCapacity > a_unusedCapacity) ? 1 : ((a_unusedCapacity > b_unusedCapacity) ? -1 : (b.lastHeartbeatTime > a.lastHeartbeatTime ? 1 : ((a.lastHeartbeatTime > b.lastHeartbeatTime) ? -1 : 0)));
                 });
                 // console.log(`GetTaskRoutes -> after sort -> ${JSON.stringify(agentCandidates, null, 4)}`);
-                const agentQueue = KikiStrings.GetAgentQueue(_orgId.toHexString(), agentCandidates[0]._id);
+                const agentQueue = SGStrings.GetAgentQueue(_orgId.toHexString(), agentCandidates[0]._id);
                 routes.push({ route: agentQueue, type: 'queue', queueAssertArgs: agentQueueProperties, targetAgentId: agentCandidates[0]._id });
                 updatedTask = await TaskModel.findOneAndUpdate({ _id: task._id, _orgId }, { $push: { attemptedRunAgentIds: agentCandidates[0]._id } }, { new: true });
             }
@@ -103,7 +103,7 @@ let GetTaskRoutes = async (_orgId: mongodb.ObjectId, task: TaskSchema, logger: B
 
         if (task.target & Enums.TaskDefTarget.ALL_AGENTS) {
             for (let i = 0; i < Object.keys(agentsQuery).length; i++) {
-                const agentQueue = KikiStrings.GetAgentQueue(_orgId.toHexString(), agentsQuery[i]._id);
+                const agentQueue = SGStrings.GetAgentQueue(_orgId.toHexString(), agentsQuery[i]._id);
                 routes.push({ route: agentQueue, type: 'queue', queueAssertArgs: agentQueueProperties, targetAgentId: agentsQuery[0]._id });
             }
         } else {
@@ -121,7 +121,7 @@ let GetTaskRoutes = async (_orgId: mongodb.ObjectId, task: TaskSchema, logger: B
                 return (b_unusedCapacity > a_unusedCapacity) ? 1 : ((a_unusedCapacity > b_unusedCapacity) ? -1 : (b.lastHeartbeatTime > a.lastHeartbeatTime ? 1 : ((a.lastHeartbeatTime > b.lastHeartbeatTime) ? -1 : 0)));
             });
             // console.log(`GetTaskRoutes -> after sort -> ${JSON.stringify(agentCandidates, null, 4)}`);
-            const agentQueue = KikiStrings.GetAgentQueue(_orgId.toHexString(), agentCandidates[0]._id);
+            const agentQueue = SGStrings.GetAgentQueue(_orgId.toHexString(), agentCandidates[0]._id);
             routes.push({ route: agentQueue, type: 'queue', queueAssertArgs: agentQueueProperties, targetAgentId: agentCandidates[0]._id });
             updatedTask = await TaskModel.findOneAndUpdate({ _id: task._id, _orgId }, { $push: { attemptedRunAgentIds: agentCandidates[0]._id } }, { new: true });
         }

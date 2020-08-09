@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response } from 'express';
 import { ResponseCode, ResponseWrapper } from './Types';
 import { ValidationError } from './Errors';
-import { BaseLogger } from '../../shared/KikiLogger';
+import { BaseLogger } from '../../shared/SGLogger';
 import * as _ from 'lodash';
 
 export function handleErrors(err: Error, req: Request, res: Response, next: NextFunction): void {

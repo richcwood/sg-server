@@ -1,7 +1,7 @@
 import { userService } from './UserService';
-import { KikiUtils } from '../../shared/KikiUtils';
+import { SGUtils } from '../../shared/SGUtils';
 import { MissingObjectError, ValidationError } from '../utils/Errors';
-import { BaseLogger } from '../../shared/KikiLogger';
+import { BaseLogger } from '../../shared/SGLogger';
 import * as _ from 'lodash';
 const jwt = require('jsonwebtoken');
 import * as config from 'config';
@@ -25,7 +25,7 @@ export class ForgotPasswordService {
 
             if (!userModel.passwordHash) {
                 const salt = await bcrypt.genSalt(10);
-                const passwordHash = await bcrypt.hash(KikiUtils.makeid(12), salt);
+                const passwordHash = await bcrypt.hash(SGUtils.makeid(12), salt);
                 userModel.passwordHash = passwordHash;
                 await userModel.save();
             }
@@ -53,9 +53,9 @@ export class ForgotPasswordService {
             //     apiUrl += `:${apiPort}`
             // let resetPasswordLink = `${apiUrl}/api/${apiVersion}/reset/${userModel._id.toHexString()}/${token}`;
 
-            await KikiUtils.SendPasswordResetEmail(userModel.email, resetPasswordLink, logger);
+            await SGUtils.SendPasswordResetEmail(userModel.email, resetPasswordLink, logger);
         } else {
-            await KikiUtils.SendPasswordResetInvalidEmail(data.email, logger);
+            await SGUtils.SendPasswordResetInvalidEmail(data.email, logger);
         }
 
         return { result: 'success' };

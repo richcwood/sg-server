@@ -1,5 +1,5 @@
 import { convertData } from '../utils/ResponseConverters';
-import { BaseLogger } from '../../shared/KikiLogger';
+import { BaseLogger } from '../../shared/SGLogger';
 import { InvoiceSchema, InvoiceModel } from '../domain/Invoice';
 import { rabbitMQPublisher, PayloadOperation } from '../utils/RabbitMQPublisher';
 import { MissingObjectError, ValidationError } from '../utils/Errors';
@@ -7,7 +7,7 @@ import { settingsService } from '../services/SettingsService';
 import { StepOutcomeModel } from '../domain/StepOutcome';
 import { TaskOutcomeModel } from '../domain/TaskOutcome';
 import { AgentModel } from '../domain/Agent';
-import { KikiUtils } from '../../shared/KikiUtils';
+import { SGUtils } from '../../shared/SGUtils';
 import { orgService } from './OrgService';
 import { invoiceService } from './InvoiceService';
 import { MongoRepo } from '../../shared/MongoLib';
@@ -165,7 +165,7 @@ export class CreateInvoiceService {
                 data.artifactsDownloadedPerGBRate = billingSettings.defaultArtifactsDownloadedPerGBRate;
         }
 
-        const scriptBillAmount = KikiUtils.scriptBillingCalculator(data.scriptPricing, data.numScripts);
+        const scriptBillAmount = SGUtils.scriptBillingCalculator(data.scriptPricing, data.numScripts);
         data.scriptRate = 0;
         if (data.numScripts > 0)
             data.scriptRate = scriptBillAmount / data.numScripts;

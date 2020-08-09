@@ -2,7 +2,7 @@ import { StepOutcomeModel } from '../api/domain/StepOutcome';
 import { TaskOutcomeModel } from '../api/domain/TaskOutcome';
 import { orgService } from '../api/services/OrgService';
 import { OrgPricingTier } from './Enums';
-import { KikiUtils } from './KikiUtils';
+import { SGUtils } from './SGUtils';
 import * as _ from 'lodash';
 import { settingsService } from '../api/services/SettingsService';
 import { MissingObjectError, FreeTierLimitExceededError } from '../api/utils/Errors';
@@ -19,7 +19,7 @@ export class FreeTierChecks {
             throw new MissingObjectError(`Org '${_orgId.toHexString()} not found`);
         if (org.pricingTier == OrgPricingTier.FREE) {
             let numStepsStarted = 0;
-            const billingCycle = KikiUtils.GetCurrentBillingCycleDates();
+            const billingCycle = SGUtils.GetCurrentBillingCycleDates();
             let stepOutcomesFilter: any = {};
             stepOutcomesFilter['_orgId'] = new mongodb.ObjectId(_orgId);
             stepOutcomesFilter['dateStarted'] = { $gte: billingCycle.start };
@@ -53,7 +53,7 @@ export class FreeTierChecks {
                 s3Path += `${config.get('environment')}/`;
             s3Path += `${_orgId.toHexString()}/`;
 
-            const currentStorageUsage = s3Access.sizeOf(s3Path, config.get('S3_BUCKET_ORG_ARTIFACTS'));
+            const currentStorageUsage = s3Access.sizeOf(s3Path, config.get('S3_BUCKET_TEAM_ARTIFACTS'));
             const freeTierSettings = await settingsService.findSettings('FreeTierLimits');
             if (currentStorageUsage >= freeTierSettings.freeArtifactsStorageBytes) {
                 const msg = `You have reached the maximum amount of artifacts storage on the free tier - please upgrade to the paid tier to create additional artifacts`;
@@ -71,7 +71,7 @@ export class FreeTierChecks {
 
         if (org.pricingTier == OrgPricingTier.FREE) {
             let currentArtifactsDownloadedGB = 0;
-            const billingCycle = KikiUtils.GetCurrentBillingCycleDates();
+            const billingCycle = SGUtils.GetCurrentBillingCycleDates();
             let taskOutcomesFilter: any = {};
             taskOutcomesFilter['_orgId'] = _orgId;
             taskOutcomesFilter['dateStarted'] = { $gte: billingCycle.start };

@@ -13,11 +13,11 @@ import { taskOutcomeActionService } from './TaskOutcomeActionService';
 import { jobDefService } from './JobDefService';
 import { jobService } from './JobService';
 import { TaskStatus, StepStatus } from '../../shared/Enums';
-import { KikiStrings } from '../../shared/KikiStrings';
-import { BaseLogger } from '../../shared/KikiLogger';
+import { SGStrings } from '../../shared/SGStrings';
+import { BaseLogger } from '../../shared/SGLogger';
 import { orgVariableService } from '../services/OrgVariableService';
 import * as Enums from '../../shared/Enums';
-import { KikiUtils } from '../../shared/KikiUtils';
+import { SGUtils } from '../../shared/SGUtils';
 import { AMQPConnector } from '../../shared/AMQPLib';
 import { GetTaskRoutes } from '../utils/Shared';
 import { FreeTierChecks } from '../../shared/FreeTierChecks';
@@ -119,7 +119,7 @@ export class TaskOutcomeService {
                     if (updatedTaskOutcome.runtimeVars) {
                         for (let i = 0; i < Object.keys(updatedTaskOutcome.runtimeVars).length; i++) {
                             let key = Object.keys(updatedTaskOutcome.runtimeVars)[i];
-                            if (key != KikiStrings.route) {
+                            if (key != SGStrings.route) {
                                 const val = updatedTaskOutcome.runtimeVars[key];
                                 const qryUpdate: any = {};
                                 qryUpdate[`runtimeVars.${key}`] = val;
@@ -186,7 +186,7 @@ export class TaskOutcomeService {
                     }
 
                     if (updatedTaskOutcome.status == Enums.TaskStatus.INTERRUPTED && (job.onJobTaskInterruptedAlertEmail || job.onJobTaskInterruptedAlertSlackURL)) {
-                        await KikiUtils.OnTaskInterrupted(_orgId, updatedTaskOutcome, job, logger);
+                        await SGUtils.OnTaskInterrupted(_orgId, updatedTaskOutcome, job, logger);
                     }
 
                     if (updatedTaskOutcome.status == Enums.TaskStatus.INTERRUPTED) {
@@ -342,7 +342,7 @@ export class TaskOutcomeService {
                 }
 
                 if (taskFailed) {
-                    await KikiUtils.OnTaskFailed(_orgId, task, Enums.TaskFailureCode[getTaskRoutesRes.failureCode], logger);
+                    await SGUtils.OnTaskFailed(_orgId, task, Enums.TaskFailureCode[getTaskRoutesRes.failureCode], logger);
                 }
 
                 // Object.assign(deltas, { _id: task._id });
@@ -403,17 +403,17 @@ export class TaskOutcomeService {
                         }
                     }
 
-                    const script_code = KikiUtils.atob(step.script.code);
-                    let rtvScript = await KikiUtils.getRuntimeVarsForScript(_orgId, script_code, job);
+                    const script_code = SGUtils.atob(step.script.code);
+                    let rtvScript = await SGUtils.getRuntimeVarsForScript(_orgId, script_code, job);
                     runtimeVarsTask = Object.assign(runtimeVarsTask, rtvScript);
 
-                    let scriptsToInject = await KikiUtils.getInjectedScripts(_orgId, script_code);
+                    let scriptsToInject = await SGUtils.getInjectedScripts(_orgId, script_code);
                     allScriptsToInject = Object.assign(allScriptsToInject, scriptsToInject);
 
                     for (let i = 0; i < Object.keys(scriptsToInject).length; i++) {
                         const scriptId = Object.keys(scriptsToInject)[i];
-                        const script_code = KikiUtils.atob(scriptsToInject[scriptId]);
-                        let rtvScript = await KikiUtils.getRuntimeVarsForScript(_orgId, script_code, job);
+                        const script_code = SGUtils.atob(scriptsToInject[scriptId]);
+                        let rtvScript = await SGUtils.getRuntimeVarsForScript(_orgId, script_code, job);
                         runtimeVarsTask = Object.assign(runtimeVarsTask, rtvScript);
                     }
 
@@ -430,9 +430,9 @@ export class TaskOutcomeService {
 
                 for (let i = 0; i < routes.length; i++) {
                     if (routes[i]['type'] == 'queue') {
-                        await amqp.PublishQueue(KikiStrings.GetOrgExchangeName(_orgId.toHexString()), routes[i]['route'], convertedTask, routes[i]['queueAssertArgs'], { 'expiration': ttl });
+                        await amqp.PublishQueue(SGStrings.GetOrgExchangeName(_orgId.toHexString()), routes[i]['route'], convertedTask, routes[i]['queueAssertArgs'], { 'expiration': ttl });
                     } else {
-                        await amqp.PublishRoute(KikiStrings.GetOrgExchangeName(_orgId.toHexString()), routes[i]['route'], convertedTask);
+                        await amqp.PublishRoute(SGStrings.GetOrgExchangeName(_orgId.toHexString()), routes[i]['route'], convertedTask);
                     }
                 }
 

@@ -169,7 +169,7 @@ import { Component, Vue, Watch } from 'vue-property-decorator';
 import { BindStoreModel, BindSelected, BindSelectedCopy } from '@/decorator';
 import { StoreType } from '@/store/types';
 import { OrgVar } from '@/store/orgVar/types';
-import { KikiAlert, AlertPlacement, AlertCategory } from '@/store/alert/types';
+import { SgAlert, AlertPlacement, AlertCategory } from '@/store/alert/types';
 import { ValidationProvider, ValidationObserver } from 'vee-validate';
 import { Invoice, InvoiceStatus } from '@/store/invoice/types';
 import { PaymentTransaction, PaymentTransactionType, PaymentTransactionStatus } from '@/store/paymentTransaction/types';
@@ -338,7 +338,7 @@ export default class PaymentMethods extends Vue {
 
         extractFieldErrors(originalError);
         
-        this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new KikiAlert(`Error processing card:<br><br> ${errorStrings} <br><br>`, AlertPlacement.WINDOW));
+        this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Error processing card:<br><br> ${errorStrings} <br><br>`, AlertPlacement.WINDOW));
       }
     }
   }
@@ -355,7 +355,7 @@ export default class PaymentMethods extends Vue {
             pricingTier: OrgPricingTier.PAID
           });
           
-          this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new KikiAlert(`Updated organization to a paid plan.`, AlertPlacement.FOOTER));
+          this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Updated organization to a paid plan.`, AlertPlacement.FOOTER));
         }
       }
       else {
@@ -367,7 +367,7 @@ export default class PaymentMethods extends Vue {
             pricingTier: OrgPricingTier.FREE
           });
           
-          this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new KikiAlert(`Updated organization to a free plan.`, AlertPlacement.FOOTER));
+          this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Updated organization to a free plan.`, AlertPlacement.FOOTER));
         }
       }
     }
@@ -395,7 +395,7 @@ export default class PaymentMethods extends Vue {
       this.invoiceToPay = invoice;
       this.paymentAmount = this.paymentAmounts[this.invoiceToPay.id];
       if(!this.paymentAmount){
-        this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new KikiAlert(`Please specify a payment for the invoice`, AlertPlacement.WINDOW));
+        this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Please specify a payment for the invoice`, AlertPlacement.WINDOW));
         return;
       }
 
@@ -418,7 +418,7 @@ export default class PaymentMethods extends Vue {
         amount: this.paymentAmount
       });
 
-      this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new KikiAlert(`Payment processed`, AlertPlacement.FOOTER));
+      this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Payment processed`, AlertPlacement.FOOTER));
       this.onUnPaidInvoicesChanged();
     }
     catch(err){

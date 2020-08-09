@@ -1,8 +1,8 @@
 import * as util from 'util';
 import * as TestBase from './TestBase';
 import * as Enums from '../../server/src/shared/Enums';
-import { KikiUtils } from '../../server/src/shared/KikiUtils';
-import { KikiStrings } from '../../server/src/shared/KikiStrings';
+import { SGUtils } from '../../server/src/shared/SGUtils';
+import { SGStrings } from '../../server/src/shared/SGStrings';
 import { OrgSchema } from '../../server/src/api/domain/Org';
 import { JobDefSchema } from '../../server/src/api/domain/JobDef';
 import { TaskDefSchema } from '../../server/src/api/domain/TaskDef';
@@ -16,7 +16,7 @@ time.sleep(2)
 print 'done'
 print '@kpo{"route": "ok"}'
 `;
-const script1_b64 = KikiUtils.btoa(script1);
+const script1_b64 = SGUtils.btoa(script1);
 
 const coeff = 1000 * 60;
 
@@ -37,13 +37,13 @@ export default class Test15 extends TestBase.ScheduledJobTestBase {
         await super.CreateTest();
 
         // /// Create org
-        // let org: any = {'name': 'TestOrg15-1', 'isActive': true, 'rmqPassword': KikiUtils.makeid(10)};
+        // let org: any = {'name': 'TestOrg15-1', 'isActive': true, 'rmqPassword': SGUtils.makeid(10)};
         // org = await self.CreateOrg(org);
         // self.orgs.push(org);
 
         // /// Create agents
         // let agent;
-        // agent = { '_orgId': _orgId, 'machineId': KikiUtils.makeid(), 'ipAddress': '10.10.0.90', 'tags': [], 'numActiveTasks': 0, 'lastHeartbeatTime': new Date().getTime(), 'rmqPassword': org['rmqPassword']};
+        // agent = { '_orgId': _orgId, 'machineId': SGUtils.makeid(), 'ipAddress': '10.10.0.90', 'tags': [], 'numActiveTasks': 0, 'lastHeartbeatTime': new Date().getTime(), 'rmqPassword': org['rmqPassword']};
         // self.agents.push(agent);
          
         const orgName = 'TestOrg';
@@ -56,7 +56,7 @@ export default class Test15 extends TestBase.ScheduledJobTestBase {
             createdBy: this.sgUser.id,
             lastRunId: 0,
             dateCreated: new Date(),
-            expectedValues: { 'type': 'job', 'matchCount': 1, 'cntPartialMatch': 0, 'cntFullMatch': 0, 'values': { [KikiStrings.status]: Enums.JobStatus.COMPLETED } },
+            expectedValues: { 'type': 'job', 'matchCount': 1, 'cntPartialMatch': 0, 'cntFullMatch': 0, 'values': { [SGStrings.status]: Enums.JobStatus.COMPLETED } },
         }
         jobDef1 = await self.CreateJobDef(jobDef1, _orgId);
         self.jobDefs.push(jobDef1);
@@ -77,11 +77,11 @@ export default class Test15 extends TestBase.ScheduledJobTestBase {
             'matchType': '>=',
             'matchCount': 20, 
             'tagsMatch': true, 
-            'values': {[KikiStrings.status]: Enums.TaskStatus.SUCCEEDED},
+            'values': {[SGStrings.status]: Enums.TaskStatus.SUCCEEDED},
             'step': [
                 {'name': step1.name, 'values': {'status': Enums.TaskStatus.SUCCEEDED, 'stderr': '', 'exitCode': 0}}
             ], 
-            'runtimeVars': {[KikiStrings.route]: 'ok'}, 
+            'runtimeVars': {[SGStrings.route]: 'ok'}, 
             'cntPartialMatch': 0, 
             'cntFullMatch': 0
         };
@@ -98,12 +98,12 @@ export default class Test15 extends TestBase.ScheduledJobTestBase {
 
 
         // /// Create org
-        // org = {'name': 'TestOrg15-2', 'isActive': true, 'rmqPassword': KikiUtils.makeid(10)};
+        // org = {'name': 'TestOrg15-2', 'isActive': true, 'rmqPassword': SGUtils.makeid(10)};
         // org = await self.CreateOrg(org);
         // self.orgs.push(org);
     
         // /// Create agents
-        // agent = { '_orgId': _orgId, 'machineId': KikiUtils.makeid(), 'ipAddress': '10.10.0.90', 'tags': [], 'numActiveTasks': 0, 'lastHeartbeatTime': new Date().getTime(), 'rmqPassword': org['rmqPassword']};
+        // agent = { '_orgId': _orgId, 'machineId': SGUtils.makeid(), 'ipAddress': '10.10.0.90', 'tags': [], 'numActiveTasks': 0, 'lastHeartbeatTime': new Date().getTime(), 'rmqPassword': org['rmqPassword']};
         // self.agents.push(agent);
 
         /// Create job def
@@ -113,7 +113,7 @@ export default class Test15 extends TestBase.ScheduledJobTestBase {
             createdBy: this.sgUser.id,
             lastRunId: 0,
             dateCreated: new Date(),
-            expectedValues: { 'type': 'job', 'matchCount': 1, 'cntPartialMatch': 0, 'cntFullMatch': 0, 'values': { [KikiStrings.status]: Enums.JobStatus.COMPLETED } },
+            expectedValues: { 'type': 'job', 'matchCount': 1, 'cntPartialMatch': 0, 'cntFullMatch': 0, 'values': { [SGStrings.status]: Enums.JobStatus.COMPLETED } },
         }
         jobDef2 = await self.CreateJobDef(jobDef2, _orgId);
         self.jobDefs.push(jobDef2);
@@ -133,11 +133,11 @@ export default class Test15 extends TestBase.ScheduledJobTestBase {
             'type': 'task', 
             'matchCount': 20, 
             'tagsMatch': true, 
-            'values': {[KikiStrings.status]: Enums.TaskStatus.SUCCEEDED},
+            'values': {[SGStrings.status]: Enums.TaskStatus.SUCCEEDED},
             'step': [
                 {'name': step2.name, 'values': {'status': Enums.TaskStatus.SUCCEEDED, 'stderr': '', 'exitCode': 0}}
             ], 
-            'runtimeVars': {[KikiStrings.route]: 'ok'}, 
+            'runtimeVars': {[SGStrings.route]: 'ok'}, 
             'cntPartialMatch': 0, 
             'cntFullMatch': 0
         };

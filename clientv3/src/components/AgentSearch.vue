@@ -15,7 +15,7 @@ import _ from 'lodash';
 import { Component, Prop, Vue, Watch } from 'vue-property-decorator';
 import { Agent } from '@/store/agent/types';
 import { LinkedModel, StoreType } from '@/store/types';
-import { KikiAlert, AlertPlacement, AlertCategory } from '@/store/alert/types';
+import { SgAlert, AlertPlacement, AlertCategory } from '@/store/alert/types';
 
 @Component
 export default class AgentSearch extends Vue {
@@ -75,7 +75,7 @@ export default class AgentSearch extends Vue {
       }
     }
     catch(err){
-      this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new KikiAlert(`Error searching agents: ${err}`, AlertPlacement.WINDOW, AlertCategory.ERROR));
+      this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Error searching agents: ${err}`, AlertPlacement.WINDOW, AlertCategory.ERROR));
     }
   }
 

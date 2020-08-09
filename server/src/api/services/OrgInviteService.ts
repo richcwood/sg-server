@@ -1,9 +1,9 @@
 import { UserSchema, UserModel } from '../domain/User';
 import { OrgSchema, OrgModel } from '../domain/Org';
 import { userService } from './UserService';
-import { KikiUtils } from '../../shared/KikiUtils';
+import { SGUtils } from '../../shared/SGUtils';
 import { MissingObjectError, ValidationError } from '../utils/Errors';
-import { BaseLogger } from '../../shared/KikiLogger';
+import { BaseLogger } from '../../shared/SGLogger';
 import * as _ from 'lodash';
 const jwt = require('jsonwebtoken');
 import { v4 as uuidv4 } from 'uuid';
@@ -37,7 +37,7 @@ export class OrgInviteService {
         }
 
         if (userModel.orgIdsInactive.indexOf(_orgId) >= 0) {
-            KikiUtils.removeItemFromArray(userModel.orgIdsInactive, _orgId);
+            SGUtils.removeItemFromArray(userModel.orgIdsInactive, _orgId);
             userModel.orgIds.push(_orgId);
             await userModel.save();
         }
@@ -78,7 +78,7 @@ export class OrgInviteService {
             url += `:${port}`
         let acceptInviteLink = `${url}/?invitedOrgToken_direct=${token}`;
 
-        await KikiUtils.SendOrgInviteEmail(org, inviter, userModel.email, acceptInviteLink, logger);
+        await SGUtils.SendOrgInviteEmail(org, inviter, userModel.email, acceptInviteLink, logger);
 
         return { result: 'success' };
     }

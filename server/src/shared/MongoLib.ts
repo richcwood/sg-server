@@ -8,9 +8,9 @@ let mongoClient = mongodb.MongoClient;
 
 export class MongoRepo {
     private db: any;
-    // private logger: KikiLogger.MongoLogger;
+    // private logger: SGLogger.MongoLogger;
     constructor(public appName: string, public mongoDbUrl: string, public dbName: string, private logger: any) {
-        // this.logger = new KikiLogger.MongoLogger(appName);
+        // this.logger = new SGLogger.MongoLogger(appName);
     }
 
     LogError(msg: string, stackTrace: string, values: any) {

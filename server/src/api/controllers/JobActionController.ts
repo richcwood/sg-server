@@ -3,7 +3,7 @@ import { ResponseWrapper, ResponseCode } from '../utils/Types';
 import { jobActionService } from '../services/JobActionService';
 import * as _ from 'lodash';
 import * as mongodb from 'mongodb';
-import { BaseLogger } from '../../shared/KikiLogger';
+import { BaseLogger } from '../../shared/SGLogger';
 
 
 export class JobActionController {

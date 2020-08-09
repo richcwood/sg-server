@@ -37,7 +37,7 @@ export class ArtifactService {
         if (artifact.prefix)
             s3Path += `${artifact.prefix}`;
         s3Path += artifact.name;
-        let url = await s3Access.getSignedS3URL(s3Path, config.get('S3_BUCKET_ORG_ARTIFACTS'));
+        let url = await s3Access.getSignedS3URL(s3Path, config.get('S3_BUCKET_TEAM_ARTIFACTS'));
 
         return Object.assign(artifact, { url });
     }
@@ -104,7 +104,7 @@ export class ArtifactService {
             newArtifact = await artifactModel.save();
         }
 
-        let url = await s3Access.putSignedS3URL(s3Path, config.get('S3_BUCKET_ORG_ARTIFACTS'), newArtifact.type);
+        let url = await s3Access.putSignedS3URL(s3Path, config.get('S3_BUCKET_TEAM_ARTIFACTS'), newArtifact.type);
         newArtifact.url = url;
 
         await rabbitMQPublisher.publish(_orgId, "Artifact", correlationId, PayloadOperation.CREATE, convertData(ArtifactSchema, newArtifact));
@@ -133,7 +133,7 @@ export class ArtifactService {
         }
 
         let s3Access = new S3Access();
-        let url = await s3Access.putSignedS3URL(artifact.s3Path, config.get('S3_BUCKET_ORG_ARTIFACTS'), artifact.type);
+        let url = await s3Access.putSignedS3URL(artifact.s3Path, config.get('S3_BUCKET_TEAM_ARTIFACTS'), artifact.type);
         artifact.url = url;
 
         const updatedArtifact = await ArtifactModel.findOneAndUpdate({_id: id}, {url}, { new: true });
@@ -160,7 +160,7 @@ export class ArtifactService {
         const deleted = await ArtifactModel.deleteOne({ _id: id, _orgId });
 
         let s3Access = new S3Access();
-        await s3Access.deleteFileFromS3(artifact.s3Path, config.get('S3_BUCKET_ORG_ARTIFACTS'));
+        await s3Access.deleteFileFromS3(artifact.s3Path, config.get('S3_BUCKET_TEAM_ARTIFACTS'));
 
         await rabbitMQPublisher.publish(_orgId, "Artifact", correlationId, PayloadOperation.DELETE, { _id: id });
 

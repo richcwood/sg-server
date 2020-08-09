@@ -2,9 +2,9 @@ import { convertData } from '../utils/ResponseConverters';
 import { OrgModel, OrgSchema } from '../domain/Org';
 import { MissingObjectError, ValidationError } from '../utils/Errors';
 import { RabbitMQAdmin } from '../../shared/RabbitMQAdmin';
-import { BaseLogger } from '../../shared/KikiLogger';
-import { KikiStrings } from '../../shared/KikiStrings';
-import { KikiUtils } from '../../shared/KikiUtils';
+import { BaseLogger } from '../../shared/SGLogger';
+import { SGStrings } from '../../shared/SGStrings';
+import { SGUtils } from '../../shared/SGUtils';
 import { rabbitMQPublisher, PayloadOperation } from '../utils/RabbitMQPublisher';
 import * as mongodb from 'mongodb';
 import * as config from 'config';
@@ -70,7 +70,7 @@ export class OrgService {
 
       orgModel.inviteLink = joinOrgLink;
 
-      orgModel.rmqPassword = KikiUtils.makeid(10);
+      orgModel.rmqPassword = SGUtils.makeid(10);
 
       newOrg = await orgModel.save();
     }
@@ -83,7 +83,7 @@ export class OrgService {
     const rmqAdmin = new RabbitMQAdmin(rmqAdminUrl, rmqVhost, logger);
     const newUsername = newOrg._id.toString();
 
-    const orgExchange = KikiStrings.GetOrgRoutingPrefix(newOrg._id);
+    const orgExchange = SGStrings.GetOrgRoutingPrefix(newOrg._id);
     await rmqAdmin.createExchange(orgExchange, 'topic', false, true);
     await rmqAdmin.createUser(newUsername, newOrg.rmqPassword, orgExchange);
 

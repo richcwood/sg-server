@@ -3,7 +3,7 @@ import { ResponseWrapper, ResponseCode } from '../utils/Types';
 import { UserSchema } from '../domain/User';
 import { signupService } from '../services/SignupService';
 import { MissingObjectError } from '../utils/Errors';
-import { BaseLogger } from '../../shared/KikiLogger';
+import { BaseLogger } from '../../shared/SGLogger';
 import { convertData as convertResponseData } from '../utils/ResponseConverters';
 const jwt = require('jsonwebtoken');
 import * as _ from 'lodash';

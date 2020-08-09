@@ -12,7 +12,7 @@ import { stepDefService } from './StepDefService';
 import { taskDefService } from './TaskDefService';
 import { agentService } from './AgentService';
 import { scheduleService } from './ScheduleService';
-import { KikiUtils } from '../../shared/KikiUtils';
+import { SGUtils } from '../../shared/SGUtils';
 import * as _ from 'lodash';
 
 
@@ -194,7 +194,7 @@ export class JobDefService {
       throw new MissingObjectError(`Agent ${data._agentId} not found.`);
     const agent = agentReq[0];
 
-    const cronJobUniqueId = KikiUtils.makeid(5);
+    const cronJobUniqueId = SGUtils.makeid(5);
 
     const jobDef_data = {
       _orgId,
@@ -206,7 +206,7 @@ export class JobDefService {
 
     const tokens = data.cronString.split(' ');
 
-    const code = KikiUtils.btoa(tokens.slice(6).join(' '));
+    const code = SGUtils.btoa(tokens.slice(6).join(' '));
     const script_data = {
       _orgId,
       name: `cron-${agent.machineId}-${cronJobUniqueId}`,

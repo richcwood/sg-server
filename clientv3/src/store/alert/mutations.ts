@@ -1,8 +1,8 @@
 import { MutationTree } from 'vuex';
-import { AlertStore, KikiAlert, AlertPlacement } from './types';
+import { AlertStore, SgAlert, AlertPlacement } from './types';
 
 export const mutations: MutationTree<AlertStore> = {  
-  addModels(state, models: KikiAlert[]){
+  addModels(state, models: SgAlert[]){
     state.models.push(...models);
 
     // just take the first footer if it exists
@@ -27,7 +27,7 @@ export const mutations: MutationTree<AlertStore> = {
     }
   },
 
-  removeModel(state, model: KikiAlert){
+  removeModel(state, model: SgAlert){
     if(model === state.currentFooter){
       state.currentFooter = null;
     }

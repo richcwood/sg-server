@@ -1,8 +1,8 @@
 import * as util from 'util';
 import * as TestBase from './TestBase';
 import * as Enums from '../../server/src/shared/Enums';
-import { KikiUtils } from '../../server/src/shared/KikiUtils';
-import { KikiStrings } from '../../server/src/shared/KikiStrings';
+import { SGUtils } from '../../server/src/shared/SGUtils';
+import { SGStrings } from '../../server/src/shared/SGStrings';
 import { OrgSchema } from '../../server/src/api/domain/Org';
 import { JobDefSchema } from '../../server/src/api/domain/JobDef';
 import { TaskDefSchema } from '../../server/src/api/domain/TaskDef';
@@ -18,7 +18,7 @@ time.sleep(2)
 print 'done'
 print '@kpo{"route": "ok"}'
 `;
-const script1_b64 = KikiUtils.btoa(script1);
+const script1_b64 = SGUtils.btoa(script1);
 
 const script2 = `
 import time
@@ -27,7 +27,7 @@ time.sleep(2)
 print 'done'
 print '@kpo{"outVal": "val"}'
 `;
-const script2_b64 = KikiUtils.btoa(script2);
+const script2_b64 = SGUtils.btoa(script2);
 
 let self: Test20;
 
@@ -46,7 +46,7 @@ export default class Test20 extends TestBase.default {
         await super.CreateTest();
 
         // /// Create org
-        // let org: any = { 'name': 'TestOrg20', 'isActive': true, 'rmqPassword': KikiUtils.makeid(10) };
+        // let org: any = { 'name': 'TestOrg20', 'isActive': true, 'rmqPassword': SGUtils.makeid(10) };
         // org = await self.CreateOrg(org);
         // self.orgs.push(org);
 
@@ -60,7 +60,7 @@ export default class Test20 extends TestBase.default {
             createdBy: this.sgUser.id,
             lastRunId: 0,
             dateCreated: new Date(),
-            expectedValues: { 'type': 'job', 'matchCount': 1, 'cntPartialMatch': 0, 'cntFullMatch': 0, 'values': { [KikiStrings.status]: Enums.JobStatus.COMPLETED } },
+            expectedValues: { 'type': 'job', 'matchCount': 1, 'cntPartialMatch': 0, 'cntFullMatch': 0, 'values': { [SGStrings.status]: Enums.JobStatus.COMPLETED } },
         }
         jobDef = await self.CreateJobDef(jobDef, _orgId);
         self.jobDefs.push(jobDef);
@@ -79,7 +79,7 @@ export default class Test20 extends TestBase.default {
         // let agent;
         // agent = {
         //     '_orgId': _orgId,
-        //     'machineId': KikiUtils.makeid(),
+        //     'machineId': SGUtils.makeid(),
         //     'ipAddress': '10.10.0.90',
         //     'tags': [],
         //     'numActiveTasks': 0,
@@ -105,8 +105,8 @@ export default class Test20 extends TestBase.default {
             'type': 'task',
             'matchCount': 5,
             'tagsMatch': true,
-            'values': { [KikiStrings.status]: Enums.TaskStatus.SUCCEEDED },
-            'runtimeVars': { [KikiStrings.route]: 'ok' },
+            'values': { [SGStrings.status]: Enums.TaskStatus.SUCCEEDED },
+            'runtimeVars': { [SGStrings.route]: 'ok' },
             'step': [
                 { 'name': step.name, 'values': { 'status': Enums.TaskStatus.SUCCEEDED, 'stderr': '', 'exitCode': 0 } }
             ],
@@ -119,7 +119,7 @@ export default class Test20 extends TestBase.default {
             'type': 'task',
             'matchCount': 5,
             'tagsMatch': true,
-            'values': { [KikiStrings.status]: Enums.TaskStatus.SUCCEEDED },
+            'values': { [SGStrings.status]: Enums.TaskStatus.SUCCEEDED },
             'runtimeVars': { 'outVal': 'val' },
             'step': [
                 { 'name': 'Step1', 'values': { 'status': Enums.TaskStatus.SUCCEEDED, 'stderr': '', 'exitCode': 0 } }

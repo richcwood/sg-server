@@ -3,7 +3,7 @@
  */
 
  
-export class KikiStrings {
+export class SGStrings {
     static status: string = 'status';
     static route: string = 'route';
     static skipped: string = 'skipped';

@@ -1,8 +1,8 @@
 import * as util from 'util';
 import * as TestBase from './TestBase';
 import * as Enums from '../../server/src/shared/Enums';
-import { KikiUtils } from '../../server/src/shared/KikiUtils';
-import { KikiStrings } from '../../server/src/shared/KikiStrings';
+import { SGUtils } from '../../server/src/shared/SGUtils';
+import { SGStrings } from '../../server/src/shared/SGStrings';
 import { OrgSchema } from '../../server/src/api/domain/Org';
 import { JobDefSchema } from '../../server/src/api/domain/JobDef';
 import { TaskDefSchema } from '../../server/src/api/domain/TaskDef';
@@ -16,7 +16,7 @@ time.sleep(2)
 print 'done'
 print '@kpo{"route": "ok"}'
 `;
-const script1_b64 = KikiUtils.btoa(script1);
+const script1_b64 = SGUtils.btoa(script1);
 
 const script3 = `
 import time
@@ -25,7 +25,7 @@ time.sleep(2)
 print 'done'
 print '@kpo{"outVal": "val"}'
 `;
-const script3_b64 = KikiUtils.btoa(script3);
+const script3_b64 = SGUtils.btoa(script3);
 
 let self: Test37;
 
@@ -52,7 +52,7 @@ export default class Test37 extends TestBase.default {
             createdBy: this.sgUser.id,
             lastRunId: 0,
             dateCreated: new Date(),
-            expectedValues: { 'type': 'job', 'matchCount': 1, 'cntPartialMatch': 0, 'cntFullMatch': 0, 'values': { [KikiStrings.status]: Enums.JobStatus.COMPLETED } },
+            expectedValues: { 'type': 'job', 'matchCount': 1, 'cntPartialMatch': 0, 'cntFullMatch': 0, 'values': { [SGStrings.status]: Enums.JobStatus.COMPLETED } },
         }
         jobDef = await self.CreateJobDef(jobDef, _orgId);
         self.jobDefs.push(jobDef);
@@ -81,8 +81,8 @@ export default class Test37 extends TestBase.default {
             'type': 'task', 
             'matchCount': 20, 
             'tagsMatch': true,
-            'values': {[KikiStrings.status]: Enums.TaskStatus.SUCCEEDED}, 
-            'runtimeVars': {[KikiStrings.route]: 'ok'}, 
+            'values': {[SGStrings.status]: Enums.TaskStatus.SUCCEEDED}, 
+            'runtimeVars': {[SGStrings.route]: 'ok'}, 
             'step': [
                 {'name': step.name, 'values': {'status': Enums.TaskStatus.SUCCEEDED, 'stderr': '', 'exitCode': 0}}
             ], 
@@ -96,7 +96,7 @@ export default class Test37 extends TestBase.default {
             'type': 'task', 
             'matchCount': 20, 
             'tagsMatch': true, 
-            'values': {[KikiStrings.status]: Enums.TaskStatus.SUCCEEDED}, 
+            'values': {[SGStrings.status]: Enums.TaskStatus.SUCCEEDED}, 
             'runtimeVars': {'outVal': 'val'}, 
             'step': [
                 {'name': step3.name, 'values': {'status': Enums.TaskStatus.SUCCEEDED, 'stderr': '', 'exitCode': 0}}

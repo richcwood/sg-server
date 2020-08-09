@@ -56,7 +56,7 @@ import { Component, Vue } from 'vue-property-decorator';
 import { BindStoreModel, BindSelected, BindSelectedCopy } from '@/decorator';
 import { StoreType } from '@/store/types';
 import { OrgVar } from '@/store/orgVar/types';
-import { KikiAlert, AlertPlacement, AlertCategory } from '@/store/alert/types';
+import { SgAlert, AlertPlacement, AlertCategory } from '@/store/alert/types';
 import { ValidationProvider, ValidationObserver } from 'vee-validate';
 import { showErrors } from '@/utils/ErrorHandler';
 
@@ -93,11 +93,11 @@ export default class OrgVars extends Vue {
         return;
       }
 
-      this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new KikiAlert(`Creating team variable`, AlertPlacement.FOOTER));
+      this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Creating team variable`, AlertPlacement.FOOTER));
       
       await this.$store.dispatch(`${StoreType.OrgVariableStore}/save`, {name: this.newKey, value: this.newValue });
 
-      this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new KikiAlert(`Team variable created`, AlertPlacement.FOOTER));
+      this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Team variable created`, AlertPlacement.FOOTER));
     }
     catch(err){
       console.error(err);
@@ -109,7 +109,7 @@ export default class OrgVars extends Vue {
     try {      
       await this.$store.dispatch(`${StoreType.OrgVariableStore}/delete`, orgVar);
 
-      this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new KikiAlert(`Team variable deleted`, AlertPlacement.FOOTER));
+      this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Team variable deleted`, AlertPlacement.FOOTER));
     }
     catch(err){
       console.error(err);

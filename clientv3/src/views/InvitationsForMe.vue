@@ -36,7 +36,7 @@
 import { Component, Vue } from 'vue-property-decorator';
 import { StoreType } from '@/store/types';
 import { BindStoreModel } from '@/decorator';
-import { KikiAlert, AlertPlacement, AlertCategory } from '@/store/alert/types';
+import { SgAlert, AlertPlacement, AlertCategory } from '@/store/alert/types';
 import { parseJwt } from '@/store/security';
 import { showErrors } from '@/utils/ErrorHandler';
 import axios from 'axios';
@@ -72,7 +72,7 @@ export default class InvitationsForMe extends Vue {
       const user = acceptInvitationResult.data.data; // this is the user account with updated info  
       this.$store.commit('securityStore/setUser', user);
 
-      this.$store.dispatch('alertStore/addAlert', new KikiAlert(`Succesfully joined the team ${this.getOrg(orgId).name}`, AlertPlacement.WINDOW));
+      this.$store.dispatch('alertStore/addAlert', new SgAlert(`Succesfully joined the team ${this.getOrg(orgId).name}`, AlertPlacement.WINDOW));
     }
     catch(err){
       console.error(err);
@@ -140,7 +140,7 @@ export default class InvitationsForMe extends Vue {
       }
       
       this.$store.commit('securityStore/setUser', user);
-      this.$store.dispatch('alertStore/addAlert', new KikiAlert(`Succesfully joined the team ${this.localStorageInvitedOrgName}`, AlertPlacement.WINDOW));
+      this.$store.dispatch('alertStore/addAlert', new SgAlert(`Succesfully joined the team ${this.localStorageInvitedOrgName}`, AlertPlacement.WINDOW));
       localStorage.removeItem('sg_invited_org_token');
       this.showAcceptedGenericInviteSuccess = true;
     }

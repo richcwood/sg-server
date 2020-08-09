@@ -70,7 +70,7 @@ import { Agent, Architecture, Platform, Platform_inverted } from '../store/agent
 import VueSplit from 'vue-split-panel';
 import { Tabs, Tab } from 'vue-slim-tabs';
 import axios from 'axios';
-import { KikiAlert, AlertPlacement, AlertCategory } from '@/store/alert/types';
+import { SgAlert, AlertPlacement, AlertCategory } from '@/store/alert/types';
 import { showErrors } from '@/utils/ErrorHandler';
 import { momentToStringV1 } from '@/utils/DateTime';
 import _ from 'lodash';
@@ -143,7 +143,7 @@ export default class DownloadAgent extends Vue {
 
     const architecture = this.selectedArchitecture[platform];
 
-    this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new KikiAlert(`Creating a download package for ${platform}/${architecture}`, AlertPlacement.FOOTER, AlertCategory.INFO, 10000));
+    this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Creating a download package for ${platform}/${architecture}`, AlertPlacement.FOOTER, AlertCategory.INFO, 10000));
 
     const getLinkPromise = new Promise((resolve: any, reject: any) => {
       let getLinkTryCount = 0;
@@ -186,7 +186,7 @@ export default class DownloadAgent extends Vue {
       this.downloadLinks[platform].link = downloadUrl;
       this.downloadLinks[platform].linkText = 'download the agent';
 
-      this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new KikiAlert(`The download link is valid for 5 minutes.`, AlertPlacement.FOOTER, AlertCategory.INFO));
+      this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`The download link is valid for 5 minutes.`, AlertPlacement.FOOTER, AlertCategory.INFO));
     }
     catch(err){
       this.creatingAgentForPlatform = null;

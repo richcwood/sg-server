@@ -1,7 +1,7 @@
 import * as util from 'util';
 import * as TestBase from './TestBase';
-import { KikiUtils } from '../../server/src/shared/KikiUtils';
-import { KikiStrings } from '../../server/src/shared/KikiStrings';
+import { SGUtils } from '../../server/src/shared/SGUtils';
+import { SGStrings } from '../../server/src/shared/SGStrings';
 import { TaskSchema } from '../../server/src/api/domain/Task';
 import { StepSchema } from '../../server/src/api/domain/Step';
 import { ScriptSchema } from '../../server/src/api/domain/Script';
@@ -16,7 +16,7 @@ sleep(5)
 print 'done\n'
 print '@kpo{"route": "ok"}\n'
 `;
-const script1_b64 = KikiUtils.btoa(script1);
+const script1_b64 = SGUtils.btoa(script1);
 
 let self: Test19;
 
@@ -34,13 +34,13 @@ export default class Test19 extends TestBase.AdhocTaskTestBase {
         await super.CreateTest();
 
         // /// Create org
-        // let org: any = { 'name': 'TestOrg19', 'isActive': true, 'rmqPassword': KikiUtils.makeid(10) };
+        // let org: any = { 'name': 'TestOrg19', 'isActive': true, 'rmqPassword': SGUtils.makeid(10) };
         // org = await self.CreateOrg(org);
         // self.orgs.push(org);
 
         // /// Create agents
         // let agent;
-        // agent = { '_orgId': _orgId, 'machineId': KikiUtils.makeid(), 'ipAddress': '10.10.0.90', 'tags': [], 'numActiveTasks': 0, 'lastHeartbeatTime': new Date().getTime(), 'rmqPassword': org['rmqPassword'] };
+        // agent = { '_orgId': _orgId, 'machineId': SGUtils.makeid(), 'ipAddress': '10.10.0.90', 'tags': [], 'numActiveTasks': 0, 'lastHeartbeatTime': new Date().getTime(), 'rmqPassword': org['rmqPassword'] };
         // self.agents.push(agent);
 
         const orgName = 'TestOrg';
@@ -80,8 +80,8 @@ export default class Test19 extends TestBase.AdhocTaskTestBase {
             'type': 'task',
             'matchCount': 7,
             'tagsMatch': true,
-            'values': { [KikiStrings.status]: Enums.TaskStatus.SUCCEEDED, 'correlationId': correlationId, source: TaskSource.JOB },
-            'runtimeVars': { [KikiStrings.route]: 'ok' },
+            'values': { [SGStrings.status]: Enums.TaskStatus.SUCCEEDED, 'correlationId': correlationId, source: TaskSource.JOB },
+            'runtimeVars': { [SGStrings.route]: 'ok' },
             'step': [
                 { 'name': 'Step1', 'values': { 'status': Enums.TaskStatus.SUCCEEDED, 'stderr': '', 'exitCode': 0 } }
             ],

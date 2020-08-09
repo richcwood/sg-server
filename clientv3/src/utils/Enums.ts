@@ -1,5 +1,3 @@
-// Bart - just temporarily copied the shared enums in for now - eventually use kiki shared
-
 enum StepStatus {NOT_STARTED = 0, RUNNING = 10, INTERRUPTED = 15, SUCCEEDED = 20, FAILED = 22, CANCELLED = 21}
 
 enum TaskStatus {NOT_STARTED = 0, WAITING_FOR_AGENT = 3, PUBLISHED = 5, RUNNING = 10, INTERRUPTING = 14, INTERRUPTED = 15, CANCELING = 17, SUCCEEDED = 20, CANCELLED = 21, FAILED = 22, SKIPPED = 23};

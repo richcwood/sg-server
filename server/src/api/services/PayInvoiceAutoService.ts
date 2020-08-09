@@ -1,5 +1,5 @@
 import { convertData } from '../utils/ResponseConverters';
-import { BaseLogger } from '../../shared/KikiLogger';
+import { BaseLogger } from '../../shared/SGLogger';
 import { PaymentTransactionSchema, PaymentTransactionModel } from '../domain/PaymentTransaction';
 import { PaymentTransactionSource } from '../../shared/Enums';
 import { paymentTransactionService } from './PaymentTransactionService';
@@ -10,7 +10,7 @@ import { invoiceService } from './InvoiceService';
 import { InvoiceStatus, OrgPaymentStatus } from '../../shared/Enums';
 import { OrgSchema } from '../domain/Org';
 import { PaymentTransactionStatus } from '../../shared/Enums';
-import { KikiUtils } from '../../shared/KikiUtils';
+import { SGUtils } from '../../shared/SGUtils';
 import * as _ from 'lodash';
 import * as config from 'config';
 import { orgService } from './OrgService';
@@ -40,7 +40,7 @@ export class PayInvoiceAutoService {
 
         if (amount <= 0) {
             let updatedInvoice = await invoiceService.updateInvoice(_orgId, invoice._id, { status: InvoiceStatus.PAID }, correlationId);
-            await KikiUtils.CreateAndSendInvoice(org, updatedInvoice, { paymentInstrumentType: 'n/a', paymentInstrument: 'n/a' }, logger);
+            await SGUtils.CreateAndSendInvoice(org, updatedInvoice, { paymentInstrumentType: 'n/a', paymentInstrument: 'n/a' }, logger);
             return { _orgId: _orgId, amount: 0 };
         }
 
@@ -86,7 +86,7 @@ export class PayInvoiceAutoService {
             logger.LogInfo('Payment processing succeeded', transactionResponse);
 
             let updatedInvoice: any = await invoiceService.updateInvoice(_orgId, invoice._id, { paidAmount: invoice.paidAmount + amount, status: InvoiceStatus.PAID }, correlationId);
-            await KikiUtils.CreateAndSendInvoice(org, updatedInvoice, paymentTransactionData, logger);
+            await SGUtils.CreateAndSendInvoice(org, updatedInvoice, paymentTransactionData, logger);
 
             if (org.paymentStatus == OrgPaymentStatus.DELINQUENT) {
                 const getDelinquentInvoices: InvoiceSchema[] = await invoiceService.findAllInvoicesInternal({ _orgId, status: InvoiceStatus.REJECTED }, '_id');

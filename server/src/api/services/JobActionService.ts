@@ -4,7 +4,7 @@ import { taskOutcomeActionService } from './TaskOutcomeActionService';
 import { TaskStatus, JobStatus, TaskFailureCode, JobDefStatus } from '../../shared/Enums';
 import * as mongodb from 'mongodb';
 import * as _ from 'lodash';
-import { BaseLogger } from '../../shared/KikiLogger';
+import { BaseLogger } from '../../shared/SGLogger';
 import { rabbitMQPublisher, PayloadOperation } from '../utils/RabbitMQPublisher';
 import { MissingObjectError, ValidationError } from '../utils/Errors';
 import { JobSchema, JobModel } from '../domain/Job';

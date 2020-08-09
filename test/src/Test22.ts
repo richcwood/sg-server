@@ -2,9 +2,9 @@ import * as util from 'util';
 import * as fs from 'fs';
 import axios from 'axios';
 import * as TestBase from './TestBase';
-import { KikiStrings } from '../../server/src/shared/KikiStrings';
+import { SGStrings } from '../../server/src/shared/SGStrings';
 import * as Enums from '../../server/src/shared/Enums';
-import { KikiUtils } from '../../server/src/shared/KikiUtils';
+import { SGUtils } from '../../server/src/shared/SGUtils';
 import { S3Access } from '../../server/src/shared/S3Access';
 import { OrgSchema } from '../../server/src/api/domain/Org';
 import { JobDefSchema } from '../../server/src/api/domain/JobDef';
@@ -22,20 +22,20 @@ time.sleep(2)
 print 'done'
 print '@kpo{"route": "ok"}'
 `;
-const script1_b64 = KikiUtils.btoa(script1);
+const script1_b64 = SGUtils.btoa(script1);
 
 let self: Test22;
 
 let UploadFileToS3 = async (_orgId: string, filePath: string, fileType: string) => {
   return new Promise(async (resolve, reject) => {
     try {
-      const compressedFilePath = await KikiUtils.GzipFile(filePath);
+      const compressedFilePath = await SGUtils.GzipFile(filePath);
 
       let res = await self.testSetup.RestAPICall('artifact', 'POST', _orgId, null, {name: compressedFilePath, type: fileType});
       const artifact = res.data.data;
 
       // let s3Access = new S3Access();
-      // let url = await s3Access.putSignedS3URL(`${s3Prefix}/${path.basename(compressedFilePath)}`, config.get('S3_BUCKET_ORG_ARTIFACTS'), fileType);
+      // let url = await s3Access.putSignedS3URL(`${s3Prefix}/${path.basename(compressedFilePath)}`, config.get('S3_BUCKET_TEAM_ARTIFACTS'), fileType);
 
       var options = {
         headers: {
@@ -66,7 +66,7 @@ export default class Test22 extends TestBase.default {
         await super.CreateTest();
 
         // /// Create org
-        // let org: any = {'name': 'TestOrg22', 'isActive': true, 'rmqPassword': KikiUtils.makeid(10)};
+        // let org: any = {'name': 'TestOrg22', 'isActive': true, 'rmqPassword': SGUtils.makeid(10)};
         // org = await self.CreateOrg(org);
         // self.orgs.push(org);
 
@@ -74,7 +74,7 @@ export default class Test22 extends TestBase.default {
         // let agent;
         // agent = { 
         //   '_orgId': _orgId, 
-        //   'machineId': KikiUtils.makeid(), 
+        //   'machineId': SGUtils.makeid(), 
         //   'ipAddress': '10.10.0.90', 
         //   'tags': [], 
         //   'numActiveTasks': 0, 
@@ -98,7 +98,7 @@ export default class Test22 extends TestBase.default {
             createdBy: this.sgUser.id,
             lastRunId: 0,
             dateCreated: new Date(),
-            expectedValues: { 'type': 'job', 'matchCount': 1, 'cntPartialMatch': 0, 'cntFullMatch': 0, 'values': { [KikiStrings.status]: Enums.JobStatus.COMPLETED } },
+            expectedValues: { 'type': 'job', 'matchCount': 1, 'cntPartialMatch': 0, 'cntFullMatch': 0, 'values': { [SGStrings.status]: Enums.JobStatus.COMPLETED } },
         }
         jobDef = await self.CreateJobDef(jobDef, _orgId);
         self.jobDefs.push(jobDef);
@@ -129,8 +129,8 @@ export default class Test22 extends TestBase.default {
           'type': 'task', 
             'matchCount': 5, 
             'tagsMatch': true, 
-            'values': {[KikiStrings.status]: Enums.TaskStatus.SUCCEEDED}, 
-            'runtimeVars': {[KikiStrings.route]: 'ok'}, 
+            'values': {[SGStrings.status]: Enums.TaskStatus.SUCCEEDED}, 
+            'runtimeVars': {[SGStrings.route]: 'ok'}, 
             'step': [
                 { 'name': step.name, 'values': {'status': Enums.TaskStatus.SUCCEEDED, 'stderr': '', 'exitCode': 0}}
             ], 

@@ -2,7 +2,7 @@ import axios from 'axios';
 import { Model } from '../store/types';
 import { Client } from '@stomp/stompjs';
 import { StoreType } from '@/store/types';
-import { KikiAlert, AlertPlacement } from '@/store/alert/types';
+import { SgAlert, AlertPlacement } from '@/store/alert/types';
 import store from '@/store/index';
 
 export interface DomainMessage {
@@ -126,7 +126,7 @@ class StompHandler {
         // alert the user if the selected model is the one that was updated
         if(correlationId !== message.correlationId){
           if(this.store.state[storeName].selected && this.store.state[storeName].selected.id === message.model.id){
-            store.dispatch(`${StoreType.AlertStore}/addAlert`, new KikiAlert(`The selected ${message.domainType} was modified by ${message.userEmail}`, AlertPlacement.FOOTER));      
+            store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`The selected ${message.domainType} was modified by ${message.userEmail}`, AlertPlacement.FOOTER));      
           }
         }
 

@@ -87,7 +87,7 @@ import { Component, Prop, Vue, Watch } from 'vue-property-decorator';
 import { ValidationProvider, ValidationObserver } from 'vee-validate';
 import { TaskDef } from '@/store/taskDef/types';
 import { StoreType } from '@/store/types';
-import { KikiAlert, AlertPlacement, AlertCategory } from '@/store/alert/types';
+import { SgAlert, AlertPlacement, AlertCategory } from '@/store/alert/types';
 
 @Component({
   components: {
@@ -159,11 +159,11 @@ export default class DesignerTask extends Vue {
         };
 
         await this.$store.dispatch(`${StoreType.TaskDefStore}/save`, updatedTaskDef);
-        this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new KikiAlert(`Updated dependencies for task - ${updatedTaskName}`, AlertPlacement.FOOTER));
+        this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Updated dependencies for task - ${updatedTaskName}`, AlertPlacement.FOOTER));
       }
       catch(err){
         console.error(err);
-        this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new KikiAlert(`Error updating task: ${err}`, AlertPlacement.WINDOW, AlertCategory.ERROR));
+        this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Error updating task: ${err}`, AlertPlacement.WINDOW, AlertCategory.ERROR));
       }
     }
   }
@@ -220,11 +220,11 @@ export default class DesignerTask extends Vue {
         };
 
         await this.$store.dispatch(`${StoreType.TaskDefStore}/save`, updatedTaskDef);
-        this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new KikiAlert(`Updated dependencies for task - ${updatedTaskName}`, AlertPlacement.FOOTER));
+        this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Updated dependencies for task - ${updatedTaskName}`, AlertPlacement.FOOTER));
       }
       catch(err){
         console.error(err);
-        this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new KikiAlert(`Error updating task: ${err}`, AlertPlacement.WINDOW, AlertCategory.ERROR));
+        this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Error updating task: ${err}`, AlertPlacement.WINDOW, AlertCategory.ERROR));
       }
     }
   }

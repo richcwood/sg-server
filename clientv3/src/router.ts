@@ -17,7 +17,7 @@ import Invoices from '@/views/Invoices.vue';
 import OrgAlerts from '@/views/OrgAlerts.vue';
 import Scripts from '@/views/Scripts.vue';
 import _ from 'lodash';
-import { KikiAlert, AlertPlacement, AlertCategory } from "@/store/alert/types";
+import { SgAlert, AlertPlacement, AlertCategory } from "@/store/alert/types";
 
 Vue.use(Router);
 
@@ -33,12 +33,12 @@ const saveScriptEdits = async (next: (options?: any) => {}) => {
       };
       await store.dispatch(`${StoreType.ScriptStore}/save`, scriptForSave);
       scriptCopy.code = scriptCopy.shadowCopyCode;
-      store.dispatch(`${StoreType.AlertStore}/addAlert`, new KikiAlert(`Saved a backup of script - ${scriptCopy.name}`, AlertPlacement.FOOTER));
+      store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Saved a backup of script - ${scriptCopy.name}`, AlertPlacement.FOOTER));
     }
   }
   catch(err){
     console.error(err);
-    store.dispatch(`${StoreType.AlertStore}/addAlert`, new KikiAlert(`Failed to save a backup of your script`, AlertPlacement.FOOTER, AlertCategory.ERROR));
+    store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Failed to save a backup of your script`, AlertPlacement.FOOTER, AlertCategory.ERROR));
   }
   finally {
     return next(true);
@@ -88,7 +88,7 @@ const router = new Router({
           catch(err){
             console.error(`Unable to fetch job ${to.params.jobId}`);
             router.push({name: 'jobMonitor'}); // no id
-            store.dispatch(`${StoreType.AlertStore}/addAlert`, new KikiAlert(`Unable to load the job ${to.params.jobId}`, AlertPlacement.FOOTER));
+            store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Unable to load the job ${to.params.jobId}`, AlertPlacement.FOOTER));
           }
         }
       }
@@ -114,7 +114,7 @@ const router = new Router({
             catch(err){
               console.error(`Unable to fetch job ${to.params.jobId}`);
               router.push({name: 'jobDesigner'}); // no id
-              store.dispatch(`${StoreType.AlertStore}/addAlert`, new KikiAlert(`Unable to load the job ${to.params.jobId}`, AlertPlacement.FOOTER));
+              store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Unable to load the job ${to.params.jobId}`, AlertPlacement.FOOTER));
             }
           }
           else {
@@ -147,7 +147,7 @@ const router = new Router({
             catch(err){
               console.error(`Unable to fetch script ${to.params.scriptId}`);
               router.push({name: 'interactiveConsole'}); // no id
-              store.dispatch(`${StoreType.AlertStore}/addAlert`, new KikiAlert(`Unable to load the script ${to.params.scriptId}`, AlertPlacement.FOOTER));
+              store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Unable to load the script ${to.params.scriptId}`, AlertPlacement.FOOTER));
             }
           }
           else {

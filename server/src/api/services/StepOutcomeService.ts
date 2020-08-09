@@ -9,10 +9,10 @@ import { jobService } from './JobService';
 import { orgService } from './OrgService';
 import { OrgSchema } from '../domain/Org';
 import { rabbitMQPublisher, PayloadOperation } from '../utils/RabbitMQPublisher';
-import { BaseLogger } from '../../shared/KikiLogger';
+import { BaseLogger } from '../../shared/SGLogger';
 import { MissingObjectError, ValidationError } from '../utils/Errors';
 import { TaskStatus } from '../../shared/Enums';
-import { KikiUtils } from '../../shared/KikiUtils';
+import { SGUtils } from '../../shared/SGUtils';
 import * as config from 'config';
 import * as mongodb from 'mongodb';
 import * as _ from 'lodash';
@@ -125,7 +125,7 @@ export class StepOutcomeService {
                 throw new MissingObjectError(`StepOutcome '${id}" not found with filter "${JSON.stringify(filter, null, 4)}'.`)
 
             if (updatedStepOutcome.status == TaskStatus.FAILED) {
-                await KikiUtils.OnStepFailed(_orgId, updatedStepOutcome, logger);
+                await SGUtils.OnStepFailed(_orgId, updatedStepOutcome, logger);
             }
 
             // The data has the deltas that the rabbit listeners need get.  If there was any calculated data it would need to be placed manually

@@ -1,4 +1,4 @@
-import { KikiAlert, AlertPlacement, AlertCategory } from '@/store/alert/types';
+import { SgAlert, AlertPlacement, AlertCategory } from '@/store/alert/types';
 import { StoreType } from '@/store/types';
 import { AxiosResponse } from 'axios';
 import store from '../store/index';
@@ -23,5 +23,5 @@ export const showErrors = (message: string, err: any) => {
     message += err;
   }
 
-  store.dispatch(`${StoreType.AlertStore}/addAlert`, new KikiAlert(message, AlertPlacement.WINDOW, AlertCategory.ERROR));
+  store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(message, AlertPlacement.WINDOW, AlertCategory.ERROR));
 }

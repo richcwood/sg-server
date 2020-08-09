@@ -5,7 +5,7 @@ import { MissingObjectError, ValidationError } from '../utils/Errors';
 import * as mongodb from 'mongodb';
 import * as config from 'config';
 import * as _ from 'lodash';
-import { BaseLogger } from '../../shared/KikiLogger';
+import { BaseLogger } from '../../shared/SGLogger';
 import * as Enums from '../../shared/Enums';
 import { taskOutcomeService } from '../services/TaskOutcomeService';
 import { stepOutcomeService } from '../services/StepOutcomeService';

@@ -578,7 +578,7 @@
   import { Component, Vue } from 'vue-property-decorator';
   import { BindStoreModel } from '@/decorator';
   import { StoreType } from '@/store/types';
-  import { KikiAlert, AlertPlacement, AlertCategory } from '@/store/alert/types';
+  import { SgAlert, AlertPlacement, AlertCategory } from '@/store/alert/types';
   import { isUserReadyToUseApp, parseJwt } from '@/store/security';
   import axios from 'axios';
   import Cookies from 'js-cookie';
@@ -854,7 +854,7 @@
 
     private async onLoginClicked(){
       if(!this.emailAddress){
-        this.$store.dispatch('alertStore/addAlert', new KikiAlert(`Email was not specified.`, AlertPlacement.WINDOW, AlertCategory.ERROR));
+        this.$store.dispatch('alertStore/addAlert', new SgAlert(`Email was not specified.`, AlertPlacement.WINDOW, AlertCategory.ERROR));
         return;
       }
 

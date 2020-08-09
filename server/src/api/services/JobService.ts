@@ -13,9 +13,9 @@ import { stepService } from '../services/StepService';
 import { scriptService } from '../services/ScriptService';
 import { orgService } from './OrgService';
 import { OrgSchema } from '../domain/Org';
-import { BaseLogger } from '../../shared/KikiLogger';
+import { BaseLogger } from '../../shared/SGLogger';
 import * as Enums from '../../shared/Enums';
-import { KikiUtils } from '../../shared/KikiUtils';
+import { SGUtils } from '../../shared/SGUtils';
 import { AMQPConnector } from '../../shared/AMQPLib';
 import * as _ from 'lodash';
 import * as config from 'config';
@@ -105,12 +105,12 @@ export class JobService {
 
         try {
             const taskDefs = await taskDefService.findJobDefTaskDefs(_orgId, _jobDefId);
-            let cd = KikiUtils.isJobDefCyclical(taskDefs);
+            let cd = SGUtils.isJobDefCyclical(taskDefs);
             if (Object.keys(cd).length > 0)
                 throw new ValidationError(`Job contains a cyclic dependency with the following tasks: ${Object.keys(cd).filter((key) => cd[key])}`)
 
             // console.log('JobService -> createJobFromJobDef -> taskDefs -> ', JSON.stringify(taskDefs, null, 4));
-            const downstreamDependencies = await KikiUtils.GenerateDownstreamDependenciesForJobTasks(taskDefs);
+            const downstreamDependencies = await SGUtils.GenerateDownstreamDependenciesForJobTasks(taskDefs);
             // console.log('JobService -> createJobFromJobDef -> downstreamDependencies -> ', JSON.stringify(downstreamDependencies, null, 4));
 
             for (let taskDef of taskDefs) {
@@ -185,7 +185,7 @@ export class JobService {
 
 
     public async createJob(_orgId: mongodb.ObjectId, data: any, createdBy: mongodb.ObjectId, source: Enums.TaskSource, logger: BaseLogger, correlationId?: string, responseFields?: string): Promise<object> {
-        KikiUtils.validateJob(data.job);
+        SGUtils.validateJob(data.job);
 
         let newJob: JobSchema = null;
         try {
@@ -206,7 +206,7 @@ export class JobService {
             await rabbitMQPublisher.publish(_orgId, "Job", correlationId, PayloadOperation.CREATE, convertData(JobSchema, newJob));
 
             const tasks: any[] = job.tasks;
-            await KikiUtils.GenerateDownstreamDependenciesForJobTasks(tasks);
+            await SGUtils.GenerateDownstreamDependenciesForJobTasks(tasks);
 
             for (let task of tasks) {
                 Object.assign(task, {
@@ -490,7 +490,7 @@ export class JobService {
                 const jobUpdated: JobSchema = jobUpdateQuery[0];
                 job = jobUpdated;
                 if (jobUpdated.status >= Enums.JobStatus.COMPLETED && (jobUpdated.onJobCompleteAlertEmail || jobUpdated.onJobCompleteAlertSlackURL)) {
-                    await KikiUtils.OnJobComplete(_orgId, jobUpdated, logger);
+                    await SGUtils.OnJobComplete(_orgId, jobUpdated, logger);
                 }
             }
             // console.log('JobService -> UpdateJobStatus -> job -> ', JSON.stringify(job, null, 4));
@@ -515,7 +515,7 @@ export class JobService {
         let no_tasks_to_run: boolean = true;
         const tasks = await taskService.findAllJobTasks(_orgId, _jobId);
         // console.log('JobService -> LaunchTasksWithNoUpstreamDependencies -> tasks -> ', JSON.stringify(tasks, null, 4));
-        const tasksToRoutes = KikiUtils.flatMap(x => x, tasks.map((t) => KikiUtils.flatMap(x => x[0], t.toRoutes)));
+        const tasksToRoutes = SGUtils.flatMap(x => x, tasks.map((t) => SGUtils.flatMap(x => x[0], t.toRoutes)));
         // console.log('JobService -> LaunchTasksWithNoUpstreamDependencies -> tasksFromToRoutes -> ', JSON.stringify(tasksToRoutes, null, 4));
         for (let task of tasks) {
             try {

@@ -51,7 +51,7 @@
 import { Component, Vue } from 'vue-property-decorator';
 import { StoreType } from '@/store/types';
 import { BindStoreModel } from '@/decorator';
-import { KikiAlert, AlertPlacement, AlertCategory } from '@/store/alert/types';
+import { SgAlert, AlertPlacement, AlertCategory } from '@/store/alert/types';
 import axios from 'axios';
 import randomId from '@/utils/RandomId';
 import { showErrors } from '@/utils/ErrorHandler';
@@ -93,7 +93,7 @@ export default class InviteTeammates extends Vue {
         (<any>copyLink).select();
         (<any>copyLink).setSelectionRange(0, 99999); ///For mobile devices
         document.execCommand('copy');
-        this.$store.dispatch('alertStore/addAlert', new KikiAlert(`Invitation link copied to your clipboard`, AlertPlacement.FOOTER));
+        this.$store.dispatch('alertStore/addAlert', new SgAlert(`Invitation link copied to your clipboard`, AlertPlacement.FOOTER));
         this.showCopyLinkSuccess = true;
         setTimeout(() => {
           this.showCopyLinkSuccess = false;
@@ -143,7 +143,7 @@ export default class InviteTeammates extends Vue {
       }
 
       await Promise.all(invitePromises);
-      this.$store.dispatch('alertStore/addAlert', new KikiAlert(`Invitations sent`, AlertPlacement.FOOTER));
+      this.$store.dispatch('alertStore/addAlert', new SgAlert(`Invitations sent`, AlertPlacement.FOOTER));
       this.showSuccessMessage = true;
     }
     catch(err){

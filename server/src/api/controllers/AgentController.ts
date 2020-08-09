@@ -13,8 +13,8 @@ import * as _ from 'lodash';
 import * as config from 'config';
 import { OrgSchema } from '../domain/Org';
 import { orgService } from '../services/OrgService';
-import { KikiStrings } from '../../shared/KikiStrings';
-import { BaseLogger } from '../../shared/KikiLogger';
+import { SGStrings } from '../../shared/SGStrings';
+import { BaseLogger } from '../../shared/SGLogger';
 import { RabbitMQAdmin } from '../../shared/RabbitMQAdmin';
 import { TaskStatus } from '../../shared/Enums';
 import { TaskFailureCode } from '../../shared/Enums';
@@ -46,23 +46,23 @@ let configureAgentQueues = async (_orgId: mongodb.ObjectId, _agentId: mongodb.Ob
 
     // let org = await this.mongoRepo.GetById(this.mongoRepo.ObjectIdFromString(_orgId), 'org', { rmqPassword: 1 });
     // const newUsername = _orgId.toString();
-    // const defaultExchange = KikiStrings.GetOrgRoutingPrefix(_orgId.toHexString());
-    const orgExchangeName = KikiStrings.GetOrgRoutingPrefix(_orgId.toHexString());
+    // const defaultExchange = SGStrings.GetOrgRoutingPrefix(_orgId.toHexString());
+    const orgExchangeName = SGStrings.GetOrgRoutingPrefix(_orgId.toHexString());
 
     await rmqAdmin.createUser(_orgId.toHexString(), org.rmqPassword, orgExchangeName);
 
     await rmqAdmin.createExchange(orgExchangeName, 'topic', false, true);
 
-    const agentQueue = KikiStrings.GetAgentQueue(_orgId.toHexString(), _agentId.toHexString());
+    const agentQueue = SGStrings.GetAgentQueue(_orgId.toHexString(), _agentId.toHexString());
     await rmqAdmin.createQueue(agentQueue, false, true, inactiveAgentQueueTTL);
     await rmqAdmin.bindQueueToExchange(orgExchangeName, agentQueue, agentQueue);
-    // await rmqAdmin.bindQueueToExchange(orgExchangeName, agentQueue, KikiStrings.GetAllAgentsQueue(_orgId.toHexString(), _orgId));
+    // await rmqAdmin.bindQueueToExchange(orgExchangeName, agentQueue, SGStrings.GetAllAgentsQueue(_orgId.toHexString(), _orgId));
 
-    const heartbeatQueue = KikiStrings.GetHeartbeatQueue(_orgId.toHexString());
+    const heartbeatQueue = SGStrings.GetHeartbeatQueue(_orgId.toHexString());
     await rmqAdmin.createQueue(heartbeatQueue, false, true);
     await rmqAdmin.bindQueueToExchange(orgExchangeName, heartbeatQueue, heartbeatQueue);
 
-    const agentUpdaterQueue = KikiStrings.GetAgentUpdaterQueue(_orgId.toHexString(), _agentId.toHexString());
+    const agentUpdaterQueue = SGStrings.GetAgentUpdaterQueue(_orgId.toHexString(), _agentId.toHexString());
     await rmqAdmin.createQueue(agentUpdaterQueue, false, true, inactiveAgentQueueTTL);
     await rmqAdmin.bindQueueToExchange(orgExchangeName, agentUpdaterQueue, agentUpdaterQueue);
 };

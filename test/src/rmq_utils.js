@@ -1,14 +1,14 @@
 #!/usr/bin/env node
 const util = require('util');
 const config = require("config");
-const KikiLogger_1 = require("../../server/src/shared/KikiLogger");
+const SGLogger_1 = require("../../server/src/shared/SGLogger");
 
 const rmqAdminUrl = config.get('rmqAdminUrl');
 let rmqVhost = config.get('rmqVhost');
 
 const RabbitMQAdmin_1 = require("../../server/src/shared/RabbitMQAdmin");
 let appName = 'rmq_utils';
-let logger = new KikiLogger_1.BaseLogger(appName, {});
+let logger = new SGLogger_1.BaseLogger(appName, {});
 logger.Start();
 
 

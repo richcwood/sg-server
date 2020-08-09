@@ -1,10 +1,10 @@
 import * as util from 'util';
 import * as config from 'config';
-import { BaseLogger } from '../../server/src/shared/KikiLogger';
+import { BaseLogger } from '../../server/src/shared/SGLogger';
 import { AMQPConnector } from '../../server/src/shared/AMQPLib';
 import { MongoRepo } from '../../server/src/shared/MongoLib';
-import { KikiStrings } from '../../server/src/shared/KikiStrings';
-import { KikiUtils } from '../../server/src/shared/KikiUtils';
+import { SGStrings } from '../../server/src/shared/SGStrings';
+import { SGUtils } from '../../server/src/shared/SGUtils';
 // import { OrgSchema } from '../../server/src/api/domain/Org';
 import { ScriptSchema } from '../../server/src/api/domain/Script';
 import { JobDefSchema } from '../../server/src/api/domain/JobDef';
@@ -131,7 +131,7 @@ export default abstract class TestBase {
 
             this.sgUser = { 'id': '5e1fac8a7e501cfd86cee31d', 'email': config.get('sgTestUser') };
 
-            // const email = `${KikiUtils.makeid(20)}@saasglue.com`;
+            // const email = `${SGUtils.makeid(20)}@saasglue.com`;
             // const password = config.get('sgTestUserPassword');
             // const salt = await bcrypt.genSalt(10);
             // const passwordHash = await bcrypt.hash(password, salt);
@@ -266,7 +266,7 @@ export default abstract class TestBase {
                         return;
                     }
 
-                    await KikiUtils.sleep(1000);
+                    await SGUtils.sleep(1000);
                 } catch (e) {
                     reject(e);
                     return;
@@ -335,15 +335,15 @@ export default abstract class TestBase {
     public async StartTestMonitor() {
         self.amqp = new AMQPConnector('SchedulerTest', '', self.amqpUrl, self.rmqVhost, 1, (activeMessages) => { }, this.logger);
         await self.amqp.Start();
-        await self.amqp.ConsumeRoute('', true, true, true, true, self.OnBrowserPush.bind(this), KikiStrings.GetOrgRoutingPrefix(config.get('sgTestOrg')), self.rmqBrowserPushRoute);
+        await self.amqp.ConsumeRoute('', true, true, true, true, self.OnBrowserPush.bind(this), SGStrings.GetOrgRoutingPrefix(config.get('sgTestOrg')), self.rmqBrowserPushRoute);
     }
 
     protected GetTaskKey(_orgId: mongodb.ObjectId, _jobId: mongodb.ObjectId, name: string) {
-        return KikiStrings.GetTaskKey(_orgId.toHexString(), _jobId.toHexString(), name);
+        return SGStrings.GetTaskKey(_orgId.toHexString(), _jobId.toHexString(), name);
     }
 
     protected GetJobKey(_orgId: mongodb.ObjectId, _jobId: mongodb.ObjectId) {
-        return KikiStrings.GetJobKey(_orgId.toHexString(), _jobId.toHexString());
+        return SGStrings.GetJobKey(_orgId.toHexString(), _jobId.toHexString());
     }
 
     protected async OnBrowserPush(params: any, msgKey: string, ch: any) {
@@ -679,7 +679,7 @@ export abstract class AdhocTaskTestBase extends TestBase {
                         resolve();
                     }
 
-                    await KikiUtils.sleep(10000);
+                    await SGUtils.sleep(10000);
                 } catch (e) {
                     reject(e);
                 }
@@ -904,7 +904,7 @@ export abstract class WorkflowTestBase extends TestBase {
                         resolve();
                     }
 
-                    await KikiUtils.sleep(1000);
+                    await SGUtils.sleep(1000);
                 } catch (e) {
                     reject(e);
                 }

@@ -5,8 +5,8 @@ import * as config from 'config';
 import axios from 'axios';
 import { exec } from 'child_process';
 import { MongoRepo } from '../../server/src/shared/MongoLib';
-import { KikiUtils } from '../../server/src/shared/KikiUtils';
-import { BaseLogger } from '../../server/src/shared/KikiLogger';
+import { SGUtils } from '../../server/src/shared/SGUtils';
+import { BaseLogger } from '../../server/src/shared/SGLogger';
 import { AMQPConnector } from '../../server/src/shared/AMQPLib';
 import { StompConnector } from '../../server/src/shared/StompLib';
 import { RabbitMQAdmin } from '../../server/src/shared/RabbitMQAdmin';
@@ -224,7 +224,7 @@ let DownloadAgent_GetUrl = async (numTries: number = 0) => {
 
 let DownloadAgent_Download = async (url) => {
   return new Promise(async (resolve, reject) => {
-    const agentPath = './kiki-agent-launcher';
+    const agentPath = './sg-agent-launcher';
 
     const writer = fs.createWriteStream(agentPath);
 
@@ -315,16 +315,16 @@ let StompTest = async () => {
   // await connector_pub.Publish('job', 'temp_queue_2', { 'key2': 'val2' });
   // await connector_pub.Publish('job', 'temp_route', { 'key2': 'val2' });
 
-  // await KikiUtils.default.sleep(3000);
+  // await SGUtils.default.sleep(3000);
 
   // await connector_2.StopConsumingQueue(sub);
 
-  // await KikiUtils.default.sleep(3000);
+  // await SGUtils.default.sleep(3000);
 
   // await connector_pub.Publish('job', 'temp_queue_1', { 'key1': 'val11' });
   // await connector_pub.Publish('job', 'temp_route', { 'key2': 'val22' });
 
-  await KikiUtils.sleep(5000);
+  await SGUtils.sleep(5000);
 
 };
 
@@ -353,17 +353,17 @@ let AMQPTest = async () => {
   // await connector_pub.Publish('job', 'temp_queue_2', { 'key2': 'val2' });
   // await connector_pub.Publish('job', 'temp_route', { 'key2': 'val2' });
 
-  // await KikiUtils.default.sleep(3000);
+  // await SGUtils.default.sleep(3000);
 
   // await connector_2.StopConsumingQueue(sub);
 
-  // await KikiUtils.default.sleep(3000);
+  // await SGUtils.default.sleep(3000);
 
   // await connector_pub.Publish('job', 'temp_queue_1', { 'key1': 'val11' });
   // await connector_pub.Publish('job', 'temp_route', { 'key2': 'val22' });
 
   while (true)
-    await KikiUtils.sleep(5000);
+    await SGUtils.sleep(5000);
 };
 
 
@@ -473,9 +473,9 @@ let UpdateAgentVersion = async () => {
 //     'fromRoutes': []
 //   };
 
-//   let route = KikiStrings.GetAgentQueue(_orgId, process.argv[2]);
+//   let route = SGStrings.GetAgentQueue(_orgId, process.argv[2]);
 
-//   await amqpConnector.Publish(kiki_4.KikiStrings.GetOrgExchangeName(_orgId), route, { taskKey: kiki_4.KikiStrings.GetTaskKey(_orgId, null, task.name), _orgId: _orgId, _jobId: null, steps: task.stepDefs, target: task.target, downstreamDependencies: {}, name: task.name });
+//   await amqpConnector.Publish(kiki_4.SGStrings.GetOrgExchangeName(_orgId), route, { taskKey: kiki_4.SGStrings.GetTaskKey(_orgId, null, task.name), _orgId: _orgId, _jobId: null, steps: task.stepDefs, target: task.target, downstreamDependencies: {}, name: task.name });
 // }
 
 
@@ -901,7 +901,7 @@ let CreateOrg = async (orgName) => {
 
   /// Get org or create
   let org;
-  org = { 'name': orgName, 'isActive': true, 'rmqPassword': KikiUtils.makeid(10) };
+  org = { 'name': orgName, 'isActive': true, 'rmqPassword': SGUtils.makeid(10) };
   await mongoRepo.InsertOne(org, 'org');
   org.id = org._id;
 
@@ -943,7 +943,7 @@ let UploadFileToS3 = async (filePath: string) => {
       const fileType = 'multipart/form-data';
       let s3Access = new S3Access();
 
-      let url = await s3Access.putSignedS3URL(`${path.basename(filePath)}`, config.get('S3_BUCKET_ORG_ARTIFACTS'), fileType);
+      let url = await s3Access.putSignedS3URL(`${path.basename(filePath)}`, config.get('S3_BUCKET_TEAM_ARTIFACTS'), fileType);
       console.log('url -> ', url);
 
       var options = {
@@ -964,7 +964,7 @@ let GetS3PrefixSize = async (prefix: string) => {
   try {
     let s3Access = new S3Access();
 
-    let res = await s3Access.sizeOf(prefix, `${config.get('S3_BUCKET_ORG_ARTIFACTS')}`);
+    let res = await s3Access.sizeOf(prefix, `${config.get('S3_BUCKET_TEAM_ARTIFACTS')}`);
     console.log('res -> ', res);
   } catch (e) {
     console.log(`Error getting size '${prefix}': ${e.message}`, e.stack);
@@ -1075,7 +1075,7 @@ let SendTestSlack = async () => {
   let logger = new BaseLogger('SendTestEmailSMTP');
   logger.Start();
 
-  KikiUtils.SendCustomerSlack('https://hooks.slack.com/services/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', 'hello from sg', logger);
+  SGUtils.SendCustomerSlack('https://hooks.slack.com/services/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', 'hello from sg', logger);
 }
 
 
@@ -1083,7 +1083,7 @@ let SendTestEmailSMTP = async () => {
   let logger = new BaseLogger('SendTestEmailSMTP');
   logger.Start();
 
-  await KikiUtils.SendSignupConfirmEmail('123456', 'rich@wifunds.com', logger);
+  await SGUtils.SendSignupConfirmEmail('123456', 'rich@wifunds.com', logger);
 }
 
 
@@ -1132,7 +1132,7 @@ let AgentRestAPICall = async () => {
       }
     });
 
-    await KikiUtils.sleep(100);
+    await SGUtils.sleep(100);
 
     // console.log(`response -> ${util.inspect(response.data, false, null)}`);
     console.log(`iteration -> ${i}`);
@@ -1325,9 +1325,9 @@ let CreateAgentInstall = async (_orgId: string, agentVersion: string, nodeRange:
   let agentLogsAPIVersion = queryRes.Values.agentLogs;
 
   let pkg_json = {
-    "name": "kiki-agent",
+    "name": "sg-agent",
     "version": "1.0.0",
-    "description": "KiKi agent",
+    "description": "Saas glue agent",
     "keywords": [],
     "author": "",
     "license": "ISC",
@@ -1351,17 +1351,17 @@ let CreateAgentInstall = async (_orgId: string, agentVersion: string, nodeRange:
   const fs = require("fs");
 
   let out_path = `.`;
-  // let out_path = `/tmp/kiki-agent-install/`;
+  // let out_path = `/tmp/sg-agent-install/`;
   // await fse.ensureDir(out_path);
-  // out_path += KikiUtils.makeid();
+  // out_path += SGUtils.makeid();
   // await fse.remove(out_path);
 
-  // const url = `https://${process.env.KIKI_GIT_USERNAME}:${process.env.KIKI_GIT_PASSWORD}@${process.env.KIKI_GIT_URL}`;
+  // const url = `https://${process.env.SG_GIT_USERNAME}:${process.env.SG_GIT_PASSWORD}@${process.env.SG_GIT_URL}`;
   // const cmdClone = `git clone --branch ${agentVersion} --depth 1 ${url} ${out_path}/`;
   // console.log(cmdClone);
-  // await KikiUtils.RunCommand(cmdClone, {});
-  // await KikiUtils.RunCommand(`npm i`, { cwd: out_path + '/agent' });
-  // // await KikiUtils.RunCommand(`npm run build`, { cwd: out_path + '/agent' });
+  // await SGUtils.RunCommand(cmdClone, {});
+  // await SGUtils.RunCommand(`npm i`, { cwd: out_path + '/agent' });
+  // // await SGUtils.RunCommand(`npm run build`, { cwd: out_path + '/agent' });
 
   out_path += '/agent/dist';
   const pkg_path = `${out_path}/pkg_agent`;
@@ -1375,7 +1375,7 @@ let CreateAgentInstall = async (_orgId: string, agentVersion: string, nodeRange:
 
   let res = await pkg_exec([`${out_path}/LaunchAgent.js`, '--config', pkg_path + '/package.json', '--targets', target, '--out-path', pkg_path]);
 
-  let outFileName = `${pkg_path}/kiki-agent`;
+  let outFileName = `${pkg_path}/sg-agent`;
   if (platform == 'win')
     outFileName += '.exe';
 
@@ -1827,7 +1827,7 @@ GenerateToken();
 
   //   const billingSettings = await settingsService.findSettings('Billing');
 
-  //   let res = await KikiUtils.scriptBillingCalculator(billingSettings.scriptPricing, parseInt(process.argv[2]));
+  //   let res = await SGUtils.scriptBillingCalculator(billingSettings.scriptPricing, parseInt(process.argv[2]));
   //   console.log(res);
 
   //   // let d = [{_orgId: 0, inviteKey: 'a;oifena'}, {_orgId: 5, inviteKey: '1234lhfoasu8'}];

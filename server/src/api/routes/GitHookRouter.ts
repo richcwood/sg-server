@@ -1,6 +1,6 @@
 import {NextFunction, Request, Response, Router} from 'express';
 import { MongoRepo } from '../../shared/MongoLib';
-import { BaseLogger } from '../../shared/KikiLogger';
+import { BaseLogger } from '../../shared/SGLogger';
 const jwt = require('jsonwebtoken');
 const bodyParser = require('body-parser')
 const crypto = require('crypto')

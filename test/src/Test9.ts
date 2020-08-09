@@ -2,8 +2,8 @@ import * as util from 'util';
 import * as lodash from 'lodash';
 import * as TestBase from './TestBase';
 import * as Enums from '../../server/src/shared/Enums';
-import { KikiUtils } from '../../server/src/shared/KikiUtils';
-import { KikiStrings } from '../../server/src/shared/KikiStrings';
+import { SGUtils } from '../../server/src/shared/SGUtils';
+import { SGStrings } from '../../server/src/shared/SGStrings';
 import { OrgSchema } from '../../server/src/api/domain/Org';
 import { JobDefSchema } from '../../server/src/api/domain/JobDef';
 import { JobSchema } from '../../server/src/api/domain/Job';
@@ -18,7 +18,7 @@ time.sleep(2)
 print 'done'
 print '@kpo{"route": "ok"}'
 `;
-const script1_b64 = KikiUtils.btoa(script1);
+const script1_b64 = SGUtils.btoa(script1);
 
 const script2 = `
 import time
@@ -26,7 +26,7 @@ print 'start'
 time.sleep(2)
 print 'done'
 `;
-const script2_b64 = KikiUtils.btoa(script2);
+const script2_b64 = SGUtils.btoa(script2);
 
 const script3 = `
 import time
@@ -35,7 +35,7 @@ time.sleep(2)
 print 'done'
 print '@kpo{"outVal": "val"}'
 `;
-const script3_b64 = KikiUtils.btoa(script3);
+const script3_b64 = SGUtils.btoa(script3);
 
 const script4 = `
 import time
@@ -45,7 +45,7 @@ time.sleep(2)
 print 'done'
 sys.exit(1)
 `;
-const script4_b64 = KikiUtils.btoa(script4);
+const script4_b64 = SGUtils.btoa(script4);
 
 const script5 = `
 import time
@@ -54,7 +54,7 @@ time.sleep(2)
 print '@kpo{"outVal": "@kpg("outVal")"}'
 print 'done'
 `;
-const script5_b64 = KikiUtils.btoa(script5);
+const script5_b64 = SGUtils.btoa(script5);
 
 let self: Test9;
 
@@ -92,12 +92,12 @@ export default class Test9 extends TestBase.FailedTestBase {
         const taskDef: TaskDefSchema = lodash.filter(self.taskDefs, x => x.name === taskName && x._jobDefId === jobDef.id)[0];
         const taskDef9: TaskDefSchema = lodash.filter(self.taskDefs, x => x.name === 'Task9' && x._jobDefId === jobDef.id)[0];
 
-        jobDef.expectedValues = {'type': 'job', 'matchCount': 1, 'cntPartialMatch': 0, 'cntFullMatch': 0,'values': {[KikiStrings.status]: Enums.JobStatus.COMPLETED}};
+        jobDef.expectedValues = {'type': 'job', 'matchCount': 1, 'cntPartialMatch': 0, 'cntFullMatch': 0,'values': {[SGStrings.status]: Enums.JobStatus.COMPLETED}};
         taskDef.expectedValues = {
             'type': 'task', 
             'matchCount': 4, 
             'tagsMatch': true,
-            'values': {[KikiStrings.status]: Enums.TaskStatus.SUCCEEDED},
+            'values': {[SGStrings.status]: Enums.TaskStatus.SUCCEEDED},
             'step': [
                 {'name': 'step1', 'values': {'status': Enums.TaskStatus.SUCCEEDED, 'stderr': '', 'exitCode': 0}}
             ], 
@@ -109,7 +109,7 @@ export default class Test9 extends TestBase.FailedTestBase {
             'type': 'task', 
             'matchCount': 5, 
             'tagsMatch': true, 
-            'values': {[KikiStrings.status]: Enums.TaskStatus.SUCCEEDED},
+            'values': {[SGStrings.status]: Enums.TaskStatus.SUCCEEDED},
             'step': [
                 {'name': 'step1', 'values': {'status': Enums.TaskStatus.SUCCEEDED, 'stderr': '', 'exitCode': 0}}
             ], 
@@ -126,21 +126,21 @@ export default class Test9 extends TestBase.FailedTestBase {
         await super.CreateTest();
 
         // /// Create org
-        // let org: any = {'name': 'TestOrg9', 'isActive': true, 'rmqPassword': KikiUtils.makeid(10)};
+        // let org: any = {'name': 'TestOrg9', 'isActive': true, 'rmqPassword': SGUtils.makeid(10)};
         // org = await self.CreateOrg(org);
         // self.orgs.push(org);
 
         // /// Create agents
         // let agent;
-        // agent = { '_orgId': _orgId, 'machineId': KikiUtils.makeid(), 'ipAddress': '10.10.0.90', 'tags': [], 'numActiveTasks': 0, 'lastHeartbeatTime': new Date().getTime(), 'rmqPassword': org['rmqPassword']};
+        // agent = { '_orgId': _orgId, 'machineId': SGUtils.makeid(), 'ipAddress': '10.10.0.90', 'tags': [], 'numActiveTasks': 0, 'lastHeartbeatTime': new Date().getTime(), 'rmqPassword': org['rmqPassword']};
         // self.agents.push(agent);
-        // agent = { '_orgId': _orgId, 'machineId': KikiUtils.makeid(), 'ipAddress': '10.10.0.90', 'tags': [], 'numActiveTasks': 0, 'lastHeartbeatTime': new Date().getTime(), 'rmqPassword': org['rmqPassword']};
+        // agent = { '_orgId': _orgId, 'machineId': SGUtils.makeid(), 'ipAddress': '10.10.0.90', 'tags': [], 'numActiveTasks': 0, 'lastHeartbeatTime': new Date().getTime(), 'rmqPassword': org['rmqPassword']};
         // self.agents.push(agent);
-        // agent = { '_orgId': _orgId, 'machineId': KikiUtils.makeid(), 'ipAddress': '10.10.0.91', 'tags': ['numchucks'], 'numActiveTasks': 0, 'lastHeartbeatTime': new Date().getTime(), 'rmqPassword': org['rmqPassword']};
+        // agent = { '_orgId': _orgId, 'machineId': SGUtils.makeid(), 'ipAddress': '10.10.0.91', 'tags': ['numchucks'], 'numActiveTasks': 0, 'lastHeartbeatTime': new Date().getTime(), 'rmqPassword': org['rmqPassword']};
         // self.agents.push(agent);
-        // agent = { '_orgId': _orgId, 'machineId': KikiUtils.makeid(), 'ipAddress': '10.10.0.92', 'tags': ['throwingstar'], 'numActiveTasks': 0, 'lastHeartbeatTime': new Date().getTime(), 'rmqPassword': org['rmqPassword']};
+        // agent = { '_orgId': _orgId, 'machineId': SGUtils.makeid(), 'ipAddress': '10.10.0.92', 'tags': ['throwingstar'], 'numActiveTasks': 0, 'lastHeartbeatTime': new Date().getTime(), 'rmqPassword': org['rmqPassword']};
         // self.agents.push(agent);
-        // agent = { '_orgId': _orgId, 'machineId': KikiUtils.makeid(), 'ipAddress': '10.10.0.93', 'tags': ['numchucks', 'throwingstar'], 'numActiveTasks': 1, 'lastHeartbeatTime': new Date().getTime(), 'rmqPassword': org['rmqPassword']};
+        // agent = { '_orgId': _orgId, 'machineId': SGUtils.makeid(), 'ipAddress': '10.10.0.93', 'tags': ['numchucks', 'throwingstar'], 'numActiveTasks': 1, 'lastHeartbeatTime': new Date().getTime(), 'rmqPassword': org['rmqPassword']};
         // self.agents.push(agent);
 
         const orgName = 'TestOrg';
@@ -153,7 +153,7 @@ export default class Test9 extends TestBase.FailedTestBase {
             createdBy: this.sgUser.id,
             lastRunId: 0,
             dateCreated: new Date(),
-            expectedValues: { 'type': 'job', 'matchCount': 1, 'cntPartialMatch': 0, 'cntFullMatch': 0, 'values': { [KikiStrings.status]: Enums.JobStatus.FAILED } },
+            expectedValues: { 'type': 'job', 'matchCount': 1, 'cntPartialMatch': 0, 'cntFullMatch': 0, 'values': { [SGStrings.status]: Enums.JobStatus.FAILED } },
         }
         jobDef = await self.CreateJobDef(jobDef, _orgId);
         self.jobDefs.push(jobDef);
@@ -225,8 +225,8 @@ export default class Test9 extends TestBase.FailedTestBase {
             'type': 'task', 
             'matchCount': 5, 
             'tagsMatch': true, 
-            'values': {[KikiStrings.status]: Enums.TaskStatus.SUCCEEDED}, 
-            'runtimeVars': {[KikiStrings.route]: 'ok'}, 
+            'values': {[SGStrings.status]: Enums.TaskStatus.SUCCEEDED}, 
+            'runtimeVars': {[SGStrings.route]: 'ok'}, 
             'step': [
                 {'name': step1.name, 'values': {'status': Enums.TaskStatus.SUCCEEDED, 'stderr': '', 'exitCode': 0}}
             ], 
@@ -239,7 +239,7 @@ export default class Test9 extends TestBase.FailedTestBase {
             'type': 'task', 
             'matchCount': 4, 
             'tagsMatch': true, 
-            'values': {[KikiStrings.status]: Enums.TaskStatus.SUCCEEDED}, 
+            'values': {[SGStrings.status]: Enums.TaskStatus.SUCCEEDED}, 
             'step': [
                 {'name': step2.name, 'values': {'status': Enums.TaskStatus.SUCCEEDED, 'stderr': '', 'exitCode': 0}}
             ], 
@@ -252,7 +252,7 @@ export default class Test9 extends TestBase.FailedTestBase {
             'type': 'task', 
             'matchCount': 5, 
             'tagsMatch': true, 
-            'values': {[KikiStrings.status]: Enums.TaskStatus.SUCCEEDED}, 
+            'values': {[SGStrings.status]: Enums.TaskStatus.SUCCEEDED}, 
             'step': [
                 {'name': step3.name, 'values': {'status': Enums.TaskStatus.SUCCEEDED, 'stderr': '', 'exitCode': 0}}
             ], 
@@ -266,11 +266,11 @@ export default class Test9 extends TestBase.FailedTestBase {
             'type': 'task', 
             'matchCount': 5, 
             'tagsMatch': true, 
-            'values': {[KikiStrings.status]: 22}, 
+            'values': {[SGStrings.status]: 22}, 
             'step': [
                 {'name': step4.name, 'values': {'status': Enums.TaskStatus.FAILED, 'stderr': '', 'exitCode': 1}}
             ], 
-            'runtimeVars': {[KikiStrings.route]: 'fail'}, 
+            'runtimeVars': {[SGStrings.route]: 'fail'}, 
             'cntPartialMatch': 0, 
             'cntFullMatch': 0
         };
@@ -297,7 +297,7 @@ export default class Test9 extends TestBase.FailedTestBase {
             'type': 'task', 
             'matchCount': 4, 
             'tagsMatch': true, 
-            'values': {[KikiStrings.status]: Enums.TaskStatus.SUCCEEDED}, 
+            'values': {[SGStrings.status]: Enums.TaskStatus.SUCCEEDED}, 
             'step': [
                 {'name': step2.name, 'values': {'status': Enums.TaskStatus.SUCCEEDED, 'stderr': '', 'exitCode': 0}}
             ], 
@@ -310,7 +310,7 @@ export default class Test9 extends TestBase.FailedTestBase {
             'type': 'task', 
             'matchCount': 4, 
             'tagsMatch': true, 
-            'values': {[KikiStrings.status]: Enums.TaskStatus.SUCCEEDED}, 
+            'values': {[SGStrings.status]: Enums.TaskStatus.SUCCEEDED}, 
             'step': [
                 {'name': step2.name, 'values': {'status': Enums.TaskStatus.SUCCEEDED, 'stderr': '', 'exitCode': 0}}
             ], 
@@ -323,7 +323,7 @@ export default class Test9 extends TestBase.FailedTestBase {
             'type': 'task', 
             'matchCount': 4, 
             'tagsMatch': true, 
-            'values': {[KikiStrings.status]: Enums.TaskStatus.SUCCEEDED}, 
+            'values': {[SGStrings.status]: Enums.TaskStatus.SUCCEEDED}, 
             'step': [
                 {'name': step2.name, 'values': {'status': Enums.TaskStatus.SUCCEEDED, 'stderr': '', 'exitCode': 0}}
             ], 

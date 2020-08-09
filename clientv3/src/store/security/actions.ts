@@ -8,7 +8,7 @@ import store from '../index';
 import { StoreType } from '../types';
 import router from '@/router';
 import { initStompHandler, InitStompOptions } from '@/utils/StompHandler';
-import { KikiAlert, AlertPlacement, AlertCategory } from '@/store/alert/types';
+import { SgAlert, AlertPlacement, AlertCategory } from '@/store/alert/types';
 import Cookies from 'js-cookie';
 
 export const actions: ActionTree<SecurityStore, RootState> = {  
@@ -104,7 +104,7 @@ export const actions: ActionTree<SecurityStore, RootState> = {
       stompHandler.connect();
     }
     catch(err){
-      store.dispatch(`${StoreType.AlertStore}/addAlert`, new KikiAlert('Could not connect to browser push.', AlertPlacement.FOOTER, AlertCategory.ERROR));
+      store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert('Could not connect to browser push.', AlertPlacement.FOOTER, AlertCategory.ERROR));
       console.error('Error, could not connect to browser push.', err);
     }
 

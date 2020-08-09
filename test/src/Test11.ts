@@ -1,8 +1,8 @@
 import * as util from 'util';
 import * as TestBase from './TestBase';
 import * as Enums from '../../server/src/shared/Enums';
-import { KikiUtils } from '../../server/src/shared/KikiUtils';
-import { KikiStrings } from '../../server/src/shared/KikiStrings';
+import { SGUtils } from '../../server/src/shared/SGUtils';
+import { SGStrings } from '../../server/src/shared/SGStrings';
 import { OrgSchema } from '../../server/src/api/domain/Org';
 import { JobDefSchema } from '../../server/src/api/domain/JobDef';
 import { TaskDefSchema } from '../../server/src/api/domain/TaskDef';
@@ -16,7 +16,7 @@ time.sleep(2)
 print 'done'
 print '@kpo{"route": "ok"}'
 `;
-const script1_b64 = KikiUtils.btoa(script1);
+const script1_b64 = SGUtils.btoa(script1);
 
 const script3 = `
 import time
@@ -25,7 +25,7 @@ time.sleep(2)
 print 'done'
 print '@kpo{"outVal": "val"}'
 `;
-const script3_b64 = KikiUtils.btoa(script3);
+const script3_b64 = SGUtils.btoa(script3);
 
 let self: Test11;
 
@@ -43,17 +43,17 @@ export default class Test11 extends TestBase.default {
         await super.CreateTest();
 
         // /// Create org
-        // let org: any = {'name': 'TestOrg11', 'isActive': true, 'rmqPassword': KikiUtils.makeid(10)};
+        // let org: any = {'name': 'TestOrg11', 'isActive': true, 'rmqPassword': SGUtils.makeid(10)};
         // org = await self.CreateOrg(org);
         // self.orgs.push(org);
 
         // /// Create agents
         // let agent;
-        // agent = { '_orgId': _orgId, 'machineId': KikiUtils.makeid(), 'ipAddress': '10.10.0.90', 'tags': [], 'numActiveTasks': 0, 'lastHeartbeatTime': new Date().getTime(), 'rmqPassword': org['rmqPassword']};
+        // agent = { '_orgId': _orgId, 'machineId': SGUtils.makeid(), 'ipAddress': '10.10.0.90', 'tags': [], 'numActiveTasks': 0, 'lastHeartbeatTime': new Date().getTime(), 'rmqPassword': org['rmqPassword']};
         // self.agents.push(agent);
-        // agent = { '_orgId': _orgId, 'machineId': KikiUtils.makeid(), 'ipAddress': '10.10.0.90', 'tags': [], 'numActiveTasks': 0, 'lastHeartbeatTime': new Date().getTime(), 'rmqPassword': org['rmqPassword']};
+        // agent = { '_orgId': _orgId, 'machineId': SGUtils.makeid(), 'ipAddress': '10.10.0.90', 'tags': [], 'numActiveTasks': 0, 'lastHeartbeatTime': new Date().getTime(), 'rmqPassword': org['rmqPassword']};
         // self.agents.push(agent);
-        // agent = { '_orgId': _orgId, 'machineId': KikiUtils.makeid(), 'ipAddress': '10.10.0.90', 'tags': [], 'numActiveTasks': 0, 'lastHeartbeatTime': new Date().getTime(), 'rmqPassword': org['rmqPassword']};
+        // agent = { '_orgId': _orgId, 'machineId': SGUtils.makeid(), 'ipAddress': '10.10.0.90', 'tags': [], 'numActiveTasks': 0, 'lastHeartbeatTime': new Date().getTime(), 'rmqPassword': org['rmqPassword']};
         // self.agents.push(agent);
      
         const orgName = 'TestOrg';
@@ -66,7 +66,7 @@ export default class Test11 extends TestBase.default {
             createdBy: this.sgUser.id,
             lastRunId: 0,
             dateCreated: new Date(),
-            expectedValues: { 'type': 'job', 'matchCount': 1, 'cntPartialMatch': 0, 'cntFullMatch': 0, 'values': { [KikiStrings.status]: Enums.JobStatus.COMPLETED } },
+            expectedValues: { 'type': 'job', 'matchCount': 1, 'cntPartialMatch': 0, 'cntFullMatch': 0, 'values': { [SGStrings.status]: Enums.JobStatus.COMPLETED } },
         }
         jobDef = await self.CreateJobDef(jobDef, _orgId);
         self.jobDefs.push(jobDef);
@@ -95,11 +95,11 @@ export default class Test11 extends TestBase.default {
             'type': 'task', 
             'matchCount': 5, 
             'tagsMatch': true, 
-            'values': {[KikiStrings.status]: Enums.TaskStatus.SUCCEEDED},
+            'values': {[SGStrings.status]: Enums.TaskStatus.SUCCEEDED},
             'step': [
                 {'name': step3.name, 'values': {'status': Enums.TaskStatus.SUCCEEDED, 'stderr': '', 'exitCode': 0}}
             ], 
-            'runtimeVars': {[KikiStrings.route]: 'ok'}, 
+            'runtimeVars': {[SGStrings.route]: 'ok'}, 
             'cntPartialMatch': 0, 
             'cntFullMatch': 0
         };
@@ -109,7 +109,7 @@ export default class Test11 extends TestBase.default {
             'type': 'task', 
             'matchCount': 16, 
             'tagsMatch': true, 
-            'values': {[KikiStrings.status]: Enums.TaskStatus.SUCCEEDED},
+            'values': {[SGStrings.status]: Enums.TaskStatus.SUCCEEDED},
             'step': [
                 {'name': step3.name, 'values': {'status': Enums.TaskStatus.SUCCEEDED, 'stderr': '', 'exitCode': 0}}
             ],

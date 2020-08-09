@@ -2,8 +2,8 @@ import * as util from 'util';
 import * as lodash from 'lodash';
 import * as TestBase from './TestBase';
 import * as Enums from '../../server/src/shared/Enums';
-import { KikiUtils } from '../../server/src/shared/KikiUtils';
-import { KikiStrings } from '../../server/src/shared/KikiStrings';
+import { SGUtils } from '../../server/src/shared/SGUtils';
+import { SGStrings } from '../../server/src/shared/SGStrings';
 import { OrgSchema } from '../../server/src/api/domain/Org';
 import { JobDefSchema } from '../../server/src/api/domain/JobDef';
 import { JobSchema } from '../../server/src/api/domain/Job';
@@ -22,7 +22,7 @@ print 'done'
 print '@kpo{"route": "ok"}'
 sys.exit(1)
 `;
-const script1_b64 = KikiUtils.btoa(script1);
+const script1_b64 = SGUtils.btoa(script1);
 
 const script2 = `
 import time
@@ -31,7 +31,7 @@ time.sleep(2)
 print 'done'
 print '@kpo{"route": "ok"}'
 `;
-const script2_b64 = KikiUtils.btoa(script2);
+const script2_b64 = SGUtils.btoa(script2);
 
 let self: Test8;
 
@@ -72,13 +72,13 @@ export default class Test8 extends TestBase.FailedTestBase {
         const jobDef: JobDefSchema = lodash.filter(self.jobDefs, x => x.name === jobName)[0];
         const taskDef: TaskDefSchema = lodash.filter(self.taskDefs, x => x.name === taskName && x._jobDefId === jobDef.id)[0];
 
-        jobDef.expectedValues = {'type': 'job', 'matchCount': 1, 'cntPartialMatch': 0, 'cntFullMatch': 0,'values': {[KikiStrings.status]: Enums.JobStatus.COMPLETED}};
+        jobDef.expectedValues = {'type': 'job', 'matchCount': 1, 'cntPartialMatch': 0, 'cntFullMatch': 0,'values': {[SGStrings.status]: Enums.JobStatus.COMPLETED}};
         taskDef.expectedValues = {
             'type': 'task', 
             'matchCount': 5, 
             'tagsMatch': true,
-            'values': {[KikiStrings.status]: Enums.TaskStatus.SUCCEEDED},
-            'runtimeVars': {[KikiStrings.route]: 'ok'}, 
+            'values': {[SGStrings.status]: Enums.TaskStatus.SUCCEEDED},
+            'runtimeVars': {[SGStrings.route]: 'ok'}, 
             'step': [
                 {'name': 'step1', 'values': {'status': Enums.TaskStatus.SUCCEEDED, 'stderr': '', 'exitCode': 0}}
             ], 
@@ -93,13 +93,13 @@ export default class Test8 extends TestBase.FailedTestBase {
         await super.CreateTest();
 
         // /// Create org
-        // let org: any = {'name': 'TestOrg8', 'isActive': true, 'rmqPassword': KikiUtils.makeid(10)};
+        // let org: any = {'name': 'TestOrg8', 'isActive': true, 'rmqPassword': SGUtils.makeid(10)};
         // org = await self.CreateOrg(org);
         // self.orgs.push(org);
 
         // /// Create agents
         // let agent;
-        // agent = { '_orgId': _orgId, 'machineId': KikiUtils.makeid(), 'ipAddress': '10.10.0.90', 'tags': [], 'numActiveTasks': 0, 'lastHeartbeatTime': new Date().getTime(), 'rmqPassword': org['rmqPassword']};
+        // agent = { '_orgId': _orgId, 'machineId': SGUtils.makeid(), 'ipAddress': '10.10.0.90', 'tags': [], 'numActiveTasks': 0, 'lastHeartbeatTime': new Date().getTime(), 'rmqPassword': org['rmqPassword']};
         // self.agents.push(agent);    
      
         const orgName = 'TestOrg';
@@ -112,7 +112,7 @@ export default class Test8 extends TestBase.FailedTestBase {
             createdBy: this.sgUser.id,
             lastRunId: 0,
             dateCreated: new Date(),
-            expectedValues: { 'type': 'job', 'matchCount': 1, 'cntPartialMatch': 0, 'cntFullMatch': 0, 'values': { [KikiStrings.status]: Enums.JobStatus.FAILED } },
+            expectedValues: { 'type': 'job', 'matchCount': 1, 'cntPartialMatch': 0, 'cntFullMatch': 0, 'values': { [SGStrings.status]: Enums.JobStatus.FAILED } },
         }
         jobDef = await self.CreateJobDef(jobDef, _orgId);
         self.jobDefs.push(jobDef);
@@ -132,8 +132,8 @@ export default class Test8 extends TestBase.FailedTestBase {
             'type': 'task', 
             'matchCount': 5, 
             'tagsMatch': true, 
-            'values': {[KikiStrings.status]: Enums.TaskStatus.FAILED},
-            'runtimeVars': {[KikiStrings.route]: 'fail'}, 
+            'values': {[SGStrings.status]: Enums.TaskStatus.FAILED},
+            'runtimeVars': {[SGStrings.route]: 'fail'}, 
             'step': [
                 {'name': step.name, 'values': {'status': Enums.TaskStatus.FAILED, 'stderr': '', 'exitCode': 1}}
             ], 

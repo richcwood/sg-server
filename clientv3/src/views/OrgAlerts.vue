@@ -105,7 +105,7 @@ import { Component, Vue } from 'vue-property-decorator';
 import { BindSelected, BindSelectedCopy } from '@/decorator';
 import { StoreType } from '@/store/types';
 import { Org } from '@/store/org/types';
-import { KikiAlert, AlertPlacement, AlertCategory } from '@/store/alert/types';
+import { SgAlert, AlertPlacement, AlertCategory } from '@/store/alert/types';
 import { ValidationProvider, ValidationObserver } from 'vee-validate';
 import { showErrors } from '@/utils/ErrorHandler';
 import axios from 'axios';
@@ -144,7 +144,7 @@ export default class OrgAlerts extends Vue {
       }
 
       await this.$store.dispatch(`${StoreType.OrgStore}/save`);
-      this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new KikiAlert(`Saved the team alerts`, AlertPlacement.FOOTER));
+      this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Saved the team alerts`, AlertPlacement.FOOTER));
     }
     catch(err){
       console.error(err);

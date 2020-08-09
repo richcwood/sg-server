@@ -4,7 +4,7 @@ import { UserSchema } from '../domain/User';
 import { passwordResetService } from '../services/PasswordResetService';
 import { MissingObjectError } from '../utils/Errors';
 import { convertData as convertResponseData } from '../utils/ResponseConverters';
-import { BaseLogger } from '../../shared/KikiLogger';
+import { BaseLogger } from '../../shared/SGLogger';
 const jwt = require('jsonwebtoken');
 import * as _ from 'lodash';
 import * as config from 'config';

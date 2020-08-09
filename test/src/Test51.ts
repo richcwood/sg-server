@@ -1,6 +1,6 @@
 import * as config from 'config';
 import * as TestBase from './TestBase';
-import { KikiUtils } from '../../server/src/shared/KikiUtils';
+import { SGUtils } from '../../server/src/shared/SGUtils';
 import { ScriptType, JobDefStatus, JobStatus, TaskStatus, TaskFailureCode } from '../../server/src/shared/Enums';
 import * as _ from 'lodash';
 import { TaskDefTarget } from '../../server/src/shared/Enums';
@@ -16,7 +16,7 @@ for i in range(1000):
 print 'done'
 print '@kpo{"route": "ok"}'
 `;
-const script1_b64 = KikiUtils.btoa(script1);
+const script1_b64 = SGUtils.btoa(script1);
 
 
 
@@ -240,7 +240,7 @@ export default class Test51 extends TestBase.WorkflowTestBase {
         await agents[0].Stop();
 
         for (let i = 0; i < 75; i++)
-            await KikiUtils.sleep(1000);
+            await SGUtils.sleep(1000);
 
 
         await self.ProcessOrphanedTasks();

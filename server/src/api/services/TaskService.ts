@@ -1,7 +1,7 @@
 import { convertData } from '../utils/ResponseConverters';
 import { TaskSchema, TaskModel } from '../domain/Task';
 import { rabbitMQPublisher, PayloadOperation } from '../utils/RabbitMQPublisher';
-import { BaseLogger } from '../../shared/KikiLogger';
+import { BaseLogger } from '../../shared/SGLogger';
 import { MissingObjectError, ValidationError } from '../utils/Errors';
 import * as mongodb from 'mongodb';
 

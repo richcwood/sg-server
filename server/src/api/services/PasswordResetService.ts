@@ -1,8 +1,8 @@
 import { UserSchema, UserModel } from '../domain/User';
 import { userService } from './UserService';
-import { KikiUtils } from '../../shared/KikiUtils';
+import { SGUtils } from '../../shared/SGUtils';
 import { MissingObjectError, ValidationError } from '../utils/Errors';
-import { BaseLogger } from '../../shared/KikiLogger';
+import { BaseLogger } from '../../shared/SGLogger';
 import * as _ from 'lodash';
 const jwt = require('jsonwebtoken');
 import * as mongodb from 'mongodb';
@@ -42,7 +42,7 @@ export class PasswordResetService {
 
         const updatedUser = await UserModel.findOneAndUpdate({ _id: _userId }, { passwordHash: passwordHash }, { new: true }).select(responseFields);
 
-        await KikiUtils.SendPasswordResetConfirmationEmail(userModel.email, logger);
+        await SGUtils.SendPasswordResetConfirmationEmail(userModel.email, logger);
 
         return updatedUser;
     }

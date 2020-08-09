@@ -1,4 +1,4 @@
-import { KikiUtils } from './KikiUtils';
+import { SGUtils } from './SGUtils';
 import * as util from 'util';
 import { RabbitMQAdmin } from "./RabbitMQAdmin";
 import { Client } from '@stomp/stompjs';
@@ -22,13 +22,13 @@ export class StompConnector {
     subscriptions: any;
     stoppedByUser: boolean;
     connectedToStomp: boolean;
-    // logger: KikiLogger.StompLogger;
+    // logger: SGLogger.StompLogger;
     activeMessages: any = [];
     rmqAdmin: RabbitMQAdmin;
     lock = new AsyncLock();
 
     constructor(public appName: string, public clientId: string, public url: string, public userName: string, public password: string, public rmqAdminUrl: string, public vhost: string, public prefetchCount: number, public fnOnDisconnect: any, private logger: any) {
-        // this.logger = new KikiLogger.StompLogger(appName, clientId);
+        // this.logger = new SGLogger.StompLogger(appName, clientId);
         this.subscribedRoutes = [];
         this.subscriptions = [];
         this.stoppedByUser = false;
@@ -87,7 +87,7 @@ export class StompConnector {
                     }
                     if (this.stoppedByUser)
                         break;
-                    await KikiUtils.sleep(500);
+                    await SGUtils.sleep(500);
                 }
             } catch (e) {
                 this.LogError('Error connecting to RabbitMQ: ' + e.message, e.stack, {});
@@ -218,7 +218,7 @@ export class StompConnector {
                                                 msg.ack();
                                             else
                                                 msg.nack();
-                                            KikiUtils.removeItemFromArray(this.activeMessages, msgKey);
+                                            SGUtils.removeItemFromArray(this.activeMessages, msgKey);
                                         } catch (e) {
                                             this.LogError('Error occurred acking Stomp message: ' + e.message, e.stack, { 'EventArgs': util.inspect(msg, false, null) });
                                         }
@@ -230,7 +230,7 @@ export class StompConnector {
                             if (!noAck) {
                                 msg.ack();
                                 if (msgKey != null)
-                                    KikiUtils.removeItemFromArray(this.activeMessages, msgKey);
+                                    SGUtils.removeItemFromArray(this.activeMessages, msgKey);
                             }
                         }
                     }
@@ -280,7 +280,7 @@ export class StompConnector {
                                                 msg.ack();
                                             else
                                                 msg.nack();
-                                            KikiUtils.removeItemFromArray(this.activeMessages, msgKey);
+                                            SGUtils.removeItemFromArray(this.activeMessages, msgKey);
                                         } catch (e) {
                                             this.LogError('Error occurred acking Stomp message: ' + e.message, e.stack, { 'EventArgs': util.inspect(msg, false, null) });
                                         }
@@ -292,7 +292,7 @@ export class StompConnector {
                             if (!noAck) {
                                 msg.ack();
                                 if (msgKey != null)
-                                    KikiUtils.removeItemFromArray(this.activeMessages, msgKey);
+                                    SGUtils.removeItemFromArray(this.activeMessages, msgKey);
                             }
                         }
                     }
@@ -310,7 +310,7 @@ export class StompConnector {
     async StopConsumingQueue(sub: any) {
         this.LogDebug('Unsubscribing', { 'Subscription': util.inspect(sub, false, null) });
         await sub.unsubscribe();
-        KikiUtils.removeItemFromArray(this.subscriptions, sub);
+        SGUtils.removeItemFromArray(this.subscriptions, sub);
     }
 
     async StopConsuming() {

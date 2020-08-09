@@ -2,7 +2,7 @@ import { convertData } from '../utils/ResponseConverters';
 import { UserSchema, UserModel } from '../domain/User';
 import * as mongodb from 'mongodb';
 import * as bcrypt from 'bcrypt';
-import { KikiUtils } from '../../shared/KikiUtils';
+import { SGUtils } from '../../shared/SGUtils';
 import { MissingObjectError, ValidationError } from '../utils/Errors';
 import * as moment from 'moment';
 import * as _ from 'lodash';
@@ -56,13 +56,13 @@ export class UserService {
     const queryRes: any = await userService.findAllUsersInternal({ email: data.email })
     if (_.isArray(queryRes) && queryRes.length > 0) {
       userModel = queryRes[0];
-      userModel.emailConfirmCode = KikiUtils.makeNumericId();
+      userModel.emailConfirmCode = SGUtils.makeNumericId();
       userModel.emailConfirmCodeExpiration = moment(new Date()).add(5, 'm').toDate().toISOString();
       userModel.hasAcceptedTerms = false;
       userModel = await userModel.save();
     } else {
       userModel = new UserModel(data);
-      userModel.emailConfirmCode = KikiUtils.makeNumericId();
+      userModel.emailConfirmCode = SGUtils.makeNumericId();
       userModel.emailConfirmCodeExpiration = moment(new Date()).add(5, 'm').toDate().toISOString();
       userModel.hasAcceptedTerms = false;
       userModel = await userModel.save();
@@ -150,7 +150,7 @@ export class UserService {
         }
         userModel.orgIdsInvited = newOrgIdsInvited;
         if (userModel.orgIdsInactive.indexOf(_orgId) >= 0)
-          userModel.orgIdsInactive = KikiUtils.removeItemFromArray(userModel.orgIdsInactive, _orgId);
+          userModel.orgIdsInactive = SGUtils.removeItemFromArray(userModel.orgIdsInactive, _orgId);
         await userModel.save();
       }
       return;
@@ -165,7 +165,7 @@ export class UserService {
       throw new ValidationError('Not invited to requested team');
 
     if (userModel.orgIdsInactive.indexOf(_orgId) >= 0)
-      userModel.orgIdsInactive = KikiUtils.removeItemFromArray(userModel.orgIdsInactive, _orgId);
+      userModel.orgIdsInactive = SGUtils.removeItemFromArray(userModel.orgIdsInactive, _orgId);
 
     userModel.orgIds.push(_orgId);
     let newOrgIdsInvited: any[] = [];

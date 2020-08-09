@@ -4,10 +4,10 @@
 import * as fs from 'fs';
 import * as util from 'util';
 import * as config from 'config';
-import { BaseLogger } from '../../server/src/shared/KikiLogger';
+import { BaseLogger } from '../../server/src/shared/SGLogger';
 import TestSetup from './Setup';
 import { AMQPConnector } from '../../server/src/shared/AMQPLib';
-import { KikiUtils } from '../../server/src/shared/KikiUtils';
+import { SGUtils } from '../../server/src/shared/SGUtils';
 
 let appName: string = 'RunSchedulerTest';
 
@@ -51,7 +51,7 @@ let amqpConnector = new AMQPConnector('SchedulerTest', '', amqpUrl, rmqVhost, 1,
                         await testModule.CreateTest();
                         await testModule.SetupServerArtifacts(testSetup);
                         // await testModule.SetupAgents(testSetup);
-                        // await KikiUtils.sleep(1500);
+                        // await SGUtils.sleep(1500);
                         let res = await testModule.RunTest()
                         await testModule.StopTestMonitor();
                         console.log('cleanup');
@@ -64,9 +64,9 @@ let amqpConnector = new AMQPConnector('SchedulerTest', '', amqpUrl, rmqVhost, 1,
                         // const testUsers = await testSetup.GetRMQUsers(testModule);
                         // usersToDelete = usersToDelete.concat(testUsers);
 
-                        // fs.writeFileSync(`${testsRootPath}/../../../bp/${KikiUtils.ChangeFileExt(f, 'bp')}`, JSON.stringify(testModule.bpMessages));
+                        // fs.writeFileSync(`${testsRootPath}/../../../bp/${SGUtils.ChangeFileExt(f, 'bp')}`, JSON.stringify(testModule.bpMessages));
 
-                        await KikiUtils.sleep(5000);
+                        await SGUtils.sleep(5000);
                     }
                 } catch (e) {
                     logger.LogError(`Error in test ${f}: ${e}`, { Stack: e.stack });

@@ -2,9 +2,9 @@ import { convertData } from '../utils/ResponseConverters';
 import { UserSchema, UserModel } from '../domain/User';
 import { userService } from './UserService';
 import * as mongodb from 'mongodb';
-import { KikiUtils } from '../../shared/KikiUtils';
+import { SGUtils } from '../../shared/SGUtils';
 import { MissingObjectError, ValidationError } from '../utils/Errors';
-import { BaseLogger } from '../../shared/KikiLogger';
+import { BaseLogger } from '../../shared/SGLogger';
 import * as moment from 'moment';
 import * as _ from 'lodash';
 import * as bcrypt from 'bcrypt';
@@ -30,29 +30,29 @@ export class SignupService {
         //     let userName = data.email.split('@')[0];
         //     if (userModel.name)
         //         userName = userModel.name;
-        //     await KikiUtils.SendConfirmEmailAlreadyExistsEmail(userName, userModel.email);
+        //     await SGUtils.SendConfirmEmailAlreadyExistsEmail(userName, userModel.email);
         // } else {
         //     if (!userModel)
         //         userModel = new UserModel(data);
 
-        //     userModel.emailConfirmCode = KikiUtils.makeNumericId();
+        //     userModel.emailConfirmCode = SGUtils.makeNumericId();
         //     userModel.emailConfirmCodeExpiration = moment(new Date()).add(5, 'm').toDate().toISOString();
         //     userModel.hasAcceptedTerms = false;
         //     userModel = await userModel.save();
 
-        //     await KikiUtils.SendSignupConfirmEmail(userModel.emailConfirmCode, data.email);
+        //     await SGUtils.SendSignupConfirmEmail(userModel.emailConfirmCode, data.email);
         // }
 
         if (!userExistsAndConfirmed) {
             if (!userModel)
                 userModel = new UserModel(data);
 
-            userModel.emailConfirmCode = KikiUtils.makeNumericId();
+            userModel.emailConfirmCode = SGUtils.makeNumericId();
             userModel.emailConfirmCodeExpiration = moment(new Date()).add(5, 'm').toDate().toISOString();
             userModel.hasAcceptedTerms = false;
             userModel = await userModel.save();
 
-            await KikiUtils.SendSignupConfirmEmail(userModel.emailConfirmCode, data.email, logger);
+            await SGUtils.SendSignupConfirmEmail(userModel.emailConfirmCode, data.email, logger);
         }
 
         return { email: userModel.email, confirmedEmailExists: userExistsAndConfirmed };

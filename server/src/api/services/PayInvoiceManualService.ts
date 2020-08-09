@@ -1,5 +1,5 @@
 import { convertData } from '../utils/ResponseConverters';
-import { BaseLogger } from '../../shared/KikiLogger';
+import { BaseLogger } from '../../shared/SGLogger';
 import { PaymentTransactionSchema, PaymentTransactionModel } from '../domain/PaymentTransaction';
 import { PaymentTransactionSource } from '../../shared/Enums';
 import { paymentTransactionService } from './PaymentTransactionService';
@@ -10,7 +10,7 @@ import { invoiceService } from './InvoiceService';
 import { InvoiceStatus, OrgPaymentStatus } from '../../shared/Enums';
 import { OrgSchema } from '../domain/Org';
 import { PaymentTransactionStatus } from '../../shared/Enums';
-import { KikiUtils } from '../../shared/KikiUtils';
+import { SGUtils } from '../../shared/SGUtils';
 import * as _ from 'lodash';
 import * as config from 'config';
 import { orgService } from './OrgService';
@@ -46,7 +46,7 @@ export class PayInvoiceManualService {
 
         if (amount <= 0) {
             let updatedInvoice = await invoiceService.updateInvoice(_orgId, invoice._id, { status: InvoiceStatus.PAID }, correlationId);
-            await KikiUtils.CreateAndSendInvoice(org, updatedInvoice, { paymentInstrumentType: 'n/a', paymentInstrument: 'n/a' }, logger);
+            await SGUtils.CreateAndSendInvoice(org, updatedInvoice, { paymentInstrumentType: 'n/a', paymentInstrument: 'n/a' }, logger);
             return { _orgId: _orgId, amount: 0 };
         }
 
@@ -101,7 +101,7 @@ export class PayInvoiceManualService {
             else
                 queryUpdateInvoice['status'] = InvoiceStatus.PARTIALLY_PAID;
             let updatedInvoice: any = await invoiceService.updateInvoice(_orgId, invoice._id, queryUpdateInvoice, correlationId);
-            await KikiUtils.CreateAndSendInvoice(org, updatedInvoice, paymentTransactionData, logger);
+            await SGUtils.CreateAndSendInvoice(org, updatedInvoice, paymentTransactionData, logger);
 
             if (invoice.paidAmount + amount >= invoice.billAmount) {
                 if (org.paymentStatus == OrgPaymentStatus.DELINQUENT) {

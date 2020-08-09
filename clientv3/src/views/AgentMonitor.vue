@@ -166,7 +166,7 @@ import { Agent } from '../store/agent/types';
 import VueSplit from 'vue-split-panel';
 import { Tabs, Tab } from 'vue-slim-tabs';
 import axios from 'axios';
-import { KikiAlert, AlertPlacement, AlertCategory } from '@/store/alert/types';
+import { SgAlert, AlertPlacement, AlertCategory } from '@/store/alert/types';
 import { momentToStringV1 } from '@/utils/DateTime';
 import _ from 'lodash';
 import moment from 'moment';
@@ -415,7 +415,7 @@ export default class AgentMonitor extends Vue {
       await Promise.all(savePromises);
       this.refreshSelectedAgentCopies();
 
-      this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new KikiAlert('Saved agent settings.', AlertPlacement.FOOTER, AlertCategory.INFO));
+      this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert('Saved agent settings.', AlertPlacement.FOOTER, AlertCategory.INFO));
     }
     catch(err) {
       console.error(err);
@@ -476,7 +476,7 @@ export default class AgentMonitor extends Vue {
       await Promise.all(savePromises);
       this.refreshSelectedAgentCopies();
 
-      this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new KikiAlert('Saved agent tags.', AlertPlacement.FOOTER, AlertCategory.INFO));
+      this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert('Saved agent tags.', AlertPlacement.FOOTER, AlertCategory.INFO));
       
       if(updateType === UpdateTagType.ADD){
         this.newTagKey = this.newTagValue = '';
@@ -532,7 +532,7 @@ export default class AgentMonitor extends Vue {
       window.open(`${window.location.origin}/#/jobDesigner/${jobDef.id}`);
 
       const alertMessage = `Cron Job imported to a new Saas Glue Job "${jobDef.name}".<br><br>Remember to remove this cron job from the Agent machine "${this.selectedAgentForCronImport.name}"<br>`;
-      this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new KikiAlert(alertMessage, AlertPlacement.WINDOW, AlertCategory.INFO));      
+      this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(alertMessage, AlertPlacement.WINDOW, AlertCategory.INFO));      
     }
     catch(err) {
       console.error(err);

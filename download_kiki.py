@@ -18,7 +18,7 @@ arch = None
 if len(sys.argv) > 6:
     arch = sys.argv[6]
 
-outFile = '{}/kiki-agent-launcher'.format(workingdir)
+outFile = '{}/sg-agent-launcher'.format(workingdir)
 
 
 def RestAPILogin():
@@ -95,17 +95,17 @@ def DownloadAgent():
 
     res = requests.get(s3url, allow_redirects=True)
 
-    open('kiki-agent-launcher.gz', 'wb').write(res.content)
+    open('sg-agent-launcher.gz', 'wb').write(res.content)
 
     print 'outFile -> ' + outFile
 
-    with gzip.open('kiki-agent-launcher.gz', 'rb') as f_in:
+    with gzip.open('sg-agent-launcher.gz', 'rb') as f_in:
         with open(outFile, 'wb') as f_out:
             shutil.copyfileobj(f_in, f_out)
 
     os.chmod(outFile, 0o777)
 
-    os.remove('kiki-agent-launcher.gz')
+    os.remove('sg-agent-launcher.gz')
 
 
 
@@ -113,7 +113,7 @@ DownloadAgent()
 
 # cmd = """
 # echo | crontab
-# (crontab -l ; echo "*/1 * * * * /usr/bin/flock -n ./kiki_agent_launcher.lockfile {}") | crontab -
+# (crontab -l ; echo "*/1 * * * * /usr/bin/flock -n ./sg_agent_launcher.lockfile {}") | crontab -
 # """.format(outFile)
 
 # os.system(cmd)

@@ -1,7 +1,7 @@
 import * as fs from 'fs';
 import * as config from 'config';
 import { MongoRepo } from '../../../server/src/shared/MongoLib';
-import { BaseLogger } from '../../../server/src/shared/KikiLogger';
+import { BaseLogger } from '../../../server/src/shared/SGLogger';
 import { agentService } from '../../../server/src/api/services/AgentService';
 import { jobDefService } from '../../../server/src/api/services/JobDefService';
 import { jobService } from '../../../server/src/api/services/JobService';

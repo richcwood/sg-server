@@ -2,7 +2,7 @@ import * as util from 'util';
 import * as config from 'config';
 import * as TestBase from './TestBase';
 import { InteractiveConsoleJob } from './TestArtifacts';
-import { KikiUtils } from '../../server/src/shared/KikiUtils';
+import { SGUtils } from '../../server/src/shared/SGUtils';
 import { TaskDefTarget, TaskStatus, TaskFailureCode } from '../../server/src/shared/Enums';
 import * as _ from 'lodash';
 
@@ -21,7 +21,7 @@ for i in range(@kpg("linenum"),50):
 print 'done'
 print '@kpo{"route": "ok"}'
 `;
-const script1_b64 = KikiUtils.btoa(script1);
+const script1_b64 = SGUtils.btoa(script1);
 
 
 let self: Test48;

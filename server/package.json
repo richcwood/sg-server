@@ -1,7 +1,7 @@
 {
-  "name": "kiki",
+  "name": "saas glue",
   "version": "1.0.0",
-  "description": "Kiki workers",
+  "description": "saas glue workers",
   "engines": {
     "node": "10.15.1"
   },

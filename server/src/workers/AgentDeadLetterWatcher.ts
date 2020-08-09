@@ -7,13 +7,13 @@
 import * as config from 'config';
 import { localRestAccess } from '../api/utils/LocalRestAccess';
 import { AMQPConnector } from '../shared/AMQPLib';
-import { BaseLogger } from '../shared/KikiLogger';
+import { BaseLogger } from '../shared/SGLogger';
 import { TaskStatus } from '../shared/Enums';
 import { TaskFailureCode, TaskDefTarget } from '../shared/Enums';
 // import { TaskSchema } from '../api/domain/Task';
 import * as util from 'util';
-import { KikiUtils } from '../shared/KikiUtils';
-import { KikiStrings } from '../shared/KikiStrings';
+import { SGUtils } from '../shared/SGUtils';
+import { SGStrings } from '../shared/SGStrings';
 
 
 const amqpUrl = config.get('amqpUrl');
@@ -130,7 +130,7 @@ export default class AgentDeadLetterWatcher {
         if (params.target & (TaskDefTarget.SINGLE_AGENT | TaskDefTarget.SINGLE_AGENT_WITH_TAGS)) {
           await localRestAccess.RestAPICall(`taskaction/republish/${params.id}`, 'POST', _orgId, null, null);
         } else {
-          await KikiUtils.sleep(noAgentAvailableFailureRetryInterval);
+          await SGUtils.sleep(noAgentAvailableFailureRetryInterval);
           const data: any = { task: params, queue: properties.headers['x-first-death-queue'] };
           await localRestAccess.RestAPICall(`taskaction/requeue/${params.id}`, 'POST', _orgId, null, data);
         }

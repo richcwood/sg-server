@@ -121,7 +121,7 @@ import moment from 'moment';
 import axios from 'axios';
 import { User } from '@/store/user/types';
 import { focusElement } from "@/utils/Shared";
-import { KikiAlert, AlertPlacement, AlertCategory } from "@/store/alert/types";
+import { SgAlert, AlertPlacement, AlertCategory } from "@/store/alert/types";
 import { showErrors } from '@/utils/ErrorHandler';
 import { ValidationProvider, ValidationObserver } from 'vee-validate';
 
@@ -234,7 +234,7 @@ export default class Scripts extends Vue {
     try {
       this.$store.dispatch(
         `${StoreType.AlertStore}/addAlert`,
-        new KikiAlert(
+        new SgAlert(
           `Creating script - ${this.newScriptName}`,
           AlertPlacement.FOOTER
         )

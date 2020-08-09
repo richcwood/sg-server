@@ -10,7 +10,7 @@ import { convertData as convertRequestData } from '../utils/RequestConverters';
 import * as _ from 'lodash';
 import * as mongodb from 'mongodb';
 import { MongoRepo } from '../../shared/MongoLib';
-import { BaseLogger } from '../../shared/KikiLogger';
+import { BaseLogger } from '../../shared/SGLogger';
 
 
 export class InvoiceController {

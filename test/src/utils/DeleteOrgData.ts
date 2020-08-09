@@ -1,6 +1,6 @@
 import * as config from 'config';
 import { MongoRepo } from '../../../server/src/shared/MongoLib';
-import { BaseLogger } from '../../../server/src/shared/KikiLogger';
+import { BaseLogger } from '../../../server/src/shared/SGLogger';
 import * as mongodb from 'mongodb';
 import * as mongoose from 'mongoose';
 const readline = require('readline');

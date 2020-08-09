@@ -12,7 +12,7 @@ export enum AlertCategory {
 }
 
 // Alert is apparently some kind of reserved word
-export class KikiAlert  {
+export class SgAlert  {
 
   public readonly id: string;
 
@@ -26,7 +26,7 @@ export class KikiAlert  {
 };
 
 export interface AlertStore {
-  models: KikiAlert[],
-  currentFooter: KikiAlert | null,
-  currentWindow: KikiAlert | null
+  models: SgAlert[],
+  currentFooter: SgAlert | null,
+  currentWindow: SgAlert | null
 }

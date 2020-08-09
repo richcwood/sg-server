@@ -9,7 +9,7 @@ import { convertData as convertResponseData } from '../utils/ResponseConverters'
 import { convertData as convertRequestData } from '../utils/RequestConverters';
 import { UserSchema } from '../domain/User';
 import { userService } from '../services/UserService';
-import { BaseLogger } from '../../shared/KikiLogger';
+import { BaseLogger } from '../../shared/SGLogger';
 const jwt = require('jsonwebtoken');
 import * as _ from 'lodash';
 import * as mongodb from 'mongodb';

@@ -295,7 +295,7 @@ import { BindStoreModel } from '@/decorator';
 import { JobStatus, TaskStatus, StepStatus, TaskFailureCode, enumKeyToPretty } from '@/utils/Enums.ts';
 import { mapToString } from '@/utils/Shared';
 import { Agent } from "../store/agent/types";
-import { KikiAlert, AlertPlacement, AlertCategory } from '@/store/alert/types';
+import { SgAlert, AlertPlacement, AlertCategory } from '@/store/alert/types';
 import { User } from '@/store/user/types';
 import { showErrors } from '@/utils/ErrorHandler';
 

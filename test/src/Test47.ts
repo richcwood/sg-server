@@ -1,6 +1,6 @@
 import * as config from 'config';
 import * as TestBase from './TestBase';
-import { KikiUtils } from '../../server/src/shared/KikiUtils';
+import { SGUtils } from '../../server/src/shared/SGUtils';
 import { ScriptType, JobDefStatus, JobStatus } from '../../server/src/shared/Enums';
 import * as _ from 'lodash';
 
@@ -12,7 +12,7 @@ time.sleep(5)
 print 'done'
 print '@kpo{"route": "ok"}'
 `;
-const script1_b64 = KikiUtils.btoa(script1);
+const script1_b64 = SGUtils.btoa(script1);
 
 
 let self: Test47;
@@ -104,7 +104,7 @@ export default class Test47 extends TestBase.WorkflowTestBase {
         self.bpMessagesExpected.length = 0;
 
 
-        await KikiUtils.sleep(12000);
+        await SGUtils.sleep(12000);
 
         resApiCall = await this.testSetup.RestAPICall(`jobdef/${jobDefs[properties.jobDefs[0].name].id}`, 'PUT', _orgId, null, { status: JobDefStatus.RUNNING });
         if (resApiCall.data.statusCode != 200) {

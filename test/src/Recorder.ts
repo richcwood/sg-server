@@ -1,10 +1,10 @@
 import * as fs from 'fs';
 import * as util from 'util';
 import * as config from 'config';
-import { BaseLogger } from '../../server/src/shared/KikiLogger';
+import { BaseLogger } from '../../server/src/shared/SGLogger';
 import { AMQPConnector } from '../../server/src/shared/AMQPLib';
 import { MongoRepo } from '../../server/src/shared/MongoLib';
-import { KikiStrings } from '../../server/src/shared/KikiStrings';
+import { SGStrings } from '../../server/src/shared/SGStrings';
 
 
 let self: Recorder;
@@ -37,7 +37,7 @@ export default class Recorder {
 
         self.amqp = new AMQPConnector('Recorder', '', self.amqpUrl, self.rmqVhost, 1, (activeMessages) => { }, this.logger);
         await self.amqp.Start();
-        await self.amqp.ConsumeRoute('', true, true, true, true, self.OnBrowserPush.bind(this), KikiStrings.GetOrgRoutingPrefix(config.get('sgTestOrg')), self.rmqBrowserPushRoute);
+        await self.amqp.ConsumeRoute('', true, true, true, true, self.OnBrowserPush.bind(this), SGStrings.GetOrgRoutingPrefix(config.get('sgTestOrg')), self.rmqBrowserPushRoute);
     }
 
     protected async OnBrowserPush(params: any, msgKey: string, ch: any) {

@@ -15,7 +15,7 @@ import _ from 'lodash';
 import { Component, Prop, Vue, Watch } from 'vue-property-decorator';
 import { Script } from '@/store/script/types';
 import { LinkedModel, StoreType } from '@/store/types';
-import { KikiAlert, AlertPlacement, AlertCategory } from '@/store/alert/types';
+import { SgAlert, AlertPlacement, AlertCategory } from '@/store/alert/types';
 import axios from 'axios';
 
 @Component
@@ -88,7 +88,7 @@ export default class ScriptSearch extends Vue {
       }
     }
     catch(err){
-      this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new KikiAlert(`Error searching scripts: ${err}`, AlertPlacement.WINDOW, AlertCategory.ERROR));
+      this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Error searching scripts: ${err}`, AlertPlacement.WINDOW, AlertCategory.ERROR));
     }
   }
 

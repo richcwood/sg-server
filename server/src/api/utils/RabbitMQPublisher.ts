@@ -1,7 +1,7 @@
 import { AMQPConnector } from '../../shared/AMQPLib';
-import { KikiStrings } from '../../shared/KikiStrings';
-import { KikiUtils } from '../../shared/KikiUtils';
-import { BaseLogger } from '../../shared/KikiLogger';
+import { SGStrings } from '../../shared/SGStrings';
+import { SGUtils } from '../../shared/SGUtils';
+import { BaseLogger } from '../../shared/SGLogger';
 import { ScheduleSchema } from '../domain/Schedule';
 import * as config from 'config';
 import * as mongodb from 'mongodb';
@@ -52,7 +52,7 @@ class RabbitMQPublisher {
     if (!this.started) {
       await this.start();
     }
-    this.amqp.PublishRoute(KikiStrings.GetOrgExchangeName(_orgId), rmqBrowserPushRoute, { domainType, operation, model: data, correlationId, userEmail });
+    this.amqp.PublishRoute(SGStrings.GetOrgExchangeName(_orgId), rmqBrowserPushRoute, { domainType, operation, model: data, correlationId, userEmail });
   }
 
 
@@ -62,7 +62,7 @@ class RabbitMQPublisher {
     if (!this.started) {
       await this.start();
     }
-    this.amqp.PublishRoute(KikiStrings.GetOrgExchangeName(_orgId), rmqBrowserAlertsRoute, { message });
+    this.amqp.PublishRoute(SGStrings.GetOrgExchangeName(_orgId), rmqBrowserAlertsRoute, { message });
   }
 
 
@@ -71,7 +71,7 @@ class RabbitMQPublisher {
     if (!this.started) {
       await this.start();
     }
-    this.amqp.PublishQueue(KikiStrings.GetOrgRoutingPrefix(_orgId.toHexString()), KikiStrings.GetAgentUpdaterQueue(_orgId.toHexString(), _agentId.toHexString()), data, agentQueueProperties, { 'expiration': defaultAgentUpdateMessageTTL });
+    this.amqp.PublishQueue(SGStrings.GetOrgRoutingPrefix(_orgId.toHexString()), SGStrings.GetAgentUpdaterQueue(_orgId.toHexString(), _agentId.toHexString()), data, agentQueueProperties, { 'expiration': defaultAgentUpdateMessageTTL });
   }
 
 

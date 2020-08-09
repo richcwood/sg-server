@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { ResponseWrapper, ResponseCode } from '../utils/Types';
 import { taskActionService } from '../services/TaskActionService';
-import { BaseLogger } from '../../shared/KikiLogger';
+import { BaseLogger } from '../../shared/SGLogger';
 import * as _ from 'lodash';
 import * as mongodb from 'mongodb';
 

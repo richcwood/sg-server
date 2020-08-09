@@ -7,7 +7,7 @@ import { MissingObjectError } from '../utils/Errors';
 import { CastError } from 'mongoose';
 import { convertData as convertResponseData } from '../utils/ResponseConverters';
 import { convertData as convertRequestData } from '../utils/RequestConverters';
-import { BaseLogger } from '../../shared/KikiLogger';
+import { BaseLogger } from '../../shared/SGLogger';
 import { TaskSource } from '../../shared/Enums';
 import * as _ from 'lodash';
 import * as mongodb from 'mongodb';

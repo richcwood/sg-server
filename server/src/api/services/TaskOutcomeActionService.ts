@@ -8,7 +8,7 @@ import { TaskStatus, TaskFailureCode } from '../../shared/Enums';
 import { TaskDefTarget } from '../../shared/Enums';
 import * as mongodb from 'mongodb';
 import * as _ from 'lodash';
-import { BaseLogger } from '../../shared/KikiLogger';
+import { BaseLogger } from '../../shared/SGLogger';
 import * as config from 'config';
 import { AMQPConnector } from '../../shared/AMQPLib';
 

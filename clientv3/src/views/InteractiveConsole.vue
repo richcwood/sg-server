@@ -464,7 +464,7 @@ import { StoreType } from "@/store/types";
 import { Agent } from "../store/agent/types";
 import VueSplit from "vue-split-panel";
 import axios from "axios";
-import { KikiAlert, AlertPlacement, AlertCategory } from "@/store/alert/types";
+import { SgAlert, AlertPlacement, AlertCategory } from "@/store/alert/types";
 import { focusElement } from "@/utils/Shared";
 import { Script, ScriptType, scriptTypesForMonaco } from "@/store/script/types";
 import { TaskDefTarget } from "@/store/taskDef/types";
@@ -631,7 +631,7 @@ export default class InteractiveConsole extends Vue {
     try {
       this.$store.dispatch(
         `${StoreType.AlertStore}/addAlert`,
-        new KikiAlert(
+        new SgAlert(
           `Creating script - ${this.newScriptName}`,
           AlertPlacement.FOOTER
         )
@@ -666,7 +666,7 @@ export default class InteractiveConsole extends Vue {
     try {
       if (this.scriptCopy) {
         this.script = await this.$store.dispatch(`${StoreType.ScriptStore}/save`, this.scriptCopy);
-        this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new KikiAlert(`Script saved`, AlertPlacement.FOOTER));
+        this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Script saved`, AlertPlacement.FOOTER));
       }
     } 
     catch (err) {
@@ -752,7 +752,7 @@ export default class InteractiveConsole extends Vue {
       }
 
       try {
-        this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new KikiAlert(`Cloning script - ${this.cloneScriptName}`, AlertPlacement.FOOTER));      
+        this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Cloning script - ${this.cloneScriptName}`, AlertPlacement.FOOTER));      
         const newScript = {
           name: this.cloneScriptName, 
           scriptType: this.scriptCopy.scriptType, 
@@ -793,7 +793,7 @@ export default class InteractiveConsole extends Vue {
   private async onCancelJobClicked(){
     try {
       await axios.post(`api/v0/jobaction/cancel/${this.selectedJob.id}`);
-      this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new KikiAlert(`Job cancelled`, AlertPlacement.FOOTER));
+      this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Job cancelled`, AlertPlacement.FOOTER));
     }
     catch(err){
       console.error(err);
@@ -804,7 +804,7 @@ export default class InteractiveConsole extends Vue {
   private async onCancelTaskOutcomeClicked(taskOutcome: TaskOutcome){
     try {
       await axios.post(`/api/v0/taskoutcomeaction/cancel/${taskOutcome.id}`);
-      this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new KikiAlert(`Task cancelled`, AlertPlacement.FOOTER));
+      this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Task cancelled`, AlertPlacement.FOOTER));
     }
     catch(err){
       console.error(err);

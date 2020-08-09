@@ -14,9 +14,9 @@ import * as config from 'config';
 import { spawn } from 'child_process';
 import { exec } from 'child_process';
 import { AMQPConnector } from '../../server/src/shared/AMQPLib';
-import { BaseLogger } from '../../server/src/shared/KikiLogger';
+import { BaseLogger } from '../../server/src/shared/SGLogger';
 import { MongoRepo } from '../../server/src/shared/MongoLib';
-import { KikiStrings } from '../../server/src/shared/KikiStrings';
+import { SGStrings } from '../../server/src/shared/SGStrings';
 import { LogLevel } from '../../server/src/shared/Enums';
 import Agent from '../../../sg-agent/src/Agent';
 import { RabbitMQAdmin } from '../../server/src/shared/RabbitMQAdmin';
@@ -25,7 +25,7 @@ import axios from 'axios';
 import * as fs from 'fs';
 import * as mongodb from 'mongodb';
 import { OrgSchema } from '../../server/src/api/domain/Org';
-import { KikiUtils } from '../../server/src/shared/KikiUtils';
+import { SGUtils } from '../../server/src/shared/SGUtils';
 import * as Enums from '../../server/src/shared/Enums';
 const jwt = require('jsonwebtoken');
 
@@ -272,7 +272,7 @@ export default class TestSetup {
             // auth = auth.substring(5) + ';';
             // test.token = auth;
 
-            // const userConfigPath: string = process.cwd() + '/kiki.cfg';
+            // const userConfigPath: string = process.cwd() + '/sg.cfg';
             // if (fs.existsSync(userConfigPath))
             //     fs.unlinkSync(userConfigPath);
 
@@ -288,14 +288,14 @@ export default class TestSetup {
 
             for (let i = 0; i < Object.values(this.orgs).length; i++) {
                 let _orgId = Object.values(this.orgs)[i]['id'];
-                const exchangeOrgName = KikiStrings.GetOrgRoutingPrefix(_orgId);
+                const exchangeOrgName = SGStrings.GetOrgRoutingPrefix(_orgId);
                 await this.rmqAdmin.createExchange(exchangeOrgName, 'topic', false, true);
 
                 await this.rmqAdmin.bindExchanges(exchangeOrgName, 'worker', rmqScheduleUpdatesQueue);
 
                 let org = await this.mongoRepo.GetById(_orgId, 'org', { rmqPassword: 1 });
                 const newUsername = _orgId.toString();
-                const defaultExchange = KikiStrings.GetOrgRoutingPrefix(_orgId);
+                const defaultExchange = SGStrings.GetOrgRoutingPrefix(_orgId);
                 await this.rmqAdmin.createUser(newUsername, org['rmqPassword'], defaultExchange);
             }
         } catch (e) {
@@ -382,21 +382,21 @@ export default class TestSetup {
 
             // for (let i = 0; i < this.agents.length; i++) {
             //     let _orgId = this.agents[i]._orgId;
-            //     await this.rmqAdmin.deleteQueue(KikiStrings.GetAgentQueue(_orgId, this.agents[i].InstanceId().toHexString()));
-            //     await this.rmqAdmin.deleteQueue(KikiStrings.GetAgentUpdaterQueue(_orgId, this.agents[i].InstanceId().toHexString()));
+            //     await this.rmqAdmin.deleteQueue(SGStrings.GetAgentQueue(_orgId, this.agents[i].InstanceId().toHexString()));
+            //     await this.rmqAdmin.deleteQueue(SGStrings.GetAgentUpdaterQueue(_orgId, this.agents[i].InstanceId().toHexString()));
             // }
 
             // for (let i = 0; i < Object.values(this.orgs).length; i++) {
             //     let _orgId = Object.values(this.orgs)[i]['id'];
 
-            //     // const orgExchangeName = KikiStrings.GetOrgRoutingPrefix(_orgId);
+            //     // const orgExchangeName = SGStrings.GetOrgRoutingPrefix(_orgId);
 
             //     for (let j = 0; j < test.allTags.length; j++) {
-            //         await this.rmqAdmin.deleteQueue(KikiStrings.GetAnyAgentTagQueue(_orgId, test.allTags[j]));
+            //         await this.rmqAdmin.deleteQueue(SGStrings.GetAnyAgentTagQueue(_orgId, test.allTags[j]));
             //     }
 
-            //     await this.rmqAdmin.deleteQueue(KikiStrings.GetAnyAgentQueue(_orgId));
-            //     await this.rmqAdmin.deleteQueue(KikiStrings.GetHeartbeatQueue(_orgId));
+            //     await this.rmqAdmin.deleteQueue(SGStrings.GetAnyAgentQueue(_orgId));
+            //     await this.rmqAdmin.deleteQueue(SGStrings.GetHeartbeatQueue(_orgId));
             //     // await this.rmqAdmin.deleteExchange(orgExchangeName);
             // }
         } catch (e) {

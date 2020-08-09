@@ -8,11 +8,11 @@ import { TaskStatus, TaskFailureCode, TaskDefTarget } from '../../shared/Enums';
 import { GetTaskRoutes } from '../utils/Shared';
 import * as mongodb from 'mongodb';
 import * as _ from 'lodash';
-import { BaseLogger } from '../../shared/KikiLogger';
+import { BaseLogger } from '../../shared/SGLogger';
 import * as config from 'config';
 import { AMQPConnector } from '../../shared/AMQPLib';
-import { KikiUtils } from '../../shared/KikiUtils';
-import { KikiStrings } from '../../shared/KikiStrings';
+import { SGUtils } from '../../shared/SGUtils';
+import { SGStrings } from '../../shared/SGStrings';
 
 
 let appName: string = 'TaskActionService';
@@ -99,7 +99,7 @@ export class TaskActionService {
             }
 
             if (taskFailed) {
-                await KikiUtils.OnTaskFailed(_orgId, task, TaskFailureCode[getTaskRoutesRes.failureCode], logger);
+                await SGUtils.OnTaskFailed(_orgId, task, TaskFailureCode[getTaskRoutesRes.failureCode], logger);
             }
         } else {
             const routes = getTaskRoutesRes.routes;
@@ -107,9 +107,9 @@ export class TaskActionService {
 
             for (let i = 0; i < routes.length; i++) {
                 if (routes[i]['type'] == 'queue') {
-                    await amqp.PublishQueue(KikiStrings.GetOrgExchangeName(_orgId.toHexString()), routes[i]['route'], task, routes[i]['queueAssertArgs'], { 'expiration': ttl });
+                    await amqp.PublishQueue(SGStrings.GetOrgExchangeName(_orgId.toHexString()), routes[i]['route'], task, routes[i]['queueAssertArgs'], { 'expiration': ttl });
                 } else {
-                    await amqp.PublishRoute(KikiStrings.GetOrgExchangeName(_orgId.toHexString()), routes[i]['route'], task);
+                    await amqp.PublishRoute(SGStrings.GetOrgExchangeName(_orgId.toHexString()), routes[i]['route'], task);
                 }
             }
 

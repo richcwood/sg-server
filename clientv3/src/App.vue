@@ -96,7 +96,7 @@ import { Component, Vue, Watch } from 'vue-property-decorator';
 import { StoreType } from '@/store/types';
 import { enumKeyToPretty } from '@/utils/Enums';
 import { Org } from '@/store/org/types';
-import { KikiAlert, AlertPlacement, AlertCategory } from '@/store/alert/types';
+import { SgAlert, AlertPlacement, AlertCategory } from '@/store/alert/types';
 import { BindSelected, BindStoreModel } from '@/decorator';
 import axios from 'axios';
 import Cookies from 'js-cookie';
@@ -117,13 +117,13 @@ export default class App extends Vue {
   private selectedOrg!: Org;
 
   @BindStoreModel({storeType: StoreType.AlertStore, selectedModelName: 'models'})
-  private alerts!: KikiAlert[];
+  private alerts!: SgAlert[];
 
   @BindStoreModel({storeType: StoreType.AlertStore, selectedModelName: 'currentFooter'})
-  private alertFooter!: KikiAlert;
+  private alertFooter!: SgAlert;
 
   @BindStoreModel({storeType: StoreType.AlertStore, selectedModelName: 'currentWindow'})
-  private alertWindow!: KikiAlert;
+  private alertWindow!: SgAlert;
 
   private showOrgsMenu = false;
   private showUserMenu = false;
@@ -147,10 +147,10 @@ export default class App extends Vue {
   private testAlert(){
     // how to do a simple footer alert
     if(this.testAlertCount % 2 === 0){
-      this.$store.dispatch('alertStore/addAlert', new KikiAlert(`This is a test alert - ${this.testAlertCount++}`, AlertPlacement.FOOTER));
+      this.$store.dispatch('alertStore/addAlert', new SgAlert(`This is a test alert - ${this.testAlertCount++}`, AlertPlacement.FOOTER));
     }
     else {
-      this.$store.dispatch('alertStore/addAlert', new KikiAlert(`This is a test alert - ${this.testAlertCount++}`, AlertPlacement.FOOTER, AlertCategory.ERROR, -1));
+      this.$store.dispatch('alertStore/addAlert', new SgAlert(`This is a test alert - ${this.testAlertCount++}`, AlertPlacement.FOOTER, AlertCategory.ERROR, -1));
     }
   }
 

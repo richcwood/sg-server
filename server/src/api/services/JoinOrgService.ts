@@ -1,7 +1,7 @@
 import { UserSchema, UserModel } from '../domain/User';
 import { OrgSchema, OrgModel } from '../domain/Org';
 import { userService } from './UserService';
-import { KikiUtils } from '../../shared/KikiUtils';
+import { SGUtils } from '../../shared/SGUtils';
 import { MissingObjectError, ValidationError } from '../utils/Errors';
 import * as _ from 'lodash';
 const jwt = require('jsonwebtoken');
@@ -60,7 +60,7 @@ export class JoinOrgService {
                 }
                 userModel.orgIdsInvited = newOrgIdsInvited;
                 if (userModel.orgIdsInactive.indexOf(_orgId) >= 0)
-                    userModel.orgIdsInactive = KikiUtils.removeItemFromArray(userModel.orgIdsInactive, _orgId);
+                    userModel.orgIdsInactive = SGUtils.removeItemFromArray(userModel.orgIdsInactive, _orgId);
                 await userModel.save();
             }
             return userModel;
@@ -73,7 +73,7 @@ export class JoinOrgService {
         ///     array - this will get them routed to the page where they can enter their account details.
         if (userModel.passwordHash) {
             if (userModel.orgIdsInactive.indexOf(_orgId) >= 0)
-                userModel.orgIdsInactive = KikiUtils.removeItemFromArray(userModel.orgIdsInactive, _orgId);
+                userModel.orgIdsInactive = SGUtils.removeItemFromArray(userModel.orgIdsInactive, _orgId);
 
             userModel.orgIds.push(_orgId);
             let newOrgIdsInvited: any[] = [];
@@ -128,7 +128,7 @@ export class JoinOrgService {
         /// If the user doesn't have a password yet, leave the org to which they are invited in the orgIdsInvited
         ///     array - this will get them routed to the page where they can enter their account details.
         if (userModel.orgIdsInactive.indexOf(jwtData.InvitedOrgId) >= 0)
-            userModel.orgIdsInactive = KikiUtils.removeItemFromArray(userModel.orgIdsInactive, jwtData.InvitedOrgId);
+            userModel.orgIdsInactive = SGUtils.removeItemFromArray(userModel.orgIdsInactive, jwtData.InvitedOrgId);
 
             console.log('\n\nHELLO aaa -> ');
         userModel.orgIds.push(jwtData.InvitedOrgId);

@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { ResponseWrapper, ResponseCode } from '../utils/Types';
 import { forgotPasswordService } from '../services/ForgotPasswordService';
-import { BaseLogger } from '../../shared/KikiLogger';
+import { BaseLogger } from '../../shared/SGLogger';
 import * as _ from 'lodash';
 
 
