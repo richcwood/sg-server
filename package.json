@@ -8,7 +8,7 @@
   "main": "index.js",
   "scripts": {
     "buildServer": "tsc",
-    "buildAll": "cd server && npm i && cd ../clientv3 && npm i && npm run build && cd ../agent && npm i && cd ../test && npm i",
+    "buildAll": "cd server && npm i && cd ../clientv3 && npm i && npm run build",
     "postinstall": "npm run buildAll",
     "start": "node ./server/dist/api/StartServer.js",
     "startTest": "node ./test/dist/test/src/RunWorkersTestHarness.js",
