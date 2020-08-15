@@ -47,36 +47,36 @@ class RabbitMQPublisher {
   }
 
   // todo
-  public async publish(_orgId: mongodb.ObjectId, domainType: string, correlationId: string, operation: PayloadOperation, data: any, userEmail?: string) {
-    // console.log(`rabbitMQ message: org=${_orgId} domainType=${domainType} op=${operation} correlation=${correlationId} data=${JSON.stringify(data)}`);
+  public async publish(_teamId: mongodb.ObjectId, domainType: string, correlationId: string, operation: PayloadOperation, data: any, userEmail?: string) {
+    // console.log(`rabbitMQ message: team=${_teamId} domainType=${domainType} op=${operation} correlation=${correlationId} data=${JSON.stringify(data)}`);
     if (!this.started) {
       await this.start();
     }
-    this.amqp.PublishRoute(SGStrings.GetOrgExchangeName(_orgId), rmqBrowserPushRoute, { domainType, operation, model: data, correlationId, userEmail });
+    this.amqp.PublishRoute(SGStrings.GetTeamExchangeName(_teamId), rmqBrowserPushRoute, { domainType, operation, model: data, correlationId, userEmail });
   }
 
 
-  public async publishBrowserAlert(_orgId: mongodb.ObjectId, message: string) {
-    // console.log(`rabbitMQ message: org=${_orgId} domainType=${domainType} op=${operation} correlation=${correlationId} data=${JSON.stringify(data)}`);
-    // console.log(`rabbitMQ message: org=${_orgId} domainType=${domainType} op=${operation} correlation=${correlationId} data=${JSON.stringify(data)}`);
+  public async publishBrowserAlert(_teamId: mongodb.ObjectId, message: string) {
+    // console.log(`rabbitMQ message: team=${_teamId} domainType=${domainType} op=${operation} correlation=${correlationId} data=${JSON.stringify(data)}`);
+    // console.log(`rabbitMQ message: team=${_teamId} domainType=${domainType} op=${operation} correlation=${correlationId} data=${JSON.stringify(data)}`);
     if (!this.started) {
       await this.start();
     }
-    this.amqp.PublishRoute(SGStrings.GetOrgExchangeName(_orgId), rmqBrowserAlertsRoute, { message });
+    this.amqp.PublishRoute(SGStrings.GetTeamExchangeName(_teamId), rmqBrowserAlertsRoute, { message });
   }
 
 
-  public async publishToAgent(_orgId: mongodb.ObjectId, _agentId: mongodb.ObjectId, data: any) {
-    // console.log(`rabbitMQ message: org=${_orgId} domainType=${domainType} op=${operation} correlation=${correlationId} data=${JSON.stringify(data)}`);
+  public async publishToAgent(_teamId: mongodb.ObjectId, _agentId: mongodb.ObjectId, data: any) {
+    // console.log(`rabbitMQ message: team=${_teamId} domainType=${domainType} op=${operation} correlation=${correlationId} data=${JSON.stringify(data)}`);
     if (!this.started) {
       await this.start();
     }
-    this.amqp.PublishQueue(SGStrings.GetOrgRoutingPrefix(_orgId.toHexString()), SGStrings.GetAgentUpdaterQueue(_orgId.toHexString(), _agentId.toHexString()), data, agentQueueProperties, { 'expiration': defaultAgentUpdateMessageTTL });
+    this.amqp.PublishQueue(SGStrings.GetTeamRoutingPrefix(_teamId.toHexString()), SGStrings.GetAgentUpdaterQueue(_teamId.toHexString(), _agentId.toHexString()), data, agentQueueProperties, { 'expiration': defaultAgentUpdateMessageTTL });
   }
 
 
   public async publishScheduleUpdate(schedule: any) {
-    // console.log(`rabbitMQ message: org=${_orgId} domainType=${domainType} op=${operation} correlation=${correlationId} data=${JSON.stringify(data)}`);
+    // console.log(`rabbitMQ message: team=${_teamId} domainType=${domainType} op=${operation} correlation=${correlationId} data=${JSON.stringify(data)}`);
     if (!this.started) {
       await this.start();
     }

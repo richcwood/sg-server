@@ -15,17 +15,17 @@ import * as mongodb from 'mongodb';
 export class StepOutcomeController {
 
   public async getManyStepOutcomes(req: Request, resp: Response, next: NextFunction): Promise<void> {
-    const _orgId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._orgid);
-    defaultBulkGet({ _orgId }, req, resp, next, StepOutcomeSchema, StepOutcomeModel, stepOutcomeService);
+    const _teamId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._teamid);
+    defaultBulkGet({ _teamId }, req, resp, next, StepOutcomeSchema, StepOutcomeModel, stepOutcomeService);
   }
 
 
   // public async getStepOutcomesForStep(req: Request, resp: Response, next: NextFunction): Promise<void> {
-  //   const _orgId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._orgid);
+  //   const _teamId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._teamid);
   //   const _stepId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.params.stepId);
   //   const response: ResponseWrapper = (resp as any).body;
 
-  //   const steps = await stepOutcomeService.findStepOutcomesForStep(_orgId, _stepId, req.query.responseFields);
+  //   const steps = await stepOutcomeService.findStepOutcomesForStep(_teamId, _stepId, (<string>req.query.responseFields));
 
   //   if (_.isArray(steps) && steps.length === 0) {
   //     next(new MissingObjectError(`No step outcomes found for step ${_stepId}.`));
@@ -38,11 +38,11 @@ export class StepOutcomeController {
 
 
   public async getStepOutcomesForTask(req: Request, resp: Response, next: NextFunction): Promise<void> {
-    const _orgId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._orgid);
+    const _teamId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._teamid);
     const _taskOutcomeId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.params.taskOutcomeId);
     const response: ResponseWrapper = (resp as any).body;
 
-    const steps = await stepOutcomeService.findStepOutcomesForTask(_orgId, _taskOutcomeId, null, req.query.responseFields);
+    const steps = await stepOutcomeService.findStepOutcomesForTask(_teamId, _taskOutcomeId, null, (<string>req.query.responseFields));
 
     if (_.isArray(steps) && steps.length === 0) {
       next(new MissingObjectError(`No step outcomes found for task outcome ${_taskOutcomeId}.`));
@@ -56,9 +56,9 @@ export class StepOutcomeController {
 
   public async getStepOutcome(req: Request, resp: Response, next: NextFunction): Promise<void> {
     try {
-      const _orgId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._orgid);
+      const _teamId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._teamid);
       const response: ResponseWrapper = (resp as any).body;
-      const stepOutcome = await stepOutcomeService.findStepOutcome(_orgId, new mongodb.ObjectId(req.params.stepOutcomeId), req.query.responseFields);
+      const stepOutcome = await stepOutcomeService.findStepOutcome(_teamId, new mongodb.ObjectId(req.params.stepOutcomeId), (<string>req.query.responseFields));
 
       if (_.isArray(stepOutcome) && stepOutcome.length === 0) {
         next(new MissingObjectError(`StepOutcome ${req.params.stepOutcomeId} not found.`));
@@ -81,10 +81,10 @@ export class StepOutcomeController {
 
 
   public async createStepOutcome(req: Request, resp: Response, next: NextFunction): Promise<void> {
-    const _orgId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._orgid);
+    const _teamId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._teamid);
     const response: ResponseWrapper = resp['body'];
     try {
-      const newStepOutcome = await stepOutcomeService.createStepOutcome(_orgId, convertRequestData(StepOutcomeSchema, req.body), req.header('correlationId'), req.query.responseFields);
+      const newStepOutcome = await stepOutcomeService.createStepOutcome(_teamId, convertRequestData(StepOutcomeSchema, req.body), req.header('correlationId'), (<string>req.query.responseFields));
       response.data = convertResponseData(StepOutcomeSchema, newStepOutcome);
       response.statusCode = ResponseCode.CREATED;
       next();
@@ -97,10 +97,10 @@ export class StepOutcomeController {
 
   public async updateStepOutcome(req: Request, resp: Response, next: NextFunction): Promise<void> {
     const logger: BaseLogger = (<any>req).logger;
-    const _orgId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._orgid);
+    const _teamId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._teamid);
     const response: ResponseWrapper = resp['body'];
     try {
-      const updatedStepOutcome: any = await stepOutcomeService.updateStepOutcome(_orgId, new mongodb.ObjectId(req.params.stepOutcomeId), convertRequestData(StepOutcomeSchema, req.body), logger, null, req.header('correlationId'), req.query.responseFields);
+      const updatedStepOutcome: any = await stepOutcomeService.updateStepOutcome(_teamId, new mongodb.ObjectId(req.params.stepOutcomeId), convertRequestData(StepOutcomeSchema, req.body), logger, null, req.header('correlationId'), (<string>req.query.responseFields));
 
       if (_.isArray(updatedStepOutcome) && updatedStepOutcome.length === 0) {
         next(new MissingObjectError(`StepOutcome ${req.params.stepOutcomeId} not found.`));

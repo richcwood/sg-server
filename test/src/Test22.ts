@@ -6,7 +6,7 @@ import { SGStrings } from '../../server/src/shared/SGStrings';
 import * as Enums from '../../server/src/shared/Enums';
 import { SGUtils } from '../../server/src/shared/SGUtils';
 import { S3Access } from '../../server/src/shared/S3Access';
-import { OrgSchema } from '../../server/src/api/domain/Org';
+import { TeamSchema } from '../../server/src/api/domain/Team';
 import { JobDefSchema } from '../../server/src/api/domain/JobDef';
 import { TaskDefSchema } from '../../server/src/api/domain/TaskDef';
 import { StepDefSchema } from '../../server/src/api/domain/StepDef';
@@ -26,12 +26,12 @@ const script1_b64 = SGUtils.btoa(script1);
 
 let self: Test22;
 
-let UploadFileToS3 = async (_orgId: string, filePath: string, fileType: string) => {
+let UploadFileToS3 = async (_teamId: string, filePath: string, fileType: string) => {
   return new Promise(async (resolve, reject) => {
     try {
       const compressedFilePath = await SGUtils.GzipFile(filePath);
 
-      let res = await self.testSetup.RestAPICall('artifact', 'POST', _orgId, null, {name: compressedFilePath, type: fileType});
+      let res = await self.testSetup.RestAPICall('artifact', 'POST', _teamId, null, {name: compressedFilePath, type: fileType});
       const artifact = res.data.data;
 
       // let s3Access = new S3Access();
@@ -65,47 +65,47 @@ export default class Test22 extends TestBase.default {
     public async CreateTest() {
         await super.CreateTest();
 
-        // /// Create org
-        // let org: any = {'name': 'TestOrg22', 'isActive': true, 'rmqPassword': SGUtils.makeid(10)};
-        // org = await self.CreateOrg(org);
-        // self.orgs.push(org);
+        // /// Create team
+        // let team: any = {'name': 'TestTeam22', 'isActive': true, 'rmqPassword': SGUtils.makeid(10)};
+        // team = await self.CreateTeam(team);
+        // self.teams.push(team);
 
         // /// Create agents
         // let agent;
         // agent = { 
-        //   '_orgId': _orgId, 
+        //   '_teamId': _teamId, 
         //   'machineId': SGUtils.makeid(), 
         //   'ipAddress': '10.10.0.90', 
         //   'tags': [], 
         //   'numActiveTasks': 0, 
         //   'lastHeartbeatTime': new Date().getTime(), 
-        //   'rmqPassword': org['rmqPassword']
+        //   'rmqPassword': team['rmqPassword']
         // };
         // self.agents.push(agent);
  
-        const orgName = 'TestOrg';
-        const _orgId = self.testSetup.orgs[orgName].id;
+        const teamName = 'TestTeam';
+        const _teamId = self.testSetup.teams[teamName].id;
 
         fs.writeFileSync('file1.txt', 'hello');
         fs.writeFileSync('file2.txt', 'world');  
-        let artifact1: any = await UploadFileToS3(_orgId, 'file1.txt', 'multipart/form-data');
-        let artifact2: any = await UploadFileToS3(_orgId, 'file2.txt', 'multipart/form-data');
+        let artifact1: any = await UploadFileToS3(_teamId, 'file1.txt', 'multipart/form-data');
+        let artifact2: any = await UploadFileToS3(_teamId, 'file2.txt', 'multipart/form-data');
 
         /// Create job def
         let jobDef: JobDefSchema = {
-            _orgId: _orgId,
+            _teamId: _teamId,
             name: 'Job 22',
             createdBy: this.sgUser.id,
             lastRunId: 0,
             dateCreated: new Date(),
             expectedValues: { 'type': 'job', 'matchCount': 1, 'cntPartialMatch': 0, 'cntFullMatch': 0, 'values': { [SGStrings.status]: Enums.JobStatus.COMPLETED } },
         }
-        jobDef = await self.CreateJobDef(jobDef, _orgId);
+        jobDef = await self.CreateJobDef(jobDef, _teamId);
         self.jobDefs.push(jobDef);
 
         /// Create job def tasks
         let task: TaskDefSchema = {
-          '_orgId': _orgId,
+          '_teamId': _teamId,
           'name': 'Task1', 
           'target': Enums.TaskDefTarget.SINGLE_AGENT, 
           'requiredTags': {}, 
@@ -116,14 +116,14 @@ export default class Test22 extends TestBase.default {
             artifact2.id
           ]
         };
-        task = await self.CreateTaskDef(task, _orgId);
+        task = await self.CreateTaskDef(task, _teamId);
 
         /// Create script
-        let script_obj1: ScriptSchema = { '_orgId': _orgId, 'name': 'Script 22', 'scriptType': Enums.ScriptType.PYTHON, 'code': script1_b64, _originalAuthorUserId: this.sgUser.id, _lastEditedUserId: this.sgUser.id, lastEditedDate: new Date(), shadowCopyCode: script1_b64 };
-        script_obj1 = await self.CreateScript(script_obj1, _orgId);
+        let script_obj1: ScriptSchema = { '_teamId': _teamId, 'name': 'Script 22', 'scriptType': Enums.ScriptType.PYTHON, 'code': script1_b64, _originalAuthorUserId: this.sgUser.id, _lastEditedUserId: this.sgUser.id, lastEditedDate: new Date(), shadowCopyCode: script1_b64 };
+        script_obj1 = await self.CreateScript(script_obj1, _teamId);
         self.scripts.push(script_obj1);            
-        let step: StepDefSchema = { '_orgId': _orgId, '_taskDefId': task.id, 'name': 'step1', '_scriptId': script_obj1['id'], 'order': 0, 'arguments': ''};
-        step = await self.CreateStepDef(step, _orgId, jobDef.id);
+        let step: StepDefSchema = { '_teamId': _teamId, '_taskDefId': task.id, 'name': 'step1', '_scriptId': script_obj1['id'], 'order': 0, 'arguments': ''};
+        step = await self.CreateStepDef(step, _teamId, jobDef.id);
 
         task.expectedValues = {
           'type': 'task', 

@@ -18,55 +18,55 @@ export class SGStrings {
     static fromRoutes: string = 'fromRoutes';
     static failureCode: string = 'failureCode';
 
-    static GetTaskKey(orgId: string, jobId: string|null, taskName: string) {
-        let taskKey = `org-${orgId}.`;
+    static GetTaskKey(teamId: string, jobId: string|null, taskName: string) {
+        let taskKey = `team-${teamId}.`;
         if (jobId)
             taskKey += `job-${jobId}.`;
         taskKey += `task-${taskName}`;
         return taskKey;
     }
 
-    static GetJobKey(orgId: string, jobId: string) {
-        return `org-${orgId}.job-${jobId}`;
+    static GetJobKey(teamId: string, jobId: string) {
+        return `team-${teamId}.job-${jobId}`;
     };
 
-    static GetOrgExchangeName(orgId: string) {
-        return `${this.GetOrgRoutingPrefix(orgId)}`;
+    static GetTeamExchangeName(teamId: string) {
+        return `${this.GetTeamRoutingPrefix(teamId)}`;
     };
 
-    static GetOrgLogExchangeName(orgId: string) {
-        return `${this.GetOrgRoutingPrefix(orgId)}`;
+    static GetTeamLogExchangeName(teamId: string) {
+        return `${this.GetTeamRoutingPrefix(teamId)}`;
     };
 
-    static GetOrgRoutingPrefix(orgId: string) {
-        return `org-${orgId}`;
+    static GetTeamRoutingPrefix(teamId: string) {
+        return `team-${teamId}`;
     };
 
-    static GetAgentQueue(orgId: string, agentId: string) {
-        return `${this.GetOrgRoutingPrefix(orgId)}.agent-${agentId}`;
+    static GetAgentQueue(teamId: string, agentId: string) {
+        return `${this.GetTeamRoutingPrefix(teamId)}.agent-${agentId}`;
     }
 
-    static GetAgentUpdaterQueue(orgId: string, agentId: string) {
-        return `${this.GetAgentQueue(orgId, agentId)}.updater`;
+    static GetAgentUpdaterQueue(teamId: string, agentId: string) {
+        return `${this.GetAgentQueue(teamId, agentId)}.updater`;
     }
 
-    static GetAgentStatusQueue(orgId: string) {
-        return `${this.GetOrgRoutingPrefix(orgId)}.agent_status`;
+    static GetAgentStatusQueue(teamId: string) {
+        return `${this.GetTeamRoutingPrefix(teamId)}.agent_status`;
     }
 
-    static GetAnyAgentQueue(orgId: string) {
-        return `${this.GetOrgRoutingPrefix(orgId)}.agent`;
+    static GetAnyAgentQueue(teamId: string) {
+        return `${this.GetTeamRoutingPrefix(teamId)}.agent`;
     };
 
-    static GetAllAgentsQueue(orgId: string) {
-        return `${this.GetOrgRoutingPrefix(orgId)}.agent.all`;
+    static GetAllAgentsQueue(teamId: string) {
+        return `${this.GetTeamRoutingPrefix(teamId)}.agent.all`;
     };
 
-    // static GetAnyAgentTagQueue(orgId: string, tag: string) {
-    //     return `${this.GetAnyAgentQueue(orgId)}.${tag}`;
+    // static GetAnyAgentTagQueue(teamId: string, tag: string) {
+    //     return `${this.GetAnyAgentQueue(teamId)}.${tag}`;
     // };
 
-    static GetHeartbeatQueue(orgId: string) {
-        return `${this.GetOrgRoutingPrefix(orgId)}.agent.heartbeat`;
+    static GetHeartbeatQueue(teamId: string) {
+        return `${this.GetTeamRoutingPrefix(teamId)}.agent.heartbeat`;
     }
 }

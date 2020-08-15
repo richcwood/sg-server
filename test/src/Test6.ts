@@ -34,27 +34,27 @@ export default class Test6 extends TestBase.AdhocTaskTestBase {
     public async CreateTest() {
         await super.CreateTest();
 
-        // /// Create org
-        // let org: any = { 'name': 'TestOrg6', 'isActive': true, 'rmqPassword': SGUtils.makeid(10) };
-        // org = await self.CreateOrg(org);
-        // self.orgs.push(org);
+        // /// Create team
+        // let team: any = { 'name': 'TestTeam6', 'isActive': true, 'rmqPassword': SGUtils.makeid(10) };
+        // team = await self.CreateTeam(team);
+        // self.teams.push(team);
 
         // /// Create agents
         // let agent;
-        // agent = { '_orgId': _orgId, 'machineId': SGUtils.makeid(), 'ipAddress': '10.10.0.90', 'tags': [], 'numActiveTasks': 0, 'lastHeartbeatTime': new Date().getTime(), 'rmqPassword': org['rmqPassword'] };
+        // agent = { '_teamId': _teamId, 'machineId': SGUtils.makeid(), 'ipAddress': '10.10.0.90', 'tags': [], 'numActiveTasks': 0, 'lastHeartbeatTime': new Date().getTime(), 'rmqPassword': team['rmqPassword'] };
         // self.agents.push(agent);
 
-        const orgName = 'TestOrg';
-        const _orgId = self.testSetup.orgs[orgName].id;
+        const teamName = 'TestTeam';
+        const _teamId = self.testSetup.teams[teamName].id;
 
-        let script_obj1: ScriptSchema = { '_orgId': _orgId, 'name': 'Script 6', 'scriptType': Enums.ScriptType.PYTHON, 'code': script1_b64, _originalAuthorUserId: this.sgUser.id, _lastEditedUserId: this.sgUser.id, lastEditedDate: new Date(), shadowCopyCode: script1_b64 };
-        script_obj1 = await self.CreateScript(script_obj1, _orgId);
+        let script_obj1: ScriptSchema = { '_teamId': _teamId, 'name': 'Script 6', 'scriptType': Enums.ScriptType.PYTHON, 'code': script1_b64, _originalAuthorUserId: this.sgUser.id, _lastEditedUserId: this.sgUser.id, lastEditedDate: new Date(), shadowCopyCode: script1_b64 };
+        script_obj1 = await self.CreateScript(script_obj1, _teamId);
         self.scripts.push(script_obj1);            
 
         /// Create tasks
         const correlationId: string = new mongodb.ObjectId().toString();
         let task: any = {
-            _orgId: _orgId,
+            _teamId: _teamId,
             name: 'Task1',
             source: TaskSource.JOB,
             requiredTags: [],

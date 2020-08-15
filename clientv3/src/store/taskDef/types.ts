@@ -8,7 +8,7 @@ export enum TaskDefTarget {
 
 export interface TaskDef extends Model {
   id?: string,
-  _orgId?: string,
+  _teamId?: string,
   _jobDefId?: string,
   target: TaskDefTarget,
   name: string,

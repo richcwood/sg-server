@@ -208,7 +208,7 @@
 
 
 
-    <div v-if="page === 'joinTeam' && invitedOrgsCount > 0">
+    <div v-if="page === 'joinTeam' && invitedTeamsCount > 0">
       <section class="hero">
         <div class="hero-body">
           <div class="container">
@@ -220,14 +220,14 @@
       </section>
       <div class="invitations">
         <table>
-          <tr v-if="hasLocalStorageInvitedOrgToken">
-            <td class="invitation-td" style="font-weight: 700;">{{localStorageInvitedOrgName}}</td>
+          <tr v-if="hasLocalStorageInvitedTeamToken">
+            <td class="invitation-td" style="font-weight: 700;">{{localStorageInvitedTeamName}}</td>
             <td class="invitation-td"><button class="button is-primary" @click="onAcceptGenericInviteClicked">Accept Invitation</button></td>
           </tr>
 
-          <tr v-for="orgIdInvited of orgIdsInvitedMinusLocalStorage" v-bind:key="orgIdInvited._orgId">
-            <td class="invitation-td">{{getOrg(orgIdInvited._orgId).name}}</td>
-            <td class="invitation-td"><button class="button" @click="onAcceptInvitationClicked(orgIdInvited._orgId)">Accept Invitation</button></td>
+          <tr v-for="teamIdInvited of teamIdsInvitedMinusLocalStorage" v-bind:key="teamIdInvited._teamId">
+            <td class="invitation-td">{{getTeam(teamIdInvited._teamId).name}}</td>
+            <td class="invitation-td"><button class="button" @click="onAcceptInvitationClicked(teamIdInvited._teamId)">Accept Invitation</button></td>
           </tr>
           <tr>
             <td colspan="2" style="padding-top: 50px; font-weight: 700;">
@@ -264,7 +264,7 @@
 
 
 
-    <div v-if="page === 'joinTeam' && invitedOrgsCount === 0">
+    <div v-if="page === 'joinTeam' && invitedTeamsCount === 0">
       <section class="hero">
         <div class="hero-body">
           <div class="container">
@@ -445,7 +445,7 @@
           <div class="field-body">
             <div class="field">
               <p class="control">
-              <a style="margin-left: -125px;" @click.prevent="onForgotPasswordClicked">Forgot password?</a>     
+              <a style="margin-left: -125px;" @click.prevent="onFteamotPasswordClicked">Fteamot password?</a>     
               </p>
             </div>
           </div>
@@ -662,13 +662,13 @@
     }
 
     private onGetStartedEnterEmailClicked(){
-      const localStorageInvitedOrgToken = localStorage.getItem('sg_invited_org_token');
+      const localStorageInvitedTeamToken = localStorage.getItem('sg_invited_team_token');
 
-      if( localStorageInvitedOrgToken &&
-          this.localStorageInvitedOrg_EmailConfirmed && 
-          this.localStorageInvitedOrg_Email ){
-        Cookies.set('Auth', 'Bearer ' + localStorageInvitedOrgToken);
-        const rawUser = parseJwt(localStorageInvitedOrgToken);
+      if( localStorageInvitedTeamToken &&
+          this.localStorageInvitedTeam_EmailConfirmed && 
+          this.localStorageInvitedTeam_Email ){
+        Cookies.set('Auth', 'Bearer ' + localStorageInvitedTeamToken);
+        const rawUser = parseJwt(localStorageInvitedTeamToken);
         this.$store.commit('securityStore/setUser', rawUser);
         this.page = 'createAccount';
       }
@@ -754,7 +754,7 @@
         this.$store.commit('securityStore/setUser', user);
         localStorage.setItem('sg_has_logged_in', 'true');
 
-        if(this.invitedOrgsCount > 0){
+        if(this.invitedTeamsCount > 0){
           this.page = 'joinTeam';
         }
         else {
@@ -779,7 +779,7 @@
 
     private async onCreateTeamClicked(){
       try {
-        const createTeamResult = await axios.post('api/v0/org', {
+        const createTeamResult = await axios.post('api/v0/team', {
             name: this.teamName,
             isActive: true,
             rmqPassword: `${this.teamName}_rmqpassword` // todo is this correct?
@@ -791,10 +791,10 @@
           }
         );
 
-        const newOrg = createTeamResult.data.data;
-        this.$store.commit('orgStore/addModels', [newOrg]);
-        this.user.orgIds.push(newOrg.id); // not sure if browser push will conflict with this
-        this.$store.commit('orgStore/select', newOrg);
+        const newTeam = createTeamResult.data.data;
+        this.$store.commit('teamStore/addModels', [newTeam]);
+        this.user.teamIds.push(newTeam.id); // not sure if browser push will conflict with this
+        this.$store.commit('teamStore/select', newTeam);
         this.page = 'addTeamMembers';
       }
       catch(err){
@@ -836,13 +836,13 @@
       this.$store.dispatch('securityStore/startApp');
     }
 
-    private async onAcceptInvitationClicked(orgId: string){
+    private async onAcceptInvitationClicked(teamId: string){
       try {
-        const acceptInvitationResult = await axios.put(`api/v0/user/${this.user.id}/join/${orgId}`);
+        const acceptInvitationResult = await axios.put(`api/v0/user/${this.user.id}/join/${teamId}`);
         const user = acceptInvitationResult.data.data; // this is the user account with updated info  
         this.$store.commit('securityStore/setUser', user);
 
-        if(this.invitedOrgsCount === 0){
+        if(this.invitedTeamsCount === 0){
           this.page = 'acceptedInvitationSuccess';
         }
       }
@@ -881,33 +881,33 @@
       });
     }
 
-    private loadedOrgs: any = {};
+    private loadedTeams: any = {};
     // Immediately return a reactive object and load it async.  Once the real model 
     // is loaded the UI will be reactive
-    private getOrg(orgId: string){
-      if(!this.loadedOrgs[orgId]){
-        Vue.set(this.loadedOrgs, orgId, {id: orgId, name: '...'});
+    private getTeam(teamId: string){
+      if(!this.loadedTeams[teamId]){
+        Vue.set(this.loadedTeams, teamId, {id: teamId, name: '...'});
 
         (async () => {
-          const org = await this.$store.dispatch('orgStore/fetchModel', orgId);
-          this.loadedOrgs[orgId] = org;
+          const team = await this.$store.dispatch('teamStore/fetchModel', teamId);
+          this.loadedTeams[teamId] = team;
         })();
       }
 
-      return this.loadedOrgs[orgId];
+      return this.loadedTeams[teamId];
     }
 
     private onClickedStartUsingSaasGlue(){
       this.$store.dispatch('securityStore/startApp');
     }
 
-    private get orgIdsInvitedMinusLocalStorage(){
-      if(this.user && this.user.orgIdsInvited){
-        if(this.hasLocalStorageInvitedOrgToken){
-          return this.user.orgIdsInvited.filter((orgInvite:any) => orgInvite._orgId !== this.localStorageInvitedOrgId);
+    private get teamIdsInvitedMinusLocalStorage(){
+      if(this.user && this.user.teamIdsInvited){
+        if(this.hasLocalStorageInvitedTeamToken){
+          return this.user.teamIdsInvited.filter((teamInvite:any) => teamInvite._teamId !== this.localStorageInvitedTeamId);
         }
         else {
-          return this.user.orgIdsInvited;
+          return this.user.teamIdsInvited;
         }
       }
       else {
@@ -915,84 +915,84 @@
       }
     }
 
-    private get invitedOrgsCount(){
-      let count = this.orgIdsInvitedMinusLocalStorage.length;
+    private get invitedTeamsCount(){
+      let count = this.teamIdsInvitedMinusLocalStorage.length;
 
-      if(this.hasLocalStorageInvitedOrgToken){
+      if(this.hasLocalStorageInvitedTeamToken){
         count++;
       }
 
       return count;
     }
 
-    private get localStorageInvitedOrgName(){
-      const localStorageInvitedOrgToken = localStorage.getItem('sg_invited_org_token');
-      if(localStorageInvitedOrgToken){
-        const invitedOrgToken = parseJwt(localStorageInvitedOrgToken);
-        return invitedOrgToken.InvitedOrgName;
+    private get localStorageInvitedTeamName(){
+      const localStorageInvitedTeamToken = localStorage.getItem('sg_invited_team_token');
+      if(localStorageInvitedTeamToken){
+        const invitedTeamToken = parseJwt(localStorageInvitedTeamToken);
+        return invitedTeamToken.InvitedTeamName;
       }
       else {
         return '';
       }
     }
 
-  private get localStorageInvitedOrgId(){
-    const localStorageInvitedOrgToken = localStorage.getItem('sg_invited_org_token');
-    if(localStorageInvitedOrgToken){
-      const invitedOrgToken = parseJwt(localStorageInvitedOrgToken);
-      return invitedOrgToken.InvitedOrgId;
+  private get localStorageInvitedTeamId(){
+    const localStorageInvitedTeamToken = localStorage.getItem('sg_invited_team_token');
+    if(localStorageInvitedTeamToken){
+      const invitedTeamToken = parseJwt(localStorageInvitedTeamToken);
+      return invitedTeamToken.InvitedTeamId;
     }
     else {
       return '';
     }
   }
 
-  private get localStorageInvitedOrg_EmailConfirmed(){
-    const localStorageInvitedOrgToken = localStorage.getItem('sg_invited_org_token');
-    if(localStorageInvitedOrgToken){
-      const invitedOrgToken = parseJwt(localStorageInvitedOrgToken);
-      return invitedOrgToken.emailConfirmed;
+  private get localStorageInvitedTeam_EmailConfirmed(){
+    const localStorageInvitedTeamToken = localStorage.getItem('sg_invited_team_token');
+    if(localStorageInvitedTeamToken){
+      const invitedTeamToken = parseJwt(localStorageInvitedTeamToken);
+      return invitedTeamToken.emailConfirmed;
     }
     else {
       return false;
     }
   }
 
-  private get localStorageInvitedOrg_Email(){
-    const localStorageInvitedOrgToken = localStorage.getItem('sg_invited_org_token');
-    if(localStorageInvitedOrgToken){
-      const invitedOrgToken: any = parseJwt(localStorageInvitedOrgToken);
-      return invitedOrgToken.email;
+  private get localStorageInvitedTeam_Email(){
+    const localStorageInvitedTeamToken = localStorage.getItem('sg_invited_team_token');
+    if(localStorageInvitedTeamToken){
+      const invitedTeamToken: any = parseJwt(localStorageInvitedTeamToken);
+      return invitedTeamToken.email;
     }
     else {
       return null;
     }
   }
 
-  private get hasLocalStorageInvitedOrgToken(){
-    return localStorage.getItem('sg_invited_org_token') !== null;
+  private get hasLocalStorageInvitedTeamToken(){
+    return localStorage.getItem('sg_invited_team_token') !== null;
   }
 
   private async onAcceptGenericInviteClicked(){
     try {
-      const orgIdInviteToken = localStorage.getItem('sg_invited_org_token');
-      if(orgIdInviteToken){
-        const orgIdInviteJwt = parseJwt(orgIdInviteToken);
+      const teamIdInviteToken = localStorage.getItem('sg_invited_team_token');
+      if(teamIdInviteToken){
+        const teamIdInviteJwt = parseJwt(teamIdInviteToken);
         let user;
 
-        if(orgIdInviteJwt.id){
+        if(teamIdInviteJwt.id){
           // this is a direct invite (id is the user id for a direct invitation)
-          const acceptedInviteResult = await axios.get(`/invite/${orgIdInviteJwt.id}/${orgIdInviteJwt.InvitedOrgId}/${orgIdInviteToken}`);
+          const acceptedInviteResult = await axios.get(`/invite/${teamIdInviteJwt.id}/${teamIdInviteJwt.InvitedTeamId}/${teamIdInviteToken}`);
           user = acceptedInviteResult.data.data; // this is the new user account with updated info
         }
         else {
           // a shareable generic invitation link
-          const acceptedInviteResult = await axios.get(`api/v0/join/shared_invite/${orgIdInviteToken}`);
+          const acceptedInviteResult = await axios.get(`api/v0/join/shared_invite/${teamIdInviteToken}`);
           user = acceptedInviteResult.data.data; // this is the new user account with updated info  
         }
 
         this.$store.commit('securityStore/setUser', user);
-        localStorage.removeItem('sg_invited_org_token');
+        localStorage.removeItem('sg_invited_team_token');
         this.page = 'acceptedInvitationSuccess';
       }
     }
@@ -1002,7 +1002,7 @@
     }
   }
 
-  private onForgotPasswordClicked(){
+  private onFteamotPasswordClicked(){
     this.page = 'passwordReset';
 
     this.$nextTick(() => {

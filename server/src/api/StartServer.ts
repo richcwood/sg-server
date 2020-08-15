@@ -13,7 +13,7 @@ import { BaseLogger } from '../shared/SGLogger';
 import LoginRouter from './routes/LoginRouter';
 const jwt = require('jsonwebtoken');
 import * as mongoose from 'mongoose';
-import { orgRouter } from './routes/OrgRouter';
+import { teamRouter } from './routes/TeamRouter';
 import { agentRouter } from './routes/AgentRouter';
 import { agentDownloadRouter } from './routes/AgentDownloadRouter';
 import { agentLogRouter } from './routes/AgentLogRouter';
@@ -32,24 +32,24 @@ import BraintreeHookRouter from './routes/BraintreeHookRouter';
 import { handleErrors } from './utils/ErrorMiddleware';
 import { handleBuildResponseWrapper, handleResponse, handleStartTimer } from './utils/ResponseMiddleware';
 import { stepRouter } from './routes/StepRouter';
-import { orgStorageRouter } from './routes/OrgStorageRouter';
+import { teamStorageRouter } from './routes/TeamStorageRouter';
 import { paymentTransactionRouter } from './routes/PaymentTransactionRouter';
 import { braintreeClientTokenRouter } from './routes/BraintreeClientTokenRouter';
 import { invoiceRouter } from './routes/InvoiceRouter';
 import { signupRouter } from './routes/SignupRouter';
-import { orgInviteRouter } from './routes/OrgInviteRouter';
-import { joinOrgRouter } from './routes/JoinOrgRouter';
+import { teamInviteRouter } from './routes/TeamInviteRouter';
+import { joinTeamRouter } from './routes/JoinTeamRouter';
 import { passwordResetRouter } from './routes/PasswordResetRouter';
-import { forgotPasswordRouter } from './routes/ForgotPasswordRouter';
+import { ForgotPasswordRouter } from './routes/ForgotPasswordRouter';
 import { taskActionRouter } from './routes/TaskActionRouter';
 import { taskOutcomeActionRouter } from './routes/TaskOutcomeActionRouter';
 import { jobActionRouter } from './routes/JobActionRouter';
-import { orgVariableRouter } from './routes/OrgVariableRouter';
+import { teamVariableRouter } from './routes/TeamVariableRouter';
 import { artifactRouter } from './routes/ArtifactRouter';
 import { payInvoiceAutoRouter } from './routes/PayInvoiceAutoRouter';
 import { payInvoiceManualRouter } from './routes/PayInvoiceManualRouter';
 import { createInvoiceRouter } from './routes/CreateInvoiceRouter';
-import { updateOrgStorageUsageRouter } from './routes/UpdateOrgStorageUsageRouter';
+import { updateTeamStorageUsageRouter } from './routes/UpdateTeamStorageUsageRouter';
 const IPCIDR = require('ip-cidr');
 import { read } from 'fs';
 import { JobStatus } from '../shared/Enums';
@@ -85,7 +85,7 @@ class AppBuilder {
     if(config.get('httpLogs.enabled')){
       morgan.token('user_id', req => req.headers.userid);
       morgan.token('user_email', req => req.headers.email);
-      morgan.token('organization_id', req => req.headers._orgid);
+      morgan.token('team_id', req => req.headers._teamid);
       morgan.token('transaction_id', req => req['transactionId'] ? req['transactionId'] : '-');
 
       // const logsDirectory = path.join(__dirname, config.get('logsFolder'));
@@ -156,17 +156,17 @@ class AppBuilder {
     // Simple check for browser to validate the Auth cookie
     this.app.get('/securecheck', async (req: Request, res: Response, next: NextFunction) => {
       // Write back the cookie to refresh it with a new life and to let the client know
-      // if they were invited to new orgs, joined new orgs etc.
+      // if they were invited to new teams, joined new teams etc.
       const userId = new mongodb.ObjectId(req.headers.userid);
-      const user: UserSchema = <UserSchema>await userService.findUser(userId, 'id passwordHash email orgIds orgIdsInvited name companyName');
+      const user: UserSchema = <UserSchema>await userService.findUser(userId, 'id passwordHash email teamIds teamIdsInvited name companyName');
 
       const jwtExpiration = Date.now() + (1000 * 60 * 60 * 24); // 1 day
       const secret = config.get('secret');
       var token = jwt.sign({
         id: user._id,
         email: user.email,
-        orgIds: user.orgIds,
-        orgIdsInvited: user.orgIdsInvited,
+        teamIds: user.teamIds,
+        teamIdsInvited: user.teamIdsInvited,
         name: user.name,
         companyName: user.companyName,
         exp: Math.floor(jwtExpiration / 1000)
@@ -176,7 +176,7 @@ class AppBuilder {
       res.send('OK');
     });
 
-    this.app.use(`${apiURLBase}/org`, orgRouter);
+    this.app.use(`${apiURLBase}/team`, teamRouter);
     this.app.use(`${apiURLBase}/agentDownload`, agentDownloadRouter);
     this.app.use(`${apiURLBase}/agent`, agentRouter);
     this.app.use(`${apiURLBase}/agentlog`, agentLogRouter);
@@ -197,25 +197,25 @@ class AppBuilder {
     this.app.use(`${apiURLBase}/paymenttoken`, braintreeClientTokenRouter);
     this.app.use(`${apiURLBase}/paymenttransaction`, paymentTransactionRouter);
     this.app.use(`${apiURLBase}/invoice`, invoiceRouter);
-    this.app.use(`${apiURLBase}/invite`, orgInviteRouter);
-    this.app.use(`${apiURLBase}/join`, joinOrgRouter);
+    this.app.use(`${apiURLBase}/invite`, teamInviteRouter);
+    this.app.use(`${apiURLBase}/join`, joinTeamRouter);
     this.app.use(`${apiURLBase}/reset`, passwordResetRouter);
-    this.app.use(`${apiURLBase}/forgot`, forgotPasswordRouter);
+    this.app.use(`${apiURLBase}/fteamot`, ForgotPasswordRouter);
     this.app.use(`${apiURLBase}/taskaction`, taskActionRouter);
     this.app.use(`${apiURLBase}/taskoutcomeaction`, taskOutcomeActionRouter);
     this.app.use(`${apiURLBase}/jobaction`, jobActionRouter);
-    this.app.use(`${apiURLBase}/orgvar`, orgVariableRouter);
-    this.app.use(`${apiURLBase}/orgstorage`, orgStorageRouter);
+    this.app.use(`${apiURLBase}/teamvar`, teamVariableRouter);
+    this.app.use(`${apiURLBase}/teamstorage`, teamStorageRouter);
     this.app.use(`${apiURLBase}/artifact`, artifactRouter);
     this.app.use(`${apiURLBase}/createinvoice`, createInvoiceRouter);
-    this.app.use(`${apiURLBase}/updateorgstorageusage`, updateOrgStorageUsageRouter);
+    this.app.use(`${apiURLBase}/updateteamstorageusage`, updateTeamStorageUsageRouter);
   }
 
   private setUpJwtSecurity(): void {
     app.use((req, res, next) => {
       const logger: BaseLogger = (<any>req).logger;
       // // simple development
-      // req.headers._orgid = '5d2f857e5a47381334ab3fab';
+      // req.headers._teamid = '5d2f857e5a47381334ab3fab';
       // next();
       // return;
 
@@ -246,7 +246,7 @@ class AppBuilder {
       } else if ((req.method === 'POST' || req.method === 'GET') && req.path.match('/api/v[0-9]+/reset')) {
         next();
         return;
-      } else if (req.method === 'POST' && req.path.match('/api/v[0-9]+/forgot')) {
+      } else if (req.method === 'POST' && req.path.match('/api/v[0-9]+/fteamot')) {
         next();
         return;
       } else if (req.method === 'POST' && req.path.match('/api/v[0-9]+/invite/shared')) {
@@ -256,7 +256,7 @@ class AppBuilder {
         if (!req.headers.auth && !req.cookies.Auth) {
           res.status(403).send('Redirect to login - no Auth cookie');
         } else {
-          /// TODO: prevent user from modifying properties like orgIds, etc.
+          /// TODO: prevent user from modifying properties like teamIds, etc.
           const authToken = req.headers.auth ? req.headers.auth : req.cookies.Auth;
           const secret = config.get('secret');
           const jwtData = jwt.verify(authToken, secret);
@@ -278,8 +278,8 @@ class AppBuilder {
           const authToken = req.headers.auth ? req.headers.auth : req.cookies.Auth;
           try {
             // todo - use the private key here
-            // todo - verify the org id was sent in the request header
-            // todo - verify the org id is in the JWT tokens orgIds array
+            // todo - verify the team id was sent in the request header
+            // todo - verify the team id is in the JWT tokens teamIds array
             const secret = config.get('secret');
             const jwtData = jwt.verify(authToken, secret);
             logger.LogDebug('New request jwtData', { jwtData });
@@ -287,67 +287,67 @@ class AppBuilder {
 
             req.headers.userid = jwtData.id;
             req.headers.email = jwtData.email;
-            req.headers.orgIds = jwtData.orgIds;
+            req.headers.teamIds = jwtData.teamIds;
 
             if ('agentStubVersion' in jwtData) {
               // todo: access rights - agents should have restricted access - for now, full
               // the agent stub should only have access to get the agent
-              // the agent should get its own jwt which should have the agent id and the org id embedded - 
-              //  then we can check the embedded org id with the org id in the request header and the 
-              //  the org id in the database to make sure they match - agent access should also be restricted
+              // the agent should get its own jwt which should have the agent id and the team id embedded - 
+              //  then we can check the embedded team id with the team id in the request header and the 
+              //  the team id in the database to make sure they match - agent access should also be restricted
               //  should we rotate the agent jwt tokens?
-              if (!req.headers._orgid) {
-                next(new ValidationError('Missing _orgId in header'));
-              } else if (req.headers.orgIds.indexOf((<any>req).headers._orgid) === -1) {
+              if (!req.headers._teamid) {
+                next(new ValidationError('Missing _teamId in header'));
+              } else if (req.headers.teamIds.indexOf((<any>req).headers._teamid) === -1) {
                 next(new ValidationError(`Access denied`));
               }
               next();
               return;
             }
 
-            // console.log(`${req.headers.email}, you have access to teams ${req.headers.orgIds}`);
-            // console.log(`${req.headers.email}, you are trying to access team ${req.headers._orgid}`);
+            // console.log(`${req.headers.email}, you have access to teams ${req.headers.teamIds}`);
+            // console.log(`${req.headers.email}, you are trying to access team ${req.headers._teamid}`);
             // console.log('req -> path -> ', req.path);
             // console.log('req -> method -> ', req.method);
 
-            let orgAccess: boolean = false;
+            let teamAccess: boolean = false;
             if (req.method === 'GET' && req.path.match('/api/v[0-9]+/join/shared_invite')) {
               next();
               return;
             }
             else if (req.method === 'GET' && req.path.match('/securecheck')) {
-              orgAccess = true;
+              teamAccess = true;
             }
-            else if ((req.method === 'POST' || req.method === 'GET') && req.path.match('/api/v[0-9]+/org')) {
-              orgAccess = true;
+            else if ((req.method === 'POST' || req.method === 'GET') && req.path.match('/api/v[0-9]+/team')) {
+              teamAccess = true;
             } else {
               if ((req.headers.email === 'scheduler@saasglue.com') || (req.headers.email === 'admin@saasglue.com')) {
-                orgAccess = true;
+                teamAccess = true;
                 let remoteAddress = req.socket.remoteAddress;
                 // console.log(`remoteAddress -> ${remoteAddress}`);
                 // if (jwtData.ipV6) {
                 //   if (jwtData.ipV6 != remoteAddress) {
-                //     orgAccess = false;
+                //     teamAccess = false;
                 //   }
                 // }
-                // if (!orgAccess) {
+                // if (!teamAccess) {
                 //   remoteAddress = req.socket.remoteAddress.replace(/^.*:/, '');
                 //   const cidr = new IPCIDR(jwtData.ipRange);
                 //   console.log(`cidr -> ${cidr}`);
                 //   if (!cidr.contains(remoteAddress)) {
-                //     orgAccess = false;
+                //     teamAccess = false;
                 //   } else {
-                //     orgAccess = true;
+                //     teamAccess = true;
                 //   }
                 // }
-              } else if (req.headers.orgIds.indexOf((<any>req).headers._orgid) !== -1) {
-                orgAccess = true;
+              } else if (req.headers.teamIds.indexOf((<any>req).headers._teamid) !== -1) {
+                teamAccess = true;
               }
             }
 
-            if (!orgAccess) {
-              logger.LogError(`${req.headers.email}, access denied to team ${req.headers._orgid}`, { '_orgId': req.headers._orgid });
-              // console.log(`${req.headers.email}, access denied to team ${req.headers._orgid}`);
+            if (!teamAccess) {
+              logger.LogError(`${req.headers.email}, access denied to team ${req.headers._teamid}`, { '_teamId': req.headers._teamid });
+              // console.log(`${req.headers.email}, access denied to team ${req.headers._teamid}`);
               res.status(403).send('Redirect to login - no access to requested team');
             }
             else {

@@ -19,7 +19,7 @@ export const scriptTypesForMonaco = {
 
 export interface Script extends Model {
   id?: string,
-  _orgId?: string,
+  _teamId?: string,
   _originalAuthorUserId: string,
   _lastEditedUserId: string,
   name: string,

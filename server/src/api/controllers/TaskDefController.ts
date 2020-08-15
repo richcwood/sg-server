@@ -14,17 +14,17 @@ import * as mongodb from 'mongodb';
 export class TaskDefController {
 
   public async getManyTaskDefs(req: Request, resp: Response, next: NextFunction): Promise<void> {
-    const _orgId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._orgid);
-    defaultBulkGet({ _orgId }, req, resp, next, TaskDefSchema, TaskDefModel, taskDefService);
+    const _teamId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._teamid);
+    defaultBulkGet({ _teamId }, req, resp, next, TaskDefSchema, TaskDefModel, taskDefService);
   }
 
 
   // public async getTaskDefsForJob(req: Request, resp: Response, next: NextFunction): Promise<void> {
-  //   const _orgId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._orgid);
+  //   const _teamId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._teamid);
   //   const _jobDefId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.params.jobDefId);
   //   const response: ResponseWrapper = (resp as any).body;
 
-  //   const taskDefs = await taskDefService.findJobDefTaskDefs(_orgId, _jobDefId, req.query.responseFields);
+  //   const taskDefs = await taskDefService.findJobDefTaskDefs(_teamId, _jobDefId, (<string>req.query.responseFields));
 
   //   // if (_.isArray(taskDefs) && taskDefs.length === 0) {
   //   //   next(new MissingObjectError(`No task defs found for job def ${_jobDefId}.`));
@@ -38,9 +38,9 @@ export class TaskDefController {
 
   public async getTaskDef(req: Request, resp: Response, next: NextFunction): Promise<void> {
     try {
-      const _orgId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._orgid);
+      const _teamId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._teamid);
       const response: ResponseWrapper = (resp as any).body;
-      const taskDef = await taskDefService.findTaskDef(_orgId, new mongodb.ObjectId(req.params.taskDefId), req.query.responseFields);
+      const taskDef = await taskDefService.findTaskDef(_teamId, new mongodb.ObjectId(req.params.taskDefId), (<string>req.query.responseFields));
 
       if (_.isArray(taskDef) && taskDef.length === 0) {
         next(new MissingObjectError(`TaskDef ${req.params.taskDefId} not found.`));
@@ -63,10 +63,10 @@ export class TaskDefController {
 
 
   public async createTaskDef(req: Request, resp: Response, next: NextFunction): Promise<void> {
-    const _orgId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._orgid);
+    const _teamId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._teamid);
     const response: ResponseWrapper = resp['body'];
     try {
-      const newTaskDef = await taskDefService.createTaskDef(_orgId, convertRequestData(TaskDefSchema, req.body), req.get('correlationId'), req.query.responseFields);
+      const newTaskDef = await taskDefService.createTaskDef(_teamId, convertRequestData(TaskDefSchema, req.body), req.get('correlationId'), (<string>req.query.responseFields));
       response.data = convertResponseData(TaskDefSchema, newTaskDef);
       response.statusCode = ResponseCode.CREATED;
       next();
@@ -78,10 +78,10 @@ export class TaskDefController {
 
 
   public async updateTaskDef(req: Request, resp: Response, next: NextFunction): Promise<void> {
-    const _orgId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._orgid);
+    const _teamId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._teamid);
     const response: ResponseWrapper = resp['body'];
     try {
-      const updatedTaskDef: any = await taskDefService.updateTaskDef(_orgId, new mongodb.ObjectId(req.params.taskDefId), convertRequestData(TaskDefSchema, req.body), req.get('correlationId'), req.query.responseFields);
+      const updatedTaskDef: any = await taskDefService.updateTaskDef(_teamId, new mongodb.ObjectId(req.params.taskDefId), convertRequestData(TaskDefSchema, req.body), req.get('correlationId'), (<string>req.query.responseFields));
 
       if (_.isArray(updatedTaskDef) && updatedTaskDef.length === 0) {
         next(new MissingObjectError(`TaskDef ${req.params.taskDefId} not found.`));
@@ -99,10 +99,10 @@ export class TaskDefController {
 
 
   public async deleteTaskDef(req: Request, resp: Response, next: NextFunction): Promise<void> {
-    const _orgId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._orgid);
+    const _teamId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._teamid);
     const response: ResponseWrapper = resp['body'];
     try {
-      const taskDefs = await taskDefService.findTaskDef(_orgId, new mongodb.ObjectId(req.params.taskDefId), req.query.responseFields);
+      const taskDefs = await taskDefService.findTaskDef(_teamId, new mongodb.ObjectId(req.params.taskDefId), (<string>req.query.responseFields));
 
       if (_.isArray(taskDefs) && taskDefs.length === 0) {
         return next(new MissingObjectError(`TaskDef ${req.params.taskDefId} not found.`));
@@ -110,14 +110,14 @@ export class TaskDefController {
       else {
         const taskDef = taskDefs[0];
         // First delete all of the step defs associated with the task
-        const stepDefIds = await stepDefService.findAllStepDefs(_orgId, new mongodb.ObjectId(taskDef._id), '_id');
+        const stepDefIds = await stepDefService.findAllStepDefs(_teamId, new mongodb.ObjectId(taskDef._id), '_id');
         
         for(const {_id} of stepDefIds){
-          await stepDefService.deleteStepDef(_orgId, new mongodb.ObjectId(_id), req.get('correlationId'));
+          await stepDefService.deleteStepDef(_teamId, new mongodb.ObjectId(_id), req.get('correlationId'));
         }
 
         // now delete the actual task
-        response.data = taskDefService.deleteTaskDef(_orgId, new mongodb.ObjectId(taskDef._id), req.get('correlationId'));
+        response.data = taskDefService.deleteTaskDef(_teamId, new mongodb.ObjectId(taskDef._id), req.get('correlationId'));
         response.statusCode = ResponseCode.OK;
         next();
       }

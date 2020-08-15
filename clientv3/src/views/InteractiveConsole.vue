@@ -696,7 +696,7 @@ export default class InteractiveConsole extends Vue {
       return;
     }
 
-    const currentOrgId = this.$store.state[StoreType.OrgStore].selected.id;
+    const currentTeamId = this.$store.state[StoreType.TeamStore].selected.id;
 
     try {
       const newJob = {
@@ -706,7 +706,7 @@ export default class InteractiveConsole extends Vue {
           runtimeVars: this.runtimeVarsAsMap,
           tasks: [
             {
-              _orgId: currentOrgId,
+              _teamId: currentTeamId,
               name: `Task1`,
               source: 0,
               requiredTags: stringToMap(this.runAgentTargetTags_string),

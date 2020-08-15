@@ -4,7 +4,7 @@ export enum JobDefStatus {RUNNING = 10, PAUSED = 15};
 
 export interface JobDef extends Model {
   id?: string,
-  _orgId?: string,
+  _teamId?: string,
   name: string,
   createdBy?: string,
   lastRunId?: number,

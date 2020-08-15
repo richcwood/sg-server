@@ -141,7 +141,7 @@ def logError(msgData):
     cml_adapter.error(msgData)
 
 
-def RestAPICall(url, method, _orgId, headers, data={}):
+def RestAPICall(url, method, _teamId, headers, data={}):
     global cml_adapter
     global token
     global apiBaseUrl
@@ -156,7 +156,7 @@ def RestAPICall(url, method, _orgId, headers, data={}):
 
         default_headers = {
             'Cookie': token,
-            '_orgId': _orgId
+            '_teamId': _teamId
         }
 
         headers.update(default_headers)
@@ -171,17 +171,17 @@ def RestAPICall(url, method, _orgId, headers, data={}):
             raise Exception('Call to {} returned {} - {}'.format(url, res.status_code, res.text))
     except Exception as ex:
         logError({'Method': 'RestAPICall', 'Error': ex, 'url': url,
-                  'method': method, '_orgId': _orgId, 'headers': headers, 'data': data})
+                  'method': method, '_teamId': _teamId, 'headers': headers, 'data': data})
 
 
-def on_launch_job(scheduled_time, job_id, _orgId, targetId):
-    logInfo({'Msg': 'Launching job', '_orgId': _orgId, '_jobDefId': targetId, 'date': datetime.now(), 'scheduled_time': scheduled_time})
-    RestAPICall('job', 'POST', _orgId, {'_jobDefId': targetId}, {'dateScheduled': scheduled_time})
+def on_launch_job(scheduled_time, job_id, _teamId, targetId):
+    logInfo({'Msg': 'Launching job', '_teamId': _teamId, '_jobDefId': targetId, 'date': datetime.now(), 'scheduled_time': scheduled_time})
+    RestAPICall('job', 'POST', _teamId, {'_jobDefId': targetId}, {'dateScheduled': scheduled_time})
 
     job = job_scheduler.get_job(job_id)
     if job:
         url = 'schedule/fromscheduler/{}'.format(job_id)
-        RestAPICall(url, 'PUT', _orgId, {}, {'lastScheduledRunDate': scheduled_time, 'nextScheduledRunDate': job.next_run_time})
+        RestAPICall(url, 'PUT', _teamId, {}, {'lastScheduledRunDate': scheduled_time, 'nextScheduledRunDate': job.next_run_time})
         logInfo({'Msg': 'Updating job info 1', 'url': url, 'job_id': job_id, 'lastScheduledRunDate': scheduled_time, 'nextScheduledRunDate': job.next_run_time})
 
 
@@ -360,7 +360,7 @@ def on_message(delivery_tag, body, async_consumer):
         job = job_scheduler.get_job(msg['id'])
         if job:
             url = 'schedule/fromscheduler/{}'.format(job.id)
-            RestAPICall(url, 'PUT', msg['_orgId'], {}, {'nextScheduledRunDate': job.next_run_time})
+            RestAPICall(url, 'PUT', msg['_teamId'], {}, {'nextScheduledRunDate': job.next_run_time})
             logInfo({'Msg': 'Updating job info 2', 'url': url, 'job_id': job.id, 'nextScheduledRunDate': job.next_run_time})
 
         async_consumer.acknowledge_message(delivery_tag)
@@ -368,7 +368,7 @@ def on_message(delivery_tag, body, async_consumer):
     except Exception as ex:
         async_consumer.acknowledge_message(delivery_tag)
         url = 'schedule/fromscheduler/{}'.format(msg['id'])
-        RestAPICall(url, 'PUT', msg['_orgId'], {}, {'scheduleError': ex.message})
+        RestAPICall(url, 'PUT', msg['_teamId'], {}, {'scheduleError': ex.message})
         logError({'Method': 'on_message', 'body': body, 'Error': ex})
     # finally:
     #     async_consumer.start_consuming()

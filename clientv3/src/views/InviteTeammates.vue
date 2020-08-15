@@ -15,7 +15,7 @@
     <div v-else style="display: flex; flex-direction: column; align-items: center;">
       <div style="margin-bottom: 40px;">
         Team invite link: <a @click.prevent="onCopyInviteLinkClicked">Copy to clipboard</a>
-        <input id="inviteLinkInput" :hidden="!isCopyingOrgInviteLink" style="opacity: .01;" type="text" v-model="selectedOrgInviteLink">
+        <input id="inviteLinkInput" :hidden="!isCopyingTeamInviteLink" style="opacity: .01;" type="text" v-model="selectedTeamInviteLink">
         <span :hidden="!showCopyLinkSuccess" style="margin-left: 10px;">Invite link copied</span>
         <br><br>
         Careful! Anyone who has this link can join your team!
@@ -61,20 +61,20 @@ import { ValidationProvider, ValidationObserver } from 'vee-validate';
   components: { ValidationProvider, ValidationObserver }
 })
 export default class InviteTeammates extends Vue {
-  private isCopyingOrgInviteLink = false;
+  private isCopyingTeamInviteLink = false;
   private showCopyLinkSuccess = false;
   private teammates = [{id: randomId(), email: ''}, {id: randomId(), email: ''}, {id: randomId(), email: ''}];
   
-  @BindStoreModel({storeType: StoreType.OrgStore})
-  private selectedOrg: any;
+  @BindStoreModel({storeType: StoreType.TeamStore})
+  private selectedTeam: any;
 
   @BindStoreModel({storeType: StoreType.SecurityStore, selectedModelName: 'user'})
   private user: any;
   private showSuccessMessage = false;
 
-  private get selectedOrgInviteLink(){
-    if(this.selectedOrg){
-      return this.selectedOrg.inviteLink;
+  private get selectedTeamInviteLink(){
+    if(this.selectedTeam){
+      return this.selectedTeam.inviteLink;
     }
     else {
       return '';
@@ -86,7 +86,7 @@ export default class InviteTeammates extends Vue {
   }
 
   private onCopyInviteLinkClicked(){
-    this.isCopyingOrgInviteLink = true;
+    this.isCopyingTeamInviteLink = true;
     this.$nextTick(() => {
       try {
         const copyLink = document.getElementById('inviteLinkInput');
@@ -100,7 +100,7 @@ export default class InviteTeammates extends Vue {
         }, 2000);
       }
       finally {
-        this.isCopyingOrgInviteLink = false;
+        this.isCopyingTeamInviteLink = false;
       }
     });
   }

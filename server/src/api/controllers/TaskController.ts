@@ -19,17 +19,17 @@ const s3Access = new S3Access();
 export class TaskController {
 
     public async getManyTasks(req: Request, resp: Response, next: NextFunction): Promise<void> {
-        const _orgId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._orgid);
-        defaultBulkGet({ _orgId }, req, resp, next, TaskSchema, TaskModel, taskService);
+        const _teamId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._teamid);
+        defaultBulkGet({ _teamId }, req, resp, next, TaskSchema, TaskModel, taskService);
     }
 
 
     // public async getTasksForJob(req: Request, resp: Response, next: NextFunction): Promise<void> {
-    //     const _orgId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._orgid);
+    //     const _teamId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._teamid);
     //     const _jobId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.params.jobId);
     //     const response: ResponseWrapper = (resp as any).body;
 
-    //     const tasks = await taskService.findAllJobTasks(_orgId, _jobId, req.query.responseFields);
+    //     const tasks = await taskService.findAllJobTasks(_teamId, _jobId, (<string>req.query.responseFields));
 
     //     if (_.isArray(tasks) && tasks.length === 0) {
     //         next(new MissingObjectError(`No tasks found for job ${_jobId}.`));
@@ -43,9 +43,9 @@ export class TaskController {
 
     public async getTask(req: Request, resp: Response, next: NextFunction): Promise<void> {
         try {
-            const _orgId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._orgid);
+            const _teamId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._teamid);
             const response: ResponseWrapper = (resp as any).body;
-            const task = await taskService.findTask(_orgId, new mongodb.ObjectId(req.params.taskId), req.query.responseFields);
+            const task = await taskService.findTask(_teamId, new mongodb.ObjectId(req.params.taskId), (<string>req.query.responseFields));
 
             if (_.isArray(task) && task.length === 0) {
                 next(new MissingObjectError(`Task ${req.params.taskId} not found.`));
@@ -68,10 +68,10 @@ export class TaskController {
 
 
     public async createTask(req: Request, resp: Response, next: NextFunction): Promise<void> {
-        const _orgId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._orgid);
+        const _teamId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._teamid);
         const response: ResponseWrapper = resp['body'];
         try {
-            const newTask = await taskService.createTask(_orgId, convertRequestData(TaskSchema, req.body), req.header('correlationId'), req.query.responseFields);
+            const newTask = await taskService.createTask(_teamId, convertRequestData(TaskSchema, req.body), req.header('correlationId'), (<string>req.query.responseFields));
             response.data = convertResponseData(TaskSchema, newTask);
             response.statusCode = ResponseCode.CREATED;
             next();
@@ -84,17 +84,17 @@ export class TaskController {
 
     public async updateTask(req: Request, resp: Response, next: NextFunction): Promise<void> {
         const logger: BaseLogger = (<any>req).logger;
-        const _orgId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._orgid);
+        const _teamId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._teamid);
         const response: ResponseWrapper = resp['body'];
         try {
             const updatedTask: any = await taskService.updateTask(
-                _orgId,
+                _teamId,
                 new mongodb.ObjectId(req.params.taskId),
                 convertRequestData(TaskSchema, req.body),
                 logger,
                 null,
                 req.header('correlationId'),
-                req.query.responseFields
+                (<string>req.query.responseFields)
             );
 
             if (_.isArray(updatedTask) && updatedTask.length === 0) {

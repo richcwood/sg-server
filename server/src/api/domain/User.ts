@@ -24,13 +24,13 @@ export class UserSchema {
   companyName?: string;
 
   @prop({ default: [] })
-  orgIds?: string[];
+  teamIds?: string[];
 
   @prop({ default: [] })
-  orgIdsInactive?: string[];
+  teamIdsInactive?: string[];
 
   @prop({ default: []})
-  orgIdsInvited?: { _orgId: string, inviteKey: string }[];
+  teamIdsInvited?: { _teamId: string, inviteKey: string }[];
 
   @prop({ default: [] })
   accessRightIds?: AccessRight[];

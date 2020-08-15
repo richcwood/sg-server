@@ -33,7 +33,7 @@ export default class Test43 extends TestBase.WorkflowTestBase {
         let result: boolean;
         let resApiCall: any;
 
-        const _orgId: string = config.get('sgTestOrg');
+        const _teamId: string = config.get('sgTestTeam');
 
         const properties: any = {
             scripts: [
@@ -66,7 +66,7 @@ export default class Test43 extends TestBase.WorkflowTestBase {
         const { scripts, jobDefs } = await this.CreateJobDefsFromTemplates(properties);
 
         let job;
-        resApiCall = await this.testSetup.RestAPICall(`job`, 'POST', _orgId, { _jobDefId: jobDefs['Job 43'].id });
+        resApiCall = await this.testSetup.RestAPICall(`job`, 'POST', _teamId, { _jobDefId: jobDefs['Job 43'].id });
         if (resApiCall.data.statusCode != 201) {
             self.logger.LogError('Failed', { Message: `job POST returned ${resApiCall.data.statusCode}`, _jobDefId: jobDefs['Job 43'].id });
             return false;
@@ -79,7 +79,7 @@ export default class Test43 extends TestBase.WorkflowTestBase {
             operation: 1,
             model:
             {
-                _orgId: config.get('sgTestOrg'),
+                _teamId: config.get('sgTestTeam'),
                 _jobDefId: jobDefs[properties.jobDefs[0].name].id,
                 runId: 0,
                 name: properties.jobDefs[0].name,
@@ -123,7 +123,7 @@ export default class Test43 extends TestBase.WorkflowTestBase {
         const task = _.filter(self.bpMessages, x => x.domainType == 'Task' && x.operation == 1 && x.model._jobId == job.id);
         const taskOutcome = _.filter(self.bpMessages, x => x.domainType == 'TaskOutcome' && x.operation == 1 && x.model._taskId == task[0].model.id);
 
-        resApiCall = await this.testSetup.RestAPICall(`taskoutcomeaction/cancel/${taskOutcome[0].model.id}`, 'POST', _orgId, null);
+        resApiCall = await this.testSetup.RestAPICall(`taskoutcomeaction/cancel/${taskOutcome[0].model.id}`, 'POST', _teamId, null);
         if (resApiCall.data.statusCode != 200) {
             self.logger.LogError('Failed', { Message: `taskoutcomeaction/cancel/${taskOutcome[0].model.id} POST returned ${resApiCall.data.statusCode}` });
             return false;

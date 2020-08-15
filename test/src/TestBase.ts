@@ -5,7 +5,7 @@ import { AMQPConnector } from '../../server/src/shared/AMQPLib';
 import { MongoRepo } from '../../server/src/shared/MongoLib';
 import { SGStrings } from '../../server/src/shared/SGStrings';
 import { SGUtils } from '../../server/src/shared/SGUtils';
-// import { OrgSchema } from '../../server/src/api/domain/Org';
+// import { TeamSchema } from '../../server/src/api/domain/Team';
 import { ScriptSchema } from '../../server/src/api/domain/Script';
 import { JobDefSchema } from '../../server/src/api/domain/JobDef';
 import { TaskDefSchema } from '../../server/src/api/domain/TaskDef';
@@ -22,7 +22,7 @@ import { fstat } from 'fs';
 import * as fs from 'fs';
 import * as bcrypt from 'bcrypt';
 import * as mongodb from 'mongodb';
-import { OrgVariableSchema } from '../../server/src/api/domain/OrgVariable';
+import { TeamVariableSchema } from '../../server/src/api/domain/TeamVariable';
 import { basename } from 'path';
 import { ScriptTemplate, JobDefTemplate, TaskDefTemplate, StepDefTemplate } from './TestArtifacts';
 
@@ -36,8 +36,8 @@ export default abstract class TestBase {
     protected taskDefs: any;
     protected jobs: any;
     // protected agents: any;
-    protected org: any;
-    // protected orgs: any;
+    protected team: any;
+    // protected teams: any;
     protected scripts: any;
     protected tasks: any;
     protected taskOutcomes: any;
@@ -81,7 +81,7 @@ export default abstract class TestBase {
         this.jobDefs = [];
         this.taskDefs = [];
         this.jobs = [];
-        // this.orgs = [];
+        // this.teams = [];
         this.scripts = [];
         this.tasks = [];
         this.taskOutcomes = {};
@@ -108,7 +108,7 @@ export default abstract class TestBase {
             const testUser = config.get('sgTestUser');
             const testPassword = config.get('sgTestUserPassword');
 
-            let resApiCall: any = await this.testSetup.RestAPICall('user', 'GET', config.get('sgTestOrg'), null, this.sgUser);
+            let resApiCall: any = await this.testSetup.RestAPICall('user', 'GET', config.get('sgTestTeam'), null, this.sgUser);
 
             this.sgUser = resApiCall.data.data[0];
 
@@ -150,14 +150,14 @@ export default abstract class TestBase {
         }
     }
 
-    // public async CreateOrg(org: any) {
-    //     let restAPICallRes: any = await this.testSetup.RestAPICall(`org/${config.get('sgTestOrg')}`, 'GET', config.get('sgTestOrg'), null, org);
+    // public async CreateTeam(team: any) {
+    //     let restAPICallRes: any = await this.testSetup.RestAPICall(`team/${config.get('sgTestTeam')}`, 'GET', config.get('sgTestTeam'), null, team);
 
     //     return restAPICallRes.data.data;
 
-    //     // org = Object.assign(org, { ownerId: this.sgUser.id, inviteLink: 'http://' });
+    //     // team = Object.assign(team, { ownerId: this.sgUser.id, inviteLink: 'http://' });
 
-    //     // let restAPICallRes: any = await this.testSetup.RestAPICall('org', 'POST', null, { userId: this.sgUser.id }, org);
+    //     // let restAPICallRes: any = await this.testSetup.RestAPICall('team', 'POST', null, { userId: this.sgUser.id }, team);
 
     //     // const cookie = restAPICallRes.headers['set-cookie'];
     //     // let tmp = cookie[0].split(';');
@@ -165,59 +165,59 @@ export default abstract class TestBase {
     //     // auth = auth.substring(5) + ';';
     //     // this.token = auth;
 
-    //     // const orgFromDb: OrgSchema = Object.assign(restAPICallRes.data.data, { id: new mongodb.ObjectId(restAPICallRes.data.data.id) });
+    //     // const teamFromDb: TeamSchema = Object.assign(restAPICallRes.data.data, { id: new mongodb.ObjectId(restAPICallRes.data.data.id) });
 
-    //     // await this.CreatePaymentMethod(orgFromDb);
+    //     // await this.CreatePaymentMethod(teamFromDb);
 
-    //     // return orgFromDb;
+    //     // return teamFromDb;
     // }
 
-    public async CreateScript(script: ScriptSchema, _orgId: mongodb.ObjectId) {
-        let restAPICallRes: any = await this.testSetup.RestAPICall('script', 'POST', _orgId, null, script);
+    public async CreateScript(script: ScriptSchema, _teamId: mongodb.ObjectId) {
+        let restAPICallRes: any = await this.testSetup.RestAPICall('script', 'POST', _teamId, null, script);
         return restAPICallRes.data.data;
     }
 
-    public async CreateOrgVariable(orgVar: OrgVariableSchema, _orgId: mongodb.ObjectId) {
-        let restAPICallRes: any = await this.testSetup.RestAPICall('orgvar', 'POST', _orgId, null, orgVar);
+    public async CreateTeamVariable(teamVar: TeamVariableSchema, _teamId: mongodb.ObjectId) {
+        let restAPICallRes: any = await this.testSetup.RestAPICall('teamvar', 'POST', _teamId, null, teamVar);
         return restAPICallRes.data.data;
     }
 
-    public async CreateJobDef(jobDef: JobDefSchema, _orgId: mongodb.ObjectId) {
+    public async CreateJobDef(jobDef: JobDefSchema, _teamId: mongodb.ObjectId) {
         console.log('CreateJobDef -> jobDef -> ', util.inspect(jobDef, false, 5, true));
-        let restAPICallRes: any = await this.testSetup.RestAPICall('jobdef', 'POST', _orgId, null, jobDef);
+        let restAPICallRes: any = await this.testSetup.RestAPICall('jobdef', 'POST', _teamId, null, jobDef);
         console.log('CreateJobDef -> restAPICallRes -> ', util.inspect(restAPICallRes.data, false, null));
         return restAPICallRes.data.data;
     }
 
-    public async CreateTaskDef(taskDef: TaskDefSchema, _orgId: mongodb.ObjectId) {
+    public async CreateTaskDef(taskDef: TaskDefSchema, _teamId: mongodb.ObjectId) {
         // console.log('CreateJobDef -> jobDef -> ', util.inspect(jobDef, false, 5, true));
-        let restAPICallRes: any = await this.testSetup.RestAPICall(`taskdef`, 'POST', _orgId, null, taskDef);
+        let restAPICallRes: any = await this.testSetup.RestAPICall(`taskdef`, 'POST', _teamId, null, taskDef);
         // console.log('CreateJobDef -> restAPICallRes -> ', util.inspect(restAPICallRes.data, false, null));
         return restAPICallRes.data.data;
     }
 
-    public async CreateStepDef(stepDef: StepDefSchema, _orgId: mongodb.ObjectId, _jobDefId: mongodb.ObjectId) {
+    public async CreateStepDef(stepDef: StepDefSchema, _teamId: mongodb.ObjectId, _jobDefId: mongodb.ObjectId) {
         // console.log('CreateJobDef -> jobDef -> ', util.inspect(jobDef, false, 5, true));
-        let restAPICallRes: any = await this.testSetup.RestAPICall(`stepdef`, 'POST', _orgId, null, stepDef);
+        let restAPICallRes: any = await this.testSetup.RestAPICall(`stepdef`, 'POST', _teamId, null, stepDef);
         // console.log('CreateJobDef -> restAPICallRes -> ', util.inspect(restAPICallRes.data, false, null));
         return restAPICallRes.data.data;
     }
 
-    public async GetJob(_jobId: mongodb.ObjectId, _orgId: mongodb.ObjectId) {
+    public async GetJob(_jobId: mongodb.ObjectId, _teamId: mongodb.ObjectId) {
         // console.log('CreateJobDef -> jobDef -> ', util.inspect(jobDef, false, 5, true));
-        let restAPICallRes: any = await this.testSetup.RestAPICall(`job/${_jobId}`, 'GET', _orgId, null, null);
+        let restAPICallRes: any = await this.testSetup.RestAPICall(`job/${_jobId}`, 'GET', _teamId, null, null);
         // console.log('CreateJobDef -> restAPICallRes -> ', util.inspect(restAPICallRes.data, false, null));
         return restAPICallRes.data.data;
     }
 
-    public async UpdateTaskDef(id: mongodb.ObjectId, taskDef: TaskDefSchema, _orgId: mongodb.ObjectId) {
-        let restAPICallRes: any = await this.testSetup.RestAPICall(`taskdef/${id}`, 'PUT', _orgId, {}, taskDef);
+    public async UpdateTaskDef(id: mongodb.ObjectId, taskDef: TaskDefSchema, _teamId: mongodb.ObjectId) {
+        let restAPICallRes: any = await this.testSetup.RestAPICall(`taskdef/${id}`, 'PUT', _teamId, {}, taskDef);
         console.log('UpdateTaskDef -> restAPICallRes -> ', util.inspect(restAPICallRes.data, false, null));
         return restAPICallRes.data.data;
     }
 
-    public async UpdateJobTask(task: TaskSchema, _orgId: mongodb.ObjectId) {
-        let restAPICallRes: any = await this.testSetup.RestAPICall(`task/${task.id}`, 'PUT', _orgId, {}, task);
+    public async UpdateJobTask(task: TaskSchema, _teamId: mongodb.ObjectId) {
+        let restAPICallRes: any = await this.testSetup.RestAPICall(`task/${task.id}`, 'PUT', _teamId, {}, task);
         // console.log('UpdateJobTask -> restAPICallRes -> ', util.inspect(restAPICallRes.data, false, null));
         return restAPICallRes.data.data;
     }
@@ -335,15 +335,15 @@ export default abstract class TestBase {
     public async StartTestMonitor() {
         self.amqp = new AMQPConnector('SchedulerTest', '', self.amqpUrl, self.rmqVhost, 1, (activeMessages) => { }, this.logger);
         await self.amqp.Start();
-        await self.amqp.ConsumeRoute('', true, true, true, true, self.OnBrowserPush.bind(this), SGStrings.GetOrgRoutingPrefix(config.get('sgTestOrg')), self.rmqBrowserPushRoute);
+        await self.amqp.ConsumeRoute('', true, true, true, true, self.OnBrowserPush.bind(this), SGStrings.GetTeamRoutingPrefix(config.get('sgTestTeam')), self.rmqBrowserPushRoute);
     }
 
-    protected GetTaskKey(_orgId: mongodb.ObjectId, _jobId: mongodb.ObjectId, name: string) {
-        return SGStrings.GetTaskKey(_orgId.toHexString(), _jobId.toHexString(), name);
+    protected GetTaskKey(_teamId: mongodb.ObjectId, _jobId: mongodb.ObjectId, name: string) {
+        return SGStrings.GetTaskKey(_teamId.toHexString(), _jobId.toHexString(), name);
     }
 
-    protected GetJobKey(_orgId: mongodb.ObjectId, _jobId: mongodb.ObjectId) {
-        return SGStrings.GetJobKey(_orgId.toHexString(), _jobId.toHexString());
+    protected GetJobKey(_teamId: mongodb.ObjectId, _jobId: mongodb.ObjectId) {
+        return SGStrings.GetJobKey(_teamId.toHexString(), _jobId.toHexString());
     }
 
     protected async OnBrowserPush(params: any, msgKey: string, ch: any) {
@@ -403,7 +403,7 @@ export default abstract class TestBase {
         }
 
         if ('step' in ev) {
-            const res: any = await this.testSetup.RestAPICall(`stepOutcome?filter=_taskOutcomeId==${taskOutcome.id}`, 'GET', taskOutcome._orgId, null, null);
+            const res: any = await this.testSetup.RestAPICall(`stepOutcome?filter=_taskOutcomeId==${taskOutcome.id}`, 'GET', taskOutcome._teamId, null, null);
             console.log('$$$$$$$$$$$$$$$$$', JSON.stringify(res.data, null, 4));
             const steps = res.data.data;
             for (let i = 0; i < ev.step.length; i++) {
@@ -430,7 +430,7 @@ export default abstract class TestBase {
     }
 
     protected async CompletedTaskHandler(taskOutcome: TaskOutcomeSchema) {
-        const getTask: any = await this.testSetup.RestAPICall(`task/${taskOutcome._taskId}`, 'GET', taskOutcome._orgId, {});
+        const getTask: any = await this.testSetup.RestAPICall(`task/${taskOutcome._taskId}`, 'GET', taskOutcome._teamId, {});
         const task = getTask.data.data;
         taskOutcome = Object.assign(taskOutcome, { source: task.source, name: task.name });
         console.log('CompletedTaskHandler -> task -> ', util.inspect(task, false, null));
@@ -444,7 +444,7 @@ export default abstract class TestBase {
                 await this.CompareTaskOutcomeToExpectedValues(taskDef[0].expectedValues, taskOutcome);
             }
         } else {
-            const getJob: any = await this.testSetup.RestAPICall(`job/${taskOutcome._jobId}`, 'GET', taskOutcome._orgId, {});
+            const getJob: any = await this.testSetup.RestAPICall(`job/${taskOutcome._jobId}`, 'GET', taskOutcome._teamId, {});
             const job = getJob.data.data;
             // console.log('CompletedTaskHandler -> job -> ', util.inspect(job, false, null));
             // console.log('CompletedTaskHandler -> self.jobDefs -> ', util.inspect(self.jobDefs, false, null));
@@ -489,7 +489,7 @@ export default abstract class TestBase {
         if (jobLocal.name.startsWith('Inactive agent job'))
             return;
 
-        const restAPICallRes: any = await this.testSetup.RestAPICall(`job/${jobOutcome.id}`, 'GET', jobLocal._orgId, {});
+        const restAPICallRes: any = await this.testSetup.RestAPICall(`job/${jobOutcome.id}`, 'GET', jobLocal._teamId, {});
         const job: JobSchema = restAPICallRes.data.data;
 
         const jobDef: JobDefSchema = _.filter(self.jobDefs, x => x.id == job._jobDefId)[0];
@@ -526,7 +526,7 @@ export default abstract class TestBase {
         let job: JobSchema;
         for (let i = 0; i < self.jobDefs.length; i++) {
             const jobDef = self.jobDefs[i];
-            const restAPICallRes: any = await this.testSetup.RestAPICall('job', 'POST', jobDef._orgId, { _jobDefId: jobDef.id });
+            const restAPICallRes: any = await this.testSetup.RestAPICall('job', 'POST', jobDef._teamId, { _jobDefId: jobDef.id });
             job = restAPICallRes.data.data;
 
             // self.jobs.push(job);
@@ -535,7 +535,7 @@ export default abstract class TestBase {
         return await self.WaitForTestToComplete();
     }
 
-    // protected async RestAPICall(url: string, method: string, _orgId: mongodb.ObjectId, headers: any = {}, data: any = {}, token: string = this.token) {
+    // protected async RestAPICall(url: string, method: string, _teamId: mongodb.ObjectId, headers: any = {}, data: any = {}, token: string = this.token) {
     //     return new Promise(async (resolve, reject) => {
     //         try {
     //             let apiUrl = config.get('API_BASE_URL');
@@ -548,7 +548,7 @@ export default abstract class TestBase {
 
     //             const combinedHeaders: any = Object.assign({
     //                 Cookie: `Auth=${this.token};`,
-    //                 _orgId: _orgId
+    //                 _teamId: _teamId
     //             }, headers);
 
     //             console.log('RestAPICall -> url ', url, ', method -> ', method, ', headers -> ', combinedHeaders, ', data -> ', data, ', token -> ', token);
@@ -616,11 +616,11 @@ export abstract class FailedTestBase extends TestBase {
 
             for (let i = 0; i < this.jobs.length; i++) {
                 const job: JobSchema = this.jobs[i];
-                let res: any = await this.testSetup.RestAPICall(`job/${job.id}`, 'GET', job._orgId)
+                let res: any = await this.testSetup.RestAPICall(`job/${job.id}`, 'GET', job._teamId)
                 console.log('TestBase -> RunTest -> res -> ', JSON.stringify(res.data.data, null, 4));
                 if (res.data.data.status == Enums.JobStatus.FAILED) {
                     console.log('Relaunching job -> ', JSON.stringify(job, null, 4));
-                    await this.testSetup.RestAPICall(`jobaction/restart/${job.id}`, 'POST', job._orgId);
+                    await this.testSetup.RestAPICall(`jobaction/restart/${job.id}`, 'POST', job._teamId);
                 }
             }
 
@@ -635,7 +635,7 @@ let adhocTaskTestBaseInstance: AdhocTaskTestBase;
 export abstract class AdhocTaskTestBase extends TestBase {
 
     protected tasks: any;
-    protected _orgId: mongodb.ObjectId;
+    protected _teamId: mongodb.ObjectId;
 
     constructor(testName: string, testSetup: any) {
         super(testName, testSetup);
@@ -723,7 +723,7 @@ export abstract class AdhocTaskTestBase extends TestBase {
 
 
     protected async CompletedTaskHandler(taskOutcome: TaskOutcomeSchema) {
-        const getTask: any = await this.testSetup.RestAPICall(`task/${taskOutcome._taskId}`, 'GET', taskOutcome._orgId, {});
+        const getTask: any = await this.testSetup.RestAPICall(`task/${taskOutcome._taskId}`, 'GET', taskOutcome._teamId, {});
         const task = getTask.data.data;
 
         taskOutcome = Object.assign(taskOutcome, { source: task.source, name: task.name });
@@ -744,7 +744,7 @@ export abstract class AdhocTaskTestBase extends TestBase {
                 }
             }
 
-            await adhocTaskTestBaseInstance.testSetup.RestAPICall(`job`, 'POST', task._orgId, { correlationId: task.correlationId }, data);
+            await adhocTaskTestBaseInstance.testSetup.RestAPICall(`job`, 'POST', task._teamId, { correlationId: task.correlationId }, data);
         });
 
         return await adhocTaskTestBaseInstance.WaitForTestToComplete();
@@ -778,7 +778,7 @@ export abstract class ScheduledJobTestBase extends TestBase {
         this.logger.LogDebug(`Running test for \"${this.description}\"`);
 
         this.schedules.forEach(async (schedule) => {
-            await this.testSetup.RestAPICall('schedule', 'POST', schedule._orgId, null, schedule);
+            await this.testSetup.RestAPICall('schedule', 'POST', schedule._teamId, null, schedule);
         });
 
         return await this.WaitForTestToComplete();
@@ -790,7 +790,7 @@ export abstract class ScheduledJobTestBase extends TestBase {
 let wftInst: WorkflowTestBase;
 export abstract class WorkflowTestBase extends TestBase {
 
-    protected _orgId: mongodb.ObjectId;
+    protected _teamId: mongodb.ObjectId;
     protected dlqMessages: string[];
     protected bpMessagesExpected: any[];
     protected dlqMessagesExpected: any[];
@@ -949,14 +949,14 @@ export abstract class WorkflowTestBase extends TestBase {
     protected async CreateJobDefsFromTemplates(properties: any) {
         let resApiCall: any;
 
-        const _orgId: string = config.get('sgTestOrg');
+        const _teamId: string = config.get('sgTestTeam');
 
         let scripts: any = {};
         for (let script of properties.scripts) {
             let scriptTemplate: any = _.clone(ScriptTemplate);
             Object.assign(scriptTemplate, script);
 
-            resApiCall = await this.testSetup.RestAPICall('script', 'POST', _orgId, null, scriptTemplate);
+            resApiCall = await this.testSetup.RestAPICall('script', 'POST', _teamId, null, scriptTemplate);
             if (resApiCall.data.statusCode != 201) {
                 wftInst.logger.LogError('Failed', { Message: `script POST returned ${resApiCall.data.statusCode}`, scriptTemplate });
                 throw new Error();
@@ -971,7 +971,7 @@ export abstract class WorkflowTestBase extends TestBase {
             let jobDefTemplate: any = _.clone(JobDefTemplate);
             Object.assign(jobDefTemplate, jobDef);
 
-            resApiCall = await this.testSetup.RestAPICall('jobDef', 'POST', _orgId, null, jobDefTemplate);
+            resApiCall = await this.testSetup.RestAPICall('jobDef', 'POST', _teamId, null, jobDefTemplate);
             if (resApiCall.data.statusCode != 201) {
                 wftInst.logger.LogError('Failed', { Message: `jobDef POST returned ${resApiCall.data.statusCode}`, jobDefTemplate });
                 throw new Error();
@@ -985,7 +985,7 @@ export abstract class WorkflowTestBase extends TestBase {
                 Object.assign(taskDefTemplate, taskDef);
                 taskDefTemplate._jobDefId = jobDefTemplate.id;
 
-                resApiCall = await this.testSetup.RestAPICall('taskDef', 'POST', _orgId, null, taskDefTemplate);
+                resApiCall = await this.testSetup.RestAPICall('taskDef', 'POST', _teamId, null, taskDefTemplate);
                 if (resApiCall.data.statusCode != 201) {
                     wftInst.logger.LogError('Failed', { Message: `taskDef POST returned ${resApiCall.data.statusCode}`, taskDefTemplate });
                     throw new Error();
@@ -1000,7 +1000,7 @@ export abstract class WorkflowTestBase extends TestBase {
                     stepDefTemplate._taskDefId = taskDefTemplate.id;
                     stepDefTemplate._scriptId = scripts[stepDef.scriptName].id;
 
-                    resApiCall = await this.testSetup.RestAPICall('stepDef', 'POST', _orgId, null, stepDefTemplate);
+                    resApiCall = await this.testSetup.RestAPICall('stepDef', 'POST', _teamId, null, stepDefTemplate);
                     if (resApiCall.data.statusCode != 201) {
                         wftInst.logger.LogError('Failed', { Message: `stepDef POST returned ${resApiCall.data.statusCode}`, stepDefTemplate });
                         throw new Error();

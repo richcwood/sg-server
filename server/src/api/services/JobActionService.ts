@@ -16,7 +16,7 @@ import { taskActionService } from './TaskActionService';
 
 export class JobActionService {
 
-    private async interruptJobTasks(_orgId: mongodb.ObjectId, _jobId: mongodb.ObjectId, logger: BaseLogger) {
+    private async interruptJobTasks(_teamId: mongodb.ObjectId, _jobId: mongodb.ObjectId, logger: BaseLogger) {
         let tasksToInterruptFilter = {};
         tasksToInterruptFilter['_jobId'] = _jobId;
         const tasksToInterruptQuery = await taskService.findAllTasksInternal(tasksToInterruptFilter, '_id');
@@ -25,7 +25,7 @@ export class JobActionService {
             for (let i = 0; i < tasksToInterruptQuery.length; i++) {
                 const taskToInterrupt = tasksToInterruptQuery[i];
                 try {
-                    await taskService.updateTask(_orgId, taskToInterrupt._id, { status: TaskStatus.INTERRUPTED }, logger);
+                    await taskService.updateTask(_teamId, taskToInterrupt._id, { status: TaskStatus.INTERRUPTED }, logger);
                 } catch (e) {
                     logger.LogWarning(`Error canceling job task: ${e}`, { taskToInterrupt });
                 }
@@ -41,7 +41,7 @@ export class JobActionService {
             for (let i = 0; i < taskOutcomesToInterruptQuery.length; i++) {
                 const taskOutcomeToInterrupt = taskOutcomesToInterruptQuery[i];
                 try {
-                    await taskOutcomeActionService.interruptTaskOutcome(_orgId, taskOutcomeToInterrupt._id);
+                    await taskOutcomeActionService.interruptTaskOutcome(_teamId, taskOutcomeToInterrupt._id);
                 } catch (e) {
                     logger.LogWarning(`Error interrupting job task: ${e}`, { taskOutcomeToInterrupt });
                 }
@@ -50,7 +50,7 @@ export class JobActionService {
     }
 
 
-    private async cancelJobTasks(_orgId: mongodb.ObjectId, _jobId: mongodb.ObjectId, logger: BaseLogger) {
+    private async cancelJobTasks(_teamId: mongodb.ObjectId, _jobId: mongodb.ObjectId, logger: BaseLogger) {
         let tasksToCancelFilter = {};
         tasksToCancelFilter['_jobId'] = _jobId;
         const tasksToCancelQuery = await taskService.findAllTasksInternal(tasksToCancelFilter, '_id');
@@ -59,7 +59,7 @@ export class JobActionService {
             for (let i = 0; i < tasksToCancelQuery.length; i++) {
                 const taskToCancel = tasksToCancelQuery[i];
                 try {
-                    await taskService.updateTask(_orgId, taskToCancel._id, { status: TaskStatus.CANCELLED }, logger);
+                    await taskService.updateTask(_teamId, taskToCancel._id, { status: TaskStatus.CANCELLED }, logger);
                 } catch (e) {
                     logger.LogWarning(`Error canceling job task: ${e}`, { taskToCancel });
                 }
@@ -75,7 +75,7 @@ export class JobActionService {
             for (let i = 0; i < taskOutcomesToCancelQuery.length; i++) {
                 const taskOutcomeToCancel = taskOutcomesToCancelQuery[i];
                 try {
-                    await taskOutcomeActionService.cancelTaskOutcome(_orgId, taskOutcomeToCancel._id);
+                    await taskOutcomeActionService.cancelTaskOutcome(_teamId, taskOutcomeToCancel._id);
                 } catch (e) {
                     logger.LogWarning(`Error canceling job task outcome: ${e}`, { taskOutcomeToCancel });
                 }
@@ -84,7 +84,7 @@ export class JobActionService {
     }
 
 
-    private async restartJobTasks(_orgId: mongodb.ObjectId, _jobId: mongodb.ObjectId, logger: BaseLogger) {
+    private async restartJobTasks(_teamId: mongodb.ObjectId, _jobId: mongodb.ObjectId, logger: BaseLogger) {
         let tasksRestarted = [];
         let taskOutcomesToRestartFilter = {};
         taskOutcomesToRestartFilter['_jobId'] = _jobId;
@@ -95,7 +95,7 @@ export class JobActionService {
             for (let i = 0; i < taskOutcomesToRestartQuery.length; i++) {
                 const taskOutcomeToRestart = taskOutcomesToRestartQuery[i];
                 try {
-                    await taskOutcomeActionService.restartTaskOutcome(_orgId, taskOutcomeToRestart._id);
+                    await taskOutcomeActionService.restartTaskOutcome(_teamId, taskOutcomeToRestart._id);
                     tasksRestarted.push(taskOutcomeToRestart._taskId);
                 } catch (e) {
                     logger.LogWarning(`Error restarting job task: ${e}`, { taskOutcomeToRestart });
@@ -114,7 +114,7 @@ export class JobActionService {
                 if (tasksRestarted.indexOf(taskToRestart._id) >= 0)
                     continue;
                 try {
-                    await taskActionService.republishTask(_orgId, taskToRestart._id);
+                    await taskActionService.republishTask(_teamId, taskToRestart._id);
                 } catch (e) {
                     logger.LogWarning(`Error canceling job task: ${e}`, { taskToRestart });
                 }
@@ -123,17 +123,17 @@ export class JobActionService {
     }
 
 
-    public async interruptJob(_orgId: mongodb.ObjectId, _jobId: mongodb.ObjectId, logger: BaseLogger, correlationId?: string, responseFields?: string): Promise<object> {
-        const filter = { _id: _jobId, _orgId, status: JobStatus.RUNNING };
+    public async interruptJob(_teamId: mongodb.ObjectId, _jobId: mongodb.ObjectId, logger: BaseLogger, correlationId?: string, responseFields?: string): Promise<object> {
+        const filter = { _id: _jobId, _teamId, status: JobStatus.RUNNING };
         let updatedJob = await JobModel.findOneAndUpdate(filter, { status: JobStatus.INTERRUPTING }, { new: true }).select('_id status');
 
         if (updatedJob)
-            await rabbitMQPublisher.publish(_orgId, "Job", correlationId, PayloadOperation.UPDATE, convertData(JobSchema, updatedJob));
+            await rabbitMQPublisher.publish(_teamId, "Job", correlationId, PayloadOperation.UPDATE, convertData(JobSchema, updatedJob));
 
         let jobInterrupted = true;
         if (!updatedJob) {
             jobInterrupted = false;
-            const jobQuery = await JobModel.findById(_jobId).find({ _orgId }).select('status');
+            const jobQuery = await JobModel.findById(_jobId).find({ _teamId }).select('status');
             if (!jobQuery || (_.isArray(jobQuery) && jobQuery.length < 1))
                 throw new ValidationError(`Job ${_jobId} not found`);
             updatedJob = jobQuery[0];
@@ -141,12 +141,12 @@ export class JobActionService {
         }
 
         if (jobInterrupted)
-            await this.interruptJobTasks(_orgId, _jobId, logger);
+            await this.interruptJobTasks(_teamId, _jobId, logger);
 
-        updatedJob = await jobService.UpdateJobStatus(_orgId, _jobId, logger, updatedJob, correlationId);
+        updatedJob = await jobService.UpdateJobStatus(_teamId, _jobId, logger, updatedJob, correlationId);
 
         if (responseFields) {
-            return jobService.findJob(_orgId, _jobId, responseFields);
+            return jobService.findJob(_teamId, _jobId, responseFields);
         }
         else {
             return updatedJob; // fully populated model
@@ -154,17 +154,17 @@ export class JobActionService {
     }
 
 
-    public async restartJob(_orgId: mongodb.ObjectId, _jobId: mongodb.ObjectId, logger: BaseLogger, correlationId?: string, responseFields?: string): Promise<object> {
-        const filter = { _id: _jobId, _orgId, status: { $in: [JobStatus.INTERRUPTED, JobStatus.FAILED] } };
+    public async restartJob(_teamId: mongodb.ObjectId, _jobId: mongodb.ObjectId, logger: BaseLogger, correlationId?: string, responseFields?: string): Promise<object> {
+        const filter = { _id: _jobId, _teamId, status: { $in: [JobStatus.INTERRUPTED, JobStatus.FAILED] } };
         let updatedJob = await JobModel.findOneAndUpdate(filter, { status: JobStatus.RUNNING }, { new: true }).select('_id status');
 
         if (updatedJob)
-            await rabbitMQPublisher.publish(_orgId, "Job", correlationId, PayloadOperation.UPDATE, convertData(JobSchema, updatedJob));
+            await rabbitMQPublisher.publish(_teamId, "Job", correlationId, PayloadOperation.UPDATE, convertData(JobSchema, updatedJob));
 
         let jobRestarted = true;
         if (!updatedJob) {
             jobRestarted = false;
-            const jobQuery = await JobModel.findById(_jobId).find({ _orgId }).select('status');
+            const jobQuery = await JobModel.findById(_jobId).find({ _teamId }).select('status');
             if (!jobQuery || (_.isArray(jobQuery) && jobQuery.length === 0))
                 throw new ValidationError(`Job ${_jobId} not found`);
             updatedJob = jobQuery[0];
@@ -172,12 +172,12 @@ export class JobActionService {
         }
 
         if (jobRestarted)
-            await this.restartJobTasks(_orgId, _jobId, logger);
+            await this.restartJobTasks(_teamId, _jobId, logger);
 
-        updatedJob = await jobService.UpdateJobStatus(_orgId, _jobId, logger, updatedJob, correlationId);
+        updatedJob = await jobService.UpdateJobStatus(_teamId, _jobId, logger, updatedJob, correlationId);
 
         if (responseFields) {
-            return jobService.findJob(_orgId, _jobId, responseFields);
+            return jobService.findJob(_teamId, _jobId, responseFields);
         }
         else {
             return updatedJob; // fully populated model
@@ -185,17 +185,17 @@ export class JobActionService {
     }
 
 
-    public async cancelJob(_orgId: mongodb.ObjectId, _jobId: mongodb.ObjectId, logger: BaseLogger, correlationId?: string, responseFields?: string): Promise<object> {
-        const filter = { _id: _jobId, _orgId, $or: [{ status: { $lt: JobStatus.CANCELING } }, { status: JobStatus.FAILED }] };
+    public async cancelJob(_teamId: mongodb.ObjectId, _jobId: mongodb.ObjectId, logger: BaseLogger, correlationId?: string, responseFields?: string): Promise<object> {
+        const filter = { _id: _jobId, _teamId, $or: [{ status: { $lt: JobStatus.CANCELING } }, { status: JobStatus.FAILED }] };
         let updatedJob = await JobModel.findOneAndUpdate(filter, { status: JobStatus.CANCELING }, { new: true }).select('_id status');
 
         if (updatedJob)
-            await rabbitMQPublisher.publish(_orgId, "Job", correlationId, PayloadOperation.UPDATE, convertData(JobSchema, updatedJob));
+            await rabbitMQPublisher.publish(_teamId, "Job", correlationId, PayloadOperation.UPDATE, convertData(JobSchema, updatedJob));
 
         let jobCanceled = true;
         if (!updatedJob) {
             jobCanceled = false;
-            const jobQuery = await JobModel.findById(_jobId).find({ _orgId }).select('status');
+            const jobQuery = await JobModel.findById(_jobId).find({ _teamId }).select('status');
             if (!jobQuery || (_.isArray(jobQuery) && jobQuery.length === 0))
                 throw new ValidationError(`Job ${_jobId} not found`);
             updatedJob = jobQuery[0];
@@ -203,12 +203,12 @@ export class JobActionService {
         }
 
         if (jobCanceled)
-            await this.cancelJobTasks(_orgId, _jobId, logger);
+            await this.cancelJobTasks(_teamId, _jobId, logger);
 
-        updatedJob = await jobService.UpdateJobStatus(_orgId, _jobId, logger, updatedJob, correlationId);
+        updatedJob = await jobService.UpdateJobStatus(_teamId, _jobId, logger, updatedJob, correlationId);
 
         if (responseFields) {
-            return jobService.findJob(_orgId, _jobId, responseFields);
+            return jobService.findJob(_teamId, _jobId, responseFields);
         }
         else {
             return updatedJob; // fully populated model

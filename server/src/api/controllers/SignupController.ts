@@ -43,8 +43,8 @@ export class SignupController {
             var token = jwt.sign({
                 id: updatedUser._id,
                 email: updatedUser.email,
-                orgIds: updatedUser.orgIds,
-                orgIdsInvited: updatedUser.orgIdsInvited,
+                teamIds: updatedUser.teamIds,
+                teamIdsInvited: updatedUser.teamIdsInvited,
                 name: updatedUser.name,
                 companyName: updatedUser.companyName,
                 exp: Math.floor(jwtExpiration / 1000)
@@ -65,7 +65,7 @@ export class SignupController {
     public async setInitialPassword(req: Request, resp: Response, next: NextFunction): Promise<void> {
         const response: ResponseWrapper = resp['body'];
         try {
-            const updatedUser: any = await signupService.setInitialPassword(new mongodb.ObjectId(req.params.userId), req.body, req.query.responseFields);
+            const updatedUser: any = await signupService.setInitialPassword(new mongodb.ObjectId(req.params.userId), req.body, (<string>req.query.responseFields));
 
             if (_.isArray(updatedUser) && updatedUser.length === 0) {
                 next(new MissingObjectError(`User ${req.params.userId} not found.`));
@@ -78,8 +78,8 @@ export class SignupController {
             var token = jwt.sign({
                 id: updatedUser._id,
                 email: updatedUser.email,
-                orgIds: updatedUser.orgIds,
-                orgIdsInvited: updatedUser.orgIdsInvited,
+                teamIds: updatedUser.teamIds,
+                teamIdsInvited: updatedUser.teamIdsInvited,
                 name: updatedUser.name,
                 companyName: updatedUser.companyName,
                 exp: Math.floor(jwtExpiration / 1000)

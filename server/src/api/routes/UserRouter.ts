@@ -11,7 +11,7 @@ export class UserRouter {
     this.router.get('/',  userController.getManyUsers);
     this.router.get('/:userId', userController.getUser);
     this.router.put('/:userId', userController.updateUser);
-    this.router.put('/:userId/join/:orgId', userController.joinOrg);
+    this.router.put('/:userId/join/:teamId', userController.joinTeam);
   }
 }
 

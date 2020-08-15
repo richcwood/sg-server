@@ -14,7 +14,7 @@ export class StepDefSchema {
   id?: mongodb.ObjectId;
 
   @prop({required: true}) 
-  _orgId: mongodb.ObjectId;
+  _teamId: mongodb.ObjectId;
 
   @prop({required: true}) 
   _taskDefId: mongodb.ObjectId;
@@ -57,8 +57,8 @@ export class StepDefSchema {
       _id: (data) => {
         return new mongodb.ObjectID(data._id);
       },
-      _orgId: (data) => {
-        return new mongodb.ObjectID(data._orgId);
+      _teamId: (data) => {
+        return new mongodb.ObjectID(data._teamId);
       },
       _taskDefId: (data) => {
         return new mongodb.ObjectID(data._taskDefId);

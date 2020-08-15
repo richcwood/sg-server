@@ -34,8 +34,8 @@ export class UserService {
   }
 
 
-  public async findAllUsersInOrg(_orgId: mongodb.ObjectId, responseFields?: string) {
-    const filter = { orgIds: { $elemMatch: { $eq: _orgId.toHexString() } } };
+  public async findAllUsersInTeam(_teamId: mongodb.ObjectId, responseFields?: string) {
+    const filter = { teamIds: { $elemMatch: { $eq: _teamId.toHexString() } } };
     return await UserModel.find(filter).select(responseFields);
   }
 
@@ -106,17 +106,17 @@ export class UserService {
       updatedUser = await UserModel.findOneAndUpdate(filter, { passwordHash: passwordHash }, { new: true }).select(responseFields);
     }
 
-    /// TODO: if org removed, make sure there is an org owner
-    if (data.orgIds) {
-      updatedUser = await UserModel.findOneAndUpdate(filter, { orgIds: data.orgIds }, { new: true }).select(responseFields);
+    /// TODO: if team removed, make sure there is an team owner
+    if (data.teamIds) {
+      updatedUser = await UserModel.findOneAndUpdate(filter, { teamIds: data.teamIds }, { new: true }).select(responseFields);
     }
 
-    // if (data.orgIdsInvited) {
-    //   updatedUser = await UserModel.findOneAndUpdate(filter, { orgIdsInvited: data.orgIdsInvited }, { new: true }).select(responseFields);
+    // if (data.teamIdsInvited) {
+    //   updatedUser = await UserModel.findOneAndUpdate(filter, { teamIdsInvited: data.teamIdsInvited }, { new: true }).select(responseFields);
     // }
 
-    if (data.orgIdsInactive) {
-      updatedUser = await UserModel.findOneAndUpdate(filter, { orgIdsInactive: data.orgIdsInactive }, { new: true }).select(responseFields);
+    if (data.teamIdsInactive) {
+      updatedUser = await UserModel.findOneAndUpdate(filter, { teamIdsInactive: data.teamIdsInactive }, { new: true }).select(responseFields);
     }
 
     if (responseFields) {
@@ -129,52 +129,52 @@ export class UserService {
   }
 
 
-  public async joinOrg(id: mongodb.ObjectId, _orgId: string): Promise<object> {
+  public async joinTeam(id: mongodb.ObjectId, _teamId: string): Promise<object> {
     const userModel: any = await userService.findUser(id);
     if (!userModel)
       throw new ValidationError('Something went wrong. Please request a new invite from the team administrator.');
 
-    /// Check if the user is already in the org
-    let userAlreadyInOrg: boolean = true;
-    if (userModel.orgIds.indexOf(_orgId) < 0)
-      userAlreadyInOrg = false;
+    /// Check if the user is already in the team
+    let userAlreadyInTeam: boolean = true;
+    if (userModel.teamIds.indexOf(_teamId) < 0)
+      userAlreadyInTeam = false;
 
-    /// If the user is already in the org make sure the org is not in the orgIdsInvited or orgIdsInactive lists
-    if (userAlreadyInOrg) {
-      if (_orgId in userModel.orgIdsInvited) {
-        let newOrgIdsInvited: any[] = [];
-        for (let i = 0; i < userModel.orgIdsInvited.length; i++) {
-          if (userModel.orgIdsInvited[i]._orgId != _orgId) {
-            newOrgIdsInvited.push(userModel.orgIdsInvited[i]);
+    /// If the user is already in the team make sure the team is not in the teamIdsInvited or teamIdsInactive lists
+    if (userAlreadyInTeam) {
+      if (_teamId in userModel.teamIdsInvited) {
+        let newTeamIdsInvited: any[] = [];
+        for (let i = 0; i < userModel.teamIdsInvited.length; i++) {
+          if (userModel.teamIdsInvited[i]._teamId != _teamId) {
+            newTeamIdsInvited.push(userModel.teamIdsInvited[i]);
           }
         }
-        userModel.orgIdsInvited = newOrgIdsInvited;
-        if (userModel.orgIdsInactive.indexOf(_orgId) >= 0)
-          userModel.orgIdsInactive = SGUtils.removeItemFromArray(userModel.orgIdsInactive, _orgId);
+        userModel.teamIdsInvited = newTeamIdsInvited;
+        if (userModel.teamIdsInactive.indexOf(_teamId) >= 0)
+          userModel.teamIdsInactive = SGUtils.removeItemFromArray(userModel.teamIdsInactive, _teamId);
         await userModel.save();
       }
       return;
     }
 
-    let userInvitedToOrg: boolean = false;
-    const filterRes = _.filter(userModel.orgIdsInvited, o => o._orgId == _orgId);
+    let userInvitedToTeam: boolean = false;
+    const filterRes = _.filter(userModel.teamIdsInvited, o => o._teamId == _teamId);
     if (_.isArray(filterRes) && filterRes.length > 0)
-      userInvitedToOrg = true;
+      userInvitedToTeam = true;
 
-    if (!userInvitedToOrg)
+    if (!userInvitedToTeam)
       throw new ValidationError('Not invited to requested team');
 
-    if (userModel.orgIdsInactive.indexOf(_orgId) >= 0)
-      userModel.orgIdsInactive = SGUtils.removeItemFromArray(userModel.orgIdsInactive, _orgId);
+    if (userModel.teamIdsInactive.indexOf(_teamId) >= 0)
+      userModel.teamIdsInactive = SGUtils.removeItemFromArray(userModel.teamIdsInactive, _teamId);
 
-    userModel.orgIds.push(_orgId);
-    let newOrgIdsInvited: any[] = [];
-    for (let i = 0; i < userModel.orgIdsInvited.length; i++) {
-      if (userModel.orgIdsInvited[i]._orgId != _orgId) {
-        newOrgIdsInvited.push(userModel.orgIdsInvited[i]);
+    userModel.teamIds.push(_teamId);
+    let newTeamIdsInvited: any[] = [];
+    for (let i = 0; i < userModel.teamIdsInvited.length; i++) {
+      if (userModel.teamIdsInvited[i]._teamId != _teamId) {
+        newTeamIdsInvited.push(userModel.teamIdsInvited[i]);
       }
     }
-    userModel.orgIdsInvited = newOrgIdsInvited;
+    userModel.teamIdsInvited = newTeamIdsInvited;
 
     await userModel.save();
 

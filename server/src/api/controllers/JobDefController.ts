@@ -18,17 +18,17 @@ export class JobDefController {
 
 
   public async getManyJobDefs(req: Request, resp: Response, next: NextFunction): Promise<void> {
-    const _orgId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._orgid);
-    defaultBulkGet({ _orgId }, req, resp, next, JobDefSchema, JobDefModel, jobDefService);
+    const _teamId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._teamid);
+    defaultBulkGet({ _teamId }, req, resp, next, JobDefSchema, JobDefModel, jobDefService);
   }
 
 
   public async getJobDef(req: Request, resp: Response, next: NextFunction): Promise<void> {
     try {
-      const _orgId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._orgid);
+      const _teamId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._teamid);
       const _jobDefId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.params.jobDefId);
       const response: ResponseWrapper = (resp as any).body;
-      const jobDef = await jobDefService.findJobDef(_orgId, _jobDefId, req.query.responseFields);
+      const jobDef = await jobDefService.findJobDef(_teamId, _jobDefId, (<string>req.query.responseFields));
 
       if (_.isArray(jobDef) && jobDef.length === 0) {
         next(new MissingObjectError(`JobDef ${req.params.jobDefId} not found.`));
@@ -51,11 +51,11 @@ export class JobDefController {
 
 
   public async createJobDef(req: Request, resp: Response, next: NextFunction): Promise<void> {
-    const _orgId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._orgid);
+    const _teamId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._teamid);
     req.body.createdBy = new mongodb.ObjectId(<string>req.headers.userid);
     const response: ResponseWrapper = resp['body'];
     try {
-      const newJobDef = await jobDefService.createJobDef(_orgId, convertRequestData(JobDefSchema, req.body), req.header('correlationId'), req.query.responseFields);
+      const newJobDef = await jobDefService.createJobDef(_teamId, convertRequestData(JobDefSchema, req.body), req.header('correlationId'), (<string>req.query.responseFields));
       response.data = convertResponseData(JobDefSchema, newJobDef[0]);
       response.statusCode = ResponseCode.CREATED;
       next();
@@ -67,11 +67,11 @@ export class JobDefController {
 
 
   public async createJobDefFromJobDef(req: Request, resp: Response, next: NextFunction): Promise<void> {
-    const _orgId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._orgid);
+    const _teamId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._teamid);
     req.body.createdBy = new mongodb.ObjectId(<string>req.headers.userid);
     const response: ResponseWrapper = resp['body'];
     try {
-      const newJobDef = await jobDefService.createJobDefFromJobDef(_orgId, convertRequestData(JobDefSchema, req.body), req.header('correlationId'), req.query.responseFields);
+      const newJobDef = await jobDefService.createJobDefFromJobDef(_teamId, convertRequestData(JobDefSchema, req.body), req.header('correlationId'), (<string>req.query.responseFields));
       response.data = convertResponseData(JobDefSchema, newJobDef[0]);
       response.statusCode = ResponseCode.CREATED;
       next();
@@ -83,11 +83,11 @@ export class JobDefController {
 
 
   public async createJobDefFromScript(req: Request, resp: Response, next: NextFunction): Promise<void> {
-    const _orgId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._orgid);
+    const _teamId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._teamid);
     req.body.createdBy = new mongodb.ObjectId(<string>req.headers.userid);
     const response: ResponseWrapper = resp['body'];
     try {
-      const newJobDef = await jobDefService.createJobDefFromScript(_orgId, convertRequestData(JobDefSchema, req.body), req.header('correlationId'), req.query.responseFields);
+      const newJobDef = await jobDefService.createJobDefFromScript(_teamId, convertRequestData(JobDefSchema, req.body), req.header('correlationId'), (<string>req.query.responseFields));
       response.data = convertResponseData(JobDefSchema, newJobDef[0]);
       response.statusCode = ResponseCode.CREATED;
       next();
@@ -99,11 +99,11 @@ export class JobDefController {
 
 
   public async createJobDefFromCron(req: Request, resp: Response, next: NextFunction): Promise<void> {
-    const _orgId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._orgid);
+    const _teamId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._teamid);
     req.body.createdBy = new mongodb.ObjectId(<string>req.headers.userid);
     const response: ResponseWrapper = resp['body'];
     try {
-      const newJobDef = await jobDefService.createJobDefFromCron(_orgId, convertRequestData(JobDefSchema, req.body), req.header('correlationId'), req.query.responseFields);
+      const newJobDef = await jobDefService.createJobDefFromCron(_teamId, convertRequestData(JobDefSchema, req.body), req.header('correlationId'), (<string>req.query.responseFields));
       response.data = convertResponseData(JobDefSchema, newJobDef[0]);
       response.statusCode = ResponseCode.CREATED;
       next();
@@ -115,11 +115,11 @@ export class JobDefController {
 
 
   public async updateJobDef(req: Request, resp: Response, next: NextFunction): Promise<void> {
-    const _orgId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._orgid);
+    const _teamId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._teamid);
     const _jobDefId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.params.jobDefId);
     const response: ResponseWrapper = resp['body'];
     try {
-      const updatedJobDef: any = await jobDefService.updateJobDef(_orgId, _jobDefId, convertRequestData(JobDefSchema, req.body), null, req.get('correlationId'), <null | string>req.headers['email'], req.query.responseFields);
+      const updatedJobDef: any = await jobDefService.updateJobDef(_teamId, _jobDefId, convertRequestData(JobDefSchema, req.body), null, req.get('correlationId'), <null | string>req.headers['email'], (<string>req.query.responseFields));
 
       if (_.isArray(updatedJobDef) && updatedJobDef.length === 0) {
         next(new MissingObjectError(`JobDef ${req.params.jobDefId} not found.`));
@@ -137,10 +137,10 @@ export class JobDefController {
 
 
   public async deleteJobDef(req: Request, resp: Response, next: NextFunction): Promise<void> {
-    const _orgId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._orgid);
+    const _teamId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._teamid);
     const response: ResponseWrapper = resp['body'];
     try {
-      const jobDefs = await jobDefService.findJobDef(_orgId, new mongodb.ObjectId(req.params.jobDefId), req.query.responseFields);
+      const jobDefs = await jobDefService.findJobDef(_teamId, new mongodb.ObjectId(req.params.jobDefId), (<string>req.query.responseFields));
 
       if (_.isArray(jobDefs) && jobDefs.length === 0) {
         return next(new MissingObjectError(`JobDef ${req.params.jobDefId} not found.`));
@@ -148,21 +148,21 @@ export class JobDefController {
       else {
         const jobDef = jobDefs[0];
         // First delete all of the task defs associated with the job
-        const taskDefIds = await taskDefService.findJobDefTaskDefs(_orgId, new mongodb.ObjectId(jobDef._id), '_id');
+        const taskDefIds = await taskDefService.findJobDefTaskDefs(_teamId, new mongodb.ObjectId(jobDef._id), '_id');
 
         for (const { _id } of taskDefIds) {
           /// Delete step defs for this task
-          let stepDefsSourceQuery: StepDefSchema[] = await stepDefService.findTaskDefStepDefs(_orgId, _id);
+          let stepDefsSourceQuery: StepDefSchema[] = await stepDefService.findTaskDefStepDefs(_teamId, _id);
           for (let i = 0; i < stepDefsSourceQuery.length; i++) {
             let stepDefSource: StepDefSchema = stepDefsSourceQuery[i];
-            await stepDefService.deleteStepDef(_orgId, stepDefSource._id, req.get('correlationId'));
+            await stepDefService.deleteStepDef(_teamId, stepDefSource._id, req.get('correlationId'));
           }
 
-          await taskDefService.deleteTaskDef(_orgId, new mongodb.ObjectId(_id), req.get('correlationId'));
+          await taskDefService.deleteTaskDef(_teamId, new mongodb.ObjectId(_id), req.get('correlationId'));
         }
 
         // now delete the actual job
-        response.data = jobDefService.deleteJobDef(_orgId, new mongodb.ObjectId(jobDef._id), req.get('correlationId'));
+        response.data = jobDefService.deleteJobDef(_teamId, new mongodb.ObjectId(jobDef._id), req.get('correlationId'));
         response.statusCode = ResponseCode.OK;
         next();
       }

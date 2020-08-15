@@ -14,16 +14,16 @@ import * as mongodb from 'mongodb';
 export class ScheduleController {
 
     public async getManySchedules(req: Request, resp: Response, next: NextFunction): Promise<void> {
-        const _orgId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._orgid);
-        defaultBulkGet({ _orgId }, req, resp, next, ScheduleSchema, ScheduleModel, scheduleService);
+        const _teamId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._teamid);
+        defaultBulkGet({ _teamId }, req, resp, next, ScheduleSchema, ScheduleModel, scheduleService);
     }
 
 
     public async getSchedule(req: Request, resp: Response, next: NextFunction): Promise<void> {
         try {
-            const _orgId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._orgid);
+            const _teamId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._teamid);
             const response: ResponseWrapper = (resp as any).body;
-            const schedule = await scheduleService.findSchedule(_orgId, new mongodb.ObjectId(req.params.scheduleId), req.query.responseFields);
+            const schedule = await scheduleService.findSchedule(_teamId, new mongodb.ObjectId(req.params.scheduleId), (<string>req.query.responseFields));
 
             if (_.isArray(schedule) && schedule.length === 0) {
                 next(new MissingObjectError(`Schedule ${req.params.scheduleId} not found.`));
@@ -46,12 +46,12 @@ export class ScheduleController {
 
 
     public async createSchedule(req: Request, resp: Response, next: NextFunction): Promise<void> {
-        const _orgId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._orgid);
+        const _teamId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._teamid);
         req.body.createdBy = new mongodb.ObjectId(<string>req.headers.userid);
         req.body.lastUpdatedBy = new mongodb.ObjectId(<string>req.headers.userid);
         const response: ResponseWrapper = resp['body'];
         try {
-            const newSchedule = await scheduleService.createSchedule(_orgId, convertRequestData(ScheduleSchema, req.body), req.header('correlationId'), req.query.responseFields);
+            const newSchedule = await scheduleService.createSchedule(_teamId, convertRequestData(ScheduleSchema, req.body), req.header('correlationId'), (<string>req.query.responseFields));
             response.data = convertResponseData(ScheduleSchema, newSchedule);
             response.statusCode = ResponseCode.CREATED;
             next();
@@ -63,11 +63,11 @@ export class ScheduleController {
 
 
     public async updateSchedule(req: Request, resp: Response, next: NextFunction): Promise<void> {
-        const _orgId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._orgid);
+        const _teamId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._teamid);
         req.body.lastUpdatedBy = new mongodb.ObjectId(<string>req.headers.userid);
         const response: ResponseWrapper = resp['body'];
         try {
-            const updatedSchedule: any = await scheduleService.updateSchedule(_orgId, new mongodb.ObjectId(req.params.scheduleId), convertRequestData(ScheduleSchema, req.body), req.header('correlationId'), req.query.responseFields);
+            const updatedSchedule: any = await scheduleService.updateSchedule(_teamId, new mongodb.ObjectId(req.params.scheduleId), convertRequestData(ScheduleSchema, req.body), req.header('correlationId'), (<string>req.query.responseFields));
 
             if (_.isArray(updatedSchedule) && updatedSchedule.length === 0) {
                 next(new MissingObjectError(`Schedule ${req.params.scheduleId} not found.`));
@@ -85,11 +85,11 @@ export class ScheduleController {
 
 
     public async updateFromScheduler(req: Request, resp: Response, next: NextFunction): Promise<void> {
-        const _orgId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._orgid);
+        const _teamId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._teamid);
         req.body.lastUpdatedBy = new mongodb.ObjectId(<string>req.headers.userid);
         const response: ResponseWrapper = resp['body'];
         try {
-            const updatedSchedule: any = await scheduleService.updateFromScheduler(_orgId, new mongodb.ObjectId(req.params.scheduleId), convertRequestData(ScheduleSchema, req.body), req.header('correlationId'), req.query.responseFields);
+            const updatedSchedule: any = await scheduleService.updateFromScheduler(_teamId, new mongodb.ObjectId(req.params.scheduleId), convertRequestData(ScheduleSchema, req.body), req.header('correlationId'), (<string>req.query.responseFields));
 
             if (_.isArray(updatedSchedule) && updatedSchedule.length === 0) {
                 next(new MissingObjectError(`Schedule ${req.params.scheduleId} not found.`));
@@ -107,10 +107,10 @@ export class ScheduleController {
 
 
     public async deleteSchedule(req: Request, resp: Response, next: NextFunction): Promise<void> {
-        const _orgId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._orgid);
+        const _teamId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._teamid);
         const response: ResponseWrapper = resp['body'];
         try {
-            response.data = await scheduleService.deleteSchedule(_orgId, new mongodb.ObjectId(req.params.scheduleId), req.header('correlationId'));
+            response.data = await scheduleService.deleteSchedule(_teamId, new mongodb.ObjectId(req.params.scheduleId), req.header('correlationId'));
             response.statusCode = ResponseCode.OK;
             next();
         }

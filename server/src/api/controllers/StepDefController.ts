@@ -14,17 +14,17 @@ import * as mongodb from 'mongodb';
 export class StepDefController {
 
   public async getManyStepDefs(req: Request, resp: Response, next: NextFunction): Promise<void> {
-    const _orgId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._orgid);
-    defaultBulkGet({ _orgId }, req, resp, next, StepDefSchema, StepDefModel, stepDefService);
+    const _teamId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._teamid);
+    defaultBulkGet({ _teamId }, req, resp, next, StepDefSchema, StepDefModel, stepDefService);
   }
 
 
   // public async getStepsForTaskDef(req: Request, resp: Response, next: NextFunction): Promise<void> {
-  //   const _orgId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._orgid);
+  //   const _teamId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._teamid);
   //   const _taskDefId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.params.taskDefId);
   //   const response: ResponseWrapper = (resp as any).body;
 
-  //   const steps = await stepDefService.findAllStepDefs(_orgId, _taskDefId, req.query.responseFields);
+  //   const steps = await stepDefService.findAllStepDefs(_teamId, _taskDefId, (<string>req.query.responseFields));
 
   //   if (_.isArray(steps) && steps.length === 0) {
   //     next(new MissingObjectError(`No step def found for task def ${_taskDefId}.`));
@@ -38,9 +38,9 @@ export class StepDefController {
 
   public async getStepDef(req: Request, resp: Response, next: NextFunction): Promise<void> {
     try {
-      const _orgId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._orgid);
+      const _teamId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._teamid);
       const response: ResponseWrapper = (resp as any).body;
-      const stepDef = await stepDefService.findStepDef(_orgId, new mongodb.ObjectId(req.params.stepDefId), req.query.responseFields);
+      const stepDef = await stepDefService.findStepDef(_teamId, new mongodb.ObjectId(req.params.stepDefId), (<string>req.query.responseFields));
 
       if (_.isArray(stepDef) && stepDef.length === 0) {
         next(new MissingObjectError(`StepDef ${req.params.stepDefId} not found.`));
@@ -63,10 +63,10 @@ export class StepDefController {
 
 
   public async createStepDef(req: Request, resp: Response, next: NextFunction): Promise<void> {
-    const _orgId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._orgid);
+    const _teamId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._teamid);
     const response: ResponseWrapper = resp['body'];
     try {
-      const newStepDef = await stepDefService.createStepDef(_orgId, convertRequestData(StepDefSchema, req.body), req.get('correlationId'), req.query.responseFields);
+      const newStepDef = await stepDefService.createStepDef(_teamId, convertRequestData(StepDefSchema, req.body), req.get('correlationId'), (<string>req.query.responseFields));
       response.data = convertResponseData(StepDefSchema, newStepDef);
       response.statusCode = ResponseCode.CREATED;
       next();
@@ -78,10 +78,10 @@ export class StepDefController {
 
 
   public async updateStepDef(req: Request, resp: Response, next: NextFunction): Promise<void> {
-    const _orgId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._orgid);
+    const _teamId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._teamid);
     const response: ResponseWrapper = resp['body'];
     try {
-      const updatedStepDef: any = await stepDefService.updateStepDef(_orgId, new mongodb.ObjectId(req.params.stepDefId), convertRequestData(StepDefSchema, req.body), req.get('correlationId'), req.query.responseFields);
+      const updatedStepDef: any = await stepDefService.updateStepDef(_teamId, new mongodb.ObjectId(req.params.stepDefId), convertRequestData(StepDefSchema, req.body), req.get('correlationId'), (<string>req.query.responseFields));
 
       if (_.isArray(updatedStepDef) && updatedStepDef.length === 0) {
         next(new MissingObjectError(`StepDef ${req.params.stepDefId} not found.`));
@@ -99,10 +99,10 @@ export class StepDefController {
 
 
   public async deleteStepDef(req: Request, resp: Response, next: NextFunction): Promise<void> {
-    const _orgId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._orgid);
+    const _teamId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._teamid);
     const response: ResponseWrapper = resp['body'];
     try {
-      response.data = await stepDefService.deleteStepDef(_orgId, new mongodb.ObjectId(req.params.stepDefId), req.get('correlationId'));
+      response.data = await stepDefService.deleteStepDef(_teamId, new mongodb.ObjectId(req.params.stepDefId), req.get('correlationId'));
       response.statusCode = ResponseCode.OK;
       next();
     }

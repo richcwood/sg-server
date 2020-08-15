@@ -3,7 +3,7 @@ import { JobStatus } from '@/utils/Enums';
 
 export interface Job extends Model {    
   dateCreated: string;
-  _orgId: string,
+  _teamId: string,
   _jobDefId: string,
   runId: number,
   name: string,

@@ -22,24 +22,24 @@ export class TaskDefService {
   }
 
 
-  public async findTaskDefs(_orgId: mongodb.ObjectId, filter: any, responseFields?: string) {
-    filter = Object.assign({ _orgId }, filter);
+  public async findTaskDefs(_teamId: mongodb.ObjectId, filter: any, responseFields?: string) {
+    filter = Object.assign({ _teamId }, filter);
     return TaskDefModel.find(filter).select(responseFields);
   }
 
 
-  public async findJobDefTaskDefs(_orgId: mongodb.ObjectId, _jobDefId: mongodb.ObjectId, responseFields?: string) {
-    return TaskDefModel.find({ _jobDefId, _orgId }).select(responseFields);
+  public async findJobDefTaskDefs(_teamId: mongodb.ObjectId, _jobDefId: mongodb.ObjectId, responseFields?: string) {
+    return TaskDefModel.find({ _jobDefId, _teamId }).select(responseFields);
   }
 
 
-  public async findTaskDef(_orgId: mongodb.ObjectId, taskDefId: mongodb.ObjectId, responseFields?: string) {
-    return TaskDefModel.findById(taskDefId).find({ _orgId }).select(responseFields);
+  public async findTaskDef(_teamId: mongodb.ObjectId, taskDefId: mongodb.ObjectId, responseFields?: string) {
+    return TaskDefModel.findById(taskDefId).find({ _teamId }).select(responseFields);
   }
 
 
-  public async findTaskDefByName(_orgId: mongodb.ObjectId, _jobDefId: mongodb.ObjectId, taskDefName: string, responseFields?: string) {
-    let taskDef = await TaskDefModel.find({ _orgId, _jobDefId, name: taskDefName }).select(responseFields);
+  public async findTaskDefByName(_teamId: mongodb.ObjectId, _jobDefId: mongodb.ObjectId, taskDefName: string, responseFields?: string) {
+    let taskDef = await TaskDefModel.find({ _teamId, _jobDefId, name: taskDefName }).select(responseFields);
     return convertData(TaskDefSchema, taskDef);
   }
 
@@ -51,14 +51,14 @@ export class TaskDefService {
   }
 
 
-  public async createTaskDef(_orgId: mongodb.ObjectId, data: any, correlationId: string, responseFields?: string): Promise<object> {
+  public async createTaskDef(_teamId: mongodb.ObjectId, data: any, correlationId: string, responseFields?: string): Promise<object> {
     if (!data.name)
       throw new ValidationError(`Request body missing "name" parameter`);
     if (!data._jobDefId)
       throw new ValidationError(`Request body missing "_jobDefId" parameter`);
 
 
-    let taskDefs: TaskDefSchema[] = await this.findJobDefTaskDefs(_orgId, data._jobDefId, 'name fromRoutes');
+    let taskDefs: TaskDefSchema[] = await this.findJobDefTaskDefs(_teamId, data._jobDefId, 'name fromRoutes');
     for (let i = 0; i < taskDefs.length; i++) {
       let taskDef: TaskDefSchema = taskDefs[i];
       if (taskDef.name == data.name)
@@ -70,15 +70,15 @@ export class TaskDefService {
     if (Object.keys(cd).length > 0)
       throw new ValidationError(`New task would create cyclic dependency with the following tasks: ${Object.keys(cd).filter((key) => cd[key])}`)
 
-    data._orgId = _orgId;
+    data._teamId = _teamId;
     const taskDefModel = new TaskDefModel(data);
     const newTaskDef = await taskDefModel.save();
 
-    await rabbitMQPublisher.publish(_orgId, "TaskDef", correlationId, PayloadOperation.CREATE, convertData(TaskDefSchema, newTaskDef));
+    await rabbitMQPublisher.publish(_teamId, "TaskDef", correlationId, PayloadOperation.CREATE, convertData(TaskDefSchema, newTaskDef));
 
     if (responseFields) {
       // It's is a bit wasteful to do another query but I can't chain a save with a select
-      return this.findTaskDef(_orgId, newTaskDef._id, responseFields);
+      return this.findTaskDef(_teamId, newTaskDef._id, responseFields);
     }
     else {
       return newTaskDef; // fully populated model
@@ -86,14 +86,14 @@ export class TaskDefService {
   }
 
 
-  public async updateTaskDef(_orgId: mongodb.ObjectId, id: mongodb.ObjectId, data: any, correlationId?: string, responseFields?: string): Promise<object> {
+  public async updateTaskDef(_teamId: mongodb.ObjectId, id: mongodb.ObjectId, data: any, correlationId?: string, responseFields?: string): Promise<object> {
     if ('fromRoutes' in data || 'toRoutes' in data) {
-      const taskDefQuery = await TaskDefModel.findById(id).find({ _orgId }).select('_jobDefId');
+      const taskDefQuery = await TaskDefModel.findById(id).find({ _teamId }).select('_jobDefId');
       if (!taskDefQuery || (_.isArray(taskDefQuery) && taskDefQuery.length === 0))
         throw new MissingObjectError(`No TaskDef with id "${id.toHexString()}"`);
       const taskDef: TaskDefSchema = taskDefQuery[0];
 
-      let taskDefs: TaskDefSchema[] = await TaskDefModel.find({ _jobDefId: taskDef._jobDefId, _orgId }).select(responseFields).lean();
+      let taskDefs: TaskDefSchema[] = await TaskDefModel.find({ _jobDefId: taskDef._jobDefId, _teamId }).select(responseFields).lean();
       for (let i = 0; i < taskDefs.length; i++) {
         if (taskDefs[i]._id.toHexString() == id.toHexString()) {
           taskDefs[i].toRoutes = data.toRoutes;
@@ -120,27 +120,27 @@ export class TaskDefService {
         throw new ValidationError(`Task update would create a cyclic dependency with the following tasks: ${Object.keys(cd).filter((key) => cd[key])}`)
     }
 
-    const filter = { _id: id, _orgId };
+    const filter = { _id: id, _teamId };
     const updatedTaskDef = await TaskDefModel.findOneAndUpdate(filter, data, { new: true }).select(responseFields);
 
     if (!updatedTaskDef)
       throw new MissingObjectError(`TaskDef '${id}" not found with filter "${JSON.stringify(filter, null, 4)}'.`)
 
     const deltas = Object.assign({ _id: id }, data);
-    await rabbitMQPublisher.publish(_orgId, "TaskDef", correlationId, PayloadOperation.UPDATE, convertData(TaskDefSchema, deltas));
+    await rabbitMQPublisher.publish(_teamId, "TaskDef", correlationId, PayloadOperation.UPDATE, convertData(TaskDefSchema, deltas));
 
     return updatedTaskDef; // fully populated model
   }
 
 
-  public async deleteTaskDef(_orgId: mongodb.ObjectId, id: mongodb.ObjectId, correlationId?: string): Promise<void> {
+  public async deleteTaskDef(_teamId: mongodb.ObjectId, id: mongodb.ObjectId, correlationId?: string): Promise<void> {
     /// Delete outbound routes to this task
-    const taskDefQuery = await TaskDefModel.findById(id).find({ _orgId }).select('_jobDefId name');
+    const taskDefQuery = await TaskDefModel.findById(id).find({ _teamId }).select('_jobDefId name');
     if (!taskDefQuery || (_.isArray(taskDefQuery) && taskDefQuery.length === 0))
       throw new MissingObjectError(`No TaskDef with id "${id.toHexString()}"`);
     const taskDef: TaskDefSchema = taskDefQuery[0];
 
-    let taskDefs: TaskDefSchema[] = await this.findJobDefTaskDefs(_orgId, taskDef._jobDefId, 'name toRoutes fromRoutes');
+    let taskDefs: TaskDefSchema[] = await this.findJobDefTaskDefs(_teamId, taskDef._jobDefId, 'name toRoutes fromRoutes');
     for (let i = 0; i < taskDefs.length; i++) {
       let taskDefToCheck: TaskDefSchema = taskDefs[i];
       if (taskDefToCheck.toRoutes) {
@@ -154,7 +154,7 @@ export class TaskDefService {
           }
         }
         if (updateToRoutes)
-          await this.updateTaskDef(_orgId, taskDefToCheck._id, { toRoutes: newToRoutes });
+          await this.updateTaskDef(_teamId, taskDefToCheck._id, { toRoutes: newToRoutes });
       }
       if (taskDefToCheck.fromRoutes) {
         let newFromRoutes: any[] = [];
@@ -167,13 +167,13 @@ export class TaskDefService {
           }
         }
         if (updateFromRoutes)
-          await this.updateTaskDef(_orgId, taskDefToCheck._id, { fromRoutes: newFromRoutes });
+          await this.updateTaskDef(_teamId, taskDefToCheck._id, { fromRoutes: newFromRoutes });
       }
     }
 
     const deleted = await TaskDefModel.deleteOne({ _id: id });
 
-    await rabbitMQPublisher.publish(_orgId, "TaskDef", correlationId, PayloadOperation.DELETE, { id, correlationId });
+    await rabbitMQPublisher.publish(_teamId, "TaskDef", correlationId, PayloadOperation.DELETE, { id, correlationId });
 
     return deleted;
   }

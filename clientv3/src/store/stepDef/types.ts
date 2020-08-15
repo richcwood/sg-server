@@ -2,7 +2,7 @@ import { Model, LinkedModel } from '@/store/types'
 
 export interface StepDef extends Model {
   id?: string,
-  _orgId?: string,
+  _teamId?: string,
   _taskDefId: string,
   _scriptId?: string,
   name: string,

@@ -5,8 +5,8 @@ import { BaseLogger } from '../../../server/src/shared/SGLogger';
 import { agentService } from '../../../server/src/api/services/AgentService';
 import { jobDefService } from '../../../server/src/api/services/JobDefService';
 import { jobService } from '../../../server/src/api/services/JobService';
-import { orgService } from '../../../server/src/api/services/OrgService';
-import { orgVariableService } from '../../../server/src/api/services/OrgVariableService';
+import { teamService } from '../../../server/src/api/services/TeamService';
+import { teamVariableService } from '../../../server/src/api/services/TeamVariableService';
 import { scheduleService } from '../../../server/src/api/services/ScheduleService';
 import { scriptService } from '../../../server/src/api/services/ScriptService';
 import { stepDefService } from '../../../server/src/api/services/StepDefService';
@@ -22,8 +22,8 @@ import { paymentTransactionService } from '../../../server/src/api/services/Paym
 import { AgentSchema } from '../../../server/src/api/domain/Agent';
 import { JobDefSchema } from '../../../server/src/api/domain/JobDef';
 import { JobSchema } from '../../../server/src/api/domain/Job';
-import { OrgSchema } from '../../../server/src/api/domain/Org';
-import { OrgVariableSchema } from '../../../server/src/api/domain/OrgVariable';
+import { TeamSchema } from '../../../server/src/api/domain/Team';
+import { TeamVariableSchema } from '../../../server/src/api/domain/TeamVariable';
 import { ScheduleSchema } from '../../../server/src/api/domain/Schedule';
 import { ScriptSchema } from '../../../server/src/api/domain/Script';
 import { StepDefSchema } from '../../../server/src/api/domain/StepDef';
@@ -60,6 +60,7 @@ let LoadMongoData = async (path: string) => {
     let mongoRepo = new MongoRepo('RunTestHarness', mongoUrl, mongoDbname, logger);
 
     await mongoRepo.DeleteByQuery({}, 'user');
+    await mongoRepo.DeleteByQuery({}, 'artifact');
     await mongoRepo.DeleteByQuery({}, 'agent');
     await mongoRepo.DeleteByQuery({}, 'job');
     await mongoRepo.DeleteByQuery({}, 'jobDef');
@@ -70,8 +71,8 @@ let LoadMongoData = async (path: string) => {
     await mongoRepo.DeleteByQuery({}, 'task');
     await mongoRepo.DeleteByQuery({}, 'taskDef');
     await mongoRepo.DeleteByQuery({}, 'taskOutcome');
-    await mongoRepo.DeleteByQuery({}, 'org');
-    await mongoRepo.DeleteByQuery({}, 'orgVariable');
+    await mongoRepo.DeleteByQuery({}, 'team');
+    await mongoRepo.DeleteByQuery({}, 'teamVariable');
     await mongoRepo.DeleteByQuery({}, 'schedule');
     await mongoRepo.DeleteByQuery({}, 'invoice');
     await mongoRepo.DeleteByQuery({}, 'paymentMethod');
@@ -154,17 +155,17 @@ let LoadMongoData = async (path: string) => {
         }
     }
 
-    if (allTestObjects.org.length > 0) {
-        for (let i = 0; i < allTestObjects.org.length; i++) {
-            const org = allTestObjects.org[i];
-            await orgService.createOrgInternal(convertRequestData(OrgSchema, org));
+    if (allTestObjects.team.length > 0) {
+        for (let i = 0; i < allTestObjects.team.length; i++) {
+            const team = allTestObjects.team[i];
+            await teamService.createTeamInternal(convertRequestData(TeamSchema, team));
         }
     }
 
-    if (allTestObjects.orgVariable && allTestObjects.orgVariable.length > 0) {
-        for (let i = 0; i < allTestObjects.orgVariable.length; i++) {
-            const orgVariable = allTestObjects.orgVariable[i];
-            await orgVariableService.createOrgVariableInternal(convertRequestData(OrgVariableSchema, orgVariable));
+    if (allTestObjects.teamVariable && allTestObjects.teamVariable.length > 0) {
+        for (let i = 0; i < allTestObjects.teamVariable.length; i++) {
+            const teamVariable = allTestObjects.teamVariable[i];
+            await teamVariableService.createTeamVariableInternal(convertRequestData(TeamVariableSchema, teamVariable));
         }
     }
 

@@ -3,8 +3,8 @@ import * as util from 'util';
 import * as mongodb from 'mongodb';
 import { MongoRepo } from '../../shared/MongoLib';
 import { userService } from '../services/UserService';
-import { orgService } from '../services/OrgService';
-import { OrgSchema } from '../domain/Org';
+import { teamService } from '../services/TeamService';
+import { TeamSchema } from '../domain/Team';
 import { convertData as convertResponseData } from '../utils/ResponseConverters';
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
@@ -39,7 +39,7 @@ export default class LoginRouter {
 
     // todo - any chance of sql injection here?
     // const loginResults: any = await mongoLib.GetOneByQuery({email: req.body.email}, 'user', {});
-    const loginResults: any = await userService.findAllUsersInternal({ email: req.body.email }, 'id passwordHash email orgIds orgIdsInvited name companyName')
+    const loginResults: any = await userService.findAllUsersInternal({ email: req.body.email }, 'id passwordHash email teamIds teamIdsInvited name companyName')
     
     if (!loginResults || (_.isArray(loginResults) && loginResults .length < 1)) {
       res.status(401).send('Authentication failed');
@@ -56,22 +56,22 @@ export default class LoginRouter {
       var token = jwt.sign({
         id: loginResult._id,
         email: loginResult.email,
-        orgIds: loginResult.orgIds,
-        orgIdsInvited: loginResult.orgIdsInvited,
+        teamIds: loginResult.teamIds,
+        teamIdsInvited: loginResult.teamIdsInvited,
         name: loginResult.name,
         companyName: loginResult.companyName,
         exp: Math.floor(jwtExpiration / 1000)
       }, secret);//KeysUtil.getPrivate()); // todo - create a public / private key
 
       res.cookie('Auth', token, { secure: false, expires: new Date(jwtExpiration) });
-      const relatedOrgs = await orgService.findAllOrgsInternal({ _id: { $in: loginResult.orgIds.map(id => new mongodb.ObjectId(id)) } });
-      // const relatedOrgs = await mongoLib.GetManyByQuery({ _id: { $in: loginResult.orgIds.map(id => new mongodb.ObjectId(id)) } }, 'org', {});
+      const relatedTeams = await teamService.findAllTeamsInternal({ _id: { $in: loginResult.teamIds.map(id => new mongodb.ObjectId(id)) } });
+      // const relatedTeams = await mongoLib.GetManyByQuery({ _id: { $in: loginResult.teamIds.map(id => new mongodb.ObjectId(id)) } }, 'team', {});
 
       // todo - dynmically fetch stomp user data
       const loginData = {
         // Use generic config names - slightly safer from lower skilled hackers  - probably doesn't matter
         config1: loginResult.email,
-        config2: convertResponseData(OrgSchema, relatedOrgs),
+        config2: convertResponseData(TeamSchema, relatedTeams),
         config3: loginResult._id
         // config3: 'wss://user:pass@funny-finch.rmq.cloudamqp.com/ws/stomp',
         // config4: 'bart',
@@ -113,7 +113,7 @@ export default class LoginRouter {
       var token = jwt.sign({
         id: loginResults._id,
         email: loginResults.email,
-        orgIds: loginResults.orgIds,
+        teamIds: loginResults.teamIds,
         exp: Math.floor(jwtExpiration / 1000)
       }, secret);//KeysUtil.getPrivate()); // todo - create a public / private key
 
@@ -121,15 +121,15 @@ export default class LoginRouter {
 
       // todo - secure: true
       res.cookie('Auth', token, { secure: false, expires: new Date(jwtExpiration) });
-      let relatedOrgs: string = '';
-      if (loginResults.orgIds)
-        relatedOrgs = <string>await mongoLib.GetManyByQuery({ _id: { $in: loginResults.orgIds.map(id => new mongodb.ObjectId(id)) } }, 'org', {});
+      let relatedTeams: string = '';
+      if (loginResults.teamIds)
+        relatedTeams = <string>await mongoLib.GetManyByQuery({ _id: { $in: loginResults.teamIds.map(id => new mongodb.ObjectId(id)) } }, 'team', {});
 
       // todo - dynmically fetch stomp user data
       const loginData = {
         // Use generic config names - slightly safer from lower skilled hackers  - probably doesn't matter
         config1: loginResults.email,
-        config2: relatedOrgs
+        config2: relatedTeams
         // config3: 'wss://user:pass@funny-finch.rmq.cloudamqp.com/ws/stomp',
         // config4: 'bart',
         // config5: 'happy'

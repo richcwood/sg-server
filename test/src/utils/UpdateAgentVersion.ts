@@ -18,19 +18,19 @@ let UpdateAgentVersion = async () => {
 
   const version = process.argv[2];
 
-  let _orgId = mongoRepo.ObjectIdFromString('5de95c0453162e8891f5a830');
+  let _teamId = mongoRepo.ObjectIdFromString('5de95c0453162e8891f5a830');
   if (process.argv.length > 3)
-    _orgId = mongoRepo.ObjectIdFromString(process.argv[3]);
+    _teamId = mongoRepo.ObjectIdFromString(process.argv[3]);
 
   let _agentId: any = undefined;
   if (process.argv.length > 4)
     _agentId = mongoRepo.ObjectIdFromString(process.argv[4]);
 
   console.log('version -> ', version);
-  console.log('_orgId -> ', _orgId);
+  console.log('_teamId -> ', _teamId);
   console.log('_agentId -> ', _agentId);
 
-  let filter: any = { _orgId };
+  let filter: any = { _teamId };
   if (_agentId)
     filter['_id'] = _agentId;
   let res = await mongoRepo.UpdateMany('agent', filter, { $set: { 'targetVersion': version } });

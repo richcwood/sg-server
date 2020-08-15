@@ -12,7 +12,7 @@ const rl = readline.createInterface({
 });
 
 
-let DeleteOrgJobData = async (orgId: string) => {
+let DeleteTeamJobData = async (teamId: string) => {
     mongoose.connect(config.get('mongoUrl'), { useNewUrlParser: true });
 
     const mongoUrl = config.get('mongoUrl');
@@ -25,7 +25,7 @@ let DeleteOrgJobData = async (orgId: string) => {
 
     console.log('mongo url -> ', config.get('mongoUrl'));
 
-    const filter: any = { "_orgId": new mongodb.ObjectId(orgId) };
+    const filter: any = { "_teamId": new mongodb.ObjectId(teamId) };
 
     let res;
     res = await mongoRepo.DeleteByQuery(filter, 'job');
@@ -50,9 +50,9 @@ let DeleteOrgJobData = async (orgId: string) => {
     process.exit();
 }
 
-const orgId = process.argv[2];
+const teamId = process.argv[2];
 
-console.log(`Deleting data for org ${orgId} from ${config.get('mongoUrl')}`);
+console.log(`Deleting data for team ${teamId} from ${config.get('mongoUrl')}`);
 
 rl.question("continue? (y/n) ", function (yesno) {
     if (yesno != 'y') {
@@ -63,6 +63,6 @@ rl.question("continue? (y/n) ", function (yesno) {
     }
 });
 
-DeleteOrgJobData(orgId);
+DeleteTeamJobData(teamId);
 
 // node test/dist/test/src/utils/LoadMongoData.js './demo.json' '5e99cbcb2317950015edb655'

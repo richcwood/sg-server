@@ -15,7 +15,7 @@ export class TaskOutcomeSchema {
     id?: mongodb.ObjectId;
 
     @prop({ required: true })
-    _orgId: mongodb.ObjectId;
+    _teamId: mongodb.ObjectId;
 
     @prop({ required: true })
     _jobId?: mongodb.ObjectId;
@@ -88,8 +88,8 @@ export class TaskOutcomeSchema {
             _id: (data) => {
                 return new mongodb.ObjectID(data._id);
             },
-            _orgId: (data) => {
-                return new mongodb.ObjectID(data._orgId);
+            _teamId: (data) => {
+                return new mongodb.ObjectID(data._teamId);
             },
             _jobId: (data) => {
                 return new mongodb.ObjectID(data._jobId);

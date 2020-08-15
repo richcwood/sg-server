@@ -11,10 +11,10 @@ import AgentMonitor from '@/views/AgentMonitor.vue';
 import JobDesigner from '@/views/JobDesigner.vue';
 import InteractiveConsole from '@/views/InteractiveConsole.vue';
 import DownloadAgent from '@/views/DownloadAgent.vue';
-import OrgVars from '@/views/OrgVars.vue';
+import TeamVars from '@/views/TeamVars.vue';
 import Artifacts from '@/views/Artifacts.vue';
 import Invoices from '@/views/Invoices.vue';
-import OrgAlerts from '@/views/OrgAlerts.vue';
+import TeamAlerts from '@/views/TeamAlerts.vue';
 import Scripts from '@/views/Scripts.vue';
 import _ from 'lodash';
 import { SgAlert, AlertPlacement, AlertCategory } from "@/store/alert/types";
@@ -164,7 +164,7 @@ const router = new Router({
     {
       path: '/teamVars',
       name: 'teamVars',
-      component: OrgVars
+      component: TeamVars
     },
     {
       path: '/artifacts',
@@ -177,9 +177,9 @@ const router = new Router({
       component: Invoices
     },
     {
-      path: '/orgAlerts',
-      name: 'orgAlerts',
-      component: OrgAlerts
+      path: '/teamAlerts',
+      name: 'teamAlerts',
+      component: TeamAlerts
     },
     {
       path: '/scripts',

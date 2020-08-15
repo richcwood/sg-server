@@ -11,8 +11,8 @@ export class PayInvoiceAutoController {
         const logger: BaseLogger = (<any>req).logger;
         const response: ResponseWrapper = resp['body'];
         try {
-            const _orgId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._orgid);
-            const res = await payInvoiceAutoService.payInvoice(_orgId, req.body, logger, req.header('correlationId'));
+            const _teamId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._teamid);
+            const res = await payInvoiceAutoService.payInvoice(_teamId, req.body, logger, req.header('correlationId'));
             response.data = res;
             response.statusCode = ResponseCode.CREATED;
             next();

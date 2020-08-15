@@ -15,9 +15,9 @@ export class UserController {
 
 
   public async getManyUsers(req: Request, resp: Response, next: NextFunction): Promise<void> {
-    const _orgId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._orgid);
+    const _teamId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._teamid);
     const response: ResponseWrapper = (resp as any).body;
-    const users = await userService.findAllUsersInOrg(_orgId, req.query.responseFields);
+    const users = await userService.findAllUsersInTeam(_teamId, (<string>req.query.responseFields));
 
     response.data = convertResponseData(UserSchema, users);
 
@@ -28,7 +28,7 @@ export class UserController {
   public async getUser(req: Request, resp: Response, next: NextFunction): Promise<void> {
     try {
       const response: ResponseWrapper = (resp as any).body;
-      const user = await userService.findUser(new mongodb.ObjectId(req.params.userId), req.query.responseFields);
+      const user = await userService.findUser(new mongodb.ObjectId(req.params.userId), (<string>req.query.responseFields));
 
       if (!user) {
         next(new MissingObjectError(`User ${req.params.userId} not found.`));
@@ -53,7 +53,7 @@ export class UserController {
   public async createUser(req: Request, resp: Response, next: NextFunction): Promise<void> {
     const response: ResponseWrapper = resp['body'];
     try {
-      const newUser = await userService.createUser(req.body, req.query.responseFields);
+      const newUser = await userService.createUser(req.body, (<string>req.query.responseFields));
       response.data = convertResponseData(UserSchema, newUser);
       response.statusCode = ResponseCode.CREATED;
       next();
@@ -67,16 +67,16 @@ export class UserController {
   public async updateUser(req: Request, resp: Response, next: NextFunction): Promise<void> {
     const response: ResponseWrapper = resp['body'];
     try {
-      const userUpdated: any = await userService.updateUser(new mongodb.ObjectId(req.params.userId), req.body, req.query.responseFields);
+      const userUpdated: any = await userService.updateUser(new mongodb.ObjectId(req.params.userId), req.body, (<string>req.query.responseFields));
 
-      if (req.body.orgIds) {
+      if (req.body.teamIds) {
         const jwtExpiration = Date.now() + (1000 * 60 * 60 * 24); // 1 day
         const secret = config.get('secret');
         var token = jwt.sign({
           id: userUpdated._id,
           email: userUpdated.email,
-          orgIds: userUpdated.orgIds,
-          orgIdsInvited: userUpdated.orgIdsInvited,
+          teamIds: userUpdated.teamIds,
+          teamIdsInvited: userUpdated.teamIdsInvited,
           name: userUpdated.name,
           companyName: userUpdated.companyName,
           exp: Math.floor(jwtExpiration / 1000)
@@ -100,18 +100,18 @@ export class UserController {
   }
 
 
-  public async joinOrg(req: Request, resp: Response, next: NextFunction): Promise<void> {
+  public async joinTeam(req: Request, resp: Response, next: NextFunction): Promise<void> {
     const response: ResponseWrapper = resp['body'];
     try {
-      const userUpdated: any = await userService.joinOrg(new mongodb.ObjectId(req.params.userId), req.params.orgId);
+      const userUpdated: any = await userService.joinTeam(new mongodb.ObjectId(req.params.userId), req.params.teamId);
 
       const jwtExpiration = Date.now() + (1000 * 60 * 60 * 24); // 1 day
       const secret = config.get('secret');
       var token = jwt.sign({
         id: userUpdated._id,
         email: userUpdated.email,
-        orgIds: userUpdated.orgIds,
-        orgIdsInvited: userUpdated.orgIdsInvited,
+        teamIds: userUpdated.teamIds,
+        teamIdsInvited: userUpdated.teamIdsInvited,
         name: userUpdated.name,
         companyName: userUpdated.companyName,
         exp: Math.floor(jwtExpiration / 1000)

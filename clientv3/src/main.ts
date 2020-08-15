@@ -67,9 +67,9 @@ if(resetPasswordToken && userId){
   sessionStorage.setItem('sg_reset_password_user_id', userId);
 }
 
-const invitedOrgToken = urlParams.get('invitedOrgToken');
-if(invitedOrgToken){ // direct or generic
-  localStorage.setItem('sg_invited_org_token', invitedOrgToken);
+const invitedTeamToken = urlParams.get('invitedTeamToken');
+if(invitedTeamToken){ // direct or generic
+  localStorage.setItem('sg_invited_team_token', invitedTeamToken);
 }
 
 // login and load data via the api

@@ -3,7 +3,7 @@ import * as config from 'config';
 import { agentService } from '../../../server/src/api/services/AgentService';
 import { jobDefService } from '../../../server/src/api/services/JobDefService';
 import { jobService } from '../../../server/src/api/services/JobService';
-import { orgService } from '../../../server/src/api/services/OrgService';
+import { teamService } from '../../../server/src/api/services/TeamService';
 import { scheduleService } from '../../../server/src/api/services/ScheduleService';
 import { scriptService } from '../../../server/src/api/services/ScriptService';
 import { stepDefService } from '../../../server/src/api/services/StepDefService';
@@ -19,7 +19,7 @@ import { paymentTransactionService } from '../../../server/src/api/services/Paym
 import { AgentSchema } from '../../../server/src/api/domain/Agent';
 import { JobDefSchema } from '../../../server/src/api/domain/JobDef';
 import { JobSchema } from '../../../server/src/api/domain/Job';
-import { OrgSchema } from '../../../server/src/api/domain/Org';
+import { TeamSchema } from '../../../server/src/api/domain/Team';
 import { ScheduleSchema } from '../../../server/src/api/domain/Schedule';
 import { ScriptSchema } from '../../../server/src/api/domain/Script';
 import { StepDefSchema } from '../../../server/src/api/domain/StepDef';
@@ -37,15 +37,15 @@ import * as mongoose from 'mongoose';
 import * as mongodb from 'mongodb';
 
 
-let DumpMongoData = async (path: string, _orgId: any) => {
+let DumpMongoData = async (path: string, _teamId: any) => {
   mongoose.connect(config.get('mongoUrl'), { useNewUrlParser: true });
 
   console.log('mongo url -> ', config.get('mongoUrl'));
 
-  const filter = {_orgId};
+  const filter = {_teamId};
 
   let user: any = await userService.findAllUsersInternal();
-  let org: any = await orgService.findAllOrgsInternal({_id: _orgId});
+  let team: any = await teamService.findAllTeamsInternal({_id: _teamId});
   let agent: any = await agentService.findAllAgentsInternal(filter);
   let job: any = await jobService.findAllJobsInternal(filter);
   let jobDef: any = await jobDefService.findAllJobDefsInternal(filter);
@@ -63,7 +63,7 @@ let DumpMongoData = async (path: string, _orgId: any) => {
 
   let allTestObjects: any = {};
   allTestObjects['user'] = convertRequestData(UserSchema, user);
-  allTestObjects['org'] = convertRequestData(OrgSchema, org);
+  allTestObjects['team'] = convertRequestData(TeamSchema, team);
   allTestObjects['agent'] = convertRequestData(AgentSchema, agent);
   allTestObjects['job'] = convertRequestData(JobSchema, job);
   allTestObjects['jobDef'] = convertRequestData(JobDefSchema, jobDef);

@@ -74,9 +74,9 @@
             "skipFiles": [
                 "<node_internals>/**"
             ],
-            "program": "${workspaceFolder}/test/dist/test/src/RunUnitTestsHarness.js",
+            "program": "${workspaceFolder}/test/dist/sg-server/test/src/RunUnitTestsHarness.js",
             "args": [
-                "Test46.js"
+                "Test38.js"
             ],
             "outFiles": [
                 "${workspaceFolder}/test/dist/test/**/*.js"

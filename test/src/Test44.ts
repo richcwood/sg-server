@@ -34,14 +34,14 @@ export default class Test44 extends TestBase.WorkflowTestBase {
         let result: boolean;
         let resApiCall: any;
 
-        const _orgId: string = config.get('sgTestOrg');
+        const _teamId: string = config.get('sgTestTeam');
 
         let firstJob: any = _.cloneDeep(InteractiveConsoleJob);
         firstJob.job.name = 'IC - Test44';
         firstJob.job.tasks[0].target = TaskDefTarget.SINGLE_AGENT;
         firstJob.job.tasks[0].steps[0].script.code = script1_b64;
 
-        resApiCall = await this.testSetup.RestAPICall('job', 'POST', _orgId, null, firstJob);
+        resApiCall = await this.testSetup.RestAPICall('job', 'POST', _teamId, null, firstJob);
         if (resApiCall.data.statusCode != 201) {
             self.logger.LogError('Failed', { Message: `Job POST returned ${resApiCall.data.statusCode}`, firstJob });
             return false;
@@ -53,7 +53,7 @@ export default class Test44 extends TestBase.WorkflowTestBase {
             operation: 1,
             model:
             {
-                _orgId: config.get('sgTestOrg'),
+                _teamId: config.get('sgTestTeam'),
                 _jobId: firstJob.job.id,
                 source: 1,
                 status: 10,
@@ -73,7 +73,7 @@ export default class Test44 extends TestBase.WorkflowTestBase {
         const task = _.filter(self.bpMessages, x => x.domainType == 'Task' && x.operation == 1 && x.model._jobId == firstJob.job.id);
         const taskOutcome = _.filter(self.bpMessages, x => x.domainType == 'TaskOutcome' && x.operation == 1 && x.model._taskId == task[0].model.id);
 
-        resApiCall = await this.testSetup.RestAPICall(`jobaction/cancel/${firstJob.job.id}`, 'POST', _orgId, null);
+        resApiCall = await this.testSetup.RestAPICall(`jobaction/cancel/${firstJob.job.id}`, 'POST', _teamId, null);
         if (resApiCall.data.statusCode != 200) {
             self.logger.LogError('Failed', { Message: `jobaction/cancel/${firstJob.job.id} POST returned ${resApiCall.data.statusCode}` });
             return false;
@@ -108,7 +108,7 @@ export default class Test44 extends TestBase.WorkflowTestBase {
             return result;
 
 
-        resApiCall = await this.testSetup.RestAPICall(`jobaction/restart/${firstJob.job.id}`, 'POST', _orgId, null);
+        resApiCall = await this.testSetup.RestAPICall(`jobaction/restart/${firstJob.job.id}`, 'POST', _teamId, null);
         if (resApiCall.data.statusCode != 400) {
             self.logger.LogError('Failed', { Message: `jobaction/restart/${firstJob.job.id} POST returned ${resApiCall.data.statusCode}` });
             return false;

@@ -16,7 +16,7 @@ export class PaymentTransactionSchema {
   id?: mongodb.ObjectId;
 
   @prop({ required: true })
-  _orgId: mongodb.ObjectId;
+  _teamId: mongodb.ObjectId;
 
   @prop({ required: true })
   _invoiceId: mongodb.ObjectId;

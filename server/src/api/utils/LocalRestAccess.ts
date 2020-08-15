@@ -3,7 +3,7 @@ import * as config from 'config';
 
 
 class LocalRestAccess {
-    public async RestAPICall(url: string, method: string, _orgId: string, headers: any = {}, data: any = {}, token: string = undefined) {
+    public async RestAPICall(url: string, method: string, _teamId: string, headers: any = {}, data: any = {}, token: string = undefined) {
         return new Promise(async (resolve, reject) => {
             try {
                 let authToken = token;
@@ -22,7 +22,7 @@ class LocalRestAccess {
 
                 const combinedHeaders: any = Object.assign({
                     Cookie: `Auth=${authToken}`,
-                    _orgId: _orgId
+                    _teamId: _teamId
                 }, headers);
 
                 // console.log('RestAPICall -> url ', url, ', method -> ', method, ', headers -> ', combinedHeaders, ', data -> ', data, ', token -> ', this.token);

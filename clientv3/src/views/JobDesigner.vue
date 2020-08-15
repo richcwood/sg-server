@@ -1309,8 +1309,8 @@ export default class JobDesigner extends Vue {
   private readonly JobDefStatus = JobDefStatus;
   private readonly timeZones = timeZones;
 
-  @BindProp({storeType: StoreType.OrgStore, selectedModelName: 'selected', propName: 'id'})
-  private selectedOrgId!: string;
+  @BindProp({storeType: StoreType.TeamStore, selectedModelName: 'selected', propName: 'id'})
+  private selectedTeamId!: string;
 
   private filterString = '';
   
@@ -1396,7 +1396,7 @@ export default class JobDesigner extends Vue {
     }
 
     try {
-      const userEmail = this.$store.state[StoreType.OrgStore].userEmail;
+      const userEmail = this.$store.state[StoreType.TeamStore].userEmail;
 
       this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Creating job - ${this.newJobName}`, AlertPlacement.FOOTER));
       const newJob: JobDef = {
@@ -2186,7 +2186,7 @@ export default class JobDesigner extends Vue {
         
         const scheduleToSave: any = _.clone(this.editSchedule);
         scheduleToSave['_jobDefId'] = this.jobDefForEdit.id;
-        scheduleToSave['FunctionKwargs'] = {_orgId: this.selectedOrgId, targetId: this.jobDefForEdit.id};
+        scheduleToSave['FunctionKwargs'] = {_teamId: this.selectedTeamId, targetId: this.jobDefForEdit.id};
 
         if(this.editSchedule.TriggerType === ScheduleTriggerType.date){
           scheduleToSave['RunDate'] = this.editSchedule.RunDate;
@@ -2316,7 +2316,7 @@ export default class JobDesigner extends Vue {
       return {
         prefix: 'Error',
         name: 'Error',
-        _orgId: 'Error',
+        _teamId: 'Error',
         s3Path: 'Error'
       }
     }

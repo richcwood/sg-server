@@ -41,7 +41,7 @@ export default class Test48 extends TestBase.WorkflowTestBase {
         let result: boolean;
         let resApiCall: any;
 
-        const _orgId: string = config.get('sgTestOrg');
+        const _teamId: string = config.get('sgTestTeam');
 
         let firstJob: any = _.cloneDeep(InteractiveConsoleJob);
         firstJob.job.name = 'IC - Test48';
@@ -49,7 +49,7 @@ export default class Test48 extends TestBase.WorkflowTestBase {
         firstJob.job.tasks[0].steps[0].script.code = script1_b64;
         firstJob.job.runtimeVars = { linenum: 0 };
 
-        resApiCall = await this.testSetup.RestAPICall('job', 'POST', _orgId, null, firstJob);
+        resApiCall = await this.testSetup.RestAPICall('job', 'POST', _teamId, null, firstJob);
         if (resApiCall.data.statusCode != 201) {
             self.logger.LogError('Failed', { Message: `Job POST returned ${resApiCall.data.statusCode}`, firstJob });
             return false;
@@ -61,7 +61,7 @@ export default class Test48 extends TestBase.WorkflowTestBase {
             operation: 1,
             model:
             {
-                _orgId: config.get('sgTestOrg'),
+                _teamId: config.get('sgTestTeam'),
                 _jobId: firstJob.job.id,
                 source: 1,
                 status: 10,
@@ -101,7 +101,7 @@ export default class Test48 extends TestBase.WorkflowTestBase {
         self.bpMessagesExpected.length = 0;
 
 
-        resApiCall = await this.testSetup.RestAPICall(`taskoutcomeaction/restart/${taskOutcome[0].model.id}`, 'POST', _orgId, null);
+        resApiCall = await this.testSetup.RestAPICall(`taskoutcomeaction/restart/${taskOutcome[0].model.id}`, 'POST', _teamId, null);
         if (resApiCall.data.statusCode != 200) {
             self.logger.LogError('Failed', { Message: `taskoutcomeaction/restart/${taskOutcome[0].model.id} POST returned ${resApiCall.data.statusCode}` });
             return false;
@@ -124,7 +124,7 @@ export default class Test48 extends TestBase.WorkflowTestBase {
             operation: 1,
             model:
             {
-                _orgId: config.get('sgTestOrg'),
+                _teamId: config.get('sgTestTeam'),
                 _jobId: firstJob.job.id,
                 source: 1,
                 status: 10,

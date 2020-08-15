@@ -30,14 +30,14 @@ const rawdata: any = fs.readFileSync(path);
 const bpMessages = JSON.parse(rawdata);
 const numMessagesTotal = bpMessages.length;
 
-const _orgId = config.get('sgTestOrg');
+const _teamId = config.get('sgTestTeam');
 let row = 0;
 
 
 let SendNextMessage = async (row: number) => {
     rl.question(`Next message (${row + 1}/${numMessagesTotal}) - domain: ${bpMessages[row].domainType}, operation: ${PayloadOperation[bpMessages[row].operation]}\n\n`, async (name) => {
         const msg = bpMessages[row];
-        await rabbitMQPublisher.publish(_orgId, msg.domainType, msg.correlationId, msg.operation, msg.model);
+        await rabbitMQPublisher.publish(_teamId, msg.domainType, msg.correlationId, msg.operation, msg.model);
         row += 1;
         if (row >= numMessagesTotal)
             rl.close();
@@ -52,7 +52,7 @@ let SendNextMessage = async (row: number) => {
             process.exit();
         const msg = bpMessages[row];
         console.log(`Pushing message (${row+1}/${numMessagesTotal}) - domain: ${msg.domainType}, operation: ${PayloadOperation[msg.operation]}`);
-        await rabbitMQPublisher.publish(_orgId, msg.domainType, msg.correlationId, msg.operation, msg.model);
+        await rabbitMQPublisher.publish(_teamId, msg.domainType, msg.correlationId, msg.operation, msg.model);
     }
 
     await SendNextMessage(row);

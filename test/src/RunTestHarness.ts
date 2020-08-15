@@ -15,7 +15,7 @@ import * as Enums from '../../server/src/shared/Enums';
 import { agentService } from '../../server/src/api/services/AgentService';
 import { jobDefService } from '../../server/src/api/services/JobDefService';
 import { jobService } from '../../server/src/api/services/JobService';
-import { orgService } from '../../server/src/api/services/OrgService';
+import { teamService } from '../../server/src/api/services/TeamService';
 import { scheduleService } from '../../server/src/api/services/ScheduleService';
 import { scriptService } from '../../server/src/api/services/ScriptService';
 import { settingsService } from '../../server/src/api/services/SettingsService';
@@ -32,7 +32,7 @@ import { paymentTransactionService } from '../../server/src/api/services/Payment
 import { AgentSchema } from '../../server/src/api/domain/Agent';
 import { JobDefSchema } from '../../server/src/api/domain/JobDef';
 import { JobSchema } from '../../server/src/api/domain/Job';
-import { OrgSchema } from '../../server/src/api/domain/Org';
+import { TeamSchema } from '../../server/src/api/domain/Team';
 import { ScheduleSchema } from '../../server/src/api/domain/Schedule';
 import { ScriptSchema } from '../../server/src/api/domain/Script';
 import { SettingsSchema } from '../../server/src/api/domain/Settings';
@@ -88,7 +88,7 @@ let DownloadAgent_Create = async () => {
     responseType: 'text',
     headers: {
       Cookie: `Auth=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImJhcnR3b29kQGdtYWlsLmNvbSIsIm9yZ0lkcyI6WyI1YzhhYWVmMTlmYzkyNTZiZWI3NzI1NWIiLCI1YzlhOGY3ODlmYzkyNTZiZWJkMjBmMjQiXSwiZXhwIjoxNTU4NzQxMDgwLCJpYXQiOjE1NTg2NTQ2ODB9.wTgXJolOrZLpzyDFHsVpCfJmb5MlOjjYKu0ISbATuxE;`,
-      objectid: config.get('sgTestOrg'),
+      objectid: config.get('sgTestTeam'),
       platform: 'macos',
       arch: ''
     }
@@ -203,7 +203,7 @@ let DownloadAgent_GetUrl = async (numTries: number = 0) => {
         responseType: 'text',
         headers: {
           Cookie: auth,
-          _orgId: '5de95c0453162e8891f5a830'
+          _teamId: '5de95c0453162e8891f5a830'
         }
       });
       resolve(response.data.data);
@@ -267,24 +267,24 @@ let ScheduleScript = async () => {
 
   let mongoRepo = new MongoRepo('RunTestHarness', mongoUrl, mongoDbname, logger);
 
-  const org: any = await mongoRepo.GetOneByQuery({ 'name': 'Barts Test Org' }, 'org', { _id: 1 });
-  const _orgId = org._id;
+  const team: any = await mongoRepo.GetOneByQuery({ 'name': 'Barts Test Team' }, 'team', { _id: 1 });
+  const _teamId = team._id;
 
   /// Create script
   let script;
-  script = { '_orgId': mongoRepo.ObjectIdFromString(org.id), 'name': 'TestScript', 'scriptType': Enums.ScriptType.PYTHON, 'code': script1_json, _originalAuthorUserId: this.sgUser.id, _lastEditedUserId: this.sgUser.id, lastEditedDate: new Date(), shadowCopyCode: script1_json };
+  script = { '_teamId': mongoRepo.ObjectIdFromString(team.id), 'name': 'TestScript', 'scriptType': Enums.ScriptType.PYTHON, 'code': script1_json, _originalAuthorUserId: this.sgUser.id, _lastEditedUserId: this.sgUser.id, lastEditedDate: new Date(), shadowCopyCode: script1_json };
   await mongoRepo.InsertOne(script, 'script');
 
   /// Create task
   let task: any;
-  task = { 'name': 'TestScheduledTask', '_orgId': _orgId, 'createdBy': 'user:rich', 'requiredTags': {}, 'target': Enums.TaskDefTarget.SINGLE_AGENT, 'scriptId': script['id'], 'arguments': '', 'variables': {}, 'fromRoutes': [] };
+  task = { 'name': 'TestScheduledTask', '_teamId': _teamId, 'createdBy': 'user:rich', 'requiredTags': {}, 'target': Enums.TaskDefTarget.SINGLE_AGENT, 'scriptId': script['id'], 'arguments': '', 'variables': {}, 'fromRoutes': [] };
   await mongoRepo.InsertOne(task, 'task');
 
   /// Create schedule
   let schedule = {
-    '_orgId': _orgId, 'Name': 'Schedule_TestScript', 'ScheduleId': mongoRepo.GetObjectId(),
+    '_teamId': _teamId, 'Name': 'Schedule_TestScript', 'ScheduleId': mongoRepo.GetObjectId(),
     'TriggerType': 'cron', 'Second': '*/20', 'Start_Date': new Date(new Date().getTime() + (1000 * 30)).toISOString(), 'End_Date': new Date(new Date().getTime() + (1000 * 110)).toISOString(),
-    'FunctionKwargs': { '_orgId': org.id, 'targetType': 'task', 'targetId': task['id'] }
+    'FunctionKwargs': { '_teamId': team.id, 'targetType': 'task', 'targetId': task['id'] }
   };
 
   await amqp.PublishRoute('worker', rmqScheduleUpdatesQueue, Object.assign(schedule, { 'Action': 'UpdateJob' }));
@@ -374,7 +374,7 @@ let RabbitMQAdminTest = async () => {
   try {
     const rmqAdmin = new RabbitMQAdmin(rmqAdminUrl, rmqVhost);
 
-    let res = await rmqAdmin.setPolicy('DLX-Agent', '^org-.*\.agent.*', { 'dead-letter-exchange': 'dlx-agent' }, 'queues');
+    let res = await rmqAdmin.setPolicy('DLX-Agent', '^team-.*\.agent.*', { 'dead-letter-exchange': 'dlx-agent' }, 'queues');
     console.log(res);
   } catch (e) {
     console.error(e);
@@ -398,7 +398,7 @@ let RabbitMQSetup = async () => {
     res = await rmqAdmin.createQueue(deadLetterQueueAgent, false, true);
     res = await rmqAdmin.bindQueueToExchange(deadLetterExchangeAgent, deadLetterQueueAgent, deadLetterQueueAgent);
 
-    res = await rmqAdmin.setPolicy('DLX-Agent', '^org-.*\.agent.*', { 'dead-letter-exchange': deadLetterExchangeAgent }, 'queues');
+    res = await rmqAdmin.setPolicy('DLX-Agent', '^team-.*\.agent.*', { 'dead-letter-exchange': deadLetterExchangeAgent }, 'queues');
     console.log(res);
   } catch (e) {
     console.error(e);
@@ -416,18 +416,18 @@ let UpdateAgentVersion = async () => {
 
   const version = process.argv[2];
 
-  let _orgId = '5de95c0453162e8891f5a830';
+  let _teamId = '5de95c0453162e8891f5a830';
   if (process.argv.length > 3)
-    _orgId = process.argv[3];
+    _teamId = process.argv[3];
 
   console.log('version -> ', version);
-  console.log('_orgId -> ', _orgId);
+  console.log('_teamId -> ', _teamId);
 
   let logger = new BaseLogger('RunTestHarness');
   logger.Start();
 
   let mongoRepo = new MongoRepo('RunTestHarness', mongoUrl, mongoDbname, logger);
-  let res = await mongoRepo.UpdateMany('agent', { _orgId: mongoRepo.ObjectIdFromString(_orgId) }, { $set: { 'targetVersion': version } });
+  let res = await mongoRepo.UpdateMany('agent', { _teamId: mongoRepo.ObjectIdFromString(_teamId) }, { $set: { 'targetVersion': version } });
   console.log(res);
 }
 
@@ -441,7 +441,7 @@ let UpdateAgentVersion = async () => {
 //   let rmqUsername = config.get('rmqUsername');
 //   let rmqPassword = config.get('rmqPassword');
 //   let rmqVhost = config.get('rmqVhost');
-//   let _orgId = config.get('_orgId');
+//   let _teamId = config.get('_teamId');
 //   let mongoUrl = config.get('mongoUrl');
 //   let mongoDbName = config.get('mongoDbName');
 //   let redisHost = config.get('redisHost');
@@ -466,16 +466,16 @@ let UpdateAgentVersion = async () => {
 //     'name': 'RunAdHocScript',
 //     'type': script_type,
 //     'requiredTags': {},
-//     '_orgId': mongoRepo.ObjectIdFromString(_orgId),
+//     '_teamId': mongoRepo.ObjectIdFromString(_teamId),
 //     'createdBy': 'user:rich',
 //     'target': Enums.TaskDefTarget.SINGLE_AGENT,
 //     'steps': steps,
 //     'fromRoutes': []
 //   };
 
-//   let route = SGStrings.GetAgentQueue(_orgId, process.argv[2]);
+//   let route = SGStrings.GetAgentQueue(_teamId, process.argv[2]);
 
-//   await amqpConnector.Publish(kiki_4.SGStrings.GetOrgExchangeName(_orgId), route, { taskKey: kiki_4.SGStrings.GetTaskKey(_orgId, null, task.name), _orgId: _orgId, _jobId: null, steps: task.stepDefs, target: task.target, downstreamDependencies: {}, name: task.name });
+//   await amqpConnector.Publish(kiki_4.SGStrings.GetTeamExchangeName(_teamId), route, { taskKey: kiki_4.SGStrings.GetTaskKey(_teamId, null, task.name), _teamId: _teamId, _jobId: null, steps: task.stepDefs, target: task.target, downstreamDependencies: {}, name: task.name });
 // }
 
 
@@ -491,7 +491,7 @@ let DeleteMongoData = async () => {
 
   let mongoRepo = new MongoRepo('RunTestHarness', mongoUrl, mongoDbname, logger);
 
-  let orgsToKeep = [
+  let teamsToKeep = [
     mongoRepo.ObjectIdFromString('5ddea7b122f0bd0a35c46216'),
   ];
 
@@ -501,18 +501,18 @@ let DeleteMongoData = async () => {
   ];
 
 
-  await mongoRepo.DeleteByQuery({ _orgId: { $nin: orgsToKeep } }, 'agent');
-  await mongoRepo.DeleteByQuery({ _orgId: { $nin: orgsToKeep } }, 'job');
-  await mongoRepo.DeleteByQuery({ _orgId: { $nin: orgsToKeep } }, 'jobDef');
-  await mongoRepo.DeleteByQuery({ _orgId: { $nin: orgsToKeep } }, 'script');
-  await mongoRepo.DeleteByQuery({ _orgId: { $nin: orgsToKeep } }, 'step');
-  await mongoRepo.DeleteByQuery({ _orgId: { $nin: orgsToKeep } }, 'stepDef');
-  await mongoRepo.DeleteByQuery({ _orgId: { $nin: orgsToKeep } }, 'stepOutcome');
-  await mongoRepo.DeleteByQuery({ _orgId: { $nin: orgsToKeep } }, 'task');
-  await mongoRepo.DeleteByQuery({ _orgId: { $nin: orgsToKeep } }, 'taskDef');
-  await mongoRepo.DeleteByQuery({ _orgId: { $nin: orgsToKeep } }, 'taskOutcome');
-  await mongoRepo.DeleteByQuery({ _orgId: { $nin: orgsToKeep } }, 'schedule');
-  await mongoRepo.DeleteByQuery({ _id: { $nin: orgsToKeep } }, 'org');
+  await mongoRepo.DeleteByQuery({ _teamId: { $nin: teamsToKeep } }, 'agent');
+  await mongoRepo.DeleteByQuery({ _teamId: { $nin: teamsToKeep } }, 'job');
+  await mongoRepo.DeleteByQuery({ _teamId: { $nin: teamsToKeep } }, 'jobDef');
+  await mongoRepo.DeleteByQuery({ _teamId: { $nin: teamsToKeep } }, 'script');
+  await mongoRepo.DeleteByQuery({ _teamId: { $nin: teamsToKeep } }, 'step');
+  await mongoRepo.DeleteByQuery({ _teamId: { $nin: teamsToKeep } }, 'stepDef');
+  await mongoRepo.DeleteByQuery({ _teamId: { $nin: teamsToKeep } }, 'stepOutcome');
+  await mongoRepo.DeleteByQuery({ _teamId: { $nin: teamsToKeep } }, 'task');
+  await mongoRepo.DeleteByQuery({ _teamId: { $nin: teamsToKeep } }, 'taskDef');
+  await mongoRepo.DeleteByQuery({ _teamId: { $nin: teamsToKeep } }, 'taskOutcome');
+  await mongoRepo.DeleteByQuery({ _teamId: { $nin: teamsToKeep } }, 'schedule');
+  await mongoRepo.DeleteByQuery({ _id: { $nin: teamsToKeep } }, 'team');
   await mongoRepo.DeleteByQuery({ email: { $nin: usersToKeep } }, 'user');
 
   process.exit();
@@ -523,7 +523,7 @@ let DumpMongoData = async (path: string) => {
   mongoose.connect(config.get('mongoUrl'), { useNewUrlParser: true });
 
   let user: any = await userService.findAllUsersInternal();
-  let org: any = await orgService.findAllOrgsInternal();
+  let team: any = await teamService.findAllTeamsInternal();
   let agent: any = await agentService.findAllAgentsInternal();
   let job: any = await jobService.findAllJobsInternal();
   let jobDef: any = await jobDefService.findAllJobDefsInternal();
@@ -542,7 +542,7 @@ let DumpMongoData = async (path: string) => {
 
   let allTestObjects: any = {};
   allTestObjects['user'] = convertRequestData(UserSchema, user);
-  allTestObjects['org'] = convertRequestData(OrgSchema, org);
+  allTestObjects['team'] = convertRequestData(TeamSchema, team);
   allTestObjects['agent'] = convertRequestData(AgentSchema, agent);
   allTestObjects['job'] = convertRequestData(JobSchema, job);
   allTestObjects['jobDef'] = convertRequestData(JobDefSchema, jobDef);
@@ -587,7 +587,7 @@ let LoadMongoData = async (path: string) => {
   await mongoRepo.DeleteByQuery({}, 'task');
   await mongoRepo.DeleteByQuery({}, 'taskDef');
   await mongoRepo.DeleteByQuery({}, 'taskOutcome');
-  await mongoRepo.DeleteByQuery({}, 'org');
+  await mongoRepo.DeleteByQuery({}, 'team');
   await mongoRepo.DeleteByQuery({}, 'schedule');
   await mongoRepo.DeleteByQuery({}, 'invoice');
   await mongoRepo.DeleteByQuery({}, 'paymentMethod');
@@ -673,10 +673,10 @@ let LoadMongoData = async (path: string) => {
     }
   }
 
-  if (allTestObjects.org.length > 0) {
-    for (let i = 0; i < allTestObjects.org.length; i++) {
-      const org = allTestObjects.org[i];
-      await orgService.createOrgInternal(convertRequestData(OrgSchema, org));
+  if (allTestObjects.team.length > 0) {
+    for (let i = 0; i < allTestObjects.team.length; i++) {
+      const team = allTestObjects.team[i];
+      await teamService.createTeamInternal(convertRequestData(TeamSchema, team));
     }
   }
 
@@ -798,22 +798,22 @@ let TestBraintreeWebhook = async () => {
 let CreateInvoices = async () => {
   const auth = `${config.get('adminToken')};`;
 
-  let orgs: any = await RestAPICall('org?responseFields=id scriptRate jobStoragePerMBRate', 'GET', null, null, null, auth);
-  // console.log(util.inspect(orgs.data.data, false, null));
+  let teams: any = await RestAPICall('team?responseFields=id scriptRate jobStoragePerMBRate', 'GET', null, null, null, auth);
+  // console.log(util.inspect(teams.data.data, false, null));
 
   while (true) {
-    let lastOrg: OrgSchema = undefined;
-    for (let i = 0; i < orgs.data.data.length; i++) {
-      lastOrg = orgs.data.data[i];
-      console.log(lastOrg.id);
+    let lastTeam: TeamSchema = undefined;
+    for (let i = 0; i < teams.data.data.length; i++) {
+      lastTeam = teams.data.data[i];
+      console.log(lastTeam.id);
 
-      const createInvoice: any = await RestAPICall('createinvoice', 'POST', lastOrg.id, null, { startDate: '2020-05-01', endDate: '2020-05-31', scriptRate: lastOrg.scriptRate }, auth);
+      const createInvoice: any = await RestAPICall('createinvoice', 'POST', lastTeam.id, null, { startDate: '2020-05-01', endDate: '2020-05-31', scriptRate: lastTeam.scriptRate }, auth);
       console.log(createInvoice.data);
     }
 
-    if (lastOrg) {
-      const url = `org?lastId=${lastOrg.id}&responseFields=id scriptRate jobStoragePerMBRate`;
-      orgs = await RestAPICall(url, 'GET', null, null, null, auth);
+    if (lastTeam) {
+      const url = `team?lastId=${lastTeam.id}&responseFields=id scriptRate jobStoragePerMBRate`;
+      teams = await RestAPICall(url, 'GET', null, null, null, auth);
     } else {
       break;
     }
@@ -856,7 +856,7 @@ let SubmitInvoicesForPayment = async () => {
 
   const auth = `${config.get('adminToken')};`;
 
-  let url = `invoice?filter=status==${Enums.InvoiceStatus.CREATED}&responseFields=id _orgId`;
+  let url = `invoice?filter=status==${Enums.InvoiceStatus.CREATED}&responseFields=id _teamId`;
   let invoices: any = await RestAPICall(url, 'GET', null, null, null, auth);
   console.log(util.inspect(invoices.data.data, false, null));
 
@@ -867,7 +867,7 @@ let SubmitInvoicesForPayment = async () => {
       console.log(lastInvoice.id);
 
       try {
-        const createPaymentTransaction: any = await RestAPICall('paymenttransaction', 'POST', lastInvoice._orgId, null, { _invoiceId: lastInvoice.id }, auth);
+        const createPaymentTransaction: any = await RestAPICall('paymenttransaction', 'POST', lastInvoice._teamId, null, { _invoiceId: lastInvoice.id }, auth);
         console.log(createPaymentTransaction.data);
       } catch (e) {
         console.log(`Error creating payment transaction for invoice "${lastInvoice.id}": ${e}`);
@@ -884,7 +884,7 @@ let SubmitInvoicesForPayment = async () => {
 }
 
 
-let CreateOrg = async (orgName) => {
+let CreateTeam = async (teamName) => {
   const Setup = require("./Setup");
   const mongoUrl = config.get('mongoUrl');
   const mongoDbname = config.get('mongoDbName');
@@ -899,16 +899,16 @@ let CreateOrg = async (orgName) => {
 
   let mongoRepo = new MongoRepo(appName, mongoUrl, mongoDbname, logger);
 
-  /// Get org or create
-  let org;
-  org = { 'name': orgName, 'isActive': true, 'rmqPassword': SGUtils.makeid(10) };
-  await mongoRepo.InsertOne(org, 'org');
-  org.id = org._id;
+  /// Get team or create
+  let team;
+  team = { 'name': teamName, 'isActive': true, 'rmqPassword': SGUtils.makeid(10) };
+  await mongoRepo.InsertOne(team, 'team');
+  team.id = team._id;
 
   let testSetup = new Setup.default(appName, logger);
-  await testSetup.InitTest({ 'orgs': [org] });
+  await testSetup.InitTest({ 'teams': [team] });
 
-  console.log(org);
+  console.log(team);
   process.exit();
 }
 
@@ -924,15 +924,15 @@ let CreateJob = async () => {
 
   let mongoRepo = new MongoRepo(appName, mongoUrl, mongoDbname, logger);
 
-  // /// Get org or create
-  // let org;
-  // org = { 'name': orgName, 'isActive': true };
-  // await mongoRepo.InsertOne(org, 'org');
+  // /// Get team or create
+  // let team;
+  // team = { 'name': teamName, 'isActive': true };
+  // await mongoRepo.InsertOne(team, 'team');
 
   // let testSetup = new Setup.default(appName, logger);
-  // await testSetup.InitTest({ 'orgs': [org] });
+  // await testSetup.InitTest({ 'teams': [team] });
 
-  // console.log(org);
+  // console.log(team);
   // process.exit();
 }
 
@@ -952,9 +952,10 @@ let UploadFileToS3 = async (filePath: string) => {
         }
       };
 
-      return axios.put(url, filePath, options);
+      let res = await axios.put(url, filePath, options);
+      console.log(res.data);
     } catch (e) {
-      console.log(`Error uploading log file '${filePath}': ${e.message}`, e.stack);
+      console.log(`Error uploading log file '${filePath}': ${e.message}`, e.stack, util.inspect(e.response.data, false, null));
     }
   });
 }
@@ -987,12 +988,12 @@ let TestForEach = async () => {
 }
 
 
-let GenerateInvoice = async (mongoRepo: MongoRepo, org: any, start: Date, end: Date) => {
+let GenerateInvoice = async (mongoRepo: MongoRepo, team: any, start: Date, end: Date) => {
   return new Promise(async (resolve, reject) => {
-    let invoice: any = { start: start, end: end, status: 'created', scriptRate: org.billing.scriptRate };
+    let invoice: any = { start: start, end: end, status: 'created', scriptRate: team.billing.scriptRate };
     let numScripts: number = 0;
     const tasks: any = await mongoRepo.GetManyByQuery({
-      '_orgId': mongoRepo.ObjectIdFromString(org.id),
+      '_teamId': mongoRepo.ObjectIdFromString(team.id),
       'dateCompleted': { $gte: start.toISOString(), $lt: end.toISOString() },
       'invoiceId': null
     }, 'taskOutcome');
@@ -1010,7 +1011,7 @@ let GenerateInvoice = async (mongoRepo: MongoRepo, org: any, start: Date, end: D
 }
 
 
-let CreateUser = async (email: string, password: string, orgIds: string[] = []) => {
+let CreateUser = async (email: string, password: string, teamIds: string[] = []) => {
   return new Promise(async (resolve, reject) => {
     console.log('email -> ', email);
     console.log('password -> ', password);
@@ -1087,7 +1088,7 @@ let SendTestEmailSMTP = async () => {
 }
 
 
-let RestAPICall = async (url: string, method: string, _orgId: mongodb.ObjectId, headers: any = {}, data: any = {}, token) => {
+let RestAPICall = async (url: string, method: string, _teamId: mongodb.ObjectId, headers: any = {}, data: any = {}, token) => {
   return new Promise(async (resolve, reject) => {
     try {
       let apiUrl = config.get('API_BASE_URL');
@@ -1100,7 +1101,7 @@ let RestAPICall = async (url: string, method: string, _orgId: mongodb.ObjectId, 
 
       const combinedHeaders: any = Object.assign({
         Cookie: `Auth=${token};`,
-        _orgId: _orgId
+        _teamId: _teamId
       }, headers);
 
       console.log('RestAPICall -> url ', url, ', method -> ', method, ', headers -> ', combinedHeaders, ', data -> ', data, ', token -> ', token);
@@ -1128,7 +1129,7 @@ let AgentRestAPICall = async () => {
       method: "GET",
       headers: {
         "Cookie": "Auth=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJvcmdJZHMiOlsiNWRlOTVjMDQ1MzE2MmU4ODkxZjVhODMwIl0sImVtYWlsIjoiQWdlbnQtVGVzdEFnZW50MyIsImV4cCI6MTU4Nzc0NTI2OSwiaWF0IjoxNTg3NjU4ODY5fQ.cGOxmXLSoK6D5lV3G3wynuGEs4w-f2PVwfzEFd4map0;",
-        "_orgId": "5de95c0453162e8891f5a830"
+        "_teamId": "5de95c0453162e8891f5a830"
       }
     });
 
@@ -1153,11 +1154,11 @@ let BraintreeTesting = async () => {
     privateKey: privateKey
   });
 
-  const orgId = config.get('sgTestOrg');
+  const teamId = config.get('sgTestTeam');
 
   // let result = await gateway.customer.create({
-  //   id: orgId,
-  //   firstName: "Test org"
+  //   id: teamId,
+  //   firstName: "Test team"
   // });
   // console.log('result -> ', util.inspect(result, false, null));
 
@@ -1264,16 +1265,23 @@ let GenerateToken = async () => {
   const secret = config.get('secret');
 
   const body = {
-    "orgIds": [
-      "5e99cbcb2317950015edb655"
+    "teamIds": [
+      "5de95c0453162e8891f5a830"
     ],
-    "agentStubVersion": "v0.0.0.246"
+    "agentStubVersion": "v0.0.0.260"
   };
+
+  // const body = {
+  //   "teamIds": [
+  //     "5e99cbcb2317950015edb655"
+  //   ],
+  //   "agentStubVersion": "v0.0.0.246"
+  // };
 
   // const body = {
   //   id: '5de8810275ad92e5bb8de78a',
   //   email: 'admin@saasglue.com',
-  //   orgIds: '',
+  //   teamIds: '',
   //   ipV6: '::1',
   //   ipRange: '127.0.0.1/32'
   // };
@@ -1281,7 +1289,7 @@ let GenerateToken = async () => {
   // const body = {
   //   id: '5e99cbcb2317950015edb655',
   //   email: 'scheduler@saasglue.com',
-  //   orgIds: '',
+  //   teamIds: '',
   //   ipV6: '::ffff:10.47.238.174',
   //   ipRange: '34.198.95.38/32'
   // };
@@ -1289,7 +1297,7 @@ let GenerateToken = async () => {
   // const body = {
   //   id: '5de8810275ad92e5bb8de78a',
   //   email: 'admin@saasglue.com',
-  //   orgIds: '',
+  //   teamIds: '',
   //   ipRange: '96.60.74.166/32'
   // };
 
@@ -1300,10 +1308,10 @@ let GenerateToken = async () => {
 }
 
 
-let CreateAgentInstall = async (_orgId: string, agentVersion: string, nodeRange: string, platform: string, arch) => {
+let CreateAgentInstall = async (_teamId: string, agentVersion: string, nodeRange: string, platform: string, arch) => {
   const secret = config.get('secret');
   var token = jwt.sign({
-    orgIds: [_orgId],
+    teamIds: [_teamId],
     agentStubVersion: 'v0.0.0.153'
   }, secret);//KeysUtil.getPrivate()); // todo - create a public / private key
 
@@ -1341,7 +1349,7 @@ let CreateAgentInstall = async (_orgId: string, agentVersion: string, nodeRange:
     "apiPort": apiPort,
     "agentLogsAPIVersion": agentLogsAPIVersion,
     "token": token,
-    "_orgId": _orgId,
+    "_teamId": _teamId,
     "env": 'debug',
     logDest: logDest,
     runStandAlone: true
@@ -1423,9 +1431,9 @@ steps.push({ 'script': script2_json, 'arguments': 'there', 'variables': script_e
 
 //   let invoices: any[] = [];
 
-//   const orgs: any = await mongoRepo.GetManyByQuery({}, 'org');
-//   for (let org of orgs) {
-//     let invoice = await GenerateInvoice(mongoRepo, org, new Date('2019-07-01'), new Date('2019-08-01'));
+//   const teams: any = await mongoRepo.GetManyByQuery({}, 'team');
+//   for (let team of teams) {
+//     let invoice = await GenerateInvoice(mongoRepo, team, new Date('2019-07-01'), new Date('2019-08-01'));
 //     invoices.push(invoice);
 //   }
 
@@ -1453,13 +1461,13 @@ let PublishJobTask = async () => {
   const rmqVhost = config.get('rmqVhost');
   let amqp: AMQPConnector = new AMQPConnector(appName, '', amqpUrl, rmqVhost, 1, (activeMessages) => { }, logger);
 
-  const _orgId = config.get('sgTestOrg');
+  const _teamId = config.get('sgTestTeam');
   const _jobId = '5e88a1fa4ff0b10b4847a4e7';
 
-  const queryTasks = await taskService.findAllJobTasks(_orgId, _jobId);
+  const queryTasks = await taskService.findAllJobTasks(_teamId, _jobId);
   if (_.isArray(queryTasks) && queryTasks.length > 0) {
     const task = queryTasks[0];
-    await taskOutcomeService.PublishTask(_orgId, task, logger, amqp);
+    await taskOutcomeService.PublishTask(_teamId, task, logger, amqp);
   }
 
   process.exit(0);
@@ -1489,9 +1497,9 @@ let ProcessOrphanedTasks = async () => {
         for (let i = 0; i < inactiveAgents.length; i++) {
           const agent = inactiveAgents[i];
 
-          const _orgId = new mongodb.ObjectId(agent._orgId);
+          const _teamId = new mongodb.ObjectId(agent._teamId);
 
-          await RestAPICall(`agent/cancelorphanedtasks/${agent._id}`, 'POST', _orgId, null, null, auth);
+          await RestAPICall(`agent/cancelorphanedtasks/${agent._id}`, 'POST', _teamId, null, null, auth);
 
           cntOfflineAgentsProcessed += 1;
           if (cntOfflineAgentsProcessed >= maxOfflineAgentsToProcess) {
@@ -1557,13 +1565,13 @@ let DeleteJobDefs = async (filter: any) => {
 
 /// Probably want to run this on a heroku worker so that it has relatively low latency access
 ///   to mongodb - maybe create a worker running the agent with specific tags - first create a job
-///   to 1) scale up the workers and 2) create a prune job for each org - how to scale down
-///   when all orgs are done? Maybe have a third step in the job that periodically gets all orgs
+///   to 1) scale up the workers and 2) create a prune job for each team - how to scale down
+///   when all teams are done? Maybe have a third step in the job that periodically gets all teams
 ///   that haven't been pruned yet and when they're all done scale down? With that solution, 
 ///   if there are a small number of long running prune jobs, we'll be paying for idle workers
 ///   until all are done. Maybe better to do it with ec2 instances and a custom scaling solution
 ///   where idle agents automatically shut themselves down with an "inactive" script.
-let PruneJobs = async (_orgId: mongodb.ObjectId) => {
+let PruneJobs = async (_teamId: mongodb.ObjectId) => {
   const auth = `${config.get('adminToken')};`;
 
   mongoose.connect(config.get('mongoUrl'), { useNewUrlParser: true });
@@ -1576,14 +1584,14 @@ let PruneJobs = async (_orgId: mongodb.ObjectId) => {
 
   let mongoRepo = new MongoRepo('RunTestHarness', mongoUrl, mongoDbname, logger);
 
-  let org: OrgSchema = (<OrgSchema>await orgService.findOrg(_orgId, 'paidStorageMB jobIdHighWatermark jobStorageSpaceHighWatermark'));
+  let team: TeamSchema = (<TeamSchema>await teamService.findTeam(_teamId, 'paidStorageMB jobIdHighWatermark jobStorageSpaceHighWatermark'));
 
   const freeTierSettings = await settingsService.findSettings('FreeTierLimits');
   const dateCutoff = new Date();
   dateCutoff.setDate(dateCutoff.getDate() - freeTierSettings.freeDaysJobStorage);
   let totalSpaceUsed = 0;
   let jobIdHighWatermark = undefined;
-  let paidStorageBytes = org.paidStorageMB * 1024 * 1024;
+  let paidStorageBytes = team.paidStorageMB * 1024 * 1024;
 
   // Get the most recent completed job past the free tier cutoff date
   let url = `job?filter=dateStarted>${Number(dateCutoff)}&limit=1`;
@@ -1592,7 +1600,7 @@ let PruneJobs = async (_orgId: mongodb.ObjectId) => {
     return;
   const oldestJobBeforeCutoff = jobsQuery.data.data[0];
 
-  // If this org is not paying for additional storage, prune data for all completed jobs older than the free job data cutoff date
+  // If this team is not paying for additional storage, prune data for all completed jobs older than the free job data cutoff date
   if (paidStorageBytes == 0) {
     let jobs: any = await RestAPICall(url, 'GET', null, null, null, auth);
     while (true) {
@@ -1625,13 +1633,13 @@ let PruneJobs = async (_orgId: mongodb.ObjectId) => {
     // Otherwise prune data older than the job data cutoff date until the total amount of psot cutoff date job storage is less than 
     //    the amount the user is paying for
   } else {
-    jobIdHighWatermark = org.jobIdHighWatermark;
+    jobIdHighWatermark = team.jobIdHighWatermark;
     let newSpaceUsed: number = 0;
     let previousSpaceUsed: number = 0;
-    previousSpaceUsed = org.jobStorageSpaceHighWatermark;
+    previousSpaceUsed = team.jobStorageSpaceHighWatermark;
 
     let queryFilter: any = {};
-    queryFilter['_orgId'] = _orgId;
+    queryFilter['_teamId'] = _teamId;
     queryFilter['_jobId'] = { $lt: oldestJobBeforeCutoff.id };
     if (jobIdHighWatermark)
       queryFilter['_jobId'] = { $gt: jobIdHighWatermark };
@@ -1668,7 +1676,7 @@ let PruneJobs = async (_orgId: mongodb.ObjectId) => {
           lastJob = jobs.data.data[i];
 
           if (lastJob.dateStarted > dateCutoff)
-            throw new Error(`Error in prune jobs for _orgId "${_orgId}": attempted to prunel jobs within free tier limit`);
+            throw new Error(`Error in prune jobs for _teamId "${_teamId}": attempted to prunel jobs within free tier limit`);
 
           jobTotalSpaceUsed += bson.calculateObjectSize(lastJob);
           let jobStepOutcomes = _.filter(taskOutcomes, x => x._jobId == lastJob.id)
@@ -1702,8 +1710,8 @@ let PruneJobs = async (_orgId: mongodb.ObjectId) => {
         }
       }
 
-      const orgUpdate = { jobIdHighWatermark: jobIdNewHighWatermark, jobStorageSpaceHighWatermark: totalSpaceUsed };
-      await orgService.updateOrg(_orgId, orgUpdate);
+      const teamUpdate = { jobIdHighWatermark: jobIdNewHighWatermark, jobStorageSpaceHighWatermark: totalSpaceUsed };
+      await teamService.updateTeam(_teamId, teamUpdate);
     }
 
     console.log('totalSpaceUsed -> ', totalSpaceUsed);
@@ -1744,9 +1752,9 @@ let ConfigNewRabbitMQServer = async () => {
 // ProcessOrphanedTasks();
 // PublishJobTask();
 // PruneJobs(mongodb.ObjectId('5e33a89f9fb5d6880217da2c'));
-// UploadFileToS3('./package.json');
+UploadFileToS3('./package.json');
 // GetS3PrefixSize('production/5de95c0453162e8891f5a830/');
-// CreateOrg('TestOrg');
+// CreateTeam('TestTeam');
 // DumpMongoData('./production_20200615.json');
 // LoadMongoData('./testdata_1.json');
 // DumpSettingsFromMongo();
@@ -1776,7 +1784,7 @@ let ConfigNewRabbitMQServer = async () => {
 // SubmitInvoicesForPayment();
 // TestBraintreeWebhook();
 // CreateInvoicePDF(0);
-GenerateToken();
+// GenerateToken();
 // AgentRestAPICall();
 // DeleteJobs({'_jobDefId': process.argv[2]});
 // DeleteJobDefs({"name": /Cron.*/});
@@ -1817,7 +1825,7 @@ GenerateToken();
   // // inactiveAgentsFilter['archived'] = false;
   // const inactiveAgents = await agentService.findAllAgentsInternal(inactiveAgentsFilter, null, 1000);
   // for (let i = 0; i < inactiveAgents.length; i++) {
-  //   await agentService.updateAgent(inactiveAgents[i]._orgId, inactiveAgents[i]._id, {archived: false});
+  //   await agentService.updateAgent(inactiveAgents[i]._teamId, inactiveAgents[i]._id, {archived: false});
   // }
 
   // console.log('num agents -> ', inactiveAgents.length);
@@ -1830,8 +1838,8 @@ GenerateToken();
   //   let res = await SGUtils.scriptBillingCalculator(billingSettings.scriptPricing, parseInt(process.argv[2]));
   //   console.log(res);
 
-  //   // let d = [{_orgId: 0, inviteKey: 'a;oifena'}, {_orgId: 5, inviteKey: '1234lhfoasu8'}];
-  //   // console.log(d.map(inv => inv._orgId));
+  //   // let d = [{_teamId: 0, inviteKey: 'a;oifena'}, {_teamId: 5, inviteKey: '1234lhfoasu8'}];
+  //   // console.log(d.map(inv => inv._teamId));
 
   //   // const auth = await Login('scheduler@saasglue.com', 'Qsf6f9MepiPkbH6x');
   //   // const auth = await Login(process.argv[2], process.argv[3]);

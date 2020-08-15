@@ -7,31 +7,31 @@ import { rabbitMQPublisher, PayloadOperation } from '../utils/RabbitMQPublisher'
 import { MissingObjectError, ValidationError } from '../utils/Errors';
 import { InvoiceSchema } from '../domain/Invoice';
 import { invoiceService } from './InvoiceService';
-import { InvoiceStatus, OrgPaymentStatus } from '../../shared/Enums';
-import { OrgSchema } from '../domain/Org';
+import { InvoiceStatus, TeamPaymentStatus } from '../../shared/Enums';
+import { TeamSchema } from '../domain/Team';
 import { PaymentTransactionStatus } from '../../shared/Enums';
 import { SGUtils } from '../../shared/SGUtils';
 import * as _ from 'lodash';
 import * as config from 'config';
-import { orgService } from './OrgService';
+import { teamService } from './TeamService';
 import * as mongodb from 'mongodb';
 import * as braintree from 'braintree';
 
 
 export class PayInvoiceAutoService {
-    public async payInvoice(_orgId: mongodb.ObjectId, data: any, logger: BaseLogger, correlationId: string): Promise<object> {
-        data._orgId = _orgId;
+    public async payInvoice(_teamId: mongodb.ObjectId, data: any, logger: BaseLogger, correlationId: string): Promise<object> {
+        data._teamId = _teamId;
 
         if (!data._invoiceId)
             throw new ValidationError(`Request body missing "_invoiceId" parameter`);
 
-        const org: any = await orgService.findOrg(_orgId, 'paymentStatus, billing_email');
-        if (_.isArray(org) && org.length === 0)
-            throw new MissingObjectError(`Org '${_orgId}' not found`);
+        const team: any = await teamService.findTeam(_teamId, 'paymentStatus, billing_email');
+        if (_.isArray(team) && team.length === 0)
+            throw new MissingObjectError(`Team '${_teamId}' not found`);
 
-        const getInvoice: InvoiceSchema[] = await invoiceService.findInvoice(_orgId, new mongodb.ObjectId(data._invoiceId), 'status billAmount paidAmount');
+        const getInvoice: InvoiceSchema[] = await invoiceService.findInvoice(_teamId, new mongodb.ObjectId(data._invoiceId), 'status billAmount paidAmount');
         if (_.isArray(getInvoice) && getInvoice.length === 0)
-            throw new MissingObjectError(`Invoice '${data._invoiceId}' not found for org '${_orgId}'`);
+            throw new MissingObjectError(`Invoice '${data._invoiceId}' not found for team '${_teamId}'`);
         const invoice: InvoiceSchema = getInvoice[0];
         if (invoice.status == InvoiceStatus.SUBMITTED || invoice.status == InvoiceStatus.PAID)
             throw new ValidationError(`Error creating payment transaction - invoice '${data._invoiceId}' has status '${InvoiceStatus[invoice.status]}'`);
@@ -39,9 +39,9 @@ export class PayInvoiceAutoService {
         const amount = invoice.billAmount - invoice.paidAmount;
 
         if (amount <= 0) {
-            let updatedInvoice = await invoiceService.updateInvoice(_orgId, invoice._id, { status: InvoiceStatus.PAID }, correlationId);
-            await SGUtils.CreateAndSendInvoice(org, updatedInvoice, { paymentInstrumentType: 'n/a', paymentInstrument: 'n/a' }, logger);
-            return { _orgId: _orgId, amount: 0 };
+            let updatedInvoice = await invoiceService.updateInvoice(_teamId, invoice._id, { status: InvoiceStatus.PAID }, correlationId);
+            await SGUtils.CreateAndSendInvoice(team, updatedInvoice, { paymentInstrumentType: 'n/a', paymentInstrument: 'n/a' }, logger);
+            return { _teamId: _teamId, amount: 0 };
         }
 
         let merchantId = config.get('braintreeMerchantId');
@@ -57,7 +57,7 @@ export class PayInvoiceAutoService {
 
         let transactionResponse = await gateway.transaction.sale({
             amount: amount,
-            customerId: _orgId.toHexString(),
+            customerId: _teamId.toHexString(),
             options: {
                 submitForSettlement: true
             },
@@ -68,7 +68,7 @@ export class PayInvoiceAutoService {
 
         const transaction: any = transactionResponse.transaction;
         const paymentTransactionData = {
-            _orgId: _orgId,
+            _teamId: _teamId,
             _invoiceId: new mongodb.ObjectId(invoice._id),
             source: PaymentTransactionSource.BRAINTREE,
             processorTransactionId: transaction.id,
@@ -79,30 +79,30 @@ export class PayInvoiceAutoService {
             status: transaction.processorResponseText,
             amount: amount
         };
-        const newPaymentTransaction: any = await paymentTransactionService.createPaymentTransaction(_orgId, paymentTransactionData, correlationId);
-        await rabbitMQPublisher.publish(_orgId, "PaymentTransaction", correlationId, PayloadOperation.UPDATE, convertData(PaymentTransactionSchema, newPaymentTransaction));
+        const newPaymentTransaction: any = await paymentTransactionService.createPaymentTransaction(_teamId, paymentTransactionData, correlationId);
+        await rabbitMQPublisher.publish(_teamId, "PaymentTransaction", correlationId, PayloadOperation.UPDATE, convertData(PaymentTransactionSchema, newPaymentTransaction));
 
         if (transactionResponse.success) {
             logger.LogInfo('Payment processing succeeded', transactionResponse);
 
-            let updatedInvoice: any = await invoiceService.updateInvoice(_orgId, invoice._id, { paidAmount: invoice.paidAmount + amount, status: InvoiceStatus.PAID }, correlationId);
-            await SGUtils.CreateAndSendInvoice(org, updatedInvoice, paymentTransactionData, logger);
+            let updatedInvoice: any = await invoiceService.updateInvoice(_teamId, invoice._id, { paidAmount: invoice.paidAmount + amount, status: InvoiceStatus.PAID }, correlationId);
+            await SGUtils.CreateAndSendInvoice(team, updatedInvoice, paymentTransactionData, logger);
 
-            if (org.paymentStatus == OrgPaymentStatus.DELINQUENT) {
-                const getDelinquentInvoices: InvoiceSchema[] = await invoiceService.findAllInvoicesInternal({ _orgId, status: InvoiceStatus.REJECTED }, '_id');
+            if (team.paymentStatus == TeamPaymentStatus.DELINQUENT) {
+                const getDelinquentInvoices: InvoiceSchema[] = await invoiceService.findAllInvoicesInternal({ _teamId, status: InvoiceStatus.REJECTED }, '_id');
                 if (_.isArray(getDelinquentInvoices) && getDelinquentInvoices.length === 0)
-                    await orgService.updateOrg(_orgId, { paymentStatus: OrgPaymentStatus.HEALTHY, paymentStatusDate: new Date() }, correlationId);
+                    await teamService.updateTeam(_teamId, { paymentStatus: TeamPaymentStatus.HEALTHY, paymentStatusDate: new Date() }, correlationId);
             }
 
-            await rabbitMQPublisher.publish(_orgId, "Invoice", correlationId, PayloadOperation.UPDATE, convertData(InvoiceSchema, updatedInvoice));
+            await rabbitMQPublisher.publish(_teamId, "Invoice", correlationId, PayloadOperation.UPDATE, convertData(InvoiceSchema, updatedInvoice));
         } else {
             logger.LogInfo('Payment processing failed', transactionResponse);
-            const updatedInvoice: any = await invoiceService.updateInvoice(_orgId, invoice._id, { status: InvoiceStatus.REJECTED }, correlationId);
-            await rabbitMQPublisher.publish(_orgId, "Invoice", correlationId, PayloadOperation.UPDATE, convertData(InvoiceSchema, updatedInvoice));
+            const updatedInvoice: any = await invoiceService.updateInvoice(_teamId, invoice._id, { status: InvoiceStatus.REJECTED }, correlationId);
+            await rabbitMQPublisher.publish(_teamId, "Invoice", correlationId, PayloadOperation.UPDATE, convertData(InvoiceSchema, updatedInvoice));
 
-            if (org.paymentStatus == OrgPaymentStatus.HEALTHY) {
-                const updatedOrg: any = await orgService.updateOrg(_orgId, { paymentStatus: OrgPaymentStatus.DELINQUENT, paymentStatusDate: new Date() }, correlationId);
-                await rabbitMQPublisher.publish(_orgId, "Org", correlationId, PayloadOperation.UPDATE, convertData(OrgSchema, updatedOrg));
+            if (team.paymentStatus == TeamPaymentStatus.HEALTHY) {
+                const updatedTeam: any = await teamService.updateTeam(_teamId, { paymentStatus: TeamPaymentStatus.DELINQUENT, paymentStatusDate: new Date() }, correlationId);
+                await rabbitMQPublisher.publish(_teamId, "Team", correlationId, PayloadOperation.UPDATE, convertData(TeamSchema, updatedTeam));
             }
         }
 

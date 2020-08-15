@@ -9,9 +9,9 @@ export class TaskOutcomeActionController {
 
     public async interruptTaskOutcome(req: Request, resp: Response, next: NextFunction): Promise<void> {
         try {
-            const _orgId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._orgid);
+            const _teamId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._teamid);
             const response: ResponseWrapper = resp['body'];
-            const res = await taskOutcomeActionService.interruptTaskOutcome(_orgId, new mongodb.ObjectId(req.params.taskId));
+            const res = await taskOutcomeActionService.interruptTaskOutcome(_teamId, new mongodb.ObjectId(req.params.taskId));
             response.data = res;
             response.statusCode = ResponseCode.OK;
             next();
@@ -24,9 +24,9 @@ export class TaskOutcomeActionController {
 
     public async restartTaskOutcome(req: Request, resp: Response, next: NextFunction): Promise<void> {
         try {
-            const _orgId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._orgid);
+            const _teamId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._teamid);
             const response: ResponseWrapper = resp['body'];
-            const res = await taskOutcomeActionService.restartTaskOutcome(_orgId, new mongodb.ObjectId(req.params.taskId));
+            const res = await taskOutcomeActionService.restartTaskOutcome(_teamId, new mongodb.ObjectId(req.params.taskId));
             response.data = res;
             response.statusCode = ResponseCode.OK;
             next();
@@ -39,9 +39,9 @@ export class TaskOutcomeActionController {
 
     public async cancelTaskOutcome(req: Request, resp: Response, next: NextFunction): Promise<void> {
         try {
-            const _orgId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._orgid);
+            const _teamId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._teamid);
             const response: ResponseWrapper = resp['body'];
-            const res = await taskOutcomeActionService.cancelTaskOutcome(_orgId, new mongodb.ObjectId(req.params.taskId));
+            const res = await taskOutcomeActionService.cancelTaskOutcome(_teamId, new mongodb.ObjectId(req.params.taskId));
             response.data = res;
             response.statusCode = ResponseCode.OK;
             next();

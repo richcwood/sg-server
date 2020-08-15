@@ -1,6 +1,6 @@
-Join {org_name} on saas glue
+Join {team_name} on saas glue
 
-{inviter_name} has created the new saas glue team {org_name}. You can use the link
+{inviter_name} has created the new saas glue team {team_name}. You can use the link
 below to join this team — it only takes a minute to create an
 account!
 

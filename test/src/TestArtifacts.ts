@@ -7,7 +7,7 @@ let LongRunningJob: any = {
         "name": "RunLongRunningScript",
         "tasks": [
             {
-                "_orgId": config.get('sgTestOrg'),
+                "_teamId": config.get('sgTestTeam'),
                 "name": "Task1",
                 "source": 0,
                 "requiredTags": [],
@@ -40,7 +40,7 @@ let InteractiveConsoleJob: any = {
         "runtimeVars": {},
         "tasks": [
             {
-                "_orgId": config.get('sgTestOrg'),
+                "_teamId": config.get('sgTestTeam'),
                 "name": "Task1",
                 "source": 0,
                 "requiredTags": {},
@@ -69,7 +69,7 @@ export { InteractiveConsoleJob }
 
 
 let ScriptTemplate: any = { 
-	"_orgId": config.get('sgTestOrg'), 
+	"_teamId": config.get('sgTestTeam'), 
 	"name": "Script 1", 
 	"scriptType": "2", 
 	"code": "ZWNobyAiSGVsbG8gV29ybGQi", 
@@ -80,7 +80,7 @@ export { ScriptTemplate }
 
 let JobDefTemplate: any = {
     "Name": "Job 1",
-    "_orgId": config.get('sgTestOrg'),
+    "_teamId": config.get('sgTestTeam'),
     "createdBy": config.get('sgTestUser')
 }
 export { JobDefTemplate }
@@ -88,7 +88,7 @@ export { JobDefTemplate }
 
 let TaskDefTemplate: any = {
     "name": "Task 1",
-    "_orgId": config.get('sgTestOrg'),
+    "_teamId": config.get('sgTestTeam'),
     "_jobDefId": "{{_jobDefId}}",
     "requiredTags": [],
     "dependsOn": [],
@@ -99,7 +99,7 @@ export { TaskDefTemplate }
 
 let StepDefTemplate: any = { 
 	"name": "Step 1", 
-	"_orgId": config.get('sgTestOrg'), 
+	"_teamId": config.get('sgTestTeam'), 
 	"_taskDefId": "{{_taskDefId}}", 
 	"_scriptId": "{{_scriptId}}",
 	"order": "0", 

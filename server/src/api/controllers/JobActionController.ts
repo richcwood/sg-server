@@ -10,9 +10,9 @@ export class JobActionController {
     public async interruptJob(req: Request, resp: Response, next: NextFunction): Promise<void> {
         try {
             const logger: BaseLogger = (<any>req).logger;
-            const _orgId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._orgid);
+            const _teamId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._teamid);
             const response: ResponseWrapper = resp['body'];
-            const res = await jobActionService.interruptJob(_orgId, new mongodb.ObjectId(req.params.jobId), logger);
+            const res = await jobActionService.interruptJob(_teamId, new mongodb.ObjectId(req.params.jobId), logger);
             response.data = res;
             response.statusCode = ResponseCode.OK;
             next();
@@ -26,9 +26,9 @@ export class JobActionController {
     public async restartJob(req: Request, resp: Response, next: NextFunction): Promise<void> {
         try {
             const logger: BaseLogger = (<any>req).logger;
-            const _orgId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._orgid);
+            const _teamId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._teamid);
             const response: ResponseWrapper = resp['body'];
-            const res = await jobActionService.restartJob(_orgId, new mongodb.ObjectId(req.params.jobId), logger);
+            const res = await jobActionService.restartJob(_teamId, new mongodb.ObjectId(req.params.jobId), logger);
             response.data = res;
             response.statusCode = ResponseCode.OK;
             next();
@@ -42,9 +42,9 @@ export class JobActionController {
     public async cancelJob(req: Request, resp: Response, next: NextFunction): Promise<void> {
         try {
             const logger: BaseLogger = (<any>req).logger;
-            const _orgId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._orgid);
+            const _teamId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._teamid);
             const response: ResponseWrapper = resp['body'];
-            const res = await jobActionService.cancelJob(_orgId, new mongodb.ObjectId(req.params.jobId), logger);
+            const res = await jobActionService.cancelJob(_teamId, new mongodb.ObjectId(req.params.jobId), logger);
             response.data = res;
             response.statusCode = ResponseCode.OK;
             next();

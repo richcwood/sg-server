@@ -1,5 +1,5 @@
 {
-  "name": "saas glue test",
+  "name": "sg-test",
   "version": "1.0.0",
   "description": "saas glue test utilities",
   "engines": {
@@ -22,7 +22,7 @@
     "amqplib": "0.5.2",
     "async-lock": "1.2.2",
     "async-redis": "^1.1.7",
-    "aws-sdk": "2.580.0",
+    "aws-sdk": "^2.580.0",
     "axios": "0.18.0",
     "bcrypt": "3.0.7",
     "braintree": "2.21.0",

@@ -4,7 +4,7 @@ import { TaskStatus, TaskFailureCode } from '@/utils/Enums';
 
 
 export interface Task extends Model {
-  _orgId: string,
+  _teamId: string,
   _jobId: string,
   requiredTags: {[key: string]: string},
   fromRoutes: string[], // type correct?

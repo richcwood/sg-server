@@ -13,7 +13,7 @@ export class ScriptSchema {
   id?: mongodb.ObjectId;
 
   @prop({ required: true })
-  _orgId: mongodb.ObjectId;
+  _teamId: mongodb.ObjectId;
 
   @prop({ required: true })
   name: string;
@@ -31,10 +31,10 @@ export class ScriptSchema {
   _lastEditedUserId: string;
 
   @prop({ default: true })
-  orgUsable?: boolean;
+  teamUsable?: boolean;
 
   @prop({ default: false })
-  orgEditable?: boolean;
+  teamEditable?: boolean;
 
   @prop({ required: true })
   lastEditedDate: Date;

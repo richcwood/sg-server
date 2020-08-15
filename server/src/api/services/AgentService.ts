@@ -31,8 +31,8 @@ export class AgentService {
         return AgentModel.find(filter).select(responseFields).limit(limit);
     }
 
-    public async findAllAgents(_orgId: mongodb.ObjectId, filter?: any, responseFields?: string) {
-        const defaultFilter = { _orgId };
+    public async findAllAgents(_teamId: mongodb.ObjectId, filter?: any, responseFields?: string) {
+        const defaultFilter = { _teamId };
         if (filter)
             filter = Object.assign(defaultFilter, filter);
         else
@@ -40,19 +40,19 @@ export class AgentService {
         return AgentModel.find(filter).select(responseFields);
     }
 
-    public async findAgent(_orgId: mongodb.ObjectId, agentId: mongodb.ObjectId, responseFields?: string) {
-        return AgentModel.findById(agentId).find({ _orgId }).select(responseFields);
+    public async findAgent(_teamId: mongodb.ObjectId, agentId: mongodb.ObjectId, responseFields?: string) {
+        return AgentModel.findById(agentId).find({ _teamId }).select(responseFields);
     }
 
 
-    public async findAgentByMachineName(_orgId: mongodb.ObjectId, machineId: string, responseFields?: string) {
-        return await AgentModel.find({ _orgId, machineId }).select(responseFields);
+    public async findAgentByMachineName(_teamId: mongodb.ObjectId, machineId: string, responseFields?: string) {
+        return await AgentModel.find({ _teamId, machineId }).select(responseFields);
     }
 
 
-    public async findAgentsByTags(_orgId: mongodb.ObjectId, tags: any, responseFields?: string) {
+    public async findAgentsByTags(_teamId: mongodb.ObjectId, tags: any, responseFields?: string) {
         const activeAgentTimeoutSeconds = config.get('activeAgentTimeoutSeconds');
-        let filter: any = { _orgId };
+        let filter: any = { _teamId };
         filter.offline = false;
         filter.lastHeartbeatTime = { $gte: (new Date().getTime()) - parseInt(activeAgentTimeoutSeconds) * 1000 };
         for (let i = 0; i < tags.length; i++) {
@@ -67,9 +67,9 @@ export class AgentService {
     }
 
 
-    public async findDisconnectedAgents(_orgId: mongodb.ObjectId, batchSize: number, responseFields?: string) {
+    public async findDisconnectedAgents(_teamId: mongodb.ObjectId, batchSize: number, responseFields?: string) {
         const activeAgentTimeoutSeconds = config.get('activeAgentTimeoutSeconds');
-        let filter: any = { _orgId };
+        let filter: any = { _teamId };
         filter.offline = false;
         filter.lastHeartbeatTime = { $lt: (new Date().getTime()) - parseInt(activeAgentTimeoutSeconds) * 1000 };
 
@@ -84,17 +84,17 @@ export class AgentService {
     }
 
 
-    public async createAgent(_orgId: mongodb.ObjectId, data: any, correlationId?: string, responseFields?: string): Promise<object> {
-        data._orgId = _orgId;
+    public async createAgent(_teamId: mongodb.ObjectId, data: any, correlationId?: string, responseFields?: string): Promise<object> {
+        data._teamId = _teamId;
         data.createDate = new Date();
         const agentModel = new AgentModel(data);
         const newAgent = await agentModel.save();
 
-        await rabbitMQPublisher.publish(_orgId, "Agent", correlationId, PayloadOperation.CREATE, convertData(AgentSchema, newAgent));
+        await rabbitMQPublisher.publish(_teamId, "Agent", correlationId, PayloadOperation.CREATE, convertData(AgentSchema, newAgent));
 
         if (responseFields) {
             // It's is a bit wasteful to do another query but I can't chain a save with a select
-            return this.findAgent(_orgId, newAgent._id, responseFields);
+            return this.findAgent(_teamId, newAgent._id, responseFields);
         }
         else {
             return newAgent; // fully populated model
@@ -102,14 +102,14 @@ export class AgentService {
     }
 
 
-    public async updateAgentHeartbeat(_orgId: mongodb.ObjectId, id: mongodb.ObjectId, data: any, correlationId?: string): Promise<object> {
+    public async updateAgentHeartbeat(_teamId: mongodb.ObjectId, id: mongodb.ObjectId, data: any, correlationId?: string): Promise<object> {
         // for (let i = 0; i < Object.keys(data).length; i++) {
         //     const key = Object.keys(data)[i];
         //     if (systemProperties.indexOf(key) < 0)
         //         throw new ValidationError(`Invalid property - "${key}"`);
         // }
 
-        const filter = { _id: id, _orgId };
+        const filter = { _id: id, _teamId };
         const updatedAgent = await AgentModel.findOneAndUpdate(filter, data).select('_id offline lastHeartbeatTime targetVersion');
 
         if (!updatedAgent)
@@ -117,25 +117,25 @@ export class AgentService {
 
         let deltas = Object.assign({ _id: id, targetVersion: updatedAgent.targetVersion }, data);
         let convertedDeltas = convertData(AgentSchema, deltas);
-        await rabbitMQPublisher.publish(_orgId, "Agent", correlationId, PayloadOperation.UPDATE, convertedDeltas);
+        await rabbitMQPublisher.publish(_teamId, "Agent", correlationId, PayloadOperation.UPDATE, convertedDeltas);
 
         let agentDeltas = _.cloneDeep(convertedDeltas);
         delete agentDeltas.sysInfo;
-        await rabbitMQPublisher.publishToAgent(_orgId, id, agentDeltas);
+        await rabbitMQPublisher.publishToAgent(_teamId, id, agentDeltas);
 
         return updatedAgent; // fully populated model
     }
 
 
-    public async updateAgentTags(_orgId: mongodb.ObjectId, id: mongodb.ObjectId, data: any, correlationId?: string, responseFields?: string): Promise<object> {
+    public async updateAgentTags(_teamId: mongodb.ObjectId, id: mongodb.ObjectId, data: any, correlationId?: string, responseFields?: string): Promise<object> {
         for (let i = 0; i < Object.keys(data).length; i++) {
             const key = Object.keys(data)[i];
             if (key != 'tags')
                 throw new ValidationError(`Invalid key - "${key}"`);
         }
 
-        data._orgId = _orgId;
-        const filter = { _id: id, _orgId };
+        data._teamId = _teamId;
+        const filter = { _id: id, _teamId };
         const updatedAgent = await AgentModel.findOneAndUpdate(filter, data, { new: true }).select(responseFields);
 
         if (!updatedAgent)
@@ -143,14 +143,14 @@ export class AgentService {
 
         let deltas = Object.assign({ _id: id }, data);
         let convertedDeltas = convertData(AgentSchema, deltas);
-        await rabbitMQPublisher.publishToAgent(_orgId, id, convertedDeltas);
-        await rabbitMQPublisher.publish(_orgId, "Agent", correlationId, PayloadOperation.UPDATE, convertedDeltas);
+        await rabbitMQPublisher.publishToAgent(_teamId, id, convertedDeltas);
+        await rabbitMQPublisher.publish(_teamId, "Agent", correlationId, PayloadOperation.UPDATE, convertedDeltas);
 
         return updatedAgent; // fully populated model
     }
 
 
-    public async updateAgentProperties(_orgId: mongodb.ObjectId, id: mongodb.ObjectId, data: any, userEmail: string, correlationId?: string, responseFields?: string): Promise<object> {
+    public async updateAgentProperties(_teamId: mongodb.ObjectId, id: mongodb.ObjectId, data: any, userEmail: string, correlationId?: string, responseFields?: string): Promise<object> {
         let updates = {};
         let deletes = {};
         for (let i = 0; i < Object.keys(data).length; i++) {
@@ -170,7 +170,7 @@ export class AgentService {
                 deletes[`propertyOverrides.${key}`] = '';
         }
 
-        const filter = { _id: id, _orgId };
+        const filter = { _id: id, _teamId };
         const updatedAgent = await AgentModel.findOneAndUpdate(filter, { $set: updates, $unset: deletes }, { new: true }).select(responseFields);
 
         if (!updatedAgent)
@@ -178,14 +178,14 @@ export class AgentService {
 
         let deltas = Object.assign({ _id: id }, { propertyOverrides: data });
         let convertedDeltas = convertData(AgentSchema, deltas);
-        await rabbitMQPublisher.publishToAgent(_orgId, id, convertedDeltas);
-        await rabbitMQPublisher.publish(_orgId, "Agent", correlationId, PayloadOperation.UPDATE, convertedDeltas);
+        await rabbitMQPublisher.publishToAgent(_teamId, id, convertedDeltas);
+        await rabbitMQPublisher.publish(_teamId, "Agent", correlationId, PayloadOperation.UPDATE, convertedDeltas);
 
         return updatedAgent; // fully populated model
     }
 
 
-    public async processOrphanedTasks(_orgId: mongodb.ObjectId, id: mongodb.ObjectId, logger: BaseLogger): Promise<object> {
+    public async processOrphanedTasks(_teamId: mongodb.ObjectId, id: mongodb.ObjectId, logger: BaseLogger): Promise<object> {
         let result: any = { success: true };
         try {
             const agent = await AgentModel.findById(id);
@@ -193,7 +193,7 @@ export class AgentService {
                 throw new MissingObjectError(`Agent with id '${id}" not found`);
 
             let orphanedTasksFilter = {};
-            orphanedTasksFilter['_orgId'] = _orgId;
+            orphanedTasksFilter['_teamId'] = _teamId;
             orphanedTasksFilter['_agentId'] = new mongodb.ObjectId(agent._id);
             orphanedTasksFilter['status'] = { $lt: Enums.TaskStatus.SUCCEEDED };
             const orphanedTasks = await taskOutcomeService.findAllTaskOutcomesInternal(orphanedTasksFilter);
@@ -215,18 +215,18 @@ export class AgentService {
                         }
 
                         try {
-                            const taskStepOutcomesQuery = await stepOutcomeService.findStepOutcomesForTask(_orgId, orphanedTask._id, { status: { $lte: Enums.StepStatus.RUNNING } }, '_id');
+                            const taskStepOutcomesQuery = await stepOutcomeService.findStepOutcomesForTask(_teamId, orphanedTask._id, { status: { $lte: Enums.StepStatus.RUNNING } }, '_id');
                             if (_.isArray(taskStepOutcomesQuery) && taskStepOutcomesQuery.length > 0) {
                                 for (let i = 0; i < taskStepOutcomesQuery.length; i++) {
                                     const stepOutcome: any = taskStepOutcomesQuery[i];
-                                    await stepOutcomeService.updateStepOutcome(_orgId, stepOutcome._id, stepOutcomeUpdates, null, null, '_id');
+                                    await stepOutcomeService.updateStepOutcome(_teamId, stepOutcome._id, stepOutcomeUpdates, null, null, '_id');
                                 }
                             }
-                            await taskOutcomeService.updateTaskOutcome(_orgId, orphanedTask._id, taskOutcomeUpdates, logger, { status: { $lt: Enums.TaskStatus.SUCCEEDED } }, null, '_id');
-                            const queryTasks = await taskService.findAllJobTasks(_orgId, orphanedTask._jobId);
+                            await taskOutcomeService.updateTaskOutcome(_teamId, orphanedTask._id, taskOutcomeUpdates, logger, { status: { $lt: Enums.TaskStatus.SUCCEEDED } }, null, '_id');
+                            const queryTasks = await taskService.findAllJobTasks(_teamId, orphanedTask._jobId);
                             if (_.isArray(queryTasks) && queryTasks.length > 0) {
                                 const task = queryTasks[0];
-                                await localRestAccess.RestAPICall(`taskaction/republish/${task._id}`, 'POST', _orgId, null, null);
+                                await localRestAccess.RestAPICall(`taskaction/republish/${task._id}`, 'POST', _teamId, null, null);
                             }
                         } catch (e) {
                             if (!(e instanceof MissingObjectError)) {
@@ -249,14 +249,14 @@ export class AgentService {
                         }
 
                         try {
-                            const taskStepOutcomesQuery = await stepOutcomeService.findStepOutcomesForTask(_orgId, orphanedTask._id, { status: { $lte: Enums.StepStatus.RUNNING } }, '_id');
+                            const taskStepOutcomesQuery = await stepOutcomeService.findStepOutcomesForTask(_teamId, orphanedTask._id, { status: { $lte: Enums.StepStatus.RUNNING } }, '_id');
                             if (_.isArray(taskStepOutcomesQuery) && taskStepOutcomesQuery.length > 0) {
                                 for (let i = 0; i < taskStepOutcomesQuery.length; i++) {
                                     const stepOutcome: any = taskStepOutcomesQuery[i];
-                                    await stepOutcomeService.updateStepOutcome(_orgId, stepOutcome._id, stepOutcomeUpdates, null, null, '_id');
+                                    await stepOutcomeService.updateStepOutcome(_teamId, stepOutcome._id, stepOutcomeUpdates, null, null, '_id');
                                 }
                             }
-                            await taskOutcomeService.updateTaskOutcome(_orgId, orphanedTask._id, taskOutcomeUpdates, logger, { status: { $lt: Enums.TaskStatus.SUCCEEDED } });
+                            await taskOutcomeService.updateTaskOutcome(_teamId, orphanedTask._id, taskOutcomeUpdates, logger, { status: { $lt: Enums.TaskStatus.SUCCEEDED } });
                         } catch (e) {
                             if (!(e instanceof MissingObjectError)) {
                                 logger.LogError(`Error canceling orphaned autoRestart task`, { orphanedTask });
@@ -265,7 +265,7 @@ export class AgentService {
                     }
                 }
             }
-            await this.updateAgentHeartbeat(_orgId, agent._id, { offline: true });
+            await this.updateAgentHeartbeat(_teamId, agent._id, { offline: true });
         } catch (err) {
             result.success = false;
             result.err = err;

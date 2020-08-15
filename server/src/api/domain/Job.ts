@@ -14,7 +14,7 @@ export class JobSchema {
     id?: mongodb.ObjectId;
 
     @prop({ required: true })
-    _orgId: mongodb.ObjectId;
+    _teamId: mongodb.ObjectId;
 
     @prop({ required: false })
     _jobDefId?: mongodb.ObjectId;
@@ -94,8 +94,8 @@ export class JobSchema {
             _id: (data) => {
                 return new mongodb.ObjectID(data._id);
             },
-            _orgId: (data) => {
-                return new mongodb.ObjectID(data._orgId);
+            _teamId: (data) => {
+                return new mongodb.ObjectID(data._teamId);
             },
             _jobDefId: (data) => {
                 return new mongodb.ObjectID(data._jobDefId);

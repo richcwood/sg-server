@@ -16,16 +16,16 @@ import { BaseLogger } from '../../shared/SGLogger';
 export class InvoiceController {
 
     public async getManyInvoices(req: Request, resp: Response, next: NextFunction): Promise<void> {
-        // const _orgId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._orgid);
+        // const _teamId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._teamid);
         defaultBulkGet({}, req, resp, next, InvoiceSchema, InvoiceModel, invoiceService);
     }
 
 
     public async getInvoice(req: Request, resp: Response, next: NextFunction): Promise<void> {
         try {
-            const _orgId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._orgid);
+            const _teamId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._teamid);
             const response: ResponseWrapper = (resp as any).body;
-            const invoice = await invoiceService.findInvoice(_orgId, new mongodb.ObjectId(req.params.invoiceId), req.query.responseFields);
+            const invoice = await invoiceService.findInvoice(_teamId, new mongodb.ObjectId(req.params.invoiceId), (<string>req.query.responseFields));
 
             if (_.isArray(invoice) && invoice.length === 0) {
                 next(new MissingObjectError(`Invoice ${req.params.invoiceId} not found.`));
@@ -49,9 +49,9 @@ export class InvoiceController {
 
     public async getInvoicePDF(req: Request, resp: Response, next: NextFunction): Promise<void> {
         try {
-            const _orgId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._orgid);
+            const _teamId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._teamid);
             const response: ResponseWrapper = (resp as any).body;
-            const invoice = await invoiceService.findInvoicePDF(_orgId, new mongodb.ObjectId(req.params.invoiceId));
+            const invoice = await invoiceService.findInvoicePDF(_teamId, new mongodb.ObjectId(req.params.invoiceId));
 
             response.data = convertResponseData(InvoiceSchema, invoice);
             next();
@@ -69,10 +69,10 @@ export class InvoiceController {
 
 
     public async createInvoice(req: Request, resp: Response, next: NextFunction): Promise<void> {
-        const _orgId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._orgid);
+        const _teamId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._teamid);
         const response: ResponseWrapper = resp['body'];
         try {
-            const newInvoice = await invoiceService.createInvoice(_orgId, convertRequestData(InvoiceSchema, req.body), req.header('correlationId'), req.query.responseFields);
+            const newInvoice = await invoiceService.createInvoice(_teamId, convertRequestData(InvoiceSchema, req.body), req.header('correlationId'), (<string>req.query.responseFields));
             if (newInvoice == null) {
                 response.data = '';
                 response.statusCode = ResponseCode.OK
@@ -89,10 +89,10 @@ export class InvoiceController {
 
 
     public async updateInvoice(req: Request, resp: Response, next: NextFunction): Promise<void> {
-        const _orgId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._orgid);
+        const _teamId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._teamid);
         const response: ResponseWrapper = resp['body'];
         try {
-            const updatedInvoice: any = await invoiceService.updateInvoice(_orgId, new mongodb.ObjectId(req.params.invoiceId), convertRequestData(InvoiceSchema, req.body), req.header('correlationId'), req.query.responseFields);
+            const updatedInvoice: any = await invoiceService.updateInvoice(_teamId, new mongodb.ObjectId(req.params.invoiceId), convertRequestData(InvoiceSchema, req.body), req.header('correlationId'), (<string>req.query.responseFields));
 
             if (_.isArray(updatedInvoice) && updatedInvoice.length === 0) {
                 next(new MissingObjectError(`Invoice ${req.params.invoiceId} not found.`));

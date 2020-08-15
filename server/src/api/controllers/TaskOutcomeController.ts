@@ -15,17 +15,17 @@ import * as mongodb from 'mongodb';
 export class TaskOutcomeController {
 
   public async getManyTaskOutcomes(req: Request, resp: Response, next: NextFunction): Promise<void> {
-    const _orgId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._orgid);
-    defaultBulkGet({ _orgId }, req, resp, next, TaskOutcomeSchema, TaskOutcomeModel, taskOutcomeService);
+    const _teamId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._teamid);
+    defaultBulkGet({ _teamId }, req, resp, next, TaskOutcomeSchema, TaskOutcomeModel, taskOutcomeService);
   }
 
 
   public async getTaskOutcomesForJob(req: Request, resp: Response, next: NextFunction): Promise<void> {
-    const _orgId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._orgid);
+    const _teamId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._teamid);
     const _jobId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.params.jobId);
     const response: ResponseWrapper = (resp as any).body;
 
-    const steps = await taskOutcomeService.findTaskOutcomes(_orgId, { _jobId }, req.query.responseFields);
+    const steps = await taskOutcomeService.findTaskOutcomes(_teamId, { _jobId }, (<string>req.query.responseFields));
 
     if (_.isArray(steps) && steps.length === 0) {
       next(new MissingObjectError(`No task outcomes found for job ${_jobId}.`));
@@ -39,9 +39,9 @@ export class TaskOutcomeController {
 
   public async getTaskOutcome(req: Request, resp: Response, next: NextFunction): Promise<void> {
     try {
-      const _orgId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._orgid);
+      const _teamId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._teamid);
       const response: ResponseWrapper = (resp as any).body;
-      const taskOutcome = await taskOutcomeService.findTaskOutcome(_orgId, new mongodb.ObjectId(req.params.taskOutcomeId), req.query.responseFields);
+      const taskOutcome = await taskOutcomeService.findTaskOutcome(_teamId, new mongodb.ObjectId(req.params.taskOutcomeId), (<string>req.query.responseFields));
 
       if (_.isArray(taskOutcome) && taskOutcome.length === 0) {
         next(new MissingObjectError(`TaskOutcome ${req.params.taskOutcomeId} not found.`));
@@ -65,10 +65,10 @@ export class TaskOutcomeController {
 
   public async createTaskOutcome(req: Request, resp: Response, next: NextFunction): Promise<void> {
     const logger: BaseLogger = (<any>req).logger;
-    const _orgId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._orgid);
+    const _teamId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._teamid);
     const response: ResponseWrapper = resp['body'];
     try {
-      const newTaskOutcome = await taskOutcomeService.createTaskOutcome(_orgId, convertRequestData(TaskOutcomeSchema, req.body), logger, req.header('correlationId'), req.query.responseFields);
+      const newTaskOutcome = await taskOutcomeService.createTaskOutcome(_teamId, convertRequestData(TaskOutcomeSchema, req.body), logger, req.header('correlationId'), (<string>req.query.responseFields));
       response.data = convertResponseData(TaskOutcomeSchema, newTaskOutcome);
       response.statusCode = ResponseCode.CREATED;
       next();
@@ -81,10 +81,10 @@ export class TaskOutcomeController {
 
   public async updateTaskOutcome(req: Request, resp: Response, next: NextFunction): Promise<void> {
     const logger: BaseLogger = (<any>req).logger;
-    const _orgId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._orgid);
+    const _teamId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._teamid);
     const response: ResponseWrapper = resp['body'];
     try {
-      const updatedTaskOutcome: any = await taskOutcomeService.updateTaskOutcome(_orgId, new mongodb.ObjectId(req.params.taskOutcomeId), convertRequestData(TaskOutcomeSchema, req.body), logger, null, req.header('correlationId'), req.query.responseFields);
+      const updatedTaskOutcome: any = await taskOutcomeService.updateTaskOutcome(_teamId, new mongodb.ObjectId(req.params.taskOutcomeId), convertRequestData(TaskOutcomeSchema, req.body), logger, null, req.header('correlationId'), (<string>req.query.responseFields));
 
       if (_.isArray(updatedTaskOutcome) && updatedTaskOutcome.length === 0) {
         next(new MissingObjectError(`TaskOutcome ${req.params.taskOutcomeId} not found.`));

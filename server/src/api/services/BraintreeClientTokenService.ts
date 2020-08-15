@@ -8,7 +8,7 @@ import * as braintree from 'braintree';
 
 export class BraintreeClientTokenService {
 
-    public async createBraintreeClientToken(_orgId: mongodb.ObjectId): Promise<object> {
+    public async createBraintreeClientToken(_teamId: mongodb.ObjectId): Promise<object> {
 
         let merchantId = config.get('braintreeMerchantId');
         let publicKey = config.get('braintreePublicKey');
@@ -23,7 +23,7 @@ export class BraintreeClientTokenService {
 
         return await new Promise((resolve, reject) => {
             gateway.clientToken.generate({
-                customerId: _orgId.toHexString()
+                customerId: _teamId.toHexString()
             }, (err, response) => {
                 if (err) console.log('err -> ', err);
                 console.log('response -> ', JSON.stringify(response, null, 4));

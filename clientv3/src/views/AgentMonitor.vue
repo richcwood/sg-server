@@ -187,7 +187,7 @@ export default class AgentMonitor extends Vue {
   private readonly momentToStringV1 = momentToStringV1;
   private readonly mapToString = mapToString;
 
-  @BindStoreModel({storeType: StoreType.OrgStore})
+  @BindStoreModel({storeType: StoreType.TeamStore})
   private selectedTeam : any;
 
   private lastCountForSort = 0;
@@ -208,7 +208,7 @@ export default class AgentMonitor extends Vue {
 
   private get agents(): Agent[] {
     // Agent load was already triggered when the app started (security/actions/startApp)
-    const agents = this.$store.getters[`${StoreType.AgentStore}/getAgentsBySelectedOrg`];
+    const agents = this.$store.getters[`${StoreType.AgentStore}/getAgentsBySelectedTeam`];
      
     if(this.lastCountForSort !== agents.length){
       this.lastCountForSort = agents.length;

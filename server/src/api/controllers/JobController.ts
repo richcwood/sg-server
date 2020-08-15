@@ -16,16 +16,16 @@ import * as mongodb from 'mongodb';
 export class JobController {
 
     public async getManyJobs(req: Request, resp: Response, next: NextFunction): Promise<void> {
-        const _orgId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._orgid);
-        defaultBulkGet({ _orgId }, req, resp, next, JobSchema, JobModel, jobService);
+        const _teamId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._teamid);
+        defaultBulkGet({ _teamId }, req, resp, next, JobSchema, JobModel, jobService);
     }
 
 
     public async getJob(req: Request, resp: Response, next: NextFunction): Promise<void> {
         try {
-            const _orgId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._orgid);
+            const _teamId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._teamid);
             const response: ResponseWrapper = (resp as any).body;
-            const job = await jobService.findJob(_orgId, new mongodb.ObjectId(req.params.jobId), req.query.responseFields);
+            const job = await jobService.findJob(_teamId, new mongodb.ObjectId(req.params.jobId), (<string>req.query.responseFields));
             console.log('JobController -> getJob -> job -> ', JSON.stringify(job, null, 4));
 
             if (_.isArray(job) && job.length === 0) {
@@ -50,7 +50,7 @@ export class JobController {
 
     public async createInteractiveConsoleJob(req: Request, resp: Response, next: NextFunction): Promise<void> {
         const logger: BaseLogger = (<any>req).logger;
-        const _orgId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._orgid);
+        const _teamId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._teamid);
         const createdBy = new mongodb.ObjectId(<string>req.headers.userid);
         const response: ResponseWrapper = resp['body'];
         try {
@@ -59,7 +59,7 @@ export class JobController {
             //     'Params': JSON.stringify(req.params, null, 4)
             // });
 
-            let newJob = await jobService.createJob(_orgId, req.body, createdBy, TaskSource.CONSOLE, logger, req.header('correlationId'), req.query.responseFields);
+            let newJob = await jobService.createJob(_teamId, req.body, createdBy, TaskSource.CONSOLE, logger, req.header('correlationId'), (<string>req.query.responseFields));
             response.data = convertResponseData(JobSchema, newJob);
             response.statusCode = ResponseCode.CREATED;
             next();
@@ -72,7 +72,7 @@ export class JobController {
 
     public async createJob(req: Request, resp: Response, next: NextFunction): Promise<void> {
         const logger: BaseLogger = (<any>req).logger;
-        const _orgId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._orgid);
+        const _teamId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._teamid);
         const createdBy = new mongodb.ObjectId(<string>req.headers.userid);
         const response: ResponseWrapper = resp['body'];
         try {
@@ -83,11 +83,11 @@ export class JobController {
 
             if (Object.keys(req.headers).indexOf('_jobdefid') >= 0) {
                 const _jobDefId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._jobdefid);
-                let newJob = await jobService.createJobFromJobDef(_orgId, _jobDefId, req.body, req.header('correlationId'), req.query.responseFields);
+                let newJob = await jobService.createJobFromJobDef(_teamId, _jobDefId, req.body, req.header('correlationId'), (<string>req.query.responseFields));
                 response.data = convertResponseData(JobSchema, newJob);
                 response.statusCode = ResponseCode.CREATED;
             } else {
-                let newJob = await jobService.createJob(_orgId, req.body, createdBy, TaskSource.JOB, logger, req.header('correlationId'), req.query.responseFields);
+                let newJob = await jobService.createJob(_teamId, req.body, createdBy, TaskSource.JOB, logger, req.header('correlationId'), (<string>req.query.responseFields));
                 response.data = convertResponseData(JobSchema, newJob);
                 response.statusCode = ResponseCode.CREATED;
             }
@@ -100,10 +100,10 @@ export class JobController {
 
 
     public async updateJob(req: Request, resp: Response, next: NextFunction): Promise<void> {
-        const _orgId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._orgid);
+        const _teamId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._teamid);
         const response: ResponseWrapper = resp['body'];
         try {
-            let updatedJob: any = await jobService.updateJob(_orgId, new mongodb.ObjectId(req.params.jobId), convertRequestData(JobSchema, req.body), req.header('correlationId'), req.query.responseFields);
+            let updatedJob: any = await jobService.updateJob(_teamId, new mongodb.ObjectId(req.params.jobId), convertRequestData(JobSchema, req.body), req.header('correlationId'), (<string>req.query.responseFields));
 
             if (_.isArray(updatedJob) && updatedJob.length === 0) {
                 next(new MissingObjectError(`Job ${req.params.jobId} not found.`));

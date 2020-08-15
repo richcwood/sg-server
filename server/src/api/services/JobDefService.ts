@@ -29,8 +29,8 @@ export class JobDefService {
     return JobDefModel.find(filter).select(responseFields);
   }
 
-  public async findJobDef(_orgId: mongodb.ObjectId, jobDefId: mongodb.ObjectId, responseFields?: string) {
-    return JobDefModel.findById(jobDefId).find({ _orgId }).select(responseFields);
+  public async findJobDef(_teamId: mongodb.ObjectId, jobDefId: mongodb.ObjectId, responseFields?: string) {
+    return JobDefModel.findById(jobDefId).find({ _teamId }).select(responseFields);
   }
 
 
@@ -41,19 +41,19 @@ export class JobDefService {
   }
 
 
-  public async createJobDef(_orgId: mongodb.ObjectId, data: any, correlationId: string, responseFields?: string): Promise<object> {
-    data._orgId = _orgId;
+  public async createJobDef(_teamId: mongodb.ObjectId, data: any, correlationId: string, responseFields?: string): Promise<object> {
+    data._teamId = _teamId;
     const jobDefModel = new JobDefModel(data);
     const newJobDef = await jobDefModel.save();
 
-    await rabbitMQPublisher.publish(_orgId, "JobDef", correlationId, PayloadOperation.CREATE, convertData(JobDefSchema, newJobDef));
+    await rabbitMQPublisher.publish(_teamId, "JobDef", correlationId, PayloadOperation.CREATE, convertData(JobDefSchema, newJobDef));
 
-    return this.findJobDef(_orgId, newJobDef._id, responseFields);
+    return this.findJobDef(_teamId, newJobDef._id, responseFields);
   }
 
 
-  public async createJobDefFromJobDef(_orgId: mongodb.ObjectId, data: any, correlationId: string, responseFields?: string): Promise<object> {
-    data._orgId = _orgId;
+  public async createJobDefFromJobDef(_teamId: mongodb.ObjectId, data: any, correlationId: string, responseFields?: string): Promise<object> {
+    data._teamId = _teamId;
 
     if (!data._jobDefId)
       throw new ValidationError('Request body missing "_jobDefId"');
@@ -61,13 +61,13 @@ export class JobDefService {
     if (!data.createdBy)
       throw new ValidationError('Request body missing "createdBy"');
 
-    const jobDefSourceQuery = await this.findJobDef(_orgId, new mongodb.ObjectId(data._jobDefId));
+    const jobDefSourceQuery = await this.findJobDef(_teamId, new mongodb.ObjectId(data._jobDefId));
     if (!jobDefSourceQuery || (_.isArray(jobDefSourceQuery) && jobDefSourceQuery.length === 0))
       throw new MissingObjectError(`JobDef ${data._jobDefId} not found.`);
     const jobDefSource = jobDefSourceQuery[0];
 
     const jobDef_data = {
-      _orgId: data._orgId,
+      _teamId: data._teamId,
       name: `${jobDefSource.name} Copy`,
       createdBy: data.createdBy,
       maxInstances: jobDefSource.maxInstances,
@@ -85,12 +85,12 @@ export class JobDefService {
     const jobDefModel = new JobDefModel(jobDef_data);
     const newJobDef = await jobDefModel.save();
 
-    let taskDefsSourceQuery: TaskDefSchema[] = await taskDefService.findJobDefTaskDefs(_orgId, data._jobDefId);
+    let taskDefsSourceQuery: TaskDefSchema[] = await taskDefService.findJobDefTaskDefs(_teamId, data._jobDefId);
     for (let i = 0; i < taskDefsSourceQuery.length; i++) {
       let taskDefSource: TaskDefSchema = taskDefsSourceQuery[i];
 
       const taskDef_data = {
-        _orgId: data._orgId,
+        _teamId: data._teamId,
         _jobDefId: newJobDef._id,
         target: taskDefSource.target,
         name: taskDefSource.name,
@@ -102,16 +102,16 @@ export class JobDefService {
         artifacts: taskDefSource.artifacts,
       }
 
-      const taskDefReq: any = await taskDefService.createTaskDef(_orgId, taskDef_data, correlationId, '_id');
+      const taskDefReq: any = await taskDefService.createTaskDef(_teamId, taskDef_data, correlationId, '_id');
       const newTaskDef = taskDefReq[0];
 
 
-      let stepDefsSourceQuery: StepDefSchema[] = await stepDefService.findTaskDefStepDefs(_orgId, taskDefSource._id);
+      let stepDefsSourceQuery: StepDefSchema[] = await stepDefService.findTaskDefStepDefs(_teamId, taskDefSource._id);
       for (let i = 0; i < stepDefsSourceQuery.length; i++) {
         let stepDefSource: StepDefSchema = stepDefsSourceQuery[i];
 
         const stepDef_data = {
-          _orgId: stepDefSource._orgId,
+          _teamId: stepDefSource._teamId,
           _taskDefId: newTaskDef._id,
           name: stepDefSource.name,
           _scriptId: stepDefSource._scriptId,
@@ -121,18 +121,18 @@ export class JobDefService {
           variables: stepDefSource.variables,
         }
 
-        const stepDefReq: any = await stepDefService.createStepDef(_orgId, stepDef_data, correlationId, '_id');
+        const stepDefReq: any = await stepDefService.createStepDef(_teamId, stepDef_data, correlationId, '_id');
       }
     }
 
-    await rabbitMQPublisher.publish(_orgId, "JobDef", correlationId, PayloadOperation.CREATE, convertData(JobDefSchema, newJobDef));
+    await rabbitMQPublisher.publish(_teamId, "JobDef", correlationId, PayloadOperation.CREATE, convertData(JobDefSchema, newJobDef));
 
-    return this.findJobDef(_orgId, newJobDef._id, responseFields);
+    return this.findJobDef(_teamId, newJobDef._id, responseFields);
   }
 
 
-  public async createJobDefFromScript(_orgId: mongodb.ObjectId, data: any, correlationId: string, responseFields?: string): Promise<object> {
-    data._orgId = _orgId;
+  public async createJobDefFromScript(_teamId: mongodb.ObjectId, data: any, correlationId: string, responseFields?: string): Promise<object> {
+    data._teamId = _teamId;
 
     if (!data._scriptId)
       throw new ValidationError('Request body missing "_scriptId"');
@@ -140,13 +140,13 @@ export class JobDefService {
     if (!data.createdBy)
       throw new ValidationError('Request body missing "createdBy"');
 
-    const scriptReq = await scriptService.findScript(_orgId, new mongodb.ObjectId(data._scriptId), '_id name');
+    const scriptReq = await scriptService.findScript(_teamId, new mongodb.ObjectId(data._scriptId), '_id name');
     if (!scriptReq || (_.isArray(scriptReq) && scriptReq.length === 0))
       throw new MissingObjectError(`Script ${data._scriptId} not found.`);
     const script = scriptReq[0];
 
     const jobDef_data = {
-      _orgId,
+      _teamId,
       name: `${script.name} job`,
       createdBy: data.createdBy
     };
@@ -154,31 +154,31 @@ export class JobDefService {
     const newJobDef = await jobDefModel.save();
 
     const taskDef_data = {
-      _orgId,
+      _teamId,
       _jobDefId: newJobDef._id,
       target: TaskDefTarget.SINGLE_AGENT,
       name: 'task'
     };
-    const taskDefReq: any = await taskDefService.createTaskDef(_orgId, taskDef_data, correlationId, '_id');
+    const taskDefReq: any = await taskDefService.createTaskDef(_teamId, taskDef_data, correlationId, '_id');
     const taskDef = taskDefReq[0];
 
     const stepDef_data = {
-      _orgId,
+      _teamId,
       _taskDefId: taskDef._id,
       name: 'step',
       _scriptId: script._id,
       order: 1
     };
-    await stepDefService.createStepDef(_orgId, stepDef_data, correlationId, '_id');
+    await stepDefService.createStepDef(_teamId, stepDef_data, correlationId, '_id');
 
-    await rabbitMQPublisher.publish(_orgId, "JobDef", correlationId, PayloadOperation.CREATE, convertData(JobDefSchema, newJobDef));
+    await rabbitMQPublisher.publish(_teamId, "JobDef", correlationId, PayloadOperation.CREATE, convertData(JobDefSchema, newJobDef));
 
-    return this.findJobDef(_orgId, newJobDef._id, responseFields);
+    return this.findJobDef(_teamId, newJobDef._id, responseFields);
   }
 
 
-  public async createJobDefFromCron(_orgId: mongodb.ObjectId, data: any, correlationId: string, responseFields?: string): Promise<object> {
-    data._orgId = _orgId;
+  public async createJobDefFromCron(_teamId: mongodb.ObjectId, data: any, correlationId: string, responseFields?: string): Promise<object> {
+    data._teamId = _teamId;
 
     if (!data.cronString)
       throw new ValidationError('Request body missing "cronString"');
@@ -189,7 +189,7 @@ export class JobDefService {
     if (!data.createdBy)
       throw new ValidationError('Request body missing "createdBy"');
 
-    const agentReq = await agentService.findAgent(_orgId, new mongodb.ObjectId(data._agentId), '_id machineId timezone');
+    const agentReq = await agentService.findAgent(_teamId, new mongodb.ObjectId(data._agentId), '_id machineId timezone');
     if (!agentReq || (_.isArray(agentReq) && agentReq.length === 0))
       throw new MissingObjectError(`Agent ${data._agentId} not found.`);
     const agent = agentReq[0];
@@ -197,7 +197,7 @@ export class JobDefService {
     const cronJobUniqueId = SGUtils.makeid(5);
 
     const jobDef_data = {
-      _orgId,
+      _teamId,
       name: `Cron Job ${agent.machineId} - ${cronJobUniqueId}`,
       createdBy: data.createdBy
     };
@@ -208,39 +208,39 @@ export class JobDefService {
 
     const code = SGUtils.btoa(tokens.slice(6).join(' '));
     const script_data = {
-      _orgId,
+      _teamId,
       name: `cron-${agent.machineId}-${cronJobUniqueId}`,
       scriptType: ScriptType.SH,
       code: code,
       shadowCopyCode: code,
-      orgEditable: true
+      teamEditable: true
     };
-    const scriptReq: any = await scriptService.createScript(_orgId, script_data, data.createdBy, correlationId, '_id');
+    const scriptReq: any = await scriptService.createScript(_teamId, script_data, data.createdBy, correlationId, '_id');
     const script = scriptReq[0];
 
     const taskDef_data = {
-      _orgId,
+      _teamId,
       _jobDefId: newJobDef._id,
       target: TaskDefTarget.SINGLE_SPECIFIC_AGENT,
       name: 'task',
       targetAgentId: agent._id.toHexString()
     };
-    const taskDefReq: any = await taskDefService.createTaskDef(_orgId, taskDef_data, correlationId, '_id');
+    const taskDefReq: any = await taskDefService.createTaskDef(_teamId, taskDef_data, correlationId, '_id');
     const taskDef = taskDefReq[0];
 
     const stepDef_data = {
-      _orgId,
+      _teamId,
       _taskDefId: taskDef._id,
       name: 'step',
       _scriptId: script._id,
       order: 1
     };
-    await stepDefService.createStepDef(_orgId, stepDef_data, correlationId, '_id');
+    await stepDefService.createStepDef(_teamId, stepDef_data, correlationId, '_id');
 
-    await rabbitMQPublisher.publish(_orgId, "JobDef", correlationId, PayloadOperation.CREATE, convertData(JobDefSchema, newJobDef));
+    await rabbitMQPublisher.publish(_teamId, "JobDef", correlationId, PayloadOperation.CREATE, convertData(JobDefSchema, newJobDef));
 
     const schedule_data: any = {
-      _orgId,
+      _teamId,
       _jobDefId: newJobDef._id,
       name: 'Schedule from Cron',
       createdBy: data.createdBy,
@@ -255,20 +255,20 @@ export class JobDefService {
         Minute: tokens[0],
       },
       FunctionKwargs: {
-        _orgId,
+        _teamId,
         targetId: newJobDef._id
       }
     };
     if (agent.timezone)
       schedule_data.cron.Timezone = agent.timezone;
-    await scheduleService.createSchedule(_orgId, schedule_data, correlationId, '_id');
+    await scheduleService.createSchedule(_teamId, schedule_data, correlationId, '_id');
 
-    return this.findJobDef(_orgId, newJobDef._id, responseFields);
+    return this.findJobDef(_teamId, newJobDef._id, responseFields);
   }
 
 
-  public async updateJobDef(_orgId: mongodb.ObjectId, id: mongodb.ObjectId, data: any, filter?: any, correlationId?: string, userEmail?: string, responseFields?: string): Promise<object> {
-    const defaultFilter = { _id: id, _orgId };
+  public async updateJobDef(_teamId: mongodb.ObjectId, id: mongodb.ObjectId, data: any, filter?: any, correlationId?: string, userEmail?: string, responseFields?: string): Promise<object> {
+    const defaultFilter = { _id: id, _teamId };
     if (filter)
       filter = Object.assign(defaultFilter, filter);
     else
@@ -280,20 +280,20 @@ export class JobDefService {
       throw new MissingObjectError(`Job template with id '${id}' not found.`)
 
     if (data.status == JobDefStatus.RUNNING && jobDef.status == JobDefStatus.PAUSED)
-      await jobService.LaunchReadyJobs(_orgId, id);
+      await jobService.LaunchReadyJobs(_teamId, id);
 
     let deltas = Object.assign({ _id: id }, data);
     let convertedDeltas = convertData(JobDefSchema, deltas);
-    await rabbitMQPublisher.publish(_orgId, "JobDef", correlationId, PayloadOperation.UPDATE, convertedDeltas, userEmail);
+    await rabbitMQPublisher.publish(_teamId, "JobDef", correlationId, PayloadOperation.UPDATE, convertedDeltas, userEmail);
 
-    return this.findJobDef(_orgId, id, responseFields);
+    return this.findJobDef(_teamId, id, responseFields);
   }
 
 
-  public async deleteJobDef(_orgId: mongodb.ObjectId, id: mongodb.ObjectId, correlationId?: string): Promise<void> {
+  public async deleteJobDef(_teamId: mongodb.ObjectId, id: mongodb.ObjectId, correlationId?: string): Promise<void> {
     const deleted = await JobDefModel.deleteOne({ _id: id });
 
-    await rabbitMQPublisher.publish(_orgId, "JobDef", correlationId, PayloadOperation.DELETE, { id, correlationId });
+    await rabbitMQPublisher.publish(_teamId, "JobDef", correlationId, PayloadOperation.DELETE, { id, correlationId });
 
     return deleted;
   }

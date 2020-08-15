@@ -7,7 +7,7 @@ export enum ScheduleTriggerType {
 };
 
 export interface Schedule extends Model {
-  _orgId: string;
+  _teamId: string;
   _jobDefId: string;
   name: string;
   createdBy: string;

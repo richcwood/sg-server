@@ -16,27 +16,27 @@ import * as mongodb from 'mongodb';
 export class ScriptController {
 
   public async getManyScripts(req: Request, resp: Response, next: NextFunction): Promise<void> {
-    const _orgId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._orgid);
-    defaultBulkGet({ _orgId }, req, resp, next, ScriptSchema, ScriptModel, scriptService);
+    const _teamId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._teamid);
+    defaultBulkGet({ _teamId }, req, resp, next, ScriptSchema, ScriptModel, scriptService);
 
-    // const _orgId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._orgid);
+    // const _teamId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._teamid);
     // const _jobId = <string>req.params.jobId;
     // const response: ResponseWrapper = (resp as any).body;
 
-    // const scripts = await scriptService.findAllScripts(_orgId, _jobId, req.query.responseFields);
+    // const scripts = await scriptService.findAllScripts(_teamId, _jobId, (<string>req.query.responseFields));
 
     // response.data = scripts;
 
     // next();
-    // defaultBulkGet(_orgId, req, resp, next, ScriptSchema, ScriptModel, scriptService);
+    // defaultBulkGet(_teamId, req, resp, next, ScriptSchema, ScriptModel, scriptService);
   }
 
 
   public async getScript(req: Request, resp: Response, next: NextFunction): Promise<void> {
     try {
-      const _orgId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._orgid);
+      const _teamId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._teamid);
       const response: ResponseWrapper = (resp as any).body;
-      const script = await scriptService.findScript(_orgId, new mongodb.ObjectId(req.params.scriptId), req.query.responseFields);
+      const script = await scriptService.findScript(_teamId, new mongodb.ObjectId(req.params.scriptId), (<string>req.query.responseFields));
 
       if (_.isArray(script) && script.length === 0) {
         next(new MissingObjectError(`Script ${req.params.scriptId} not found.`));
@@ -59,10 +59,10 @@ export class ScriptController {
 
 
   public async createScript(req: Request, resp: Response, next: NextFunction): Promise<void> {
-    const _orgId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._orgid);
+    const _teamId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._teamid);
     const response: ResponseWrapper = resp['body'];
     try {
-      const newScript = await scriptService.createScript(_orgId, convertRequestData(ScriptSchema, req.body), new mongodb.ObjectId(req.headers.userid), req.header('correlationId'), req.query.responseFields);
+      const newScript = await scriptService.createScript(_teamId, convertRequestData(ScriptSchema, req.body), new mongodb.ObjectId(req.headers.userid), req.header('correlationId'), (<string>req.query.responseFields));
       response.data = convertResponseData(ScriptSchema, newScript);
       response.statusCode = ResponseCode.CREATED;
       next();
@@ -74,10 +74,10 @@ export class ScriptController {
 
 
   public async updateScript(req: Request, resp: Response, next: NextFunction): Promise<void> {
-    const _orgId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._orgid);
+    const _teamId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._teamid);
     const response: ResponseWrapper = resp['body'];
     try {
-      const updatedScript: any = await scriptService.updateScript(_orgId, new mongodb.ObjectId(req.params.scriptId), convertRequestData(ScriptSchema, req.body), new mongodb.ObjectId(req.headers.userid), req.header('correlationId'), req.query.responseFields);
+      const updatedScript: any = await scriptService.updateScript(_teamId, new mongodb.ObjectId(req.params.scriptId), convertRequestData(ScriptSchema, req.body), new mongodb.ObjectId(req.headers.userid), req.header('correlationId'), (<string>req.query.responseFields));
 
       if (_.isArray(updatedScript) && updatedScript.length === 0) {
         next(new MissingObjectError(`Script ${req.params.scriptId} not found.`));

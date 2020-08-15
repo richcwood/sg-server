@@ -35,7 +35,7 @@ export default class Test46 extends TestBase.WorkflowTestBase {
         let result: boolean;
         let resApiCall: any;
 
-        const _orgId: string = config.get('sgTestOrg');
+        const _teamId: string = config.get('sgTestTeam');
 
         let firstJob: any = _.cloneDeep(InteractiveConsoleJob);
         firstJob.job.name = 'IC - Test46';
@@ -43,7 +43,7 @@ export default class Test46 extends TestBase.WorkflowTestBase {
         firstJob.job.tasks[0].targetAgentId = new mongodb.ObjectId();
         firstJob.job.tasks[0].steps[0].script.code = script1_b64;
 
-        resApiCall = await this.testSetup.RestAPICall('job', 'POST', _orgId, null, firstJob);
+        resApiCall = await this.testSetup.RestAPICall('job', 'POST', _teamId, null, firstJob);
         if (resApiCall.data.statusCode != 201) {
             self.logger.LogError('Failed', { Message: `Job POST returned ${resApiCall.data.statusCode}`, firstJob });
             return false;
@@ -57,7 +57,7 @@ export default class Test46 extends TestBase.WorkflowTestBase {
             {
                 status: null,
                 autoRestart: false,
-                _orgId: _orgId,
+                _teamId: _teamId,
                 name: firstJob.job.tasks[0].name,
                 source: 1,
                 target: TaskDefTarget.SINGLE_SPECIFIC_AGENT,
@@ -94,7 +94,7 @@ export default class Test46 extends TestBase.WorkflowTestBase {
             return result;
         self.bpMessagesExpected.length = 0;
 
-        resApiCall = await this.testSetup.RestAPICall(`jobaction/restart/${firstJob.job.id}`, 'POST', _orgId, null);
+        resApiCall = await this.testSetup.RestAPICall(`jobaction/restart/${firstJob.job.id}`, 'POST', _teamId, null);
         if (resApiCall.data.statusCode != 400) {
             self.logger.LogError('Failed', { Message: `jobaction/restart/${firstJob.job.id} POST returned ${resApiCall.data.statusCode} - should have returned 400` });
             return false;
@@ -107,7 +107,7 @@ export default class Test46 extends TestBase.WorkflowTestBase {
         }
 
 
-        await self.testSetup.RestAPICall(`jobaction/cancel/${firstJob.job.id}`, 'POST', _orgId, null, null);
+        await self.testSetup.RestAPICall(`jobaction/cancel/${firstJob.job.id}`, 'POST', _teamId, null, null);
 
         const jobCompleteBP: any = {
             domainType: 'Job',

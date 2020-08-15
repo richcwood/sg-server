@@ -66,16 +66,16 @@ export default class AgentDeadLetterWatcher {
       await cb(true, msgKey);
       if (env == "debug")
         this.amqpConnector.PublishRoute('', rmqDLQRoute, { type: 'LaunchTaskErrorMessage', values: params });
-      logger.LogDebug('OnLaunchTaskErrorMessage message received', { '_orgId': params._orgId, 'Params': params, 'MsgKey': msgKey });
-      const _orgId = params._orgId;
+      logger.LogDebug('OnLaunchTaskErrorMessage message received', { '_teamId': params._teamId, 'Params': params, 'MsgKey': msgKey });
+      const _teamId = params._teamId;
 
       let taskUpdateData: any = { status: TaskStatus.FAILED, failureCode: TaskFailureCode.LAUNCH_TASK_ERROR };
       if (params.error)
         taskUpdateData.error = params.error;
-      let updateTaskResponse: any = await localRestAccess.RestAPICall(`task/${params.id}`, 'PUT', _orgId, null, taskUpdateData);
+      let updateTaskResponse: any = await localRestAccess.RestAPICall(`task/${params.id}`, 'PUT', _teamId, null, taskUpdateData);
 
       let taskOutcome: any = {
-        _orgId: _orgId,
+        _teamId: _teamId,
         _jobId: params._jobId,
         _taskId: params.id,
         source: params.source,
@@ -90,11 +90,11 @@ export default class AgentDeadLetterWatcher {
         autoRestart: params.autoRestart
       }
 
-      const res: any = await localRestAccess.RestAPICall(`taskoutcome`, 'POST', _orgId, null, taskOutcome);
+      const res: any = await localRestAccess.RestAPICall(`taskoutcome`, 'POST', _teamId, null, taskOutcome);
       // console.log('OnNoAgentMessage -> res -> ', JSON.stringify(res.data, null, 4));
-      await localRestAccess.RestAPICall(`taskoutcome/${res.data.data.id}`, 'PUT', _orgId, null, { status: TaskStatus.FAILED, failureCode: TaskFailureCode.LAUNCH_TASK_ERROR, runtimeVars: { 'route': 'fail' } });
+      await localRestAccess.RestAPICall(`taskoutcome/${res.data.data.id}`, 'PUT', _teamId, null, { status: TaskStatus.FAILED, failureCode: TaskFailureCode.LAUNCH_TASK_ERROR, runtimeVars: { 'route': 'fail' } });
     } catch (e) {
-      logger.LogError('Error in OnLaunchTaskErrorMessage: ' + e.message, { '_orgId': params._orgId, 'Params': params, 'MsgKey': msgKey, 'Stack': e.stack });
+      logger.LogError('Error in OnLaunchTaskErrorMessage: ' + e.message, { '_teamId': params._teamId, 'Params': params, 'MsgKey': msgKey, 'Stack': e.stack });
     }
   };
 
@@ -104,7 +104,7 @@ export default class AgentDeadLetterWatcher {
       await cb(true, msgKey);
       if (env == "debug")
         this.amqpConnector.PublishRoute('', rmqDLQRoute, { type: 'TTLMessage', values: params, 'reason': properties.headers['x-first-death-reason'] });
-      logger.LogDebug('OnTTLMessage received', { '_orgId': params._orgId, 'Properties': properties, 'Params': params, 'MsgKey': msgKey });
+      logger.LogDebug('OnTTLMessage received', { '_teamId': params._teamId, 'Properties': properties, 'Params': params, 'MsgKey': msgKey });
 
       let isAgentUpdaterMessage: boolean = false;
       if (properties.headers['x-first-death-queue'].endsWith('.updater')) {
@@ -112,10 +112,10 @@ export default class AgentDeadLetterWatcher {
         // logger.LogError('Received Agent updater message in OnTTLMessage', { properties, params });
       }
 
-      let _orgId: string;
+      let _teamId: string;
 
       if (params.interruptTask) {
-        _orgId = params.interruptTask._orgId;
+        _teamId = params.interruptTask._teamId;
 
         const runtimeVars: any = { 'route': 'interrupt' };
         let taskOutcomeUpdate: any = {
@@ -123,20 +123,20 @@ export default class AgentDeadLetterWatcher {
           runtimeVars: runtimeVars
         }
 
-        await localRestAccess.RestAPICall(`taskoutcome/${params.interruptTask.id}`, 'PUT', _orgId, null, taskOutcomeUpdate);
+        await localRestAccess.RestAPICall(`taskoutcome/${params.interruptTask.id}`, 'PUT', _teamId, null, taskOutcomeUpdate);
       } else if (!isAgentUpdaterMessage) {
-        _orgId = params._orgId;
+        _teamId = params._teamId;
 
         if (params.target & (TaskDefTarget.SINGLE_AGENT | TaskDefTarget.SINGLE_AGENT_WITH_TAGS)) {
-          await localRestAccess.RestAPICall(`taskaction/republish/${params.id}`, 'POST', _orgId, null, null);
+          await localRestAccess.RestAPICall(`taskaction/republish/${params.id}`, 'POST', _teamId, null, null);
         } else {
           await SGUtils.sleep(noAgentAvailableFailureRetryInterval);
           const data: any = { task: params, queue: properties.headers['x-first-death-queue'] };
-          await localRestAccess.RestAPICall(`taskaction/requeue/${params.id}`, 'POST', _orgId, null, data);
+          await localRestAccess.RestAPICall(`taskaction/requeue/${params.id}`, 'POST', _teamId, null, data);
         }
       }
     } catch (e) {
-      logger.LogError('Error in OnTTLMessage: ' + e.message, { '_orgId': params._orgId, 'Params': params, 'MsgKey': msgKey, 'Stack': e.stack });
+      logger.LogError('Error in OnTTLMessage: ' + e.message, { '_teamId': params._teamId, 'Params': params, 'MsgKey': msgKey, 'Stack': e.stack });
     }
   };
 

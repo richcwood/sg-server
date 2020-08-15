@@ -55,7 +55,7 @@ export default class Test51 extends TestBase.WorkflowTestBase {
             while (true) {
                 let disconnectedAgentsQuery;
                 try {
-                    disconnectedAgentsQuery = await self.testSetup.RestAPICall('agent/disconnected/disconnected?responseFields=id _orgId', 'GET', config.get('sgTestOrg'), { batchSize: 10 }, null, auth);
+                    disconnectedAgentsQuery = await self.testSetup.RestAPICall('agent/disconnected/disconnected?responseFields=id _teamId', 'GET', config.get('sgTestTeam'), { batchSize: 10 }, null, auth);
                 } catch (err) {
                     if (err.message.indexOf('Request failed with status code 404') >= 0) {
                         break;
@@ -71,7 +71,7 @@ export default class Test51 extends TestBase.WorkflowTestBase {
                         const agent = inactiveAgents[i];
                         console.log('agent -> ', agent);
 
-                        let cancelRes = await this.testSetup.RestAPICall('agent/cancelorphanedtasks/' + agent.id, 'POST', agent._orgId, null, null, auth);
+                        let cancelRes = await this.testSetup.RestAPICall('agent/cancelorphanedtasks/' + agent.id, 'POST', agent._teamId, null, null, auth);
                         console.log('cancelRes -> ', cancelRes.data);
 
                         cntOfflineAgentsProcessed += 1;
@@ -96,7 +96,7 @@ export default class Test51 extends TestBase.WorkflowTestBase {
         let result: boolean;
         let resApiCall: any;
 
-        const _orgId: string = config.get('sgTestOrg');
+        const _teamId: string = config.get('sgTestTeam');
 
         const properties: any = {
             scripts: [
@@ -128,7 +128,7 @@ export default class Test51 extends TestBase.WorkflowTestBase {
 
         const { scripts, jobDefs } = await this.CreateJobDefsFromTemplates(properties);
 
-        resApiCall = await self.testSetup.RestAPICall(`job`, 'POST', _orgId, { _jobDefId: jobDefs['Job 51'].id, correlationId: correlationId });
+        resApiCall = await self.testSetup.RestAPICall(`job`, 'POST', _teamId, { _jobDefId: jobDefs['Job 51'].id, correlationId: correlationId });
         if (resApiCall.data.statusCode != 201) {
             self.logger.LogError('Failed', { Message: `job POST returned ${resApiCall.data.statusCode}`, _jobDefId: jobDefs['Job 51'].id });
             return false;
@@ -140,7 +140,7 @@ export default class Test51 extends TestBase.WorkflowTestBase {
             operation: 1,
             model:
             {
-                _orgId: config.get('sgTestOrg'),
+                _teamId: config.get('sgTestTeam'),
                 _jobDefId: jobDefs[properties.jobDefs[0].name].id,
                 runId: 0,
                 name: properties.jobDefs[0].name,
@@ -165,7 +165,7 @@ export default class Test51 extends TestBase.WorkflowTestBase {
             {
                 status: null,
                 autoRestart: true,
-                _orgId: config.get('sgTestOrg'),
+                _teamId: config.get('sgTestTeam'),
                 _jobId: job.id,
                 name: properties.jobDefs[0].taskDefs[0].name,
                 target: TaskDefTarget.SINGLE_AGENT,
@@ -181,7 +181,7 @@ export default class Test51 extends TestBase.WorkflowTestBase {
             operation: 1,
             model:
             {
-                _orgId: config.get('sgTestOrg'),
+                _teamId: config.get('sgTestTeam'),
                 _jobId: job.id,
                 source: 1,
                 status: TaskStatus.RUNNING,
@@ -214,7 +214,7 @@ export default class Test51 extends TestBase.WorkflowTestBase {
             operation: 1,
             model:
             {
-                _orgId: config.get('sgTestOrg'),
+                _teamId: config.get('sgTestTeam'),
                 _jobId: job.id,
                 _taskOutcomeId: taskOutcome[0].model.id,
                 name: 'Step 1',
@@ -308,7 +308,7 @@ export default class Test51 extends TestBase.WorkflowTestBase {
             operation: 1,
             model:
             {
-                _orgId: config.get('sgTestOrg'),
+                _teamId: config.get('sgTestTeam'),
                 _jobId: job.id,
                 source: 1,
                 status: TaskStatus.RUNNING,
@@ -335,7 +335,7 @@ export default class Test51 extends TestBase.WorkflowTestBase {
             operation: 1,
             model:
             {
-                _orgId: config.get('sgTestOrg'),
+                _teamId: config.get('sgTestTeam'),
                 _jobId: job.id,
                 _taskOutcomeId: newTaskOutcome[0].model.id,
                 name: 'Step 1',
@@ -368,7 +368,7 @@ export default class Test51 extends TestBase.WorkflowTestBase {
         agents[0].stopped = false;
         await agents[0].Init();    
 
-        await self.testSetup.RestAPICall(`jobaction/cancel/${job.id}`, 'POST', _orgId, { correlationId: correlationId }, null);
+        await self.testSetup.RestAPICall(`jobaction/cancel/${job.id}`, 'POST', _teamId, { correlationId: correlationId }, null);
 
         const jobCompleteBP: any = {
             domainType: 'Job',

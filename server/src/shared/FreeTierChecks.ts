@@ -1,7 +1,7 @@
 import { StepOutcomeModel } from '../api/domain/StepOutcome';
 import { TaskOutcomeModel } from '../api/domain/TaskOutcome';
-import { orgService } from '../api/services/OrgService';
-import { OrgPricingTier } from './Enums';
+import { teamService } from '../api/services/TeamService';
+import { TeamPricingTier } from './Enums';
 import { SGUtils } from './SGUtils';
 import * as _ from 'lodash';
 import { settingsService } from '../api/services/SettingsService';
@@ -13,15 +13,15 @@ import * as config from 'config';
 
 
 export class FreeTierChecks {
-    static MaxScriptsCheck = async (_orgId: mongodb.ObjectId) => {
-        const org = await orgService.findOrg(_orgId, 'pricingTier');
-        if (!org)
-            throw new MissingObjectError(`Org '${_orgId.toHexString()} not found`);
-        if (org.pricingTier == OrgPricingTier.FREE) {
+    static MaxScriptsCheck = async (_teamId: mongodb.ObjectId) => {
+        const team = await teamService.findTeam(_teamId, 'pricingTier');
+        if (!team)
+            throw new MissingObjectError(`Team '${_teamId.toHexString()} not found`);
+        if (team.pricingTier == TeamPricingTier.FREE) {
             let numStepsStarted = 0;
             const billingCycle = SGUtils.GetCurrentBillingCycleDates();
             let stepOutcomesFilter: any = {};
-            stepOutcomesFilter['_orgId'] = new mongodb.ObjectId(_orgId);
+            stepOutcomesFilter['_teamId'] = new mongodb.ObjectId(_teamId);
             stepOutcomesFilter['dateStarted'] = { $gte: billingCycle.start };
 
             let numStepsQuery = await StepOutcomeModel.aggregate([
@@ -34,46 +34,46 @@ export class FreeTierChecks {
             const freeTierSettings = await settingsService.findSettings('FreeTierLimits');
             if (numStepsStarted >= freeTierSettings.maxScriptsPerBillingCycle) {
                 const msg = `You have reached the maximum number of scripts you can run in this billing cycle on the free tier - please upgrade to the paid tier to run additional scripts`;
-                rabbitMQPublisher.publishBrowserAlert(_orgId, msg);
+                rabbitMQPublisher.publishBrowserAlert(_teamId, msg);
                 throw new FreeTierLimitExceededError(msg);
             }
         }
     }
 
 
-    static MaxArtifactStorageCheck = async (_orgId: mongodb.ObjectId) => {
-        const org = await orgService.findOrg(_orgId, 'pricingTier');
-        if (!org)
-            throw new MissingObjectError(`Org '${_orgId.toHexString()} not found`);
+    static MaxArtifactStorageCheck = async (_teamId: mongodb.ObjectId) => {
+        const team = await teamService.findTeam(_teamId, 'pricingTier');
+        if (!team)
+            throw new MissingObjectError(`Team '${_teamId.toHexString()} not found`);
 
-        if (org.pricingTier == OrgPricingTier.FREE) {
+        if (team.pricingTier == TeamPricingTier.FREE) {
             let s3Access = new S3Access();
             let s3Path = '';
             if (config.get('environment') != 'production')
                 s3Path += `${config.get('environment')}/`;
-            s3Path += `${_orgId.toHexString()}/`;
+            s3Path += `${_teamId.toHexString()}/`;
 
             const currentStorageUsage = s3Access.sizeOf(s3Path, config.get('S3_BUCKET_TEAM_ARTIFACTS'));
             const freeTierSettings = await settingsService.findSettings('FreeTierLimits');
             if (currentStorageUsage >= freeTierSettings.freeArtifactsStorageBytes) {
                 const msg = `You have reached the maximum amount of artifacts storage on the free tier - please upgrade to the paid tier to create additional artifacts`;
-                rabbitMQPublisher.publishBrowserAlert(_orgId, msg);
+                rabbitMQPublisher.publishBrowserAlert(_teamId, msg);
                 throw new FreeTierLimitExceededError(msg);
             }
         }
     }
 
 
-    static MaxArtifactDownloadsCheck = async (_orgId: mongodb.ObjectId) => {
-        const org = await orgService.findOrg(_orgId, 'pricingTier');
-        if (!org)
-            throw new MissingObjectError(`Org '${_orgId.toHexString()} not found`);
+    static MaxArtifactDownloadsCheck = async (_teamId: mongodb.ObjectId) => {
+        const team = await teamService.findTeam(_teamId, 'pricingTier');
+        if (!team)
+            throw new MissingObjectError(`Team '${_teamId.toHexString()} not found`);
 
-        if (org.pricingTier == OrgPricingTier.FREE) {
+        if (team.pricingTier == TeamPricingTier.FREE) {
             let currentArtifactsDownloadedGB = 0;
             const billingCycle = SGUtils.GetCurrentBillingCycleDates();
             let taskOutcomesFilter: any = {};
-            taskOutcomesFilter['_orgId'] = _orgId;
+            taskOutcomesFilter['_teamId'] = _teamId;
             taskOutcomesFilter['dateStarted'] = { $gte: billingCycle.start };
 
             let artifactDownloadsQuery = await TaskOutcomeModel.aggregate([
@@ -89,7 +89,7 @@ export class FreeTierChecks {
 
                 if (currentArtifactsDownloadedGB >= freeTierSettings.freeArtifactsDownloadBytes) {
                     const msg = `You have reached the maximum amount of artifact downloads in this billing cycle on the free tier - please upgrade to the paid tier to download additional artifacts`;
-                    rabbitMQPublisher.publishBrowserAlert(_orgId, msg);
+                    rabbitMQPublisher.publishBrowserAlert(_teamId, msg);
                     throw new FreeTierLimitExceededError(msg);
                 }
             }

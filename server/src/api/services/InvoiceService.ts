@@ -16,18 +16,18 @@ export class InvoiceService {
     }
 
 
-    public async findAllInvoices(_orgId: mongodb.ObjectId, responseFields?: string) {
-        return InvoiceModel.find({ _orgId }).select(responseFields);
+    public async findAllInvoices(_teamId: mongodb.ObjectId, responseFields?: string) {
+        return InvoiceModel.find({ _teamId }).select(responseFields);
     }
 
 
-    public async findInvoice(_orgId: mongodb.ObjectId, invoiceId: mongodb.ObjectId, responseFields?: string) {
-        return InvoiceModel.findById(invoiceId).find({ _orgId }).select(responseFields);
+    public async findInvoice(_teamId: mongodb.ObjectId, invoiceId: mongodb.ObjectId, responseFields?: string) {
+        return InvoiceModel.findById(invoiceId).find({ _teamId }).select(responseFields);
     }
 
 
-    public async findInvoicePDF(_orgId: mongodb.ObjectId, id: mongodb.ObjectId) {
-        const invoiceQuery = await InvoiceModel.findById(id).find({ _orgId }).select('pdfLocation');
+    public async findInvoicePDF(_teamId: mongodb.ObjectId, id: mongodb.ObjectId) {
+        const invoiceQuery = await InvoiceModel.findById(id).find({ _teamId }).select('pdfLocation');
         if (!invoiceQuery || (_.isArray(invoiceQuery) && invoiceQuery.length === 0))
             throw new MissingObjectError(`No invoice with id "${id.toHexString()}"`);
         const invoice: InvoiceSchema = invoiceQuery[0];
@@ -46,16 +46,16 @@ export class InvoiceService {
     }
 
 
-    public async createInvoice(_orgId: mongodb.ObjectId, data: any, correlationId: string, responseFields?: string): Promise<object> {
-        data._orgId = _orgId;
+    public async createInvoice(_teamId: mongodb.ObjectId, data: any, correlationId: string, responseFields?: string): Promise<object> {
+        data._teamId = _teamId;
         const invoiceModel = new InvoiceModel(data);
         const newInvoice = await invoiceModel.save();
 
-        await rabbitMQPublisher.publish(_orgId, "Invoice", correlationId, PayloadOperation.CREATE, convertData(InvoiceSchema, newInvoice));
+        await rabbitMQPublisher.publish(_teamId, "Invoice", correlationId, PayloadOperation.CREATE, convertData(InvoiceSchema, newInvoice));
 
         if (responseFields) {
             // It's is a bit wasteful to do another query but I can't chain a save with a select
-            return this.findInvoice(_orgId, newInvoice.id, responseFields);
+            return this.findInvoice(_teamId, newInvoice.id, responseFields);
         }
         else {
             return newInvoice; // fully populated model
@@ -63,9 +63,9 @@ export class InvoiceService {
     }
 
 
-    public async updateInvoice(_orgId: mongodb.ObjectId, id: mongodb.ObjectId, data: any, correlationId?: string, responseFields?: string): Promise<object> {
-        if ('_orgId' in data)
-            throw new ValidationError('Unable to update _orgId field');
+    public async updateInvoice(_teamId: mongodb.ObjectId, id: mongodb.ObjectId, data: any, correlationId?: string, responseFields?: string): Promise<object> {
+        if ('_teamId' in data)
+            throw new ValidationError('Unable to update _teamId field');
         if ('startDate' in data)
             throw new ValidationError('Unable to update startDate field');
         if ('endDate' in data)
@@ -78,16 +78,16 @@ export class InvoiceService {
             const clonedNotes = _.clone(data.notes);
             delete data.notes;
             for (let note of clonedNotes) {
-                updatedInvoice = await InvoiceModel.findOneAndUpdate({ _id: id, _orgId }, { $push: { notes: note } }, { new: true });
+                updatedInvoice = await InvoiceModel.findOneAndUpdate({ _id: id, _teamId }, { $push: { notes: note } }, { new: true });
             }
         }
 
         if (Object.keys(data).length > 0) {
-            const invoice = await this.findInvoice(_orgId, id, 'status')
+            const invoice = await this.findInvoice(_teamId, id, 'status')
             if (invoice.status == InvoiceStatus.PAID)
                 throw new ValidationError(`Error updating invoice "${id}" - invoice has status ${invoice.status}`);
 
-            updatedInvoice = await InvoiceModel.findOneAndUpdate({ _id: id, _orgId }, data, { new: true }).select(responseFields);
+            updatedInvoice = await InvoiceModel.findOneAndUpdate({ _id: id, _teamId }, data, { new: true }).select(responseFields);
 
             // let billAmount = 0.0;
             // let scriptAmount = data.scriptRate * data.numScripts;
@@ -100,7 +100,7 @@ export class InvoiceService {
             // if (artifactsAmount)
             //     billAmount += artifactsAmount;
             // if (billAmount != updatedInvoice.billAmount) {
-            //     updatedInvoice = await InvoiceModel.findOneAndUpdate({ _id: id, _orgId }, { billAmount: billAmount }, { new: true }).select(responseFields);
+            //     updatedInvoice = await InvoiceModel.findOneAndUpdate({ _id: id, _teamId }, { billAmount: billAmount }, { new: true }).select(responseFields);
             //     data.billAmount = updatedInvoice.billAmount;
             // }
         }
@@ -110,7 +110,7 @@ export class InvoiceService {
 
         let deltas = Object.assign({ _id: id }, data);
         let convertedDeltas = convertData(InvoiceSchema, deltas);
-        await rabbitMQPublisher.publish(_orgId, "Invoice", correlationId, PayloadOperation.UPDATE, convertedDeltas);
+        await rabbitMQPublisher.publish(_teamId, "Invoice", correlationId, PayloadOperation.UPDATE, convertedDeltas);
 
         return updatedInvoice; // fully populated model
     }

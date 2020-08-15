@@ -24,19 +24,19 @@ amqp.Start();
 
 export class TaskOutcomeActionService {
 
-    public async interruptTaskOutcome(_orgId: mongodb.ObjectId, _taskOutcomeId: mongodb.ObjectId, correlationId?: string, responseFields?: string): Promise<object> {
-        const filter = { _id: _taskOutcomeId, _orgId, status: TaskStatus.RUNNING };
-        const updatedTaskOutcome = await TaskOutcomeModel.findOneAndUpdate(filter, { status: TaskStatus.INTERRUPTING }, { new: true }).select('_id _orgId _jobId _agentId target sourceTaskRoute correlationId runtimeVars status');
+    public async interruptTaskOutcome(_teamId: mongodb.ObjectId, _taskOutcomeId: mongodb.ObjectId, correlationId?: string, responseFields?: string): Promise<object> {
+        const filter = { _id: _taskOutcomeId, _teamId, status: TaskStatus.RUNNING };
+        const updatedTaskOutcome = await TaskOutcomeModel.findOneAndUpdate(filter, { status: TaskStatus.INTERRUPTING }, { new: true }).select('_id _teamId _jobId _agentId target sourceTaskRoute correlationId runtimeVars status');
 
         if (!updatedTaskOutcome)
             throw new ValidationError(`Task outcome ${_taskOutcomeId} not found with filter ${JSON.stringify(filter)}`);
 
-        await rabbitMQPublisher.publish(_orgId, "TaskOutcome", correlationId, PayloadOperation.UPDATE, convertData(TaskOutcomeSchema, updatedTaskOutcome));
+        await rabbitMQPublisher.publish(_teamId, "TaskOutcome", correlationId, PayloadOperation.UPDATE, convertData(TaskOutcomeSchema, updatedTaskOutcome));
 
-        await rabbitMQPublisher.publishToAgent(_orgId, updatedTaskOutcome._agentId, { interruptTask: convertData(TaskOutcomeSchema, updatedTaskOutcome) });
+        await rabbitMQPublisher.publishToAgent(_teamId, updatedTaskOutcome._agentId, { interruptTask: convertData(TaskOutcomeSchema, updatedTaskOutcome) });
 
         if (responseFields) {
-            return taskOutcomeService.findTaskOutcome(_orgId, _taskOutcomeId, responseFields);
+            return taskOutcomeService.findTaskOutcome(_teamId, _taskOutcomeId, responseFields);
         }
         else {
             return updatedTaskOutcome; // fully populated model
@@ -44,8 +44,8 @@ export class TaskOutcomeActionService {
     }
 
 
-    public async restartTaskOutcome(_orgId: mongodb.ObjectId, _taskOutcomeId: mongodb.ObjectId, correlationId?: string, responseFields?: string): Promise<object> {
-        const filter = { _id: _taskOutcomeId, _orgId, $or: [ { status: TaskStatus.INTERRUPTED }, { $and: [ { status: TaskStatus.FAILED }, { $or: [ { failureCode: TaskFailureCode.AGENT_EXEC_ERROR }, { failureCode: TaskFailureCode.LAUNCH_TASK_ERROR }, { failureCode: TaskFailureCode.TASK_EXEC_ERROR } ] } ] } ] };
+    public async restartTaskOutcome(_teamId: mongodb.ObjectId, _taskOutcomeId: mongodb.ObjectId, correlationId?: string, responseFields?: string): Promise<object> {
+        const filter = { _id: _taskOutcomeId, _teamId, $or: [ { status: TaskStatus.INTERRUPTED }, { $and: [ { status: TaskStatus.FAILED }, { $or: [ { failureCode: TaskFailureCode.AGENT_EXEC_ERROR }, { failureCode: TaskFailureCode.LAUNCH_TASK_ERROR }, { failureCode: TaskFailureCode.TASK_EXEC_ERROR } ] } ] } ] };
         let taskOutcomeUpdateQuery = {};
         taskOutcomeUpdateQuery['$unset'] = {'runtimeVars.route': ''};
         taskOutcomeUpdateQuery['$set'] = {'route': '', 'status': TaskStatus.CANCELLED};
@@ -55,9 +55,9 @@ export class TaskOutcomeActionService {
             throw new ValidationError(`Task outcome ${_taskOutcomeId} not found with filter ${JSON.stringify(filter)}`);
 
         const deltas = { _id: updatedTaskOutcome._id, status: updatedTaskOutcome.status };
-        await rabbitMQPublisher.publish(_orgId, "TaskOutcome", correlationId, PayloadOperation.UPDATE, convertData(TaskOutcomeSchema, deltas));
+        await rabbitMQPublisher.publish(_teamId, "TaskOutcome", correlationId, PayloadOperation.UPDATE, convertData(TaskOutcomeSchema, deltas));
 
-        const taskFilter = { _id: new mongodb.ObjectId(updatedTaskOutcome._taskId), _orgId };
+        const taskFilter = { _id: new mongodb.ObjectId(updatedTaskOutcome._taskId), _teamId };
         let taskUpdateQuery = {};
         taskUpdateQuery['$unset'] = {'runtimeVars.route': ''};
         taskUpdateQuery['$set'] = {'attemptedRunAgentIds': []};
@@ -71,18 +71,18 @@ export class TaskOutcomeActionService {
             task.targetAgentId = updatedTaskOutcome._agentId;
         }
 
-        await taskOutcomeService.PublishTask(_orgId, task, logger, amqp);
+        await taskOutcomeService.PublishTask(_teamId, task, logger, amqp);
         
         if (responseFields) {
-            return taskOutcomeService.findTaskOutcome(_orgId, _taskOutcomeId, responseFields);
+            return taskOutcomeService.findTaskOutcome(_teamId, _taskOutcomeId, responseFields);
         }
         else {
             return updatedTaskOutcome; // fully populated model
         }
     }
 
-    public async cancelTaskOutcome(_orgId: mongodb.ObjectId, _taskOutcomeId: mongodb.ObjectId, correlationId?: string, responseFields?: string): Promise<object> {
-        const filter = { _id: _taskOutcomeId, _orgId, $or: [{ status: { $lt: TaskStatus.CANCELING } }, { status: TaskStatus.FAILED }] };
+    public async cancelTaskOutcome(_teamId: mongodb.ObjectId, _taskOutcomeId: mongodb.ObjectId, correlationId?: string, responseFields?: string): Promise<object> {
+        const filter = { _id: _taskOutcomeId, _teamId, $or: [{ status: { $lt: TaskStatus.CANCELING } }, { status: TaskStatus.FAILED }] };
         const updatedTaskOutcome = await TaskOutcomeModel.findOneAndUpdate(filter, { status: TaskStatus.CANCELING }, { new: true }).select(responseFields);
 
         // TODO: if the task was already interrupted sending the cancel message to the agent won't do anything (i.e. the agent won't kill the process and send the 
@@ -90,12 +90,12 @@ export class TaskOutcomeActionService {
         if (!updatedTaskOutcome)
             throw new ValidationError(`Task outcome ${_taskOutcomeId} not found with filter ${JSON.stringify(filter)}`);
 
-        await rabbitMQPublisher.publish(_orgId, "TaskOutcome", correlationId, PayloadOperation.UPDATE, convertData(TaskOutcomeSchema, updatedTaskOutcome));
+        await rabbitMQPublisher.publish(_teamId, "TaskOutcome", correlationId, PayloadOperation.UPDATE, convertData(TaskOutcomeSchema, updatedTaskOutcome));
 
-        await rabbitMQPublisher.publishToAgent(_orgId, updatedTaskOutcome._agentId, { interruptTask: convertData(TaskOutcomeSchema, updatedTaskOutcome) });
+        await rabbitMQPublisher.publishToAgent(_teamId, updatedTaskOutcome._agentId, { interruptTask: convertData(TaskOutcomeSchema, updatedTaskOutcome) });
 
         if (responseFields) {
-            return taskOutcomeService.findTaskOutcome(_orgId, _taskOutcomeId, responseFields);
+            return taskOutcomeService.findTaskOutcome(_teamId, _taskOutcomeId, responseFields);
         }
         else {
             return updatedTaskOutcome; // fully populated model

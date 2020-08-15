@@ -15,16 +15,16 @@ import * as mongodb from 'mongodb';
 export class PaymentTransactionController {
 
     public async getManyPaymentTransactions(req: Request, resp: Response, next: NextFunction): Promise<void> {
-        const _orgId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._orgid);
-        defaultBulkGet({ _orgId }, req, resp, next, PaymentTransactionSchema, PaymentTransactionModel, paymentTransactionService);
+        const _teamId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._teamid);
+        defaultBulkGet({ _teamId }, req, resp, next, PaymentTransactionSchema, PaymentTransactionModel, paymentTransactionService);
     }
 
 
     public async getPaymentTransaction(req: Request, resp: Response, next: NextFunction): Promise<void> {
         try {
-            const _orgId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._orgid);
+            const _teamId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._teamid);
             const response: ResponseWrapper = (resp as any).body;
-            const paymentTransaction = await paymentTransactionService.findPaymentTransaction(_orgId, new mongodb.ObjectId(req.params.paymentTransactionId), req.query.responseFields);
+            const paymentTransaction = await paymentTransactionService.findPaymentTransaction(_teamId, new mongodb.ObjectId(req.params.paymentTransactionId), (<string>req.query.responseFields));
 
             if (_.isArray(paymentTransaction) && paymentTransaction.length === 0) {
                 next(new MissingObjectError(`PaymentTransaction ${req.params.paymentTransactionId} not found.`));
@@ -47,10 +47,10 @@ export class PaymentTransactionController {
 
 
     public async createPaymentTransaction(req: Request, resp: Response, next: NextFunction): Promise<void> {
-        const _orgId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._orgid);
+        const _teamId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._teamid);
         const response: ResponseWrapper = resp['body'];
         try {
-            const newPaymentTransaction = await paymentTransactionService.createPaymentTransaction(_orgId, convertRequestData(PaymentTransactionSchema, req.body), req.header('correlationId'), req.query.responseFields);
+            const newPaymentTransaction = await paymentTransactionService.createPaymentTransaction(_teamId, convertRequestData(PaymentTransactionSchema, req.body), req.header('correlationId'), (<string>req.query.responseFields));
             response.data = convertResponseData(PaymentTransactionSchema, newPaymentTransaction);
             response.statusCode = ResponseCode.CREATED;
             next();
@@ -62,10 +62,10 @@ export class PaymentTransactionController {
 
 
     public async updatePaymentTransaction(req: Request, resp: Response, next: NextFunction): Promise<void> {
-        const _orgId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._orgid);
+        const _teamId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._teamid);
         const response: ResponseWrapper = resp['body'];
         try {
-            const updatedPaymentTransaction: any = await paymentTransactionService.updatePaymentTransaction(_orgId, new mongodb.ObjectId(req.params.paymentTransactionId), convertRequestData(PaymentTransactionSchema, req.body), req.header('correlationId'), req.query.responseFields);
+            const updatedPaymentTransaction: any = await paymentTransactionService.updatePaymentTransaction(_teamId, new mongodb.ObjectId(req.params.paymentTransactionId), convertRequestData(PaymentTransactionSchema, req.body), req.header('correlationId'), (<string>req.query.responseFields));
 
             if (_.isArray(updatedPaymentTransaction) && updatedPaymentTransaction.length === 0) {
                 next(new MissingObjectError(`PaymentTransaction ${req.params.paymentTransactionId} not found.`));

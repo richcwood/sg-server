@@ -14,16 +14,16 @@ import * as mongodb from 'mongodb';
 export class ArtifactController {
 
     public async getManyArtifacts(req: Request, resp: Response, next: NextFunction): Promise<void> {
-        const _orgId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._orgid);
-        defaultBulkGet({ _orgId }, req, resp, next, ArtifactSchema, ArtifactModel, artifactService);
+        const _teamId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._teamid);
+        defaultBulkGet({ _teamId }, req, resp, next, ArtifactSchema, ArtifactModel, artifactService);
     }
 
 
     public async getArtifact(req: Request, resp: Response, next: NextFunction): Promise<void> {
         try {
-            const _orgId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._orgid);
+            const _teamId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._teamid);
             const response: ResponseWrapper = (resp as any).body;
-            const artifact = await artifactService.findArtifact(_orgId, new mongodb.ObjectId(req.params.artifactId));
+            const artifact = await artifactService.findArtifact(_teamId, new mongodb.ObjectId(req.params.artifactId));
 
             if (!artifact) {
                 next(new MissingObjectError(`Artifact ${req.params.artifactId} not found.`));
@@ -46,10 +46,10 @@ export class ArtifactController {
 
 
     public async createArtifact(req: Request, resp: Response, next: NextFunction): Promise<void> {
-        const _orgId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._orgid);
+        const _teamId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._teamid);
         const response: ResponseWrapper = resp['body'];
         try {
-            const newArtifact = await artifactService.createArtifact(_orgId, convertRequestData(ArtifactSchema, req.body), req.header('correlationId'));
+            const newArtifact = await artifactService.createArtifact(_teamId, convertRequestData(ArtifactSchema, req.body), req.header('correlationId'));
             response.data = convertResponseData(ArtifactSchema, newArtifact);
             response.statusCode = ResponseCode.CREATED;
             next();
@@ -61,10 +61,10 @@ export class ArtifactController {
 
 
     public async updateArtifact(req: Request, resp: Response, next: NextFunction): Promise<void> {
-        const _orgId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._orgid);
+        const _teamId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._teamid);
         const response: ResponseWrapper = resp['body'];
         try {
-            const updatedArtifact: any = await artifactService.updateArtifact(_orgId, new mongodb.ObjectId(req.params.artifactId), convertRequestData(ArtifactSchema, req.body), req.header('correlationId'));
+            const updatedArtifact: any = await artifactService.updateArtifact(_teamId, new mongodb.ObjectId(req.params.artifactId), convertRequestData(ArtifactSchema, req.body), req.header('correlationId'));
 
             if (_.isArray(updatedArtifact) && updatedArtifact.length === 0) {
                 next(new MissingObjectError(`Artifact ${req.params.artifactId} not found.`));
@@ -82,10 +82,10 @@ export class ArtifactController {
 
 
     public async deleteArtifact(req: Request, resp: Response, next: NextFunction): Promise<void> {
-        const _orgId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._orgid);
+        const _teamId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._teamid);
         const response: ResponseWrapper = resp['body'];
         try {
-            response.data = await artifactService.deleteArtifact(_orgId, new mongodb.ObjectId(req.params.artifactId), req.header('correlationId'));
+            response.data = await artifactService.deleteArtifact(_teamId, new mongodb.ObjectId(req.params.artifactId), req.header('correlationId'));
             response.statusCode = ResponseCode.OK;
             next();
         }

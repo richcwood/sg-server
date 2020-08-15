@@ -34,14 +34,14 @@ export default class Test40 extends TestBase.WorkflowTestBase {
         let result: boolean;
         let resApiCall: any;
 
-        const _orgId: string = config.get('sgTestOrg');
+        const _teamId: string = config.get('sgTestTeam');
 
         let firstJob: any = _.cloneDeep(InteractiveConsoleJob);
         firstJob.job.name = 'IC - Test40';
         firstJob.job.tasks[0].target = TaskDefTarget.ALL_AGENTS_WITH_TAGS;
         firstJob.job.tasks[0].requiredTags = {numchucks: "true"};
 
-        resApiCall = await this.testSetup.RestAPICall('job', 'POST', _orgId, null, firstJob);
+        resApiCall = await this.testSetup.RestAPICall('job', 'POST', _teamId, null, firstJob);
         if (resApiCall.data.statusCode != 201) {
             self.logger.LogError('Failed', { Message: `Job POST returned ${resApiCall.data.statusCode}`, firstJob });
             return false;
@@ -53,7 +53,7 @@ export default class Test40 extends TestBase.WorkflowTestBase {
             operation: 1,
             model:
             {
-                _orgId: config.get('sgTestOrg'),
+                _teamId: config.get('sgTestTeam'),
                 _jobId: firstJob.job.id,
                 source: 1,
                 status: 10,
@@ -72,7 +72,7 @@ export default class Test40 extends TestBase.WorkflowTestBase {
 
 
         let taskOutcomeId: string;
-        resApiCall = await this.testSetup.RestAPICall(`taskoutcome?filter=_jobId==${firstJob.job.id}&responseFields=id&limit=1`, 'GET', _orgId, null);
+        resApiCall = await this.testSetup.RestAPICall(`taskoutcome?filter=_jobId==${firstJob.job.id}&responseFields=id&limit=1`, 'GET', _teamId, null);
         if (resApiCall.data.statusCode != 200) {
             self.logger.LogError('Failed', { Message: `taskoutcome?filter=_jobId==${firstJob.job.id}&responseFields=id&limit=1 GET returned ${resApiCall.data.statusCode}` });
             return false;
@@ -80,7 +80,7 @@ export default class Test40 extends TestBase.WorkflowTestBase {
         taskOutcomeId = resApiCall.data.data[0].id;
 
 
-        resApiCall = await this.testSetup.RestAPICall(`taskoutcomeaction/interrupt/${taskOutcomeId}`, 'POST', _orgId, null);
+        resApiCall = await this.testSetup.RestAPICall(`taskoutcomeaction/interrupt/${taskOutcomeId}`, 'POST', _teamId, null);
         if (resApiCall.data.statusCode != 200) {
             self.logger.LogError('Failed', { Message: `taskoutcomeaction/interrupt/${taskOutcomeId} GET returned ${resApiCall.data.statusCode}` });
             return false;
@@ -106,7 +106,7 @@ export default class Test40 extends TestBase.WorkflowTestBase {
         self.bpMessagesExpected.length = 0;
 
 
-        resApiCall = await this.testSetup.RestAPICall(`taskoutcomeaction/restart/${taskOutcomeId}`, 'POST', _orgId, null);
+        resApiCall = await this.testSetup.RestAPICall(`taskoutcomeaction/restart/${taskOutcomeId}`, 'POST', _teamId, null);
         if (resApiCall.data.statusCode != 200) {
             self.logger.LogError('Failed', { Message: `taskoutcomeaction/restart/${taskOutcomeId} GET returned ${resApiCall.data.statusCode}` });
             return false;

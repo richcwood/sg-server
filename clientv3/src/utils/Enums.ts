@@ -10,7 +10,7 @@ enum LogLevel {ERROR = 40, WARNING = 30, INFO = 20, DEBUG = 10}
 
 enum TaskSource {CONSOLE = 0, JOB = 1, API = 2}
 
-enum OrgPaymentStatus { HEALTHY = 0, DELINQUENT = 1 }
+enum TeamPaymentStatus { HEALTHY = 0, DELINQUENT = 1 }
 
 enum InvoiceStatus { CREATED = 0, SUBMITTED = 1, PAID = 2, PARTIALLY_PAID = 3, REJECTED = 4 }
 
@@ -22,7 +22,7 @@ enum PaymentTransactionType {CHARGE = 0}
 
 enum PaymentTransactionStatus {APPROVED = 0, REJECTED = 1, SETTLED = 2, DISPUTED = 3, RESOLVED = 4}
 
-enum OrgPricingTier { FREE = 0, PAID = 1 }
+enum TeamPricingTier { FREE = 0, PAID = 1 }
 
 const enumKeyToPretty = function(theEnum: any, enumKey: any): string {
   if(enumKey === undefined || enumKey === null){
@@ -51,4 +51,4 @@ const enumKeys = function(theEnum: any): string[] {
   return output;
 }
 
-export { StepStatus, TaskStatus, TaskFailureCode, JobStatus, LogLevel, TaskSource, OrgPaymentStatus, InvoiceStatus, PaymentMethodType, PaymentTransactionSource, PaymentTransactionType, PaymentTransactionStatus, OrgPricingTier, enumKeyToPretty, enumKeys };
+export { StepStatus, TaskStatus, TaskFailureCode, JobStatus, LogLevel, TaskSource, TeamPaymentStatus, InvoiceStatus, PaymentMethodType, PaymentTransactionSource, PaymentTransactionType, PaymentTransactionStatus, TeamPricingTier, enumKeyToPretty, enumKeys };

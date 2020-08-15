@@ -8,7 +8,8 @@ const s3 = new aws.S3({
   credentials: {
     accessKeyId: config.get('AWS_ACCESS_KEY_ID'),
     secretAccessKey: config.get('AWS_SECRET_ACCESS_KEY')
-  }
+  },
+  region: config.get('AWS_REGION')
 });
 
 

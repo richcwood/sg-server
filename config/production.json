@@ -26,6 +26,6 @@
   "schedulerToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjVlOTljYmNiMjMxNzk1MDAxNWVkYjY1NSIsImVtYWlsIjoic2NoZWR1bGVyQHNhYXNnbHVlLmNvbSIsIm9yZ0lkcyI6IiIsImlwVjYiOiI6OmZmZmY6MTAuNDcuMjM4LjE3NCIsImlwUmFuZ2UiOiIzNC4xOTguOTUuMzgvMzIiLCJpYXQiOjE1ODcyNzcyMTl9.8Zqqi5KoJFYXtxsazY1qxJztjwQ6DPHUiZ2MiqGfovQ",
   "sgTestUser": "testuser@saasglue.com",
   "sgTestUserPassword": "mypassword",
-  "sgTestOrg": "5de95c0453162e8891f5a830",
-  "sgOrg": "5e99cbcb2317950015edb655"
+  "sgTestTeam": "5de95c0453162e8891f5a830",
+  "sgTeam": "5e99cbcb2317950015edb655"
 }

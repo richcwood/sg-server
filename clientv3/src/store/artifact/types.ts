@@ -1,7 +1,7 @@
 import { Model } from '@/store/types'
 
 export interface Artifact extends Model {
-  _orgId: string;
+  _teamId: string;
   name: string;
   prefix?: string;
   s3Path: string;

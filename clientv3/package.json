@@ -1,5 +1,5 @@
 {
-  "name": "clientv3",
+  "name": "sg-clientv3",
   "version": "0.1.0",
   "private": true,
   "scripts": {

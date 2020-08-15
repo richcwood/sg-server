@@ -34,18 +34,18 @@ export default class Test38 extends TestBase.WorkflowTestBase {
         let result: boolean;
         let resApiCall: any;
 
-        const _orgId: string = config.get('sgTestOrg');
+        const _teamId: string = config.get('sgTestTeam');
 
         let agentMachineId: string = self.testSetup.agents[0].machineId;
         let agentId: string;
-        resApiCall = await self.testSetup.RestAPICall(`agent?filter=machineId==${agentMachineId}&responseFields=id`, 'GET', _orgId, null);
+        resApiCall = await self.testSetup.RestAPICall(`agent?filter=machineId==${agentMachineId}&responseFields=id`, 'GET', _teamId, null);
         if (resApiCall.data.statusCode != 200) {
             self.logger.LogError('Failed', { Message: `agent/name/${agentMachineId}?responseFields=id GET returned ${resApiCall.data.statusCode}` });
             return false;
         }
         agentId = resApiCall.data.data[0].id;
 
-        resApiCall = await self.testSetup.RestAPICall(`agent/properties/${agentId}`, 'PUT', _orgId, null, { maxActiveTasks: 1 });
+        resApiCall = await self.testSetup.RestAPICall(`agent/properties/${agentId}`, 'PUT', _teamId, null, { maxActiveTasks: 1 });
         if (resApiCall.data.statusCode != 200) {
             self.logger.LogError('Failed', { Message: `agent/properties/${agentId} PUT returned ${resApiCall.data.statusCode}`, maxActiveTasks: 1 });
             return false;
@@ -56,7 +56,7 @@ export default class Test38 extends TestBase.WorkflowTestBase {
         firstJob.job.tasks[0].target = TaskDefTarget.SINGLE_SPECIFIC_AGENT;
         firstJob.job.tasks[0].targetAgentId = agentId;
 
-        resApiCall = await self.testSetup.RestAPICall('job', 'POST', _orgId, null, firstJob);
+        resApiCall = await self.testSetup.RestAPICall('job', 'POST', _teamId, null, firstJob);
         if (resApiCall.data.statusCode != 201) {
             self.logger.LogError('Failed', { Message: `Job POST returned ${resApiCall.data.statusCode}`, firstJob });
             return false;
@@ -69,7 +69,7 @@ export default class Test38 extends TestBase.WorkflowTestBase {
                 operation: 1,
                 model:
                 {
-                    _orgId: config.get('sgTestOrg'),
+                    _teamId: config.get('sgTestTeam'),
                     _jobId: firstJob.job.id,
                     source: 1,
                     status: 10,
@@ -90,7 +90,7 @@ export default class Test38 extends TestBase.WorkflowTestBase {
         secondJob.job.name = 'IC - Test38';
         secondJob.job.tasks[0].targetAgentId = agentId;
 
-        resApiCall = await self.testSetup.RestAPICall('job', 'POST', _orgId, null, secondJob);
+        resApiCall = await self.testSetup.RestAPICall('job', 'POST', _teamId, null, secondJob);
         if (resApiCall.data.statusCode != 201) {
             self.logger.LogError('Failed', { Message: `Job POST returned ${resApiCall.data.statusCode}`, secondJob });
             return false;
@@ -115,19 +115,19 @@ export default class Test38 extends TestBase.WorkflowTestBase {
         self.bpMessagesExpected.length = 0;
 
 
-        resApiCall = await self.testSetup.RestAPICall(`jobaction/cancel/${secondJob.job.id}`, 'POST', _orgId, null, null);
+        resApiCall = await self.testSetup.RestAPICall(`jobaction/cancel/${secondJob.job.id}`, 'POST', _teamId, null, null);
         if (resApiCall.data.statusCode != 200) {
             self.logger.LogError('Failed', { Message: `jobaction/cancel/${secondJob.job.id} POST returned ${resApiCall.data.statusCode}`, secondJob });
             return false;
         }
 
-        resApiCall = await self.testSetup.RestAPICall(`jobaction/cancel/${firstJob.job.id}`, 'POST', _orgId, null, null);
+        resApiCall = await self.testSetup.RestAPICall(`jobaction/cancel/${firstJob.job.id}`, 'POST', _teamId, null, null);
         if (resApiCall.data.statusCode != 200) {
             self.logger.LogError('Failed', { Message: `jobaction/cancel/${firstJob.job.id} POST returned ${resApiCall.data.statusCode}`, firstJob });
             return false;
         }
 
-        resApiCall = await self.testSetup.RestAPICall(`agent/properties/${agentId}`, 'PUT', _orgId, null, { maxActiveTasks: 10 });
+        resApiCall = await self.testSetup.RestAPICall(`agent/properties/${agentId}`, 'PUT', _teamId, null, { maxActiveTasks: 10 });
         if (resApiCall.data.statusCode != 200) {
             self.logger.LogError('Failed', { Message: `agent/properties/${agentId} PUT returned ${resApiCall.data.statusCode}`, maxActiveTasks: 10 });
             return false;

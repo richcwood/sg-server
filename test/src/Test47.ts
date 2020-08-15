@@ -32,7 +32,7 @@ export default class Test47 extends TestBase.WorkflowTestBase {
         let result: boolean;
         let resApiCall: any;
 
-        const _orgId: string = config.get('sgTestOrg');
+        const _teamId: string = config.get('sgTestTeam');
 
         const properties: any = {
             scripts: [
@@ -67,19 +67,19 @@ export default class Test47 extends TestBase.WorkflowTestBase {
 
         const runDate = new Date(new Date().getTime() + 10000);
         const schedule: any = {
-            _orgId: config.get('sgTestOrg'),
+            _teamId: config.get('sgTestTeam'),
             _jobDefId: jobDefs[properties.jobDefs[0].name].id,
             name: "Schedule1",
             isActive: true,
             TriggerType: "date",
             RunDate: runDate,
             FunctionKwargs: {
-                _orgId: config.get('sgTestOrg'),
+                _teamId: config.get('sgTestTeam'),
                 targetId: jobDefs[properties.jobDefs[0].name].id
             }
         };
 
-        resApiCall = await this.testSetup.RestAPICall(`schedule`, 'POST', _orgId, null, schedule);
+        resApiCall = await this.testSetup.RestAPICall(`schedule`, 'POST', _teamId, null, schedule);
         if (resApiCall.data.statusCode != 201) {
             self.logger.LogError('Failed', { Message: `schedule POST returned ${resApiCall.data.statusCode}` });
             return false;
@@ -106,7 +106,7 @@ export default class Test47 extends TestBase.WorkflowTestBase {
 
         await SGUtils.sleep(12000);
 
-        resApiCall = await this.testSetup.RestAPICall(`jobdef/${jobDefs[properties.jobDefs[0].name].id}`, 'PUT', _orgId, null, { status: JobDefStatus.RUNNING });
+        resApiCall = await this.testSetup.RestAPICall(`jobdef/${jobDefs[properties.jobDefs[0].name].id}`, 'PUT', _teamId, null, { status: JobDefStatus.RUNNING });
         if (resApiCall.data.statusCode != 200) {
             self.logger.LogError('Failed', { Message: `jobdef/${jobDefs[properties.jobDefs[0].name].id} PUT returned ${resApiCall.data.statusCode}`, status: JobDefStatus.RUNNING });
             return false;
@@ -117,7 +117,7 @@ export default class Test47 extends TestBase.WorkflowTestBase {
             operation: 1,
             model:
             {
-                _orgId: config.get('sgTestOrg'),
+                _teamId: config.get('sgTestTeam'),
                 _jobDefId: jobDefs[properties.jobDefs[0].name].id,
                 runId: 0,
                 name: properties.jobDefs[0].name,

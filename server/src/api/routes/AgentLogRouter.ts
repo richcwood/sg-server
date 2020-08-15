@@ -123,9 +123,9 @@ export const agentLogRouter = agentLogRouterSingleton.router;
 
 //   // really belong in a controller layer but I just don't give a poo right now, git er done
 //   //   async getAll(req: Request, res: Response, next: NextFunction){
-//   //     const _orgId:string = <string>req.headers._orgid;
+//   //     const _teamId:string = <string>req.headers._teamid;
 //   //     const mongoLib: MongoLib = (<any>req).mongoLib;
-//   //     const agents:any = await mongoLib.GetManyByQuery({_orgId: new mongodb.ObjectID(_orgId)}, 'agent');
+//   //     const agents:any = await mongoLib.GetManyByQuery({_teamId: new mongodb.ObjectID(_teamId)}, 'agent');
 //   //     for(let agent of agents){
 //   //       agent.isHeartbeatActive = (Date.now() - agent.isHeartbeatActive) < 30000;
 //   //     }

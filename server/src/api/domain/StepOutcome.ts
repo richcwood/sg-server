@@ -14,7 +14,7 @@ export class StepOutcomeSchema {
     id?: mongodb.ObjectId;
 
     @prop({ required: true })
-    _orgId: mongodb.ObjectId;
+    _teamId: mongodb.ObjectId;
 
     @prop({ required: true })
     _jobId?: mongodb.ObjectId;

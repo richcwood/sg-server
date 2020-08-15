@@ -59,10 +59,10 @@
           </table>
         </div>
 
-        <!-- Org / team variables -->
+        <!-- Team / team variables -->
         <div style="width: 100%; height: 300px; overflow: scroll;">
           <table class="table is-striped">
-            <tr class="tr" v-if="orgVars.length === 0">
+            <tr class="tr" v-if="teamVars.length === 0">
               <td class="td">
                 There are no variables for your team yet.
               </td>
@@ -72,9 +72,9 @@
                 Variables available to your team
               </td>
             </tr>
-            <tr class="tr" v-for="orgVar in orgVars" v-bind:key="orgVar.id">
+            <tr class="tr" v-for="teamVar in teamVars" v-bind:key="teamVar.id">
               <td class="td">
-                <a @click="onClickedOrgVar(orgVar)">{{orgVar.name}}</a>
+                <a @click="onClickedTeamVar(teamVar)">{{teamVar.name}}</a>
               </td>
               <td class="td">
                 <span style="font-weight: 700; size: 20px;">
@@ -82,7 +82,7 @@
                 </span>
               </td>
               <td class="td">
-                {{orgVar.value}}
+                {{teamVar.value}}
               </td>
             </tr>
           </table>
@@ -160,7 +160,7 @@ import { StoreType } from '@/store/types';
 import { SgAlert, AlertPlacement, AlertCategory } from '@/store/alert/types';
 import { showErrors } from '@/utils/ErrorHandler'; 
 import { JobDef } from '@/store/jobDef/types';
-import { OrgVar } from '@/store/orgVar/types';
+import { TeamVar } from '@/store/teamVar/types';
 import { BindStoreModel, BindSelected, BindSelectedCopy, BindProp } from '@/decorator';
 import axios from 'axios';
 import * as monaco from "monaco-editor";
@@ -178,8 +178,8 @@ export default class ScriptEditor extends Vue {
   private scriptShadowCopySaveInterval: any;
 
   private mounted(){
-    // load all org vars when the component is mounted - they are small objects
-    this.$store.dispatch(`${StoreType.OrgVariableStore}/fetchModelsByFilter`);
+    // load all team vars when the component is mounted - they are small objects
+    this.$store.dispatch(`${StoreType.TeamVariableStore}/fetchModelsByFilter`);
 
     monaco.editor.onDidCreateModel((model: monaco.editor.ITextModel) => {
       model.onDidChangeContent((e: monaco.editor.IModelContentChangedEvent) => {
@@ -350,8 +350,8 @@ export default class ScriptEditor extends Vue {
   @BindStoreModel({storeType: StoreType.JobDefStore, selectedModelName: 'models'})
   private jobDefs!: JobDef[];
 
-  @BindStoreModel({storeType: StoreType.OrgVariableStore, selectedModelName: 'models'})
-  private orgVars!: OrgVar[];
+  @BindStoreModel({storeType: StoreType.TeamVariableStore, selectedModelName: 'models'})
+  private teamVars!: TeamVar[];
 
   @Prop() private jobDef!: JobDef;
 
@@ -366,8 +366,8 @@ export default class ScriptEditor extends Vue {
     this.$modal.show('kpg');
   }
 
-  private onClickedOrgVar(orgVar: OrgVar){
-    this.fullScreenEditor.trigger('keyboard', 'type', {text: `@kpg("${orgVar.name}")`});
+  private onClickedTeamVar(teamVar: TeamVar){
+    this.fullScreenEditor.trigger('keyboard', 'type', {text: `@kpg("${teamVar.name}")`});
     this.$modal.hide('kpg');
   } 
 

@@ -13,7 +13,7 @@ export class ArtifactSchema {
   id?: mongodb.ObjectId;
 
   @prop({ required: true })
-  _orgId: mongodb.ObjectId;
+  _teamId: mongodb.ObjectId;
 
   @prop({ required: true })
   name: string;

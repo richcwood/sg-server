@@ -22,7 +22,7 @@ export enum Architecture {
 
 export interface Agent extends Model {
   id: string,
-  _orgId?: string,
+  _teamId?: string,
   targetVersion: string,
   machineId: string,
   ipAddress: string,

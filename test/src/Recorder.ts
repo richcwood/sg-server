@@ -37,7 +37,7 @@ export default class Recorder {
 
         self.amqp = new AMQPConnector('Recorder', '', self.amqpUrl, self.rmqVhost, 1, (activeMessages) => { }, this.logger);
         await self.amqp.Start();
-        await self.amqp.ConsumeRoute('', true, true, true, true, self.OnBrowserPush.bind(this), SGStrings.GetOrgRoutingPrefix(config.get('sgTestOrg')), self.rmqBrowserPushRoute);
+        await self.amqp.ConsumeRoute('', true, true, true, true, self.OnBrowserPush.bind(this), SGStrings.GetTeamRoutingPrefix(config.get('sgTestTeam')), self.rmqBrowserPushRoute);
     }
 
     protected async OnBrowserPush(params: any, msgKey: string, ch: any) {

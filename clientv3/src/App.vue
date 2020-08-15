@@ -22,14 +22,14 @@
         <router-link :class="{'active-link': isLinkActive(['interactiveConsole'])}" to="/interactiveConsole">Console</router-link> |
         <router-link :class="{'active-link': isLinkActive(['artifacts'])}" to="/artifacts">Artifacts</router-link> |
         <router-link :class="{'active-link': isLinkActive(['teamVars'])}" to="/teamVars">Team Vars</router-link> |
-        <router-link :class="{'active-link': isLinkActive(['orgAlerts'])}" to="/orgAlerts">Team Alerts</router-link> |
+        <router-link :class="{'active-link': isLinkActive(['teamAlerts'])}" to="/teamAlerts">Team Alerts</router-link> |
         <router-link :class="{'active-link': isLinkActive(['scripts'])}" to="/scripts">Scripts</router-link>
       </div>
 
       <div class="right-nav">
-        <div v-if="userOrgIds.length > 1" class="dropdown is-right" :class="{'is-active': showOrgsMenu}" v-click-outside="onClickedOutsideOrgsMenu">
+        <div v-if="userTeamIds.length > 1" class="dropdown is-right" :class="{'is-active': showTeamsMenu}" v-click-outside="onClickedOutsideTeamsMenu">
           <div class="dropdown-trigger">
-            <a href="" @click.prevent="onClickedOrgsMenu">{{selectedOrgName}}</a> |
+            <a href="" @click.prevent="onClickedTeamsMenu">{{selectedTeamName}}</a> |
           </div>
           <div class="dropdown-menu" id="dropdown-menu" role="menu">
             <div class="dropdown-content" role="menu">
@@ -39,17 +39,17 @@
               <hr class="dropdown-divider">
 
               <a class="dropdown-item" 
-                 v-for="orgId of Object.values(userOrgIds)" 
-                 v-bind:key="orgId"
-                 @click.prevent="onClickedOrgId(orgId)"
-                 :class="{'is-active': selectedOrg && selectedOrg.id === orgId}">
-                {{getOrg(orgId).name}}
+                 v-for="teamId of Object.values(userTeamIds)" 
+                 v-bind:key="teamId"
+                 @click.prevent="onClickedTeamId(teamId)"
+                 :class="{'is-active': selectedTeam && selectedTeam.id === teamId}">
+                {{getTeam(teamId).name}}
               </a>
             </div>
           </div>
         </div>
         <div v-else>
-          {{selectedOrgName}} |
+          {{selectedTeamName}} |
         </div>
 
         <div class="dropdown is-right" :class="{'is-active': showUserMenu}" v-click-outside="onClickedOutsideUserMenu">
@@ -95,7 +95,7 @@ import { ClickOutside } from '@/directive';
 import { Component, Vue, Watch } from 'vue-property-decorator';
 import { StoreType } from '@/store/types';
 import { enumKeyToPretty } from '@/utils/Enums';
-import { Org } from '@/store/org/types';
+import { Team } from '@/store/team/types';
 import { SgAlert, AlertPlacement, AlertCategory } from '@/store/alert/types';
 import { BindSelected, BindStoreModel } from '@/decorator';
 import axios from 'axios';
@@ -113,8 +113,8 @@ export default class App extends Vue {
   @BindStoreModel({storeType: StoreType.SecurityStore, selectedModelName: 'user'})
   private user: any;
 
-  @BindSelected({storeType: StoreType.OrgStore})
-  private selectedOrg!: Org;
+  @BindSelected({storeType: StoreType.TeamStore})
+  private selectedTeam!: Team;
 
   @BindStoreModel({storeType: StoreType.AlertStore, selectedModelName: 'models'})
   private alerts!: SgAlert[];
@@ -125,7 +125,7 @@ export default class App extends Vue {
   @BindStoreModel({storeType: StoreType.AlertStore, selectedModelName: 'currentWindow'})
   private alertWindow!: SgAlert;
 
-  private showOrgsMenu = false;
+  private showTeamsMenu = false;
   private showUserMenu = false;
 
   @Watch('alertWindow')
@@ -167,9 +167,9 @@ export default class App extends Vue {
     }
   }
 
-  private get userOrgIds(){
+  private get userTeamIds(){
     if(this.user){
-      return this.user.orgIds;
+      return this.user.teamIds;
     }
     else {
       return [];
@@ -180,7 +180,7 @@ export default class App extends Vue {
     this.showUserMenu = !this.showUserMenu;
 
     if(this.showUserMenu){
-      this.showOrgsMenu = false;
+      this.showTeamsMenu = false;
     }
   }
 
@@ -188,39 +188,39 @@ export default class App extends Vue {
     this.showUserMenu = false;
   }
 
-  private onClickedOrgsMenu(){
-    this.showOrgsMenu = !this.showOrgsMenu;
+  private onClickedTeamsMenu(){
+    this.showTeamsMenu = !this.showTeamsMenu;
 
-    if(this.showOrgsMenu){
+    if(this.showTeamsMenu){
       this.showUserMenu = false; 
     }
   }
 
-  private onClickedOutsideOrgsMenu(){
-    this.showOrgsMenu = false;
+  private onClickedOutsideTeamsMenu(){
+    this.showTeamsMenu = false;
   }
 
-  private get selectedOrgName(){
-    if(this.selectedOrg){
-      return this.selectedOrg.name;
+  private get selectedTeamName(){
+    if(this.selectedTeam){
+      return this.selectedTeam.name;
     }
     else {
       return '';
     }
   }
 
-  private get hasLocalStorageInvitedOrgToken(){
-    return localStorage.getItem('sg_invited_org_token') !== null;
+  private get hasLocalStorageInvitedTeamToken(){
+    return localStorage.getItem('sg_invited_team_token') !== null;
   }
 
   private get invitationsCount(){
     let count = 0;
     
-    if(this.user && this.user.orgIdsInvited){
-      count += this.user.orgIdsInvited.length;
+    if(this.user && this.user.teamIdsInvited){
+      count += this.user.teamIdsInvited.length;
     }
 
-    if(this.hasLocalStorageInvitedOrgToken){
+    if(this.hasLocalStorageInvitedTeamToken){
       count++;
     }
 
@@ -236,25 +236,25 @@ export default class App extends Vue {
     }
   }
 
-  private loadedOrgs: any = {};
+  private loadedTeams: any = {};
     // Immediately return a reactive object and load it async.  Once the real model 
     // is loaded the UI will be reactive
-    private getOrg(orgId: string){
-      if(!this.loadedOrgs[orgId]){
-        Vue.set(this.loadedOrgs, orgId, {id: orgId, name: '...'});
+    private getTeam(teamId: string){
+      if(!this.loadedTeams[teamId]){
+        Vue.set(this.loadedTeams, teamId, {id: teamId, name: '...'});
 
         (async () => {
-          const org = await this.$store.dispatch('orgStore/fetchModel', orgId);
-          this.loadedOrgs[orgId] = org;
+          const team = await this.$store.dispatch('teamStore/fetchModel', teamId);
+          this.loadedTeams[teamId] = team;
         })();
       }
 
-      return this.loadedOrgs[orgId];
+      return this.loadedTeams[teamId];
     }
 
-    private onClickedOrgId(selectedOrgId: string){
-      // restart the app with the new orgId - way to hard to clear out existing state
-      this.$store.dispatch('securityStore/restartApp', {selectedOrgId});
+    private onClickedTeamId(selectedTeamId: string){
+      // restart the app with the new teamId - way to hard to clear out existing state
+      this.$store.dispatch('securityStore/restartApp', {selectedTeamId});
     }
 
     private onClickedInvoices(){

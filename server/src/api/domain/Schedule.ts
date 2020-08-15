@@ -13,7 +13,7 @@ export class ScheduleSchema {
     id?: mongodb.ObjectId;
 
     @prop({ required: true })
-    _orgId: mongodb.ObjectId;
+    _teamId: mongodb.ObjectId;
 
     @prop({ required: true })
     _jobDefId: mongodb.ObjectId;
@@ -84,7 +84,7 @@ export class ScheduleSchema {
 
     @prop({ required: true })
     FunctionKwargs: {
-        _orgId: mongodb.ObjectId,
+        _teamId: mongodb.ObjectId,
         targetId: mongodb.ObjectId
     };
 
@@ -108,11 +108,11 @@ export class ScheduleSchema {
             _id: (data) => {
                 return new mongodb.ObjectID(data._id);
             },
-            _orgId: (data) => {
-                return new mongodb.ObjectID(data._orgId);
+            _teamId: (data) => {
+                return new mongodb.ObjectID(data._teamId);
             },
-            'FunctionKwargs._orgId': (data) => {
-                return new mongodb.ObjectID(data.FunctionKwargs._orgId);
+            'FunctionKwargs._teamId': (data) => {
+                return new mongodb.ObjectID(data.FunctionKwargs._teamId);
             },
             'FunctionKwargs.targetId': (data) => {
                 return new mongodb.ObjectID(data.FunctionKwargs.targetId);

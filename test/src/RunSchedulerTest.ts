@@ -74,7 +74,7 @@ let amqpConnector = new AMQPConnector('SchedulerTest', '', amqpUrl, rmqVhost, 1,
             }
 
             let allTestObjects: any = {};
-            allTestObjects['orgs'] = testSetup.allOrgs;
+            allTestObjects['teams'] = testSetup.allTeams;
             allTestObjects['jobDefs'] = testSetup.allJobDefs;
             allTestObjects['jobs'] = testSetup.allJobs;
             allTestObjects['agents'] = testSetup.allAgents;

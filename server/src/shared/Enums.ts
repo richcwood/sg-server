@@ -23,8 +23,8 @@ export { LogLevel };
 enum TaskSource {CONSOLE = 0, JOB = 1}
 export { TaskSource };
 
-enum UserOrgStatus { ACTIVE = 0, INACTIVE = 1, INVITED } // someone deactivated this user from the org
-export { UserOrgStatus };
+enum UserTeamStatus { ACTIVE = 0, INACTIVE = 1, INVITED } // someone deactivated this user from the team
+export { UserTeamStatus };
 
 enum ScriptType { PYTHON = 0, NODE = 1, SH = 2, CMD = 3, RUBY = 4, LUA = 5, PERL = 6, PHP = 7, POWERSHELL = 8 }
 export { ScriptType };
@@ -54,8 +54,8 @@ const ScriptTypeDetails: any = {
 }
 export { ScriptTypeDetails }
 
-enum OrgPaymentStatus { HEALTHY = 0, DELINQUENT = 1 }
-export { OrgPaymentStatus };
+enum TeamPaymentStatus { HEALTHY = 0, DELINQUENT = 1 }
+export { TeamPaymentStatus };
 
 enum InvoiceStatus { CREATED = 0, SUBMITTED = 1, PAID = 2, PARTIALLY_PAID = 3, REJECTED = 4 }
 export { InvoiceStatus };
@@ -72,8 +72,8 @@ export { PaymentTransactionType };
 enum PaymentTransactionStatus {APPROVED = 0, REJECTED = 1, SETTLED = 2, DISPUTED = 3, RESOLVED = 4}
 export { PaymentTransactionStatus };
 
-enum OrgPricingTier { FREE = 0, PAID = 1 }
-export { OrgPricingTier }
+enum TeamPricingTier { FREE = 0, PAID = 1 }
+export { TeamPricingTier }
 
 enum AccessRight {
     // no access rights for now

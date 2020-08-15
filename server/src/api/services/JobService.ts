@@ -11,8 +11,8 @@ import { taskService } from '../services/TaskService';
 import { taskOutcomeService } from '../services/TaskOutcomeService';
 import { stepService } from '../services/StepService';
 import { scriptService } from '../services/ScriptService';
-import { orgService } from './OrgService';
-import { OrgSchema } from '../domain/Org';
+import { teamService } from './TeamService';
+import { TeamSchema } from '../domain/Team';
 import { BaseLogger } from '../../shared/SGLogger';
 import * as Enums from '../../shared/Enums';
 import { SGUtils } from '../../shared/SGUtils';
@@ -49,8 +49,8 @@ export class JobService {
     }
 
 
-    public async findJob(_orgId: mongodb.ObjectId, jobId: mongodb.ObjectId, responseFields?: string) {
-        return JobModel.findById(jobId).find({ _orgId }).select(responseFields);
+    public async findJob(_teamId: mongodb.ObjectId, jobId: mongodb.ObjectId, responseFields?: string) {
+        return JobModel.findById(jobId).find({ _teamId }).select(responseFields);
     }
 
 
@@ -61,12 +61,12 @@ export class JobService {
     }
 
 
-    public async createJobFromJobDef(_orgId: mongodb.ObjectId, _jobDefId: mongodb.ObjectId, data: any, correlationId?: string, responseFields?: string): Promise<object> {
-        const filterJobDef = { _id: _jobDefId, _orgId };
+    public async createJobFromJobDef(_teamId: mongodb.ObjectId, _jobDefId: mongodb.ObjectId, data: any, correlationId?: string, responseFields?: string): Promise<object> {
+        const filterJobDef = { _id: _jobDefId, _teamId };
         const jobDef = await JobDefModel.findOneAndUpdate(filterJobDef, { $inc: { 'lastRunId': 1 } }).select('lastRunId name createdBy runtimeVars');
         if (!jobDef)
             throw new MissingObjectError(`Job template '${_jobDefId}" not found`);
-        await rabbitMQPublisher.publish(_orgId, "JobDef", correlationId, PayloadOperation.UPDATE, { id: jobDef._id, lastRunId: jobDef.lastRunId });
+        await rabbitMQPublisher.publish(_teamId, "JobDef", correlationId, PayloadOperation.UPDATE, { id: jobDef._id, lastRunId: jobDef.lastRunId });
 
         // console.log('JobRouter -> createJobFromJobDef -> jobDef -> ', jobDef);
 
@@ -82,7 +82,7 @@ export class JobService {
             jobName = data.name;
 
         let job: any = {
-            _orgId: _orgId,
+            _teamId: _teamId,
             _jobDefId: _jobDefId,
             runId: jobDef.lastRunId,
             name: jobName,
@@ -101,10 +101,10 @@ export class JobService {
 
         const jobModel = new JobModel(job);
         const newJob = await jobModel.save();
-        await rabbitMQPublisher.publish(_orgId, "Job", correlationId, PayloadOperation.CREATE, convertData(JobSchema, newJob));
+        await rabbitMQPublisher.publish(_teamId, "Job", correlationId, PayloadOperation.CREATE, convertData(JobSchema, newJob));
 
         try {
-            const taskDefs = await taskDefService.findJobDefTaskDefs(_orgId, _jobDefId);
+            const taskDefs = await taskDefService.findJobDefTaskDefs(_teamId, _jobDefId);
             let cd = SGUtils.isJobDefCyclical(taskDefs);
             if (Object.keys(cd).length > 0)
                 throw new ValidationError(`Job contains a cyclic dependency with the following tasks: ${Object.keys(cd).filter((key) => cd[key])}`)
@@ -116,7 +116,7 @@ export class JobService {
             for (let taskDef of taskDefs) {
                 // console.log('JobService -> createJobFromJobDef -> taskDef -> ', taskDef);
                 let task: TaskSchema = {
-                    _orgId: _orgId,
+                    _teamId: _teamId,
                     _jobId: newJob._id,
                     name: taskDef.name,
                     status: null,
@@ -137,16 +137,16 @@ export class JobService {
                         task.up_dep[task.fromRoutes[i][0]] = task.fromRoutes[i][1];
                 }
 
-                const taskModel: TaskSchema = <TaskSchema>await taskService.createTask(_orgId, task, correlationId);
+                const taskModel: TaskSchema = <TaskSchema>await taskService.createTask(_teamId, task, correlationId);
 
-                for (let stepDef of await stepDefService.findAllStepDefs(_orgId, taskDef._id)) {
+                for (let stepDef of await stepDefService.findAllStepDefs(_teamId, taskDef._id)) {
                     // console.log('JobService -> createJobFromJobDef -> stepDef -> ', stepDef);
-                    const scripts: ScriptSchema[] = await scriptService.findScript(_orgId, stepDef._scriptId)
+                    const scripts: ScriptSchema[] = await scriptService.findScript(_teamId, stepDef._scriptId)
                     if (!scripts || scripts.length < 1)
                         throw new MissingObjectError(`Script "${stepDef._scriptId}" not found for task "${taskModel.name}"`);
                     const script = scripts[0];
                     let step: StepSchema = {
-                        _orgId: _orgId,
+                        _teamId: _teamId,
                         _jobId: newJob._id,
                         _taskId: taskModel._id,
                         name: stepDef.name,
@@ -161,15 +161,15 @@ export class JobService {
                         }
                     };
 
-                    const stepModel: StepSchema = <StepSchema>await stepService.createStep(_orgId, step, correlationId);
+                    const stepModel: StepSchema = <StepSchema>await stepService.createStep(_teamId, step, correlationId);
                 }
             }
 
-            await this.LaunchReadyJobs(_orgId, job._jobDefId);
+            await this.LaunchReadyJobs(_teamId, job._jobDefId);
 
             if (responseFields) {
                 // It's is a bit wasteful to do another query but I can't chain a save with a select
-                return this.findJob(_orgId, newJob._id, responseFields);
+                return this.findJob(_teamId, newJob._id, responseFields);
             }
             else {
                 return newJob; // fully populated model
@@ -177,21 +177,21 @@ export class JobService {
         }
         catch (err) {
             if (newJob) {
-                await this.updateJob(_orgId, newJob._id, { status: Enums.JobStatus.FAILED, error: err.message });
+                await this.updateJob(_teamId, newJob._id, { status: Enums.JobStatus.FAILED, error: err.message });
             }
             throw err;
         }
     }
 
 
-    public async createJob(_orgId: mongodb.ObjectId, data: any, createdBy: mongodb.ObjectId, source: Enums.TaskSource, logger: BaseLogger, correlationId?: string, responseFields?: string): Promise<object> {
+    public async createJob(_teamId: mongodb.ObjectId, data: any, createdBy: mongodb.ObjectId, source: Enums.TaskSource, logger: BaseLogger, correlationId?: string, responseFields?: string): Promise<object> {
         SGUtils.validateJob(data.job);
 
         let newJob: JobSchema = null;
         try {
             let job: any = data.job;
             Object.assign(job, {
-                _orgId: _orgId,
+                _teamId: _teamId,
                 createdBy: createdBy,
                 dateCreated: new Date().toISOString(),
                 dateStarted: new Date().toISOString(),
@@ -203,14 +203,14 @@ export class JobService {
 
             const jobModel = new JobModel(job);
             newJob = await jobModel.save();
-            await rabbitMQPublisher.publish(_orgId, "Job", correlationId, PayloadOperation.CREATE, convertData(JobSchema, newJob));
+            await rabbitMQPublisher.publish(_teamId, "Job", correlationId, PayloadOperation.CREATE, convertData(JobSchema, newJob));
 
             const tasks: any[] = job.tasks;
             await SGUtils.GenerateDownstreamDependenciesForJobTasks(tasks);
 
             for (let task of tasks) {
                 Object.assign(task, {
-                    _orgId: _orgId,
+                    _teamId: _teamId,
                     _jobId: newJob._id,
                     status: null,
                     source: source,
@@ -222,12 +222,12 @@ export class JobService {
                         task.up_dep[task.fromRoutes[i][0]] = task.fromRoutes[i][1];
                 }
 
-                const taskModel: TaskSchema = <TaskSchema>await taskService.createTask(_orgId, task, correlationId);
+                const taskModel: TaskSchema = <TaskSchema>await taskService.createTask(_teamId, task, correlationId);
 
                 for (let step of task.steps) {
                     let script: ScriptSchema;
                     if (step.script.script_id) {
-                        const scripts: ScriptSchema[] = await scriptService.findScript(_orgId, step.script._id)
+                        const scripts: ScriptSchema[] = await scriptService.findScript(_teamId, step.script._id)
                         if (!scripts || scripts.length < 1)
                             throw new MissingObjectError(`Script '${step.script._id}" not found for task "${taskModel.name}'`);
                         script = scripts[0];
@@ -237,20 +237,20 @@ export class JobService {
                     }
                     Object.assign(step.script, { scriptType: Enums.ScriptType[step.script.scriptType] });
                     Object.assign(step, {
-                        _orgId: _orgId,
+                        _teamId: _teamId,
                         _jobId: newJob._id,
                         _taskId: taskModel._id
                     });
 
-                    await stepService.createStep(_orgId, step, correlationId);
+                    await stepService.createStep(_teamId, step, correlationId);
                 }
             }
 
-            await this.LaunchTasksWithNoUpstreamDependencies(_orgId, newJob._id, logger);
+            await this.LaunchTasksWithNoUpstreamDependencies(_teamId, newJob._id, logger);
 
             if (responseFields) {
                 // It's is a bit wasteful to do another query but I can't chain a save with a select
-                return this.findJob(_orgId, newJob._id, responseFields);
+                return this.findJob(_teamId, newJob._id, responseFields);
             }
             else {
                 return newJob; // fully populated model
@@ -258,15 +258,15 @@ export class JobService {
         }
         catch (err) {
             if (newJob) {
-                await this.updateJob(_orgId, newJob._id, { status: Enums.JobStatus.FAILED, error: err.message });
+                await this.updateJob(_teamId, newJob._id, { status: Enums.JobStatus.FAILED, error: err.message });
             }
             throw err;
         }
     }
 
 
-    public async updateJob(_orgId: mongodb.ObjectId, id: mongodb.ObjectId, data: any, filter?: any, correlationId?: string, responseFields?: string): Promise<object> {
-        const defaultFilter = { _id: id, _orgId };
+    public async updateJob(_teamId: mongodb.ObjectId, id: mongodb.ObjectId, data: any, filter?: any, correlationId?: string, responseFields?: string): Promise<object> {
+        const defaultFilter = { _id: id, _teamId };
         if (filter)
             filter = Object.assign(defaultFilter, filter);
         else
@@ -280,10 +280,10 @@ export class JobService {
         if (job._jobDefId) {
             if (data.status == Enums.JobStatus.RUNNING || data.status == Enums.JobStatus.COMPLETED || data.status == Enums.JobStatus.SKIPPED) {
                 if (job.status == Enums.JobStatus.INTERRUPTED || job.status == Enums.JobStatus.CANCELING || job.status == Enums.JobStatus.FAILED) {
-                    const failedJobs: JobSchema[] = <JobSchema[]>await this.findAllJobsInternal({ _orgId, _jobDefId: job._jobDefId, $or: [{ status: Enums.JobStatus.INTERRUPTED }, { status: Enums.JobStatus.FAILED }] }, 'id');
+                    const failedJobs: JobSchema[] = <JobSchema[]>await this.findAllJobsInternal({ _teamId, _jobDefId: job._jobDefId, $or: [{ status: Enums.JobStatus.INTERRUPTED }, { status: Enums.JobStatus.FAILED }] }, 'id');
                     if (!failedJobs || (_.isArray(failedJobs) && failedJobs.length < 1)) {
                         try {
-                            await jobDefService.updateJobDef(_orgId, job._jobDefId, { status: Enums.JobDefStatus.RUNNING }, { status: Enums.JobDefStatus.PAUSED });
+                            await jobDefService.updateJobDef(_teamId, job._jobDefId, { status: Enums.JobDefStatus.RUNNING }, { status: Enums.JobDefStatus.PAUSED });
                         } catch (e) {
                             if (!(e instanceof MissingObjectError))
                                 throw e;
@@ -293,16 +293,16 @@ export class JobService {
             }
 
             if (data.status >= Enums.JobStatus.COMPLETED)
-                await jobService.LaunchReadyJobs(_orgId, job._jobDefId);
+                await jobService.LaunchReadyJobs(_teamId, job._jobDefId);
         }
 
 
         // The data has the deltas that the rabbit listeners need get.  If there was any calculated data it would need to be placed manually
         // inside of the deltas here.
         const deltas = Object.assign({ _id: id }, data);
-        await rabbitMQPublisher.publish(_orgId, "Job", correlationId, PayloadOperation.UPDATE, convertData(JobSchema, deltas));
+        await rabbitMQPublisher.publish(_teamId, "Job", correlationId, PayloadOperation.UPDATE, convertData(JobSchema, deltas));
 
-        return this.findJob(_orgId, id, responseFields);
+        return this.findJob(_teamId, id, responseFields);
     }
 
 
@@ -311,12 +311,12 @@ export class JobService {
     };
 
 
-    async LaunchReadyJobs(_orgId: mongodb.ObjectId, _jobDefId: mongodb.ObjectId) {
+    async LaunchReadyJobs(_teamId: mongodb.ObjectId, _jobDefId: mongodb.ObjectId) {
         if (!_jobDefId)
             return;
 
         const currentTime: Date = new Date();
-        const jobDefs: JobDefSchema[] = <JobDefSchema[]>await jobDefService.findJobDef(_orgId, _jobDefId, 'maxInstances misfireGraceTime coalesce status');
+        const jobDefs: JobDefSchema[] = <JobDefSchema[]>await jobDefService.findJobDef(_teamId, _jobDefId, 'maxInstances misfireGraceTime coalesce status');
         if (!jobDefs || (_.isArray(jobDefs) && jobDefs.length === 0))
             throw new MissingObjectError(`Job template ${_jobDefId.toHexString()} not found.`);
         const jobDef: JobDefSchema = jobDefs[0];
@@ -329,7 +329,7 @@ export class JobService {
 
         /// Get jobs created but not started - if we're past the misfire grace time, skip the job
         ///     If multiple ready jobs and coalesce is true, run the most recent and skip the rest
-        const queryNotStartedJobs: JobSchema[] = await this.findAllJobsInternal({ _jobDefId: _jobDefId, _orgId, status: Enums.JobStatus.NOT_STARTED });
+        const queryNotStartedJobs: JobSchema[] = await this.findAllJobsInternal({ _jobDefId: _jobDefId, _teamId, status: Enums.JobStatus.NOT_STARTED });
         let jobsToRun: JobSchema[] = [];
         if (_.isArray(queryNotStartedJobs) && queryNotStartedJobs.length > 0) {
             for (let i = 0; i < queryNotStartedJobs.length; i++) {
@@ -340,7 +340,7 @@ export class JobService {
                     if (lag <= jobDef.misfireGraceTime) {
                         jobsToRun.push(job);
                     } else {
-                        this.updateJob(_orgId, job._id, { status: Enums.JobStatus.SKIPPED, error: "Exceeded misfire grace time" });
+                        this.updateJob(_teamId, job._id, { status: Enums.JobStatus.SKIPPED, error: "Exceeded misfire grace time" });
                     }
                 } else {
                     jobsToRun.push(job);
@@ -349,7 +349,7 @@ export class JobService {
 
             /// Get count of running jobs
             let numRunningJobs: number = 0;
-            const queryRunningJobs: JobSchema[] = await this.findAllJobsInternal({ _jobDefId: _jobDefId, _orgId, status: Enums.JobStatus.RUNNING }, 'id');
+            const queryRunningJobs: JobSchema[] = await this.findAllJobsInternal({ _jobDefId: _jobDefId, _teamId, status: Enums.JobStatus.RUNNING }, 'id');
             if (_.isArray(queryRunningJobs) && queryRunningJobs.length > 0)
                 numRunningJobs = queryRunningJobs.length;
 
@@ -362,26 +362,26 @@ export class JobService {
             /// If "coalesce", skip all ready jobs except the most recent
             if ((numJobsToStart > 0) && jobDef.coalesce) {
                 for (let i = 0; i < jobsToRun.length - 1; i++) {
-                    this.updateJob(_orgId, jobsToRun[i]._id, { status: Enums.JobStatus.SKIPPED, error: "Job skipped due to coalesce" });
+                    this.updateJob(_teamId, jobsToRun[i]._id, { status: Enums.JobStatus.SKIPPED, error: "Job skipped due to coalesce" });
                 }
                 const jobToRun = jobsToRun[jobsToRun.length - 1];
                 logger.LogInfo('Launching next available job', { _jobDefId: jobToRun._jobDefId.toHexString(), _jobId: jobToRun._id.toHexString() });
-                await this.updateJob(_orgId, jobToRun._id, { status: Enums.JobStatus.RUNNING, dateStarted: new Date().toISOString() }, { status: Enums.JobStatus.NOT_STARTED });
-                await this.LaunchTasksWithNoUpstreamDependencies(_orgId, jobToRun._id, logger);
+                await this.updateJob(_teamId, jobToRun._id, { status: Enums.JobStatus.RUNNING, dateStarted: new Date().toISOString() }, { status: Enums.JobStatus.NOT_STARTED });
+                await this.LaunchTasksWithNoUpstreamDependencies(_teamId, jobToRun._id, logger);
             } else {
                 /// Run up to maxInstances jobs (minus count of jobs already running) - remaining jobs will stay in "not started" status
                 for (let i = 0; i < numJobsToStart; i++) {
                     const jobToRun = jobsToRun[i];
                     logger.LogInfo('Launching next available job', { _jobDefId: _jobDefId.toHexString(), _jobId: jobToRun._id.toHexString() });
-                    await this.updateJob(_orgId, jobToRun._id, { status: Enums.JobStatus.RUNNING, dateStarted: new Date().toISOString() }, { status: Enums.JobStatus.NOT_STARTED });
-                    await this.LaunchTasksWithNoUpstreamDependencies(_orgId, jobToRun._id, logger);
+                    await this.updateJob(_teamId, jobToRun._id, { status: Enums.JobStatus.RUNNING, dateStarted: new Date().toISOString() }, { status: Enums.JobStatus.NOT_STARTED });
+                    await this.LaunchTasksWithNoUpstreamDependencies(_teamId, jobToRun._id, logger);
                 }
             }
         }
     }
 
 
-    async CheckJobStatus(_orgId: mongodb.ObjectId, _jobId: mongodb.ObjectId, currentStatus: Enums.JobStatus) {
+    async CheckJobStatus(_teamId: mongodb.ObjectId, _jobId: mongodb.ObjectId, currentStatus: Enums.JobStatus) {
         let taskStatuses: any = {};
         let taskIds: string[] = [];
         taskStatuses[Enums.TaskStatus.NOT_STARTED] = 0;
@@ -396,7 +396,7 @@ export class JobService {
         taskStatuses[Enums.TaskStatus.FAILED] = 0;
         taskStatuses[Enums.TaskStatus.SKIPPED] = 0;
 
-        const taskOutcomes = await taskOutcomeService.findTaskOutcomes(_orgId, { _jobId }, '_taskId status');
+        const taskOutcomes = await taskOutcomeService.findTaskOutcomes(_teamId, { _jobId }, '_taskId status');
         if (_.isArray(taskOutcomes) && taskOutcomes.length > 0) {
             for (let taskOutcome of taskOutcomes) {
                 taskIds.push(taskOutcome._taskId.toHexString());
@@ -409,7 +409,7 @@ export class JobService {
             }
         }
 
-        const tasks = await taskService.findTasks(_orgId, { _jobId, $or: [{ status: null }, { status: { $in: [Enums.TaskStatus.NOT_STARTED, Enums.TaskStatus.WAITING_FOR_AGENT, Enums.TaskStatus.PUBLISHED, Enums.TaskStatus.INTERRUPTED, Enums.TaskStatus.FAILED, Enums.TaskStatus.CANCELLED] } }] }, '_id status');
+        const tasks = await taskService.findTasks(_teamId, { _jobId, $or: [{ status: null }, { status: { $in: [Enums.TaskStatus.NOT_STARTED, Enums.TaskStatus.WAITING_FOR_AGENT, Enums.TaskStatus.PUBLISHED, Enums.TaskStatus.INTERRUPTED, Enums.TaskStatus.FAILED, Enums.TaskStatus.CANCELLED] } }] }, '_id status');
         if (_.isArray(tasks) && tasks.length > 0) {
             for (let task of tasks) {
                 if (taskIds.indexOf(task._id.toHexString()) >= 0)
@@ -465,55 +465,55 @@ export class JobService {
     }
 
 
-    async UpdateJobStatus(_orgId: mongodb.ObjectId, _jobId: mongodb.ObjectId, logger: BaseLogger, job: JobSchema = null, responseFields?: string) {
+    async UpdateJobStatus(_teamId: mongodb.ObjectId, _jobId: mongodb.ObjectId, logger: BaseLogger, job: JobSchema = null, responseFields?: string) {
         if (!job) {
             if (!responseFields)
                 responseFields = 'status';
             if (responseFields.indexOf('status"') < 0)
                 responseFields += ' status';
             responseFields = responseFields.trim();
-            const currentJobQuery: JobSchema[] = await this.findJob(_orgId, _jobId, responseFields);
+            const currentJobQuery: JobSchema[] = await this.findJob(_teamId, _jobId, responseFields);
             if (!currentJobQuery || (_.isArray(currentJobQuery) && currentJobQuery.length === 0))
-                throw new MissingObjectError(`Job '${_jobId.toHexString()}" not found for org "${_orgId.toHexString()}'`);
+                throw new MissingObjectError(`Job '${_jobId.toHexString()}" not found for team "${_teamId.toHexString()}'`);
             job = currentJobQuery[0];
         }
 
-        const status = await this.CheckJobStatus(_orgId, _jobId, job.status);
+        const status = await this.CheckJobStatus(_teamId, _jobId, job.status);
         console.log('JobService -> UpdateJobStatus -> status -> ', status, ', job.status -> ', job.status);
         if (status != job.status) {
             let update = {};
             update['status'] = status;
             if (status >= Enums.JobStatus.COMPLETED && job.status < Enums.JobStatus.COMPLETED)
                 update['dateCompleted'] = new Date().toISOString();
-            const jobUpdateQuery: any = (<JobSchema>await this.updateJob(_orgId, _jobId, update));
+            const jobUpdateQuery: any = (<JobSchema>await this.updateJob(_teamId, _jobId, update));
             if (_.isArray(jobUpdateQuery) && jobUpdateQuery.length > 0) {
                 const jobUpdated: JobSchema = jobUpdateQuery[0];
                 job = jobUpdated;
                 if (jobUpdated.status >= Enums.JobStatus.COMPLETED && (jobUpdated.onJobCompleteAlertEmail || jobUpdated.onJobCompleteAlertSlackURL)) {
-                    await SGUtils.OnJobComplete(_orgId, jobUpdated, logger);
+                    await SGUtils.OnJobComplete(_teamId, jobUpdated, logger);
                 }
             }
             // console.log('JobService -> UpdateJobStatus -> job -> ', JSON.stringify(job, null, 4));
 
             const deltas = Object.assign({ _id: _jobId }, update);
-            await rabbitMQPublisher.publish(_orgId, "Job", null, PayloadOperation.UPDATE, convertData(JobSchema, deltas));
+            await rabbitMQPublisher.publish(_teamId, "Job", null, PayloadOperation.UPDATE, convertData(JobSchema, deltas));
         }
 
         return job;
     }
 
 
-    async LaunchTasksWithNoUpstreamDependencies(_orgId: mongodb.ObjectId, _jobId: mongodb.ObjectId, logger: BaseLogger) {
-        const currentJobQuery: JobSchema[] = await this.findJob(_orgId, _jobId, 'status _jobDefId');
+    async LaunchTasksWithNoUpstreamDependencies(_teamId: mongodb.ObjectId, _jobId: mongodb.ObjectId, logger: BaseLogger) {
+        const currentJobQuery: JobSchema[] = await this.findJob(_teamId, _jobId, 'status _jobDefId');
         if (!currentJobQuery || (_.isArray(currentJobQuery) && currentJobQuery.length === 0))
-            throw new MissingObjectError(`Job '${_jobId.toHexString()}" not found for org "${_orgId.toHexString()}'`);
+            throw new MissingObjectError(`Job '${_jobId.toHexString()}" not found for team "${_teamId.toHexString()}'`);
         const currentJob: JobSchema = currentJobQuery[0];
         // console.log('JobService -> LaunchTasksWithNoUpstreamDependencies -> job -> ', JSON.stringify(currentJob, null, 4));
 
-        await FreeTierChecks.MaxScriptsCheck(_orgId);
+        await FreeTierChecks.MaxScriptsCheck(_teamId);
 
         let no_tasks_to_run: boolean = true;
-        const tasks = await taskService.findAllJobTasks(_orgId, _jobId);
+        const tasks = await taskService.findAllJobTasks(_teamId, _jobId);
         // console.log('JobService -> LaunchTasksWithNoUpstreamDependencies -> tasks -> ', JSON.stringify(tasks, null, 4));
         const tasksToRoutes = SGUtils.flatMap(x => x, tasks.map((t) => SGUtils.flatMap(x => x[0], t.toRoutes)));
         // console.log('JobService -> LaunchTasksWithNoUpstreamDependencies -> tasksFromToRoutes -> ', JSON.stringify(tasksToRoutes, null, 4));
@@ -523,7 +523,7 @@ export class JobService {
                     if (task.status == null) {
                         try {
                             task.status = Enums.TaskStatus.NOT_STARTED;
-                            await taskService.updateTask(_orgId, task._id, { status: task.status }, logger, { status: null }, null, null);
+                            await taskService.updateTask(_teamId, task._id, { status: task.status }, logger, { status: null }, null, null);
                         } catch (err) {
                             if (err instanceof MissingObjectError) {
                                 logger.LogWarning(err.message, { error: err, service: 'JobService', method: 'LaunchTasksWithNoUpstreamDependencies' });
@@ -532,26 +532,26 @@ export class JobService {
                             }
                         }
 
-                        let publishRes = await taskOutcomeService.PublishTask(_orgId, task, logger, amqp);
+                        let publishRes = await taskOutcomeService.PublishTask(_teamId, task, logger, amqp);
                         // console.log('LaunchReadyTasks -> publishRes -> ', publishRes);
                         if (publishRes.success) {
                             // PublishTask was successful
                             // task.status = Enums.TaskStatus.PUBLISHED;
-                            // await taskService.updateTask(_orgId, task._id, { status: task.status, route: '' }, logger)
+                            // await taskService.updateTask(_teamId, task._id, { status: task.status, route: '' }, logger)
                             no_tasks_to_run = false;
                         }
                     }
                 }
             } catch (e) {
-                logger.LogError(e, { Class: 'JobRouter', Method: 'LaunchTasksWithNoUpstreamDependencies', _orgId, _jobId, task });
+                logger.LogError(e, { Class: 'JobRouter', Method: 'LaunchTasksWithNoUpstreamDependencies', _teamId, _jobId, task });
             }
         }
 
         if (no_tasks_to_run) {
-            logger.LogError(`No tasks to run`, { Class: 'JobService', Method: 'LaunchTasksWithNoUpstreamDependencies', _orgId, _jobId });
-            await this.UpdateJobStatus(_orgId, _jobId, logger, currentJob);
-            // await this.updateJob(_orgId, _jobId, { status: Enums.JobStatus.COMPLETED, dateCompleted: new Date().toISOString() });
-            this.LaunchReadyJobs(_orgId, currentJob._jobDefId);
+            logger.LogError(`No tasks to run`, { Class: 'JobService', Method: 'LaunchTasksWithNoUpstreamDependencies', _teamId, _jobId });
+            await this.UpdateJobStatus(_teamId, _jobId, logger, currentJob);
+            // await this.updateJob(_teamId, _jobId, { status: Enums.JobStatus.COMPLETED, dateCompleted: new Date().toISOString() });
+            this.LaunchReadyJobs(_teamId, currentJob._jobDefId);
         }
     }
 }

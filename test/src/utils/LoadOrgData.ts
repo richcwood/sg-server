@@ -5,7 +5,7 @@ import { BaseLogger } from '../../../server/src/shared/SGLogger';
 import { agentService } from '../../../server/src/api/services/AgentService';
 import { jobDefService } from '../../../server/src/api/services/JobDefService';
 import { jobService } from '../../../server/src/api/services/JobService';
-import { orgService } from '../../../server/src/api/services/OrgService';
+import { teamService } from '../../../server/src/api/services/TeamService';
 import { scheduleService } from '../../../server/src/api/services/ScheduleService';
 import { scriptService } from '../../../server/src/api/services/ScriptService';
 import { stepDefService } from '../../../server/src/api/services/StepDefService';
@@ -21,7 +21,7 @@ import { paymentTransactionService } from '../../../server/src/api/services/Paym
 import { AgentSchema } from '../../../server/src/api/domain/Agent';
 import { JobDefSchema } from '../../../server/src/api/domain/JobDef';
 import { JobSchema } from '../../../server/src/api/domain/Job';
-import { OrgSchema } from '../../../server/src/api/domain/Org';
+import { TeamSchema } from '../../../server/src/api/domain/Team';
 import { ScheduleSchema } from '../../../server/src/api/domain/Schedule';
 import { ScriptSchema } from '../../../server/src/api/domain/Script';
 import { StepDefSchema } from '../../../server/src/api/domain/StepDef';
@@ -40,7 +40,7 @@ import * as mongoose from 'mongoose';
 
 
 
-let LoadMongoData = async (path: string, orgId: string = '') => {
+let LoadMongoData = async (path: string, teamId: string = '') => {
   mongoose.connect(config.get('mongoUrl'), { useNewUrlParser: true });
 
   const mongoUrl = config.get('mongoUrl');
@@ -54,8 +54,8 @@ let LoadMongoData = async (path: string, orgId: string = '') => {
   console.log('mongo url -> ', config.get('mongoUrl'));
 
   let filter: any = {};
-  if (orgId)
-    filter["_orgId"] = new mongodb.ObjectId(orgId);
+  if (teamId)
+    filter["_teamId"] = new mongodb.ObjectId(teamId);
 
   // let res;
   // res = await mongoRepo.DeleteByQuery(filter, 'job');
@@ -174,10 +174,10 @@ let LoadMongoData = async (path: string, orgId: string = '') => {
 }
 
 const filePath = process.argv[2];
-const org = process.argv[3];
+const team = process.argv[3];
 
-console.log(`Loading data for org ${org} from ${filePath} to ${config.get('mongoUrl')}`);
+console.log(`Loading data for team ${team} from ${filePath} to ${config.get('mongoUrl')}`);
 
-LoadMongoData(filePath, org);
+LoadMongoData(filePath, team);
 
 // node test/dist/test/src/utils/LoadMongoData.js './demo.json' '5e99cbcb2317950015edb655'

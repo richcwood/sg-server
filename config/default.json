@@ -57,13 +57,14 @@
   "SG_GIT_USERNAME": "richwifunds",
   "SG_GIT_PASSWORD": "7d7bd8bab95c40937f8f8bfdcc336bad2d990f11",
   "SG_GIT_URL": "github.com/theironcook/Kiki.git",
-  "AWS_ACCESS_KEY_ID": "AKIATV2XO2YFWAJMQJSN",
-  "AWS_SECRET_ACCESS_KEY": "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",
+  "AWS_ACCESS_KEY_ID": "AKIA5ZOZE6PNDQ4LSZLC",
+  "AWS_SECRET_ACCESS_KEY": "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",
+  "AWS_REGION": "us-east-2",
   "logsFolder": "../logs",
   "httpLogs": {
     "enabled": true,
     "fileName": "httpAccess.log",
-    "morganFormat": "date=\":date\" forwarded_ip=\":req[X-Forwarded-For]\" user_id=\":user_id\" user_email=\":user_email\" organization_id=\":organization_id\" transaction_id=\":transaction_id\" remote_address=\":remote-addr\" url=\":url\" method=\":method\" response_code=\":status\" response_time=\":response-time\""
+    "morganFormat": "date=\":date\" forwarded_ip=\":req[X-Forwarded-For]\" user_id=\":user_id\" user_email=\":user_email\" team_id=\":team_id\" transaction_id=\":transaction_id\" remote_address=\":remote-addr\" url=\":url\" method=\":method\" response_code=\":status\" response_time=\":response-time\""
   },
   "buildAgentJobDefId": "5ed6dc9bae918d37ad199d89",
   "buildAgentStubJobDefId": "5ee2ae88bd2c5a0015991f95",

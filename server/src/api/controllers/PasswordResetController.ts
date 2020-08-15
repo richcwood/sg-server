@@ -15,7 +15,7 @@ export class PasswordResetController {
         const response: ResponseWrapper = resp['body'];
         const logger: BaseLogger = (<any>req).logger;
         try {
-            const updatedUser: any = await passwordResetService.updatePassword(req.body, logger, req.query.responseFields);
+            const updatedUser: any = await passwordResetService.updatePassword(req.body, logger, (<string>req.query.responseFields));
 
             if (_.isArray(updatedUser) && updatedUser.length === 0) {
                 next(new MissingObjectError(`User ${req.params.userId} not found.`));
@@ -28,8 +28,8 @@ export class PasswordResetController {
             var token = jwt.sign({
                 id: updatedUser._id,
                 email: updatedUser.email,
-                orgIds: updatedUser.orgIds,
-                orgIdsInvited: updatedUser.orgIdsInvited,
+                teamIds: updatedUser.teamIds,
+                teamIdsInvited: updatedUser.teamIdsInvited,
                 name: updatedUser.name,
                 companyName: updatedUser.companyName,
                 exp: Math.floor(jwtExpiration / 1000)

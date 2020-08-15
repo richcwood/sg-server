@@ -15,7 +15,7 @@ export class InvoiceSchema {
   id?: mongodb.ObjectId;
 
   @prop({ required: true })
-  _orgId: mongodb.ObjectId;
+  _teamId: mongodb.ObjectId;
 
   @prop({ required: true })
   startDate: Date;

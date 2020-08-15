@@ -168,15 +168,15 @@
 import { Component, Vue, Watch } from 'vue-property-decorator';
 import { BindStoreModel, BindSelected, BindSelectedCopy } from '@/decorator';
 import { StoreType } from '@/store/types';
-import { OrgVar } from '@/store/orgVar/types';
+import { TeamVar } from '@/store/teamVar/types';
 import { SgAlert, AlertPlacement, AlertCategory } from '@/store/alert/types';
 import { ValidationProvider, ValidationObserver } from 'vee-validate';
 import { Invoice, InvoiceStatus } from '@/store/invoice/types';
 import { PaymentTransaction, PaymentTransactionType, PaymentTransactionStatus } from '@/store/paymentTransaction/types';
 import { momentToStringV3 } from '@/utils/DateTime';
-import { enumKeyToPretty, enumKeys, OrgPricingTier } from '@/utils/Enums';
+import { enumKeyToPretty, enumKeys, TeamPricingTier } from '@/utils/Enums';
 import {create as createBraintreeClient } from 'braintree-web/client';
-import { Org } from '@/store/org/types';
+import { Team } from '@/store/team/types';
 import { showErrors } from '@/utils/ErrorHandler';
 import axios from 'axios';
 import dropin from 'braintree-web-drop-in';
@@ -203,8 +203,8 @@ export default class PaymentMethods extends Vue {
 
   private paymentAmounts = {};
 
-  @BindStoreModel({storeType: StoreType.OrgStore})
-  private selectedOrg: Org;
+  @BindStoreModel({storeType: StoreType.TeamStore})
+  private selectedTeam: Team;
 
   private get paidInvoices(){
     return this.$store.getters[`${StoreType.InvoiceStore}/getPaidInvoices`];
@@ -348,26 +348,26 @@ export default class PaymentMethods extends Vue {
     try {
       if(this.canSubmitPayment){
         // If the ability to submit payments is a new thing that was just added
-        if(this.selectedOrg.pricingTier === OrgPricingTier.FREE){
+        if(this.selectedTeam.pricingTier === TeamPricingTier.FREE){
           console.log('moving from a free to a paid plan');
-          await this.$store.dispatch(`${StoreType.OrgStore}/save`, {
-            id: this.selectedOrg.id,
-            pricingTier: OrgPricingTier.PAID
+          await this.$store.dispatch(`${StoreType.TeamStore}/save`, {
+            id: this.selectedTeam.id,
+            pricingTier: TeamPricingTier.PAID
           });
           
-          this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Updated organization to a paid plan.`, AlertPlacement.FOOTER));
+          this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Updated team to a paid plan.`, AlertPlacement.FOOTER));
         }
       }
       else {
-        if(this.selectedOrg.pricingTier === OrgPricingTier.PAID){
+        if(this.selectedTeam.pricingTier === TeamPricingTier.PAID){
           console.log('moving from a paid to a free plan');
 
-          await this.$store.dispatch(`${StoreType.OrgStore}/save`, {
-            id: this.selectedOrg.id,
-            pricingTier: OrgPricingTier.FREE
+          await this.$store.dispatch(`${StoreType.TeamStore}/save`, {
+            id: this.selectedTeam.id,
+            pricingTier: TeamPricingTier.FREE
           });
           
-          this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Updated organization to a free plan.`, AlertPlacement.FOOTER));
+          this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Updated team to a free plan.`, AlertPlacement.FOOTER));
         }
       }
     }

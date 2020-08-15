@@ -13,8 +13,8 @@ export class CreateInvoiceController {
         const mongoLib: MongoRepo = (<any>req).mongoLib;
         const response: ResponseWrapper = resp['body'];
         try {
-            const _orgId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._orgid);
-            const res = await createInvoiceService.createInvoice(_orgId, req.body, mongoLib, logger, req.header('correlationId'), req.query.responseFields);
+            const _teamId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._teamid);
+            const res = await createInvoiceService.createInvoice(_teamId, req.body, mongoLib, logger, req.header('correlationId'), (<string>req.query.responseFields));
             response.data = res;
             response.statusCode = ResponseCode.CREATED;
             next();

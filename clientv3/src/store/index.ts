@@ -10,12 +10,12 @@ import { stepOutcomeStore } from '@/store/stepOutcome/index';
 import { jobDefStore } from '@/store/jobDef/index';
 import { taskDefStore } from '@/store/taskDef/index';
 import { stepDefStore } from '@/store/stepDef/index';
-import { orgStore } from '@/store/org/index';
+import { teamStore } from '@/store/team/index';
 import { alertStore } from '@/store/alert/index';
 import { agentStore } from '@/store/agent/index';
 import { scriptStore } from '@/store/script/index';
 import { scheduleStore } from '@/store/schedule/index';
-import { orgVariableStore } from '@/store/orgVar/index';
+import { teamVariableStore } from '@/store/teamVar/index';
 import { artifactStore } from '@/store/artifact/index';
 import { invoiceStore } from '@/store/invoice/index';
 import { paymentTransactionStore } from '@/store/paymentTransaction/index';
@@ -40,12 +40,12 @@ const store: StoreOptions<RootState> = {
         jobDefStore,
         taskDefStore,
         stepDefStore,
-        orgStore,
+        teamStore,
         alertStore,
         agentStore,
         scriptStore,
         scheduleStore,
-        orgVariableStore,
+        teamVariableStore,
         artifactStore,
         invoiceStore,
         paymentTransactionStore,

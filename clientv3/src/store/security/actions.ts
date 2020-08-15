@@ -1,7 +1,7 @@
 import { ActionTree } from 'vuex';
 import { RootState, Model } from '@/store/types';
 import { SecurityStore } from './types';
-import { Org } from '@/store/org/types';
+import { Team } from '@/store/team/types';
 import { getAuthJwtCookie } from './index';
 import axios from 'axios';
 import store from '../index';
@@ -50,13 +50,13 @@ export const actions: ActionTree<SecurityStore, RootState> = {
     location.reload(); // automatically redirected to the landing page
   },
 
-  // Restart the app when you change the selected org.  There's too much state change to manage
-  // when everything depends on the selected org.
-  async restartApp({}, {selectedOrgId, routeName}){
+  // Restart the app when you change the selected team.  There's too much state change to manage
+  // when everything depends on the selected team.
+  async restartApp({}, {selectedTeamId, routeName}){
     if(routeName){
       localStorage.setItem('sg_start_route_name', routeName);
     }
-    localStorage.setItem('sg_start_org_id', selectedOrgId);
+    localStorage.setItem('sg_start_team_id', selectedTeamId);
     location.reload(); // will invoke startApp below because there is a user logged in
   },
 
@@ -65,27 +65,27 @@ export const actions: ActionTree<SecurityStore, RootState> = {
       throw 'Error, the user was not set yet.  Call login first and make sure it worked.';
     }
 
-    if(! state.user.orgIds || state.user.orgIds.length === 0){
-      throw 'Error, the user was not associated with any orgs.  You should not have started the app.  Go to the landing instead.';
+    if(! state.user.teamIds || state.user.teamIds.length === 0){
+      throw 'Error, the user was not associated with any teams.  You should not have started the app.  Go to the landing instead.';
     }
     
-    store.commit(`${StoreType.OrgStore}/setUserEmail`, state.user.email);
-    const orgIdsAsStrings = state.user.orgIds.map(orgId => `"${orgId}"`)
-    const orgs = await store.dispatch(`${StoreType.OrgStore}/fetchModelsByFilter`, {filter: `id->[${orgIdsAsStrings}]`});
-    const localStorageStartOrgId = localStorage.getItem('sg_start_org_id');
-    let selectedOrg: Org|null = null;
-    if(localStorageStartOrgId){
-      const startingOrg = orgs.find((org: any) => org.id === localStorageStartOrgId);
-      if(startingOrg){
-        selectedOrg = await store.dispatch(`${StoreType.OrgStore}/select`, startingOrg);
+    store.commit(`${StoreType.TeamStore}/setUserEmail`, state.user.email);
+    const teamIdsAsStrings = state.user.teamIds.map(teamId => `"${teamId}"`)
+    const teams = await store.dispatch(`${StoreType.TeamStore}/fetchModelsByFilter`, {filter: `id->[${teamIdsAsStrings}]`});
+    const localStorageStartTeamId = localStorage.getItem('sg_start_team_id');
+    let selectedTeam: Team|null = null;
+    if(localStorageStartTeamId){
+      const startingTeam = teams.find((team: any) => team.id === localStorageStartTeamId);
+      if(startingTeam){
+        selectedTeam = await store.dispatch(`${StoreType.TeamStore}/select`, startingTeam);
       }
       else {
-        console.warn(`Did not find the local storage starting orgId ${localStorageStartOrgId}.`);
+        console.warn(`Did not find the local storage starting teamId ${localStorageStartTeamId}.`);
       }
     }
     
-    if(!selectedOrg){
-      selectedOrg = await store.dispatch(`${StoreType.OrgStore}/select`, orgs[0]);
+    if(!selectedTeam){
+      selectedTeam = await store.dispatch(`${StoreType.TeamStore}/select`, teams[0]);
     }
 
     // Initialize the single stomp handler
@@ -95,8 +95,8 @@ export const actions: ActionTree<SecurityStore, RootState> = {
       login: process.env.VUE_APP_RABBITMQ_USER, // login
       passcode: process.env.VUE_APP_RABBITMQ_PASS, // passcode
       vHost: process.env.VUE_APP_RABBITMQ_VHOST, // vHost
-      exchangeName: `org-${selectedOrg.id}`, // exchangeName
-      queueName: `org-${selectedOrg.name}` // queueName
+      exchangeName: `team-${selectedTeam.id}`, // exchangeName
+      queueName: `team-${selectedTeam.name}` // queueName
     };
 
     const stompHandler = initStompHandler( stompOptions );
@@ -108,7 +108,7 @@ export const actions: ActionTree<SecurityStore, RootState> = {
       console.error('Error, could not connect to browser push.', err);
     }
 
-    // Fetch all of the job defs, jobs and agents for the entire org
+    // Fetch all of the job defs, jobs and agents for the entire team
     store.dispatch(`${StoreType.JobDefStore}/fetchModelsByFilter`);
     store.dispatch(`${StoreType.JobStore}/fetchModelsByFilter`);
     store.dispatch(`${StoreType.AgentStore}/fetchModelsByFilter`);
@@ -116,9 +116,9 @@ export const actions: ActionTree<SecurityStore, RootState> = {
     
     commit('setAppStarted', true);
 
-    const invitedToken = localStorage.getItem('sg_invited_org_token');
+    const invitedToken = localStorage.getItem('sg_invited_team_token');
 
-    if(invitedToken && ! localStorage.getItem(`failed_org_token_${invitedToken}`)) {
+    if(invitedToken && ! localStorage.getItem(`failed_team_token_${invitedToken}`)) {
       if(router.currentRoute.name !== 'invitationsForMe') {
         router.replace({name: 'invitationsForMe'});
       }

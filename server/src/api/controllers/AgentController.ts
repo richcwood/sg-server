@@ -11,8 +11,8 @@ import { convertData as convertRequestData } from '../utils/RequestConverters';
 import * as mongodb from 'mongodb';
 import * as _ from 'lodash';
 import * as config from 'config';
-import { OrgSchema } from '../domain/Org';
-import { orgService } from '../services/OrgService';
+import { TeamSchema } from '../domain/Team';
+import { teamService } from '../services/TeamService';
 import { SGStrings } from '../../shared/SGStrings';
 import { BaseLogger } from '../../shared/SGLogger';
 import { RabbitMQAdmin } from '../../shared/RabbitMQAdmin';
@@ -38,46 +38,46 @@ let amqp: AMQPConnector = new AMQPConnector(appName, '', amqpUrl, rmqVhost, 1, (
 amqp.Start();
 
 
-let configureAgentQueues = async (_orgId: mongodb.ObjectId, _agentId: mongodb.ObjectId, logger: BaseLogger) => {
+let configureAgentQueues = async (_teamId: mongodb.ObjectId, _agentId: mongodb.ObjectId, logger: BaseLogger) => {
     let inactiveAgentQueueTTL = inactiveAgentQueueTTLHours * 60 * 60 * 1000;
-    let org: OrgSchema = await orgService.findOrg(_orgId);
+    let team: TeamSchema = await teamService.findTeam(_teamId);
 
     const rmqAdmin = new RabbitMQAdmin(rmqAdminUrl, rmqVhost, logger);
 
-    // let org = await this.mongoRepo.GetById(this.mongoRepo.ObjectIdFromString(_orgId), 'org', { rmqPassword: 1 });
-    // const newUsername = _orgId.toString();
-    // const defaultExchange = SGStrings.GetOrgRoutingPrefix(_orgId.toHexString());
-    const orgExchangeName = SGStrings.GetOrgRoutingPrefix(_orgId.toHexString());
+    // let team = await this.mongoRepo.GetById(this.mongoRepo.ObjectIdFromString(_teamId), 'team', { rmqPassword: 1 });
+    // const newUsername = _teamId.toString();
+    // const defaultExchange = SGStrings.GetTeamRoutingPrefix(_teamId.toHexString());
+    const teamExchangeName = SGStrings.GetTeamRoutingPrefix(_teamId.toHexString());
 
-    await rmqAdmin.createUser(_orgId.toHexString(), org.rmqPassword, orgExchangeName);
+    await rmqAdmin.createUser(_teamId.toHexString(), team.rmqPassword, teamExchangeName);
 
-    await rmqAdmin.createExchange(orgExchangeName, 'topic', false, true);
+    await rmqAdmin.createExchange(teamExchangeName, 'topic', false, true);
 
-    const agentQueue = SGStrings.GetAgentQueue(_orgId.toHexString(), _agentId.toHexString());
+    const agentQueue = SGStrings.GetAgentQueue(_teamId.toHexString(), _agentId.toHexString());
     await rmqAdmin.createQueue(agentQueue, false, true, inactiveAgentQueueTTL);
-    await rmqAdmin.bindQueueToExchange(orgExchangeName, agentQueue, agentQueue);
-    // await rmqAdmin.bindQueueToExchange(orgExchangeName, agentQueue, SGStrings.GetAllAgentsQueue(_orgId.toHexString(), _orgId));
+    await rmqAdmin.bindQueueToExchange(teamExchangeName, agentQueue, agentQueue);
+    // await rmqAdmin.bindQueueToExchange(teamExchangeName, agentQueue, SGStrings.GetAllAgentsQueue(_teamId.toHexString(), _teamId));
 
-    const heartbeatQueue = SGStrings.GetHeartbeatQueue(_orgId.toHexString());
+    const heartbeatQueue = SGStrings.GetHeartbeatQueue(_teamId.toHexString());
     await rmqAdmin.createQueue(heartbeatQueue, false, true);
-    await rmqAdmin.bindQueueToExchange(orgExchangeName, heartbeatQueue, heartbeatQueue);
+    await rmqAdmin.bindQueueToExchange(teamExchangeName, heartbeatQueue, heartbeatQueue);
 
-    const agentUpdaterQueue = SGStrings.GetAgentUpdaterQueue(_orgId.toHexString(), _agentId.toHexString());
+    const agentUpdaterQueue = SGStrings.GetAgentUpdaterQueue(_teamId.toHexString(), _agentId.toHexString());
     await rmqAdmin.createQueue(agentUpdaterQueue, false, true, inactiveAgentQueueTTL);
-    await rmqAdmin.bindQueueToExchange(orgExchangeName, agentUpdaterQueue, agentUpdaterQueue);
+    await rmqAdmin.bindQueueToExchange(teamExchangeName, agentUpdaterQueue, agentUpdaterQueue);
 };
 
 
 let addServerPropertiesToAgent = async (agent: any) => {
-    const org: OrgSchema = <OrgSchema>await orgService.findOrg(agent._orgId, 'rmqPassword');
-    if (!org)
-        throw new MissingObjectError(`Agent org "${agent._orgId.toHexString()}" not found`);
+    const team: TeamSchema = <TeamSchema>await teamService.findTeam(agent._teamId, 'rmqPassword');
+    if (!team)
+        throw new MissingObjectError(`Agent team "${agent._teamId.toHexString()}" not found`);
     return Object.assign(agent, {
         inactiveAgentQueueTTL: inactiveAgentQueueTTLHours * 60 * 60 * 1000,
         stompUrl: stompUrl,
         rmqAdminUrl: rmqAdminUrl,
-        rmqUsername: agent._orgId.toHexString(),
-        rmqPassword: org.rmqPassword,
+        rmqUsername: agent._teamId.toHexString(),
+        rmqPassword: team.rmqPassword,
         rmqVhost: rmqVhost
     });
 }
@@ -87,17 +87,17 @@ export class AgentController {
 
 
     public async getManyAgents(req: Request, resp: Response, next: NextFunction): Promise<void> {
-        const _orgId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._orgid);
-        defaultBulkGet({ _orgId }, req, resp, next, AgentSchema, AgentModel, agentService);
+        const _teamId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._teamid);
+        defaultBulkGet({ _teamId }, req, resp, next, AgentSchema, AgentModel, agentService);
     }
 
 
     public async getAgent(req: Request, resp: Response, next: NextFunction): Promise<void> {
         try {
-            const _orgId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._orgid);
+            const _teamId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._teamid);
             const _agentId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.params.agentId);
             const response: ResponseWrapper = (resp as any).body;
-            const agent = await agentService.findAgent(_orgId, _agentId, req.query.responseFields);
+            const agent = await agentService.findAgent(_teamId, _agentId, (<string>req.query.responseFields));
 
             if (!agent || (_.isArray(agent) && agent.length === 0)) {
                 next(new MissingObjectError(`Agent ${req.params.agentId} not found.`));
@@ -121,13 +121,13 @@ export class AgentController {
 
     public async getAgentFromMachineId(req: Request, resp: Response, next: NextFunction): Promise<void> {
         try {
-            const _orgId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._orgid);
+            const _teamId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._teamid);
             const machineId: string = <string>req.params.machineId;
             const response: ResponseWrapper = (resp as any).body;
-            let agent = await agentService.findAgentByMachineName(_orgId, machineId, req.query.responseFields);
+            let agent = await agentService.findAgentByMachineName(_teamId, machineId, (<string>req.query.responseFields));
 
             if (_.isArray(agent) && agent.length === 0) {
-                next(new MissingObjectError(`Agent '${machineId}" in org "${_orgId.toHexString()}' not found.`));
+                next(new MissingObjectError(`Agent '${machineId}" in team "${_teamId.toHexString()}' not found.`));
             }
             else {
                 response.data = await addServerPropertiesToAgent(convertResponseData(AgentSchema, agent[0]));
@@ -142,10 +142,10 @@ export class AgentController {
 
     public async getAgentByTags(req: Request, resp: Response, next: NextFunction): Promise<void> {
         try {
-            const _orgId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._orgid);
+            const _teamId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._teamid);
             const tags: any = JSON.parse(<string>req.params.tags);
             const response: ResponseWrapper = (resp as any).body;
-            const agents = await agentService.findAgentsByTags(_orgId, tags, req.query.responseFields);
+            const agents = await agentService.findAgentsByTags(_teamId, tags, (<string>req.query.responseFields));
 
             if (!agents || (_.isArray(agents) && agents.length === 0)) {
                 next(new MissingObjectError(`No agent with tags ${req.params.tags} was found.`));
@@ -163,10 +163,10 @@ export class AgentController {
 
     public async getDisconnectedAgents(req: Request, resp: Response, next: NextFunction): Promise<void> {
         try {
-            const _orgId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._orgid);
+            const _teamId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._teamid);
             const batchSize: number = parseInt(<string>req.headers.batchsize);
             const response: ResponseWrapper = (resp as any).body;
-            const agents = await agentService.findDisconnectedAgents(_orgId, batchSize, req.query.responseFields);
+            const agents = await agentService.findDisconnectedAgents(_teamId, batchSize, (<string>req.query.responseFields));
 
             if (!agents || (_.isArray(agents) && agents.length === 0)) {
                 next(new MissingObjectError(`No disconnected agents found.`));
@@ -184,11 +184,11 @@ export class AgentController {
 
     public async createAgent(req: Request, resp: Response, next: NextFunction): Promise<void> {
         const logger: BaseLogger = (<any>req).logger;
-        const _orgId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._orgid);
+        const _teamId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._teamid);
         const response: ResponseWrapper = resp['body'];
         try {
-            const newAgent: AgentSchema = <AgentSchema>await agentService.createAgent(_orgId, convertRequestData(AgentSchema, req.body), req.header('correlationId'), req.query.responseFields);
-            await configureAgentQueues(_orgId, newAgent._id, logger);
+            const newAgent: AgentSchema = <AgentSchema>await agentService.createAgent(_teamId, convertRequestData(AgentSchema, req.body), req.header('correlationId'), (<string>req.query.responseFields));
+            await configureAgentQueues(_teamId, newAgent._id, logger);
             response.data = await addServerPropertiesToAgent(convertResponseData(AgentSchema, newAgent));
             response.statusCode = ResponseCode.CREATED;
             next();
@@ -202,17 +202,17 @@ export class AgentController {
     public async updateAgentHeartbeat(req: Request, resp: Response, next: NextFunction): Promise<void> {
         // console.log('updateAgentHeartbeat -> ', JSON.stringify(req.body, null, 4));
         const logger: BaseLogger = (<any>req).logger;
-        const _orgId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._orgid);
+        const _teamId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._teamid);
         const _agentId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.params.agentId);
         const response: ResponseWrapper = resp['body'];
         try {
-            let agent: any = await agentService.updateAgentHeartbeat(_orgId, _agentId, convertRequestData(AgentSchema, req.body), req.header('correlationId'));
+            let agent: any = await agentService.updateAgentHeartbeat(_teamId, _agentId, convertRequestData(AgentSchema, req.body), req.header('correlationId'));
 
             let tasksToCancel: mongodb.ObjectId[] = [];
             if (agent.offline || (agent.lastHeartbeatTime < new Date().getTime() - activeAgentTimeoutSeconds * 1000)) {
-                rabbitMQPublisher.publishBrowserAlert(_orgId, `Agent ${agent.machineId} is back online`);
+                rabbitMQPublisher.publishBrowserAlert(_teamId, `Agent ${agent.machineId} is back online`);
                 let orphanedTasksFilter = {};
-                orphanedTasksFilter['_orgId'] = _orgId;
+                orphanedTasksFilter['_teamId'] = _teamId;
                 orphanedTasksFilter['_agentId'] = new mongodb.ObjectId(agent._id);
                 orphanedTasksFilter['status'] = { $eq: TaskStatus.CANCELLED };
                 orphanedTasksFilter['failureCode'] = { $eq: TaskFailureCode.AGENT_CRASHED_OR_LOST_CONNECTIVITY };
@@ -224,17 +224,17 @@ export class AgentController {
                 }
 
                 let noAgentTasksFilter = {};
-                noAgentTasksFilter['_orgId'] = _orgId;
+                noAgentTasksFilter['_teamId'] = _teamId;
                 noAgentTasksFilter['status'] = { $eq: TaskStatus.WAITING_FOR_AGENT };
                 // noAgentTasksFilter['failureCode'] = { $eq: TaskFailureCode.NO_AGENT_AVAILABLE };
                 const noAgentTasks = await taskService.findAllTasksInternal(noAgentTasksFilter);
                 if (_.isArray(noAgentTasks) && noAgentTasks.length > 0) {
                     for (let i = 0; i < noAgentTasks.length; i++) {
-                        let updatedTask: any = await taskService.updateTask(_orgId, noAgentTasks[i]._id, { $pull: { attemptedRunAgentIds: agent._id } }, logger);
-                        await taskOutcomeService.PublishTask(_orgId, updatedTask, logger, amqp);
+                        let updatedTask: any = await taskService.updateTask(_teamId, noAgentTasks[i]._id, { $pull: { attemptedRunAgentIds: agent._id } }, logger);
+                        await taskOutcomeService.PublishTask(_teamId, updatedTask, logger, amqp);
                     }
                 }
-                // updatedAgent = await agentService.updateAgentHeartbeat(_orgId, _agentId, { offline: false }, req.header('correlationId'), req.query.responseFields);
+                // updatedAgent = await agentService.updateAgentHeartbeat(_teamId, _agentId, { offline: false }, req.header('correlationId'), (<string>req.query.responseFields));
             }
 
             if (_.isArray(agent) && agent.length === 0) {
@@ -265,11 +265,11 @@ export class AgentController {
 
     public async updateAgentTags(req: Request, resp: Response, next: NextFunction): Promise<void> {
         // console.log('updateAgentProperties -> ', JSON.stringify(req.headers, null, 4));
-        const _orgId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._orgid);
+        const _teamId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._teamid);
         const _agentId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.params.agentId);
         const response: ResponseWrapper = resp['body'];
         try {
-            let updatedAgent: any = await agentService.updateAgentTags(_orgId, _agentId, convertRequestData(AgentSchema, req.body), req.header('correlationId'), req.query.responseFields);
+            let updatedAgent: any = await agentService.updateAgentTags(_teamId, _agentId, convertRequestData(AgentSchema, req.body), req.header('correlationId'), (<string>req.query.responseFields));
 
             if (_.isArray(updatedAgent) && updatedAgent.length === 0) {
                 next(new MissingObjectError(`Agent ${req.params.agentId} not found.`));
@@ -294,12 +294,12 @@ export class AgentController {
 
     public async updateAgentProperties(req: Request, resp: Response, next: NextFunction): Promise<void> {
         // console.log('updateAgentProperties -> ', JSON.stringify(req.body, null, 4));
-        const _orgId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._orgid);
+        const _teamId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._teamid);
         const _agentId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.params.agentId);
         const userEmail: string = <string>req.headers.email;
         const response: ResponseWrapper = resp['body'];
         try {
-            let updatedAgent: any = await agentService.updateAgentProperties(_orgId, _agentId, convertRequestData(AgentSchema, req.body), userEmail, req.header('correlationId'), req.query.responseFields);
+            let updatedAgent: any = await agentService.updateAgentProperties(_teamId, _agentId, convertRequestData(AgentSchema, req.body), userEmail, req.header('correlationId'), (<string>req.query.responseFields));
 
             if (_.isArray(updatedAgent) && updatedAgent.length === 0) {
                 next(new MissingObjectError(`Agent ${req.params.agentId} not found.`));
@@ -324,11 +324,11 @@ export class AgentController {
 
     public async processOrphanedTasks(req: Request, resp: Response, next: NextFunction): Promise<void> {
         const logger: BaseLogger = (<any>req).logger;
-        const _orgId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._orgid);
+        const _teamId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._teamid);
         const _agentId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.params.agentId);
         const response: ResponseWrapper = resp['body'];
         try {
-            response.data = await agentService.processOrphanedTasks(_orgId, _agentId, logger);
+            response.data = await agentService.processOrphanedTasks(_teamId, _agentId, logger);
             response.statusCode = ResponseCode.CREATED;
             next();
         }

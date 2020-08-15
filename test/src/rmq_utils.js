@@ -12,7 +12,7 @@ let logger = new SGLogger_1.BaseLogger(appName, {});
 logger.Start();
 
 
-let orgsToKeep = ['5de95c0453162e8891f5a830'];
+let teamsToKeep = ['5de95c0453162e8891f5a830'];
 
 (async () => {
     try {
@@ -49,8 +49,8 @@ let orgsToKeep = ['5de95c0453162e8891f5a830'];
             for (let index = 0; index < queues.length; index++) {
                 try {
                     let remove = true;
-                    for (let i = 0; i < orgsToKeep.length; i++) {
-                        if (queues[index].indexOf(orgsToKeep[i]) >= 0) {
+                    for (let i = 0; i < teamsToKeep.length; i++) {
+                        if (queues[index].indexOf(teamsToKeep[i]) >= 0) {
                             if (queues[index].indexOf('updater') < 0)
                                 remove = false;
                             break;
@@ -75,8 +75,8 @@ let orgsToKeep = ['5de95c0453162e8891f5a830'];
             for (let index = 0; index < exchanges.length; index++) {
                 try {
                     let remove = true;
-                    for (let i = 0; i < orgsToKeep.length; i++) {
-                        if (exchanges[index].indexOf(orgsToKeep[i]) >= 0) {
+                    for (let i = 0; i < teamsToKeep.length; i++) {
+                        if (exchanges[index].indexOf(teamsToKeep[i]) >= 0) {
                             remove = false;
                             break;
                         }
@@ -100,8 +100,8 @@ let orgsToKeep = ['5de95c0453162e8891f5a830'];
             for (let index = 0; index < users.length; index++) {
                 try {
                     let remove = true;
-                    for (let i = 0; i < orgsToKeep.length; i++) {
-                        if (users[index].indexOf(orgsToKeep[i]) >= 0) {
+                    for (let i = 0; i < teamsToKeep.length; i++) {
+                        if (users[index].indexOf(teamsToKeep[i]) >= 0) {
                             remove = false;
                             break;
                         }
@@ -123,4 +123,4 @@ let orgsToKeep = ['5de95c0453162e8891f5a830'];
 })();
 
 
-// to delete all exchange, queues and users except our test items:  node test/dist/test/src/rmq_utils.js ^org- ^org- ^5
+// to delete all exchange, queues and users except our test items:  node test/dist/test/src/rmq_utils.js ^team- ^team- ^5

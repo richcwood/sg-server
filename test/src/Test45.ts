@@ -34,7 +34,7 @@ export default class Test45 extends TestBase.WorkflowTestBase {
         let result: boolean;
         let resApiCall: any;
 
-        const _orgId: string = config.get('sgTestOrg');
+        const _teamId: string = config.get('sgTestTeam');
 
         const agent: any = self.testSetup.agents[0];
 
@@ -48,7 +48,7 @@ export default class Test45 extends TestBase.WorkflowTestBase {
         firstJob.job.tasks[0].targetAgentId = agent.InstanceId();
         firstJob.job.tasks[0].steps[0].script.code = script1_b64;
 
-        resApiCall = await this.testSetup.RestAPICall('job', 'POST', _orgId, null, firstJob);
+        resApiCall = await this.testSetup.RestAPICall('job', 'POST', _teamId, null, firstJob);
         if (resApiCall.data.statusCode != 201) {
             self.logger.LogError('Failed', { Message: `Job POST returned ${resApiCall.data.statusCode}`, firstJob });
             return false;
@@ -62,7 +62,7 @@ export default class Test45 extends TestBase.WorkflowTestBase {
             {
                 status: null,
                 autoRestart: false,
-                _orgId: _orgId,
+                _teamId: _teamId,
                 name: firstJob.job.tasks[0].name,
                 source: 1,
                 target: TaskDefTarget.SINGLE_SPECIFIC_AGENT,
@@ -110,7 +110,7 @@ export default class Test45 extends TestBase.WorkflowTestBase {
             operation: 1,
             model:
             {
-                _orgId: config.get('sgTestOrg'),
+                _teamId: config.get('sgTestTeam'),
                 _jobId: firstJob.job.id,
                 source: 1,
                 status: 10,

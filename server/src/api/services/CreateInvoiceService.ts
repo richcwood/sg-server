@@ -8,19 +8,19 @@ import { StepOutcomeModel } from '../domain/StepOutcome';
 import { TaskOutcomeModel } from '../domain/TaskOutcome';
 import { AgentModel } from '../domain/Agent';
 import { SGUtils } from '../../shared/SGUtils';
-import { orgService } from './OrgService';
+import { teamService } from './TeamService';
 import { invoiceService } from './InvoiceService';
 import { MongoRepo } from '../../shared/MongoLib';
 import * as mongodb from 'mongodb';
 import * as _ from 'lodash';
 import * as moment from 'moment';
-import { OrgStorageModel } from '../domain/OrgStorage';
+import { TeamStorageModel } from '../domain/TeamStorage';
 import { TaskSource } from '../../shared/Enums';
 
 
 export class CreateInvoiceService {
-    public async createInvoice(_orgId: mongodb.ObjectId, data: any, mongoLib: MongoRepo, logger: BaseLogger, correlationId: string, responseFields?: string): Promise<object> {
-        data._orgId = _orgId;
+    public async createInvoice(_teamId: mongodb.ObjectId, data: any, mongoLib: MongoRepo, logger: BaseLogger, correlationId: string, responseFields?: string): Promise<object> {
+        data._teamId = _teamId;
 
         if (!data.startDate)
             throw new MissingObjectError('Missing startDate');
@@ -45,7 +45,7 @@ export class CreateInvoiceService {
         /// Get the number of new agents since the start of the billing cycle minus the first ten free agents
         data.numNewAgents = 0;
         let newAgentsFilter: any = {};
-        newAgentsFilter['_orgId'] = _orgId;
+        newAgentsFilter['_teamId'] = _teamId;
         newAgentsFilter['createDate'] = { $gte: startDate.toDate() };
 
         let numNewAgents: number = 0;
@@ -58,7 +58,7 @@ export class CreateInvoiceService {
 
         let numOldAgents = 0;
         let oldAgentsFilter: any = {};
-        oldAgentsFilter['_orgId'] = _orgId;
+        oldAgentsFilter['_teamId'] = _teamId;
         oldAgentsFilter['createDate'] = { $lt: startDate.toDate() };
 
         let numOldAgentsQuery = await AgentModel.aggregate([
@@ -74,12 +74,12 @@ export class CreateInvoiceService {
         data.numNewAgents = Math.max(data.numNewAgents, 0);
 
         /// Get current job history storage amount
-        let org = await orgService.findOrg(_orgId, 'jobStorageSpaceHighWatermark');
-        data.storageMB = Math.round(org.jobStorageSpaceHighWatermark / (1024 * 1024));
+        let team = await teamService.findTeam(_teamId, 'jobStorageSpaceHighWatermark');
+        data.storageMB = Math.round(team.jobStorageSpaceHighWatermark / (1024 * 1024));
 
         /// Get number of non-interactive console scripts executed in billing period
         let invoiceScriptsFilter: any = {};
-        invoiceScriptsFilter['_orgId'] = _orgId;
+        invoiceScriptsFilter['_teamId'] = _teamId;
         invoiceScriptsFilter['dateStarted'] = { $gte: startDate.toDate(), $lt: endDate.toDate() };
         invoiceScriptsFilter['_invoiceId'] = { $exists: false };
         invoiceScriptsFilter['source'] = TaskSource.JOB;
@@ -95,7 +95,7 @@ export class CreateInvoiceService {
 
         /// Get number of interactive console scripts executed in billing period
         let invoiceICScriptsFilter: any = {};
-        invoiceICScriptsFilter['_orgId'] = _orgId;
+        invoiceICScriptsFilter['_teamId'] = _teamId;
         invoiceICScriptsFilter['dateStarted'] = { $gte: startDate.toDate(), $lt: endDate.toDate() };
         invoiceICScriptsFilter['_invoiceId'] = { $exists: false };
         invoiceICScriptsFilter['source'] = TaskSource.CONSOLE;
@@ -112,7 +112,7 @@ export class CreateInvoiceService {
         /// Get total artifacts downloaded size for this billing period
         data.artifactsDownloadedGB = 0;
         let taskOutcomesFilter: any = {};
-        taskOutcomesFilter['_orgId'] = _orgId;
+        taskOutcomesFilter['_teamId'] = _teamId;
         taskOutcomesFilter['dateStarted'] = { $gte: startDate.toDate() };
 
         let artifactDownloadsQuery = await TaskOutcomeModel.aggregate([
@@ -127,11 +127,11 @@ export class CreateInvoiceService {
 
         /// Get total artifacts storage for this billing period
         data.artifactsStorageGB = 0;
-        let orgStorageFilter: any = {};
-        orgStorageFilter['_orgId'] = _orgId;
-        orgStorageFilter['date'] = { $gte: startDate.toDate(), $lte: endDate.toDate() };
+        let teamStorageFilter: any = {};
+        teamStorageFilter['_teamId'] = _teamId;
+        teamStorageFilter['date'] = { $gte: startDate.toDate(), $lte: endDate.toDate() };
 
-        let artifactStorageQuery = await OrgStorageModel.find(orgStorageFilter).select('numobservations bytes');
+        let artifactStorageQuery = await TeamStorageModel.find(teamStorageFilter).select('numobservations bytes');
         if (_.isArray(artifactStorageQuery) && artifactStorageQuery.length > 0) {
             let totalByteHours = 0;
             for (let i = 0; i < artifactStorageQuery.length; i++) {
@@ -186,15 +186,15 @@ export class CreateInvoiceService {
         // const res = await StepOutcomeModel.udpateMany( invoiceScriptsFilter, { $set: { _invoiceId: newInvoice._id }});
         const res: any = await mongoLib.UpdateMany('stepOutcome', invoiceScriptsFilter, { $set: { _invoiceId: newInvoice._id } });
         if (res.matchedCount != res.modifiedCount != newInvoice.numScripts) {
-            logger.LogError(`Create invoice error: counts mismatch`, { _orgId, _invoiceId: newInvoice._id, numScripts: newInvoice.numScripts, matchedCount: res.matchedCount, modifiedCount: res.modifiedCount });
+            logger.LogError(`Create invoice error: counts mismatch`, { _teamId, _invoiceId: newInvoice._id, numScripts: newInvoice.numScripts, matchedCount: res.matchedCount, modifiedCount: res.modifiedCount });
         }
         await mongoLib.UpdateMany('stepOutcome', invoiceICScriptsFilter, { $set: { _invoiceId: newInvoice._id } });
 
-        await rabbitMQPublisher.publish(_orgId, "Invoice", correlationId, PayloadOperation.CREATE, convertData(InvoiceSchema, newInvoice));
+        await rabbitMQPublisher.publish(_teamId, "Invoice", correlationId, PayloadOperation.CREATE, convertData(InvoiceSchema, newInvoice));
 
         if (responseFields) {
             // It's is a bit wasteful to do another query but I can't chain a save with a select
-            return invoiceService.findInvoice(_orgId, newInvoice.id, responseFields);
+            return invoiceService.findInvoice(_teamId, newInvoice.id, responseFields);
         }
         else {
             return newInvoice; // fully populated model

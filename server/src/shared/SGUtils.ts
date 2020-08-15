@@ -2,14 +2,14 @@ import * as os from 'os';
 import { exec } from 'child_process';
 import { SGStrings } from './SGStrings';
 import { TaskDefSchema } from '../api/domain/TaskDef';
-import { orgService } from '../api/services/OrgService';
+import { teamService } from '../api/services/TeamService';
 import { jobService } from '../api/services/JobService';
 import { taskService } from '../api/services/TaskService';
 import { taskOutcomeService } from '../api/services/TaskOutcomeService';
-import { OrgSchema } from '../api/domain/Org';
+import { TeamSchema } from '../api/domain/Team';
 import { InvoiceSchema } from '../api/domain/Invoice';
 import { JobSchema } from '../api/domain/Job';
-import { orgVariableService } from '../api/services/OrgVariableService';
+import { teamVariableService } from '../api/services/TeamVariableService';
 import { BaseLogger } from './SGLogger';
 import { S3Access } from './S3Access';
 import * as mongodb from 'mongodb';
@@ -257,7 +257,7 @@ export class SGUtils {
     };
 
 
-    static async getRuntimeVarsForScript(_orgId: mongodb.ObjectId, script_code: string, job: JobSchema) {
+    static async getRuntimeVarsForScript(_teamId: mongodb.ObjectId, script_code: string, job: JobSchema) {
         let runtimeVars: any = {};
         let arrFindVarsScript: string[] = script_code.match(/@kpg?(\([^)]*\))/g);
         if (arrFindVarsScript) {
@@ -271,9 +271,9 @@ export class SGUtils {
                         if (varKey in job.runtimeVars) {
                             runtimeVars[varKey] = job.runtimeVars[varKey];
                         } else {
-                            const orgVar = await orgVariableService.findOrgVariableByName(_orgId, varKey, 'value');
-                            if (_.isArray(orgVar) && orgVar.length > 0)
-                                runtimeVars[varKey] = orgVar[0].value;
+                            const teamVar = await teamVariableService.findTeamVariableByName(_teamId, varKey, 'value');
+                            if (_.isArray(teamVar) && teamVar.length > 0)
+                                runtimeVars[varKey] = teamVar[0].value;
                         }
                     }
                 } catch (e) {
@@ -286,7 +286,7 @@ export class SGUtils {
     }
 
 
-    static async getInjectedScripts(_orgId: mongodb.ObjectId, script_code: string) {
+    static async getInjectedScripts(_teamId: mongodb.ObjectId, script_code: string) {
         // find dynamically injected scripts
         let arrFindScriptsToInject: string[] = script_code.match(/@kps?(\([^)]*\))/g);
         let scriptsToInject: any = {};
@@ -296,12 +296,12 @@ export class SGUtils {
                     let scriptKey = arrFindScriptsToInject[i].substr(5, arrFindScriptsToInject[i].length - 6);
                     if (scriptKey.substr(0, 1) === '"' && scriptKey.substr(scriptKey.length - 1, 1) === '"')
                         scriptKey = scriptKey.slice(1, -1);
-                    // let scriptQuery: ScriptSchema[] = await scriptService.findScript(_orgId, new mongodb.ObjectId(scriptKey), 'code')
-                    const scriptQuery: any = await scriptService.findAllScriptsInternal({ _orgId, name: scriptKey });
+                    // let scriptQuery: ScriptSchema[] = await scriptService.findScript(_teamId, new mongodb.ObjectId(scriptKey), 'code')
+                    const scriptQuery: any = await scriptService.findAllScriptsInternal({ _teamId, name: scriptKey });
                     if (!scriptQuery || (_.isArray(scriptQuery) && scriptQuery.length === 0))
                         throw new MissingObjectError(`Script ${scriptKey} not found.`);
                     const injectedScriptCode = SGUtils.atob(scriptQuery[0].code);
-                    let subScriptsToInject = await SGUtils.getInjectedScripts(_orgId, injectedScriptCode);
+                    let subScriptsToInject = await SGUtils.getInjectedScripts(_teamId, injectedScriptCode);
                     scriptsToInject[scriptKey] = scriptQuery[0].code;
                     scriptsToInject = Object.assign(scriptsToInject, subScriptsToInject);
                 } catch (e) {
@@ -455,27 +455,27 @@ export class SGUtils {
     }
 
 
-    static GenerateInvoice = async (_orgId: mongodb.ObjectId, invoice: InvoiceSchema, paymentTransaction: any, format: string) => {
-        let org: OrgSchema = await orgService.findOrg(_orgId, 'name billing_address1 billing_address2 billing_city billing_state billing_zip billing_email');
+    static GenerateInvoice = async (_teamId: mongodb.ObjectId, invoice: InvoiceSchema, paymentTransaction: any, format: string) => {
+        let team: TeamSchema = await teamService.findTeam(_teamId, 'name billing_address1 billing_address2 billing_city billing_state billing_zip billing_email');
         let invoice_raw: string;
         if (format == 'html')
             invoice_raw = fs.readFileSync('server/src/resources/invoice_template.html', 'utf8');
         else
             invoice_raw = fs.readFileSync('server/src/resources/invoice_template.txt', 'utf8');
 
-        let customer_info = org.name;
-        if (org.billing_address1)
-            customer_info += `<br>${org.billing_address1}`;
-        if (org.billing_address2)
-            customer_info += `<br>${org.billing_address2}`;
-        if (org.billing_city)
-            customer_info += `<br>${org.billing_city}`;
-        if (org.billing_state)
-            customer_info += `<br>${org.billing_state}`;
-        if (org.billing_zip)
-            customer_info += `<br>${org.billing_zip}`;
-        if (org.billing_email)
-            customer_info += `<br>${org.billing_email}`;
+        let customer_info = team.name;
+        if (team.billing_address1)
+            customer_info += `<br>${team.billing_address1}`;
+        if (team.billing_address2)
+            customer_info += `<br>${team.billing_address2}`;
+        if (team.billing_city)
+            customer_info += `<br>${team.billing_city}`;
+        if (team.billing_state)
+            customer_info += `<br>${team.billing_state}`;
+        if (team.billing_zip)
+            customer_info += `<br>${team.billing_zip}`;
+        if (team.billing_email)
+            customer_info += `<br>${team.billing_email}`;
         invoice_raw = invoice_raw.replace(/{saasglue_favicon_png}/g, '' + config.get('SaasglueFaviconPng'));
         invoice_raw = invoice_raw.replace('{customer_info}', customer_info);
 
@@ -526,15 +526,15 @@ export class SGUtils {
     }
 
 
-    static CreateAndSendInvoice = async (org: OrgSchema, invoiceModel: any, paymentTransaction: any, logger: BaseLogger) => {
+    static CreateAndSendInvoice = async (team: TeamSchema, invoiceModel: any, paymentTransaction: any, logger: BaseLogger) => {
         const invoiceDateString = `${moment(invoiceModel.endDate).format('MMMM')}_${moment(invoiceModel.endDate).format('YYYY')}`;
-        const invoicePDFFileName = `invoice_${org._id}_${invoiceDateString}.pdf`;
+        const invoicePDFFileName = `invoice_${team._id}_${invoiceDateString}.pdf`;
         const localInvoicePDFPath = `./${invoicePDFFileName}`;
-        const invoice_html: string = await SGUtils.GenerateInvoice(org._id, invoiceModel, paymentTransaction, "html");
-        const invoice_text: string = await SGUtils.GenerateInvoice(org._id, invoiceModel, paymentTransaction, "text");
+        const invoice_html: string = await SGUtils.GenerateInvoice(team._id, invoiceModel, paymentTransaction, "html");
+        const invoice_text: string = await SGUtils.GenerateInvoice(team._id, invoiceModel, paymentTransaction, "text");
         await SGUtils.GenerateInvoicePDF(invoice_html, localInvoicePDFPath);
 
-        let s3Path = `invoice/${config.get('environment')}/${org._id}/${invoiceDateString}/${invoicePDFFileName}`;
+        let s3Path = `invoice/${config.get('environment')}/${team._id}/${invoiceDateString}/${invoicePDFFileName}`;
         const s3Access = new S3Access();
         await s3Access.uploadFileToS3(localInvoicePDFPath, s3Path, config.get('S3_BUCKET_INVOICES'));
 
@@ -552,7 +552,7 @@ export class SGUtils {
                         throw err;
                     } else {
                         sgMail.send({
-                            to: org.billing_email,
+                            to: team.billing_email,
                             from: config.get('BillingReplyEmailAddress'),
                             subject: `saas glue invoice for period ending ${moment(invoiceModel.endDate).format('MMMM d, YYYY')}`,
                             attachments: [{
@@ -568,7 +568,7 @@ export class SGUtils {
                         resolve();
                     }
                 } catch (e) {
-                    logger.LogError(`Error sending invoice: ${e}`, Object.assign({ _orgId: org._id }, invoiceModel));
+                    logger.LogError(`Error sending invoice: ${e}`, Object.assign({ _teamId: team._id }, invoiceModel));
                     resolve();
                 }
             });
@@ -749,7 +749,7 @@ export class SGUtils {
 
         if (apiPort != '')
             apiUrl += `:${apiPort}`
-        let resetPasswordUrl = `${apiUrl}/api/${apiVersion}/forgot`;
+        let resetPasswordUrl = `${apiUrl}/api/${apiVersion}/fteamot`;
 
         content = content.replace(/{reset_password_url}/g, '' + resetPasswordUrl);
 
@@ -787,7 +787,7 @@ export class SGUtils {
 
         if (apiPort != '')
             apiUrl += `:${apiPort}`
-        let resetPasswordUrl = `${apiUrl}/api/${apiVersion}/forgot`;
+        let resetPasswordUrl = `${apiUrl}/api/${apiVersion}/fteamot`;
 
         content = content.replace(/{reset_password_url}/g, '' + resetPasswordUrl);
 
@@ -840,7 +840,7 @@ export class SGUtils {
     }
 
 
-    static GenerateOrgSharedInviteContent = (format: string, org: OrgSchema, acceptInviteLink: string, recipientAddress: string) => {
+    static GenerateTeamSharedInviteContent = (format: string, team: TeamSchema, acceptInviteLink: string, recipientAddress: string) => {
         let content: string;
         if (format == 'html')
             content = fs.readFileSync('server/src/resources/email_shared_invite_template.html', 'utf8');
@@ -848,30 +848,30 @@ export class SGUtils {
             content = fs.readFileSync('server/src/resources/email_shared_invite_template.txt', 'utf8');
 
         content = SGUtils.ApplyStandardEmailReplacements(content, recipientAddress);
-        content = content.replace(/{org_name}/g, '' + org.name);
-        content = content.replace(/{org_first_letter}/g, '' + org.name.substring(0, 1));
+        content = content.replace(/{team_name}/g, '' + team.name);
+        content = content.replace(/{team_first_letter}/g, '' + team.name.substring(0, 1));
         content = content.replace(/{accept_invite_link}/g, '' + acceptInviteLink);
 
         return content;
     }
 
 
-    static SendOrgSharedInviteEmail = async (org: OrgSchema, recipientAddress: string, acceptInviteLink: string, logger: BaseLogger) => {
+    static SendTeamSharedInviteEmail = async (team: TeamSchema, recipientAddress: string, acceptInviteLink: string, logger: BaseLogger) => {
         let subject = 'You are invited to join a saas glue team';
 
         let rawMsg = base64EncodedEmailTemplate;
 
-        let contentHtml: string = SGUtils.GenerateOrgSharedInviteContent('html', org, acceptInviteLink, recipientAddress);
+        let contentHtml: string = SGUtils.GenerateTeamSharedInviteContent('html', team, acceptInviteLink, recipientAddress);
         rawMsg = rawMsg.replace('{content_html}', '' + Buffer.from(contentHtml).toString('base64'));
 
-        let contentText: string = SGUtils.GenerateOrgSharedInviteContent('text', org, acceptInviteLink, recipientAddress);
+        let contentText: string = SGUtils.GenerateTeamSharedInviteContent('text', team, acceptInviteLink, recipientAddress);
         rawMsg = rawMsg.replace('{content_text}', '' + Buffer.from(contentText).toString('base64'));
 
         await SGUtils.SendCustomerEmail(recipientAddress, subject, rawMsg, logger);
     }
 
 
-    static GenerateOrgInviteContent = (format: string, org: OrgSchema, inviter: any, acceptInviteLink: string, recipientAddress: string) => {
+    static GenerateTeamInviteContent = (format: string, team: TeamSchema, inviter: any, acceptInviteLink: string, recipientAddress: string) => {
         let content: string;
         if (format == 'html')
             content = fs.readFileSync('server/src/resources/email_invite_template.html', 'utf8');
@@ -879,25 +879,25 @@ export class SGUtils {
             content = fs.readFileSync('server/src/resources/email_invite_template.txt', 'utf8');
 
         content = SGUtils.ApplyStandardEmailReplacements(content, recipientAddress);
-        content = content.replace(/{org_name}/g, '' + org.name);
+        content = content.replace(/{team_name}/g, '' + team.name);
         content = content.replace(/{inviter_name}/g, '' + inviter.name);
         content = content.replace(/{inviter_email}/g, '' + inviter.email);
-        content = content.replace(/{org_first_letter}/g, '' + org.name.substring(0, 1));
+        content = content.replace(/{team_first_letter}/g, '' + team.name.substring(0, 1));
         content = content.replace(/{accept_invite_link}/g, '' + acceptInviteLink);
 
         return content;
     }
 
 
-    static SendOrgInviteEmail = async (org: OrgSchema, inviter: any, recipientAddress: string, acceptInviteLink: string, logger: BaseLogger) => {
+    static SendTeamInviteEmail = async (team: TeamSchema, inviter: any, recipientAddress: string, acceptInviteLink: string, logger: BaseLogger) => {
         let subject = `${inviter.name} has invited you to join a saas glue team`;
 
         let rawMsg = base64EncodedEmailTemplate;
 
-        let contentHtml: string = SGUtils.GenerateOrgInviteContent('html', org, inviter, acceptInviteLink, recipientAddress);
+        let contentHtml: string = SGUtils.GenerateTeamInviteContent('html', team, inviter, acceptInviteLink, recipientAddress);
         rawMsg = rawMsg.replace('{content_html}', '' + Buffer.from(contentHtml).toString('base64'));
 
-        let contentText: string = SGUtils.GenerateOrgInviteContent('text', org, inviter, acceptInviteLink, recipientAddress);
+        let contentText: string = SGUtils.GenerateTeamInviteContent('text', team, inviter, acceptInviteLink, recipientAddress);
         rawMsg = rawMsg.replace('{content_text}', '' + Buffer.from(contentText).toString('base64'));
 
         await SGUtils.SendCustomerEmail(recipientAddress, subject, rawMsg, logger);
@@ -1001,19 +1001,19 @@ export class SGUtils {
     }
 
 
-    static OnStepFailed = async (_orgId: mongodb.ObjectId, updatedStepOutcome: any, logger: BaseLogger) => {
-        const taskOutcomeQuery: any[] = await taskOutcomeService.findTaskOutcome(_orgId, updatedStepOutcome._taskOutcomeId, '_id _jobId _taskId');
+    static OnStepFailed = async (_teamId: mongodb.ObjectId, updatedStepOutcome: any, logger: BaseLogger) => {
+        const taskOutcomeQuery: any[] = await taskOutcomeService.findTaskOutcome(_teamId, updatedStepOutcome._taskOutcomeId, '_id _jobId _taskId');
         if ((_.isArray(taskOutcomeQuery) && taskOutcomeQuery.length > 0)) {
             const taskOutcome = taskOutcomeQuery[0];
 
             let taskName: string = taskOutcome._id.toHexString();
-            const taskQuery: any[] = await taskService.findTask(_orgId, taskOutcome._taskId, 'name');
+            const taskQuery: any[] = await taskService.findTask(_teamId, taskOutcome._taskId, 'name');
             if ((_.isArray(taskQuery) && taskQuery.length > 0)) {
                 taskName = taskQuery[0].name;
 
                 let taskFailAlertEmail: string = undefined;
                 let taskFailAlertSlackURL: string = undefined;
-                const jobQuery: JobSchema[] = await jobService.findJob(_orgId, taskOutcome._jobId, 'name runId onJobTaskFailAlertEmail onJobTaskFailAlertSlackURL');
+                const jobQuery: JobSchema[] = await jobService.findJob(_teamId, taskOutcome._jobId, 'name runId onJobTaskFailAlertEmail onJobTaskFailAlertSlackURL');
                 if ((_.isArray(jobQuery) && jobQuery.length > 0)) {
                     const job = jobQuery[0];
                     if (job.onJobTaskFailAlertEmail)
@@ -1022,11 +1022,11 @@ export class SGUtils {
                         taskFailAlertSlackURL = job.onJobTaskFailAlertSlackURL;
 
                     if (!taskFailAlertEmail || !taskFailAlertSlackURL) {
-                        const org: OrgSchema = await orgService.findOrg(_orgId, 'onJobTaskFailAlertEmail onJobTaskFailAlertSlackURL');
-                        if (!taskFailAlertEmail && org.onJobTaskFailAlertEmail)
-                            taskFailAlertEmail = org.onJobTaskFailAlertEmail;
-                        if (!taskFailAlertSlackURL && org.onJobTaskFailAlertSlackURL)
-                            taskFailAlertSlackURL = org.onJobTaskFailAlertSlackURL;
+                        const team: TeamSchema = await teamService.findTeam(_teamId, 'onJobTaskFailAlertEmail onJobTaskFailAlertSlackURL');
+                        if (!taskFailAlertEmail && team.onJobTaskFailAlertEmail)
+                            taskFailAlertEmail = team.onJobTaskFailAlertEmail;
+                        if (!taskFailAlertSlackURL && team.onJobTaskFailAlertSlackURL)
+                            taskFailAlertSlackURL = team.onJobTaskFailAlertSlackURL;
                     }
 
                     if (taskFailAlertEmail || taskFailAlertSlackURL) {
@@ -1052,10 +1052,10 @@ export class SGUtils {
     }
 
 
-    static OnTaskFailed = async (_orgId: mongodb.ObjectId, task: any, error: string, logger: BaseLogger) => {
+    static OnTaskFailed = async (_teamId: mongodb.ObjectId, task: any, error: string, logger: BaseLogger) => {
         let taskFailAlertEmail: string = undefined;
         let taskFailAlertSlackURL: string = undefined;
-        const jobQuery: JobSchema[] = await jobService.findJob(_orgId, task._jobId, 'name runId onJobTaskFailAlertEmail onJobTaskFailAlertSlackURL');
+        const jobQuery: JobSchema[] = await jobService.findJob(_teamId, task._jobId, 'name runId onJobTaskFailAlertEmail onJobTaskFailAlertSlackURL');
         if ((_.isArray(jobQuery) && jobQuery.length > 0)) {
             const job = jobQuery[0];
             if (job.onJobTaskFailAlertEmail)
@@ -1064,11 +1064,11 @@ export class SGUtils {
                 taskFailAlertSlackURL = job.onJobTaskFailAlertSlackURL;
 
             if (!taskFailAlertEmail || !taskFailAlertSlackURL) {
-                const org: OrgSchema = await orgService.findOrg(_orgId, 'onJobTaskFailAlertEmail onJobTaskFailAlertSlackURL');
-                if (!taskFailAlertEmail && org.onJobTaskFailAlertEmail)
-                    taskFailAlertEmail = org.onJobTaskFailAlertEmail;
-                if (!taskFailAlertSlackURL && org.onJobTaskFailAlertSlackURL)
-                    taskFailAlertSlackURL = org.onJobTaskFailAlertSlackURL;
+                const team: TeamSchema = await teamService.findTeam(_teamId, 'onJobTaskFailAlertEmail onJobTaskFailAlertSlackURL');
+                if (!taskFailAlertEmail && team.onJobTaskFailAlertEmail)
+                    taskFailAlertEmail = team.onJobTaskFailAlertEmail;
+                if (!taskFailAlertSlackURL && team.onJobTaskFailAlertSlackURL)
+                    taskFailAlertSlackURL = team.onJobTaskFailAlertSlackURL;
             }
 
             if (taskFailAlertEmail || taskFailAlertSlackURL) {
@@ -1092,9 +1092,9 @@ export class SGUtils {
     }
 
 
-    static OnTaskInterrupted = async (_orgId: mongodb.ObjectId, taskOutcome: any, job: any, logger: BaseLogger) => {
+    static OnTaskInterrupted = async (_teamId: mongodb.ObjectId, taskOutcome: any, job: any, logger: BaseLogger) => {
         let taskName: string = taskOutcome._id.toHexString();
-        const taskQuery: any[] = await taskService.findTask(_orgId, taskOutcome._taskId, 'name');
+        const taskQuery: any[] = await taskService.findTask(_teamId, taskOutcome._taskId, 'name');
         if ((_.isArray(taskQuery) && taskQuery.length > 0))
             taskName = taskQuery[0].name;
 
@@ -1118,11 +1118,11 @@ export class SGUtils {
             jobTaskInterruptedAlertSlackURL = job.onJobTaskInterruptedAlertSlackURL;
 
         if (!jobTaskInterruptedAlertEmail || !jobTaskInterruptedAlertSlackURL) {
-            const org: OrgSchema = await orgService.findOrg(_orgId, 'onJobTaskInterruptedAlertEmail onJobTaskInterruptedAlertSlackURL');
-            if (!jobTaskInterruptedAlertEmail && org.onJobTaskInterruptedAlertEmail)
-                jobTaskInterruptedAlertEmail = org.onJobTaskInterruptedAlertEmail;
-            if (!jobTaskInterruptedAlertSlackURL && org.onJobTaskInterruptedAlertSlackURL)
-                jobTaskInterruptedAlertSlackURL = org.onJobTaskInterruptedAlertSlackURL;
+            const team: TeamSchema = await teamService.findTeam(_teamId, 'onJobTaskInterruptedAlertEmail onJobTaskInterruptedAlertSlackURL');
+            if (!jobTaskInterruptedAlertEmail && team.onJobTaskInterruptedAlertEmail)
+                jobTaskInterruptedAlertEmail = team.onJobTaskInterruptedAlertEmail;
+            if (!jobTaskInterruptedAlertSlackURL && team.onJobTaskInterruptedAlertSlackURL)
+                jobTaskInterruptedAlertSlackURL = team.onJobTaskInterruptedAlertSlackURL;
         }
 
         if (jobTaskInterruptedAlertEmail)
@@ -1132,7 +1132,7 @@ export class SGUtils {
             SGUtils.SendTaskInterruptedAlertSlack(taskName, url, jobName, jobTaskInterruptedAlertSlackURL, logger);
     }
 
-    static OnJobComplete = async (_orgId: mongodb.ObjectId, job: any, logger: BaseLogger) => {
+    static OnJobComplete = async (_teamId: mongodb.ObjectId, job: any, logger: BaseLogger) => {
         let jobName = job.name;
         if (job.runId)
             jobName += `- ${job.runId}`;
@@ -1153,11 +1153,11 @@ export class SGUtils {
             jobCompleteAlertSlackURL = job.onJobCompleteAlertSlackURL;
 
         if (!jobCompleteAlertEmail || !jobCompleteAlertSlackURL) {
-            const org: OrgSchema = await orgService.findOrg(_orgId, 'onJobCompleteAlertEmail onJobCompleteAlertSlackURL');
-            if (!jobCompleteAlertEmail && org.onJobCompleteAlertEmail)
-                jobCompleteAlertEmail = org.onJobCompleteAlertEmail;
-            if (!jobCompleteAlertSlackURL && org.onJobCompleteAlertSlackURL)
-                jobCompleteAlertSlackURL = org.onJobCompleteAlertSlackURL;
+            const team: TeamSchema = await teamService.findTeam(_teamId, 'onJobCompleteAlertEmail onJobCompleteAlertSlackURL');
+            if (!jobCompleteAlertEmail && team.onJobCompleteAlertEmail)
+                jobCompleteAlertEmail = team.onJobCompleteAlertEmail;
+            if (!jobCompleteAlertSlackURL && team.onJobCompleteAlertSlackURL)
+                jobCompleteAlertSlackURL = team.onJobCompleteAlertSlackURL;
         }
 
         if (jobCompleteAlertEmail)

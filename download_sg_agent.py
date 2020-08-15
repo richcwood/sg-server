@@ -9,7 +9,7 @@ import time
 
 token = ''
 
-orgId = sys.argv[1]
+teamId = sys.argv[1]
 email = sys.argv[2]
 password = sys.argv[3]
 workingdir = sys.argv[4]
@@ -47,7 +47,7 @@ def RestAPILogin():
 
 def GetDownloadUrl():
     global token
-    global orgId
+    global teamId
     global platform
     global arch
 
@@ -66,7 +66,7 @@ def GetDownloadUrl():
 
     headers = {
 	'Cookie': 'Auth={};'.format(token),
-        '_orgId': orgId
+        '_teamId': teamId
     }
 
     print 'headers = ', headers

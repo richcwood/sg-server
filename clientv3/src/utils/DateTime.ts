@@ -110,7 +110,7 @@ export const timeZones = [
   {"label":"(GMT-04:00) Santiago","value":"America/Santiago"},
   {"label":"(GMT-03:30) Newfoundland","value":"Canada/Newfoundland"},
   {"label":"(GMT-03:00) Brasilia","value":"America/Sao_Paulo"},
-  {"label":"(GMT-03:00) Buenos Aires, Georgetown","value":"America/Argentina/Buenos_Aires"},
+  {"label":"(GMT-03:00) Buenos Aires, Geteametown","value":"America/Argentina/Buenos_Aires"},
   {"label":"(GMT-03:00) Greenland","value":"America/Godthab"},
   {"label":"(GMT-03:00) Montevideo","value":"America/Montevideo"},
   {"label":"(GMT-02:00) Mid-Atlantic","value":"America/Noronha"},

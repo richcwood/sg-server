@@ -26,8 +26,8 @@ amqp.Start();
 
 export class TaskActionService {
 
-    public async republishTask(_orgId: mongodb.ObjectId, _taskId: mongodb.ObjectId, correlationId?: string, responseFields?: string): Promise<object> {
-        const filter = { _id: _taskId, _orgId };
+    public async republishTask(_teamId: mongodb.ObjectId, _taskId: mongodb.ObjectId, correlationId?: string, responseFields?: string): Promise<object> {
+        const filter = { _id: _taskId, _teamId };
 
         let taskUpdateQuery = {};
         taskUpdateQuery['$unset'] = { 'runtimeVars.route': '' };
@@ -40,19 +40,19 @@ export class TaskActionService {
         // throw new ValidationError(`Task ${_taskId} not found with filter ${JSON.stringify(filter)}`);
 
         // if (!updatedTask) {
-        //     const taskQuery = await TaskModel.findById(_taskId).find({ _orgId }).select('status');
+        //     const taskQuery = await TaskModel.findById(_taskId).find({ _teamId }).select('status');
         //     if (!taskQuery || (_.isArray(taskQuery) && taskQuery.length < 1))
         //         throw new ValidationError(`Job ${_taskId} not found`);
         //     updatedTask = taskQuery[0];
         //     throw new ValidationError(`Task ${_taskId} cannot be interrupted - current status should be "RUNNING" but is "${JobStatus[jobQuery[0].status]}"`);
         // }
 
-        await rabbitMQPublisher.publish(_orgId, "Task", correlationId, PayloadOperation.UPDATE, convertData(TaskSchema, updatedTask));
+        await rabbitMQPublisher.publish(_teamId, "Task", correlationId, PayloadOperation.UPDATE, convertData(TaskSchema, updatedTask));
 
-        await taskOutcomeService.PublishTask(_orgId, updatedTask, logger, amqp);
+        await taskOutcomeService.PublishTask(_teamId, updatedTask, logger, amqp);
 
         if (responseFields) {
-            return taskService.findTask(_orgId, _taskId, responseFields);
+            return taskService.findTask(_teamId, _taskId, responseFields);
         }
         else {
             return updatedTask; // fully populated model
@@ -60,8 +60,8 @@ export class TaskActionService {
     }
 
 
-    public async requeueTask(_orgId: mongodb.ObjectId, _taskId: mongodb.ObjectId, data: any, logger: BaseLogger, correlationId?: string, responseFields?: string): Promise<object> {
-        const filter = { _id: _taskId, _orgId, status: TaskStatus.PUBLISHED };
+    public async requeueTask(_teamId: mongodb.ObjectId, _taskId: mongodb.ObjectId, data: any, logger: BaseLogger, correlationId?: string, responseFields?: string): Promise<object> {
+        const filter = { _id: _taskId, _teamId, status: TaskStatus.PUBLISHED };
 
         let taskUpdateQuery = {};
         taskUpdateQuery['$unset'] = { 'runtimeVars.route': '' };
@@ -80,26 +80,26 @@ export class TaskActionService {
             agentId = new mongodb.ObjectId(arrParams[0]);
 
         const routeTaskInfo: any = { target: TaskDefTarget.SINGLE_SPECIFIC_AGENT, targetAgentId: agentId, _jobId: task._jobId };
-        let getTaskRoutesRes = await GetTaskRoutes(_orgId, routeTaskInfo, logger);
+        let getTaskRoutesRes = await GetTaskRoutes(_teamId, routeTaskInfo, logger);
         if (!getTaskRoutesRes.routes) {
             let deltas: any;
             let taskFailed: boolean = false;
             if (getTaskRoutesRes.failureCode == TaskFailureCode.TARGET_AGENT_NOT_SPECIFIED) {
                 taskFailed = true;
                 deltas = { status: TaskStatus.FAILED, failureCode: getTaskRoutesRes.failureCode, route: 'fail' };
-                updatedTask = await taskService.updateTask(_orgId, _taskId, deltas, logger)
+                updatedTask = await taskService.updateTask(_teamId, _taskId, deltas, logger)
             } else if (getTaskRoutesRes.failureCode == TaskFailureCode.NO_AGENT_AVAILABLE) {
                 deltas = { status: TaskStatus.WAITING_FOR_AGENT, failureCode: getTaskRoutesRes.failureCode, route: 'fail' };
-                updatedTask = await taskService.updateTask(_orgId, _taskId, deltas, logger)
+                updatedTask = await taskService.updateTask(_teamId, _taskId, deltas, logger)
             } else {
                 taskFailed = true;
                 deltas = { status: TaskStatus.FAILED, failureCode: getTaskRoutesRes.failureCode, route: 'fail' };
-                updatedTask = await taskService.updateTask(_orgId, _taskId, deltas, logger)
-                logger.LogError(`Unhandled failure code: ${getTaskRoutesRes.failureCode}`, { Class: 'TaskOutcomeService', Method: 'PublishTask', _orgId, task: task });
+                updatedTask = await taskService.updateTask(_teamId, _taskId, deltas, logger)
+                logger.LogError(`Unhandled failure code: ${getTaskRoutesRes.failureCode}`, { Class: 'TaskOutcomeService', Method: 'PublishTask', _teamId, task: task });
             }
 
             if (taskFailed) {
-                await SGUtils.OnTaskFailed(_orgId, task, TaskFailureCode[getTaskRoutesRes.failureCode], logger);
+                await SGUtils.OnTaskFailed(_teamId, task, TaskFailureCode[getTaskRoutesRes.failureCode], logger);
             }
         } else {
             const routes = getTaskRoutesRes.routes;
@@ -107,19 +107,19 @@ export class TaskActionService {
 
             for (let i = 0; i < routes.length; i++) {
                 if (routes[i]['type'] == 'queue') {
-                    await amqp.PublishQueue(SGStrings.GetOrgExchangeName(_orgId.toHexString()), routes[i]['route'], task, routes[i]['queueAssertArgs'], { 'expiration': ttl });
+                    await amqp.PublishQueue(SGStrings.GetTeamExchangeName(_teamId.toHexString()), routes[i]['route'], task, routes[i]['queueAssertArgs'], { 'expiration': ttl });
                 } else {
-                    await amqp.PublishRoute(SGStrings.GetOrgExchangeName(_orgId.toHexString()), routes[i]['route'], task);
+                    await amqp.PublishRoute(SGStrings.GetTeamExchangeName(_teamId.toHexString()), routes[i]['route'], task);
                 }
             }
 
-            updatedTask = await taskService.updateTask(_orgId, _taskId, { status: TaskStatus.PUBLISHED, route: '', failureCode: '' }, logger);
+            updatedTask = await taskService.updateTask(_teamId, _taskId, { status: TaskStatus.PUBLISHED, route: '', failureCode: '' }, logger);
         }
 
-        await rabbitMQPublisher.publish(_orgId, "Task", correlationId, PayloadOperation.UPDATE, convertData(TaskSchema, updatedTask));
+        await rabbitMQPublisher.publish(_teamId, "Task", correlationId, PayloadOperation.UPDATE, convertData(TaskSchema, updatedTask));
 
         if (responseFields) {
-            return taskService.findTask(_orgId, _taskId, responseFields);
+            return taskService.findTask(_teamId, _taskId, responseFields);
         }
         else {
             return updatedTask; // fully populated model
