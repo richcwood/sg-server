@@ -123,7 +123,10 @@ export class MongoRepo {
                 let query: any = {_id: new mongodb.ObjectId(id)};
                 this.db.collection(collectionName).deleteOne(query, (err, r) => {
                     if (err) reject(err);
-                    resolve(r.deletedCount);
+                    if (r && r.deletedCount)
+                        resolve(r.deletedCount);
+                    else
+                        resolve(0);
                 });
             } catch (e) {
                 this.LogError('Error in DeleteById: ' + e.message, e.StackTrace, {'id': id, 'CollectionName': collectionName});
@@ -138,7 +141,10 @@ export class MongoRepo {
                 await this.Connect();
                 this.db.collection(collectionName).deleteMany(query, (err, r) => {
                     if (err) reject(err);
-                    resolve(r.deletedCount);
+                    if (r && r.deletedCount)
+                        resolve(r.deletedCount);
+                    else
+                        resolve(0);
                 });
             } catch (e) {
                 this.LogError('Error in DeleteByQuery: ' + e.message, e.StackTrace, {'Query': query, 'CollectionName': collectionName});
