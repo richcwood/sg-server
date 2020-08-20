@@ -14,7 +14,7 @@ import time
 import os
 print 'start'
 time.sleep(2)
-print '@kpo{{"globalParam1": "{0}"}}'.format(os.environ['GLOBAL_PARAM_1'])
+print '@sgo{{"globalParam1": "{0}"}}'.format(os.environ['GLOBAL_PARAM_1'])
 print 'done'
 `;
 const script_b64 = SGUtils.btoa(script);

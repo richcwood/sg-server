@@ -259,7 +259,7 @@ export class SGUtils {
 
     static async getRuntimeVarsForScript(_teamId: mongodb.ObjectId, script_code: string, job: JobSchema) {
         let runtimeVars: any = {};
-        let arrFindVarsScript: string[] = script_code.match(/@kpg?(\([^)]*\))/g);
+        let arrFindVarsScript: string[] = script_code.match(/@sgg?(\([^)]*\))/g);
         if (arrFindVarsScript) {
             // replace runtime variables in script
             for (let i = 0; i < arrFindVarsScript.length; i++) {
@@ -277,7 +277,7 @@ export class SGUtils {
                         }
                     }
                 } catch (e) {
-                    throw new Error(`Error in script @kpg capture for string \"${arrFindVarsScript[i]}\": ${e.message}`);
+                    throw new Error(`Error in script @sgg capture for string \"${arrFindVarsScript[i]}\": ${e.message}`);
                 }
             }
         }
@@ -288,7 +288,7 @@ export class SGUtils {
 
     static async getInjectedScripts(_teamId: mongodb.ObjectId, script_code: string) {
         // find dynamically injected scripts
-        let arrFindScriptsToInject: string[] = script_code.match(/@kps?(\([^)]*\))/g);
+        let arrFindScriptsToInject: string[] = script_code.match(/@sgs?(\([^)]*\))/g);
         let scriptsToInject: any = {};
         if (arrFindScriptsToInject) {
             for (let i = 0; i < arrFindScriptsToInject.length; i++) {
@@ -305,7 +305,7 @@ export class SGUtils {
                     scriptsToInject[scriptKey] = scriptQuery[0].code;
                     scriptsToInject = Object.assign(scriptsToInject, subScriptsToInject);
                 } catch (e) {
-                    throw new Error(`Error in script @kps capture for string \"${arrFindScriptsToInject[i]}\": ${e.message}`);
+                    throw new Error(`Error in script @sgs capture for string \"${arrFindScriptsToInject[i]}\": ${e.message}`);
                 }
             }
         }

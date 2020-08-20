@@ -16,7 +16,7 @@ import sys
 print 'start'
 time.sleep(30)
 print 'done'
-print '@kpo{"route": "ok"}'
+print '@sgo{"route": "ok"}'
 for i in range(10):
   print i, datetime.now().strftime('%H:%M:%S')
   sys.stdout.flush()

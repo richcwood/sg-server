@@ -14,7 +14,7 @@ const script1 = `
 import time
 print 'start'
 time.sleep(2)
-print '@kpo{"globalParam1": "@kpg("globalParam1")"}'
+print '@sgo{"globalParam1": "@sgg("globalParam1")"}'
 print 'done'
 `;
 const script1_b64 = SGUtils.btoa(script1);

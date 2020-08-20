@@ -13,7 +13,7 @@ const script1 = `
 echo 'start'
 sleep 5
 echo 'done'
-echo '@kpo{"route": "ok"}'
+echo '@sgo{"route": "ok"}'
 echo $1
 `;
 

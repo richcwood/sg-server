@@ -104,9 +104,9 @@
         <button class="button" @click="onClickedExitFullScreen">Exit full screen</button>
         <span class="variables">
           Static variables: 
-          <a @click="onKpgVariablesClicked">@kpg</a> | 
-          <a>@kps</a> |
-          <a>@kpo</a>
+          <a @click="onKpgVariablesClicked">@sgg</a> | 
+          <a>@sgs</a> |
+          <a>@sgo</a>
         </span>
       </div>
       <div ref="scriptEditorFullScreen" style="width: 100%; height: 100%;">
@@ -367,12 +367,12 @@ export default class ScriptEditor extends Vue {
   }
 
   private onClickedTeamVar(teamVar: TeamVar){
-    this.fullScreenEditor.trigger('keyboard', 'type', {text: `@kpg("${teamVar.name}")`});
+    this.fullScreenEditor.trigger('keyboard', 'type', {text: `@sgg("${teamVar.name}")`});
     this.$modal.hide('kpg');
   } 
 
   private onClickedJobDefVar(varKey: string, varValue: string){
-    this.fullScreenEditor.trigger('keyboard', 'type', {text: `@kpg("${varKey}")`});
+    this.fullScreenEditor.trigger('keyboard', 'type', {text: `@sgg("${varKey}")`});
     this.$modal.hide('kpg');
   }
 

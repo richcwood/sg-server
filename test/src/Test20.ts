@@ -16,7 +16,7 @@ import time
 print 'start'
 time.sleep(2)
 print 'done'
-print '@kpo{"route": "ok"}'
+print '@sgo{"route": "ok"}'
 `;
 const script1_b64 = SGUtils.btoa(script1);
 
@@ -25,7 +25,7 @@ import time
 print 'start'
 time.sleep(2)
 print 'done'
-print '@kpo{"outVal": "val"}'
+print '@sgo{"outVal": "val"}'
 `;
 const script2_b64 = SGUtils.btoa(script2);
 

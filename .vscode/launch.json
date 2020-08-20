@@ -36,17 +36,8 @@
                 "${workspaceFolder}/server/dist/**/*.js"
             ],
             "env": {
-                "SG_GIT_USERNAME": "richwifunds",
-                "SG_GIT_PASSWORD": "7d7bd8bab95c40937f8f8bfdcc336bad2d990f11",
-                "SG_GIT_URL": "github.com/theironcook/Kiki.git",
-                "S3_BUCKET_TEAM_ARTIFACTS": "sg-team-artifacts",
-                "S3_BUCKET_AGENT_BINARIES": "sg-agent-binaries",
-                "AWS_SECRET_ACCESS_KEY": "U2GhKobfcfogFF6hVIhPr6yPudSrG/qXy4W1AcCM",
-                "AWS_ACCESS_KEY_ID": "AKIA5ZOZE6PNDQ4LSZLC",
-                "AGENT_CREATE_TIMEOUT": "240",
-                "environment": "debug",
-                "NODE_ENV": "debug",
-                "SENDGRID_API_KEY": "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"
+                "environment": "production",
+                "NODE_ENV": "production"
             }
         },
         {
@@ -62,6 +53,8 @@
                 "${workspaceFolder}/server/dist/*.js"
             ],
             "env": {
+                "AWS_ACCESS_KEY_ID": "AKIA5ZOZE6PNDQ4LSZLC",
+                "AWS_SECRET_ACCESS_KEY": "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",
                 "environment": "debug",
                 "NODE_ENV": "debug"
             }
@@ -74,15 +67,16 @@
             "skipFiles": [
                 "<node_internals>/**"
             ],
-            "program": "${workspaceFolder}/test/dist/sg-server/test/src/RunUnitTestsHarness.js",
+            "program": "${workspaceFolder}/test/dist/sg-server/test/src/utils/LoadOrgData.js",
             "args": [
-                "Test38.js"
+                "test/data/demo_prod_tmp.json",
+                "5e99cbcb2317950015edb655"
             ],
             "outFiles": [
                 "${workspaceFolder}/test/dist/test/**/*.js"
             ],
             "env": {
-                "NODE_ENV": "debug"
+                "NODE_ENV": "production"
             }
         }
     ]

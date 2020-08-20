@@ -44,40 +44,40 @@ let DumpMongoData = async (path: string, _teamId: any) => {
 
   const filter = {_teamId};
 
-  let user: any = await userService.findAllUsersInternal();
-  let team: any = await teamService.findAllTeamsInternal({_id: _teamId});
-  let agent: any = await agentService.findAllAgentsInternal(filter);
-  let job: any = await jobService.findAllJobsInternal(filter);
+  // let user: any = await userService.findAllUsersInternal();
+  // let team: any = await teamService.findAllTeamsInternal({_id: _teamId});
+  // let agent: any = await agentService.findAllAgentsInternal(filter);
+  // let job: any = await jobService.findAllJobsInternal(filter);
   let jobDef: any = await jobDefService.findAllJobDefsInternal(filter);
-  let script: any = await scriptService.findAllScriptsInternal({});
-  let step: any = await stepService.findAllStepsInternal(filter);
+  let script: any = await scriptService.findAllScriptsInternal(filter);
+  // let step: any = await stepService.findAllStepsInternal(filter);
   let stepDef: any = await stepDefService.findAllStepDefsInternal(filter);
-  let stepOutcome: any = await stepOutcomeService.findAllStepOutcomesInternal(filter);
-  let task: any = await taskService.findAllTasksInternal(filter);
+  // let stepOutcome: any = await stepOutcomeService.findAllStepOutcomesInternal(filter);
+  // let task: any = await taskService.findAllTasksInternal(filter);
   let taskDef: any = await taskDefService.findAllTaskDefsInternal(filter);
-  let taskOutcome: any = await taskOutcomeService.findAllTaskOutcomesInternal(filter);
-  let schedule: any = await scheduleService.findAllSchedulesInternal(filter);
-  let invoice: any = await invoiceService.findAllInvoicesInternal(filter);
-  let paymentMethod: any = await paymentMethodService.findAllPaymentMethodsInternal(filter);
-  let paymentTransaction: any = await paymentTransactionService.findAllPaymentTransactionsInternal(filter);
+  // let taskOutcome: any = await taskOutcomeService.findAllTaskOutcomesInternal(filter);
+  // let schedule: any = await scheduleService.findAllSchedulesInternal(filter);
+  // let invoice: any = await invoiceService.findAllInvoicesInternal(filter);
+  // let paymentMethod: any = await paymentMethodService.findAllPaymentMethodsInternal(filter);
+  // let paymentTransaction: any = await paymentTransactionService.findAllPaymentTransactionsInternal(filter);
 
   let allTestObjects: any = {};
-  allTestObjects['user'] = convertRequestData(UserSchema, user);
-  allTestObjects['team'] = convertRequestData(TeamSchema, team);
-  allTestObjects['agent'] = convertRequestData(AgentSchema, agent);
-  allTestObjects['job'] = convertRequestData(JobSchema, job);
+  // allTestObjects['user'] = convertRequestData(UserSchema, user);
+  // allTestObjects['team'] = convertRequestData(TeamSchema, team);
+  // allTestObjects['agent'] = convertRequestData(AgentSchema, agent);
+  // allTestObjects['job'] = convertRequestData(JobSchema, job);
   allTestObjects['jobDef'] = convertRequestData(JobDefSchema, jobDef);
   allTestObjects['script'] = convertRequestData(ScriptSchema, script);
-  allTestObjects['step'] = convertRequestData(StepSchema, step);
+  // allTestObjects['step'] = convertRequestData(StepSchema, step);
   allTestObjects['stepDef'] = convertRequestData(StepDefSchema, stepDef);
-  allTestObjects['stepOutcome'] = convertRequestData(StepOutcomeSchema, stepOutcome);
-  allTestObjects['task'] = convertRequestData(TaskSchema, task);
+  // allTestObjects['stepOutcome'] = convertRequestData(StepOutcomeSchema, stepOutcome);
+  // allTestObjects['task'] = convertRequestData(TaskSchema, task);
   allTestObjects['taskDef'] = convertRequestData(TaskDefSchema, taskDef);
-  allTestObjects['taskOutcome'] = convertRequestData(TaskOutcomeSchema, taskOutcome);
-  allTestObjects['schedule'] = convertRequestData(ScheduleSchema, schedule);
-  allTestObjects['invoice'] = convertRequestData(InvoiceSchema, invoice);
-  allTestObjects['paymentMethod'] = convertRequestData(PaymentMethodSchema, paymentMethod);
-  allTestObjects['paymentTransaction'] = convertRequestData(PaymentTransactionSchema, paymentTransaction);
+  // allTestObjects['taskOutcome'] = convertRequestData(TaskOutcomeSchema, taskOutcome);
+  // allTestObjects['schedule'] = convertRequestData(ScheduleSchema, schedule);
+  // allTestObjects['invoice'] = convertRequestData(InvoiceSchema, invoice);
+  // allTestObjects['paymentMethod'] = convertRequestData(PaymentMethodSchema, paymentMethod);
+  // allTestObjects['paymentTransaction'] = convertRequestData(PaymentTransactionSchema, paymentTransaction);
 
   try { if (fs.existsSync(path)) fs.unlinkSync(path); } catch (e) { }
   fs.writeFileSync(path, JSON.stringify(allTestObjects));

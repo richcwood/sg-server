@@ -53,27 +53,29 @@ let LoadMongoData = async (path: string, teamId: string = '') => {
 
   console.log('mongo url -> ', config.get('mongoUrl'));
 
+  await teamService.createTeam({"name" : "saas glue demo", "ownerId" : new mongodb.ObjectId("5e99cb8e2317950015edb654")}, logger);
+
   let filter: any = {};
   if (teamId)
     filter["_teamId"] = new mongodb.ObjectId(teamId);
 
-  // let res;
+  let res;
   // res = await mongoRepo.DeleteByQuery(filter, 'job');
   // console.log(`deleted ${res} jobs`);
-  // res = await mongoRepo.DeleteByQuery(filter, 'jobDef');
-  // console.log(`deleted ${res} jobDefs`);
-  // res = await mongoRepo.DeleteByQuery(filter, 'script');
-  // console.log(`deleted ${res} scripts`);
+  res = await mongoRepo.DeleteByQuery(filter, 'jobDef');
+  console.log(`deleted ${res} jobDefs`);
+  res = await mongoRepo.DeleteByQuery(filter, 'script');
+  console.log(`deleted ${res} scripts`);
   // res = await mongoRepo.DeleteByQuery(filter, 'step');
   // console.log(`deleted ${res} steps`);
-  // res = await mongoRepo.DeleteByQuery(filter, 'stepDef');
-  // console.log(`deleted ${res} stepDefs`);
+  res = await mongoRepo.DeleteByQuery(filter, 'stepDef');
+  console.log(`deleted ${res} stepDefs`);
   // res = await mongoRepo.DeleteByQuery(filter, 'stepOutcome');
   // console.log(`deleted ${res} stepOutcomes`);
   // res = await mongoRepo.DeleteByQuery(filter, 'task');
   // console.log(`deleted ${res} tasks`);
-  // res = await mongoRepo.DeleteByQuery(filter, 'taskDef');
-  // console.log(`deleted ${res} taskDefs`);
+  res = await mongoRepo.DeleteByQuery(filter, 'taskDef');
+  console.log(`deleted ${res} taskDefs`);
   // res = await mongoRepo.DeleteByQuery(filter, 'taskOutcome');
   // console.log(`deleted ${res} taskOutcomes`);
   // res = await mongoRepo.DeleteByQuery(filter, 'schedule');
@@ -96,16 +98,23 @@ let LoadMongoData = async (path: string, teamId: string = '') => {
   if (allTestObjects.jobDef.length > 0) {
     for (let i = 0; i < allTestObjects.jobDef.length; i++) {
       const jobDef = allTestObjects.jobDef[i];
-      await jobDefService.createJobDefInternal(convertRequestData(JobDefSchema, jobDef));
+      // await jobDefService.createJobDefInternal(convertRequestData(JobDefSchema, jobDef));
+      try {
+        await jobDefService.createJobDefInternal(jobDef);
+      } catch (err) { console.log(err); }
     }
   }
 
-  // if (allTestObjects.script.length > 0) {
-  //   for (let i = 0; i < allTestObjects.script.length; i++) {
-  //     const script = allTestObjects.script[i];
-  //     await scriptService.createScriptInternal(convertRequestData(ScriptSchema, script));
-  //   }
-  // }
+  if (allTestObjects.script.length > 0) {
+    for (let i = 0; i < allTestObjects.script.length; i++) {
+      const script = allTestObjects.script[i];
+      // console.log(`script ${i}: ${JSON.stringify(convertRequestData(ScriptSchema, script))}`);
+      // await scriptService.createScriptInternal(convertRequestData(ScriptSchema, script));
+      try {
+        await scriptService.createScriptInternal(script);
+      } catch (err) { console.log(err); }
+    }
+  }
 
   // if (allTestObjects.step.length > 0) {
   //   for (let i = 0; i < allTestObjects.step.length; i++) {
@@ -117,7 +126,10 @@ let LoadMongoData = async (path: string, teamId: string = '') => {
   if (allTestObjects.stepDef.length > 0) {
     for (let i = 0; i < allTestObjects.stepDef.length; i++) {
       const stepDef = allTestObjects.stepDef[i];
-      await stepDefService.createStepDefInternal(convertRequestData(StepDefSchema, stepDef));
+      // await stepDefService.createStepDefInternal(convertRequestData(StepDefSchema, stepDef));
+      try {
+        await stepDefService.createStepDefInternal(stepDef);
+      } catch (err) { console.log(err); }
     }
   }
 
@@ -138,7 +150,10 @@ let LoadMongoData = async (path: string, teamId: string = '') => {
   if (allTestObjects.taskDef.length > 0) {
     for (let i = 0; i < allTestObjects.taskDef.length; i++) {
       const taskDef = allTestObjects.taskDef[i];
-      await taskDefService.createTaskDefInternal(convertRequestData(TaskDefSchema, taskDef));
+      // await taskDefService.createTaskDefInternal(convertRequestData(TaskDefSchema, taskDef));
+      try {
+        await taskDefService.createTaskDefInternal(taskDef);
+      } catch (err) { console.log(err); }
     }
   }
 
@@ -149,12 +164,12 @@ let LoadMongoData = async (path: string, teamId: string = '') => {
   //   }
   // }
 
-  if (allTestObjects.schedule.length > 0) {
-    for (let i = 0; i < allTestObjects.schedule.length; i++) {
-      const schedule = allTestObjects.schedule[i];
-      await scheduleService.createScheduleInternal(convertRequestData(ScheduleSchema, schedule));
-    }
-  }
+  // if (allTestObjects.schedule.length > 0) {
+  //   for (let i = 0; i < allTestObjects.schedule.length; i++) {
+  //     const schedule = allTestObjects.schedule[i];
+  //     await scheduleService.createScheduleInternal(convertRequestData(ScheduleSchema, schedule));
+  //   }
+  // }
 
   // if (allTestObjects.invoice && allTestObjects.invoice.length > 0) {
   //   for (let i = 0; i < allTestObjects.invoice.length; i++) {
