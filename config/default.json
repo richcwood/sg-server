@@ -59,7 +59,7 @@
   "SG_GIT_URL": "github.com/theironcook/Kiki.git",
   "AWS_ACCESS_KEY_ID": "AKIA5ZOZE6PNDQ4LSZLC",
   "AWS_SECRET_ACCESS_KEY": "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",
-  "AWS_REGION": "us-east-1",
+  "AWS_REGION": "us-east-2",
   "logsFolder": "../logs",
   "httpLogs": {
     "enabled": true,
