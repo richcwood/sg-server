@@ -18,7 +18,7 @@ arch = None
 if len(sys.argv) > 6:
     arch = sys.argv[6]
 
-outFile = '{}/sg-agent-launcher'.format(workingdir)
+outFile = '{}sg-agent-launcher'.format(workingdir)
 
 
 def RestAPILogin():
@@ -26,7 +26,7 @@ def RestAPILogin():
     global email
     global password
 
-    url = 'http://localhost:3000/login/apiLogin'
+    url = 'http://saasglue.herokuapp.com/login/apiLogin'
     
     headers = {
         'Content-Type': 'application/json'
@@ -60,7 +60,7 @@ def GetDownloadUrl():
     
     print 'token = ', token
 
-    url = 'http://localhost:3000/api/v0/agentDownload/agentstub/{}'.format(platform)
+    url = 'https://saasglue.herokuapp.com/api/v0/agentDownload/agentstub/{}'.format(platform)
     if arch:
         url += ('/' + arch)
 

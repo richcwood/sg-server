@@ -4,6 +4,7 @@ import { agentService } from '../../../server/src/api/services/AgentService';
 import { jobDefService } from '../../../server/src/api/services/JobDefService';
 import { jobService } from '../../../server/src/api/services/JobService';
 import { teamService } from '../../../server/src/api/services/TeamService';
+import { teamVariableService } from '../../../server/src/api/services/TeamVariableService';
 import { scheduleService } from '../../../server/src/api/services/ScheduleService';
 import { scriptService } from '../../../server/src/api/services/ScriptService';
 import { stepDefService } from '../../../server/src/api/services/StepDefService';
@@ -20,6 +21,7 @@ import { AgentSchema } from '../../../server/src/api/domain/Agent';
 import { JobDefSchema } from '../../../server/src/api/domain/JobDef';
 import { JobSchema } from '../../../server/src/api/domain/Job';
 import { TeamSchema } from '../../../server/src/api/domain/Team';
+import { TeamVariableSchema } from '../../../server/src/api/domain/TeamVariable';
 import { ScheduleSchema } from '../../../server/src/api/domain/Schedule';
 import { ScriptSchema } from '../../../server/src/api/domain/Script';
 import { StepDefSchema } from '../../../server/src/api/domain/StepDef';
@@ -60,6 +62,7 @@ let DumpMongoData = async (path: string, _teamId: any) => {
   // let invoice: any = await invoiceService.findAllInvoicesInternal(filter);
   // let paymentMethod: any = await paymentMethodService.findAllPaymentMethodsInternal(filter);
   // let paymentTransaction: any = await paymentTransactionService.findAllPaymentTransactionsInternal(filter);
+  let teamVariable: any = await teamVariableService.findAllTeamVariablesInternal({_id: _teamId});
 
   let allTestObjects: any = {};
   // allTestObjects['user'] = convertRequestData(UserSchema, user);
@@ -78,6 +81,7 @@ let DumpMongoData = async (path: string, _teamId: any) => {
   // allTestObjects['invoice'] = convertRequestData(InvoiceSchema, invoice);
   // allTestObjects['paymentMethod'] = convertRequestData(PaymentMethodSchema, paymentMethod);
   // allTestObjects['paymentTransaction'] = convertRequestData(PaymentTransactionSchema, paymentTransaction);
+  allTestObjects['teamVariable'] = convertRequestData(TeamVariableSchema, teamVariable);
 
   try { if (fs.existsSync(path)) fs.unlinkSync(path); } catch (e) { }
   fs.writeFileSync(path, JSON.stringify(allTestObjects));
