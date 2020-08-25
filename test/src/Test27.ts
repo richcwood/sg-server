@@ -14,7 +14,7 @@ use feature qw(say);
 say 'start';
 sleep(5);
 say 'done';
-say '@kpo{"route": "ok"}';
+say '@sgo{"route": "ok"}';
 `;
 
 const script1_b64 = SGUtils.btoa(script1);

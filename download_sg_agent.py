@@ -26,7 +26,7 @@ def RestAPILogin():
     global email
     global password
 
-    url = 'http://kiki-go-server.herokuapp.com/login/apiLogin'
+    url = 'http://localhost:3000/login/apiLogin'
     
     headers = {
         'Content-Type': 'application/json'
@@ -60,7 +60,7 @@ def GetDownloadUrl():
     
     print 'token = ', token
 
-    url = 'https://kiki-go-server.herokuapp.com/api/v0/agentDownload/agentstub/{}'.format(platform)
+    url = 'http://localhost:3000/api/v0/agentDownload/agentstub/{}'.format(platform)
     if arch:
         url += ('/' + arch)
 

@@ -1,7 +1,7 @@
 {
   "loggingLevel": 10,
   "environment": "production",
-  "API_BASE_URL": "https://kiki-go-server.herokuapp.com",
+  "API_BASE_URL": "https://saasglue.herokuapp.com",
   "API_PORT": "",
   "API_VERSION": "v0",
   "stompUrl": "wss://@funny-finch.rmq.cloudamqp.com/ws/stomp",

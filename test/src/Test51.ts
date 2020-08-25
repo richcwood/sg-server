@@ -14,7 +14,7 @@ print 'start'
 for i in range(1000):
     time.sleep(5)
 print 'done'
-print '@kpo{"route": "ok"}'
+print '@sgo{"route": "ok"}'
 `;
 const script1_b64 = SGUtils.btoa(script1);
 

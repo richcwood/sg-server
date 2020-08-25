@@ -11,15 +11,15 @@ const script1 = `
 import time
 import sys
 print 'start'
-for i in range(@kpg("linenum"),50):
+for i in range(@sgg("linenum"),50):
     print i
-    print '@kpo{{"linenum":{}}}'.format(i)
+    print '@sgo{{"linenum":{}}}'.format(i)
     if i==25:
-        print '@kpo{{"linenum":{}}}'.format(i+1)
+        print '@sgo{{"linenum":{}}}'.format(i+1)
         sys.exit(-1)
     time.sleep(.5)
 print 'done'
-print '@kpo{"route": "ok"}'
+print '@sgo{"route": "ok"}'
 `;
 const script1_b64 = SGUtils.btoa(script1);
 

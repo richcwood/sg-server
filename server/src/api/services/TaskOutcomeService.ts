@@ -380,7 +380,7 @@ export class TaskOutcomeService {
                         }
                     }
 
-                    let arrFindVarsArgs: string[] = step.arguments.match(/@kpg?(\([^)]*\))/g);
+                    let arrFindVarsArgs: string[] = step.arguments.match(/@sgg?(\([^)]*\))/g);
                     if (arrFindVarsArgs) {
                         // replace runtime variables in arguments
                         for (let i = 0; i < arrFindVarsArgs.length; i++) {
@@ -398,7 +398,7 @@ export class TaskOutcomeService {
                                     }
                                 }
                             } catch (e) {
-                                logger.LogError(`Error in arguments @kpg capture for string \"${arrFindVarsArgs[i]}\": ${e.message}`, { Class: 'JobRouter', Method: 'PublishTask', _teamId, task: task });
+                                logger.LogError(`Error in arguments @sgg capture for string \"${arrFindVarsArgs[i]}\": ${e.message}`, { Class: 'JobRouter', Method: 'PublishTask', _teamId, task: task });
                             }
                         }
                     }

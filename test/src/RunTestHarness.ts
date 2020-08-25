@@ -120,7 +120,7 @@ let ParseScriptStdout = async (filePath: string, saveOutput: boolean) => {
             }
           }
 
-          let arrParams: string[] = line.match(/@kpo?(\{[^}]*\})/g);
+          let arrParams: string[] = line.match(/@sgo?(\{[^}]*\})/g);
           if (arrParams) {
             for (let i = 0; i < arrParams.length; i++) {
               try {
@@ -135,7 +135,7 @@ let ParseScriptStdout = async (filePath: string, saveOutput: boolean) => {
                   }
                 }
               } catch (e) {
-                console.log(`Error parsing stdout @kpo capture for string \"${arrParams[i].substring(4)}\": ` + e.message, e.stack, {});
+                console.log(`Error parsing stdout @sgo capture for string \"${arrParams[i].substring(4)}\": ` + e.message, e.stack, {});
               }
             }
           }
@@ -245,7 +245,7 @@ import time
 print 'start'
 time.sleep(5)
 print 'done'
-print '@kpo{"route": "ok"}'
+print '@sgo{"route": "ok"}'
 `;
 const script1_json = JSON.stringify(script1);
 
@@ -1264,19 +1264,19 @@ let BraintreeTesting = async () => {
 let GenerateToken = async () => {
   const secret = config.get('secret');
 
+  // const body = {
+  //   "teamIds": [
+  //     "5de95c0453162e8891f5a830"
+  //   ],
+  //   "agentStubVersion": "v0.0.0.260"
+  // };
+
   const body = {
     "teamIds": [
-      "5de95c0453162e8891f5a830"
+      "5e99cbcb2317950015edb655"
     ],
     "agentStubVersion": "v0.0.0.260"
   };
-
-  // const body = {
-  //   "teamIds": [
-  //     "5e99cbcb2317950015edb655"
-  //   ],
-  //   "agentStubVersion": "v0.0.0.246"
-  // };
 
   // const body = {
   //   id: '5de8810275ad92e5bb8de78a',
@@ -1399,7 +1399,7 @@ print sys.argv[1];
 print 'start'
 time.sleep(30)
 print 'done'
-print '@kpo{"route": "ok"}'
+print '@sgo{"route": "ok"}'
 `;
 const script2_json = JSON.stringify(script2);
 
@@ -1752,7 +1752,7 @@ let ConfigNewRabbitMQServer = async () => {
 // ProcessOrphanedTasks();
 // PublishJobTask();
 // PruneJobs(mongodb.ObjectId('5e33a89f9fb5d6880217da2c'));
-UploadFileToS3('./package.json');
+// UploadFileToS3('./package.json');
 // GetS3PrefixSize('production/5de95c0453162e8891f5a830/');
 // CreateTeam('TestTeam');
 // DumpMongoData('./production_20200615.json');
@@ -1784,7 +1784,7 @@ UploadFileToS3('./package.json');
 // SubmitInvoicesForPayment();
 // TestBraintreeWebhook();
 // CreateInvoicePDF(0);
-// GenerateToken();
+GenerateToken();
 // AgentRestAPICall();
 // DeleteJobs({'_jobDefId': process.argv[2]});
 // DeleteJobDefs({"name": /Cron.*/});
@@ -1797,7 +1797,7 @@ UploadFileToS3('./package.json');
 // print 'start'
 // time.sleep(5)
 // for i in range(20):
-//   print '@kpo{"globalParam1": "globalParam1_val"}'
+//   print '@sgo{"globalParam1": "globalParam1_val"}'
 //   sys.stdout.flush()
 //   time.sleep(2)
 // print 'done'

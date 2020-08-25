@@ -13,9 +13,9 @@ const script1 = `
 import time
 print 'start'
 time.sleep(2)
-print '@kpo{"globalParam1": "globalParam1_val"}'
+print '@sgo{"globalParam1": "globalParam1_val"}'
 print 'done'
-print '@kpo{"route": "ok"}'
+print '@sgo{"route": "ok"}'
 `;
 const script1_b64 = SGUtils.btoa(script1);
 
@@ -23,7 +23,7 @@ const script2 = `
 import time
 print 'start'
 time.sleep(2)
-print '@kpo{"globalParam2": "@kpg("globalParam1")"}'
+print '@sgo{"globalParam2": "@sgg("globalParam1")"}'
 print 'done'
 `;
 const script2_b64 = SGUtils.btoa(script2);

@@ -13,9 +13,9 @@ const script1 = `
 import time
 print 'start'
 time.sleep(2)
-print '@kpo{"GLOBAL_PARAM_1": "globalParam1_val"}'
+print '@sgo{"GLOBAL_PARAM_1": "globalParam1_val"}'
 print 'done'
-print '@kpo{"route": "ok"}'
+print '@sgo{"route": "ok"}'
 `;
 const script1_b64 = SGUtils.btoa(script1);
 
@@ -24,7 +24,7 @@ import time
 import os
 print 'start'
 time.sleep(2)
-print '@kpo{{"globalParam1": "{0}"}}'.format(os.environ['GLOBAL_PARAM_1'])
+print '@sgo{{"globalParam1": "{0}"}}'.format(os.environ['GLOBAL_PARAM_1'])
 print 'done'
 `;
 const script2_b64 = SGUtils.btoa(script2);

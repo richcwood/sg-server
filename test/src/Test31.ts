@@ -13,9 +13,9 @@ const script1 = `
 import time
 print 'start'
 time.sleep(2)
-print '@kpo{"globalParam1": "globalParam1_val"}'
+print '@sgo{"globalParam1": "globalParam1_val"}'
 print 'done'
-print '@kpo{"route": "ok"}'
+print '@sgo{"route": "ok"}'
 `;
 const script1_b64 = SGUtils.btoa(script1);
 
@@ -24,7 +24,7 @@ import time
 import sys
 print 'start'
 time.sleep(2)
-print '@kpo{{"globalParam2": "{0}"}}'.format(sys.argv[1])
+print '@sgo{{"globalParam2": "{0}"}}'.format(sys.argv[1])
 print 'done'
 `;
 const script2_b64 = SGUtils.btoa(script2);
@@ -83,7 +83,7 @@ export default class Test31 extends TestBase.default {
         let script_obj2: ScriptSchema = {'_teamId': _teamId, 'name': 'Script 31.2', 'scriptType': Enums.ScriptType.PYTHON, 'code': script2_b64, _originalAuthorUserId: this.sgUser.id, _lastEditedUserId: this.sgUser.id, lastEditedDate: new Date(), shadowCopyCode: script2_b64 };
         script_obj2 = await self.CreateScript(script_obj2, _teamId);
         self.scripts.push(script_obj2);    
-        let step2: StepDefSchema = {'_teamId': _teamId, '_taskDefId': taskDef1.id, 'name': 'step2', '_scriptId': script_obj2['id'], 'order': 1, 'arguments': '@kpg("globalParam1")'};
+        let step2: StepDefSchema = {'_teamId': _teamId, '_taskDefId': taskDef1.id, 'name': 'step2', '_scriptId': script_obj2['id'], 'order': 1, 'arguments': '@sgg("globalParam1")'};
         step2 = await self.CreateStepDef(step2, _teamId, jobDef.id);
      
         taskDef1.expectedValues = {

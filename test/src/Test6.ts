@@ -15,7 +15,7 @@ import time
 print 'start'
 time.sleep(2)
 print 'done'
-print '@kpo{"route": "ok"}'
+print '@sgo{"route": "ok"}'
 `;
 const script1_b64 = SGUtils.btoa(script1);
 
