@@ -42,8 +42,8 @@ import * as mongoose from 'mongoose';
 
 
 let LoadMongoData = async (path: string) => {
-    // if (config.get("environment") == 'production')
-    //     throw new Error('Attempted to load to production')
+    if (config.get("environment") == 'production')
+        throw new Error('Attempted to load to production')
 
     console.log(`Loading data to ${config.get('mongoUrl')}`);
     mongoose.connect(config.get('mongoUrl'), { useNewUrlParser: true });

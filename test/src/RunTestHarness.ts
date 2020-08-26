@@ -884,29 +884,15 @@ let SubmitInvoicesForPayment = async () => {
 }
 
 
-let CreateTeam = async (teamName) => {
-  const Setup = require("./Setup");
-  const mongoUrl = config.get('mongoUrl');
-  const mongoDbname = config.get('mongoDbName');
-  const redisHost = config.get('redisHost');
-  const redisPort = config.get('redisPort');
-  const redisPassword = config.get('redisPassword');
-
+let CreateTeam = async (teamName, ownerId) => {
   const appName = 'RunTestHarness';
 
   let logger = new BaseLogger(appName);
   logger.Start();
 
-  let mongoRepo = new MongoRepo(appName, mongoUrl, mongoDbname, logger);
+  mongoose.connect(config.get('mongoUrl'), { useNewUrlParser: true });
 
-  /// Get team or create
-  let team;
-  team = { 'name': teamName, 'isActive': true, 'rmqPassword': SGUtils.makeid(10) };
-  await mongoRepo.InsertOne(team, 'team');
-  team.id = team._id;
-
-  let testSetup = new Setup.default(appName, logger);
-  await testSetup.InitTest({ 'teams': [team] });
+  let team = await teamService.createTeam({"name" : teamName, "ownerId" : new mongodb.ObjectId(ownerId)}, logger);
 
   console.log(team);
   process.exit();
@@ -1275,7 +1261,7 @@ let GenerateToken = async () => {
     "teamIds": [
       "5e99cbcb2317950015edb655"
     ],
-    "agentStubVersion": "v0.0.0.260"
+    "agentStubVersion": "v0.0.0.2"
   };
 
   // const body = {
@@ -1754,7 +1740,7 @@ let ConfigNewRabbitMQServer = async () => {
 // PruneJobs(mongodb.ObjectId('5e33a89f9fb5d6880217da2c'));
 // UploadFileToS3('./package.json');
 // GetS3PrefixSize('production/5de95c0453162e8891f5a830/');
-// CreateTeam('TestTeam');
+CreateTeam("Konexus", "5ef125b4fb07e500150507ca");
 // DumpMongoData('./production_20200615.json');
 // LoadMongoData('./testdata_1.json');
 // DumpSettingsFromMongo();
@@ -1784,7 +1770,7 @@ let ConfigNewRabbitMQServer = async () => {
 // SubmitInvoicesForPayment();
 // TestBraintreeWebhook();
 // CreateInvoicePDF(0);
-GenerateToken();
+// GenerateToken();
 // AgentRestAPICall();
 // DeleteJobs({'_jobDefId': process.argv[2]});
 // DeleteJobDefs({"name": /Cron.*/});

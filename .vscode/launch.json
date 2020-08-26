@@ -67,10 +67,9 @@
             "skipFiles": [
                 "<node_internals>/**"
             ],
-            "program": "${workspaceFolder}/test/dist/sg-server/test/src/utils/LoadOrgData.js",
+            "program": "${workspaceFolder}/test/dist/sg-server/test/src/RunUnitTestsHarness.js",
             "args": [
-                "test/data/demo_prod_tmp.json",
-                "5e99cbcb2317950015edb655"
+                "Test15.js"
             ],
             "outFiles": [
                 "${workspaceFolder}/test/dist/test/**/*.js"

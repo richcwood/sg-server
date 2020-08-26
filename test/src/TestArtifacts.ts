@@ -19,7 +19,7 @@ let LongRunningJob: any = {
                         "name": "Step1",
                         "script": {
                             "scriptType": "PYTHON",
-                            "code": "aW1wb3J0IHN5cwppbXBvcnQgdGltZQpwcmludCAnc3RhcnQnCmNudCA9IDAKd2hpbGUoVHJ1ZSk6CiAgdGltZS5zbGVlcCg1KQogIHByaW50ICdsb29wIHt9Jy5mb3JtYXQoY250KQogIHN5cy5zdGRvdXQuZmx1c2goKQogIGNudCArPSAxCnByaW50ICdkb25lJwpwcmludCAnQGtwb3sicm91dGUiOiAib2sifSc="
+                            "code": "aW1wb3J0IHN5cwppbXBvcnQgdGltZQpwcmludCAnc3RhcnQnCmNudCA9IDAKd2hpbGUoVHJ1ZSk6CiAgdGltZS5zbGVlcCg1KQogIHByaW50ICdsb29wIHt9Jy5mb3JtYXQoY250KQogIHN5cy5zdGRvdXQuZmx1c2goKQogIGNudCArPSAxCnByaW50ICdkb25lJwpwcmludCAnQHNnb3sicm91dGUiOiAib2sifSc="
                         },
                         "order": 0,
                         "arguments": "",
@@ -52,7 +52,7 @@ let InteractiveConsoleJob: any = {
                         "name": "Step1",
                         "script": {
                             "scriptType": "PYTHON",
-                            "code": "aW1wb3J0IHRpbWUKcHJpbnQgJ3N0YXJ0Jwp0aW1lLnNsZWVwKDUpCnByaW50ICdkb25lJwpwcmludCAnQGtwb3sicm91dGUiOiAib2sifScK"
+                            "code": "aW1wb3J0IHRpbWUKcHJpbnQgJ3N0YXJ0Jwp0aW1lLnNsZWVwKDUpCnByaW50ICdkb25lJwpwcmludCAnQHNnb3sicm91dGUiOiAib2sifSc="
                         },
                         "order": 0,
                         "command": "",
