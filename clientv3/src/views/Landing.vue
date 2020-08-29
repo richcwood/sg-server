@@ -445,7 +445,7 @@
           <div class="field-body">
             <div class="field">
               <p class="control">
-              <a style="margin-left: -125px;" @click.prevent="onFteamotPasswordClicked">Fteamot password?</a>     
+              <a style="margin-left: -125px;" @click.prevent="onForgotPasswordClicked">Forgot password?</a>     
               </p>
             </div>
           </div>
@@ -1002,7 +1002,7 @@
     }
   }
 
-  private onFteamotPasswordClicked(){
+  private onForgotPasswordClicked(){
     this.page = 'passwordReset';
 
     this.$nextTick(() => {

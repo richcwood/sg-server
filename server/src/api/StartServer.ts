@@ -200,7 +200,7 @@ class AppBuilder {
     this.app.use(`${apiURLBase}/invite`, teamInviteRouter);
     this.app.use(`${apiURLBase}/join`, joinTeamRouter);
     this.app.use(`${apiURLBase}/reset`, passwordResetRouter);
-    this.app.use(`${apiURLBase}/fteamot`, ForgotPasswordRouter);
+    this.app.use(`${apiURLBase}/forgot`, ForgotPasswordRouter);
     this.app.use(`${apiURLBase}/taskaction`, taskActionRouter);
     this.app.use(`${apiURLBase}/taskoutcomeaction`, taskOutcomeActionRouter);
     this.app.use(`${apiURLBase}/jobaction`, jobActionRouter);
@@ -246,7 +246,7 @@ class AppBuilder {
       } else if ((req.method === 'POST' || req.method === 'GET') && req.path.match('/api/v[0-9]+/reset')) {
         next();
         return;
-      } else if (req.method === 'POST' && req.path.match('/api/v[0-9]+/fteamot')) {
+      } else if (req.method === 'POST' && req.path.match('/api/v[0-9]+/forgot')) {
         next();
         return;
       } else if (req.method === 'POST' && req.path.match('/api/v[0-9]+/invite/shared')) {

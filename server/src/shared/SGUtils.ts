@@ -749,7 +749,7 @@ export class SGUtils {
 
         if (apiPort != '')
             apiUrl += `:${apiPort}`
-        let resetPasswordUrl = `${apiUrl}/api/${apiVersion}/fteamot`;
+        let resetPasswordUrl = `${apiUrl}/api/${apiVersion}/forgot`;
 
         content = content.replace(/{reset_password_url}/g, '' + resetPasswordUrl);
 
@@ -787,7 +787,7 @@ export class SGUtils {
 
         if (apiPort != '')
             apiUrl += `:${apiPort}`
-        let resetPasswordUrl = `${apiUrl}/api/${apiVersion}/fteamot`;
+        let resetPasswordUrl = `${apiUrl}/api/${apiVersion}/forgot`;
 
         content = content.replace(/{reset_password_url}/g, '' + resetPasswordUrl);
 

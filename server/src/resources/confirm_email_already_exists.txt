@@ -4,7 +4,7 @@ We received an attempt to create an account for rich@wifunds.com on
 TradeOMS, but this account already exists.
 
 You can sign in [https://slack.com/signin] to that account, or request a
-password change [https://tradeoms.slack.com/fteamot].
+password change [https://tradeoms.slack.com/forgot].
 
 If you no longer need help accessing this account, you can ignore this
 email.
