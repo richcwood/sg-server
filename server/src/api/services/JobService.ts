@@ -334,7 +334,7 @@ export class JobService {
         if (_.isArray(queryNotStartedJobs) && queryNotStartedJobs.length > 0) {
             for (let i = 0; i < queryNotStartedJobs.length; i++) {
                 const job = queryNotStartedJobs[i];
-                if (_.isNumber(jobDef.misfireGraceTime)) {
+                if (_.isNumber(jobDef.misfireGraceTime) && job.dateScheduled) {
                     const lag = Math.floor((currentTime.getTime() - job.dateScheduled.getTime()) / 1000)
                     console.log(`LaunchReadyJobs -> lag -> ${lag}`);
                     if (lag <= jobDef.misfireGraceTime) {

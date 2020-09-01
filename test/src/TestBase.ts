@@ -921,8 +921,9 @@ export abstract class WorkflowTestBase extends TestBase {
                 } else {
                     wftInst.logger.LogDebug('Passed', ev);
                 }
-            } else {
-                wftInst.logger.LogError('Failed', ev);
+            } else if (!ev.neg) {
+                let matches: any[] = _.filter(wftInst.bpMessages, x => !x.matched && x.operation == ev.operation && x.domainType == ev.domainType);
+                wftInst.logger.LogError('Failed', Object.assign(ev, {PossibleMatches: matches}));
                 testPassed = false;
             }
         }
@@ -936,8 +937,9 @@ export abstract class WorkflowTestBase extends TestBase {
                 } else {
                     wftInst.logger.LogDebug('Passed', ev);
                 }
-            } else {
-                wftInst.logger.LogError('Failed', ev);
+            } else if (!ev.neg) {
+                let matches: any[] = _.filter(wftInst.dlqMessages, x => !x.matched && x.type == ev.type && x.reason == ev.reason);
+                wftInst.logger.LogError('Failed', Object.assign(ev, {PossibleMatches: matches}));
                 testPassed = false;
             }
         }

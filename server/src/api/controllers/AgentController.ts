@@ -21,6 +21,7 @@ import { TaskFailureCode } from '../../shared/Enums';
 import { taskService } from '../services/TaskService';
 import { AMQPConnector } from '../../shared/AMQPLib';
 import { rabbitMQPublisher } from '../utils/RabbitMQPublisher';
+import { CheckWaitingForAgentTasks } from '../utils/Shared';
 
 
 const stompUrl = config.get('stompUrl');
@@ -209,7 +210,7 @@ export class AgentController {
             let agent: any = await agentService.updateAgentHeartbeat(_teamId, _agentId, convertRequestData(AgentSchema, req.body), req.header('correlationId'));
 
             let tasksToCancel: mongodb.ObjectId[] = [];
-            if (agent.offline || (agent.lastHeartbeatTime < new Date().getTime() - activeAgentTimeoutSeconds * 1000)) {
+            if (agent.offline || agent.lastHeartbeatTime == null || (agent.lastHeartbeatTime < new Date().getTime() - activeAgentTimeoutSeconds * 1000)) {
                 rabbitMQPublisher.publishBrowserAlert(_teamId, `Agent ${agent.machineId} is back online`);
                 let orphanedTasksFilter = {};
                 orphanedTasksFilter['_teamId'] = _teamId;
@@ -223,17 +224,7 @@ export class AgentController {
                     }
                 }
 
-                let noAgentTasksFilter = {};
-                noAgentTasksFilter['_teamId'] = _teamId;
-                noAgentTasksFilter['status'] = { $eq: TaskStatus.WAITING_FOR_AGENT };
-                // noAgentTasksFilter['failureCode'] = { $eq: TaskFailureCode.NO_AGENT_AVAILABLE };
-                const noAgentTasks = await taskService.findAllTasksInternal(noAgentTasksFilter);
-                if (_.isArray(noAgentTasks) && noAgentTasks.length > 0) {
-                    for (let i = 0; i < noAgentTasks.length; i++) {
-                        let updatedTask: any = await taskService.updateTask(_teamId, noAgentTasks[i]._id, { $pull: { attemptedRunAgentIds: agent._id } }, logger);
-                        await taskOutcomeService.PublishTask(_teamId, updatedTask, logger, amqp);
-                    }
-                }
+                await CheckWaitingForAgentTasks(_teamId, _agentId, logger, amqp);
                 // updatedAgent = await agentService.updateAgentHeartbeat(_teamId, _agentId, { offline: false }, req.header('correlationId'), (<string>req.query.responseFields));
             }
 

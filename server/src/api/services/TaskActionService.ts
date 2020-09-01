@@ -37,19 +37,18 @@ export class TaskActionService {
             logger.LogError(`Task ${_taskId} not found with filter ${JSON.stringify(filter)}`, {});
             return {};
         }
-        // throw new ValidationError(`Task ${_taskId} not found with filter ${JSON.stringify(filter)}`);
-
-        // if (!updatedTask) {
-        //     const taskQuery = await TaskModel.findById(_taskId).find({ _teamId }).select('status');
-        //     if (!taskQuery || (_.isArray(taskQuery) && taskQuery.length < 1))
-        //         throw new ValidationError(`Job ${_taskId} not found`);
-        //     updatedTask = taskQuery[0];
-        //     throw new ValidationError(`Task ${_taskId} cannot be interrupted - current status should be "RUNNING" but is "${JobStatus[jobQuery[0].status]}"`);
-        // }
 
         await rabbitMQPublisher.publish(_teamId, "Task", correlationId, PayloadOperation.UPDATE, convertData(TaskSchema, updatedTask));
 
-        await taskOutcomeService.PublishTask(_teamId, updatedTask, logger, amqp);
+        const tasks = await taskService.findAllJobTasks(_teamId, updatedTask._jobId, 'toRoutes');
+        const tasksToRoutes = SGUtils.flatMap(x => x, tasks.map((t) => SGUtils.flatMap(x => x[0], t.toRoutes)));
+        if ((!updatedTask.up_dep || (Object.keys(updatedTask.up_dep).length < 1)) && (tasksToRoutes.indexOf(updatedTask.name) < 0)) {
+            if (updatedTask.status == null) {
+                updatedTask.status = TaskStatus.NOT_STARTED;
+                await taskService.updateTask(_teamId, updatedTask._id, { status: updatedTask.status }, logger, { status: null }, null, null);
+                await taskOutcomeService.PublishTask(_teamId, updatedTask, logger, amqp);
+            }
+        }
 
         if (responseFields) {
             return taskService.findTask(_teamId, _taskId, responseFields);

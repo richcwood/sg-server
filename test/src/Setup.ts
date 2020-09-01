@@ -187,15 +187,20 @@ export default class TestSetup {
 
     async CreateAgents() {
         const team = this.teams['TestTeam'];
-        let agent;
-        agent = { '_teamId': team.id, 'machineId': 'TestAgent1', 'ipAddress': '10.10.0.90', 'numActiveTasks': 0, 'lastHeartbeatTime': new Date().getTime(), 'rmqPassword': team['rmqPassword'] };
-        await this.InitAgent(agent);
-        agent = { '_teamId': team.id, 'machineId': 'TestAgent2', 'ipAddress': '10.10.0.91', 'tags': {'numchucks': 'true'}, 'numActiveTasks': 0, 'lastHeartbeatTime': new Date().getTime(), 'rmqPassword': team['rmqPassword'] };
-        await this.InitAgent(agent);
-        agent = { '_teamId': team.id, 'machineId': 'TestAgent3', 'ipAddress': '10.10.0.92', 'tags': {'throwingstar': 'true'}, 'numActiveTasks': 0, 'lastHeartbeatTime': new Date().getTime(), 'rmqPassword': team['rmqPassword'] };
-        await this.InitAgent(agent);
-        agent = { '_teamId': team.id, 'machineId': 'TestAgent4', 'ipAddress': '10.10.0.93', 'tags': {'numchucks': 'true', 'throwingstar': 'true'}, 'numActiveTasks': 1, 'lastHeartbeatTime': new Date().getTime(), 'rmqPassword': team['rmqPassword'] };
-        await this.InitAgent(agent);
+        let agent: any;
+        let agentProperties;
+        agentProperties = { '_teamId': team.id, 'machineId': 'TestAgent1', 'ipAddress': '10.10.0.90', 'numActiveTasks': 0, 'lastHeartbeatTime': null, 'rmqPassword': team['rmqPassword'] };
+        agent = await this.InitAgent(agentProperties);
+        this.agents.push(agent);
+        agentProperties = { '_teamId': team.id, 'machineId': 'TestAgent2', 'ipAddress': '10.10.0.91', 'tags': {'numchucks': 'true'}, 'numActiveTasks': 0, 'lastHeartbeatTime': null, 'rmqPassword': team['rmqPassword'] };
+        agent = await this.InitAgent(agentProperties);
+        this.agents.push(agent);
+        agentProperties = { '_teamId': team.id, 'machineId': 'TestAgent3', 'ipAddress': '10.10.0.92', 'tags': {'throwingstar': 'true'}, 'numActiveTasks': 0, 'lastHeartbeatTime': null, 'rmqPassword': team['rmqPassword'] };
+        agent = await this.InitAgent(agentProperties);
+        this.agents.push(agent);
+        agentProperties = { '_teamId': team.id, 'machineId': 'TestAgent4', 'ipAddress': '10.10.0.93', 'tags': {'numchucks': 'true', 'throwingstar': 'true'}, 'numActiveTasks': 1, 'lastHeartbeatTime': null, 'rmqPassword': team['rmqPassword'] };
+        agent = await this.InitAgent(agentProperties);
+        this.agents.push(agent);
     }
 
 
@@ -251,7 +256,7 @@ export default class TestSetup {
 
             let new_agent: Agent = new Agent(params);
             await new_agent.Init();
-            this.agents.push(new_agent);
+            return new_agent;
         } catch (e) {
             this.logger.LogError('Error initializing Agent: ' + e.message, { 'Stack': e.stack });
         }

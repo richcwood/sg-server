@@ -3,7 +3,11 @@ import { SGStrings } from '../../shared/SGStrings';
 import { BaseLogger } from '../../shared/SGLogger';
 import { TaskSchema, TaskModel } from '../domain/Task';
 import { agentService } from '../services/AgentService';
+import { taskService } from '../services/TaskService';
+import { taskOutcomeService } from '../services/TaskOutcomeService';
 import * as Enums from '../../shared/Enums';
+import { AMQPConnector } from '../../shared/AMQPLib';
+import { SGUtils } from '../../shared/SGUtils';
 import * as util from 'util';
 import * as mongodb from 'mongodb';
 import * as _ from 'lodash';
@@ -131,4 +135,29 @@ let GetTaskRoutes = async (_teamId: mongodb.ObjectId, task: TaskSchema, logger: 
 }
 
 
+let CheckWaitingForAgentTasks = async (_teamId: mongodb.ObjectId, _agentId: mongodb.ObjectId, logger: BaseLogger, amqp: AMQPConnector) => {
+    let noAgentTasksFilter = {};
+    noAgentTasksFilter['_teamId'] = _teamId;
+    noAgentTasksFilter['status'] = { $eq: Enums.TaskStatus.WAITING_FOR_AGENT };
+    // noAgentTasksFilter['failureCode'] = { $eq: TaskFailureCode.NO_AGENT_AVAILABLE };
+    const noAgentTasks = await taskService.findAllTasksInternal(noAgentTasksFilter);
+    if (_.isArray(noAgentTasks) && noAgentTasks.length > 0) {
+        for (let i = 0; i < noAgentTasks.length; i++) {
+            let updatedTask: any = await taskService.updateTask(_teamId, noAgentTasks[i]._id, { $pull: { attemptedRunAgentIds: _agentId } }, logger);
+
+            const tasks = await taskService.findAllJobTasks(_teamId, updatedTask._jobId, 'toRoutes');
+            const tasksToRoutes = SGUtils.flatMap(x => x, tasks.map((t) => SGUtils.flatMap(x => x[0], t.toRoutes)));
+            if ((!updatedTask.up_dep || (Object.keys(updatedTask.up_dep).length < 1)) && (tasksToRoutes.indexOf(updatedTask.name) < 0)) {
+                if (updatedTask.status == Enums.TaskStatus.WAITING_FOR_AGENT) {
+                    updatedTask.status = Enums.TaskStatus.NOT_STARTED;
+                    updatedTask = await taskService.updateTask(_teamId, updatedTask._id, { status: updatedTask.status }, logger, { status: Enums.TaskStatus.WAITING_FOR_AGENT }, null, null);
+                    await taskOutcomeService.PublishTask(_teamId, updatedTask, logger, amqp);
+                }
+            }
+        }
+    }
+}
+
+
 export { GetTaskRoutes };
+export { CheckWaitingForAgentTasks };
