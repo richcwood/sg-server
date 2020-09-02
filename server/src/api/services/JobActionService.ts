@@ -17,21 +17,21 @@ import { taskActionService } from './TaskActionService';
 export class JobActionService {
 
     private async interruptJobTasks(_teamId: mongodb.ObjectId, _jobId: mongodb.ObjectId, logger: BaseLogger) {
-        // let tasksToInterruptFilter = {};
-        // tasksToInterruptFilter['_jobId'] = _jobId;
-        // // tasksToInterruptFilter['$and'] = [{ status: { $ne: null } }, { $and: [{ status: TaskStatus.FAILED }, { $or: [{ failureCode: TaskFailureCode.AGENT_EXEC_ERROR }, { failureCode: TaskFailureCode.LAUNCH_TASK_ERROR }, { failureCode: TaskFailureCode.TASK_EXEC_ERROR }] }] }];
-        // const tasksToInterruptQuery = await taskService.findAllTasksInternal(tasksToInterruptFilter, '_id');
+        let tasksToInterruptFilter = {};
+        tasksToInterruptFilter['_jobId'] = _jobId;
+        tasksToInterruptFilter['status'] = TaskStatus.WAITING_FOR_AGENT;
+        const tasksToInterruptQuery = await taskService.findAllTasksInternal(tasksToInterruptFilter, '_id');
 
-        // if (_.isArray(tasksToInterruptQuery) && tasksToInterruptQuery.length > 0) {
-        //     for (let i = 0; i < tasksToInterruptQuery.length; i++) {
-        //         const taskToInterrupt = tasksToInterruptQuery[i];
-        //         try {
-        //             await taskService.updateTask(_teamId, taskToInterrupt._id, { status: TaskStatus.INTERRUPTED }, logger);
-        //         } catch (e) {
-        //             logger.LogWarning(`Error canceling job task: ${e}`, { taskToInterrupt });
-        //         }
-        //     }
-        // }
+        if (_.isArray(tasksToInterruptQuery) && tasksToInterruptQuery.length > 0) {
+            for (let i = 0; i < tasksToInterruptQuery.length; i++) {
+                const taskToInterrupt = tasksToInterruptQuery[i];
+                try {
+                    await taskService.updateTask(_teamId, taskToInterrupt._id, { status: null, failureCode: null }, logger);
+                } catch (e) {
+                    logger.LogWarning(`Error canceling job task: ${e}`, { taskToInterrupt });
+                }
+            }
+        }
 
         let taskOutcomesToInterruptFilter = {};
         taskOutcomesToInterruptFilter['_jobId'] = _jobId;
@@ -104,23 +104,25 @@ export class JobActionService {
             }
         }
 
-        let tasksToRestartFilter = {};
-        tasksToRestartFilter['_jobId'] = _jobId;
-        tasksToRestartFilter['status'] = { $in: [TaskStatus.INTERRUPTED] };
-        const tasksToRestartQuery = await taskService.findAllTasksInternal(tasksToRestartFilter, '_id');
+        await jobService.LaunchTasksWithNoUpstreamDependencies(_teamId, _jobId, logger);
 
-        if (_.isArray(tasksToRestartQuery) && tasksToRestartQuery.length > 0) {
-            for (let i = 0; i < tasksToRestartQuery.length; i++) {
-                const taskToRestart = tasksToRestartQuery[i];
-                if (tasksRestarted.indexOf(taskToRestart._id) >= 0)
-                    continue;
-                try {
-                    await taskActionService.republishTask(_teamId, taskToRestart._id);
-                } catch (e) {
-                    logger.LogWarning(`Error canceling job task: ${e}`, { taskToRestart });
-                }
-            }
-        }
+        // let tasksToRestartFilter = {};
+        // tasksToRestartFilter['_jobId'] = _jobId;
+        // tasksToRestartFilter['status'] = { $in: [TaskStatus.INTERRUPTED] };
+        // const tasksToRestartQuery = await taskService.findAllTasksInternal(tasksToRestartFilter, '_id');
+
+        // if (_.isArray(tasksToRestartQuery) && tasksToRestartQuery.length > 0) {
+        //     for (let i = 0; i < tasksToRestartQuery.length; i++) {
+        //         const taskToRestart = tasksToRestartQuery[i];
+        //         if (tasksRestarted.indexOf(taskToRestart._id) >= 0)
+        //             continue;
+        //         try {
+        //             await taskActionService.republishTask(_teamId, taskToRestart._id);
+        //         } catch (e) {
+        //             logger.LogWarning(`Error canceling job task: ${e}`, { taskToRestart });
+        //         }
+        //     }
+        // }
     }
 
 

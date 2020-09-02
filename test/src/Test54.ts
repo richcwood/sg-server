@@ -322,111 +322,13 @@ export default class Test52 extends TestBase.WorkflowTestBase {
         self.bpMessagesExpected.length = 0;
 
 
-
-
-        // const newAgentProperties = { '_teamId': _teamId, 'machineId': 'TestAgent5', 'ipAddress': '10.10.0.94', 'tags': {'nomatch': 'true'}, 'numActiveTasks': 0, 'lastHeartbeatTime': null, 'rmqPassword': self.testSetup.teams['TestTeam']['rmqPassword'] };
-        // const newAgent = await self.testSetup.InitAgent(newAgentProperties);
-
-        // const taskOutcomeCreatedTask1BP: any = {
-        //     domainType: 'TaskOutcome',
-        //     operation: 1,
-        //     model:
-        //     {
-        //         _teamId: _teamId,
-        //         _jobId: job.id,
-        //         _taskId: task1.id,
-        //         source: 1,
-        //         status: TaskStatus.RUNNING,
-        //         target: TaskDefTarget.SINGLE_AGENT_WITH_TAGS,
-        //         autoRestart: false,
-        //         type: 'TaskOutcome'
-        //     }
-        // };
-        // self.bpMessagesExpected.push(taskOutcomeCreatedTask1BP);
-
-        // const taskOutcomeCreatedTask2BP: any = {
-        //     domainType: 'TaskOutcome',
-        //     operation: 1,
-        //     model:
-        //     {
-        //         _teamId: _teamId,
-        //         _jobId: job.id,
-        //         _taskId: task2.id,
-        //         source: 1,
-        //         status: TaskStatus.RUNNING,
-        //         target: TaskDefTarget.SINGLE_AGENT,
-        //         autoRestart: false,
-        //         type: 'TaskOutcome'
-        //     }
-        // };
-        // self.bpMessagesExpected.push(taskOutcomeCreatedTask2BP);
-
-        // result = await self.WaitForTestToComplete();
-        // if (!result)
-        //     return result;
-        // self.bpMessagesExpected.length = 0;
-
-
-        // const taskOutcome1Qry = _.filter(self.bpMessages, x => x.domainType == 'TaskOutcome' && x.operation == 1 && x.model._jobId == job.id && x.model._taskId == task1.id);
-        // if (taskOutcome1Qry.length < 1) {
-        //     throw new Error(`Unable to find TaskOutcome - {operation: 1, _jobId: ${job.id}, _taskId: ${task1.id}}`);
-        // }
-        // const taskOutcome1: any = taskOutcome1Qry[0].model;
-
-        // const taskOutcome2Qry = _.filter(self.bpMessages, x => x.domainType == 'TaskOutcome' && x.operation == 1 && x.model._jobId == job.id && x.model._taskId == task2.id);
-        // if (taskOutcome2Qry.length < 1) {
-        //     throw new Error(`Unable to find TaskOutcome - {operation: 1, _jobId: ${job.id}, _taskId: ${task2.id}}`);
-        // }
-        // const taskOutcome2: any = taskOutcome2Qry[0].model;
-
-
-        // const taskResultCompleteTask1BP: any = {
-        //     domainType: 'TaskOutcome',
-        //     operation: 2,
-        //     model:
-        //     {
-        //         status: TaskStatus.SUCCEEDED,
-        //         route: 'ok',
-        //         id: taskOutcome1.id,
-        //         type: 'TaskOutcome'
-        //     }
-        // }
-        // self.bpMessagesExpected.push(taskResultCompleteTask1BP);
-
-        // const taskResultCompleteTask2BP: any = {
-        //     domainType: 'TaskOutcome',
-        //     operation: 2,
-        //     model:
-        //     {
-        //         status: TaskStatus.SUCCEEDED,
-        //         route: 'ok',
-        //         id: taskOutcome2.id,
-        //         type: 'TaskOutcome'
-        //     }
-        // }
-        // self.bpMessagesExpected.push(taskResultCompleteTask2BP);
-
-        // const jobCompletedBP: any = {
-        //     domainType: 'Job',
-        //     operation: 2,
-        //     model: 
-        //     {
-        //         status: JobStatus.COMPLETED, 
-        //         id: job.id, 
-        //         type: 'Job'
-        //     }
-        // }
-        // self.bpMessagesExpected.push(jobCompletedBP);
-
-        // result = await self.WaitForTestToComplete();
-        // if (!result)
-        //     return result;
-        // self.bpMessagesExpected.length = 0;
-
-
-        // newAgent.offline = true;
-        // await newAgent.SendHeartbeat(false, true);
-        // await newAgent.Stop();
+        tags = self.testSetup.agents[0]['tags'];
+        delete tags.nomatch;
+        resApiCall = await self.testSetup.RestAPICall(`agent/tags/${agentId}`, 'PUT', _teamId, null, { tags: tags });
+        if (resApiCall.data.statusCode != 200) {
+            self.logger.LogError('Failed', { Message: `agent/tags/${agentId} PUT returned ${resApiCall.data.statusCode}`, tags });
+            return false;
+        }
 
 
         return true;
