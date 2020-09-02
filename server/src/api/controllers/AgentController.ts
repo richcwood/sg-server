@@ -262,6 +262,8 @@ export class AgentController {
         try {
             let updatedAgent: any = await agentService.updateAgentTags(_teamId, _agentId, convertRequestData(AgentSchema, req.body), req.header('correlationId'), (<string>req.query.responseFields));
 
+            await CheckWaitingForAgentTasks(_teamId, _agentId, logger, amqp);
+
             if (_.isArray(updatedAgent) && updatedAgent.length === 0) {
                 next(new MissingObjectError(`Agent ${req.params.agentId} not found.`));
             }
