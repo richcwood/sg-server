@@ -1136,6 +1136,16 @@
               <input type="radio" class="radio" v-model="selectedTaskDefForEdit.target" :value="TaskDefTarget.SINGLE_AGENT"/> Any active agent
             </td>
           </tr>
+
+          <tr class="tr">
+            <td class="td"></td>
+            <td class="td">
+              <input type="checkbox" 
+                v-model="selectedTaskDefForEdit.autoRestart" 
+                :disabled="selectedTaskDefForEdit.target === TaskDefTarget.ALL_AGENTS || selectedTaskDefForEdit.target === TaskDefTarget.ALL_AGENTS_WITH_TAGS">
+              Auto restart
+            </td>
+          </tr>
           <tr class="tr">
             <td class="td"></td>
             <td class="td">
@@ -1738,6 +1748,11 @@ export default class JobDesigner extends Vue {
       if(this.selectedTaskDefForEdit){
         if( ! await (<any>this.$refs.editTaskDefValidationObserver).validate()){
           return;
+        }
+
+        if(    this.selectedTaskDefForEdit.target === TaskDefTarget.ALL_AGENTS 
+            || this.selectedTaskDefForEdit.target === TaskDefTarget.ALL_AGENTS_WITH_TAGS){
+          this.selectedTaskDefForEdit.autoRestart = false; // clear out this choice
         }
 
         this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Saving task - ${this.selectedTaskDefForEdit.name}`, AlertPlacement.FOOTER));      
