@@ -14,10 +14,10 @@
           </h2>
 
           <table class="table downloads">
-            <tr class="tr" v-for="platform in Platform" v-bind:key="platform">
+            <tr class="tr" v-for="platform in ExposedPlatforms" v-bind:key="platform">
               <td class="td padded">
                 <select class="select" v-model="selectedArchitecture[platform]">
-                  <option class="option" v-for="architecture in Architecture" v-bind:key="architecture" :value="architecture" >{{architecture}}</option>
+                  <option class="option" v-for="architecture in ExposedArchitectures" v-bind:key="architecture" :value="architecture" >{{architecture}}</option>
                 </select>
               </td>
               <td clas="td padded">
@@ -89,7 +89,14 @@ export default class DownloadAgent extends Vue {
   private readonly momentToStringV1 = momentToStringV1;
   private readonly Platform = Platform;
   private readonly Platform_inverted = Platform_inverted;
+  private get ExposedPlatforms(){
+    return {'Windows': 'win', 'Linux': 'linux', 'Mac': 'macos'}
+  } 
+
   private readonly Architecture = Architecture;
+  private get ExposedArchitectures(){
+    return {'x64': 'x64'};
+  } 
 
   private readonly selectedArchitecture: {[platform: string]: Architecture} = {};
 
@@ -98,19 +105,21 @@ export default class DownloadAgent extends Vue {
   private waitAnimationRight = '';
 
   // Have to generate all of this stuff up front to be reactive
-  private readonly downloadLinks: {[platform: string]: {link: string, linkText: string, expireLinkTimer?: any}} = {
+  private readonly downloadLinks: {
+    [platform: string]: {link: string, linkText: string, expireLinkTimer?: any}} = 
+  {
     [this.Platform.Windows]: {link: '', linkText: ''},
     [this.Platform.Linux]: {link: '', linkText: ''},
-    [this.Platform.Mac]: {link: '', linkText: ''},
-    [this.Platform.Alpine]: {link: '', linkText: ''},
-    [this.Platform.FreeBSD]: {link: '', linkText: ''}
+    [this.Platform.Mac]: {link: '', linkText: ''}
   };
 
   private mounted(){
-    for(let platform of Object.values(Platform)){
-      // vue isn't reactive on object keys (I think vue3 will be)
-      Vue.set(this.selectedArchitecture, platform, Architecture.empty);
-    }
+    // Vue 2 isn't reactive so I need to do this
+    Vue.set(this, 'selectedArchitecture', {
+      'win': Architecture.x64,
+      'linux': Architecture.x64,
+      'macos': Architecture.x64
+    });
   }
 
   private isCreatingAgent(platform: Platform): boolean {
