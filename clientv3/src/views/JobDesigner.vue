@@ -304,7 +304,7 @@
                     </td>
                     <td class="td">
                       <validation-provider name="Schedule Name" rules="required" v-slot="{ errors }">
-                        <input class="input" type="text" v-model="editSchedule.RunDate">
+                        <input class="input" type="text" style="width: 250px;" v-model="editSchedule.RunDate" placeholder="yyyy-MM-dd HH:mm:ss">
                         <div v-if="errors && errors.length > 0" class="message validation-error is-danger">{{ errors[0] }}</div>
                       </validation-provider>
                     </td>
