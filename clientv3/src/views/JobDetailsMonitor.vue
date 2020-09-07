@@ -137,12 +137,17 @@
         <tr class="tr">
           <td class="td">Run Number</td><td class="td">{{selectedJob.runId}}</td>
           <td style="width: 100px"> </td>
+          <td class="td">Error</td><td class="td">{{selectedJob.error}}</td>
+        </tr>
+        <tr class="tr">
           <td class="td">Started</td><td class="td">{{momentToStringV1(selectedJob.dateStarted)}}</td>
+          <td style="width: 100px"> </td>
+          <td class="td">Completed</td><td class="td">{{momentToStringV1(selectedJob.dateCompleted)}}</td>
         </tr>
         <tr class="tr">
           <td class="td">Created By</td><td class="td">{{getUser(selectedJob.createdBy).name}}</td>
-          <td style="width: 100px"> </td>
-          <td class="td">Completed</td><td class="td">{{momentToStringV1(selectedJob.dateCompleted)}}</td>
+          <td class="td"></td>
+          <td class="td"></td>
         </tr>
       </tbody>
     </table>
