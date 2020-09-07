@@ -303,7 +303,7 @@
                       Run Date
                     </td>
                     <td class="td">
-                      <validation-provider name="Schedule Name" rules="required" v-slot="{ errors }">
+                      <validation-provider name="Run Date" rules="required|datetime" v-slot="{ errors }">
                         <input class="input" type="text" style="width: 250px;" v-model="editSchedule.RunDate" placeholder="yyyy-MM-dd HH:mm:ss">
                         <div v-if="errors && errors.length > 0" class="message validation-error is-danger">{{ errors[0] }}</div>
                       </validation-provider>
@@ -2179,6 +2179,9 @@ export default class JobDesigner extends Vue {
       console.error('Unable to compute computers timezone');
     }
 
+    // select schedule type by default
+    this.editSchedule.TriggerType = ScheduleTriggerType.date;
+
     this.$modal.show('edit-schedule-modal');
   }
 
@@ -2192,10 +2195,11 @@ export default class JobDesigner extends Vue {
 
   private async onCreateSchedule(){
     if(this.jobDefForEdit){
-      try {
-        if( ! await (<any>this.$refs.editScheduleValidationObserver).validate()){
-          return;
-        }
+      if( ! await (<any>this.$refs.editScheduleValidationObserver).validate()){
+        return;
+      }
+
+      try {  
         // todo - possibly conditional validation based on Schedule.TriggerType
         this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Saving schedule - ${this.editSchedule.name}`, AlertPlacement.FOOTER));
         
@@ -2205,6 +2209,8 @@ export default class JobDesigner extends Vue {
 
         if(this.editSchedule.TriggerType === ScheduleTriggerType.date){
           scheduleToSave['RunDate'] = this.editSchedule.RunDate;
+          // Need to convert the date that the user entered into ISO format for the server to accept
+          scheduleToSave['RunDate'] = (new Date(scheduleToSave['RunDate'])).toISOString();
         }
         else if(this.editSchedule.TriggerType === ScheduleTriggerType.cron){
           scheduleToSave['cron'] = _.clone(this.editSchedule_cron);

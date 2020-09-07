@@ -94,6 +94,16 @@ const initValidation = function(){
     }
   });
 
+  vee_validate_extend('datetime', value => {
+    if(value && value.trim()){
+      const date = new Date(value.trim());
+      return ! isNaN(date.getTime());
+    }
+    else {
+      return true;
+    }
+  });
+
 }
 
 export { initValidation };
