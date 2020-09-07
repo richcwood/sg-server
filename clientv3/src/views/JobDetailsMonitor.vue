@@ -151,15 +151,9 @@
      <table class="table">
       <thead class="thead" style="font-weight: 700;">
         <td class="td">Task Name</td>
-        <td class="td">Agents</td>
         <td class="td">Status</td>
+        <td class="td">Task Outcomes</td>
         <td class="td">Failure</td>
-        <td class="td">Tags</td>
-        <td class="td">No Agent</td>
-        <td class="td">Depends On</td>
-        <td class="td">Runtime Vars</td>
-        <td class="td">Multi Agent</td>
-        <td class="td">Artifacts</td>
       </thead>
 
       <tbody class="tbody">
@@ -168,29 +162,79 @@
             There are no tasks yet for the job
           </td>
         </tr>
-        <tr v-else v-for="task in tasks" class="tr" v-bind:key="task.id">
+        <div v-else v-for="task in tasks" class="tr" v-bind:key="task.id">
           <template v-if="!selectedTask || selectedTask === task">
-            <td class="td"><a @click.prevent="onClickedTask(task)">{{task.name}}</a></td>
-            <td class="td">
-              <span v-html="formatTaskOutcomes(task)"></span>
-            </td>
-            <td class="td">{{enumKeyToPretty(TaskStatus, task.status)}}</td>
-            <td class="td">{{enumKeyToPretty(TaskFailureCode, task.failureCode)}}</td>
-            <td class="td">{{mapToString(task.requiredTags)}}</td>
-            <td class="td"><input class="checkbox" type="checkbox" :checked="task.noAgent" disabled></td>
-            <td class="td">{{task.fromRoutes}}</td>
-            <td class="td">
-              <a v-if="task.runtimeVars && Object.keys(task.runtimeVars).length > 3" 
-                 v-html="formatRuntimeVars_summary(task.runtimeVars)"
-                 @click.prevent="onClickedRuntimeVarsSummary(task)">
-              </a>
-              <span v-else v-html="formatRuntimeVars_summary(task.runtimeVars)">
-              </span>
-            </td>
-            <td class="td"><input class="checkbox" type="checkbox" :checked="task.runOnAllAgents" disabled></td>
-            <td class="td">{{task.artifacts}}</td>
+            <tr class="tr">
+              <td class="td"><a @click.prevent="onClickedTask(task)">{{task.name}}</a></td>
+              <td class="td">{{enumKeyToPretty(TaskStatus, task.status)}}</td>
+              <td class="td">
+                <span v-html="formatTaskOutcomes(task)"></span>
+              </td>
+              <td class="td">{{enumKeyToPretty(TaskFailureCode, task.failureCode)}}</td>
+            <tr>
+            <tr class="tr">
+              <td class="td" colspan="4">
+                <table class="table">
+                  <tr class="tr">
+                    <td class="td">
+                      <span style="font-weight: 700;">
+                        Error
+                      </span>
+                    </td>
+                    <td class="td">
+                      {{task.error}}
+                    </td>
+                  </tr>
+                  <tr class="tr">
+                    <td class="td">
+                      <span style="font-weight: 700;">
+                        Runtime Vars
+                      </span>
+                    </td>
+                    <td class="td">
+                      <a v-if="task.runtimeVars && Object.keys(task.runtimeVars).length > 3" 
+                          v-html="formatRuntimeVars_summary(task.runtimeVars)"
+                          @click.prevent="onClickedRuntimeVarsSummary(task)">
+                      </a>
+                      <span v-else v-html="formatRuntimeVars_summary(task.runtimeVars)">
+                      </span>
+                    </td>
+                  </tr>
+                  <tr class="tr">
+                    <td class="td">
+                      <span style="font-weight: 700;">
+                        Inbound Routes
+                      </span>
+                    </td>
+                    <td class="td">
+                      {{task.fromRoutes}}
+                    </td>
+                  </tr>
+                  <tr class="tr">
+                    <td class="td">
+                      <span style="font-weight: 700;">
+                        Outbound Routes
+                      </span>
+                    </td>
+                    <td class="td">
+                      {{task.toRoutes}}
+                    </td>
+                  </tr>
+                  <tr class="tr">
+                    <td class="td">
+                      <span style="font-weight: 700;">
+                        Artifacts
+                      </span>
+                    </td>
+                    <td class="td">
+                      {{getArtifactNames(task)}}
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
           </template>
-        </tr>
+        </div>
       </tbody>
     </table>
 
@@ -298,6 +342,8 @@ import { Agent } from "../store/agent/types";
 import { SgAlert, AlertPlacement, AlertCategory } from '@/store/alert/types';
 import { User } from '@/store/user/types';
 import { showErrors } from '@/utils/ErrorHandler';
+import { Artifact } from '@/store/artifact/types';
+import { TaskDef } from '../store/taskDef/types';
 
 @Component({
   components: {
@@ -613,6 +659,40 @@ D
   private onCloseRuntimeVarsModalClicked(){
     this.$modal.hide('runtime-vars-modal');
     this.taskToShowRuntimeVars = null;
+  }
+
+  private getArtifactNames(task: Task): string[] {
+    if(task.artifacts){
+      return task.artifacts.map((artifactId: string) => this.getArtifact(artifactId).name);
+    } 
+    else {
+      return [];
+    }
+  }
+
+  // for reactivity in a template
+  private loadedArtifacts = {};
+  private getArtifact(artifactId: string): Artifact {
+    try {
+      if(!this.loadedArtifacts[artifactId]){
+        Vue.set(this.loadedArtifacts, artifactId, {name: 'loading...'});
+
+        (async () => {
+          this.loadedArtifacts[artifactId] = await this.$store.dispatch(`${StoreType.ArtifactStore}/fetchModel`, artifactId);
+        })();
+      }
+
+      return this.loadedArtifacts[artifactId];
+    }
+    catch(err){
+      console.log('Error in loading an artifact.  Maybe it was deleted?', artifactId);
+      return {
+        prefix: 'Error',
+        name: 'Error',
+        _teamId: 'Error',
+        s3Path: 'Error'
+      }
+    }
   }
 }
 </script>
