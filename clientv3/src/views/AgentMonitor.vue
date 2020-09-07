@@ -98,7 +98,7 @@
                     Handle General Tasks
                   </td>
                   <td class="td">
-                    <input class="input" type="text" style="width: 200px;" v-model="selectedHandleGeneralTasks" :disabled="selectedAgents.length === 0"/>
+                    <input type="checkbox" v-model="selectedHandleGeneralTasks" :disabled="selectedAgents.length === 0"/>
                   </td>
                 </tr>
                 <tr class="tr">
@@ -348,6 +348,11 @@ export default class AgentMonitor extends Vue {
     }
   }
 
+  private getSelectedAgentsSharedPropertyOverride_boolean(key: string): boolean {
+    const value = this.getSelectedAgentsSharedPropertyOverride(key);
+    return value === '<>' ? false : <boolean><unknown>value;
+  }
+
   private setSelectedAgentsSharedPropertyOverride(key: string, value: string){
     const selectedAgentIds = Object.keys(this.selectedAgentCopies);
     for(const selectedAgentId of selectedAgentIds){
@@ -363,12 +368,12 @@ export default class AgentMonitor extends Vue {
     this.setSelectedAgentsSharedPropertyOverride('maxActiveTasks', newValue);
   }
 
-  private get selectedHandleGeneralTasks(): string {
-    return this.getSelectedAgentsSharedPropertyOverride('handleGeneralTasks');
+  private get selectedHandleGeneralTasks(): boolean {
+    return this.getSelectedAgentsSharedPropertyOverride_boolean('handleGeneralTasks');
   }
 
-  private set selectedHandleGeneralTasks(newValue: string) {
-    this.setSelectedAgentsSharedPropertyOverride('handleGeneralTasks', newValue);
+  private set selectedHandleGeneralTasks(newValue: boolean) {
+    this.setSelectedAgentsSharedPropertyOverride('handleGeneralTasks', <string><unknown>newValue);
   }
 
   private get selectedInactiveAgentTasks(): string {
