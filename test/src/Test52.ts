@@ -214,6 +214,12 @@ export default class Test52 extends TestBase.WorkflowTestBase {
         const newAgentProperties = { '_teamId': _teamId, 'machineId': 'TestAgent5', 'ipAddress': '10.10.0.94', 'tags': {'nomatch': 'true'}, 'numActiveTasks': 0, 'lastHeartbeatTime': null, 'rmqPassword': self.testSetup.teams['TestTeam']['rmqPassword'] };
         const newAgent = await self.testSetup.InitAgent(newAgentProperties);
 
+        resApiCall = await this.testSetup.RestAPICall(`jobaction/restart/${job.id}`, 'POST', _teamId, null);
+        if (resApiCall.data.statusCode != 200) {
+            self.logger.LogError('Failed', { Message: `jobaction/restart/${job.id} POST returned ${resApiCall.data.statusCode}` });
+            return false;
+        }
+
         const taskOutcomeCreatedTask1BP: any = {
             domainType: 'TaskOutcome',
             operation: 1,
