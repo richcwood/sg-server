@@ -141,6 +141,10 @@ const router = new Router({
         beforeEnter: async (to: Route, from: Route) => {
           if(to.params.scriptId){
             try {
+              if(store.state[StoreType.ScriptStore].selected && store.state[StoreType.ScriptStore].selected.id === to.params.scriptId){
+                return; // the script is already selected, avoid infinite loop
+              } 
+
               const script = await store.dispatch(`${StoreType.ScriptStore}/fetchModel`, to.params.scriptId);
               store.dispatch(`${StoreType.ScriptStore}/select`, script);
             }

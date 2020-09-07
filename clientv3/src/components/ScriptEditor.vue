@@ -141,7 +141,11 @@
           <option value="vs-dark">Dark</option>
           <option value="hc-black">Black</option>
         </select>
-        <span class="button-spaced" style="vertical-align:bottom; padding-top: 8px;">( {{scriptTypesForMonaco[script.scriptType]}} )</span>
+        <select class="input select button-spaced" style="width: 250px; margin-bottom: 10px;" v-model="script.scriptType">
+          <option v-for="(value, key) in scriptTypesForMonaco" v-bind:key="`scriptType${key}-${value}`" :value="key">
+            {{value}}
+          </option>
+        </select>
         <span style="flex-grow: 1"> </span>
         <button class="button button-spaced" :disabled="script.code === script.shadowCopyCode" @click="warnRevertScriptChanges">Revert</button>
         <button class="button is-primary button-spaced" :disabled="script.code === script.shadowCopyCode" @click="onPublishScriptClicked">Publish</button>
@@ -239,7 +243,7 @@ export default class ScriptEditor extends Vue {
 
   @Prop() private script!: Script;
 
-  @Watch("script")
+  @Watch('script')
   private onScriptChanged() {
     const scriptEditor = (<any>this.$refs).scriptEditor;
     if(scriptEditor){
@@ -261,6 +265,23 @@ export default class ScriptEditor extends Vue {
       this.scriptShadowCopySaveInterval = setInterval(() => {
         this.tryToSaveScriptShadowCopy();
       }, 20*1000); // try to save shadow copy every n milliseconds
+    }
+  }
+
+  @Watch('script.scriptType')
+  private async onScriptTypeChanged(){
+    try {
+      if(this.script){
+        this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Saving script type - ${this.script.name}`, AlertPlacement.FOOTER));      
+ 
+        await this.$store.dispatch(`${StoreType.ScriptStore}/save`, this.script);
+        this.onScriptChanged();
+        this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Script type updated`, AlertPlacement.FOOTER));
+      }
+    }
+    catch(err){
+      console.error(err);
+      showErrors('Error publishing script', err);
     }
   }
 

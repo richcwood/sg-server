@@ -605,10 +605,15 @@ export default class InteractiveConsole extends Vue {
     this.script = script; // will also update the scriptCopy
   }
 
-  @Watch("scriptCopy")
+  @Watch('scriptCopy')
   private onScriptCopyChanged() {
     if(this.script){
       this.scriptId = this.script.id;
+
+      // Update the browser's url for the newly selected script
+      if(!this.$router.currentRoute.params['scriptId'] !== this.scriptId){
+        this.$router.replace({name: 'interactiveConsole', params: {scriptId: this.scriptId}});
+      }
     }
     else {
       this.scriptId = null;
