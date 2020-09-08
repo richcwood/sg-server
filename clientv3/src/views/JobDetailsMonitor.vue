@@ -13,7 +13,7 @@
           <td class="td">
             <div v-if="stepOutcomeForPopup  && stepOutcomeForPopup.runCode" 
                  style="overflow: scroll; width: 750px; height: 525px;" 
-                 v-html="stepOutcomeForPopup.runCode.replace(/\n/g, '<br>')"></div>
+                 v-html="'<pre>' + stepOutcomeForPopup.runCode + '</pre>'"></div>
             <div v-else>
               Code was missing
             </div>
@@ -732,5 +732,9 @@ table {
   margin-right: 14px;
   text-align: center;
   line-height: 36px;
+}
+
+.tab { 
+  margin-left: 40px; 
 }
 </style>
