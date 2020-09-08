@@ -53,7 +53,7 @@ let LoadMongoData = async (path: string, teamId: string = '') => {
 
   console.log('mongo url -> ', config.get('mongoUrl'));
 
-  await teamService.createTeam({"name" : "saas glue demo", "ownerId" : new mongodb.ObjectId("5e99cb8e2317950015edb654")}, logger);
+  // await teamService.createTeam({"name" : "saas glue demo", "ownerId" : new mongodb.ObjectId("5e99cb8e2317950015edb654")}, logger);
 
   let filter: any = {};
   if (teamId)
@@ -95,15 +95,9 @@ let LoadMongoData = async (path: string, teamId: string = '') => {
   //   }
   // }
 
-  if (allTestObjects.jobDef.length > 0) {
-    for (let i = 0; i < allTestObjects.jobDef.length; i++) {
-      const jobDef = allTestObjects.jobDef[i];
-      // await jobDefService.createJobDefInternal(convertRequestData(JobDefSchema, jobDef));
-      try {
-        await jobDefService.createJobDefInternal(jobDef);
-      } catch (err) { console.log(err); }
-    }
-  }
+  let scriptIdMap = {};
+  let jobDefIdMap = {};
+  let taskDefIdMap = {};
 
   if (allTestObjects.script.length > 0) {
     for (let i = 0; i < allTestObjects.script.length; i++) {
@@ -111,7 +105,50 @@ let LoadMongoData = async (path: string, teamId: string = '') => {
       // console.log(`script ${i}: ${JSON.stringify(convertRequestData(ScriptSchema, script))}`);
       // await scriptService.createScriptInternal(convertRequestData(ScriptSchema, script));
       try {
-        await scriptService.createScriptInternal(script);
+        const origId = script.id;
+        delete script.id;
+        res = await scriptService.createScriptInternal(script);
+        scriptIdMap[origId] = res._id;
+      } catch (err) { console.log(err); }
+    }
+  }
+
+  if (allTestObjects.jobDef.length > 0) {
+    for (let i = 0; i < allTestObjects.jobDef.length; i++) {
+      const jobDef = allTestObjects.jobDef[i];
+      // await jobDefService.createJobDefInternal(convertRequestData(JobDefSchema, jobDef));
+      try {
+        const origId = jobDef.id;
+        delete jobDef.id;
+        res = await jobDefService.createJobDefInternal(jobDef);
+        jobDefIdMap[origId] = res._id;
+      } catch (err) { console.log(err); }
+    }
+  }
+
+  if (allTestObjects.taskDef.length > 0) {
+    for (let i = 0; i < allTestObjects.taskDef.length; i++) {
+      const taskDef = allTestObjects.taskDef[i];
+      // await taskDefService.createTaskDefInternal(convertRequestData(TaskDefSchema, taskDef));
+      try {
+        const origId = taskDef.id;
+        delete taskDef.id;
+        taskDef._jobDefId = jobDefIdMap[taskDef._jobDefId];
+        res = await taskDefService.createTaskDefInternal(taskDef);
+        taskDefIdMap[origId] = res._id;
+      } catch (err) { console.log(err); }
+    }
+  }
+
+  if (allTestObjects.stepDef.length > 0) {
+    for (let i = 0; i < allTestObjects.stepDef.length; i++) {
+      const stepDef = allTestObjects.stepDef[i];
+      // await stepDefService.createStepDefInternal(convertRequestData(StepDefSchema, stepDef));
+      try {
+        delete stepDef.id;
+        stepDef._scriptId = scriptIdMap[stepDef._scriptId];
+        stepDef._taskDefId = taskDefIdMap[stepDef._taskDefId];
+        await stepDefService.createStepDefInternal(stepDef);
       } catch (err) { console.log(err); }
     }
   }
@@ -122,16 +159,6 @@ let LoadMongoData = async (path: string, teamId: string = '') => {
   //     await stepService.createStepInternal(convertRequestData(StepSchema, step));
   //   }
   // }
-
-  if (allTestObjects.stepDef.length > 0) {
-    for (let i = 0; i < allTestObjects.stepDef.length; i++) {
-      const stepDef = allTestObjects.stepDef[i];
-      // await stepDefService.createStepDefInternal(convertRequestData(StepDefSchema, stepDef));
-      try {
-        await stepDefService.createStepDefInternal(stepDef);
-      } catch (err) { console.log(err); }
-    }
-  }
 
   // if (allTestObjects.stepOutcome.length > 0) {
   //   for (let i = 0; i < allTestObjects.stepOutcome.length; i++) {
@@ -146,16 +173,6 @@ let LoadMongoData = async (path: string, teamId: string = '') => {
   //     await taskService.createTaskInternal(convertRequestData(TaskSchema, task));
   //   }
   // }
-
-  if (allTestObjects.taskDef.length > 0) {
-    for (let i = 0; i < allTestObjects.taskDef.length; i++) {
-      const taskDef = allTestObjects.taskDef[i];
-      // await taskDefService.createTaskDefInternal(convertRequestData(TaskDefSchema, taskDef));
-      try {
-        await taskDefService.createTaskDefInternal(taskDef);
-      } catch (err) { console.log(err); }
-    }
-  }
 
   // if (allTestObjects.taskOutcome.length > 0) {
   //   for (let i = 0; i < allTestObjects.taskOutcome.length; i++) {

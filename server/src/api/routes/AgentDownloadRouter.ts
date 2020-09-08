@@ -245,7 +245,7 @@ export class AgentDownloadRouter {
         let jobDefId = config.get('buildAgentStubJobDefId');
         if (platform == 'win')
           jobDefId = config.get('buildAgentStubWinx64JobDefId');
-        await localRestAccess.RestAPICall('job', 'POST', config.get("sgTeam"), { _jobDefId: jobDefId }, data);
+        await localRestAccess.RestAPICall('job', 'POST', config.get("sgAdminTeam"), { _jobDefId: jobDefId }, data);
       } catch (err) {
         logger.LogInfo(`Error creating agent stub: ${err}`, { '_teamId': _teamId, 'Platform': platform, 'Arch': arch, Version: agentStubVersion, team });
         queryUpdate[platformKey]['status'] = 'error';
@@ -538,7 +538,7 @@ export class AgentDownloadRouter {
         let jobDefId = config.get('buildAgentJobDefId');
         if (platform == 'win')
           jobDefId = config.get('buildAgentWinx64JobDefId');
-        await localRestAccess.RestAPICall('job', 'POST', config.get("sgTeam"), { _jobDefId: jobDefId }, data);
+        await localRestAccess.RestAPICall('job', 'POST', config.get("sgAdminTeam"), { _jobDefId: jobDefId }, data);
       } catch (err) {
         logger.LogInfo(`Error creating agent: ${err}`, { '_teamId': _teamId, 'Platform': platform, 'Arch': arch, Version: agentVersion, team });
         queryUpdate[platformKey]['status'] = 'error';

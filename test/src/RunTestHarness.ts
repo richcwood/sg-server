@@ -1045,10 +1045,11 @@ let StopScheduler = async () => {
 let SendTestEmail = async () => {
   // using Twilio SendGrid's v3 Node.js Library
   // https://github.com/sendgrid/sendgrid-nodejs
+  console.log('sending email');
   const sgMail = require('@sendgrid/mail');
   sgMail.setApiKey(process.env.SENDGRID_API_KEY);
   const msg = {
-    to: 'rich.mon.wood@gmail.com',
+    to: 'rich@saasglue.com',
     from: 'test@example.com',
     subject: 'Sending with Twilio SendGrid is Fun',
     text: Buffer.from('and easy to do anywhere, even with Node.js').toString('base64'),
@@ -1740,7 +1741,7 @@ let ConfigNewRabbitMQServer = async () => {
 // PruneJobs(mongodb.ObjectId('5e33a89f9fb5d6880217da2c'));
 // UploadFileToS3('./package.json');
 // GetS3PrefixSize('production/5de95c0453162e8891f5a830/');
-CreateTeam("Konexus", "5ef125b4fb07e500150507ca");
+// CreateTeam("Konexus", "5ef125b4fb07e500150507ca");
 // DumpMongoData('./production_20200615.json');
 // LoadMongoData('./testdata_1.json');
 // DumpSettingsFromMongo();
@@ -1761,7 +1762,7 @@ CreateTeam("Konexus", "5ef125b4fb07e500150507ca");
 // CreateUser('testuser@saasglue.com', 'mypassword', ['5de95c0453162e8891f5a830']);
 // StopScheduler();
 // MongoMapTest();
-// SendTestEmail();
+SendTestEmail();
 // SendTestEmailSMTP();
 // SendTestSlack();
 // CreateAgentInstall('5de9691f53162e8891f5aa99', 'v0.0.0.156', 'node10', 'macos', '');
