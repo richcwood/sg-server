@@ -60,11 +60,14 @@ const momentToStringV2 = function(input: moment.Moment | string | number): strin
 }
 
 // Only dates / days - no time
-const momentToStringV3 = function(input: moment.Moment | string | number): string {
+const momentToStringV3 = function(input: moment.Moment | string | number | Date): string {
   if(input){
     let momentInput: moment.Moment;
 
     if(_.isFinite(input) || _.isString(input)){
+      momentInput = moment(input);
+    }
+    else if(input instanceof Date){
       momentInput = moment(input);
     }
     else {
