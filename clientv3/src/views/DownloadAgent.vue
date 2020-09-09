@@ -117,8 +117,8 @@ export default class DownloadAgent extends Vue {
     // Vue 2 isn't reactive so I need to do this
     Vue.set(this, 'selectedArchitecture', {
       'win': Architecture.x64,
-      'linux': Architecture.x64,
-      'macos': Architecture.x64
+      'linux': Architecture.empty,
+      'macos': Architecture.empty
     });
   }
 

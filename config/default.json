@@ -66,9 +66,9 @@
     "fileName": "httpAccess.log",
     "morganFormat": "date=\":date\" forwarded_ip=\":req[X-Forwarded-For]\" user_id=\":user_id\" user_email=\":user_email\" team_id=\":team_id\" transaction_id=\":transaction_id\" remote_address=\":remote-addr\" url=\":url\" method=\":method\" response_code=\":status\" response_time=\":response-time\""
   },
-  "buildAgentJobDefId": "5ed6dc9bae918d37ad199d89",
-  "buildAgentStubJobDefId": "5ee2ae88bd2c5a0015991f95",
-  "buildAgentWinx64JobDefId": "5efcfa2f7bf6520015136286",
-  "buildAgentStubWinx64JobDefId": "5efcdcf7a225550015b1e3b3",
+  "buildAgentJobDefId": "5f57ef978f0baa0ece87df6f",
+  "buildAgentStubJobDefId": "5f57ef968f0baa0ece87df6c",
+  "buildAgentWinx64JobDefId": "5f57ef968f0baa0ece87df6e",
+  "buildAgentStubWinx64JobDefId": "5f57ef978f0baa0ece87df72",
   "rmqDLQRoute": "dlq"
 }

@@ -10,5 +10,6 @@
     "adminToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjVkZTg4MTAyNzVhZDkyZTViYjhkZTc4YSIsImVtYWlsIjoiYWRtaW5Ac2Fhc2dsdWUuY29tIiwib3JnSWRzIjoiIiwiaXBWNiI6Ijo6MSIsImlwUmFuZ2UiOiIxMjcuMC4wLjEvMzIiLCJpYXQiOjE1ODQzOTA4MzV9.aXSNtux0P_Mr5gYrW26ydslWrLABhuUQloD1UbPEuJc",
     "schedulerToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjVkZGVhOWMxZjliYTVjMTk4N2M1MWU1MCIsImVtYWlsIjoic2NoZWR1bGVyQHNhYXNnbHVlLmNvbSIsIm9yZ0lkcyI6IiIsImlwVjYiOiI6OjEiLCJpcFJhbmdlIjoiMTI3LjAuMC4xLzMyIiwiaWF0IjoxNTg0MzkwNzE1fQ.hHFfxB9BIWdb9Bf2MS26m-c0MtthD51xE3n7WhNo5iI",
     "sgTeam": "5e99cbcb2317950015edb655",
+    "sgAdminTeam": "5f57b2f14b5da00017df0d4f",
     "rmqDLQRoute": "dlq"
 }

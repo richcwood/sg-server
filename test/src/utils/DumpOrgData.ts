@@ -90,4 +90,4 @@ let DumpMongoData = async (path: string, _teamId: any) => {
 }
 
 
-DumpMongoData('./test/data/demo_prod_tmp.json', new mongodb.ObjectId('5e99cbcb2317950015edb655'));
+DumpMongoData('./test/data/demo_prod_org.json', new mongodb.ObjectId('5e99cbcb2317950015edb655'));
