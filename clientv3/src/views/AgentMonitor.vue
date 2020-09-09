@@ -103,10 +103,11 @@
                 </tr>
                 <tr class="tr">
                   <td class="td">
-                    Inactive Agent Task
+                    Inactive Agent Script
                   </td>
                   <td class="td">
-                    <input class="input" type="text" style="width: 200px;" v-model="selectedInactiveAgentTasks" :disabled="selectedAgents.length === 0"/>
+                    <!-- <input class="input" type="text" style="width: 200px;" v-model="selectedInactiveAgentScript" :disabled="selectedAgents.length === 0"/> -->
+                    <script-search :scriptId="selectedInactiveAgentScript" @scriptPicked="onScriptPicked"></script-search>
                   </td>
                 </tr>
                 <tr class="tr">
@@ -173,13 +174,15 @@ import moment from 'moment';
 import { focusElement, stringToMap, mapToString } from '@/utils/Shared';
 import { JobDef } from '@/store/jobDef/types';
 import { showErrors } from '@/utils/ErrorHandler';
+import { Script } from "@/store/script/types";
+import ScriptSearch from "@/components/ScriptSearch.vue";
 
 enum UpdateTagType {
   ADD, DELETE
 };
 
 @Component({
-  components: { Tabs, Tab },
+  components: { Tabs, Tab, ScriptSearch },
   props: { },
 })
 export default class AgentMonitor extends Vue {
@@ -376,11 +379,27 @@ export default class AgentMonitor extends Vue {
     this.setSelectedAgentsSharedPropertyOverride('handleGeneralTasks', <string><unknown>newValue);
   }
 
-  private get selectedInactiveAgentTasks(): string {
-    return this.getSelectedAgentsSharedPropertyOverride('inactiveAgentTask');
+  private get selectedInactiveAgentScript(): string {
+    const sharedId = this.getSelectedAgentsSharedPropertyOverride('inactiveAgentTask');
+
+    if(sharedId === '<>'){
+      return '';
+    }
+    else {
+      return sharedId;
+    }
   }
 
-  private set selectedInactiveAgentTasks(newValue: string) {
+  private onScriptPicked(script: Script|undefined) {
+    if(script){
+      this.selectedInactiveAgentScript = script.id;
+    }
+    else {
+      this.selectedInactiveAgentScript = null;
+    }
+  }
+
+  private set selectedInactiveAgentScript(newValue: string) {
     this.setSelectedAgentsSharedPropertyOverride('inactiveAgentTask', newValue);
   }
 
