@@ -69,6 +69,10 @@
                 Invoices and Payments
               </a>
               <hr class="dropdown-divider">
+              <a class="dropdown-item" @click.prevent="onClickedSettings">
+                Settings
+              </a>
+              <hr class="dropdown-divider">
               <a class="dropdown-item" @click.prevent="onClickedSignOut">
                 Sign Out
               </a>
@@ -198,6 +202,14 @@ export default class App extends Vue {
 
   private onClickedOutsideTeamsMenu(){
     this.showTeamsMenu = false;
+  }
+
+  private onClickedSettings(){
+    this.showUserMenu = false;
+
+    if(this.$router.currentRoute.name !== 'settings'){
+      this.$router.push({name: 'settings'});
+    }
   }
 
   private get selectedTeamName(){
