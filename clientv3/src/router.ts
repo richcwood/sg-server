@@ -16,6 +16,7 @@ import Artifacts from '@/views/Artifacts.vue';
 import Invoices from '@/views/Invoices.vue';
 import TeamAlerts from '@/views/TeamAlerts.vue';
 import Scripts from '@/views/Scripts.vue';
+import Settings from '@/views/Settings.vue';
 import _ from 'lodash';
 import { SgAlert, AlertPlacement, AlertCategory } from "@/store/alert/types";
 
@@ -189,7 +190,12 @@ const router = new Router({
       path: '/scripts',
       name: 'scripts',
       component: Scripts
-    }
+    },
+    {
+      path: '/settings',
+      name: 'settings',
+      component: Settings
+    },
   ]
 });
 

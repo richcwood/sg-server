@@ -84,13 +84,13 @@
         <div>
           <tabs>
             <tab title="Settings">
-              <table class="table" style="width: 450px;">
+              <table class="table" style="width: 525px;">
                 <tr class="tr">
                   <td class="td">
                     Max Active Tasks
                   </td>
                   <td class="td">
-                    <input class="input" type="text" style="width: 200px;" v-model="selectedMaxActiveTasks" :disabled="selectedAgents.length === 0"/>
+                    <input class="input" type="text" style="width: 200px; margin-left: 10px;" v-model="selectedMaxActiveTasks" :disabled="selectedAgents.length === 0"/>
                   </td>
                 </tr>
                 <tr class="tr">
@@ -98,15 +98,23 @@
                     Handle General Tasks
                   </td>
                   <td class="td">
-                    <input type="checkbox" v-model="selectedHandleGeneralTasks" :disabled="selectedAgents.length === 0"/>
+                    <input type="checkbox" style="margin-left: 10px;" v-model="selectedHandleGeneralTasks" :disabled="selectedAgents.length === 0"/>
                   </td>
                 </tr>
                 <tr class="tr">
                   <td class="td">
-                    Inactive Agent Task
+                    Inactive Agent Timeout (ms)
                   </td>
                   <td class="td">
-                    <input class="input" type="text" style="width: 200px;" v-model="selectedInactiveAgentTasks" :disabled="selectedAgents.length === 0"/>
+                    <input class="input" type="text" style="width: 200px; margin-left: 10px;" v-model="selectedInactiveAgentTimeout" :disabled="selectedAgents.length === 0"/>
+                  </td>
+                </tr>
+                <tr class="tr">
+                  <td class="td">
+                    Inactive Agent Script
+                  </td>
+                  <td class="td">
+                    <script-search :scriptId="selectedInactiveAgentScript" @scriptPicked="onScriptPicked"></script-search>
                   </td>
                 </tr>
                 <tr class="tr">
@@ -173,13 +181,15 @@ import moment from 'moment';
 import { focusElement, stringToMap, mapToString } from '@/utils/Shared';
 import { JobDef } from '@/store/jobDef/types';
 import { showErrors } from '@/utils/ErrorHandler';
+import { Script } from "@/store/script/types";
+import ScriptSearch from "@/components/ScriptSearch.vue";
 
 enum UpdateTagType {
   ADD, DELETE
 };
 
 @Component({
-  components: { Tabs, Tab },
+  components: { Tabs, Tab, ScriptSearch },
   props: { },
 })
 export default class AgentMonitor extends Vue {
@@ -376,11 +386,35 @@ export default class AgentMonitor extends Vue {
     this.setSelectedAgentsSharedPropertyOverride('handleGeneralTasks', <string><unknown>newValue);
   }
 
-  private get selectedInactiveAgentTasks(): string {
-    return this.getSelectedAgentsSharedPropertyOverride('inactiveAgentTask');
+  private get selectedInactiveAgentTimeout(): string {
+    return this.getSelectedAgentsSharedPropertyOverride('inactivePeriodWaitTime');
   }
 
-  private set selectedInactiveAgentTasks(newValue: string) {
+  private set selectedInactiveAgentTimeout(newValue: string) {
+    this.setSelectedAgentsSharedPropertyOverride('inactivePeriodWaitTime', newValue);
+  }
+
+  private get selectedInactiveAgentScript(): string {
+    const sharedId = this.getSelectedAgentsSharedPropertyOverride('inactiveAgentTask');
+
+    if(sharedId === '<>'){
+      return '';
+    }
+    else {
+      return sharedId;
+    }
+  }
+
+  private onScriptPicked(script: Script|undefined) {
+    if(script){
+      this.selectedInactiveAgentScript = script.id;
+    }
+    else {
+      this.selectedInactiveAgentScript = null;
+    }
+  }
+
+  private set selectedInactiveAgentScript(newValue: string) {
     this.setSelectedAgentsSharedPropertyOverride('inactiveAgentTask', newValue);
   }
 
@@ -412,7 +446,8 @@ export default class AgentMonitor extends Vue {
         const properties = {
           maxActiveTasks: selectedAgent.propertyOverrides.maxActiveTasks,
           handleGeneralTasks: selectedAgent.propertyOverrides.handleGeneralTasks,
-          inactiveAgentTask: selectedAgent.propertyOverrides.inactiveAgentTask
+          inactiveAgentTask: selectedAgent.propertyOverrides.inactiveAgentTask,
+          inactivePeriodWaitTime: selectedAgent.propertyOverrides.inactivePeriodWaitTime
         };
 
         savePromises.push(this.$store.dispatch(`${StoreType.AgentStore}/saveSettings`, {id: selectedAgentId, properties}));

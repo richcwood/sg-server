@@ -52,6 +52,24 @@
       </thead>
 
       <tbody class="tbody">
+        <tr class="tr" v-if="filteredJobs.length === 0">
+          <td class="td" colspan="6">
+            <div style="margin-left: 10px;">
+              <p>
+                No results
+              </p>
+              <p style="margin-left: 10px;">
+                Filter date: <span style="font-weight: 700;">{{momentToStringV3(filterDate)}}</span>
+                (only jobs after this date will be shown here)
+                <br><br>
+                <span v-if="filterString">
+                  Filter job name and created by: <span style="font-weight: 700;">{{filterString}}</span>
+                </span>
+              </p>
+            </div>
+          </td>
+        </tr>
+
         <tr class="tr" v-for="job in filteredJobs" v-bind:key="job.id">
           <td class="td"><router-link :to="{name: 'jobDetailsMonitor', params: {jobId: job.id}}">Monitor {{job.runId}}</router-link></td>
           <td class="td">
@@ -78,7 +96,7 @@ import Datepicker from 'vuejs-datepicker';
 import { StoreType } from '@/store/types';
 import { Job } from '@/store/job/types';
 import { BindStoreModel } from '@/decorator';
-import { momentToStringV1 } from '@/utils/DateTime';
+import { momentToStringV1, momentToStringV3 } from '@/utils/DateTime';
 import moment from 'moment';
 import axios from 'axios';
 import { JobStatus, TaskStatus, enumKeyToPretty, enumKeys } from '@/utils/Enums';
@@ -93,6 +111,7 @@ export default class JobMonitor extends Vue {
 
   // Expose to template
   private readonly momentToStringV1 = momentToStringV1;
+  private readonly momentToStringV3 = momentToStringV3;
   private readonly JobStatus = JobStatus;
   private readonly enumKeyToPretty = enumKeyToPretty;
   private readonly enumKeys = enumKeys;
