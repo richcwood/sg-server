@@ -36,8 +36,8 @@
                 "${workspaceFolder}/server/dist/**/*.js"
             ],
             "env": {
-                "environment": "production",
-                "NODE_ENV": "production"
+                "environment": "debug",
+                "NODE_ENV": "debug"
             }
         },
         {
@@ -69,13 +69,14 @@
             ],
             "program": "${workspaceFolder}/test/dist/sg-server/test/src/RunUnitTestsHarness.js",
             "args": [
-                "Test54.js"
+                "Test1.js"
             ],
             "outFiles": [
                 "${workspaceFolder}/test/dist/test/**/*.js"
             ],
             "env": {
-                "NODE_ENV": "debug"
+                "NODE_ENV": "debug",
+                "SENDGRID_API_KEY": "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"
             }
         }
     ]

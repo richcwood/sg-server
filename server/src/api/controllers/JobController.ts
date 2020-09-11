@@ -83,7 +83,12 @@ export class JobController {
 
             if (Object.keys(req.headers).indexOf('_jobdefid') >= 0) {
                 const _jobDefId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._jobdefid);
-                let newJob = await jobService.createJobFromJobDef(_teamId, _jobDefId, req.body, req.header('correlationId'), (<string>req.query.responseFields));
+                let newJob = await jobService.createJobFromJobDefId(_teamId, _jobDefId, req.body, req.header('correlationId'), (<string>req.query.responseFields));
+                response.data = convertResponseData(JobSchema, newJob);
+                response.statusCode = ResponseCode.CREATED;
+            } else if (Object.keys(req.headers).indexOf('jobdefname') >= 0) {
+                const jobDefName: string = <string>req.headers.jobdefname;
+                let newJob = await jobService.createJobFromJobDefName(_teamId, jobDefName, req.body, req.header('correlationId'), (<string>req.query.responseFields));
                 response.data = convertResponseData(JobSchema, newJob);
                 response.statusCode = ResponseCode.CREATED;
             } else {

@@ -42,6 +42,10 @@ export class JobDefService {
 
 
   public async createJobDef(_teamId: mongodb.ObjectId, data: any, correlationId: string, responseFields?: string): Promise<object> {
+    const exitingJobDefQuery: any = await this.findAllJobDefsInternal({ _teamId, name: data.name });
+    if (_.isArray(exitingJobDefQuery) && exitingJobDefQuery.length > 0)
+        throw new ValidationError(`Job definition with name "${data.name}" already exists`);
+      
     data._teamId = _teamId;
     const jobDefModel = new JobDefModel(data);
     const newJobDef = await jobDefModel.save();
@@ -268,6 +272,12 @@ export class JobDefService {
 
 
   public async updateJobDef(_teamId: mongodb.ObjectId, id: mongodb.ObjectId, data: any, filter?: any, correlationId?: string, userEmail?: string, responseFields?: string): Promise<object> {
+    if (data.name) {
+      const exitingJobDefQuery: any = await this.findAllJobDefsInternal({ _teamId, name: data.name });
+      if (_.isArray(exitingJobDefQuery) && exitingJobDefQuery.length > 0)
+        throw new ValidationError(`Job definition with name "${data.name}" already exists`);
+    }
+
     const defaultFilter = { _id: id, _teamId };
     if (filter)
       filter = Object.assign(defaultFilter, filter);

@@ -61,15 +61,29 @@ export class JobService {
     }
 
 
-    public async createJobFromJobDef(_teamId: mongodb.ObjectId, _jobDefId: mongodb.ObjectId, data: any, correlationId?: string, responseFields?: string): Promise<object> {
+    public async createJobFromJobDefId(_teamId: mongodb.ObjectId, _jobDefId: mongodb.ObjectId, data: any, correlationId?: string, responseFields?: string): Promise<object> {
         const filterJobDef = { _id: _jobDefId, _teamId };
         const jobDef = await JobDefModel.findOneAndUpdate(filterJobDef, { $inc: { 'lastRunId': 1 } }).select('lastRunId name createdBy runtimeVars');
         if (!jobDef)
             throw new MissingObjectError(`Job template '${_jobDefId}" not found`);
         await rabbitMQPublisher.publish(_teamId, "JobDef", correlationId, PayloadOperation.UPDATE, { id: jobDef._id, lastRunId: jobDef.lastRunId });
 
-        // console.log('JobRouter -> createJobFromJobDef -> jobDef -> ', jobDef);
+        return this.createJobFromJobDef(_teamId, jobDef, data, responseFields);
+    }
 
+
+    public async createJobFromJobDefName(_teamId: mongodb.ObjectId, jobDefName: string, data: any, correlationId?: string, responseFields?: string): Promise<object> {
+        const filterJobDef = { name: jobDefName, _teamId };
+        const jobDef = await JobDefModel.findOneAndUpdate(filterJobDef, { $inc: { 'lastRunId': 1 } }).select('lastRunId name createdBy runtimeVars');
+        if (!jobDef)
+            throw new MissingObjectError(`Job template '${jobDefName}" not found`);
+        await rabbitMQPublisher.publish(_teamId, "JobDef", correlationId, PayloadOperation.UPDATE, { id: jobDef._id, lastRunId: jobDef.lastRunId });
+
+        return this.createJobFromJobDef(_teamId, jobDef, data, responseFields);
+    }
+
+
+    public async createJobFromJobDef(_teamId: mongodb.ObjectId, jobDef: any, data: any, correlationId?: string, responseFields?: string): Promise<object> {
         let runtimeVars: any = {};
         if (jobDef.runtimeVars)
             runtimeVars = <any>jobDef.runtimeVars;
@@ -83,7 +97,7 @@ export class JobService {
 
         let job: any = {
             _teamId: _teamId,
-            _jobDefId: _jobDefId,
+            _jobDefId: jobDef._id,
             runId: jobDef.lastRunId,
             name: jobName,
             createdBy: jobDef.createdBy,
@@ -104,7 +118,7 @@ export class JobService {
         await rabbitMQPublisher.publish(_teamId, "Job", correlationId, PayloadOperation.CREATE, convertData(JobSchema, newJob));
 
         try {
-            const taskDefs = await taskDefService.findJobDefTaskDefs(_teamId, _jobDefId);
+            const taskDefs = await taskDefService.findJobDefTaskDefs(_teamId, jobDef._id);
             let cd = SGUtils.isJobDefCyclical(taskDefs);
             if (Object.keys(cd).length > 0)
                 throw new ValidationError(`Job contains a cyclic dependency with the following tasks: ${Object.keys(cd).filter((key) => cd[key])}`)
