@@ -52,7 +52,7 @@ export class ScheduleController {
         req.body.lastUpdatedBy = new mongodb.ObjectId(<string>req.headers.userid);
         const response: ResponseWrapper = resp['body'];
         try {
-            FreeTierChecks.PaidTierRequired(_teamId);
+            await FreeTierChecks.PaidTierRequired(_teamId);
 
             const newSchedule = await scheduleService.createSchedule(_teamId, convertRequestData(ScheduleSchema, req.body), req.header('correlationId'), (<string>req.query.responseFields));
             response.data = convertResponseData(ScheduleSchema, newSchedule);
