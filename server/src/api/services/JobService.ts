@@ -524,7 +524,7 @@ export class JobService {
         const currentJob: JobSchema = currentJobQuery[0];
         // console.log('JobService -> LaunchTasksWithNoUpstreamDependencies -> job -> ', JSON.stringify(currentJob, null, 4));
 
-        await FreeTierChecks.MaxScriptsCheck(_teamId);
+        // await FreeTierChecks.MaxScriptsCheck(_teamId);
 
         let no_tasks_to_run: boolean = true;
         const tasks = await taskService.findAllJobTasks(_teamId, _jobId);

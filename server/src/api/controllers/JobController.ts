@@ -11,6 +11,7 @@ import { BaseLogger } from '../../shared/SGLogger';
 import { TaskSource } from '../../shared/Enums';
 import * as _ from 'lodash';
 import * as mongodb from 'mongodb';
+import { FreeTierChecks } from '../../shared/FreeTierChecks';
 
 
 export class JobController {
@@ -80,6 +81,8 @@ export class JobController {
             //     'Headers': JSON.stringify(req.headers, null, 4),
             //     'Params': JSON.stringify(req.params, null, 4)
             // });
+
+            FreeTierChecks.PaidTierRequired(_teamId);
 
             if (Object.keys(req.headers).indexOf('_jobdefid') >= 0) {
                 const _jobDefId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._jobdefid);
