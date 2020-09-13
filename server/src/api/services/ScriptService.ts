@@ -70,7 +70,7 @@ export class ScriptService {
         if (data.name) {
             const existingScriptQuery: any = await this.findAllScriptsInternal({ _teamId, name: data.name });
             if (_.isArray(existingScriptQuery) && existingScriptQuery.length > 0)
-                if (existingScriptQuery[0].id != id)
+                if (existingScriptQuery[0]._id.toHexString() != id.toHexString())
                     throw new ValidationError(`Script with name "${data.name}" already exists`);
         }
 

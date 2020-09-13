@@ -14,14 +14,13 @@ import { MongoDbSettings } from 'aws-sdk/clients/dms';
 
 
 export class FreeTierChecks {
-    static PaidTierRequired = async (_teamId: mongodb.ObjectId) => {
+    static PaidTierRequired = async (_teamId: mongodb.ObjectId, errMsg: string) => {
         const team = await teamService.findTeam(_teamId, 'pricingTier');
         if (!team)
             throw new MissingObjectError(`Team '${_teamId.toHexString()} not found`);
         if (team.pricingTier == TeamPricingTier.FREE) {
-            const msg = `Please upgrade to the paid tier to use this feature.`;
-            rabbitMQPublisher.publishBrowserAlert(_teamId, msg);
-            throw new FreeTierLimitExceededError(msg);
+            rabbitMQPublisher.publishBrowserAlert(_teamId, errMsg);
+            throw new FreeTierLimitExceededError(errMsg);
         }
     }
 

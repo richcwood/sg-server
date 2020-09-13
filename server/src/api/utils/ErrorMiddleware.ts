@@ -91,6 +91,11 @@ export function handleErrors(err: Error, req: Request, res: Response, next: Next
             response.errors = [buildErrorMessage(err.name, err.message, transactionId, undefined)];
             break;
 
+        case 'FreeTierLimitExceededError':
+            response.statusCode = ResponseCode.UNAUTHORIZED;
+            response.errors = [buildErrorMessage('', err.message, transactionId, err['path'])];
+            break;
+
         default:
             if (err['code']) {
                 response.errors = [err];

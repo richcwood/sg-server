@@ -82,7 +82,7 @@ export class JobController {
             //     'Params': JSON.stringify(req.params, null, 4)
             // });
 
-            await FreeTierChecks.PaidTierRequired(_teamId);
+            await FreeTierChecks.PaidTierRequired(_teamId, 'Please uprade to the paid tier to run Jobs');
 
             if (Object.keys(req.headers).indexOf('_jobdefid') >= 0) {
                 const _jobDefId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._jobdefid);

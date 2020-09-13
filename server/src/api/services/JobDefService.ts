@@ -275,7 +275,8 @@ export class JobDefService {
     if (data.name) {
       const exitingJobDefQuery: any = await this.findAllJobDefsInternal({ _teamId, name: data.name });
       if (_.isArray(exitingJobDefQuery) && exitingJobDefQuery.length > 0)
-        throw new ValidationError(`Job definition with name "${data.name}" already exists`);
+        if (exitingJobDefQuery[0]._id.toHexString() != id.toHexString())
+          throw new ValidationError(`Job definition with name "${data.name}" already exists`);
     }
 
     const defaultFilter = { _id: id, _teamId };
