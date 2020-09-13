@@ -25,10 +25,10 @@ export class ScriptSchema {
   code: string;
 
   @prop({ required: true })
-  _originalAuthorUserId: string;
+  _originalAuthorUserId: mongodb.ObjectID;
 
   @prop({ required: true })
-  _lastEditedUserId: string;
+  _lastEditedUserId: mongodb.ObjectID;
 
   @prop({ default: true })
   teamUsable?: boolean;
@@ -61,11 +61,20 @@ export class ScriptSchema {
   public static readonly dataConverters = {
     // This isn't hooked up yet until needed - if it does, then call this in the controller layer on data before passing to service
     toDB: {
+      // _originalAuthorUserId: (data) => {
+      //   return new mongodb.ObjectID(data._originalAuthorUserId);
+      // },
+      // _lastEditedUserId: (data) => {
+      //   return new mongodb.ObjectID(data._lastEditedUserId);
+      // }
     },
 
     fromDB: {
-      // version: (data) => {
-      //   return undefined; // remove the version field - api users won't see it
+      // _originalAuthorUserId: (data) => {
+      //   return new mongodb.ObjectID(data._originalAuthorUserId);
+      // },
+      // _lastEditedUserId: (data) => {
+      //   return new mongodb.ObjectID(data._lastEditedUserId);
       // }
     }
   }

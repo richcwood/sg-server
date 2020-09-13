@@ -34,7 +34,7 @@ import { JobDefSchema } from '../../server/src/api/domain/JobDef';
 import { JobSchema } from '../../server/src/api/domain/Job';
 import { TeamSchema } from '../../server/src/api/domain/Team';
 import { ScheduleSchema } from '../../server/src/api/domain/Schedule';
-import { ScriptSchema } from '../../server/src/api/domain/Script';
+import { ScriptSchema, ScriptModel } from '../../server/src/api/domain/Script';
 import { SettingsSchema } from '../../server/src/api/domain/Settings';
 import { StepDefSchema } from '../../server/src/api/domain/StepDef';
 import { StepOutcomeSchema } from '../../server/src/api/domain/StepOutcome';
@@ -515,6 +515,28 @@ let DeleteMongoData = async () => {
   await mongoRepo.DeleteByQuery({ _teamId: { $nin: teamsToKeep } }, 'schedule');
   await mongoRepo.DeleteByQuery({ _id: { $nin: teamsToKeep } }, 'team');
   await mongoRepo.DeleteByQuery({ email: { $nin: usersToKeep } }, 'user');
+
+  process.exit();
+}
+
+
+let FixScriptDBRecords = async () => {
+  mongoose.connect(config.get('mongoUrl'), { useNewUrlParser: true });
+
+  let scripts: any = await scriptService.findAllScriptsInternal();
+
+  for (let i = 0; i < scripts.length; i++) {
+    let script: any = scripts[i];
+
+    let data: any = {};
+    data._originalAuthorUserId = new mongodb.ObjectId(script._originalAuthorUserId);
+    data._lastEditedUserId = new mongodb.ObjectId(script._lastEditedUserId);
+
+    const filter = { _id: script._id };
+
+    const updatedScript = await ScriptModel.findOneAndUpdate(filter, data, { new: true });
+    console.log(updatedScript);
+  }
 
   process.exit();
 }
@@ -1746,7 +1768,8 @@ let SendTestBrowserAlert = async() => {
 }
 
 
-SendTestBrowserAlert();
+FixScriptDBRecords();
+// SendTestBrowserAlert();
 // ConfigNewRabbitMQServer();
 // ProcessOrphanedTasks();
 // PublishJobTask();
