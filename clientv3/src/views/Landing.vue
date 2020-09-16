@@ -631,7 +631,7 @@
 
             if(sessionStorage.getItem('sg_logged_out_403') === 'true'){
               sessionStorage.removeItem('sg_logged_out_403');
-              this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert('Looks like your session expire.  Please log back in.', AlertPlacement.WINDOW, AlertCategory.INFO));
+              this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert('Looks like your session expired.  Please log back in.', AlertPlacement.WINDOW, AlertCategory.INFO));
             }
           }
           else {

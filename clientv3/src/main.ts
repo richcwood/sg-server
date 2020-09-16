@@ -13,7 +13,6 @@ import { faSearch } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 import { initValidation } from './utils/Validation';
 import VueSplit from 'vue-split-panel';
-import { SgAlert, AlertPlacement, AlertCategory } from '@/store/alert/types';
 
 library.add(faSearch);
 Vue.component('font-awesome-icon', FontAwesomeIcon);
@@ -27,7 +26,7 @@ Vue.config.productionTip = false;
 
 axios.interceptors.response.use(undefined, (err) => {
   if(err.response.status === 403){
-    if(err.config.url !== '/securecheck'){
+    if(store.state[StoreType.SecurityStore].appStarted){
       sessionStorage.setItem('sg_logged_out_403', 'true');
       store.dispatch(`${StoreType.SecurityStore}/logout`);
     }
