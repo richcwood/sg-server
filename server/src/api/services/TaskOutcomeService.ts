@@ -291,7 +291,7 @@ export class TaskOutcomeService {
 
 
     async LaunchTask(_teamId: mongodb.ObjectId, taskToLaunch: any, logger: BaseLogger) {
-        await FreeTierChecks.MaxScriptsCheck(_teamId);
+        // await FreeTierChecks.MaxScriptsCheck(_teamId);
 
         const _taskId: mongodb.ObjectId = taskToLaunch.taskId;
         let task: any;

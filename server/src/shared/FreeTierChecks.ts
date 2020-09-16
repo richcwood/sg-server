@@ -10,9 +10,21 @@ import { S3Access } from '../shared/S3Access';
 import { rabbitMQPublisher } from '../api/utils/RabbitMQPublisher';
 import * as mongodb from 'mongodb';
 import * as config from 'config';
+import { MongoDbSettings } from 'aws-sdk/clients/dms';
 
 
 export class FreeTierChecks {
+    static PaidTierRequired = async (_teamId: mongodb.ObjectId, errMsg: string) => {
+        const team = await teamService.findTeam(_teamId, 'pricingTier');
+        if (!team)
+            throw new MissingObjectError(`Team '${_teamId.toHexString()} not found`);
+        if (team.pricingTier == TeamPricingTier.FREE) {
+            rabbitMQPublisher.publishBrowserAlert(_teamId, errMsg);
+            throw new FreeTierLimitExceededError(errMsg);
+        }
+    }
+
+
     static MaxScriptsCheck = async (_teamId: mongodb.ObjectId) => {
         const team = await teamService.findTeam(_teamId, 'pricingTier');
         if (!team)

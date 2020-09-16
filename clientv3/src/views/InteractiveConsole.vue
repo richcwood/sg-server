@@ -352,6 +352,32 @@
         </td>
       </tr>
     </table>
+    <table class="table">
+      <tr class="tr">
+        <td class="td">
+          <label class="label">Original Author</label>
+        </td>
+        <td class="td">
+          <div v-if="script">{{getUser(script._originalAuthorUserId).name}}</div>
+        </td>
+      </tr>
+      <tr class="tr">
+        <td class="td">
+          <label class="label">Last Edited By</label>
+        </td>
+        <td class="td">
+          <div v-if="script">{{getUser(script._lastEditedUserId).name}} on {{momentToStringV1(script.lastEditedDate)}}</div>
+        </td>
+      </tr>
+      <tr class="tr">
+        <td class="td">
+          <label class="label">Team Members Can Edit</label>
+        </td>
+        <td class="td">
+          <input type="checkbox" v-if="script" v-model="script.teamEditable" :disabled="script._originalAuthorUserId !== user.id" @change="onTeamEditableChanged(script)">
+        </td>
+      </tr>
+    </table>
 
     <script-editor :script="scriptCopy"></script-editor>
 
@@ -462,6 +488,7 @@ import { Component, Prop, Vue, Watch } from "vue-property-decorator";
 import { BindStoreModel } from "@/decorator";
 import { StoreType } from "@/store/types";
 import { Agent } from "../store/agent/types";
+import { User } from "@/store/user/types";
 import VueSplit from "vue-split-panel";
 import axios from "axios";
 import { SgAlert, AlertPlacement, AlertCategory } from "@/store/alert/types";
@@ -520,6 +547,9 @@ export default class InteractiveConsole extends Vue {
 
   @BindSelected({ storeType: <any>StoreType.ScriptStore.toString() })
   private script!: Script | null;
+
+  @BindStoreModel({storeType: StoreType.SecurityStore, selectedModelName: 'user'})
+  private user: any;
 
   @BindSelectedCopy({ storeType: StoreType.ScriptStore })
   private scriptCopy!: Script | null;
@@ -583,6 +613,20 @@ export default class InteractiveConsole extends Vue {
     return this.loadedAgents[agentId];
   }
 
+  // for reactivity in a template
+  private loadedUsers = {};
+  private getUser(userId: string): User {
+    if(!this.loadedUsers[userId]){
+      Vue.set(this.loadedUsers, userId, {name: 'loading...'});
+
+      (async () => {
+        this.loadedUsers[userId] = await this.$store.dispatch(`${StoreType.UserStore}/fetchModel`, userId);
+      })();
+    }
+
+    return this.loadedUsers[userId];
+  }
+
   private get olderRunningJobs(): Job[] {
     if(this.runningJobs.length > 1){
       const jobClone = _.clone(this.runningJobs); // shallow reference clone
@@ -592,6 +636,17 @@ export default class InteractiveConsole extends Vue {
     }
     else {
       return [];
+    }
+  }
+
+  private async onTeamEditableChanged(script: Script){
+    try {
+      await this.$store.dispatch(`${StoreType.ScriptStore}/save`, {id: script.id, teamEditable: script.teamEditable});
+      this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Script saved`, AlertPlacement.FOOTER));
+    }
+    catch(err){
+      console.error(err);
+      showErrors('Error saving the script', err);
     }
   }
 

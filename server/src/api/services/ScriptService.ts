@@ -67,6 +67,13 @@ export class ScriptService {
 
 
     public async updateScript(_teamId: mongodb.ObjectId, id: mongodb.ObjectId, data: any, _userId: mongodb.ObjectId, correlationId: string, responseFields?: string): Promise<object> {
+        if (data.name) {
+            const existingScriptQuery: any = await this.findAllScriptsInternal({ _teamId, name: data.name });
+            if (_.isArray(existingScriptQuery) && existingScriptQuery.length > 0)
+                if (existingScriptQuery[0]._id.toHexString() != id.toHexString())
+                    throw new ValidationError(`Script with name "${data.name}" already exists`);
+        }
+
         const filter = { _id: id, _teamId, $or: [{ teamEditable: true }, { _originalAuthorUserId: _userId }] };
 
         data._lastEditedUserId = _userId;

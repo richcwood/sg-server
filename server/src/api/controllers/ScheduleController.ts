@@ -9,6 +9,7 @@ import { convertData as convertResponseData } from '../utils/ResponseConverters'
 import { convertData as convertRequestData } from '../utils/RequestConverters';
 import * as _ from 'lodash';
 import * as mongodb from 'mongodb';
+import { FreeTierChecks } from '../../shared/FreeTierChecks';
 
 
 export class ScheduleController {
@@ -51,6 +52,8 @@ export class ScheduleController {
         req.body.lastUpdatedBy = new mongodb.ObjectId(<string>req.headers.userid);
         const response: ResponseWrapper = resp['body'];
         try {
+            await FreeTierChecks.PaidTierRequired(_teamId, 'Please uprade to the paid tier to schedule Jobs');
+
             const newSchedule = await scheduleService.createSchedule(_teamId, convertRequestData(ScheduleSchema, req.body), req.header('correlationId'), (<string>req.query.responseFields));
             response.data = convertResponseData(ScheduleSchema, newSchedule);
             response.statusCode = ResponseCode.CREATED;

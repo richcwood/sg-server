@@ -11,6 +11,7 @@ import { BaseLogger } from '../../shared/SGLogger';
 import { TaskSource } from '../../shared/Enums';
 import * as _ from 'lodash';
 import * as mongodb from 'mongodb';
+import { FreeTierChecks } from '../../shared/FreeTierChecks';
 
 
 export class JobController {
@@ -81,9 +82,16 @@ export class JobController {
             //     'Params': JSON.stringify(req.params, null, 4)
             // });
 
+            await FreeTierChecks.PaidTierRequired(_teamId, 'Please uprade to the paid tier to run Jobs');
+
             if (Object.keys(req.headers).indexOf('_jobdefid') >= 0) {
                 const _jobDefId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._jobdefid);
-                let newJob = await jobService.createJobFromJobDef(_teamId, _jobDefId, req.body, req.header('correlationId'), (<string>req.query.responseFields));
+                let newJob = await jobService.createJobFromJobDefId(_teamId, _jobDefId, req.body, req.header('correlationId'), (<string>req.query.responseFields));
+                response.data = convertResponseData(JobSchema, newJob);
+                response.statusCode = ResponseCode.CREATED;
+            } else if (Object.keys(req.headers).indexOf('jobdefname') >= 0) {
+                const jobDefName: string = <string>req.headers.jobdefname;
+                let newJob = await jobService.createJobFromJobDefName(_teamId, jobDefName, req.body, req.header('correlationId'), (<string>req.query.responseFields));
                 response.data = convertResponseData(JobSchema, newJob);
                 response.statusCode = ResponseCode.CREATED;
             } else {

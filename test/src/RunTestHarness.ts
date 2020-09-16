@@ -34,7 +34,7 @@ import { JobDefSchema } from '../../server/src/api/domain/JobDef';
 import { JobSchema } from '../../server/src/api/domain/Job';
 import { TeamSchema } from '../../server/src/api/domain/Team';
 import { ScheduleSchema } from '../../server/src/api/domain/Schedule';
-import { ScriptSchema } from '../../server/src/api/domain/Script';
+import { ScriptSchema, ScriptModel } from '../../server/src/api/domain/Script';
 import { SettingsSchema } from '../../server/src/api/domain/Settings';
 import { StepDefSchema } from '../../server/src/api/domain/StepDef';
 import { StepOutcomeSchema } from '../../server/src/api/domain/StepOutcome';
@@ -47,6 +47,7 @@ import { InvoiceSchema } from '../../server/src/api/domain/Invoice';
 import { PaymentMethodSchema } from '../../server/src/api/domain/PaymentMethod';
 import { PaymentTransactionSchema } from '../../server/src/api/domain/PaymentTransaction';
 import { convertData as convertRequestData } from '../../server/src/api/utils/RequestConverters';
+import { rabbitMQPublisher } from '../../server/src/api/utils/RabbitMQPublisher';
 import { MissingObjectError, ValidationError, FreeTierLimitExceededError } from '../../server/src/api/utils/Errors';
 import * as path from 'path';
 import * as es from 'event-stream';
@@ -514,6 +515,28 @@ let DeleteMongoData = async () => {
   await mongoRepo.DeleteByQuery({ _teamId: { $nin: teamsToKeep } }, 'schedule');
   await mongoRepo.DeleteByQuery({ _id: { $nin: teamsToKeep } }, 'team');
   await mongoRepo.DeleteByQuery({ email: { $nin: usersToKeep } }, 'user');
+
+  process.exit();
+}
+
+
+let FixScriptDBRecords = async () => {
+  mongoose.connect(config.get('mongoUrl'), { useNewUrlParser: true });
+
+  let scripts: any = await scriptService.findAllScriptsInternal();
+
+  for (let i = 0; i < scripts.length; i++) {
+    let script: any = scripts[i];
+
+    let data: any = {};
+    data._originalAuthorUserId = new mongodb.ObjectId(script._originalAuthorUserId);
+    data._lastEditedUserId = new mongodb.ObjectId(script._lastEditedUserId);
+
+    const filter = { _id: script._id };
+
+    const updatedScript = await ScriptModel.findOneAndUpdate(filter, data, { new: true });
+    console.log(updatedScript);
+  }
 
   process.exit();
 }
@@ -1045,17 +1068,22 @@ let StopScheduler = async () => {
 let SendTestEmail = async () => {
   // using Twilio SendGrid's v3 Node.js Library
   // https://github.com/sendgrid/sendgrid-nodejs
-  console.log('sending email');
-  const sgMail = require('@sendgrid/mail');
-  sgMail.setApiKey(process.env.SENDGRID_API_KEY);
-  const msg = {
-    to: 'rich@saasglue.com',
-    from: 'test@example.com',
-    subject: 'Sending with Twilio SendGrid is Fun',
-    text: Buffer.from('and easy to do anywhere, even with Node.js').toString('base64'),
-    html: Buffer.from('<strong>and easy to do anywhere, even with Node.js</strong>').toString('base64')
-  };
-  sgMail.send(msg);
+  try {
+    console.log('sending email');
+    const sgMail = require('@sendgrid/mail');
+    sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+    const msg = {
+      to: 'rich@saasglue.com',
+      from: 'rich@saasglue.com',
+      subject: 'Sending with Twilio SendGrid is Fun',
+      text: Buffer.from('and easy to do anywhere, even with Node.js').toString('base64'),
+      html: Buffer.from('<strong>and easy to do anywhere, even with Node.js</strong>').toString('base64')
+    };
+    sgMail.send(msg);
+  }
+  catch (err) {
+    console.log(err);
+  }
 }
 
 
@@ -1735,6 +1763,13 @@ let ConfigNewRabbitMQServer = async () => {
 }
 
 
+let SendTestBrowserAlert = async() => {
+  rabbitMQPublisher.publishBrowserAlert(config.get("sgTestTeam"), `This is a test message`);  
+}
+
+
+FixScriptDBRecords();
+// SendTestBrowserAlert();
 // ConfigNewRabbitMQServer();
 // ProcessOrphanedTasks();
 // PublishJobTask();
@@ -1762,7 +1797,7 @@ let ConfigNewRabbitMQServer = async () => {
 // CreateUser('testuser@saasglue.com', 'mypassword', ['5de95c0453162e8891f5a830']);
 // StopScheduler();
 // MongoMapTest();
-SendTestEmail();
+// SendTestEmail();
 // SendTestEmailSMTP();
 // SendTestSlack();
 // CreateAgentInstall('5de9691f53162e8891f5aa99', 'v0.0.0.156', 'node10', 'macos', '');
