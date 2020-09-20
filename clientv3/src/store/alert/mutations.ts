@@ -33,5 +33,11 @@ export const mutations: MutationTree<AlertStore> = {
     }
     // Remove the alert from the store - it will dissapear
     state.models.splice(state.models.indexOf(model), 1);
+  },
+
+  removeAll(state){
+    state.currentFooter = null;
+    state.currentWindow = null;
+    state.models.splice(0);
   }
 };

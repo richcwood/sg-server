@@ -33,8 +33,7 @@ axios.interceptors.response.use(undefined, (err) => {
   }
   // todo - good error reporting / handling
   else if(err.response.status === 401){
-    // This is what we should get for an access rights violation
-    console.error('Bart, got a 401 - access rights violation', err);
+    // Handled individually by views / stores
   }
   else if(err.response.status === 400){
     //console.error('Bart, got a 400 ', err);
