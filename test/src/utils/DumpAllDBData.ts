@@ -86,4 +86,4 @@ let DumpMongoData = async (path: string) => {
 }
 
 
-DumpMongoData(`./test/data/${config.get("environment")}.json`);
+DumpMongoData(`./test/data/testdata_1.json`);

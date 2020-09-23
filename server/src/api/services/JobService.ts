@@ -144,12 +144,15 @@ export class JobService {
                     source: Enums.TaskSource.JOB,
                     up_dep: {},
                     down_dep: downstreamDependencies[taskDef.name],
-                    autoRestart: taskDef.autoRestart
+                    autoRestart: taskDef.autoRestart,
+                    executionEnvironment: taskDef.executionEnvironment
                 };
                 if (task.fromRoutes) {
                     for (let i = 0; i < task.fromRoutes.length; i++)
                         task.up_dep[task.fromRoutes[i][0]] = task.fromRoutes[i][1];
                 }
+                if (!task.executionEnvironment)
+                    task.executionEnvironment = Enums.ExecutionEnvironment.CLIENT;
 
                 const taskModel: TaskSchema = <TaskSchema>await taskService.createTask(_teamId, task, correlationId);
 
@@ -167,6 +170,12 @@ export class JobService {
                         order: stepDef.order,
                         arguments: stepDef.arguments,
                         variables: stepDef.variables,
+                        lambdaRuntime: stepDef.lambdaRuntime,
+                        lambdaRole: stepDef.lambdaRole,
+                        lambdaMemorySize: stepDef.lambdaMemorySize,
+                        lambdaTimeout: stepDef.lambdaTimeout,
+                        lambdaZipfile: stepDef.lambdaZipfile,
+                        lambdaAWSRegion: stepDef.lambdaAWSRegion,
                         script: {
                             id: script._id,
                             name: script.name,
@@ -235,6 +244,8 @@ export class JobService {
                     for (let i = 0; i < task.fromRoutes.length; i++)
                         task.up_dep[task.fromRoutes[i][0]] = task.fromRoutes[i][1];
                 }
+                if (!task.executionEnvironment)
+                    task.executionEnvironment = Enums.ExecutionEnvironment.CLIENT;
 
                 const taskModel: TaskSchema = <TaskSchema>await taskService.createTask(_teamId, task, correlationId);
 

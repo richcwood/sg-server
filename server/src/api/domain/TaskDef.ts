@@ -1,6 +1,6 @@
 import { modelOptions, prop, getModelForClass } from '@typegoose/typegoose';
 import { FilterOperator } from '../utils/BulkGet';
-import { TaskDefTarget } from '../../shared/Enums';
+import { TaskDefTarget, ExecutionEnvironment } from '../../shared/Enums';
 import * as mongodb from 'mongodb';
 
 
@@ -48,6 +48,9 @@ export class TaskDefSchema {
 
   @prop({ default: false })
   autoRestart?: boolean;
+
+  @prop({ default: ExecutionEnvironment.CLIENT })
+  executionEnvironment?: ExecutionEnvironment;
 
   // Define which filters are legal for which props (including nested props (not sure about nested arrays))
   public static readonly validFilters = {

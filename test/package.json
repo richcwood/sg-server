@@ -15,14 +15,14 @@
   "license": "ISC",
   "dependencies": {
     "@sendgrid/mail": "6.4.0",
-    "@stomp/stompjs": "^5.4.4",
+    "@stomp/stompjs": "5.4.4",
     "@typegoose/typegoose": "6.1.2",
     "@types/express-jwt": "0.0.42",
     "@types/node": "11.13.7",
     "amqplib": "0.5.2",
     "async-lock": "1.2.2",
-    "async-redis": "^1.1.7",
-    "aws-sdk": "^2.580.0",
+    "async-redis": "1.1.7",
+    "aws-sdk": "2.580.0",
     "axios": "0.18.0",
     "bcrypt": "3.0.7",
     "braintree": "2.21.0",
@@ -36,7 +36,7 @@
     "html-pdf": "2.2.0",
     "jsonwebtoken": "8.5.1",
     "lodash": "4.17.11",
-    "moment-timezone": "^0.5.31",
+    "moment-timezone": "0.5.31",
     "mongodb": "3.6.0",
     "mongoose": "5.7.13",
     "node-ipc": "9.1.1",
@@ -47,12 +47,13 @@
     "stompjs": "2.3.3",
     "systeminformation": "4.6.0",
     "tail": "2.0.3",
-    "text-encoding": "^0.7.0",
+    "text-encoding": "0.7.0",
     "truncate-utf8-bytes": "1.0.2",
     "ts-loader": "4.0.0",
     "typescript": "3.5.1",
     "un": "0.0.0",
     "util": "0.11.1",
-    "websocket": "^1.0.31"
+    "websocket": "1.0.31",
+    "zip-a-folder": "0.0.12"
   }
 }

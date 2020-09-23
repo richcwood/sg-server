@@ -1,6 +1,6 @@
 import { modelOptions, prop, getModelForClass } from '@typegoose/typegoose';
 import { FilterOperator } from '../utils/BulkGet';
-import { TaskDefTarget, TaskSource } from '../../shared/Enums';
+import { TaskDefTarget, TaskSource, ExecutionEnvironment } from '../../shared/Enums';
 import * as mongodb from 'mongodb';
 import { MongoDbSettings } from 'aws-sdk/clients/dms';
 
@@ -67,6 +67,9 @@ export class TaskOutcomeSchema {
 
     @prop()
     autoRestart: boolean;
+  
+    @prop({ default: ExecutionEnvironment.CLIENT })
+    executionEnvironment?: ExecutionEnvironment;
   
     // Define which filters are legal for which props (including nested props (not sure about nested arrays))
     public static readonly validFilters = {

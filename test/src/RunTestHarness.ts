@@ -1768,7 +1768,7 @@ let SendTestBrowserAlert = async() => {
 }
 
 
-FixScriptDBRecords();
+// FixScriptDBRecords();
 // SendTestBrowserAlert();
 // ConfigNewRabbitMQServer();
 // ProcessOrphanedTasks();
@@ -1776,7 +1776,7 @@ FixScriptDBRecords();
 // PruneJobs(mongodb.ObjectId('5e33a89f9fb5d6880217da2c'));
 // UploadFileToS3('./package.json');
 // GetS3PrefixSize('production/5de95c0453162e8891f5a830/');
-// CreateTeam("Konexus", "5ef125b4fb07e500150507ca");
+// CreateTeam("saas glue admin", "5ef125b4fb07e500150507ca");
 // DumpMongoData('./production_20200615.json');
 // LoadMongoData('./testdata_1.json');
 // DumpSettingsFromMongo();

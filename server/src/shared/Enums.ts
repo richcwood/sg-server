@@ -80,5 +80,8 @@ enum AccessRight {
 }
 export { AccessRight }
 
-enum TaskDefTarget { SINGLE_AGENT = 1, ALL_AGENTS = 2, SINGLE_AGENT_WITH_TAGS = 4, ALL_AGENTS_WITH_TAGS = 8, SINGLE_SPECIFIC_AGENT = 16 }
+enum TaskDefTarget { SINGLE_AGENT = 1, ALL_AGENTS = 2, SINGLE_AGENT_WITH_TAGS = 4, ALL_AGENTS_WITH_TAGS = 8, SINGLE_SPECIFIC_AGENT = 16, AWS_LAMBDA = 32 }
 export { TaskDefTarget }
+
+enum ExecutionEnvironment { CLIENT = 0, AWS_LAMBDA = 1, GCP_FUNCTION = 2, AMAZON_AUTOMATION = 3 }
+export { ExecutionEnvironment };

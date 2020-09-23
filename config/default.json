@@ -70,5 +70,10 @@
   "buildAgentStubJobDefId": "5f57ef968f0baa0ece87df6c",
   "buildAgentWinx64JobDefId": "5f57ef968f0baa0ece87df6e",
   "buildAgentStubWinx64JobDefId": "5f57ef978f0baa0ece87df72",
-  "rmqDLQRoute": "dlq"
+  "rmqDLQRoute": "dlq",
+  "lambda-admin-iam-role": "arn:aws:iam::948032566234:role/lambda-admin",
+  "awsLambdaRequiredTags": {
+    "cloud_platform": "aws",
+    "lambda_runner": "true"
+  }
 }

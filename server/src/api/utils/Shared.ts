@@ -96,6 +96,41 @@ let GetTaskRoutes = async (_teamId: mongodb.ObjectId, task: TaskSchema, logger: 
             return { routes: null, error: errMsg, failureCode: Enums.TaskFailureCode.MISSING_TARGET_TAGS };
         }
     }
+    /// For aws lambda objectives, route the task to a saas glue aws lambda agent
+    else if (task.target == Enums.TaskDefTarget.AWS_LAMBDA) {
+        let agentsWithRequiredTags = [];
+        const sgAdminTeam = new mongodb.ObjectId(config.get('sgAdminTeam'));
+        const requiredTags = config.et('awsLambdaRequiredTags');
+        const agents = await agentService.findAllAgents(sgAdminTeam, { 'offline': false, 'lastHeartbeatTime': { $gte: (new Date().getTime()) - parseInt(activeAgentTimeoutSeconds) * 1000 } }, 'lastHeartbeatTime tags propertyOverrides numActiveTasks attemptedRunAgentIds');
+        for (let i = 0; i < Object.keys(agents).length; i++) {
+            if (!Object.keys(requiredTags).some(tagKey => !(tagKey in agents[i].tags) || (requiredTags[tagKey] != agents[i].tags[tagKey])))
+                agentsWithRequiredTags.push(agents[i]);
+        }
+
+        if (agentsWithRequiredTags.length < 1) {
+            const errMsg = `No lambda runner agents available`;
+            logger.LogError(errMsg, { Class: 'Shared', Method: 'GetTaskRoutes', _teamId, _jobId: task._jobId, task: task });
+            return { routes: null, error: errMsg, failureCode: Enums.TaskFailureCode.NO_AGENT_AVAILABLE };
+        }
+
+        const agentCandidates = _.filter(agentsWithRequiredTags, a => task.attemptedRunAgentIds.indexOf(a._id) < 0);
+        // console.log(`GetTaskRoutes -> after filter -> ${JSON.stringify(agentCandidates, null, 4)}`);
+        if (agentCandidates.length < 1) {
+            const errMsg = `No lambda runner agents available`;
+            logger.LogError(errMsg, { Class: 'Shared', Method: 'GetTaskRoutes', sgAdminTeam, _jobId: task._jobId, task: task });
+            return { routes: null, error: errMsg, failureCode: Enums.TaskFailureCode.NO_AGENT_AVAILABLE };
+        }
+
+        agentCandidates.sort((a, b) => {
+            const a_unusedCapacity = a.propertyOverrides.maxActiveTasks - a.numActiveTasks;
+            const b_unusedCapacity = b.propertyOverrides.maxActiveTasks - b.numActiveTasks;
+            return (b_unusedCapacity > a_unusedCapacity) ? 1 : ((a_unusedCapacity > b_unusedCapacity) ? -1 : (b.lastHeartbeatTime > a.lastHeartbeatTime ? 1 : ((a.lastHeartbeatTime > b.lastHeartbeatTime) ? -1 : 0)));
+        });
+        // console.log(`GetTaskRoutes -> after sort -> ${JSON.stringify(agentCandidates, null, 4)}`);
+        const agentQueue = SGStrings.GetAgentQueue(sgAdminTeam.toHexString(), agentCandidates[0]._id);
+        routes.push({ route: agentQueue, type: 'queue', queueAssertArgs: agentQueueProperties, targetAgentId: agentCandidates[0]._id });
+        updatedTask = await TaskModel.findOneAndUpdate({ _id: task._id, _teamId }, { $push: { attemptedRunAgentIds: agentCandidates[0]._id } }, { new: true });
+    } 
     /// For objecives not requiring particular tags, route the task to a single agent or all agents
     else {
         const agentsQuery = await agentService.findAllAgents(_teamId, { $or: [{ 'propertyOverrides.handleGeneralTasks': { $exists: false } }, { 'propertyOverrides.handleGeneralTasks': true }], 'offline': false, 'lastHeartbeatTime': { $gte: (new Date().getTime()) - parseInt(activeAgentTimeoutSeconds) * 1000 } }, 'lastHeartbeatTime tags propertyOverrides numActiveTasks attemptedRunAgentIds');
