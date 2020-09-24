@@ -57,7 +57,10 @@ export class StepSchema {
   @prop({ default: '' })
   lambdaAWSRegion?: string;
 
-  
+  @prop({ default: '' })
+  lambdaDependencies?: string;
+
+
   // Define which filters are legal for which props (including nested props (not sure about nested arrays))
   public static readonly validFilters = {
     'name': [FilterOperator.LIKE, FilterOperator.EQUALS],

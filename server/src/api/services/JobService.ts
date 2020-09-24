@@ -176,6 +176,7 @@ export class JobService {
                         lambdaTimeout: stepDef.lambdaTimeout,
                         lambdaZipfile: stepDef.lambdaZipfile,
                         lambdaAWSRegion: stepDef.lambdaAWSRegion,
+                        lambdaDependencies: stepDef.lambdaDependencies,
                         script: {
                             id: script._id,
                             name: script.name,
