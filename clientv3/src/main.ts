@@ -12,7 +12,6 @@ import { library } from '@fortawesome/fontawesome-svg-core';
 import { faSearch } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 import { initValidation } from './utils/Validation';
-import Cookies from 'js-cookie';
 import VueSplit from 'vue-split-panel';
 
 library.add(faSearch);
@@ -27,20 +26,14 @@ Vue.config.productionTip = false;
 
 axios.interceptors.response.use(undefined, (err) => {
   if(err.response.status === 403){
-    // If we ever get a 403 because a cookie expired, the backend should
-    // have cleared the cookie.  We should clear out the logged in user
-    // and redirect back to the landing page which should go straight to the login
-    if(! Cookies.get('Auth')){
-      store.commit(`${StoreType.SecurityStore}/setUser`, null);
-      if(router.currentRoute.name !== 'landing'){
-        router.push({name: 'landing'});
-      }
+    if(store.state[StoreType.SecurityStore].appStarted){
+      sessionStorage.setItem('sg_logged_out_403', 'true');
+      store.dispatch(`${StoreType.SecurityStore}/logout`);
     }
   }
   // todo - good error reporting / handling
   else if(err.response.status === 401){
-    // This is what we should get for an access rights violation
-    console.error('Bart, got a 401 - access rights violation', err);
+    // Handled individually by views / stores
   }
   else if(err.response.status === 400){
     //console.error('Bart, got a 400 ', err);
@@ -77,7 +70,6 @@ if(invitedTeamToken){ // direct or generic
   try {
     // store what deep link the user was trying to get to for a redirect after login if necessary
     sessionStorage.setItem('deep_link_hash', window.location.hash);
-
     await store.dispatch('securityStore/checkSecurity');
   }
   catch(err){

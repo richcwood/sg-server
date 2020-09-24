@@ -1,5 +1,5 @@
 <template>
-  <div id="app">
+  <div id="app" @mousemove="onMouseMoved">
     <modal name="alert-modal" :classes="['round-popup']">
       <div v-if="alertWindow" name="alertMessage" style="background-color:white; width:100%; height:100%; padding:20px;">
         <p :class="enumKeyToPretty(AlertCategory, alertWindow.category)" v-html="alertWindow.message">
@@ -300,6 +300,20 @@ export default class App extends Vue {
       return routeNames.indexOf(this.$router.currentRoute.name) !== -1;
     }
 
+    private lastMovedNow: number = Date.now();
+    private readonly THIRTY_MINUTES = 1800000;
+
+    private onMouseMoved(){
+      const now: number = Date.now();
+
+      // If it's been a while since the user did anything you should probably quickly
+      // make sure the user hasn't been logged out
+      if(now - this.lastMovedNow > this.THIRTY_MINUTES){
+        this.$store.dispatch('securityStore/checkSecurity');
+      }
+
+      this.lastMovedNow = now;
+    }
 }
 </script>
 

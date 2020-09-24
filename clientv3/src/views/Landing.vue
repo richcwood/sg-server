@@ -432,7 +432,7 @@
           <div class="field-body">
             <div class="field">
               <p class="control">
-                <button class="button is-primary" style="margin-left: -125px;" @click="onLoginClicked">Login</button>
+                <button class="button is-primary" style="margin-left: -175px;" @click="onLoginClicked">Login</button>
               </p>
             </div>
           </div>
@@ -628,6 +628,11 @@
             this.$nextTick(() => {
               (<any>this.$refs['emailAddress']).focus();
             });
+
+            if(sessionStorage.getItem('sg_logged_out_403') === 'true'){
+              sessionStorage.removeItem('sg_logged_out_403');
+              this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert('Looks like your session expired.  Please log back in.', AlertPlacement.WINDOW, AlertCategory.INFO));
+            }
           }
           else {
             this.page = 'getStarted';

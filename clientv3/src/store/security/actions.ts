@@ -46,7 +46,10 @@ export const actions: ActionTree<SecurityStore, RootState> = {
   },
 
   async logout({commit}){
-    Cookies.remove('Auth');
+    if(Cookies.get('Auth')){
+      Cookies.remove('Auth');
+    }
+
     location.reload(); // automatically redirected to the landing page
   },
 
@@ -67,6 +70,10 @@ export const actions: ActionTree<SecurityStore, RootState> = {
 
     if(! state.user.teamIds || state.user.teamIds.length === 0){
       throw 'Error, the user was not associated with any teams.  You should not have started the app.  Go to the landing instead.';
+    }
+
+    if(state.appStarted){
+      throw 'Error, the app has already been started.  On logout, you should have refreshed the app.'
     }
     
     store.commit(`${StoreType.TeamStore}/setUserEmail`, state.user.email);

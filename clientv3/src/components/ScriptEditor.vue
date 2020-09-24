@@ -141,11 +141,19 @@
           <option value="vs-dark">Dark</option>
           <option value="hc-black">Black</option>
         </select>
-        <select class="input select button-spaced" style="width: 250px; margin-bottom: 10px;" v-model="script.scriptType">
+        <select :disabled="!isScriptEditable(script)" class="input select button-spaced" style="width: 250px; margin-bottom: 10px;" v-model="script.scriptType">
           <option v-for="(value, key) in scriptTypesForMonaco" v-bind:key="`scriptType${key}-${value}`" :value="key">
             {{value}}
           </option>
         </select>
+        <div v-if="!isScriptEditable(script)" 
+             class="button-spaced readonly-tooltip-container" 
+             style="margin-top: 6px;">
+          (read only)
+          <span class="readonly-tooltip-text">
+            You can't modify the script because it's not editable for the entire team.
+          </span>
+        </div>
         <span style="flex-grow: 1"> </span>
         <button class="button button-spaced" :disabled="script.code === script.shadowCopyCode" @click="warnRevertScriptChanges">Revert</button>
         <button class="button is-primary button-spaced" :disabled="script.code === script.shadowCopyCode" @click="onPublishScriptClicked">Publish</button>
@@ -255,7 +263,8 @@ export default class ScriptEditor extends Vue {
         value: this.script.shadowCopyCode,
         language: (<any>scriptTypesForMonaco)[this.script.scriptType],
         theme: this.theme,
-        automaticLayout: true
+        automaticLayout: true,
+        readOnly: !this.isScriptEditable(this.script)
       });
 
       if(this.scriptShadowCopySaveInterval){
@@ -355,7 +364,8 @@ export default class ScriptEditor extends Vue {
           value: this.script.shadowCopyCode,
           language: (<any>scriptTypesForMonaco)[this.script.scriptType],
           theme: this.theme,    
-          automaticLayout: true
+          automaticLayout: true,
+          readOnly: !this.isScriptEditable(this.script)
         });
       }, 100);
     }
@@ -400,6 +410,18 @@ export default class ScriptEditor extends Vue {
   private onCloseKpg(){
     this.$modal.hide('kpg');
   }
+
+  @BindProp({storeType: StoreType.SecurityStore, selectedModelName: 'user', propName: 'id'})
+  private loggedInUserId!: string;
+
+  private isScriptEditable(script: Script): boolean {
+    if(script.teamEditable){
+      return true;
+    }
+    else {
+      return script._originalAuthorUserId == this.loggedInUserId;
+    }
+  }
 }
 </script>
 
@@ -425,6 +447,32 @@ td {
   position: relative;
   margin-left: 10px;
   top: 8px;
+}
+
+.readonly-tooltip-container {
+  position: relative;
+  display: inline-block;
+}
+
+.readonly-tooltip-container .readonly-tooltip-text {
+  visibility: hidden;
+  width: 200px;
+  background-color: white;
+  color: black;
+  text-align: center;
+  padding: 5px 0;
+  border-radius: 6px;
+  border-width: 1px;
+  border-style: solid;
+ 
+  /* Position the tooltip text - see examples below! */
+  position: absolute;
+  z-index: 1;
+}
+
+/* Show the tooltip text when you mouse over the tooltip container */
+.readonly-tooltip-container:hover .readonly-tooltip-text {
+  visibility: visible;
 }
 
 .v--modal-overlay[data-modal="script-editor-fullscreen"] {
