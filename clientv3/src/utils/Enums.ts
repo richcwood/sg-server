@@ -24,8 +24,6 @@ enum PaymentTransactionStatus {APPROVED = 0, REJECTED = 1, SETTLED = 2, DISPUTED
 
 enum TeamPricingTier { FREE = 0, PAID = 1 }
 
-enum ExecutionEnvironment { CLIENT = 0, AWS_LAMBDA = 1, GCP_FUNCTION = 2, AMAZON_AUTOMATION = 3 }
-
 const enumKeyToPretty = function(theEnum: any, enumKey: any): string {
   if(enumKey === undefined || enumKey === null){
     return '';
@@ -53,4 +51,4 @@ const enumKeys = function(theEnum: any): string[] {
   return output;
 }
 
-export { StepStatus, TaskStatus, TaskFailureCode, JobStatus, LogLevel, TaskSource, TeamPaymentStatus, InvoiceStatus, PaymentMethodType, PaymentTransactionSource, PaymentTransactionType, PaymentTransactionStatus, TeamPricingTier, enumKeyToPretty, enumKeys, ExecutionEnvironment };
+export { StepStatus, TaskStatus, TaskFailureCode, JobStatus, LogLevel, TaskSource, TeamPaymentStatus, InvoiceStatus, PaymentMethodType, PaymentTransactionSource, PaymentTransactionType, PaymentTransactionStatus, TeamPricingTier, enumKeyToPretty, enumKeys };

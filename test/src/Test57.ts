@@ -1,7 +1,7 @@
 import * as config from 'config';
 import * as TestBase from './TestBase';
 import { SGUtils } from '../../server/src/shared/SGUtils';
-import { ScriptType, ExecutionEnvironment } from '../../server/src/shared/Enums';
+import { ScriptType, TaskDefTarget } from '../../server/src/shared/Enums';
 import * as _ from 'lodash';
 
 
@@ -74,7 +74,7 @@ export default class Test57 extends TestBase.WorkflowTestBase {
                     taskDefs: [
                         {
                             name: 'Task 1',
-                            executionEnvironment: ExecutionEnvironment.AWS_LAMBDA,
+                            target: TaskDefTarget.AWS_LAMBDA,
                             stepDefs: [
                                 {
                                     name: 'Step 1',

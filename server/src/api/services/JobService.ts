@@ -144,15 +144,12 @@ export class JobService {
                     source: Enums.TaskSource.JOB,
                     up_dep: {},
                     down_dep: downstreamDependencies[taskDef.name],
-                    autoRestart: taskDef.autoRestart,
-                    executionEnvironment: taskDef.executionEnvironment
+                    autoRestart: taskDef.autoRestart
                 };
                 if (task.fromRoutes) {
                     for (let i = 0; i < task.fromRoutes.length; i++)
                         task.up_dep[task.fromRoutes[i][0]] = task.fromRoutes[i][1];
                 }
-                if (!task.executionEnvironment)
-                    task.executionEnvironment = Enums.ExecutionEnvironment.CLIENT;
 
                 const taskModel: TaskSchema = <TaskSchema>await taskService.createTask(_teamId, task, correlationId);
 
@@ -245,8 +242,6 @@ export class JobService {
                     for (let i = 0; i < task.fromRoutes.length; i++)
                         task.up_dep[task.fromRoutes[i][0]] = task.fromRoutes[i][1];
                 }
-                if (!task.executionEnvironment)
-                    task.executionEnvironment = Enums.ExecutionEnvironment.CLIENT;
 
                 const taskModel: TaskSchema = <TaskSchema>await taskService.createTask(_teamId, task, correlationId);
 
@@ -500,7 +495,7 @@ export class JobService {
             responseFields = responseFields.trim();
             const currentJobQuery: JobSchema[] = await this.findJob(_teamId, _jobId, responseFields);
             if (!currentJobQuery || (_.isArray(currentJobQuery) && currentJobQuery.length === 0))
-                throw new MissingObjectError(`Job '${_jobId.toHexString()}" not found for team "${_teamId.toHexString()}'`);
+                throw new MissingObjectError(`Job '${_jobId.toHexString()}' not found for team '${_teamId.toHexString()}'`);
             job = currentJobQuery[0];
         }
 

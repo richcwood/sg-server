@@ -100,7 +100,7 @@ let GetTaskRoutes = async (_teamId: mongodb.ObjectId, task: TaskSchema, logger: 
     else if (task.target == Enums.TaskDefTarget.AWS_LAMBDA) {
         let agentsWithRequiredTags = [];
         const sgAdminTeam = new mongodb.ObjectId(config.get('sgAdminTeam'));
-        const requiredTags = config.et('awsLambdaRequiredTags');
+        const requiredTags = config.get('awsLambdaRequiredTags');
         const agents = await agentService.findAllAgents(sgAdminTeam, { 'offline': false, 'lastHeartbeatTime': { $gte: (new Date().getTime()) - parseInt(activeAgentTimeoutSeconds) * 1000 } }, 'lastHeartbeatTime tags propertyOverrides numActiveTasks attemptedRunAgentIds');
         for (let i = 0; i < Object.keys(agents).length; i++) {
             if (!Object.keys(requiredTags).some(tagKey => !(tagKey in agents[i].tags) || (requiredTags[tagKey] != agents[i].tags[tagKey])))

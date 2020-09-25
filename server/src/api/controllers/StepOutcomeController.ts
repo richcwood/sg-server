@@ -10,6 +10,7 @@ import { convertData as convertRequestData } from '../utils/RequestConverters';
 import { BaseLogger } from '../../shared/SGLogger';
 import * as _ from 'lodash';
 import * as mongodb from 'mongodb';
+import * as config from 'config';
 
 
 export class StepOutcomeController {
@@ -81,7 +82,9 @@ export class StepOutcomeController {
 
 
   public async createStepOutcome(req: Request, resp: Response, next: NextFunction): Promise<void> {
-    const _teamId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._teamid);
+    let _teamId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._teamid);
+    if (_teamId.toHexString() == config.get('sgAdminTeam') && req.body._teamId && req.body._teamId != _teamId.toHexString())
+      _teamId = mongodb.ObjectId(req.body._teamId);
     const response: ResponseWrapper = resp['body'];
     try {
       const newStepOutcome = await stepOutcomeService.createStepOutcome(_teamId, convertRequestData(StepOutcomeSchema, req.body), req.header('correlationId'), (<string>req.query.responseFields));
@@ -97,7 +100,9 @@ export class StepOutcomeController {
 
   public async updateStepOutcome(req: Request, resp: Response, next: NextFunction): Promise<void> {
     const logger: BaseLogger = (<any>req).logger;
-    const _teamId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._teamid);
+    let _teamId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._teamid);
+    if (_teamId.toHexString() == config.get('sgAdminTeam') && req.body._teamId && req.body._teamId != _teamId.toHexString())
+      _teamId = mongodb.ObjectId(req.body._teamId);
     const response: ResponseWrapper = resp['body'];
     try {
       const updatedStepOutcome: any = await stepOutcomeService.updateStepOutcome(_teamId, new mongodb.ObjectId(req.params.stepOutcomeId), convertRequestData(StepOutcomeSchema, req.body), logger, null, req.header('correlationId'), (<string>req.query.responseFields));
