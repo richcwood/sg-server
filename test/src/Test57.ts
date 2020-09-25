@@ -82,7 +82,8 @@ export default class Test57 extends TestBase.WorkflowTestBase {
                                     lambdaRuntime: 'nodejs10.x',
                                     lambdaRole: config.get('lambda-admin-iam-role'),
                                     lambdaAWSRegion: config.get('AWS_REGION'),
-                                    lambdaDependencies: 'compressing;axios'
+                                    lambdaDependencies: 'compressing;axios',
+                                    lambdaTimeout: 10
                                 }
                             ]
                         }
