@@ -264,7 +264,8 @@
         <tbody class="tbody">
           <template v-for="taskOutcome in getTaskOutcomes(selectedTask)">
             <tr class="tr" v-bind:key="taskOutcome.id+'main'">
-              <td class="td">{{getAgentName(taskOutcome._agentId)}}</td>
+              <td class="td" v-if="taskOutcome.target == TaskDefTarget.AWS_LAMBDA">AWS Lambda</td>
+              <td class="td" v-else>{{getAgentName(taskOutcome._agentId)}}</td>
               <td class="td">{{enumKeyToPretty(TaskStatus, taskOutcome.status)}}</td>
               <td class="td">{{enumKeyToPretty(TaskFailureCode, taskOutcome.failureCode)}}</td>
               <td class="td">
@@ -339,6 +340,7 @@ import { StoreType } from '@/store/types';
 import { Job } from '@/store/job/types';
 import { Task } from '@/store/task/types';
 import { TaskOutcome } from '@/store/taskOutcome/types';
+import { TaskDefTarget } from "@/store/taskDef/types";
 import { StepOutcome } from '@/store/stepOutcome/types';
 import { BindStoreModel } from '@/decorator';
 import { JobStatus, TaskStatus, StepStatus, TaskFailureCode, enumKeyToPretty } from '@/utils/Enums.ts';
@@ -367,6 +369,7 @@ export default class JobDetailsMonitor extends Vue {
   private readonly TaskFailureCode = TaskFailureCode;
   private readonly enumKeyToPretty = enumKeyToPretty;
   private readonly mapToString = mapToString;
+  private readonly TaskDefTarget = TaskDefTarget;
 
   private get defaultStoreType(){return StoreType.JobStore};
 
