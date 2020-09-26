@@ -843,16 +843,36 @@ export abstract class WorkflowTestBase extends TestBase {
                                 if (_.isPlainObject(ev.model[key])) {
                                     for (let x = 0; x < Object.keys(ev.model[key]).length; x++) {
                                         const skey = Object.keys(ev.model[key])[x];
-                                        if (!(key in match.model) || !(skey in match.model[key]) || match.model[key][skey] != ev.model[key][skey]) {
+                                        const sValExpected = ev.model[key][skey];
+                                        if (!(key in match.model) || !(skey in match.model[key])) {
+                                            matched = false;
+                                            break;
+                                        } else if (sValExpected && sValExpected.toString().startsWith("~|")) {
+                                            if (match.model[key][skey].indexOf(sValExpected.substring(2)) < 0) {
+                                                matched = false;
+                                                break;
+                                            }
+                                        } else if (match.model[key][skey] != ev.model[key][skey]) {
                                             // console.log(`No match on ${key}`);
                                             matched = false;
                                             break;
                                         }
                                     }
-                                } else if (!(key in match.model) || match.model[key] != ev.model[key]) {
-                                    // console.log(`No match on ${key}`);
-                                    matched = false;
-                                    break;
+                                } else {
+                                    const valExpected = ev.model[key];
+                                    if (!(key in match.model)) {
+                                        // console.log(`No match on ${key}`);
+                                        matched = false;
+                                        break;
+                                    } else if (valExpected && valExpected.toString().startsWith("~|")) {
+                                        if (match.model[key].indexOf(valExpected.substring(2)) < 0) {
+                                            matched = false;
+                                            break;
+                                        }
+                                    } else if (match.model[key] != ev.model[key]) {
+                                        matched = false;
+                                        break;
+                                    }
                                 }
                             }
 

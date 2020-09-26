@@ -6,19 +6,56 @@ import * as _ from 'lodash';
 
 
 const script1 = `
-console.log('Hello from lambda!');
+import requests
+import json
+
+
+token = ''
+
+def RestAPILogin():
+    global token
+
+    url = 'http://saasglue.herokuapp.com/login/apiLogin'
+    
+    headers = {
+        'Content-Type': 'application/json'
+    }
+
+    data = {
+        'email': 'testuser@saasglue.com',
+        'password': 'mypassword'
+    }
+
+    res = requests.post(url=url, headers=headers, data=json.dumps(data))
+    if 'status_code' in res and res['status_code'] != 200:
+        msg = 'Call to {} returned {} - {}'.format(url, res.status_code, res.text)
+        raise Exception(msg)
+
+    token = res.cookies.get_dict()['Auth']
+
+
+while token == '':
+    RestAPILogin()
+    if token == '':
+        print 'API login failed'
+        sys.stdout.flush
+        time.sleep(5)
+        print 'Retrying api login'
+        sys.stdout.flush
+
+print '@sgo{{"sgAuthToken": "{}"}}'.format(token)
 `;
 const script1_b64 = SGUtils.btoa(script1);
 
 
-let self: Test56;
+let self: Test58;
 
 
-export default class Test56 extends TestBase.WorkflowTestBase {
+export default class Test58 extends TestBase.WorkflowTestBase {
 
     constructor(testSetup) {
-        super('Test56', testSetup);
-        this.description = 'Run node task as lambda';
+        super('Test58', testSetup);
+        this.description = 'Run python task with dependency as lambda';
 
         self = this;
     }
@@ -38,15 +75,15 @@ export default class Test56 extends TestBase.WorkflowTestBase {
         const properties: any = {
             scripts: [
                 {
-                    name: 'Script 56',
-                    scriptType: ScriptType.NODE,
+                    name: 'Script 58',
+                    scriptType: ScriptType.PYTHON,
                     code: script1_b64,
                     shadowCopyCode: script1_b64
                 }
             ],
             jobDefs: [
                 {
-                    name: 'Job 56',
+                    name: 'Job 58',
                     taskDefs: [
                         {
                             name: 'Task 1',
@@ -54,10 +91,12 @@ export default class Test56 extends TestBase.WorkflowTestBase {
                             stepDefs: [
                                 {
                                     name: 'Step 1',
-                                    scriptName: 'Script 56',
-                                    lambdaRuntime: 'nodejs10.x',
+                                    scriptName: 'Script 58',
+                                    lambdaRuntime: 'python2.7',
                                     lambdaRole: config.get('lambda-admin-iam-role'),
-                                    lambdaAWSRegion: config.get('AWS_REGION')
+                                    lambdaAWSRegion: config.get('AWS_REGION'),
+                                    lambdaDependencies: 'requests',
+                                    lambdaTimeout: 10
                                 }
                             ]
                         }
@@ -69,9 +108,9 @@ export default class Test56 extends TestBase.WorkflowTestBase {
         const { scripts, jobDefs } = await this.CreateJobDefsFromTemplates(properties);
 
         let startedJobId;
-        resApiCall = await this.testSetup.RestAPICall(`job`, 'POST', _teamId, { jobDefName: jobDefs['Job 56'].name });
+        resApiCall = await this.testSetup.RestAPICall(`job`, 'POST', _teamId, { jobDefName: jobDefs['Job 58'].name });
         if (resApiCall.data.statusCode != 201) {
-            self.logger.LogError('Failed', { Message: `job POST returned ${resApiCall.data.statusCode}`, _jobDefId: jobDefs['Job 56'].id });
+            self.logger.LogError('Failed', { Message: `job POST returned ${resApiCall.data.statusCode}`, _jobDefId: jobDefs['Job 58'].id });
             return false;
         }
         startedJobId = resApiCall.data.data.id;

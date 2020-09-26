@@ -20,17 +20,19 @@ let GzipFile = async (filePath) => {
     return compressedFilePath;
 };
 
-const msgs = [];
-msgs.push('Hello');
-msgs.push('from');
-msgs.push('lambda!');
+(async () => {
+    const msgs = [];
+    msgs.push('Hello');
+    msgs.push('from');
+    msgs.push('lambda!');
 
-let outFilePath = '/tmp/test.out';
-fs.writeFileSync(outFilePath, JSON.stringify(msgs.join('\\n')));
+    let outFilePath = '/tmp/test.out';
+    fs.writeFileSync(outFilePath, JSON.stringify(msgs.join('\\n')));
 
-let compressedFilePath = await GzipFile(outFilePath);
+    let compressedFilePath = await GzipFile(outFilePath);
 
-console.log(outFilePath + ' compressed to ' + compressedFilePath);
+    console.log(outFilePath + ' compressed to ' + compressedFilePath);
+})();
 `;
 const script1_b64 = SGUtils.btoa(script1);
 
@@ -42,7 +44,7 @@ export default class Test57 extends TestBase.WorkflowTestBase {
 
     constructor(testSetup) {
         super('Test57', testSetup);
-        this.description = 'Run task as lambda';
+        this.description = 'Run node task as lambda with dependencies';
 
         self = this;
     }
