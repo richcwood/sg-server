@@ -8,9 +8,9 @@
             Get started by downloading an agent
           </h1>
           <h2 class="subtitle" style="margin-left: 10px;">
-            To run your scripts inside your environment first download and run the appropriate agent(s). <br>
+            To run scripts from saas glue first download and run the appropriate agent. <br>
             You'll need to run the agent on every machine where you want to run scripts. <br>
-            You can then monitor your running agents in the Agents tab. <br>
+            You can monitor your running agents in the Agents tab. <br>
           </h2>
 
           <table class="table downloads">

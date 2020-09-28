@@ -9,6 +9,10 @@ import time
 
 token = ''
 
+if len(sys.argv) < 4:
+    print('Usage: python download_sg_agent.py [teamid] [email] "[password]" [platform] [architecture]')
+    sys.exit()
+
 teamId = sys.argv[1]
 email = sys.argv[2]
 password = sys.argv[3]

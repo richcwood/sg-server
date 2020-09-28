@@ -49,12 +49,31 @@ export class AgentDownloadRouter {
     this.router.post('/agentstub/:platform/:arch?', this.createAgentStub.bind(this)); // by the browser
     this.router.get('/agent/:machineId/:platform/:arch?', this.downloadAgent.bind(this)); // by the browser
     this.router.get('/agentstub/:platform/:arch?', this.downloadAgentStub.bind(this)); // by the browser
+    this.router.get('/agentdownloadscript', this.downloadAgentDownloaderScript.bind(this)); // by the browser
   }
 
 
   verifyIsAgentStub(req: Request, res: Response, next: NextFunction) {
     // todo - check JWT for if it's an agent
     next();
+  }
+
+
+  // Returns 303 if agent stub install does not exist - otherwise returns 200 plus a signed url for direct s3 download
+  async downloadAgentDownloaderScript(req: Request, res: Response, next: NextFunction) {
+    const response: ResponseWrapper = (res as any).body;
+
+    try {
+      const agentDownloaderS3Path = 'agent-stub/download_sg_agent.py';
+      const signedUrl = await this.s3Access.getSignedS3URL(agentDownloaderS3Path, config.get('S3_BUCKET_AGENT_BINARIES'));
+      response.data = signedUrl;
+      response.statusCode = ResponseCode.OK;
+      next();
+      return;
+    } catch (e) {
+      next(e);
+      return;
+    }
   }
 
 
