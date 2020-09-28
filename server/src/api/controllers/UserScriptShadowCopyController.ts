@@ -1,8 +1,8 @@
 import { Request, Response, NextFunction, response } from 'express';
 import { ResponseWrapper, ResponseCode } from '../utils/Types';
-import { PaymentMethodSchema, PaymentMethodModel } from '../domain/PaymentMethod';
+import { UserScriptShadowCopySchema, UserScriptShadowCopyModel } from '../domain/UserScriptShadowCopy';
 import { defaultBulkGet } from '../utils/BulkGet';
-import { paymentMethodService } from '../services/PaymentMethodService';
+import { userScriptShadowCopyService } from '../services/UserScriptShadowCopyService';
 import { MissingObjectError } from '../utils/Errors';
 import { CastError } from 'mongoose';
 import { convertData as convertResponseData } from '../utils/ResponseConverters';
@@ -11,32 +11,32 @@ import * as _ from 'lodash';
 import * as mongodb from 'mongodb';
 
 
-export class PaymentMethodController {
+export class UserScriptShadowCopyController {
 
-    public async getManyPaymentMethods(req: Request, resp: Response, next: NextFunction): Promise<void> {
+    public async getManyUserScriptShadowCopys(req: Request, resp: Response, next: NextFunction): Promise<void> {
         const _teamId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._teamid);
-        defaultBulkGet({ _teamId }, req, resp, next, PaymentMethodSchema, PaymentMethodModel, paymentMethodService);
+        defaultBulkGet({ _teamId }, req, resp, next, UserScriptShadowCopySchema, UserScriptShadowCopyModel, userScriptShadowCopyService);
     }
 
 
-    public async getPaymentMethod(req: Request, resp: Response, next: NextFunction): Promise<void> {
+    public async getUserScriptShadowCopy(req: Request, resp: Response, next: NextFunction): Promise<void> {
         try {
             const _teamId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._teamid);
             const response: ResponseWrapper = (resp as any).body;
-            const paymentMethod = await paymentMethodService.findPaymentMethod(_teamId, new mongodb.ObjectId(req.params.paymentMethodId), (<string>req.query.responseFields));
+            const userScriptShadowCopy = await userScriptShadowCopyService.findUserScriptShadowCopy(_teamId, new mongodb.ObjectId(req.params.userScriptShadowCopyId), (<string>req.query.responseFields));
 
-            if (_.isArray(paymentMethod) && paymentMethod.length === 0) {
-                next(new MissingObjectError(`PaymentMethod ${req.params.paymentMethodId} not found.`));
+            if (_.isArray(userScriptShadowCopy) && userScriptShadowCopy.length === 0) {
+                next(new MissingObjectError(`UserScriptShadowCopy ${req.params.userScriptShadowCopyId} not found.`));
             }
             else {
-                response.data = convertResponseData(PaymentMethodSchema, paymentMethod[0]);
+                response.data = convertResponseData(UserScriptShadowCopySchema, userScriptShadowCopy[0]);
                 next();
             }
         }
         catch (err) {
-            // If req.params.paymentMethodId wasn't a mongo id then we will get a CastError - basically same as if the id wasn't found
+            // If req.params.userScriptShadowCopyId wasn't a mongo id then we will get a CastError - basically same as if the id wasn't found
             if (err instanceof CastError) {
-                next(new MissingObjectError(`PaymentMethod ${req.params.paymentMethodId} not found.`));
+                next(new MissingObjectError(`UserScriptShadowCopy ${req.params.userScriptShadowCopyId} not found.`));
             }
             else {
                 next(err);
@@ -45,12 +45,12 @@ export class PaymentMethodController {
     }
 
 
-    public async createPaymentMethod(req: Request, resp: Response, next: NextFunction): Promise<void> {
+    public async createUserScriptShadowCopy(req: Request, resp: Response, next: NextFunction): Promise<void> {
         const _teamId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._teamid);
         const response: ResponseWrapper = resp['body'];
         try {
-            const newPaymentMethod = await paymentMethodService.createPaymentMethod(_teamId, convertRequestData(PaymentMethodSchema, req.body), req.header('correlationId'), (<string>req.query.responseFields));
-            response.data = convertResponseData(PaymentMethodSchema, newPaymentMethod);
+            const newUserScriptShadowCopy = await userScriptShadowCopyService.createUserScriptShadowCopy(_teamId, convertRequestData(UserScriptShadowCopySchema, req.body), req.header('correlationId'), (<string>req.query.responseFields));
+            response.data = convertResponseData(UserScriptShadowCopySchema, newUserScriptShadowCopy);
             response.statusCode = ResponseCode.CREATED;
             next();
         }
@@ -60,17 +60,17 @@ export class PaymentMethodController {
     }
 
 
-    public async updatePaymentMethod(req: Request, resp: Response, next: NextFunction): Promise<void> {
+    public async updateUserScriptShadowCopy(req: Request, resp: Response, next: NextFunction): Promise<void> {
         const _teamId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._teamid);
         const response: ResponseWrapper = resp['body'];
         try {
-            const updatedPaymentMethod: any = await paymentMethodService.updatePaymentMethod(_teamId, new mongodb.ObjectId(req.params.paymentMethodId), convertRequestData(PaymentMethodSchema, req.body), req.header('correlationId'), (<string>req.query.responseFields));
+            const updatedUserScriptShadowCopy: any = await userScriptShadowCopyService.updateUserScriptShadowCopy(_teamId, new mongodb.ObjectId(req.params.userScriptShadowCopyId), convertRequestData(UserScriptShadowCopySchema, req.body), req.header('correlationId'), (<string>req.query.responseFields));
 
-            if (_.isArray(updatedPaymentMethod) && updatedPaymentMethod.length === 0) {
-                next(new MissingObjectError(`PaymentMethod ${req.params.paymentMethodId} not found.`));
+            if (_.isArray(updatedUserScriptShadowCopy) && updatedUserScriptShadowCopy.length === 0) {
+                next(new MissingObjectError(`UserScriptShadowCopy ${req.params.userScriptShadowCopyId} not found.`));
             }
             else {
-                response.data = convertResponseData(PaymentMethodSchema, updatedPaymentMethod);
+                response.data = convertResponseData(UserScriptShadowCopySchema, updatedUserScriptShadowCopy);
                 response.statusCode = ResponseCode.OK;
                 next();
             }
@@ -81,11 +81,11 @@ export class PaymentMethodController {
     }
 
 
-    public async deletePaymentMethod(req: Request, resp: Response, next: NextFunction): Promise<void> {
+    public async deleteUserScriptShadowCopy(req: Request, resp: Response, next: NextFunction): Promise<void> {
         const _teamId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._teamid);
         const response: ResponseWrapper = resp['body'];
         try {
-            response.data = await paymentMethodService.deletePaymentMethod(_teamId, new mongodb.ObjectId(req.params.paymentMethodId), req.header('correlationId'));
+            response.data = await userScriptShadowCopyService.deleteUserScriptShadowCopy(_teamId, new mongodb.ObjectId(req.params.userScriptShadowCopyId), req.header('correlationId'));
             response.statusCode = ResponseCode.OK;
             next();
         }
@@ -95,4 +95,4 @@ export class PaymentMethodController {
     }
 }
 
-export const paymentMethodController = new PaymentMethodController();
+export const userScriptShadowCopyController = new UserScriptShadowCopyController();

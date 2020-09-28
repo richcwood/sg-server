@@ -1171,38 +1171,39 @@ let BraintreeTesting = async () => {
 
   const teamId = config.get('sgTestTeam');
 
-  // let result = await gateway.customer.create({
-  //   id: teamId,
-  //   firstName: "Test team"
-  // });
-  // console.log('result -> ', util.inspect(result, false, null));
+  let result = await gateway.customer.create({
+    id: teamId,
+    firstName: "Test team"
+  });
+  console.log('result -> ', util.inspect(result, false, null));
 
-  // gateway.customer.find("5de9691f53162e8891f5aa99", function (err, address) {
-  //   if (err) console.log('err -> ', err);
-  //   console.log('customer -> ', util.inspect(address, false, null));
-  // });
+  gateway.customer.find("5de9691f53162e8891f5aa99", function (err, address) {
+    if (err) console.log('err -> ', err);
+    console.log('customer -> ', util.inspect(address, false, null));
+  });
 
-  // gateway.address.create({
-  //   customerId: '5de9691f53162e8891f5aa98',
-  //   firstName: 'Bilbo',
-  //   lastName: 'Baggins',
-  //   company: 'The Fellowship',
-  //   streetAddress: '80 Bag End',
-  //   locality: 'Hobbiton',
-  //   region: 'The Shire',
-  //   postalCode: '60607',
-  //   countryCodeAlpha2: 'US'
-  // }, function (err, result) {
-  //   if (err) console.log('err -> ', err);
-  //   console.log('result -> ', util.inspect(result, false, null));
-  //   let addressId = result.address.id;
-  //   console.log('address id -> ', addressId);
-  // });
+  let addressId;
+  gateway.address.create({
+    customerId: '5de9691f53162e8891f5aa98',
+    firstName: 'Bilbo',
+    lastName: 'Baggins',
+    company: 'The Fellowship',
+    streetAddress: '80 Bag End',
+    locality: 'Hobbiton',
+    region: 'The Shire',
+    postalCode: '60607',
+    countryCodeAlpha2: 'US'
+  }, function (err, result) {
+    if (err) console.log('err -> ', err);
+    console.log('result -> ', util.inspect(result, false, null));
+    addressId = result.address.id;
+    console.log('address id -> ', addressId);
+  });
 
-  // gateway.address.find("5de9691f53162e8891f5aa99", addressId, function (err, address) {
-  //   if (err) console.log('err -> ', err);
-  //   console.log('address -> ', util.inspect(address, false, null));
-  // });
+  gateway.address.find("5de9691f53162e8891f5aa99", addressId, function (err, address) {
+    if (err) console.log('err -> ', err);
+    console.log('address -> ', util.inspect(address, false, null));
+  });
 
   // gateway.clientToken.generate({
   //   customerId: '5de9691f53162e8891f5aa99'
@@ -1801,7 +1802,7 @@ let SendTestBrowserAlert = async() => {
 // SendTestEmailSMTP();
 // SendTestSlack();
 // CreateAgentInstall('5de9691f53162e8891f5aa99', 'v0.0.0.156', 'node10', 'macos', '');
-// BraintreeTesting();
+BraintreeTesting();
 // CreateInvoices();
 // SubmitInvoicesForPayment();
 // TestBraintreeWebhook();
