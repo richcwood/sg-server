@@ -44,13 +44,25 @@
 
           <table class="table">
             <tr class="tr">
-              <td class="td" v-show="getDownload(Platform.Mac).linkText">
+              <td class="td" v-show="lastDownloadGenerated === Platform.Mac">
                 <b>{{Platform_inverted[Platform.Mac]}} instructions:</b> <br>
                 <ul>
                   <li>Download the agent</li>
                   <li>Unzip it - just double click it</li>
                   <li>terminal: chmod 711 file_name</li>
                   <li>terminal: sudo ./file_name</li>
+                </ul>
+              </td>
+              <td class="td" v-show="lastDownloadGenerated === Platform.Windows">
+                <b>{{Platform_inverted[Platform.Windows]}} instructions:</b> <br>
+                <ul>
+                  Rich, please enter windows directions here
+                </ul>
+              </td>
+              <td class="td" v-show="lastDownloadGenerated === Platform.Linux">
+                <b>{{Platform_inverted[Platform.Linux]}} instructions:</b> <br>
+                <ul>
+                  Rich, please enter linux directions here
                 </ul>
               </td>
             </tr>
@@ -104,6 +116,8 @@ export default class DownloadAgent extends Vue {
   private waitAnimationLeft = '';
   private waitAnimationRight = '';
 
+  private lastDownloadGenerated: Platform|null = null;
+
   // Have to generate all of this stuff up front to be reactive
   private readonly downloadLinks: {
     [platform: string]: {link: string, linkText: string, expireLinkTimer?: any}} = 
@@ -117,8 +131,8 @@ export default class DownloadAgent extends Vue {
     // Vue 2 isn't reactive so I need to do this
     Vue.set(this, 'selectedArchitecture', {
       'win': Architecture.x64,
-      'linux': Architecture.empty,
-      'macos': Architecture.empty
+      'linux': Architecture.x64,
+      'macos': Architecture.x64
     });
   }
 
@@ -168,11 +182,12 @@ export default class DownloadAgent extends Vue {
             console.log('still waiting for link', err);
           }
           
-          if(getLinkTryCount < 10){
+          if(getLinkTryCount < 15){
             setTimeout(tryGetLink, 7*1000);
           }
           else {
-            return reject('Timed out waiting for the agent to be built.');
+            return reject(`<br>It's taking longer than usual to create your agent.
+                           <br>Please try again in a few minutes.`);
           }
       };
 
@@ -194,6 +209,7 @@ export default class DownloadAgent extends Vue {
       this.downloadLinks[platform].expireLinkTimer = expireLinkTimer;
       this.downloadLinks[platform].link = downloadUrl;
       this.downloadLinks[platform].linkText = 'download the agent';
+      this.lastDownloadGenerated = platform;
 
       this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`The download link is valid for 5 minutes.`, AlertPlacement.FOOTER, AlertCategory.INFO));
     }
