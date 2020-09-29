@@ -1298,7 +1298,6 @@ import { computeDownstreamTasks_inbound,
 import { ClickOutside } from '@/directive';
 import { Route } from 'vue-router';
 import { showErrors } from '@/utils/ErrorHandler'; 
-import { isErrorPaidTierSuggestion, showPaidTierPopup } from '@/store/job/jobUtils'
 
 @Component({
   components: {
@@ -2492,13 +2491,8 @@ export default class JobDesigner extends Vue {
       this.runJobId = data.id;
     }
     catch(err){
-      if(isErrorPaidTierSuggestion(err)){
-        showPaidTierPopup();
-      }
-      else {
-        console.error(err);
-        showErrors(`Error running job ${this.jobDef.name}`, err);
-      }
+      console.error(err);
+      showErrors(`Error running job ${this.jobDef.name}`, err);
     }
   }
 

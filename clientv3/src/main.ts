@@ -33,7 +33,7 @@ axios.interceptors.response.use(undefined, (err) => {
   }
   // todo - good error reporting / handling
   else if(err.response.status === 401){
-    // Handled individually by views / stores
+    // Should be handled by the global ErrorHandler
   }
   else if(err.response.status === 400){
     //console.error('Bart, got a 400 ', err);
