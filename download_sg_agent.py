@@ -9,16 +9,17 @@ import time
 
 token = ''
 
+if len(sys.argv) < 4:
+    print('Usage: python download_sg_agent.py [teamid] [email] "[password]" [platform] [architecture]')
+    sys.exit()
+
 teamId = sys.argv[1]
 email = sys.argv[2]
 password = sys.argv[3]
-workingdir = sys.argv[4]
-platform = sys.argv[5]
+platform = sys.argv[4]
 arch = None
-if len(sys.argv) > 6:
-    arch = sys.argv[6]
-
-outFile = '{}sg-agent-launcher'.format(workingdir)
+if len(sys.argv) > 5:
+    arch = sys.argv[5]
 
 
 def RestAPILogin():
@@ -54,11 +55,11 @@ def GetDownloadUrl():
     while token == '':
         RestAPILogin()
         if token == '':
-            print 'API login failed'
+            print('API login failed')
             time.sleep(5)
-            print 'Retrying api login'
+            print('Retrying api login')
     
-    print 'token = ', token
+    print('token = ', token)
 
     url = 'https://saasglue.herokuapp.com/api/v0/agentDownload/agentstub/{}'.format(platform)
     if arch:
@@ -69,13 +70,13 @@ def GetDownloadUrl():
         '_teamId': teamId
     }
 
-    print 'headers = ', headers
+    print('headers = ', headers)
 
     while True:
         res = requests.get(url=url, headers=headers)
 
-        print 'res1 = ', res.json()
-        print 'res2 = ', res.json()['data']
+        print('res1 = ', res.json())
+        print('res2 = ', res.json()['data'])
         if (res.status_code == 200):
             break
         else:
@@ -89,23 +90,24 @@ def GetDownloadUrl():
 
 
 def DownloadAgent():
-    global outFile
+    global platform
 
     s3url = GetDownloadUrl()
 
     res = requests.get(s3url, allow_redirects=True)
 
-    open('sg-agent-launcher.gz', 'wb').write(res.content)
+    if platform.lower()[:3] == 'win':
+        open('sg-agent-launcher.zip', 'wb').write(res.content)        
+    else:
+        open('sg-agent-launcher.gz', 'wb').write(res.content)
 
-    print 'outFile -> ' + outFile
+        with gzip.open('sg-agent-launcher.gz', 'rb') as f_in:
+            with open(outFile, 'wb') as f_out:
+                shutil.copyfileobj(f_in, f_out)
 
-    with gzip.open('sg-agent-launcher.gz', 'rb') as f_in:
-        with open(outFile, 'wb') as f_out:
-            shutil.copyfileobj(f_in, f_out)
+        os.chmod(outFile, 0o777)
 
-    os.chmod(outFile, 0o777)
-
-    os.remove('sg-agent-launcher.gz')
+        os.remove('sg-agent-launcher.gz')
 
 
 

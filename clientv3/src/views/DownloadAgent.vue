@@ -8,9 +8,9 @@
             Get started by downloading an agent
           </h1>
           <h2 class="subtitle" style="margin-left: 10px;">
-            Saas glue depends on running an agent inside of your environment.  <br>
-            Agents can run whatever scripts you'd like. <br>
-            Monitor the agents in the Agents tab.
+            To run scripts from saas glue first download and run the appropriate agent. <br>
+            You'll need to run the agent on every machine where you want to run scripts. <br>
+            You can monitor your running agents in the Agents tab. <br>
           </h2>
 
           <table class="table downloads">
@@ -49,20 +49,26 @@
                 <ul>
                   <li>Download the agent</li>
                   <li>Unzip it - just double click it</li>
-                  <li>terminal: chmod 711 file_name</li>
-                  <li>terminal: sudo ./file_name</li>
+                  <li>terminal: chmod 711 sg-agent-launcher</li>
+                  <li>terminal: sudo ./sg-agent-launcher</li>
                 </ul>
               </td>
               <td class="td" v-show="lastDownloadGenerated === Platform.Windows">
                 <b>{{Platform_inverted[Platform.Windows]}} instructions:</b> <br>
                 <ul>
-                  Rich, please enter windows directions here
+                  <li>Download the agent</li>
+                  <li>Unzip it</li>
+                  <li>Run sg-agent-launcher.exe by double clicking or run it from the command prompt</li>
+                  <li>To ensure the agent is always running it's recommended to install it as a Windows Service. There are many ways to do this but NSSM provides a relatively simple solution available at https://www.nssm.cc/download.</li>
                 </ul>
               </td>
               <td class="td" v-show="lastDownloadGenerated === Platform.Linux">
                 <b>{{Platform_inverted[Platform.Linux]}} instructions:</b> <br>
                 <ul>
-                  Rich, please enter linux directions here
+                  <li>Download the agent</li>
+                  <li>terminal: gunzip sg-agent-launcher.gz</li>
+                  <li>terminal: chmod 711 sg-agent-launcher</li>
+                  <li>terminal: sudo ./sg-agent-launcher</li>
                 </ul>
               </td>
             </tr>

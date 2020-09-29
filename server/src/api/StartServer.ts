@@ -50,6 +50,7 @@ import { payInvoiceAutoRouter } from './routes/PayInvoiceAutoRouter';
 import { payInvoiceManualRouter } from './routes/PayInvoiceManualRouter';
 import { createInvoiceRouter } from './routes/CreateInvoiceRouter';
 import { updateTeamStorageUsageRouter } from './routes/UpdateTeamStorageUsageRouter';
+import { userScriptShadowCopyRouter } from './routes/UserScriptShadowCopyRouter';
 const IPCIDR = require('ip-cidr');
 import { read } from 'fs';
 import { JobStatus } from '../shared/Enums';
@@ -209,6 +210,7 @@ class AppBuilder {
     this.app.use(`${apiURLBase}/artifact`, artifactRouter);
     this.app.use(`${apiURLBase}/createinvoice`, createInvoiceRouter);
     this.app.use(`${apiURLBase}/updateteamstorageusage`, updateTeamStorageUsageRouter);
+    this.app.use(`${apiURLBase}/scriptshadow`, userScriptShadowCopyRouter);
   }
 
   private setUpJwtSecurity(): void {
