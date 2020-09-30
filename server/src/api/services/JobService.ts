@@ -183,7 +183,7 @@ export class JobService {
                         }
                     };
 
-                    if (step.lambdaZipfile)
+                    if (taskModel.target == Enums.TaskDefTarget.AWS_LAMBDA)
                         step.s3Bucket = config.get('S3_BUCKET_TEAM_ARTIFACTS');
 
                     const stepModel: StepSchema = <StepSchema>await stepService.createStep(_teamId, step, correlationId);
