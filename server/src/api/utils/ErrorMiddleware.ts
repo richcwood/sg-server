@@ -93,7 +93,7 @@ export function handleErrors(err: Error, req: Request, res: Response, next: Next
 
         case 'FreeTierLimitExceededError':
             response.statusCode = ResponseCode.UNAUTHORIZED;
-            response.errors = [buildErrorMessage('', err.message, transactionId, err['path'])];
+            response.errors = [buildErrorMessage('FreeTierLimitExceededError', err.message, transactionId, err['path'])];
             break;
 
         default:
@@ -123,7 +123,7 @@ export function formatError(err: Error, statusCode: number, req: Request): objec
     };
 }
 
-export function buildErrorMessage(title: string, description: string, transactionId: string, source?: string): object {
+export function buildErrorMessage(title: string, description: string, transactionId: string, source?: string, errorCode?: string): object {
     return {
         code: transactionId,
         title,
