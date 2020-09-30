@@ -55,10 +55,16 @@ export class StepSchema {
   lambdaZipfile?: string;
 
   @prop({ default: '' })
+  lambdaFunctionHandler?: string;
+
+  @prop({ default: '' })
   lambdaAWSRegion?: string;
 
   @prop({ default: '' })
   lambdaDependencies?: string;
+
+  @prop()
+  s3Bucket?: string;
 
 
   // Define which filters are legal for which props (including nested props (not sure about nested arrays))

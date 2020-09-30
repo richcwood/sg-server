@@ -949,7 +949,7 @@ let CreateJob = async () => {
 let UploadFileToS3 = async (filePath: string) => {
   await new Promise(async (resolve, reject) => {
     try {
-      const fileType = 'multipart/form-data';
+      const fileType = 'application/octet-stream';
       let s3Access = new S3Access();
 
       let url = await s3Access.putSignedS3URL(`${path.basename(filePath)}`, config.get('S3_BUCKET_TEAM_ARTIFACTS'), fileType);
@@ -962,7 +962,7 @@ let UploadFileToS3 = async (filePath: string) => {
       };
 
       let res = await axios.put(url, filePath, options);
-      console.log(res.data);
+      console.log(`${Object.keys(res.request)}\n\n\n${util.inspect(res.request, false, null)}`);
     } catch (e) {
       console.log(`Error uploading log file '${filePath}': ${e.message}`, e.stack, util.inspect(e.response.data, false, null));
     }
@@ -1775,7 +1775,7 @@ let SendTestBrowserAlert = async() => {
 // ProcessOrphanedTasks();
 // PublishJobTask();
 // PruneJobs(mongodb.ObjectId('5e33a89f9fb5d6880217da2c'));
-// UploadFileToS3('./package.json');
+UploadFileToS3('./test62lambda.zip');
 // GetS3PrefixSize('production/5de95c0453162e8891f5a830/');
 // CreateTeam("saas glue admin", "5ef125b4fb07e500150507ca");
 // DumpMongoData('./production_20200615.json');
@@ -1802,7 +1802,7 @@ let SendTestBrowserAlert = async() => {
 // SendTestEmailSMTP();
 // SendTestSlack();
 // CreateAgentInstall('5de9691f53162e8891f5aa99', 'v0.0.0.156', 'node10', 'macos', '');
-BraintreeTesting();
+// BraintreeTesting();
 // CreateInvoices();
 // SubmitInvoicesForPayment();
 // TestBraintreeWebhook();

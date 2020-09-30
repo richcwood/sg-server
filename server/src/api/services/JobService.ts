@@ -172,6 +172,7 @@ export class JobService {
                         lambdaMemorySize: stepDef.lambdaMemorySize,
                         lambdaTimeout: stepDef.lambdaTimeout,
                         lambdaZipfile: stepDef.lambdaZipfile,
+                        lambdaFunctionHandler: stepDef.lambdaFunctionHandler,
                         lambdaAWSRegion: stepDef.lambdaAWSRegion,
                         lambdaDependencies: stepDef.lambdaDependencies,
                         script: {
@@ -181,6 +182,9 @@ export class JobService {
                             code: script.code,
                         }
                     };
+
+                    if (step.lambdaZipfile)
+                        step.s3Bucket = config.get('S3_BUCKET_TEAM_ARTIFACTS');
 
                     const stepModel: StepSchema = <StepSchema>await stepService.createStep(_teamId, step, correlationId);
                 }

@@ -26,32 +26,6 @@ const script1_b64 = SGUtils.btoa(script1);
 
 let self: Test22;
 
-let UploadFileToS3 = async (_teamId: string, filePath: string, fileType: string) => {
-  return new Promise(async (resolve, reject) => {
-    try {
-      const compressedFilePath = await SGUtils.GzipFile(filePath);
-
-      let res = await self.testSetup.RestAPICall('artifact', 'POST', _teamId, null, {name: compressedFilePath, type: fileType});
-      const artifact = res.data.data;
-
-      // let s3Access = new S3Access();
-      // let url = await s3Access.putSignedS3URL(`${s3Prefix}/${path.basename(compressedFilePath)}`, config.get('S3_BUCKET_TEAM_ARTIFACTS'), fileType);
-
-      var options = {
-        headers: {
-          'Content-Type': fileType
-        }
-      };
-
-      await axios.put(artifact.url, compressedFilePath, options);
-      fs.unlinkSync(filePath);
-      resolve(artifact);
-    } catch (e) {
-      reject(`Error uploading file '${filePath}': ${e.message} - ${e.stack}`);
-    }
-  });
-}
-
 
 export default class Test22 extends TestBase.default {
 
@@ -86,10 +60,17 @@ export default class Test22 extends TestBase.default {
         const teamName = 'TestTeam';
         const _teamId = self.testSetup.teams[teamName].id;
 
-        fs.writeFileSync('file1.txt', 'hello');
-        fs.writeFileSync('file2.txt', 'world');  
-        let artifact1: any = await UploadFileToS3(_teamId, 'file1.txt', 'multipart/form-data');
-        let artifact2: any = await UploadFileToS3(_teamId, 'file2.txt', 'multipart/form-data');
+        const filePath1 = 'file1.txt';
+        const filePath2 = 'file2.txt';
+
+        fs.writeFileSync(filePath1, 'hello');
+        fs.writeFileSync(filePath2, 'world');
+
+        const compressedFilePath1 = await SGUtils.GzipFile(filePath1);
+        const compressedFilePath2 = await SGUtils.GzipFile(filePath2);      
+
+        let artifact1: any = await self.testSetup.UploadFileToS3(_teamId, compressedFilePath1, 'multipart/form-data');
+        let artifact2: any = await self.testSetup.UploadFileToS3(_teamId, compressedFilePath2, 'multipart/form-data');
 
         /// Create job def
         let jobDef: JobDefSchema = {

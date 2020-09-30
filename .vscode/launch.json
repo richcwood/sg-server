@@ -69,7 +69,7 @@
             ],
             "program": "${workspaceFolder}/test/dist/sg-server/test/src/RunUnitTestsHarness.js",
             "args": [
-                "Test59.js"
+                "Test62.js"
             ],
             "outFiles": [
                 "${workspaceFolder}/test/dist/test/**/*.js"

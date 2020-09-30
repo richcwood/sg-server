@@ -27,6 +27,7 @@ import * as mongodb from 'mongodb';
 import { TeamSchema } from '../../server/src/api/domain/Team';
 import { SGUtils } from '../../server/src/shared/SGUtils';
 import * as Enums from '../../server/src/shared/Enums';
+import * as path from 'path';
 const jwt = require('jsonwebtoken');
 
 let env = 'UnitTest';
@@ -458,6 +459,28 @@ export default class TestSetup {
 
         return response.headers['set-cookie'];
     }
+
+
+    protected async UploadFileToS3(_teamId: string, compressedFilePath: string, fileType: string = 'multipart/form-data') {
+        return new Promise(async (resolve, reject) => {
+          try {
+            let res: any = await this.RestAPICall('artifact', 'POST', _teamId, null, {name: path.basename(compressedFilePath), type: fileType});
+            const artifact = res.data.data;
+            
+            var options = {
+              headers: {
+                'Content-Type': fileType
+              }
+            };
+      
+            await axios.put(artifact.url, compressedFilePath, options);
+            resolve(artifact);
+          } catch (e) {
+            reject(`Error uploading file '${compressedFilePath}': ${e.message} - ${e.stack}`);
+          }
+        });
+      }
+      
 
 
     protected async RestAPICall(url: string, method: string, _teamId: string, headers: any = {}, data: any = {}, token: string = this.token) {

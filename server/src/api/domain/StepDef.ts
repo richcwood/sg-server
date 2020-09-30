@@ -53,6 +53,9 @@ export class StepDefSchema {
   lambdaZipfile?: string;
 
   @prop({ default: '' })
+  lambdaFunctionHandler?: string;
+
+  @prop({ default: '' })
   lambdaAWSRegion?: string;
 
   @prop({ default: '' })
