@@ -2161,7 +2161,7 @@ export default class JobDesigner extends Vue {
   private scheduleToDelete: Schedule|null = null;
 
   private onCreateScheduleClicked(){
-    this.editSchedule = <any>{};
+    this.editSchedule = <any>{TriggerType: ScheduleTriggerType.date};
     this.editSchedule_cron = {};
     this.editSchedule_interval = {};
 
