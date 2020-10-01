@@ -185,6 +185,29 @@ export class AgentService {
     }
 
 
+    public async updateAgentName(_teamId: mongodb.ObjectId, id: mongodb.ObjectId, data: any, correlationId?: string, responseFields?: string): Promise<object> {
+        for (let i = 0; i < Object.keys(data).length; i++) {
+            const key = Object.keys(data)[i];
+            if (key != 'name')
+                throw new ValidationError(`Invalid key - "${key}"`);
+        }
+
+        data._teamId = _teamId;
+        const filter = { _id: id, _teamId };
+        const updatedAgent = await AgentModel.findOneAndUpdate(filter, data, { new: true }).select(responseFields);
+
+        if (!updatedAgent)
+            throw new MissingObjectError(`Agent with id '${id}" not found with filter "${JSON.stringify(filter, null, 4)}'.`)
+
+        let deltas = Object.assign({ _id: id }, data);
+        let convertedDeltas = convertData(AgentSchema, deltas);
+        await rabbitMQPublisher.publishToAgent(_teamId, id, convertedDeltas);
+        await rabbitMQPublisher.publish(_teamId, "Agent", correlationId, PayloadOperation.UPDATE, convertedDeltas);
+
+        return updatedAgent; // fully populated model
+    }
+
+
     public async processOrphanedTasks(_teamId: mongodb.ObjectId, id: mongodb.ObjectId, logger: BaseLogger): Promise<object> {
         let result: any = { success: true };
         try {

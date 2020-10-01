@@ -123,6 +123,11 @@ export class JobService {
             if (Object.keys(cd).length > 0)
                 throw new ValidationError(`Job contains a cyclic dependency with the following tasks: ${Object.keys(cd).filter((key) => cd[key])}`)
 
+            for (let taskDef of taskDefs) {
+                if (taskDef.target == Enums.TaskDefTarget.AWS_LAMBDA) {
+                    FreeTierChecks.PaidTierRequired(_teamId, 'Please uprade to the paid tier to run Lambda tasks');
+                }
+            }
             // console.log('JobService -> createJobFromJobDef -> taskDefs -> ', JSON.stringify(taskDefs, null, 4));
             const downstreamDependencies = await SGUtils.GenerateDownstreamDependenciesForJobTasks(taskDefs);
             // console.log('JobService -> createJobFromJobDef -> downstreamDependencies -> ', JSON.stringify(downstreamDependencies, null, 4));

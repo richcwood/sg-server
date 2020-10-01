@@ -315,6 +315,35 @@ export class AgentController {
     }
 
 
+    public async updateAgentName(req: Request, resp: Response, next: NextFunction): Promise<void> {
+        // console.log('updateAgentProperties -> ', JSON.stringify(req.body, null, 4));
+        const _teamId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._teamid);
+        const _agentId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.params.agentId);
+        const response: ResponseWrapper = resp['body'];
+        try {
+            let updatedAgent: any = await agentService.updateAgentName(_teamId, _agentId, convertRequestData(AgentSchema, req.body), req.header('correlationId'), (<string>req.query.responseFields));
+
+            if (_.isArray(updatedAgent) && updatedAgent.length === 0) {
+                next(new MissingObjectError(`Agent ${req.params.agentId} not found.`));
+            }
+            else {
+                response.data = convertResponseData(AgentSchema, updatedAgent);
+                response.statusCode = ResponseCode.OK;
+                next();
+            }
+        }
+        catch (err) {
+            // If req.params.agentId wasn't a mongo id then we will get a CastError - basically same as if the id wasn't found
+            if (err instanceof CastError) {
+                next(new MissingObjectError(`Agent ${req.params.agentId} not found.`));
+            }
+            else {
+                next(err);
+            }
+        }
+    }
+
+
     public async processOrphanedTasks(req: Request, resp: Response, next: NextFunction): Promise<void> {
         const logger: BaseLogger = (<any>req).logger;
         const _teamId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._teamid);

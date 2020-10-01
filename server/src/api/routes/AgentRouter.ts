@@ -17,6 +17,7 @@ export class AgentRouter {
         this.router.put('/heartbeat/:agentId', agentController.updateAgentHeartbeat);
         this.router.put('/tags/:agentId', agentController.updateAgentTags);
         this.router.put('/properties/:agentId', agentController.updateAgentProperties);
+        this.router.put('/name/:agentId', agentController.updateAgentName);
         this.router.post('/cancelorphanedtasks/:agentId', agentController.processOrphanedTasks);
     }
 }
