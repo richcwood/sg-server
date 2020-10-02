@@ -104,6 +104,36 @@ const initValidation = function(){
     }
   });
 
+  // Kind of stupid but I need custom validators for the agent settings because they have that stupid muti-select thing
+  vee_validate_extend('agent-name', value => {
+    if(value === '<>'){
+      return true;
+    }
+    else if( _.isString(value) && value.match(objectNameRegex) !== null){
+      return true;
+    }
+    else {
+      return '{_field_} is not a valid';
+    }
+  });
+
+  vee_validate_extend('agent-positiveNumber', value => {
+    if(value === '<>'){
+      return true;
+    }
+    
+    if(!_.isNaN(value)){
+      value = value+'';
+    }
+    
+    if( _.isString(value) && value.match(positiveNumberRegex) !== null){
+      return true;
+    }
+    else {
+      return '{_field_} should be in a positive number';
+    }
+  });
+
 }
 
 export { initValidation };
