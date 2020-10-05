@@ -14,11 +14,11 @@ export class TeamSchema {
   @prop()
   id?: mongodb.ObjectId;
 
-  @prop({ required: true })
-  name: string;
+  @prop({ required: false })
+  name?: string;
 
-  @prop({ required: true })
-  ownerId: mongodb.ObjectId;
+  @prop({ required: false })
+  ownerId?: mongodb.ObjectId;
 
   @prop({ default: '' })
   billing_address1?: string;
@@ -38,11 +38,11 @@ export class TeamSchema {
   @prop({ default: '' })
   billing_email?: string;
 
-  @prop({ default: true })
+  @prop({ default: false })
   isActive?: boolean;
 
-  @prop({ required: true})
-  rmqPassword: string;
+  @prop({ required: false})
+  rmqPassword?: string;
 
   @prop()
   defaultTimeZone?: string;
@@ -74,8 +74,8 @@ export class TeamSchema {
   @prop({ default: TeamPricingTier.FREE })
   pricingTier?: TeamPricingTier;
 
-  @prop({ required: true })
-  inviteLink: string;
+  @prop({ required: false })
+  inviteLink?: string;
 
   @prop({ default: [] })
   notes?: { date: Date, csr: string, note: string }[];
@@ -103,6 +103,9 @@ export class TeamSchema {
 
   @prop()
   onJobTaskInterruptedAlertSlackURL?: string;
+
+  @prop({ default: false })
+  userAssigned: boolean;
 
   // Define which filters are legal for which props (including nested props (not sure about nested arrays))
   public static readonly validFilters = {

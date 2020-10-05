@@ -50,6 +50,22 @@ export class TeamController {
   }
   
   
+  public async createUnassignedTeam(req: Request, resp: Response, next: NextFunction): Promise<void> {    
+    const response: ResponseWrapper = resp['body'];
+    try {
+      const newTeam: TeamSchema = <TeamSchema>await teamService.createUnassignedTeam(convertRequestData(TeamSchema, req.body), (<string>req.query.responseFields));
+      response.data = convertResponseData(TeamSchema, newTeam);
+      response.statusCode = ResponseCode.CREATED;
+
+      next();
+    } 
+    catch (err) {  
+      console.error(err);    
+      next(err);
+    }
+  }
+  
+  
   public async createTeam(req: Request, resp: Response, next: NextFunction): Promise<void> {    
     const logger: BaseLogger = (<any>req).logger;
     const response: ResponseWrapper = resp['body'];

@@ -284,7 +284,7 @@ class AppBuilder {
             // todo - verify the team id is in the JWT tokens teamIds array
             const secret = config.get('secret');
             const jwtData = jwt.verify(authToken, secret);
-            logger.LogDebug('New request jwtData', { jwtData });
+            // logger.LogDebug('New request jwtData', { jwtData });
             // console.log('setUpJwtSecurity -> jwtData -> ', util.inspect(jwtData, false, null));
 
             req.headers.userid = jwtData.id;

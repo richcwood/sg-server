@@ -11,6 +11,7 @@ export class TeamRouter {
     this.router.get('/',  teamController.getManyTeams);
     this.router.get('/:teamId', teamController.getTeam);
     this.router.post('/', teamController.createTeam);
+    this.router.post('/unassigned', teamController.createUnassignedTeam);
     this.router.put('/:teamId', teamController.updateTeam);
   }
 }
