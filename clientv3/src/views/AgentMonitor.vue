@@ -84,48 +84,67 @@
         <div>
           <tabs>
             <tab title="Settings">
-              <table class="table" style="width: 525px;">
-                <tr class="tr">
-                  <td class="td">
-                    Max Active Tasks
-                  </td>
-                  <td class="td">
-                    <input class="input" type="text" style="width: 200px; margin-left: 10px;" v-model="selectedMaxActiveTasks" :disabled="selectedAgents.length === 0"/>
-                  </td>
-                </tr>
-                <tr class="tr">
-                  <td class="td">
-                    Handle General Tasks
-                  </td>
-                  <td class="td">
-                    <input type="checkbox" style="margin-left: 10px;" v-model="selectedHandleGeneralTasks" :disabled="selectedAgents.length === 0"/>
-                  </td>
-                </tr>
-                <tr class="tr">
-                  <td class="td">
-                    Inactive Agent Timeout (ms)
-                  </td>
-                  <td class="td">
-                    <input class="input" type="text" style="width: 200px; margin-left: 10px;" v-model="selectedInactiveAgentTimeout" :disabled="selectedAgents.length === 0"/>
-                  </td>
-                </tr>
-                <tr class="tr">
-                  <td class="td">
-                    Inactive Agent Script
-                  </td>
-                  <td class="td">
-                    <script-search :scriptId="selectedInactiveAgentScript" @scriptPicked="onScriptPicked"></script-search>
-                  </td>
-                </tr>
-                <tr class="tr">
-                  <td class="td">
-                  </td>
-                  <td class="td">
-                    <button class="button is-primary" @click="onSaveSettingsClicked" :disabled="selectedAgents.length === 0">Save</button>
-                    <button class="button" style="margin-left: 12px;" @click="onCancelSettingsClicked" :disabled="selectedAgents.length === 0">Cancel</button>
-                  </td>
-                </tr>
-              </table>
+              <validation-observer ref="agentSettingsValidationObserver">
+                <table class="table" style="width: 525px; margin-top: 10px;">
+                  <tr class="tr">
+                    <td class="td">
+                      Agent name
+                    </td>
+                    <td class="td">
+                      <validation-provider name="Agent Name" rules="agent-name" v-slot="{ errors }">
+                        <input class="input" type="text" style="width: 200px; margin-left: 10px;" v-model="selectedAgentName" :disabled="selectedAgents.length !== 1"/>
+                        <div v-if="errors && errors.length > 0" class="message validation-error is-danger">{{ errors[0] }}</div>
+                      </validation-provider>
+                    </td>
+                  </tr>
+                  <tr class="tr">
+                    <td class="td">
+                      Max Active Tasks
+                    </td>
+                    <td class="td">
+                      <validation-provider name="Max Active Tasks" rules="agent-positiveNumber" v-slot="{ errors }">
+                        <input class="input" type="text" style="width: 200px; margin-left: 10px;" v-model="selectedMaxActiveTasks" :disabled="selectedAgents.length === 0"/>
+                        <div v-if="errors && errors.length > 0" class="message validation-error is-danger">{{ errors[0] }}</div>
+                      </validation-provider>
+                    </td>
+                  </tr>
+                  <tr class="tr">
+                    <td class="td">
+                      Handle General Tasks
+                    </td>
+                    <td class="td">
+                      <input type="checkbox" style="margin-left: 10px;" v-model="selectedHandleGeneralTasks" :disabled="selectedAgents.length === 0"/>
+                    </td>
+                  </tr>
+                  <tr class="tr">
+                    <td class="td">
+                      Inactive Agent Timeout (ms)
+                    </td>
+                    <td class="td">
+                      <validation-provider name="Inactive Agent Timeout(ms)" rules="agent-positiveNumber" v-slot="{ errors }">
+                        <input class="input" type="text" style="width: 200px; margin-left: 10px;" v-model="selectedInactiveAgentTimeout" :disabled="selectedAgents.length === 0"/>
+                        <div v-if="errors && errors.length > 0" class="message validation-error is-danger">{{ errors[0] }}</div>
+                      </validation-provider>
+                    </td>
+                  </tr>
+                  <tr class="tr">
+                    <td class="td">
+                      Inactive Agent Script
+                    </td>
+                    <td class="td">
+                      <script-search :scriptId="selectedInactiveAgentScript" @scriptPicked="onScriptPicked"></script-search>
+                    </td>
+                  </tr>
+                  <tr class="tr">
+                    <td class="td">
+                    </td>
+                    <td class="td">
+                      <button class="button is-primary" @click="onSaveSettingsClicked" :disabled="selectedAgents.length === 0">Save</button>
+                      <button class="button" style="margin-left: 12px;" @click="onCancelSettingsClicked" :disabled="selectedAgents.length === 0">Cancel</button>
+                    </td>
+                  </tr>
+                </table>
+              </validation-observer>
             </tab>
             <tab title="System Information">
               System information for the selected agent (nothing if multiple agents selected)
@@ -183,13 +202,14 @@ import { JobDef } from '@/store/jobDef/types';
 import { showErrors } from '@/utils/ErrorHandler';
 import { Script } from "@/store/script/types";
 import ScriptSearch from "@/components/ScriptSearch.vue";
+import { ValidationProvider, ValidationObserver } from 'vee-validate';
 
 enum UpdateTagType {
   ADD, DELETE
 };
 
 @Component({
-  components: { Tabs, Tab, ScriptSearch },
+  components: { Tabs, Tab, ScriptSearch, ValidationObserver, ValidationProvider },
   props: { },
 })
 export default class AgentMonitor extends Vue {
@@ -337,6 +357,26 @@ export default class AgentMonitor extends Vue {
         array.splice(index, 1);
   }
 
+  private get selectedAgentName(): string {
+    const selectedAgentIds = Object.keys(this.selectedAgentCopies);
+    if(selectedAgentIds.length === 0){
+      return '';
+    }
+    else if(selectedAgentIds.length === 1){
+      return this.selectedAgentCopies[selectedAgentIds[0]].name;
+    }
+    else {
+      return '<>';
+    }
+  }
+
+  private set selectedAgentName(name: string){
+    const selectedAgentIds = Object.keys(this.selectedAgentCopies);
+    if(selectedAgentIds.length === 1){
+      this.selectedAgentCopies[selectedAgentIds[0]].name = name;
+    }
+  }
+
   // Helper to get all of the selected tasks property override values if they are homogenous
   private getSelectedAgentsSharedPropertyOverride(key: string): string|null {
     const selectedAgentIds = Object.keys(this.selectedAgentCopies);
@@ -438,6 +478,10 @@ export default class AgentMonitor extends Vue {
 
   private async onSaveSettingsClicked(){
     try {
+      if( ! await (<any>this.$refs.agentSettingsValidationObserver).validate()){
+        return;
+      }
+
       const savePromises = [];
 
       const selectedAgentIds = Object.keys(this.selectedAgentCopies);
@@ -449,6 +493,13 @@ export default class AgentMonitor extends Vue {
           inactiveAgentTask: selectedAgent.propertyOverrides.inactiveAgentTask,
           inactivePeriodWaitTime: selectedAgent.propertyOverrides.inactivePeriodWaitTime
         };
+
+        // If there is only a single agent selected and the name has changed, update the name
+        if(selectedAgentIds.length === 1 && this.selectedAgent){
+          if(this.selectedAgent.name !== selectedAgent.name){
+            savePromises.push(this.$store.dispatch(`${StoreType.AgentStore}/saveName`, {id: this.selectedAgent.id, name: selectedAgent.name}));
+          }
+        }
 
         savePromises.push(this.$store.dispatch(`${StoreType.AgentStore}/saveSettings`, {id: selectedAgentId, properties}));
       }
@@ -469,7 +520,7 @@ export default class AgentMonitor extends Vue {
 
     // Add new fresh copies
     for(const agent of this.selectedAgents){
-      newCopies[agent.id] = _.cloneDeep(this.selectedAgents[agent.id]);
+      newCopies[agent.id] = _.cloneDeep(agent);
     }
 
     // Need to do this to make the object reactive / change
