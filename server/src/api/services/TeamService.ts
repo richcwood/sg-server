@@ -65,12 +65,11 @@ export class TeamService {
       if (newTeam.ownerId.toHexString() != data.ownerId.toHexString())
         throw new ValidationError(`Team with name "${data.name}" already exists`);
     } else {
+      data.userAssigned = true;
       // const unassignedTeamQuery: any = await this.findAllTeamsInternal({ userAssigned: false });
-      newTeam = await TeamModel.findOneAndUpdate({ userAssigned: false }, { userAssigned: true }, { new: true });
+      newTeam = await TeamModel.findOneAndUpdate({ userAssigned: false }, data, { new: true });
       // const unassignedTeamQuery: any = await TeamModel.find({ userAssigned: false }).limit(1)
-      if (newTeam) {
-        Object.assign(newTeam, data);
-      } else {
+      if (!newTeam) {
         data.userAssigned = true;
         const teamModel = new TeamModel(data);
         newTeam = await teamModel.save();
