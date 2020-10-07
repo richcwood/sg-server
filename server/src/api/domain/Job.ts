@@ -26,7 +26,7 @@ export class JobSchema {
     name: string;
 
     @prop({ required: true })
-    createdBy: mongodb.ObjectId;
+    createdBy: string;
 
     @prop({ default: new Date().toISOString() })
     dateCreated?: Date;

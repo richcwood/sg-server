@@ -74,7 +74,13 @@ export class JobController {
     public async createJob(req: Request, resp: Response, next: NextFunction): Promise<void> {
         const logger: BaseLogger = (<any>req).logger;
         const _teamId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._teamid);
-        const createdBy = new mongodb.ObjectId(<string>req.headers.userid);
+        let createdBy: string = '';
+        if (req.headers.userid)
+            createdBy = <string>req.headers.userid;
+        else if (req.body.job && req.body.job.createdBy)
+            createdBy = req.body.job.createdBy;
+        else if (req.headers.email)
+            createdBy = <string>req.headers.email;
         const response: ResponseWrapper = resp['body'];
         try {
             // logger.LogDebug('JobRouter -> POST ->', {
