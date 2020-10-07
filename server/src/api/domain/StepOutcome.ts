@@ -76,6 +76,21 @@ export class StepOutcomeSchema {
     @prop({ default: false })
     archived?: boolean;
 
+    @prop()
+    sgcDuration?: string;
+
+    @prop()
+    sgcBilledDuration?: string;
+
+    @prop()
+    sgcMemSize?: string;
+
+    @prop()
+    sgcMaxMemUsed?: string;
+
+    @prop()
+    sgcInitDuration?: string;
+
 
     // Define which filters are legal for which props (including nested props (not sure about nested arrays))
     public static readonly validFilters = {
