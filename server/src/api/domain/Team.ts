@@ -112,7 +112,8 @@ export class TeamSchema {
     'name': [FilterOperator.LIKE],
     'paymentStatusDate': [FilterOperator.LESS_THAN],
     'id': [FilterOperator.IN],
-    'userAssigned': [FilterOperator.EQUALS]
+    'userAssigned': [FilterOperator.EQUALS],
+    'isActive': [FilterOperator.EQUALS]
     // 'dog.name': [FilterOperator.IN, FilterOperator.EQUALS, FilterOperator.NOT_EQUALS, FilterOperator.LIKE
     // ],
     // 'dog.smell': [FilterOperator.LIKE],
