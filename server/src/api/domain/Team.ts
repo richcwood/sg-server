@@ -38,7 +38,7 @@ export class TeamSchema {
   @prop({ default: '' })
   billing_email?: string;
 
-  @prop({ default: false })
+  @prop({ default: true })
   isActive?: boolean;
 
   @prop({ required: false})

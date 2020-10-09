@@ -274,6 +274,7 @@ export class AgentDownloadRouter {
 
         // if (fs.existsSync(out_path))
         //   fse.removeSync(out_path);
+        next(err);
         return;
       }
 
@@ -287,9 +288,17 @@ export class AgentDownloadRouter {
       // let queryStatus = {};
       // queryStatus[statusKey] = 'ready'
       // await this.mongoRepo.Update('team', { _id: this.mongoRepo.ObjectIdFromString(_teamId) }, { $set: queryStatus });
-      logger.LogInfo('Create agent stub success', { '_teamId': _teamId, 'Platform': platform, 'Arch': arch, 'version': agentStubVersion });
+      // logger.LogInfo('Create agent stub success', { '_teamId': _teamId, 'Platform': platform, 'Arch': arch, 'version': agentStubVersion });
+
+      response.data = '';
+      response.statusCode = ResponseCode.NOT_AVAILABLE;
+      next();
     } else {
-      logger.LogInfo('Create agent stub called but agent stub already exists', { '_teamId': _teamId, 'Platform': platform, 'Arch': arch, 'version': agentStubVersion });
+      // logger.LogInfo('Create agent stub called but agent stub already exists', { '_teamId': _teamId, 'Platform': platform, 'Arch': arch, 'version': agentStubVersion });
+
+      response.data = '';
+      response.statusCode = ResponseCode.OK;
+      next();
     }
 
     // Rich todo Happens in StartServer.ts jwt ...
@@ -567,6 +576,7 @@ export class AgentDownloadRouter {
 
         // if (fs.existsSync(out_path))
         //   fse.removeSync(out_path);
+        next(err);
         return;
       }
 
@@ -583,9 +593,17 @@ export class AgentDownloadRouter {
       // let queryStatus = {};
       // queryStatus[statusKey] = 'ready'
       // await this.mongoRepo.Update('team', { _id: this.mongoRepo.ObjectIdFromString(_teamId) }, { $set: queryStatus });
-      logger.LogInfo('Build agent started', { '_teamId': _teamId, 'Platform': platform, 'Arch': arch, 'version': agentVersion });
+      // logger.LogInfo('Build agent started', { '_teamId': _teamId, 'Platform': platform, 'Arch': arch, 'version': agentVersion });
+
+      response.data = '';
+      response.statusCode = ResponseCode.NOT_AVAILABLE;
+      next();
     } else {
-      logger.LogInfo('Create agent called but agent already exists', { '_teamId': _teamId, 'Platform': platform, 'Arch': arch, 'version': agentVersion });
+      // logger.LogInfo('Create agent called but agent already exists', { '_teamId': _teamId, 'Platform': platform, 'Arch': arch, 'version': agentVersion });
+
+      response.data = '';
+      response.statusCode = ResponseCode.OK;
+      next();
     }
 
     // Rich todo Happens in StartServer.ts jwt ...
