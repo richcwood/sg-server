@@ -202,9 +202,9 @@ export class AgentDownloadRouter {
     const statusKey = `agent_stub_install.${platform}${arch}.status`;
     const lastUpdateTimeKey = `agent_stub_install.${platform}${arch}.lastUpdateTime`;
 
-    response.data = '';
-    response.statusCode = ResponseCode.OK;
-    next();
+    // response.data = '';
+    // response.statusCode = ResponseCode.OK;
+    // next();
 
     let queryPlatformNotExists = {};
     queryPlatformNotExists[platformKey] = { $exists: false }
@@ -504,9 +504,9 @@ export class AgentDownloadRouter {
     const statusKey = `agent_install.${agentVersionMongo}.${platform}${arch}.status`;
     const lastUpdateTimeKey = `agent_install.${agentVersionMongo}.${platform}${arch}.lastUpdateTime`;
 
-    response.data = '';
-    response.statusCode = ResponseCode.OK;
-    next();
+    // response.data = '';
+    // response.statusCode = ResponseCode.OK;
+    // next();
 
     let queryPlatformNotExists = {};
     queryPlatformNotExists[platformKey] = { $exists: false }
@@ -530,7 +530,7 @@ export class AgentDownloadRouter {
     // s3Path += '.gz';
     let queryUpdate = {};
     const lastUpdateTime = new Date().getTime();
-    queryUpdate[platformKey] = { 'status': 'creating', 'lastUpdateTime': lastUpdateTime };
+    queryUpdate[platformKey] = { 'status': 'creating', 'lastUpdateTime': lastUpdateTime, $unset: 'message' };
 
     const team: any = await this.mongoRepo.Update('team', {
       $and: [
