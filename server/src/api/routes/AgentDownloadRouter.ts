@@ -300,9 +300,18 @@ export class AgentDownloadRouter {
     } else {
       // logger.LogInfo('Create agent stub called but agent stub already exists', { '_teamId': _teamId, 'Platform': platform, 'Arch': arch, 'version': agentStubVersion });
 
-      response.data = '';
-      response.statusCode = ResponseCode.OK;
-      next();
+      const queryProjection: any = {};
+      queryProjection[platformKey] = 1;
+      const team = await this.mongoRepo.GetById(this.mongoRepo.ObjectIdFromString(_teamId), 'team', queryProjection);
+      if (team['agent_stub_install'][platform+arch]['status'] == 'creating') {
+        response.data = '';
+        response.statusCode = ResponseCode.NOT_AVAILABLE;
+        next();  
+      } else {
+        response.data = '';
+        response.statusCode = ResponseCode.OK;
+        next();
+      }
     }
 
     // Rich todo Happens in StartServer.ts jwt ...
@@ -609,9 +618,18 @@ export class AgentDownloadRouter {
     } else {
       // logger.LogInfo('Create agent called but agent already exists', { '_teamId': _teamId, 'Platform': platform, 'Arch': arch, 'version': agentVersion });
 
-      response.data = '';
-      response.statusCode = ResponseCode.OK;
-      next();
+      const queryProjection: any = {};
+      queryProjection[platformKey] = 1;
+      const team = await this.mongoRepo.GetById(this.mongoRepo.ObjectIdFromString(_teamId), 'team', queryProjection);
+      if (team['agent_install'][agentVersionMongo][platform+arch]['status'] == 'creating') {
+        response.data = '';
+        response.statusCode = ResponseCode.NOT_AVAILABLE;
+        next();  
+      } else {
+        response.data = '';
+        response.statusCode = ResponseCode.OK;
+        next();
+      }
     }
 
     // Rich todo Happens in StartServer.ts jwt ...
