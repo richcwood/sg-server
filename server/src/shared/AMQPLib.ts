@@ -192,7 +192,7 @@ export class AMQPConnector {
 
             let res = await this.PublishLocal(exchange, routingKey, content, args);
 
-            this.LogDebug('Published message', { 'Exchange': exchange, 'Route': routingKey, 'Content': content, 'Response': res });
+            // this.LogDebug('Published message', { 'Exchange': exchange, 'Route': routingKey, 'Content': content, 'Response': res });
         } catch (e) {
             if (this.stoppedByUser)
                 return;
@@ -214,7 +214,7 @@ export class AMQPConnector {
 
             let res = await this.PublishLocal(exchange, routingKey, content, args);
 
-            this.LogDebug('Published message', { 'Exchange': exchange, 'Route': routingKey, 'Content': content, 'Response': res });
+            // this.LogDebug('Published message', { 'Exchange': exchange, 'Route': routingKey, 'Content': content, 'Response': res });
         } catch (e) {
             if (this.stoppedByUser)
                 return;

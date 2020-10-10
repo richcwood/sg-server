@@ -38,6 +38,21 @@ export class TeamService {
   }
 
 
+  public async createUnassignedTeam(data: any, responseFields?: string): Promise<object> {
+    let newTeam: TeamSchema;
+    data.userAssigned = false;
+    const teamModel = new TeamModel(data);
+    newTeam = await teamModel.save();
+
+    if (responseFields) {
+      return this.findTeam(newTeam.id, responseFields);
+    }
+    else {
+      return newTeam; // fully populated model
+    }
+  }
+
+
   public async createTeam(data: any, logger: BaseLogger, responseFields?: string): Promise<object> {
     if (!data.name)
       throw new ValidationError(`Request body missing "name" parameter`);
@@ -50,14 +65,23 @@ export class TeamService {
       if (newTeam.ownerId.toHexString() != data.ownerId.toHexString())
         throw new ValidationError(`Team with name "${data.name}" already exists`);
     } else {
-      const teamModel = new TeamModel(data);
+      data.userAssigned = true;
+      // const unassignedTeamQuery: any = await this.findAllTeamsInternal({ userAssigned: false });
+      newTeam = await TeamModel.findOneAndUpdate({ userAssigned: false }, data, { new: true });
+      // const unassignedTeamQuery: any = await TeamModel.find({ userAssigned: false }).limit(1)
+      if (!newTeam) {
+        data.userAssigned = true;
+        const teamModel = new TeamModel(data);
+        newTeam = await teamModel.save();
+      }
 
+      let dataUpdates: any = {};
       /// Create general team invite link
       const secret = config.get('secret');
       const jwtExpiration = Date.now() + (1000 * 60 * 60 * 24 * 180); // 180 days
       let token = jwt.sign({
-        InvitedTeamId: teamModel._id,
-        InvitedTeamName: teamModel.name,
+        InvitedTeamId: newTeam._id,
+        InvitedTeamName: newTeam.name,
         exp: Math.floor(jwtExpiration / 1000)
       }, secret);//KeysUtil.getPrivate()); // todo - create a public / private key
 
@@ -68,11 +92,12 @@ export class TeamService {
         url += `:${port}`
       let joinTeamLink = `${url}/?invitedTeamToken_shared=${token}`;
 
-      teamModel.inviteLink = joinTeamLink;
+      dataUpdates.inviteLink = joinTeamLink;
+      dataUpdates.isActive = true;
+      dataUpdates.rmqPassword = SGUtils.makeid(10);
 
-      teamModel.rmqPassword = SGUtils.makeid(10);
-
-      newTeam = await teamModel.save();
+      const filter = { _id: newTeam._id };
+      newTeam = await TeamModel.findOneAndUpdate(filter, dataUpdates, { new: true });
     }
 
 

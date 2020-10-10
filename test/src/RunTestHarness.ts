@@ -32,7 +32,7 @@ import { paymentTransactionService } from '../../server/src/api/services/Payment
 import { AgentSchema } from '../../server/src/api/domain/Agent';
 import { JobDefSchema } from '../../server/src/api/domain/JobDef';
 import { JobSchema } from '../../server/src/api/domain/Job';
-import { TeamSchema } from '../../server/src/api/domain/Team';
+import { TeamSchema, TeamModel } from '../../server/src/api/domain/Team';
 import { ScheduleSchema } from '../../server/src/api/domain/Schedule';
 import { ScriptSchema, ScriptModel } from '../../server/src/api/domain/Script';
 import { SettingsSchema } from '../../server/src/api/domain/Settings';
@@ -515,6 +515,27 @@ let DeleteMongoData = async () => {
   await mongoRepo.DeleteByQuery({ _teamId: { $nin: teamsToKeep } }, 'schedule');
   await mongoRepo.DeleteByQuery({ _id: { $nin: teamsToKeep } }, 'team');
   await mongoRepo.DeleteByQuery({ email: { $nin: usersToKeep } }, 'user');
+
+  process.exit();
+}
+
+
+let FixTeamDBRecords = async () => {
+  mongoose.connect(config.get('mongoUrl'), { useNewUrlParser: true });
+
+  let teams: any = await teamService.findAllTeamsInternal({ 'userAssigned': { $exists: false } });
+
+  for (let i = 0; i < teams.length; i++) {
+    let team: any = teams[i];
+
+    let data: any = {};
+    data.userAssigned = true;
+
+    const filter = { _id: team._id };
+
+    const updatedTeam = await TeamModel.findOneAndUpdate(filter, data, { new: true });
+    console.log(updatedTeam);
+  }
 
   process.exit();
 }
@@ -1769,13 +1790,14 @@ let SendTestBrowserAlert = async() => {
 }
 
 
+FixTeamDBRecords();
 // FixScriptDBRecords();
 // SendTestBrowserAlert();
 // ConfigNewRabbitMQServer();
 // ProcessOrphanedTasks();
 // PublishJobTask();
 // PruneJobs(mongodb.ObjectId('5e33a89f9fb5d6880217da2c'));
-UploadFileToS3('./test62lambda.zip');
+// UploadFileToS3('./test62lambda.zip');
 // GetS3PrefixSize('production/5de95c0453162e8891f5a830/');
 // CreateTeam("saas glue admin", "5ef125b4fb07e500150507ca");
 // DumpMongoData('./production_20200615.json');

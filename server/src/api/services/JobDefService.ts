@@ -42,8 +42,8 @@ export class JobDefService {
 
 
   public async createJobDef(_teamId: mongodb.ObjectId, data: any, correlationId: string, responseFields?: string): Promise<object> {
-    const exitingJobDefQuery: any = await this.findAllJobDefsInternal({ _teamId, name: data.name });
-    if (_.isArray(exitingJobDefQuery) && exitingJobDefQuery.length > 0)
+    const existingJobDefQuery: any = await this.findAllJobDefsInternal({ _teamId, name: data.name });
+    if (_.isArray(existingJobDefQuery) && existingJobDefQuery.length > 0)
         throw new ValidationError(`Job definition with name "${data.name}" already exists`);
       
     data._teamId = _teamId;

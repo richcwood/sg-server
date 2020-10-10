@@ -202,9 +202,9 @@ export class AgentDownloadRouter {
     const statusKey = `agent_stub_install.${platform}${arch}.status`;
     const lastUpdateTimeKey = `agent_stub_install.${platform}${arch}.lastUpdateTime`;
 
-    response.data = '';
-    response.statusCode = ResponseCode.OK;
-    next();
+    // response.data = '';
+    // response.statusCode = ResponseCode.OK;
+    // next();
 
     let queryPlatformNotExists = {};
     queryPlatformNotExists[platformKey] = { $exists: false }
@@ -215,8 +215,11 @@ export class AgentDownloadRouter {
     let queryLastUpdateTimeNotExists = {};
     queryLastUpdateTimeNotExists[lastUpdateTimeKey] = { $exists: false }
 
-    let queryStatusNotReady = {};
-    queryStatusNotReady[statusKey] = { $eq: 'creating' };
+    let queryStatusCreating = {};
+    queryStatusCreating[statusKey] = { $eq: 'creating' };
+
+    let queryStatusError = {};
+    queryStatusError[statusKey] = { $eq: 'error' };
 
     let queryAgentCreateTimeout = {};
     const agentCreateTimeout = new Date().getTime() - parseInt(config.get('AGENT_CREATE_TIMEOUT'), 10) * 1000;
@@ -228,7 +231,7 @@ export class AgentDownloadRouter {
     // s3Path += '.gz';
     let queryUpdate = {};
     const lastUpdateTime = new Date().getTime();
-    queryUpdate[platformKey] = { 'status': 'creating', 'lastUpdateTime': lastUpdateTime };
+    queryUpdate[platformKey] = { 'status': 'creating', 'lastUpdateTime': lastUpdateTime, 'message': '' };
 
     const team: any = await this.mongoRepo.Update('team', {
       $and: [
@@ -239,7 +242,8 @@ export class AgentDownloadRouter {
             queryPlatformNotExists,
             queryStatusNotExists,
             queryLastUpdateTimeNotExists,
-            { $and: [queryStatusNotReady, queryAgentCreateTimeout] }
+            queryStatusError,
+            { $and: [queryStatusCreating, queryAgentCreateTimeout] }
           ]
         }
       ]
@@ -274,6 +278,7 @@ export class AgentDownloadRouter {
 
         // if (fs.existsSync(out_path))
         //   fse.removeSync(out_path);
+        next(err);
         return;
       }
 
@@ -287,9 +292,26 @@ export class AgentDownloadRouter {
       // let queryStatus = {};
       // queryStatus[statusKey] = 'ready'
       // await this.mongoRepo.Update('team', { _id: this.mongoRepo.ObjectIdFromString(_teamId) }, { $set: queryStatus });
-      logger.LogInfo('Create agent stub success', { '_teamId': _teamId, 'Platform': platform, 'Arch': arch, 'version': agentStubVersion });
+      // logger.LogInfo('Create agent stub success', { '_teamId': _teamId, 'Platform': platform, 'Arch': arch, 'version': agentStubVersion });
+
+      response.data = '';
+      response.statusCode = ResponseCode.NOT_AVAILABLE;
+      next();
     } else {
-      logger.LogInfo('Create agent stub called but agent stub already exists', { '_teamId': _teamId, 'Platform': platform, 'Arch': arch, 'version': agentStubVersion });
+      // logger.LogInfo('Create agent stub called but agent stub already exists', { '_teamId': _teamId, 'Platform': platform, 'Arch': arch, 'version': agentStubVersion });
+
+      const queryProjection: any = {};
+      queryProjection[platformKey] = 1;
+      const team = await this.mongoRepo.GetById(this.mongoRepo.ObjectIdFromString(_teamId), 'team', queryProjection);
+      if (team['agent_stub_install'][platform+arch]['status'] == 'creating') {
+        response.data = '';
+        response.statusCode = ResponseCode.NOT_AVAILABLE;
+        next();  
+      } else {
+        response.data = '';
+        response.statusCode = ResponseCode.OK;
+        next();
+      }
     }
 
     // Rich todo Happens in StartServer.ts jwt ...
@@ -495,9 +517,9 @@ export class AgentDownloadRouter {
     const statusKey = `agent_install.${agentVersionMongo}.${platform}${arch}.status`;
     const lastUpdateTimeKey = `agent_install.${agentVersionMongo}.${platform}${arch}.lastUpdateTime`;
 
-    response.data = '';
-    response.statusCode = ResponseCode.OK;
-    next();
+    // response.data = '';
+    // response.statusCode = ResponseCode.OK;
+    // next();
 
     let queryPlatformNotExists = {};
     queryPlatformNotExists[platformKey] = { $exists: false }
@@ -508,8 +530,11 @@ export class AgentDownloadRouter {
     let queryLastUpdateTimeNotExists = {};
     queryLastUpdateTimeNotExists[lastUpdateTimeKey] = { $exists: false }
 
-    let queryStatusNotReady = {};
-    queryStatusNotReady[statusKey] = { $eq: 'creating' };
+    let queryStatusCreating = {};
+    queryStatusCreating[statusKey] = { $eq: 'creating' };
+
+    let queryStatusError = {};
+    queryStatusError[statusKey] = { $eq: 'error' };
 
     let queryAgentCreateTimeout = {};
     const agentCreateTimeout = new Date().getTime() - parseInt(config.get('AGENT_CREATE_TIMEOUT'), 10) * 1000;
@@ -521,7 +546,7 @@ export class AgentDownloadRouter {
     // s3Path += '.gz';
     let queryUpdate = {};
     const lastUpdateTime = new Date().getTime();
-    queryUpdate[platformKey] = { 'status': 'creating', 'lastUpdateTime': lastUpdateTime };
+    queryUpdate[platformKey] = { 'status': 'creating', 'lastUpdateTime': lastUpdateTime, 'message': '' };
 
     const team: any = await this.mongoRepo.Update('team', {
       $and: [
@@ -532,7 +557,8 @@ export class AgentDownloadRouter {
             queryPlatformNotExists,
             queryStatusNotExists,
             queryLastUpdateTimeNotExists,
-            { $and: [queryStatusNotReady, queryAgentCreateTimeout] }
+            queryStatusError,
+            { $and: [queryStatusCreating, queryAgentCreateTimeout] }
           ]
         }
       ]
@@ -567,6 +593,7 @@ export class AgentDownloadRouter {
 
         // if (fs.existsSync(out_path))
         //   fse.removeSync(out_path);
+        next(err);
         return;
       }
 
@@ -583,9 +610,26 @@ export class AgentDownloadRouter {
       // let queryStatus = {};
       // queryStatus[statusKey] = 'ready'
       // await this.mongoRepo.Update('team', { _id: this.mongoRepo.ObjectIdFromString(_teamId) }, { $set: queryStatus });
-      logger.LogInfo('Build agent started', { '_teamId': _teamId, 'Platform': platform, 'Arch': arch, 'version': agentVersion });
+      // logger.LogInfo('Build agent started', { '_teamId': _teamId, 'Platform': platform, 'Arch': arch, 'version': agentVersion });
+
+      response.data = '';
+      response.statusCode = ResponseCode.NOT_AVAILABLE;
+      next();
     } else {
-      logger.LogInfo('Create agent called but agent already exists', { '_teamId': _teamId, 'Platform': platform, 'Arch': arch, 'version': agentVersion });
+      // logger.LogInfo('Create agent called but agent already exists', { '_teamId': _teamId, 'Platform': platform, 'Arch': arch, 'version': agentVersion });
+
+      const queryProjection: any = {};
+      queryProjection[platformKey] = 1;
+      const team = await this.mongoRepo.GetById(this.mongoRepo.ObjectIdFromString(_teamId), 'team', queryProjection);
+      if (team['agent_install'][agentVersionMongo][platform+arch]['status'] == 'creating') {
+        response.data = '';
+        response.statusCode = ResponseCode.NOT_AVAILABLE;
+        next();  
+      } else {
+        response.data = '';
+        response.statusCode = ResponseCode.OK;
+        next();
+      }
     }
 
     // Rich todo Happens in StartServer.ts jwt ...
