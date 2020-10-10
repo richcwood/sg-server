@@ -215,8 +215,11 @@ export class AgentDownloadRouter {
     let queryLastUpdateTimeNotExists = {};
     queryLastUpdateTimeNotExists[lastUpdateTimeKey] = { $exists: false }
 
-    let queryStatusNotReady = {};
-    queryStatusNotReady[statusKey] = { $eq: 'creating' };
+    let queryStatusCreating = {};
+    queryStatusCreating[statusKey] = { $eq: 'creating' };
+
+    let queryStatusError = {};
+    queryStatusError[statusKey] = { $eq: 'error' };
 
     let queryAgentCreateTimeout = {};
     const agentCreateTimeout = new Date().getTime() - parseInt(config.get('AGENT_CREATE_TIMEOUT'), 10) * 1000;
@@ -228,7 +231,7 @@ export class AgentDownloadRouter {
     // s3Path += '.gz';
     let queryUpdate = {};
     const lastUpdateTime = new Date().getTime();
-    queryUpdate[platformKey] = { 'status': 'creating', 'lastUpdateTime': lastUpdateTime };
+    queryUpdate[platformKey] = { 'status': 'creating', 'lastUpdateTime': lastUpdateTime, 'message': '' };
 
     const team: any = await this.mongoRepo.Update('team', {
       $and: [
@@ -239,7 +242,8 @@ export class AgentDownloadRouter {
             queryPlatformNotExists,
             queryStatusNotExists,
             queryLastUpdateTimeNotExists,
-            { $and: [queryStatusNotReady, queryAgentCreateTimeout] }
+            queryStatusError,
+            { $and: [queryStatusCreating, queryAgentCreateTimeout] }
           ]
         }
       ]
@@ -517,8 +521,11 @@ export class AgentDownloadRouter {
     let queryLastUpdateTimeNotExists = {};
     queryLastUpdateTimeNotExists[lastUpdateTimeKey] = { $exists: false }
 
-    let queryStatusNotReady = {};
-    queryStatusNotReady[statusKey] = { $eq: 'creating' };
+    let queryStatusCreating = {};
+    queryStatusCreating[statusKey] = { $eq: 'creating' };
+
+    let queryStatusError = {};
+    queryStatusError[statusKey] = { $eq: 'error' };
 
     let queryAgentCreateTimeout = {};
     const agentCreateTimeout = new Date().getTime() - parseInt(config.get('AGENT_CREATE_TIMEOUT'), 10) * 1000;
@@ -530,7 +537,7 @@ export class AgentDownloadRouter {
     // s3Path += '.gz';
     let queryUpdate = {};
     const lastUpdateTime = new Date().getTime();
-    queryUpdate[platformKey] = { 'status': 'creating', 'lastUpdateTime': lastUpdateTime, $unset: 'message' };
+    queryUpdate[platformKey] = { 'status': 'creating', 'lastUpdateTime': lastUpdateTime, 'message': '' };
 
     const team: any = await this.mongoRepo.Update('team', {
       $and: [
@@ -541,7 +548,8 @@ export class AgentDownloadRouter {
             queryPlatformNotExists,
             queryStatusNotExists,
             queryLastUpdateTimeNotExists,
-            { $and: [queryStatusNotReady, queryAgentCreateTimeout] }
+            queryStatusError,
+            { $and: [queryStatusCreating, queryAgentCreateTimeout] }
           ]
         }
       ]
