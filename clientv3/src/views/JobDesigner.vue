@@ -596,10 +596,10 @@
         </span>
         <span v-else class="nav-spacer">
         </span>
-        {{taskDef.name}}
+        {{calcNavPanelTaskName(taskDef)}}
         <span v-if="!isNavTaskDefCollapsed(taskDef)">
           <div class="nav-step" :class="{selected: stepDef === selectedItemForNav}" @click.stop="selectItemForNav(stepDef)" v-for="stepDef in stepDefsForTaskDef(taskDef)" v-bind:key="stepDef.id">
-            {{stepDef.name}}
+            {{calcNavPanelStepName(stepDef)}}
           </div>
         </span>
       </div>
@@ -1206,7 +1206,7 @@ import { BindStoreModel, BindSelected, BindSelectedCopy, BindProp } from '@/deco
 import { JobStatus, TaskStatus, enumKeyToPretty, enumKeys } from '@/utils/Enums';
 import { SgAlert, AlertPlacement, AlertCategory } from '@/store/alert/types';
 import { ValidationProvider, ValidationObserver } from 'vee-validate';
-import { focusElement, stringToMap, mapToString } from '@/utils/Shared';
+import { focusElement, stringToMap, mapToString, truncateString } from '@/utils/Shared';
 import AgentSearch from '@/components/AgentSearch.vue';
 import { Agent } from "@/store/agent/types";
 import { Tabs, Tab } from 'vue-slim-tabs';
@@ -2368,8 +2368,34 @@ export default class JobDesigner extends Vue {
 
   private navPanelWidth = 200;
 
-  private get editPanelMarginLeft(){
+  private get editPanelMarginLeft(): number {
     return this.navPanelWidth + 45;
+  }
+
+  private get maxNavPanelTaskNameLength(): number {
+    return Math.floor(this.navPanelWidth / 9);
+  }
+
+  private get maxNavPanelStepNameLength(): number {
+    return Math.floor(this.navPanelWidth / 9.5);
+  }
+
+  private calcNavPanelTaskName(taskDef: TaskDef): string {
+    if(taskDef){
+      return truncateString(taskDef.name, this.maxNavPanelTaskNameLength);
+    }
+    else {
+      return '';
+    }
+  }
+
+  private calcNavPanelStepName(stepDef: StepDef): string {
+    if(stepDef){
+      return truncateString(stepDef.name, this.maxNavPanelStepNameLength);
+    }
+    else {
+      return '';
+    }
   }
 
   private onMouseMove(event: MouseEvent){

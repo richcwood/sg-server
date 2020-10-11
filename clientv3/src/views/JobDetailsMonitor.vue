@@ -247,7 +247,7 @@ import { TaskDefTarget } from "@/store/taskDef/types";
 import { StepOutcome } from '@/store/stepOutcome/types';
 import { BindStoreModel } from '@/decorator';
 import { JobStatus, TaskStatus, StepStatus, TaskFailureCode, enumKeyToPretty } from '@/utils/Enums.ts';
-import { mapToString } from '@/utils/Shared';
+import { mapToString, truncateString } from '@/utils/Shared';
 import { Agent } from "../store/agent/types";
 import { SgAlert, AlertPlacement, AlertCategory } from '@/store/alert/types';
 import { User } from '@/store/user/types';
@@ -274,6 +274,7 @@ export default class JobDetailsMonitor extends Vue {
   private readonly enumKeyToPretty = enumKeyToPretty;
   private readonly mapToString = mapToString;
   private readonly TaskDefTarget = TaskDefTarget;
+  private readonly truncateString = truncateString;
 
   private get defaultStoreType(){return StoreType.JobStore};
 
@@ -301,31 +302,11 @@ export default class JobDetailsMonitor extends Vue {
     return tasks;
   }
 
-  private formatTailRow(tailRow: string): string {
-    if(tailRow && tailRow.trim()){
-      tailRow = tailRow.trim();
-
-      if(tailRow.length > 60){
-        tailRow = tailRow.substring(0, 57) + '...';
-      }
-
-      return tailRow;
-    }
-    else {
-      return '';
-    }
-  }
-
   private formatRuntimeVars(task: Task): string {
     if(task.runtimeVars){
       const runtimeVarKeys = Object.keys(task.runtimeVars);
-      let summary = runtimeVarKeys.map(k => `${k}=${task.runtimeVars[k]}`).join(', ');
-      
-      if(summary.length > 24){
-        summary = summary.substring(0, 21) + '...';
-      }
-
-      return summary;
+      const summary = runtimeVarKeys.map(k => `${k}=${task.runtimeVars[k]}`).join(', ');
+      return truncateString(summary, 24);
     }
     else {
       return '';
@@ -341,12 +322,8 @@ export default class JobDetailsMonitor extends Vue {
         }
         return returnVal;
       }).join(', ');
-      
-      if(summary.length > 24){
-        summary = summary.substring(0, 21) + '...';
-      }
 
-      return summary;
+      return truncateString(summary, 24);
     }
     else {
       return '';
@@ -363,11 +340,7 @@ export default class JobDetailsMonitor extends Vue {
         return returnVal;
       }).join(', ');
       
-      if(summary.length > 24){
-        summary = summary.substring(0, 21) + '...';
-      }
-
-      return summary;
+      return truncateString(summary, 24);
     }
     else {
       return '';
@@ -376,13 +349,8 @@ export default class JobDetailsMonitor extends Vue {
 
   private formatArtifacts(task: Task): string {
     if(task.artifacts){
-      let summary = this.getArtifactNames(task).join(', ');
-      
-      if(summary.length > 24){
-        summary = summary.substring(0, 21) + '...';
-      }
-
-      return summary;
+      const summary = this.getArtifactNames(task).join(', ');
+      return truncateString(summary, 24);
     }
     else {
       return '';

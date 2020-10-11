@@ -40,6 +40,8 @@
       </tbody>
     </table>
 
+    
+
     <!-- List of jobs -->
     <table class="table is-striped">
       <thead class="thead">

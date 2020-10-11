@@ -1,6 +1,6 @@
 <template>
   <span class="task" :class="{ 'selected': source === selected, 'is-transparent': isTransparent }" @click.stop="$emit('clickedBody')">
-    <div class="task-title">{{source.name}}</div>
+    <div class="task-title">{{truncateString(source.name, 28)}}</div>
 
     <div v-if="taskDesignerMode==='normal'">
       <button class="button task-button" @click.stop="$emit('clickedEditOutboundTasks')">Out bound ({{source.toRoutes.length}})</button>
@@ -20,7 +20,7 @@
 
       <div v-else>
         <label class="checkbox">
-          <input type="checkbox" class="checkbox route-input" v-model="targetInboundEntryForSource_isChecked"/> <span class="route-input"> Route to {{target.name}} </span>
+          <input type="checkbox" class="checkbox route-input" v-model="targetInboundEntryForSource_isChecked"/> <span class="route-input"> Route to {{truncateString(target.name, 14)}} </span>
         </label>
         <br>
         <validation-observer ref="editRouteValidationObserver_inbound">
@@ -44,7 +44,7 @@
 
       <div v-else>
         <label class="checkbox">
-          <input type="checkbox" class="checkbox route-input" v-model="targetOutboundEntryForSource_isChecked"/> <span class="route-input"> Route from {{target.name}} </span>
+          <input type="checkbox" class="checkbox route-input" v-model="targetOutboundEntryForSource_isChecked"/> <span class="route-input"> Route from {{truncateString(target.name, 14)}} </span>
         </label>
         <br>
         <validation-observer ref="editRouteValidationObserver_outbound">
@@ -88,6 +88,7 @@ import { ValidationProvider, ValidationObserver } from 'vee-validate';
 import { TaskDef } from '@/store/taskDef/types';
 import { StoreType } from '@/store/types';
 import { SgAlert, AlertPlacement, AlertCategory } from '@/store/alert/types';
+import { truncateString } from '@/utils/Shared';
 
 @Component({
   components: {
@@ -95,6 +96,9 @@ import { SgAlert, AlertPlacement, AlertCategory } from '@/store/alert/types';
   }
 })
 export default class DesignerTask extends Vue {
+
+  // Expose to template
+  private readonly truncateString = truncateString;
 
   @Prop() private taskDesignerMode!: string;
   @Prop() private taskDefs!: TaskDef[];

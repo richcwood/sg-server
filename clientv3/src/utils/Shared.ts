@@ -71,3 +71,21 @@ export const mapToString = (input: {[key: string]: string}, breakCount?: number)
     return theString;
   }
 }
+
+export const truncateString = (input: string, maxLength: number): string => {
+  if(!input){
+    return '';
+  }
+  else {
+    if(isNaN(maxLength) || maxLength < 4){
+      console.error(`maxLength of ${maxLength} is not legal`);
+      maxLength = 20;
+    }
+
+    if(input.length > maxLength){
+      input = `${input.substring(0, maxLength - 3)}...`;
+    }
+
+    return input;
+  }
+}

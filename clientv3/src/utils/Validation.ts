@@ -26,10 +26,8 @@ const initValidation = function(){
   });
 
   vee_validate_extend('valid-regex', value => {
-    console.log('called valid-regex', value);
     try {
       const re = new RegExp(value);
-      console.log('returning true yo');
       return true;
     }
     catch(err){
