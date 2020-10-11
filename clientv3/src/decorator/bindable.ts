@@ -39,7 +39,7 @@ export const BindSelectedCopy = function(options?: BindStoreModelOptions){
 // You can specify a component's defaultStoreType() and omit specifying the storeName as an option.
 export const BindStoreModel = function({storeType, selectedModelName = 'selected', updateActionName='select'}: BindStoreModelOptions = {}){
   return createDecorator(function (target: any, key: string){
-    
+
     const computedStoreType = computeStoreType(target, storeType);
 
     if(!target.computed){

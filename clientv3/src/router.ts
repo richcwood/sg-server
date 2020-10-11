@@ -8,6 +8,7 @@ import InvitationsForMe from '@/views/InvitationsForMe.vue';
 import JobMonitor from '@/views/JobMonitor.vue';
 import JobDetailsMonitor from '@/views/JobDetailsMonitor.vue';
 import AgentMonitor from '@/views/AgentMonitor.vue';
+import JobList from '@/views/JobList.vue';
 import JobDesigner from '@/views/JobDesigner.vue';
 import InteractiveConsole from '@/views/InteractiveConsole.vue';
 import DownloadAgent from '@/views/DownloadAgent.vue';
@@ -95,7 +96,12 @@ const router = new Router({
       }
     },
     {
-      path: '/jobDesigner/:jobId?/:tabName?',
+      path: '/jobList',
+      name: 'jobList',
+      component: JobList
+    },
+    {
+      path: '/jobDesigner/:jobId/:tabName?',
       name: 'jobDesigner',
       component: JobDesigner,
       meta: {
@@ -114,7 +120,7 @@ const router = new Router({
             }
             catch(err){
               console.error(`Unable to fetch job ${to.params.jobId}`);
-              router.push({name: 'jobDesigner'}); // no id
+              router.push({name: 'jobList'});
               store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Unable to load the job ${to.params.jobId}`, AlertPlacement.FOOTER));
             }
           }

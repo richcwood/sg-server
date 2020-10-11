@@ -297,7 +297,7 @@
         <td class="td">
           <input type="checkbox" v-if="script" v-model="script.teamEditable" :disabled="script._originalAuthorUserId !== user.id" @change="onTeamEditableChanged(script)">
 
-          <template v-if="script._originalAuthorUserId !== user.id">
+          <template v-if="script && script._originalAuthorUserId !== user.id">
             <span class="button-spaced" style="color:gray;">(orignal author: {{getUser(script._originalAuthorUserId).name}})</span>
           </template>
         </td>
