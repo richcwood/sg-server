@@ -53,7 +53,7 @@
   "SaasglueFaviconPng": "https://saasglue-img.s3.amazonaws.com/email/Saas_Glue_06.png",
   "SaasglueLogoPng": "https://saasglue-img.s3.amazonaws.com/email/Saas_Glue_05.png",
   "sgAdminUser": "admin@saasglue.com",
-  "AGENT_CREATE_TIMEOUT": 180,
+  "AGENT_CREATE_TIMEOUT": 360,
   "SG_GIT_USERNAME": "saasglue",
   "SG_GIT_PASSWORD": "cozga5-wamveq-kEtvyt",
   "SG_GIT_URL": "github.com/saasglue/sg-agent.git",
