@@ -190,6 +190,7 @@ import { Component, Prop, Vue, Watch } from 'vue-property-decorator';
 import { BindStoreModel } from '@/decorator';
 import { StoreType } from '@/store/types';
 import { Agent } from '../store/agent/types';
+import { isAgentActive } from '@/store/agent/agentUtils';
 import VueSplit from 'vue-split-panel';
 import { Tabs, Tab } from 'vue-slim-tabs';
 import axios from 'axios';
@@ -216,6 +217,7 @@ export default class AgentMonitor extends Vue {
   // Expose to template
   private readonly momentToStringV1 = momentToStringV1;
   private readonly mapToString = mapToString;
+  private readonly isAgentActive = isAgentActive;
 
   @BindStoreModel({storeType: StoreType.TeamStore})
   private selectedTeam : any;
@@ -576,23 +578,6 @@ export default class AgentMonitor extends Vue {
     catch(err) {
       console.error(err);
       showErrors('Error saving agent tags.', err);
-    }
-  }
-
-  private isAgentActive(agent: Agent){
-    if(agent.lastHeartbeatTime){
-      const now = moment();
-
-      try {
-        return !agent.offline && now.diff(moment(agent.lastHeartbeatTime), 'seconds') < 180;
-      }
-      catch(err){
-        console.log('Could not convert last heartbeat to a moment', err);
-        return false;
-      }
-    }
-    else {
-      return false;
     }
   }
 

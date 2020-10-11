@@ -301,14 +301,14 @@ export default class App extends Vue {
     }
 
     private lastMovedNow: number = Date.now();
-    private readonly THIRTY_MINUTES = 1800000;
+    private readonly FIVE_MINUTES = 300000;
 
     private onMouseMoved(){
       const now: number = Date.now();
 
       // If it's been a while since the user did anything you should probably quickly
       // make sure the user hasn't been logged out
-      if(now - this.lastMovedNow > this.THIRTY_MINUTES){
+      if(now - this.lastMovedNow > this.FIVE_MINUTES){
         this.$store.dispatch('securityStore/checkSecurity');
       }
 

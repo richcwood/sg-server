@@ -312,8 +312,8 @@ export default class DesignerTask extends Vue {
     padding-right: 10px;
     min-width: 225px;
     max-width: 225px;
-    min-height: 175px;
-    max-height: 175px;
+    min-height: 185px;
+    max-height: 185px;
     margin: 10px;
     overflow-y: auto;
     cursor: pointer;

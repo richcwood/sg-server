@@ -1,11 +1,21 @@
 <template>
   <span class="auto-complete">
     <span style="position: relative;">
-      <input :disabled="disabled" class="control input search-input" style="padding-left: 30px;" @focus="onSearchInputFocus" @blur="onSearchInputBlur" @keydown="onSearchKeyDown" v-model="search" placeholder="Agent name">
+      <input :disabled="disabled" 
+             class="control input search-input" 
+             :class="{activeAgent: agent && isAgentActive(agent)}"
+             style="padding-left: 30px;" 
+             @focus="onSearchInputFocus" 
+             @blur="onSearchInputBlur" 
+             @keydown="onSearchKeyDown" 
+             v-model="search" 
+             placeholder="Agent name">
       <font-awesome-icon icon="search" style="position: absolute; left: 20px; top: 10px; color: #dbdbdb;" />
     </span>
     <div class="search-choices" v-if="choices.length > 0">
-      <div class="search-choice" v-for="choice in choices" v-bind:key="choice.id" @mousedown="onSearchOnMouseDown(choice)">{{choice.name}}</div>
+      <div class="search-choice" v-for="choice in choices" v-bind:key="choice.id" @mousedown="onSearchOnMouseDown(choice)">
+        <span :class="{activeAgent: isAgentActive(choice)}">{{choice.name}}</span>
+      </div>
     </div>
   </span>
 </template>
@@ -16,9 +26,13 @@ import { Component, Prop, Vue, Watch } from 'vue-property-decorator';
 import { Agent } from '@/store/agent/types';
 import { LinkedModel, StoreType } from '@/store/types';
 import { SgAlert, AlertPlacement, AlertCategory } from '@/store/alert/types';
+import { isAgentActive } from '@/store/agent/agentUtils';
 
 @Component
 export default class AgentSearch extends Vue {
+
+  // expose to template
+  private readonly isAgentActive = isAgentActive;
 
   @Prop() private agentId!: string;
 
@@ -48,6 +62,9 @@ export default class AgentSearch extends Vue {
             this.loadedAgents[this.agentId] = await this.$store.dispatch(`${StoreType.AgentStore}/fetchModel`, this.agentId);
             this.search = this.loadedAgents[this.agentId].name;
           })();
+        }
+        else {
+          this.search = this.loadedAgents[this.agentId].name;
         }
 
         return this.loadedAgents[this.agentId];
@@ -141,4 +158,7 @@ export default class AgentSearch extends Vue {
     cursor: pointer;
   }
 
+  .activeAgent {
+    color: green;
+  }
 </style>

@@ -7,8 +7,9 @@ export interface Task extends Model {
   _teamId: string,
   _jobId: string,
   requiredTags: {[key: string]: string},
-  fromRoutes: string[], // type correct?
-  artifacts: any, // type?
+  fromRoutes: string[], 
+  toRoutes: string[], 
+  artifacts: string[], // type?
   status: TaskStatus,
   autoRestart: boolean,
   down_dep: string[], // type?

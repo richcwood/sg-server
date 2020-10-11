@@ -6,7 +6,7 @@ import store from '..';
 
 // For pagination, what are the defaults for max models loaded, the default page size etc.
 const DEFAULT_MAX_PAGE_TOTAL = 2500;
-const DEFAULT_MAX_PAGE_SIZE = 128;
+const DEFAULT_MAX_PAGE_SIZE = 512; // todo - Bart fix this
 
 
 // Helper functions
