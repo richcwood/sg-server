@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div @mousemove="onMouseMove" @mouseup="onMouseUp">
     <!-- Modals -->
     <modal name="create-jobdef-modal" :classes="'round-popup'" :width="400" :height="200">
       <validation-observer ref="newJobValidationObserver">
@@ -627,7 +627,7 @@
     </div>
 
     <!-- Job tasks / steps navigation / selection -->
-    <div class="nav-job" v-if="jobDefForEdit">
+    <div ref="navPanel" class="nav-job" v-if="jobDefForEdit">
       <div class="dropdown"
            v-click-outside="onClickedOutsideNavCreateMenu" 
            :class="{'is-active': showCreateItemMenu}" 
@@ -678,12 +678,15 @@
           </div>
         </span>
       </div>
-      
+    </div>
+
+    <!-- For resizing the nav panel -->
+    <div class="nav-job-resizer" @mousedown="onResizerMouseDown">
     </div>
 
 
     <!-- Edit job, including task routes designer -->
-    <div class="edit-job" v-if="jobDefForEdit && selectedItemForNav === jobDefForEdit">
+    <div ref="editJobPanel" class="edit-job" v-if="jobDefForEdit && selectedItemForNav === jobDefForEdit">
 
       <tabs :defaultIndex="3">
 
@@ -1059,13 +1062,10 @@
           </table>
         </tab>
       </tabs>
-
-      
-      
     </div>
 
     <!-- Edit task -->
-    <div class="edit-task" v-if="selectedTaskDefForEdit">
+    <div ref="editTaskPanel" class="edit-task" v-if="selectedTaskDefForEdit">
       <validation-observer ref="editTaskDefValidationObserver">
         <table class="table">
           <tr class="tr">
@@ -1197,7 +1197,7 @@
 
 
     <!-- Edit step -->
-    <div class="edit-step" v-if="selectedStepDefForEdit">
+    <div ref="editStepPanel" class="edit-step" v-if="selectedStepDefForEdit">
       <validation-observer ref="editStepDefValidationObserver">
         <table class="table" style="width: 100%;">
           <tr class="tr">
@@ -2566,6 +2566,41 @@ export default class JobDesigner extends Vue {
       }
     }
   }
+
+  private navResizing = false;
+  private onResizerMouseDown(){
+    this.navResizing = true;
+  }
+
+  private onMouseMove(event: MouseEvent){
+    if(this.navResizing){
+      const navPanel = <HTMLElement>this.$refs.navPanel;
+
+      const newNavPanelWidth = event.pageX - navPanel.getBoundingClientRect().left;
+      if(newNavPanelWidth > 200 && newNavPanelWidth < 400){
+        navPanel.style.width = `${newNavPanelWidth}px`;
+
+        const editJobPanel = <HTMLElement>this.$refs.editJobPanel;
+        if(editJobPanel){
+          editJobPanel.style.marginLeft = `${newNavPanelWidth+45}px`;
+        }
+        
+        const editTaskPanel = <HTMLElement>this.$refs.editTaskPanel;
+        if(editTaskPanel){
+          editTaskPanel.style.marginLeft = `${newNavPanelWidth+45}px`;
+        }
+
+        const editStepPanel = <HTMLElement>this.$refs.editStepPanel;
+        if(editStepPanel){
+          editStepPanel.style.marginLeft = `${newNavPanelWidth+45}px`;
+        }
+      }
+    }
+  }
+
+  private onMouseUp(){
+    this.navResizing = false;
+  }
 }
 </script>
 
@@ -2601,6 +2636,17 @@ export default class JobDesigner extends Vue {
     height: 90vh;
     overflow-y: auto;
     float: left;
+  }
+
+  // for resizing the nav-job panel
+  .nav-job-resizer {
+    float: left;
+    height: 90vh;
+    width: 12px;
+  }
+
+  .nav-job-resizer:hover {
+    cursor: pointer;
   }
 
   .nav-job-item {
@@ -2644,10 +2690,6 @@ export default class JobDesigner extends Vue {
   }
 
   .edit-job {
-    // border-style: solid;
-    // border-width: .5px;
-    // border-radius: 5px;
-    // border-color: lightgray;
     margin-left: 245px;
     margin-right: 10px;
   }
@@ -2683,61 +2725,6 @@ export default class JobDesigner extends Vue {
     padding-bottom: 10px;
     min-height: 500px;
     overflow-x: scroll;
-  }
-
-  .task-designer-task {
-    display: inline-block;
-    vertical-align: top;
-    border-style: solid;
-    border-width: 1px;
-    border-radius: 5px;
-    border-color: lightgray;
-    background-color: $white-ter;
-    padding-top: 2px;
-    padding-bottom: 2px;
-    padding-left: 10px;
-    padding-right: 10px;
-    min-width: 215px;
-    max-width: 215px;
-    min-height: 160px;
-    max-height: 160px;
-    margin: 10px;
-    cursor: pointer;
-  }
-
-  .task-designer-task:hover {
-   border-width: 3px; 
-  }
-
-  .task-designer-task-title {
-    width: 100%;
-    text-align: center;
-  }
-
-  .task-designer-task-route {
-    width: 100%;
-    padding-top: 6px;
-    text-align: center;
-  }
-
-  .task-designer-task-button {
-    width: 100%;
-    position: relative;
-    margin-bottom: 6px;
-    bottom: -15px;
-  }
-
-  .task-selected {
-    border-width: 2px;
-    border-color: black;
-  }
-
-  .edit-task {
-    margin-right: 10px;
-
-    td {
-      border-width: 0 !important;
-    }
   }
 
   .cron-options-table {

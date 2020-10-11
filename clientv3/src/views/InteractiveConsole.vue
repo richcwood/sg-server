@@ -262,85 +262,6 @@
     </modal>
 
 
-    <!-- Show text (script or stdout) modal -->
-    <modal name="show-script-modal" :classes="'round-popup'" :width="800" :height="650">
-      <table class="table" width="100%" height="100%">
-        <tr class="tr">
-          <td class="td">
-            <strong>script for step: {{stepOutcomeForPopup && stepOutcomeForPopup.name}}</strong>
-          </td>
-        </tr>
-        <tr class="tr">
-          <td class="td">
-            <div v-if="stepOutcomeForPopup  && stepOutcomeForPopup.runCode" 
-                 style="overflow: scroll; width: 750px; height: 525px;" 
-                 v-html="stepOutcomeForPopup.runCode.replace(/\n/g, '<br>')"></div>
-            <div v-else>
-              Code was missing
-            </div>
-          </td>
-        </tr>
-        <tr class="tr">
-          <td class="td">
-            <button class="button" @click="onCloseScriptModalClicked">Close</button>
-          </td>
-        </tr>
-      </table>
-    </modal>
-
-
-    <modal name="show-stdout-modal" :classes="'round-popup'" :width="800" :height="650">
-      <table class="table" width="100%" height="100%">
-        <tr class="tr">
-          <td class="td">
-            <strong>stdout for step: {{stepOutcomeForPopup && stepOutcomeForPopup.name}}</strong>
-          </td>
-        </tr>
-        <tr class="tr">
-          <td class="td">
-            <div v-if="stepOutcomeForPopup  && stepOutcomeForPopup.stdout" 
-                 style="overflow: scroll; width: 750px; height: 525px;" 
-                 v-html="formatStdString(stepOutcomeForPopup.stdout)"></div>
-            <div v-else>
-              No stdout available yet...
-            </div>
-          </td>
-        </tr>
-        <tr class="tr">
-          <td class="td">
-            <button class="button" @click="onCloseStdoutModalClicked">Close</button>
-          </td>
-        </tr>
-      </table>
-    </modal>
-
-
-    <modal name="show-stderr-modal" :classes="'round-popup'" :width="800" :height="650">
-      <table class="table" width="100%" height="100%">
-        <tr class="tr">
-          <td class="td">
-            <strong>stderr for step: {{stepOutcomeForPopup && stepOutcomeForPopup.name}}</strong>
-          </td>
-        </tr>
-        <tr class="tr">
-          <td class="td">
-            <div v-if="stepOutcomeForPopup  && stepOutcomeForPopup.stderr" 
-                 style="overflow: scroll; width: 750px; height: 525px;" 
-                 v-html="formatStdString(stepOutcomeForPopup.stderr)"></div>
-            <div v-else>
-              No stderr available yet...
-            </div>
-          </td>
-        </tr>
-        <tr class="tr">
-          <td class="td">
-            <button class="button" @click="onCloseStderrModalClicked">Close</button>
-          </td>
-        </tr>
-      </table>
-    </modal>
-
-
 
 
     <table class="table" style="width: 100%;">
@@ -375,6 +296,10 @@
         </td>
         <td class="td">
           <input type="checkbox" v-if="script" v-model="script.teamEditable" :disabled="script._originalAuthorUserId !== user.id" @change="onTeamEditableChanged(script)">
+
+          <template v-if="script._originalAuthorUserId !== user.id">
+            <span class="button-spaced" style="color:gray;">(orignal author: {{getUser(script._originalAuthorUserId).name}})</span>
+          </template>
         </td>
       </tr>
     </table>
@@ -392,85 +317,15 @@
       <tr class="tr">
         <td class="td">
           <template v-if="runningJobs.length > 0">
-            <div v-if="selectedJob">
+
+            <template v-if="selectedJob">
               <span class="spaced">{{selectedJob.name}}</span>
               <button class="button button-spaced" :disabled="selectedJob.status!==JobStatus.RUNNING && selectedJob.status!==JobStatus.INTERRUPTED" @click="onCancelJobClicked">Cancel</button>              
               <span class="spaced">{{enumKeyToPretty(JobStatus, selectedJob.status)}}</span>
               <span class="spaced">{{momentToStringV1(selectedJob.dateStarted)}}</span>
- 
-              <div style="margin-left: 10px;">
-                <div v-for="taskOutcome in taskOutcomes" v-bind:key="taskOutcome.id" style="margin-top: 20px;">
-                  <span class="spaced">{{getAgent(taskOutcome._agentId).name}}</span>
-                  <button class="button button-spaced" :disabled="taskOutcome.status!==TaskStatus.RUNNING && taskOutcome.status!==TaskStatus.INTERRUPTED" @click="onCancelTaskOutcomeClicked(taskOutcome)">Cancel</button>
-                  <span class="spaced">{{enumKeyToPretty(JobStatus, taskOutcome.status)}}</span>
-                  <span class="spaced">{{enumKeyToPretty(TaskFailureCode, taskOutcome.failureCode)}}</span>
-                  <span class="spaced">{{momentToStringV1(taskOutcome.dateStarted)}}</span>
-
-                  <div v-for="stepOutcome in getStepOutcomes(taskOutcome)" v-bind:key="stepOutcome.id">
-                    <div style="margin-left: 30px; margin-top: 10px;">
-                      <span class="spaced">{{stepOutcome.name}}</span>
-                      <span class="spaced">{{enumKeyToPretty(JobStatus, stepOutcome.status)}}</span>
-                      <span class="spaced">{{enumKeyToPretty(TaskFailureCode, stepOutcome.failureCode)}}</span>
-                      <span class="spaced">{{momentToStringV1(stepOutcome.dateStarted)}}</span>
-                      <span class="spaced">{{momentToStringV1(stepOutcome.dateCompleted)}}</span>
-                      <span class="spaced">{{stepOutcome.runtimeVars}}</span>
-                      <span class="spaced"><a @click.prevent="onShowScriptClicked(stepOutcome)">script</a></span>
-                      <span class="spaced"><a @click.prevent="onShowStdoutClicked(stepOutcome)">stdout</a></span>
-                      <span class="spaced"><a @click.prevent="onShowStderrClicked(stepOutcome)">stderr</a></span>
-                    </div>
-                    <div v-if="stepOutcome.tail && stepOutcome.tail.length > 4" style="margin-left: 54px; margin-top: 10px;">
-                      {{stepOutcome.tail[4]}}
-                    </div>
-                    <div v-if="stepOutcome.tail && stepOutcome.tail.length > 3" style="margin-left: 54px; margin-top: 10px;">
-                      {{stepOutcome.tail[3]}}
-                    </div>
-                    <div v-if="stepOutcome.tail && stepOutcome.tail.length > 2" style="margin-left: 54px; margin-top: 10px;">
-                      {{stepOutcome.tail[2]}}
-                    </div>
-                    <div v-if="stepOutcome.tail && stepOutcome.tail.length > 1" style="margin-left: 54px; margin-top: 10px;">
-                      {{stepOutcome.tail[1]}}
-                    </div>
-                    <div v-if="stepOutcome.tail && stepOutcome.tail.length > 0" style="margin-left: 54px; margin-top: 10px;">
-                      {{stepOutcome.tail[0]}}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div>
-              <table class="table" style="margin-top: 20px;">
-                <thead class="thead">
-                  <tr class="tr">
-                    <td class="td">
-                      Job Name
-                    </td>
-                    <td class="td">
-                      Status
-                    </td>
-                    <td class="td">
-                      Started
-                    </td>
-                    <td class="td">
-                      Completed
-                    </td>
-                  </tr>
-                </thead>
-                <tr class="tr" v-for="job in olderRunningJobs" v-bind:key="job.id">
-                  <td class="td">
-                      <a @click.prevent="onClickedJob(job)">{{job.name}}</a>
-                    </td>
-                    <td class="td">
-                      {{enumKeyToPretty(JobStatus, job.status)}}
-                    </td>
-                    <td class="td">
-                      {{momentToStringV1(job.dateStarted)}}
-                    </td>
-                    <td class="td">
-                      {{momentToStringV1(job.dateCompleted)}}
-                    </td>
-                </tr>
-              </table>
-            </div>
+              <br>
+              <task-monitor-details :selectedJobId="selectedJob.id" ></task-monitor-details>
+            </template>
           </template>
           <div v-else>
             No job have ran yet
@@ -510,10 +365,11 @@ import { stringToMap } from '@/utils/Shared';
 import AgentSearch from '@/components/AgentSearch.vue';
 import ScriptEditor from '@/components/ScriptEditor.vue';
 import { showErrors } from '@/utils/ErrorHandler';
+import TaskMonitorDetails from "@/components/TaskMonitorDetails.vue";
 import moment from 'moment';
 
 @Component({
-  components: { AgentSearch, ScriptSearch, ScriptEditor, ValidationProvider, ValidationObserver },
+  components: { AgentSearch, ScriptSearch, ScriptEditor, ValidationProvider, ValidationObserver, TaskMonitorDetails },
   props: {}
 })
 export default class InteractiveConsole extends Vue {
@@ -761,7 +617,7 @@ export default class InteractiveConsole extends Vue {
     try {
       const newJob = {
         job: {
-          name: `IC-${moment().format('dddd MMM DD h:m a')}`,
+          name: `IC-${moment().format('dddd MMM DD h:mm a')}`,
           dateCreated: (new Date()).toISOString(),
           runtimeVars: this.runtimeVarsAsMap,
           tasks: [
@@ -837,19 +693,6 @@ export default class InteractiveConsole extends Vue {
     this.$modal.hide('clone-script-modal');
   }
 
-  private get taskOutcomes(): Task[]{
-    if(this.selectedJob){
-      return <Task[]> this.$store.getters[`${StoreType.TaskOutcomeStore}/getByJobId`](this.selectedJob.id);
-    }
-    else {
-      return [];
-    }
-  } 
-
-  private getStepOutcomes(taskOutcome: TaskOutcome){
-    return this.$store.getters[`${StoreType.StepOutcomeStore}/getByTaskOutcomeId`](taskOutcome.id);
-  }
-
   private async onCancelJobClicked(){
     try {
       await axios.post(`api/v0/jobaction/cancel/${this.selectedJob.id}`);
@@ -875,42 +718,6 @@ export default class InteractiveConsole extends Vue {
   private onClickedJob(job: Job){
     const routeData = this.$router.resolve({name: 'jobDetailsMonitor', params: {jobId: job.id}});
     window.open(routeData.href, '_blank');
-  }
-
-  private stepOutcomeForPopup: StepOutcome | null = null;
-
-  private onShowScriptClicked(stepOutcome: StepOutcome){
-    this.stepOutcomeForPopup = stepOutcome;
-    this.$modal.show('show-script-modal');
-  }
-
-  private onShowStdoutClicked(stepOutcome: StepOutcome){
-    this.stepOutcomeForPopup = stepOutcome;
-    this.$modal.show('show-stdout-modal');
-  }
-
-  private onShowStderrClicked(stepOutcome: StepOutcome){
-    this.stepOutcomeForPopup = stepOutcome;
-    this.$modal.show('show-stderr-modal');
-  }
-
-  private onCloseScriptModalClicked(){
-    this.stepOutcomeForPopup = null;
-    this.$modal.hide('show-script-modal');
-  }
-
-  private onCloseStdoutModalClicked(){
-    this.stepOutcomeForPopup = null;
-    this.$modal.hide('show-stdout-modal');
-  }
-
-  private onCloseStderrModalClicked(){
-    this.stepOutcomeForPopup = null;
-    this.$modal.hide('show-stderr-modal');
-  }
-
-  private formatStdString(std: string): string {
-    return std.split('\n').reverse().join('<br>');
   }
 
   private async onScheduleScriptClicked(){
