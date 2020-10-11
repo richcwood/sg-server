@@ -278,7 +278,11 @@ export default class ScriptEditor extends Vue {
   }
 
   @Watch('script.scriptType')
-  private async onScriptTypeChanged(){
+  private async onScriptTypeChanged(newScriptType: ScriptType){
+    if(newScriptType === this.script.scriptType){
+      return;
+    }
+    
     try {
       if(this.script){
         this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Saving script type - ${this.script.name}`, AlertPlacement.FOOTER));      

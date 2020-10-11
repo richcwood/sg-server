@@ -589,7 +589,7 @@
               Delete
       </button>
       
-      <div class="nav-job-item" :class="{selected: jobDefForEdit === selectedItemForNav}" @click="selectItemForNav(jobDefForEdit)"> {{jobDefForEdit.name}}</div>
+      <div class="nav-job-item" :class="{selected: jobDefForEdit === selectedItemForNav}" @click="selectItemForNav(jobDefForEdit)"> {{calcNavPanelJobName(jobDefForEdit)}}</div>
       <div class="nav-task" :class="{selected: taskDef === selectedItemForNav}" @click="selectItemForNav(taskDef)" v-for="taskDef in taskDefs" v-bind:key="taskDef.id">
         <span v-if="stepDefsForTaskDef(taskDef).length > 0">
           <span class="nav-expander" @click.stop="onNavTaskDefClicked(taskDef)">{{isNavTaskDefCollapsed(taskDef) ? '+' : '-'}}</span>
@@ -893,6 +893,7 @@
             </validation-observer>
           
             <button class="button button-spaced" @click="onAddRuntimeVarClicked">Add Runtime Variable</button>
+            <br><br>&nbsp;
           </div>              
         </tab>
         
@@ -2372,12 +2373,25 @@ export default class JobDesigner extends Vue {
     return this.navPanelWidth + 45;
   }
 
+  private get maxNavPanelJobNameLength(): number {
+    return Math.floor(this.navPanelWidth / 10);
+  }
+
   private get maxNavPanelTaskNameLength(): number {
     return Math.floor(this.navPanelWidth / 9);
   }
 
   private get maxNavPanelStepNameLength(): number {
     return Math.floor(this.navPanelWidth / 9.5);
+  }
+
+  private calcNavPanelJobName(jobDef: JobDef): string {
+    if(jobDef){
+      return truncateString(jobDef.name, this.maxNavPanelJobNameLength);
+    }
+    else {
+      return '';
+    }
   }
 
   private calcNavPanelTaskName(taskDef: TaskDef): string {
