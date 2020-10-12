@@ -1,7 +1,7 @@
 <template>
   <div>
 
-    <modal name="kpg" :classes="'round-popup'" width="700" height="825" background="white">
+    <modal name="kpg" :classes="'round-popup'" width="700" height="725" background="white">
       <div style="width: 100%; height: 100%; background: white;">
         <table class="table">
           <tr class="tr">
@@ -98,7 +98,6 @@
       </div>
     </modal>
 
-
     <modal name="script-editor-fullscreen" :classes="'round-popup'" :adaptive="true" width="100%" height="100%" background="white">
       <div style="margin: 6px;">
         <button class="button" @click="onClickedExitFullScreen">Exit full screen</button>
@@ -110,6 +109,14 @@
         </span>
       </div>
       <div ref="scriptEditorFullScreen" style="width: 100%; height: 100%;">
+      </div>
+    </modal>
+
+    <modal name="script-diff" :classes="'round-popup'" :adaptive="true" width="100%" height="100%" background="white">
+      <div style="margin: 6px;">
+        <button class="button" @click="onClickedExitDiff">Exit diff</button>
+      </div>
+      <div ref="scriptDiff" style="width: 100%; height: 100%;">
       </div>
     </modal>
 
@@ -131,6 +138,45 @@
         </tbody> 
       </table>
     </modal>
+
+    <modal name="job-step-details" :classes="'round-popup'" width="450" height="425" background="white">
+      <div style="width: 100%; height: 100%; background: white;">
+        <table class="table">
+          <tr class="tr">
+            <td class="td">
+              Script {{script && script.name}} is used in the following jobs<br>
+            </td>
+          </tr>
+          <tr class="tr">
+            <td class="td">
+              <label class="label">Jobs used</label>
+            </td>
+          </tr>
+
+          <tr class="tr" v-if="scriptJobUsage.length === 0">
+            <td class="td">
+              This script is not used in any jobs
+            </td>
+          </tr>
+
+          <tr class="tr" v-for="jobDef in scriptJobUsage" v-bind:key="jobDef.id">
+            <td class="td">
+              <router-link :to="{name: 'jobDesigner', params: {jobId: jobDef.id}}">{{jobDef.name}}</router-link>
+            </td>
+          </tr>
+
+          <tr class="tr">
+            <td class="td">
+              <button class="button is-primary" @click="closeJobStepDetails">close</button>
+            </td>
+          </tr>
+        </table>
+      </div>
+    </modal>
+
+
+
+
 
 
     <div style="margin-left: 5px; margin-right: 10px;">
@@ -154,7 +200,11 @@
             The orginal script author "{{getUser(script._originalAuthorUserId).name}}" has has not allowed team members to edit this script.
           </span>
         </div>
+        <div class="button-spaced" style="margin-top: 6px;">
+          (used in {{scriptStepDefUsageCount}} <a @click="onClickScriptJobUsage"> job steps</a>)
+        </div>
         <span style="flex-grow: 1"> </span>
+        <button class="button button-spaced" :disabled="!hasScriptChanged" @click="onClickedScriptDiff">Diff</button>
         <button class="button button-spaced" :disabled="!hasScriptChanged" @click="warnRevertScriptChanges">Revert</button>
         <button class="button is-primary button-spaced" :disabled="!hasScriptChanged" @click="onPublishScriptClicked">Publish</button>
       </div>
@@ -416,6 +466,37 @@ export default class ScriptEditor extends Vue {
     this.fullScreenEditor = null;
   }
 
+  private scriptDiffEditor: monaco.editor.IStandaloneDiffEditor;
+
+  private onClickedScriptDiff(){
+    if(this.script && this.scriptShadow){
+      this.$modal.show('script-diff');
+      setTimeout(() => {
+        const scriptDiffEl = (<any>this.$refs).scriptDiff;
+        scriptDiffEl.innerHTML = ""; // clear old stuff out
+
+        this.scriptDiffEditor = monaco.editor.createDiffEditor(scriptDiffEl, {
+          theme: this.theme,    
+          automaticLayout: true,
+          readOnly: true,
+        });
+        const scriptLanguage = (<any>scriptTypesForMonaco)[this.script.scriptType];
+
+        this.scriptDiffEditor.setModel({
+          original: monaco.editor.createModel(this.script.code, scriptLanguage),
+          modified: monaco.editor.createModel(this.scriptShadow.shadowCopyCode, scriptLanguage)
+        });
+      }, 100);
+    }
+  }
+
+  private onClickedExitDiff(){
+    const scriptDiffEditor = (<any>this.$refs).scriptDiff;
+    scriptDiffEditor.innerHTML = ''; // clear old stuff out
+    this.$modal.hide('script-diff');
+    this.scriptDiffEditor = null;
+  }
+
   @BindStoreModel({storeType: StoreType.JobDefStore, selectedModelName: 'models'})
   private jobDefs!: JobDef[];
 
@@ -476,6 +557,43 @@ export default class ScriptEditor extends Vue {
     }
 
     return this.loadedUsers[userId];
+  }
+
+  private scriptUsageCount = 0; // need an actual field for reactivity in Vue
+
+  private get scriptStepDefUsageCount(): number {
+    if(this.script){
+      (async () => {
+        const countResponse = await axios.get(`/api/v0/stepDef?filter=_scriptId==${this.script.id}&responseFields=id`);
+        this.scriptUsageCount = countResponse.data.meta.count;
+      })();
+
+      return this.scriptUsageCount;
+    }
+    else {
+      return 0;
+    }
+  }
+
+  private scriptJobUsage = [];
+
+  private onClickScriptJobUsage(){
+    this.$modal.show('job-step-details');
+
+    (async () => {
+      const stepDefsResponse = await axios.get(`/api/v0/stepDef?filter=_scriptId==${this.script.id}`);
+      const taskDefIds = _.uniq(stepDefsResponse.data.data.map(stepDef => stepDef._taskDefId));
+
+      const taskDefsResponse = await axios.get(`/api/v0/taskDef?filter=id->${JSON.stringify(taskDefIds)}`);
+      const jobDefIds = _.uniq(taskDefsResponse.data.data.map(taskDef => taskDef._jobDefId));
+      
+      const jobDefsResponse = await axios.get(`/api/v0/jobDef?filter=id->${JSON.stringify(jobDefIds)}`);
+      this.scriptJobUsage = jobDefsResponse.data.data.map(jobDef => {return {id: jobDef.id, name: jobDef.name};});
+    })();
+  }
+
+  private closeJobStepDetails(){
+    this.$modal.hide('job-step-details');
   }
 }
 </script>

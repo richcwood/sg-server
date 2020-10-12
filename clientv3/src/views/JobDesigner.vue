@@ -1127,7 +1127,7 @@
       <validation-observer ref="editStepDefValidationObserver">
         <table class="table" style="width: 100%;">
           <tr class="tr">
-            <td class="td">
+            <td class="td" style="width: 120px;">
               <label class="label">Step Name</label>
             </td>
             <td class="td">
@@ -1143,7 +1143,6 @@
             </td>
             <td class="td">
               <input class="control input" style="width: 250px;" v-model="selectedStepDefForEdit.arguments">
-              
             </td>
           </tr>
           <tr class="tr">
@@ -1163,7 +1162,7 @@
           </tr>
           <tr class="tr">
             <td class="td">
-              Script
+              <label class="label">Script</label>
             </td>
             <td class="td">
               <button class="button" @click="onCreateScriptClicked">Create</button>

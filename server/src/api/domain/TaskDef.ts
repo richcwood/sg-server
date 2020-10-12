@@ -51,6 +51,7 @@ export class TaskDefSchema {
 
   // Define which filters are legal for which props (including nested props (not sure about nested arrays))
   public static readonly validFilters = {
+    'id': [FilterOperator.IN],
     'name': [FilterOperator.EQUALS, FilterOperator.LIKE],
     '_jobDefId': [FilterOperator.EQUALS, FilterOperator.IN],
     'target': [FilterOperator.EQUALS, FilterOperator.IN]

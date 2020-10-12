@@ -65,7 +65,8 @@ export class StepDefSchema {
   // Define which filters are legal for which props (including nested props (not sure about nested arrays))
   public static readonly validFilters = {
     'name': [FilterOperator.LIKE],
-    '_taskDefId': [FilterOperator.EQUALS, FilterOperator.IN]
+    '_taskDefId': [FilterOperator.EQUALS, FilterOperator.IN],
+    '_scriptId': [FilterOperator.EQUALS]
   };
   
   // 2 way map between field values the API client sees and what is stored in the database.  Allows client to use 'id' and database to use '_id'

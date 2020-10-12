@@ -71,13 +71,8 @@ export class JobDefSchema {
 
   // Define which filters are legal for which props (including nested props (not sure about nested arrays))
   public static readonly validFilters = {
+    'id': [FilterOperator.IN],
     'name': [FilterOperator.LIKE]
-    // 'dog.name': [FilterOperator.IN, FilterOperator.EQUALS, FilterOperator.NOT_EQUALS, FilterOperator.LIKE
-    // ],
-    // 'dog.smell': [FilterOperator.LIKE],
-    // firstName: [FilterOperator.IN, FilterOperator.LIKE, FilterOperator.EQUALS, FilterOperator.NOT_EQUALS],
-    // lastName: [FilterOperator.IN, FilterOperator.EQUALS, FilterOperator.NOT_EQUALS],
-    // id: [FilterOperator.EQUALS, FilterOperator.IN]
   };
   
   // 2 way map between field values the API client sees and what is stored in the database.  Allows client to use 'id' and database to use '_id'
