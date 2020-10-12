@@ -14,6 +14,7 @@ import { teamStore } from '@/store/team/index';
 import { alertStore } from '@/store/alert/index';
 import { agentStore } from '@/store/agent/index';
 import { scriptStore } from '@/store/script/index';
+import { userScriptShadowCopyStore } from '@/store/scriptShadow/index';
 import { scheduleStore } from '@/store/schedule/index';
 import { teamVariableStore } from '@/store/teamVar/index';
 import { artifactStore } from '@/store/artifact/index';
@@ -44,6 +45,7 @@ const store: StoreOptions<RootState> = {
         alertStore,
         agentStore,
         scriptStore,
+        userScriptShadowCopyStore,
         scheduleStore,
         teamVariableStore,
         artifactStore,

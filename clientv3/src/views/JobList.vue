@@ -94,9 +94,8 @@ import axios from 'axios';
 import { momentToStringV1 } from '@/utils/DateTime';
 import { Schedule } from "@/store/schedule/types";
 
-
 @Component({
-  components: {  },
+  components: { ValidationProvider, ValidationObserver },
   props: { },
 })
 export default class JobList extends Vue { 

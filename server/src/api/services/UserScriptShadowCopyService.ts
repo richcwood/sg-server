@@ -31,6 +31,11 @@ export class UserScriptShadowCopyService {
 
     public async createUserScriptShadowCopy(_teamId: mongodb.ObjectId, data: any, correlationId: string, responseFields?: string): Promise<object> {
         data._teamId = _teamId;
+
+        if(data.shadowCopyCode === ''){
+            data.shadowCopyCode = ' '; // Need at least an empty character
+        }
+
         const userScriptShadowCopyModel = new UserScriptShadowCopyModel(data);
         const newUserScriptShadowCopy = await userScriptShadowCopyModel.save();
 

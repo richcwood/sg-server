@@ -556,14 +556,10 @@ export default class InteractiveConsole extends Vue {
         name: this.newScriptName,
         scriptType: this.newScriptType,
         code: '',
-        shadowCopyCode: '',
         lastEditedDate: new Date().toISOString()
       };
 
-      this.script = await this.$store.dispatch(
-        `${StoreType.ScriptStore}/save`,
-        newScript
-      );
+      this.script = await this.$store.dispatch(`${StoreType.ScriptStore}/save`, newScript);
     } 
     catch (err) {
       console.error(err);

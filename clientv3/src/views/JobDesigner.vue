@@ -1827,7 +1827,6 @@ export default class JobDesigner extends Vue {
           name: this.newScriptName, 
           scriptType: this.newScriptType, 
           code: '',
-          shadowCopyCode: '',
           lastEditedDate: (new Date()).toISOString()
         };
 
@@ -2374,7 +2373,7 @@ export default class JobDesigner extends Vue {
   }
 
   private get maxNavPanelJobNameLength(): number {
-    return Math.floor(this.navPanelWidth / 10);
+    return Math.floor(this.navPanelWidth / 10.5);
   }
 
   private get maxNavPanelTaskNameLength(): number {

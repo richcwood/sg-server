@@ -151,12 +151,12 @@
              style="margin-top: 6px;">
           (read only)
           <span class="readonly-tooltip-text">
-            You can't modify the script because it's not editable for the entire team.
+            The orginal script author "{{getUser(script._originalAuthorUserId).name}}" has has not allowed team members to edit this script.
           </span>
         </div>
         <span style="flex-grow: 1"> </span>
-        <button class="button button-spaced" :disabled="script.code === script.shadowCopyCode" @click="warnRevertScriptChanges">Revert</button>
-        <button class="button is-primary button-spaced" :disabled="script.code === script.shadowCopyCode" @click="onPublishScriptClicked">Publish</button>
+        <button class="button button-spaced" :disabled="!hasScriptChanged" @click="warnRevertScriptChanges">Revert</button>
+        <button class="button is-primary button-spaced" :disabled="!hasScriptChanged" @click="onPublishScriptClicked">Publish</button>
       </div>
         
       <div ref="scriptEditor" style="width: 100%; height: 250px; background: hsl(0, 0%, 98%);"></div>
@@ -167,13 +167,15 @@
 <script lang="ts">
 import _ from 'lodash';
 import { Component, Prop, Vue, Watch } from 'vue-property-decorator';
-import { Script, ScriptType, scriptTypesForMonaco } from "@/store/script/types";
+import { Script, ScriptType, scriptTypesForMonaco } from '@/store/script/types';
+import { ScriptShadow } from '@/store/scriptShadow/types';
 import { StoreType } from '@/store/types';
 import { SgAlert, AlertPlacement, AlertCategory } from '@/store/alert/types';
 import { showErrors } from '@/utils/ErrorHandler'; 
 import { JobDef } from '@/store/jobDef/types';
 import { TeamVar } from '@/store/teamVar/types';
 import { BindStoreModel, BindSelected, BindSelectedCopy, BindProp } from '@/decorator';
+import { User } from '@/store/user/types';
 import axios from 'axios';
 import * as monaco from "monaco-editor";
 
@@ -195,8 +197,13 @@ export default class ScriptEditor extends Vue {
 
     monaco.editor.onDidCreateModel((model: monaco.editor.ITextModel) => {
       model.onDidChangeContent((e: monaco.editor.IModelContentChangedEvent) => {
-        if (this.script) {
-          this.script.shadowCopyCode = model.getLinesContent().join("\n");
+        if (this.scriptShadow) {
+          const newCode = model.getLinesContent().join('\n');
+
+          if(this.scriptShadow.shadowCopyCode !== newCode){
+            this.scriptShadow.shadowCopyCode = newCode;
+            this.hasScriptShadowChanged = true;
+          }
 
           // If the change was made in the full screen editor then we need to copy the changes to the regular editor
           if(this.scriptEditor && this.fullScreenEditor && model.id === this.fullScreenEditor.getModel().id){
@@ -221,17 +228,17 @@ export default class ScriptEditor extends Vue {
   }
 
   private async tryToSaveScriptShadowCopy(){
-    if(    this.script
-        && this.script.code !== this.script.shadowCopyCode){
+    if(this.hasScriptShadowChanged){
       this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Saving backup of script - ${this.script.name}`, AlertPlacement.FOOTER));
     
       try {
-        const scriptForSave = {
-          id: this.script.id,
-          shadowCopyCode: this.script.shadowCopyCode
+        const scriptShadowForSave = {
+          id: this.scriptShadow.id,
+          shadowCopyCode: this.scriptShadow.shadowCopyCode
         };
 
-        await this.$store.dispatch(`${StoreType.ScriptStore}/save`, scriptForSave);
+        this.scriptShadow = await this.$store.dispatch(`${StoreType.ScriptShadowStore}/save`, scriptShadowForSave);
+        this.hasScriptShadowChanged = false; // now the script shadow is up to date
       }
       catch(err){
         this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Saving backup of script - ${this.script.name} failed`, AlertPlacement.FOOTER, AlertCategory.ERROR));
@@ -252,15 +259,28 @@ export default class ScriptEditor extends Vue {
   @Prop() private script!: Script;
 
   @Watch('script')
-  private onScriptChanged() {
+  private async onScriptChanged() {
+    if(this.script && this.loggedInUserId){
+      this.scriptShadow = await this.$store.dispatch(`${StoreType.ScriptShadowStore}/getOrCreate`, {scriptId: this.script.id, userId: this.loggedInUserId});
+    }
+    else {
+      this.scriptShadow = null;
+    }
+  }
+
+  private scriptShadow: ScriptShadow|null = null;
+  private hasScriptShadowChanged = false;
+
+  @Watch('scriptShadow')
+  private onScriptShadowChanged() {
     const scriptEditor = (<any>this.$refs).scriptEditor;
     if(scriptEditor){
       scriptEditor.innerHTML = ''; // clear old stuff out
     }
 
-    if(this.script){
+    if(this.scriptShadow){
       this.scriptEditor = monaco.editor.create(scriptEditor, {
-        value: this.script.shadowCopyCode,
+        value: this.scriptShadow.shadowCopyCode,
         language: (<any>scriptTypesForMonaco)[this.script.scriptType],
         theme: this.theme,
         automaticLayout: true,
@@ -277,18 +297,27 @@ export default class ScriptEditor extends Vue {
     }
   }
 
+  private get hasScriptChanged(): boolean {
+    if(this.script && this.scriptShadow){
+      return this.script.code !== this.scriptShadow.shadowCopyCode;
+    }
+    else {
+      return false;
+    }
+  }
+
   @Watch('script.scriptType')
   private async onScriptTypeChanged(newScriptType: ScriptType){
-    if(newScriptType === this.script.scriptType){
+    if(!this.isScriptEditable(this.script)){
       return;
     }
-    
+
     try {
       if(this.script){
         this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Saving script type - ${this.script.name}`, AlertPlacement.FOOTER));      
  
         await this.$store.dispatch(`${StoreType.ScriptStore}/save`, this.script);
-        this.onScriptChanged();
+        this.onScriptShadowChanged();
         this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Script type updated`, AlertPlacement.FOOTER));
       }
     }
@@ -314,13 +343,12 @@ export default class ScriptEditor extends Vue {
         //revert the shadow copy
         this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Reverting script - ${this.script.name}`, AlertPlacement.FOOTER));      
         
-        const revertedScript = {
-          id: this.script.id,
+        const revertedScriptShadow = {
+          id: this.scriptShadow.id,
           shadowCopyCode: this.script.code
         };
-        await this.$store.dispatch(`${StoreType.ScriptStore}/save`, revertedScript);
-        this.script.shadowCopyCode = this.script.code;
-        this.onScriptChanged(); // will reset the editor
+        this.scriptShadow = await this.$store.dispatch(`${StoreType.ScriptShadowStore}/save`, revertedScriptShadow);
+        this.onScriptShadowChanged(); // will reset the editor
         this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Script reverted`, AlertPlacement.FOOTER));
       }
     }
@@ -341,11 +369,17 @@ export default class ScriptEditor extends Vue {
         
         const updatedScript = {
           id: this.script.id,
-          shadowCopyCode: this.script.shadowCopyCode,
-          code: this.script.shadowCopyCode
+          code: this.scriptShadow.shadowCopyCode
         };
-        await this.$store.dispatch(`${StoreType.ScriptStore}/save`, updatedScript);
-        this.script.code = this.script.shadowCopyCode;
+        this.script = await this.$store.dispatch(`${StoreType.ScriptStore}/save`, updatedScript);
+        
+        // And update the shadow copy
+        const updatedScriptShadow = {
+          id: this.scriptShadow.id,
+          shadowCopyCode: this.scriptShadow.shadowCopyCode
+        };
+        this.scriptShadow = await this.$store.dispatch(`${StoreType.ScriptShadowStore}/save`, updatedScriptShadow);
+
         this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Script published`, AlertPlacement.FOOTER));
       }
     }
@@ -419,12 +453,29 @@ export default class ScriptEditor extends Vue {
   private loggedInUserId!: string;
 
   private isScriptEditable(script: Script): boolean {
-    if(script.teamEditable){
+    if(!script){
+      return false;
+    }
+    else if(script.teamEditable){
       return true;
     }
     else {
       return script._originalAuthorUserId == this.loggedInUserId;
     }
+  }
+
+  // for reactivity in a template
+  private loadedUsers = {};
+  private getUser(userId: string): User {
+    if(!this.loadedUsers[userId]){
+      Vue.set(this.loadedUsers, userId, {name: 'loading...'});
+
+      (async () => {
+        this.loadedUsers[userId] = await this.$store.dispatch(`${StoreType.UserStore}/fetchModel`, userId);
+      })();
+    }
+
+    return this.loadedUsers[userId];
   }
 }
 </script>

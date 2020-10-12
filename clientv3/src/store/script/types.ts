@@ -15,7 +15,7 @@ export const scriptTypesForMonaco = {
   [ScriptType.PHP]: 'php',
   [ScriptType.POWERSHELL]: 'powershell',
   [ScriptType.JAVASCRIPT]: 'javascript',
-}; 
+};
 
 export interface Script extends Model {
   id?: string,
@@ -25,7 +25,6 @@ export interface Script extends Model {
   name: string,
   scriptType: ScriptType,
   code: string, // in base64
-  shadowCopyCode: string, // in base64
   lastEditedDate: Date,
   teamEditable?: boolean
 };
