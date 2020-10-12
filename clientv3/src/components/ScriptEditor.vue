@@ -652,6 +652,10 @@ td {
   background: white;
 }
 
+.v--modal-overlay[data-modal="script-diff"] {
+  background: white;
+}
+
 // Make sure the alert-modal shows on top of all other modals
 [data-modal="kpg"] { 
   z-index: 1000 !important;
