@@ -399,7 +399,7 @@ export default class ScriptEditor extends Vue {
         scriptEditorFullScreenEl.innerHTML = ""; // clear old stuff out
 
         this.fullScreenEditor = monaco.editor.create(scriptEditorFullScreenEl, {
-          value: this.script.shadowCopyCode,
+          value: this.scriptShadow.shadowCopyCode,
           language: (<any>scriptTypesForMonaco)[this.script.scriptType],
           theme: this.theme,    
           automaticLayout: true,
