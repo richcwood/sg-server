@@ -101,6 +101,7 @@ import { BindStoreModel } from '@/decorator';
 import { momentToStringV1, momentToStringV3 } from '@/utils/DateTime';
 import moment from 'moment';
 import axios from 'axios';
+import _ from 'lodash';
 import { JobStatus, TaskStatus, enumKeyToPretty, enumKeys } from '@/utils/Enums';
 import { User } from '@/store/user/types';
 
@@ -225,7 +226,9 @@ export default class JobMonitor extends Vue {
   private getUser(userId: string, jobName: string): User {
     try {
       if(jobName.startsWith('Inactive agent job')) {     
-        return {name: userId};
+        let newUser = _.cloneDeep(this.loadedUsers[userId]);
+        newUser.name = userId;
+        return newUser;
       } else {
         if(!this.loadedUsers[userId]){
           Vue.set(this.loadedUsers, userId, {name: userId});
