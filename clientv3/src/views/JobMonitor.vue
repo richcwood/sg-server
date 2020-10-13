@@ -80,7 +80,7 @@
               {{job.name}}
             </template>
           </td>
-          <td class="td">{{getUser(job.createdBy).name}}</td>
+          <td class="td">{{getUser(job.createdBy, job.name).name}}</td>
           <td class="td">{{enumKeyToPretty(JobStatus, job.status)}}</td>
           <td class="td">{{momentToStringV1(job.dateStarted)}}</td>
           <td class="td">{{momentToStringV1(job.dateCompleted)}}</td>
@@ -160,7 +160,7 @@ export default class JobMonitor extends Vue {
           if(job.name.toUpperCase().indexOf(filter) !== -1){
             return true;
           }
-          else if(this.getUser(job.createdBy).name.toUpperCase().indexOf(filter) !== -1){
+          else if(this.getUser(job.createdBy, job.name).name.toUpperCase().indexOf(filter) !== -1){
             return true;
           }
           else {
@@ -220,17 +220,21 @@ export default class JobMonitor extends Vue {
 
   // for reactivity in a template
   private loadedUsers = {};
-  private getUser(userId: string): User {
+  private getUser(userId: string, jobName: string): User {
     try {
-      if(!this.loadedUsers[userId]){
-        Vue.set(this.loadedUsers, userId, {name: 'loading...'});
+      if(jobName.startsWith('Inactive agent job')) {     
+        return {name: userId};
+      } else {
+        if(!this.loadedUsers[userId]){
+          Vue.set(this.loadedUsers, userId, {name: userId});
 
-        (async () => {
-          this.loadedUsers[userId] = await this.$store.dispatch(`${StoreType.UserStore}/fetchModel`, userId);
-        })();
+          (async () => {
+            this.loadedUsers[userId] = await this.$store.dispatch(`${StoreType.UserStore}/fetchModel`, userId);
+          })();
+        }
+
+        return this.loadedUsers[userId];
       }
-
-      return this.loadedUsers[userId];
     }
     catch(err){
       console.log('Error in loading a user.  Maybe it was deleted?', userId);

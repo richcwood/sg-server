@@ -10,9 +10,9 @@ export class RabbitMQAdmin {
     baseURL: string;
     instance: any;
     constructor(public url: string, public vhost: string, public logger: any = null) {
-        if (logger) {
-            logger.LogDebug('Instantiating RabbitMQAdmin class', { 'Url': url });
-        }
+        // if (logger) {
+        //     logger.LogDebug('Instantiating RabbitMQAdmin class', { 'Url': url });
+        // }
 
         this.instance = axios.create({
             baseURL: url,

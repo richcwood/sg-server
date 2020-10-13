@@ -193,7 +193,7 @@ export class AgentDownloadRouter {
     const agentVersionSettings = await settingsService.findSettings('AgentVersion');
     let agentStubVersion = agentVersionSettings.agentStub;
 
-    logger.LogInfo('Create agent stub called', { '_teamId': _teamId, 'Platform': platform, 'Arch': arch });
+    // logger.LogInfo('Create agent stub called', { '_teamId': _teamId, 'Platform': platform, 'Arch': arch });
 
     // Run a query which will return null if we have an active agent stub or create information for the requested agent 
     //  stub with the status defaulted to "creating" in a single atomic operation - if the current status is "creating" and 
@@ -508,7 +508,7 @@ export class AgentDownloadRouter {
       }
     }
 
-    logger.LogInfo('Create agent called', { '_teamId': _teamId, 'Platform': platform, 'Arch': arch, 'AgentVersion': agentVersion });
+    // logger.LogInfo('Create agent called', { '_teamId': _teamId, 'Platform': platform, 'Arch': arch, 'AgentVersion': agentVersion });
 
     // Run a query which will return null if we have an active agent install or create information for the requested agent 
     //  install with the status defaulted to "creating" in a single atomic operation - if the current status is "creating" and 
