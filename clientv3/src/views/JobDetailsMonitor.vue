@@ -179,7 +179,7 @@
           <td class="td">Completed</td><td class="td">{{momentToStringV1(selectedJob.dateCompleted)}}</td>
         </tr>
         <tr class="tr">
-          <td class="td">Created By</td><td class="td">{{getUser(selectedJob.createdBy).name}}</td>
+          <td class="td">Created By</td><td class="td">{{getUser(selectedJob.createdBy, selectedJob.name).name}}</td>
           <td class="td"></td>
           <td class="td"></td>
         </tr>
@@ -549,17 +549,21 @@ export default class JobDetailsMonitor extends Vue {
 
   // for reactivity in a template
   private loadedUsers = {};
-  private getUser(userId: string): User {
+  private getUser(userId: string, jobName: string): User {
     try {
-      if(!this.loadedUsers[userId]){
-        Vue.set(this.loadedUsers, userId, {name: 'loading...'});
+      if(jobName.startsWith('Inactive agent job')) {
+        return { name: userId, email: '' };
+      } else {
+        if(!this.loadedUsers[userId]){
+          Vue.set(this.loadedUsers, userId, {name: 'loading...'});
 
-        (async () => {
-          this.loadedUsers[userId] = await this.$store.dispatch(`${StoreType.UserStore}/fetchModel`, userId);
-        })();
+          (async () => {
+            this.loadedUsers[userId] = await this.$store.dispatch(`${StoreType.UserStore}/fetchModel`, userId);
+          })();
+        }
+
+        return this.loadedUsers[userId];
       }
-
-      return this.loadedUsers[userId];
     }
     catch(err){
       console.log('Error in loading a user.  Maybe it was deleted?', userId);
