@@ -225,10 +225,8 @@ export default class JobMonitor extends Vue {
   private loadedUsers = {};
   private getUser(userId: string, jobName: string): User {
     try {
-      if(jobName.startsWith('Inactive agent job')) {     
-        let newUser = _.cloneDeep(this.loadedUsers[userId]);
-        newUser.name = userId;
-        return newUser;
+      if(jobName.startsWith('Inactive agent job')) {
+        return { name: userId, email: '' };
       } else {
         if(!this.loadedUsers[userId]){
           Vue.set(this.loadedUsers, userId, {name: userId});
