@@ -120,8 +120,8 @@
                       <td class="td" style="padding-bottom: 0px;">{{stepOutcome.name}}</td>
                       <td class="td" style="padding-bottom: 0px;">{{stepOutcome && enumKeyToPretty(TaskStatus, stepOutcome.status)}}</td>
                       <td class="td" style="padding-bottom: 0px;">{{momentToStringV1(stepOutcome.dateStarted)}}</td>
-                      <td class="td" style="padding-bottom: 0px;">
-                        <span class="spaced"><a @click.prevent="onShowScriptClicked(stepOutcome)">script</a></span>
+                      <td class="td" style="padding-top: 0px;">
+                        <span class="spaced" style="margin-bottom: -5px;"><a @click.prevent="onShowScriptClicked(stepOutcome)">script</a></span>
                         <span class="spaced"><a @click.prevent="onShowStdoutClicked(stepOutcome)">stdout</a></span>
                         <span class="spaced"><a @click.prevent="onShowStderrClicked(stepOutcome)">stderr</a></span>
                       </td>

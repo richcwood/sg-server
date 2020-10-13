@@ -6,7 +6,7 @@ import store from '..';
 
 // For pagination, what are the defaults for max models loaded, the default page size etc.
 const DEFAULT_MAX_PAGE_TOTAL = 2500;
-const DEFAULT_MAX_PAGE_SIZE = 512; // todo - Bart fix this
+const DEFAULT_MAX_PAGE_SIZE = 250;
 
 
 // Helper functions
@@ -39,8 +39,8 @@ const loadPaginatedModels = async function({state, commit, preCommit, filter}: {
   commit(`${state._storeName}/addModels`, firstResponse.data.data, {root: true});
 
   // some models don't support pagination
-  if(firstResponse.data.meta && firstResponse.data.meta.pagination){  
-    const paginationTotal = firstResponse.data.meta.pagination.total;
+  if(firstResponse.data.meta && firstResponse.data.meta.count){  
+    const paginationTotal = firstResponse.data.meta.count;
 
     if(paginationTotal > DEFAULT_MAX_PAGE_TOTAL){
       console.error(`Oops, looks like you tried to bulk load a model type with more than the default limit of ${DEFAULT_MAX_PAGE_TOTAL}. url=${state._url('GET')}, totalModelCount=${paginationTotal}`);

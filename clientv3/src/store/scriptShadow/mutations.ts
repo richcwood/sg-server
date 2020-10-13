@@ -1,23 +1,23 @@
 import { MutationTree } from 'vuex';
 import { CoreState } from '@/store/types';
-import { Script } from './types';
+import { ScriptShadow } from './types';
 
 // You can't invoke mutations from other mutations via Vuex but you can directly invoke them
 import {mutations as coreMutations} from '@/store/core/mutations';
 
 export const mutations: MutationTree<CoreState> = {  
-  addModels(state: CoreState, models: Script[]){
-    // only triggered when we save a script in API or get a stream api message
+  addModels(state: CoreState, models: ScriptShadow[]){
+    // only triggered when we save a ScriptShadow in API or get a stream api message
     // the API saves code in base64 so we need to decode it
-    for(let script of models){
-      if(script.code){
+    for(let scriptShadow of models){
+      if(scriptShadow.shadowCopyCode){
         try {
-          script.code = atob(script.code);
+          scriptShadow.shadowCopyCode = atob(scriptShadow.shadowCopyCode);
         }
         catch(err){
           // too much data to convert in db right now - can remove once script.code is converted to base64
-          console.log(`Failed to base64 decode the script ${script.name}. Trying to parse it as json`);
-          script.code = JSON.parse(script.code);
+          console.log(`Failed to base64 decode the scriptShadow ${scriptShadow._scriptId}. Trying to parse it as json`);
+          scriptShadow.shadowCopyCode = JSON.parse(scriptShadow.shadowCopyCode);
         }
       }
     }
@@ -25,25 +25,24 @@ export const mutations: MutationTree<CoreState> = {
     coreMutations.addModels(state, models);
   },
 
-  select(state: CoreState, model: Script){
+  select(state: CoreState, model: ScriptShadow){
     coreMutations.select(state, model);
   },
 
-  update(state: CoreState, model: Script){
+  update(state: CoreState, model: ScriptShadow){
     // only triggered when I save a script in the API or get a stream api message
     // the API saves code in base64 so we need to decode it 
-    if(model.code){
-      model.code = atob(model.code);
+    if(model.shadowCopyCode){
+      model.shadowCopyCode = atob(model.shadowCopyCode);
     }
-    
     coreMutations.update(state, model);
   },
 
-  updateSelectedCopy(state: CoreState, updated: Script){    
+  updateSelectedCopy(state: CoreState, updated: ScriptShadow){    
     coreMutations.updateSelectedCopy(state, updated);
   },
 
-  delete(state: CoreState, model: Script) {    
+  delete(state: CoreState, model: ScriptShadow) {    
     coreMutations.delete(state, model);
   }
 };

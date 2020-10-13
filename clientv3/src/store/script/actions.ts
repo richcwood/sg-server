@@ -12,10 +12,7 @@ export const actions: ActionTree<CoreState, RootState> = {
     const script = <Script>model;
     const scriptCopy = _.clone(script);
     if(script.code){
-      scriptCopy.code = btoa(script.code); 
-    }
-    if(script.shadowCopyCode){
-      scriptCopy.shadowCopyCode = btoa(script.shadowCopyCode); 
+      scriptCopy.code = btoa(script.code);
     }
 
     return coreActions.save({commit, state}, scriptCopy);

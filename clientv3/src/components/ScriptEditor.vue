@@ -1,7 +1,7 @@
 <template>
   <div>
 
-    <modal name="kpg" :classes="'round-popup'" width="700" height="825" background="white">
+    <modal name="kpg" :classes="'round-popup'" width="700" height="725" background="white">
       <div style="width: 100%; height: 100%; background: white;">
         <table class="table">
           <tr class="tr">
@@ -98,7 +98,6 @@
       </div>
     </modal>
 
-
     <modal name="script-editor-fullscreen" :classes="'round-popup'" :adaptive="true" width="100%" height="100%" background="white">
       <div style="margin: 6px;">
         <button class="button" @click="onClickedExitFullScreen">Exit full screen</button>
@@ -110,6 +109,14 @@
         </span>
       </div>
       <div ref="scriptEditorFullScreen" style="width: 100%; height: 100%;">
+      </div>
+    </modal>
+
+    <modal name="script-diff" :classes="'round-popup'" :adaptive="true" width="100%" height="100%" background="white">
+      <div style="margin: 6px;">
+        <button class="button" @click="onClickedExitDiff">Exit diff</button>
+      </div>
+      <div ref="scriptDiff" style="width: 100%; height: 100%;">
       </div>
     </modal>
 
@@ -132,6 +139,45 @@
       </table>
     </modal>
 
+    <modal name="job-step-details" :classes="'round-popup'" width="450" height="425" background="white">
+      <div style="width: 100%; height: 100%; background: white;">
+        <table class="table">
+          <tr class="tr">
+            <td class="td">
+              Script {{script && script.name}} is used in the following jobs<br>
+            </td>
+          </tr>
+          <tr class="tr">
+            <td class="td">
+              <label class="label">Jobs used</label>
+            </td>
+          </tr>
+
+          <tr class="tr" v-if="scriptJobUsage.length === 0">
+            <td class="td">
+              This script is not used in any jobs
+            </td>
+          </tr>
+
+          <tr class="tr" v-for="jobDef in scriptJobUsage" v-bind:key="jobDef.id">
+            <td class="td">
+              <router-link :to="{name: 'jobDesigner', params: {jobId: jobDef.id}}">{{jobDef.name}}</router-link>
+            </td>
+          </tr>
+
+          <tr class="tr">
+            <td class="td">
+              <button class="button is-primary" @click="closeJobStepDetails">close</button>
+            </td>
+          </tr>
+        </table>
+      </div>
+    </modal>
+
+
+
+
+
 
     <div style="margin-left: 5px; margin-right: 10px;">
       <div v-if="script" class="script-button-bar" style="margin-bottom: 10px;">
@@ -151,12 +197,16 @@
              style="margin-top: 6px;">
           (read only)
           <span class="readonly-tooltip-text">
-            You can't modify the script because it's not editable for the entire team.
+            The orginal script author "{{getUser(script._originalAuthorUserId).name}}" has has not allowed team members to edit this script.
           </span>
         </div>
+        <div class="button-spaced" style="margin-top: 6px;">
+          (used in {{scriptStepDefUsageCount}} <a @click="onClickScriptJobUsage"> job steps</a>)
+        </div>
         <span style="flex-grow: 1"> </span>
-        <button class="button button-spaced" :disabled="script.code === script.shadowCopyCode" @click="warnRevertScriptChanges">Revert</button>
-        <button class="button is-primary button-spaced" :disabled="script.code === script.shadowCopyCode" @click="onPublishScriptClicked">Publish</button>
+        <button class="button button-spaced" :disabled="!hasScriptChanged" @click="onClickedScriptDiff">Diff</button>
+        <button class="button button-spaced" :disabled="!hasScriptChanged" @click="warnRevertScriptChanges">Revert</button>
+        <button class="button is-primary button-spaced" :disabled="!hasScriptChanged" @click="onPublishScriptClicked">Publish</button>
       </div>
         
       <div ref="scriptEditor" style="width: 100%; height: 250px; background: hsl(0, 0%, 98%);"></div>
@@ -167,13 +217,15 @@
 <script lang="ts">
 import _ from 'lodash';
 import { Component, Prop, Vue, Watch } from 'vue-property-decorator';
-import { Script, ScriptType, scriptTypesForMonaco } from "@/store/script/types";
+import { Script, ScriptType, scriptTypesForMonaco } from '@/store/script/types';
+import { ScriptShadow } from '@/store/scriptShadow/types';
 import { StoreType } from '@/store/types';
 import { SgAlert, AlertPlacement, AlertCategory } from '@/store/alert/types';
 import { showErrors } from '@/utils/ErrorHandler'; 
 import { JobDef } from '@/store/jobDef/types';
 import { TeamVar } from '@/store/teamVar/types';
 import { BindStoreModel, BindSelected, BindSelectedCopy, BindProp } from '@/decorator';
+import { User } from '@/store/user/types';
 import axios from 'axios';
 import * as monaco from "monaco-editor";
 
@@ -195,8 +247,13 @@ export default class ScriptEditor extends Vue {
 
     monaco.editor.onDidCreateModel((model: monaco.editor.ITextModel) => {
       model.onDidChangeContent((e: monaco.editor.IModelContentChangedEvent) => {
-        if (this.script) {
-          this.script.shadowCopyCode = model.getLinesContent().join("\n");
+        if (this.scriptShadow) {
+          const newCode = model.getLinesContent().join('\n');
+
+          if(this.scriptShadow.shadowCopyCode !== newCode){
+            this.scriptShadow.shadowCopyCode = newCode;
+            this.hasScriptShadowChanged = true;
+          }
 
           // If the change was made in the full screen editor then we need to copy the changes to the regular editor
           if(this.scriptEditor && this.fullScreenEditor && model.id === this.fullScreenEditor.getModel().id){
@@ -221,17 +278,17 @@ export default class ScriptEditor extends Vue {
   }
 
   private async tryToSaveScriptShadowCopy(){
-    if(    this.script
-        && this.script.code !== this.script.shadowCopyCode){
+    if(this.hasScriptShadowChanged){
       this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Saving backup of script - ${this.script.name}`, AlertPlacement.FOOTER));
     
       try {
-        const scriptForSave = {
-          id: this.script.id,
-          shadowCopyCode: this.script.shadowCopyCode
+        const scriptShadowForSave = {
+          id: this.scriptShadow.id,
+          shadowCopyCode: this.scriptShadow.shadowCopyCode
         };
 
-        await this.$store.dispatch(`${StoreType.ScriptStore}/save`, scriptForSave);
+        this.scriptShadow = await this.$store.dispatch(`${StoreType.ScriptShadowStore}/save`, scriptShadowForSave);
+        this.hasScriptShadowChanged = false; // now the script shadow is up to date
       }
       catch(err){
         this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Saving backup of script - ${this.script.name} failed`, AlertPlacement.FOOTER, AlertCategory.ERROR));
@@ -252,15 +309,28 @@ export default class ScriptEditor extends Vue {
   @Prop() private script!: Script;
 
   @Watch('script')
-  private onScriptChanged() {
+  private async onScriptChanged() {
+    if(this.script && this.loggedInUserId){
+      this.scriptShadow = await this.$store.dispatch(`${StoreType.ScriptShadowStore}/getOrCreate`, {scriptId: this.script.id, userId: this.loggedInUserId});
+    }
+    else {
+      this.scriptShadow = null;
+    }
+  }
+
+  private scriptShadow: ScriptShadow|null = null;
+  private hasScriptShadowChanged = false;
+
+  @Watch('scriptShadow')
+  private onScriptShadowChanged() {
     const scriptEditor = (<any>this.$refs).scriptEditor;
     if(scriptEditor){
       scriptEditor.innerHTML = ''; // clear old stuff out
     }
 
-    if(this.script){
+    if(this.scriptShadow){
       this.scriptEditor = monaco.editor.create(scriptEditor, {
-        value: this.script.shadowCopyCode,
+        value: this.scriptShadow.shadowCopyCode,
         language: (<any>scriptTypesForMonaco)[this.script.scriptType],
         theme: this.theme,
         automaticLayout: true,
@@ -277,14 +347,27 @@ export default class ScriptEditor extends Vue {
     }
   }
 
+  private get hasScriptChanged(): boolean {
+    if(this.script && this.scriptShadow){
+      return this.script.code !== this.scriptShadow.shadowCopyCode;
+    }
+    else {
+      return false;
+    }
+  }
+
   @Watch('script.scriptType')
-  private async onScriptTypeChanged(){
+  private async onScriptTypeChanged(newScriptType: ScriptType){
+    if(!this.isScriptEditable(this.script)){
+      return;
+    }
+
     try {
       if(this.script){
         this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Saving script type - ${this.script.name}`, AlertPlacement.FOOTER));      
  
         await this.$store.dispatch(`${StoreType.ScriptStore}/save`, this.script);
-        this.onScriptChanged();
+        this.onScriptShadowChanged();
         this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Script type updated`, AlertPlacement.FOOTER));
       }
     }
@@ -310,13 +393,12 @@ export default class ScriptEditor extends Vue {
         //revert the shadow copy
         this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Reverting script - ${this.script.name}`, AlertPlacement.FOOTER));      
         
-        const revertedScript = {
-          id: this.script.id,
+        const revertedScriptShadow = {
+          id: this.scriptShadow.id,
           shadowCopyCode: this.script.code
         };
-        await this.$store.dispatch(`${StoreType.ScriptStore}/save`, revertedScript);
-        this.script.shadowCopyCode = this.script.code;
-        this.onScriptChanged(); // will reset the editor
+        this.scriptShadow = await this.$store.dispatch(`${StoreType.ScriptShadowStore}/save`, revertedScriptShadow);
+        this.onScriptShadowChanged(); // will reset the editor
         this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Script reverted`, AlertPlacement.FOOTER));
       }
     }
@@ -337,11 +419,17 @@ export default class ScriptEditor extends Vue {
         
         const updatedScript = {
           id: this.script.id,
-          shadowCopyCode: this.script.shadowCopyCode,
-          code: this.script.shadowCopyCode
+          code: this.scriptShadow.shadowCopyCode
         };
-        await this.$store.dispatch(`${StoreType.ScriptStore}/save`, updatedScript);
-        this.script.code = this.script.shadowCopyCode;
+        this.script = await this.$store.dispatch(`${StoreType.ScriptStore}/save`, updatedScript);
+        
+        // And update the shadow copy
+        const updatedScriptShadow = {
+          id: this.scriptShadow.id,
+          shadowCopyCode: this.scriptShadow.shadowCopyCode
+        };
+        this.scriptShadow = await this.$store.dispatch(`${StoreType.ScriptShadowStore}/save`, updatedScriptShadow);
+
         this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Script published`, AlertPlacement.FOOTER));
       }
     }
@@ -361,7 +449,7 @@ export default class ScriptEditor extends Vue {
         scriptEditorFullScreenEl.innerHTML = ""; // clear old stuff out
 
         this.fullScreenEditor = monaco.editor.create(scriptEditorFullScreenEl, {
-          value: this.script.shadowCopyCode,
+          value: this.scriptShadow.shadowCopyCode,
           language: (<any>scriptTypesForMonaco)[this.script.scriptType],
           theme: this.theme,    
           automaticLayout: true,
@@ -376,6 +464,37 @@ export default class ScriptEditor extends Vue {
     scriptEditorFullScreenEl.innerHTML = ''; // clear old stuff out
     this.$modal.hide('script-editor-fullscreen');
     this.fullScreenEditor = null;
+  }
+
+  private scriptDiffEditor: monaco.editor.IStandaloneDiffEditor;
+
+  private onClickedScriptDiff(){
+    if(this.script && this.scriptShadow){
+      this.$modal.show('script-diff');
+      setTimeout(() => {
+        const scriptDiffEl = (<any>this.$refs).scriptDiff;
+        scriptDiffEl.innerHTML = ""; // clear old stuff out
+
+        this.scriptDiffEditor = monaco.editor.createDiffEditor(scriptDiffEl, {
+          theme: this.theme,    
+          automaticLayout: true,
+          readOnly: true,
+        });
+        const scriptLanguage = (<any>scriptTypesForMonaco)[this.script.scriptType];
+
+        this.scriptDiffEditor.setModel({
+          original: monaco.editor.createModel(this.script.code, scriptLanguage),
+          modified: monaco.editor.createModel(this.scriptShadow.shadowCopyCode, scriptLanguage)
+        });
+      }, 100);
+    }
+  }
+
+  private onClickedExitDiff(){
+    const scriptDiffEditor = (<any>this.$refs).scriptDiff;
+    scriptDiffEditor.innerHTML = ''; // clear old stuff out
+    this.$modal.hide('script-diff');
+    this.scriptDiffEditor = null;
   }
 
   @BindStoreModel({storeType: StoreType.JobDefStore, selectedModelName: 'models'})
@@ -415,12 +534,66 @@ export default class ScriptEditor extends Vue {
   private loggedInUserId!: string;
 
   private isScriptEditable(script: Script): boolean {
-    if(script.teamEditable){
+    if(!script){
+      return false;
+    }
+    else if(script.teamEditable){
       return true;
     }
     else {
       return script._originalAuthorUserId == this.loggedInUserId;
     }
+  }
+
+  // for reactivity in a template
+  private loadedUsers = {};
+  private getUser(userId: string): User {
+    if(!this.loadedUsers[userId]){
+      Vue.set(this.loadedUsers, userId, {name: 'loading...'});
+
+      (async () => {
+        this.loadedUsers[userId] = await this.$store.dispatch(`${StoreType.UserStore}/fetchModel`, userId);
+      })();
+    }
+
+    return this.loadedUsers[userId];
+  }
+
+  private scriptUsageCount = 0; // need an actual field for reactivity in Vue
+
+  private get scriptStepDefUsageCount(): number {
+    if(this.script){
+      (async () => {
+        const countResponse = await axios.get(`/api/v0/stepDef?filter=_scriptId==${this.script.id}&responseFields=id`);
+        this.scriptUsageCount = countResponse.data.meta.count;
+      })();
+
+      return this.scriptUsageCount;
+    }
+    else {
+      return 0;
+    }
+  }
+
+  private scriptJobUsage = [];
+
+  private onClickScriptJobUsage(){
+    this.$modal.show('job-step-details');
+
+    (async () => {
+      const stepDefsResponse = await axios.get(`/api/v0/stepDef?filter=_scriptId==${this.script.id}`);
+      const taskDefIds = _.uniq(stepDefsResponse.data.data.map(stepDef => stepDef._taskDefId));
+
+      const taskDefsResponse = await axios.get(`/api/v0/taskDef?filter=id->${JSON.stringify(taskDefIds)}`);
+      const jobDefIds = _.uniq(taskDefsResponse.data.data.map(taskDef => taskDef._jobDefId));
+      
+      const jobDefsResponse = await axios.get(`/api/v0/jobDef?filter=id->${JSON.stringify(jobDefIds)}`);
+      this.scriptJobUsage = jobDefsResponse.data.data.map(jobDef => {return {id: jobDef.id, name: jobDef.name};});
+    })();
+  }
+
+  private closeJobStepDetails(){
+    this.$modal.hide('job-step-details');
   }
 }
 </script>
@@ -476,6 +649,10 @@ td {
 }
 
 .v--modal-overlay[data-modal="script-editor-fullscreen"] {
+  background: white;
+}
+
+.v--modal-overlay[data-modal="script-diff"] {
   background: white;
 }
 

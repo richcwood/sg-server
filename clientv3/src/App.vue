@@ -16,7 +16,7 @@
       <div class="left-nav">
         <img src="/logo2_alpha.png" class="logo">
         <router-link :class="{'active-link': isLinkActive(['downloadAgent'])}" to="/downloadAgent">Download Agent</router-link> |
-        <router-link :class="{'active-link': isLinkActive(['jobDesigner'])}" to="/jobDesigner">Job Designer</router-link> |
+        <router-link :class="{'active-link': isLinkActive(['jobList', 'jobDesigner'])}" to="/jobList">Job Designer</router-link> |
         <router-link :class="{'active-link': isLinkActive(['jobMonitor', 'jobDetailsMonitor'])}" to="/">Job Monitor</router-link> |
         <router-link :class="{'active-link': isLinkActive(['agentMonitor'])}" to="/agentMonitor">Agents</router-link> | 
         <router-link :class="{'active-link': isLinkActive(['interactiveConsole'])}" to="/interactiveConsole">Console</router-link> |

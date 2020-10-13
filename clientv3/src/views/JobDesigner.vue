@@ -1,34 +1,6 @@
 <template>
   <div @mousemove="onMouseMove" @mouseup="onMouseUp">
     <!-- Modals -->
-    <modal name="create-jobdef-modal" :classes="'round-popup'" :width="400" :height="200">
-      <validation-observer ref="newJobValidationObserver">
-        <table class="table" width="100%" height="100%">
-          <tbody class="tbody">
-            <tr class="tr">
-              <td class="td"></td>
-              <td class="td">Create a new job</td>
-            </tr>
-            <tr class="tr">
-              <td class="td">Job Name</td>
-              <td class="td">
-                <validation-provider name="Job Name" rules="required|object-name" v-slot="{ errors }">
-                  <input class="input" id="create-jobdef-modal-autofocus" type="text" v-on:keyup.enter="saveNewJobDef" autofocus v-model="newJobName" placeholder="Enter the new job name">
-                  <div v-if="errors && errors.length > 0" class="message validation-error is-danger">{{ errors[0] }}</div>
-                </validation-provider>
-              </td>
-            </tr>
-            <tr class="tr">
-              <td class="td"></td>
-              <td class="td">
-                <button class="button is-primary" @click="saveNewJobDef">Create new job</button> 
-                <button class="button button-spaced" @click="cancelCreateNewJobDef">Cancel</button>
-              </td>
-            </tr>
-          </tbody> 
-        </table>
-      </validation-observer>
-    </modal>
 
     <modal name="create-taskdef-modal" :classes="'round-popup'" :width="400" :height="225">
       <validation-observer ref="newTaskValidationObserver">
@@ -579,55 +551,8 @@
     </modal>
     
 
-
-    
-
-    <!-- Job Def selection -->
-    <div class="select-job" v-if="!jobDefForEdit">
-      <table class="table" width="650px">
-        <tbody class="tbody">
-          <tr class="tr">
-            <td class="td">
-              <span style="position: relative;">
-                <input class="input" style="padding-left: 30px;" type="text" v-model="filterString" placeholder="Filter by Job Name and Created By">
-                <font-awesome-icon icon="search" style="position: absolute; left: 10px; top: 10px; color: #dbdbdb;" />
-              </span>
-            </td>
-          </tr>
-          <tr class="tr">
-            <td class="td"><button class="button" @click="createNewJobDef">Create new job</button></td>
-          </tr>
-
-          <tr class="tr">
-            <td class="td">
-              <table class="table">
-                <thead class="thead">
-                  <tr class="tr">
-                    <td class="td">Job Definition Name</td>
-                    <td class="td">Created By</td>
-                    <td class="td">Date Created</td>
-                    <td class="td">Schedule</td>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr class="tr" v-for="jobDef in filteredJobDefs" v-bind:key="jobDef.id">
-                    <td class="td"><router-link :to="{name: 'jobDesigner', params: {jobId: jobDef.id}}">{{jobDef.name}}</router-link></td>
-                    <td class="td">{{getUser(jobDef.createdBy).name}}</td>
-                    <td class="td">{{momentToStringV1(jobDef.dateCreated)}}</td>
-                    <td class="td">
-                      <a @click="onClickedScheduleLinkText(jobDef)">{{getScheduleLinkTextForJobDef(jobDef)}}</a>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-
     <!-- Job tasks / steps navigation / selection -->
-    <div ref="navPanel" class="nav-job" v-if="jobDefForEdit">
+    <div ref="navPanel" class="nav-job" v-if="jobDefForEdit" :style="{width: navPanelWidth+'px'}">
       <div class="dropdown"
            v-click-outside="onClickedOutsideNavCreateMenu" 
            :class="{'is-active': showCreateItemMenu}" 
@@ -664,17 +589,17 @@
               Delete
       </button>
       
-      <div class="nav-job-item" :class="{selected: jobDefForEdit === selectedItemForNav}" @click="selectItemForNav(jobDefForEdit)"> {{jobDefForEdit.name}}</div>
+      <div class="nav-job-item" :class="{selected: jobDefForEdit === selectedItemForNav}" @click="selectItemForNav(jobDefForEdit)"> {{calcNavPanelJobName(jobDefForEdit)}}</div>
       <div class="nav-task" :class="{selected: taskDef === selectedItemForNav}" @click="selectItemForNav(taskDef)" v-for="taskDef in taskDefs" v-bind:key="taskDef.id">
         <span v-if="stepDefsForTaskDef(taskDef).length > 0">
           <span class="nav-expander" @click.stop="onNavTaskDefClicked(taskDef)">{{isNavTaskDefCollapsed(taskDef) ? '+' : '-'}}</span>
         </span>
         <span v-else class="nav-spacer">
         </span>
-        {{taskDef.name}}
+        {{calcNavPanelTaskName(taskDef)}}
         <span v-if="!isNavTaskDefCollapsed(taskDef)">
           <div class="nav-step" :class="{selected: stepDef === selectedItemForNav}" @click.stop="selectItemForNav(stepDef)" v-for="stepDef in stepDefsForTaskDef(taskDef)" v-bind:key="stepDef.id">
-            {{stepDef.name}}
+            {{calcNavPanelStepName(stepDef)}}
           </div>
         </span>
       </div>
@@ -686,7 +611,7 @@
 
 
     <!-- Edit job, including task routes designer -->
-    <div ref="editJobPanel" class="edit-job" v-if="jobDefForEdit && selectedItemForNav === jobDefForEdit">
+    <div class="edit-job" v-if="jobDefForEdit && selectedItemForNav === jobDefForEdit" :style="{'margin-left': editPanelMarginLeft+'px'}">
 
       <tabs :defaultIndex="3">
 
@@ -968,6 +893,7 @@
             </validation-observer>
           
             <button class="button button-spaced" @click="onAddRuntimeVarClicked">Add Runtime Variable</button>
+            <br><br>&nbsp;
           </div>              
         </tab>
         
@@ -1065,7 +991,7 @@
     </div>
 
     <!-- Edit task -->
-    <div ref="editTaskPanel" class="edit-task" v-if="selectedTaskDefForEdit">
+    <div class="edit-task" v-if="selectedTaskDefForEdit" :style="{'margin-left': editPanelMarginLeft+'px'}">
       <validation-observer ref="editTaskDefValidationObserver">
         <table class="table">
           <tr class="tr">
@@ -1197,11 +1123,11 @@
 
 
     <!-- Edit step -->
-    <div ref="editStepPanel" class="edit-step" v-if="selectedStepDefForEdit">
+    <div class="edit-step" v-if="selectedStepDefForEdit" :style="{'margin-left': editPanelMarginLeft+'px'}">
       <validation-observer ref="editStepDefValidationObserver">
         <table class="table" style="width: 100%;">
           <tr class="tr">
-            <td class="td">
+            <td class="td" style="width: 120px;">
               <label class="label">Step Name</label>
             </td>
             <td class="td">
@@ -1217,7 +1143,6 @@
             </td>
             <td class="td">
               <input class="control input" style="width: 250px;" v-model="selectedStepDefForEdit.arguments">
-              
             </td>
           </tr>
           <tr class="tr">
@@ -1237,7 +1162,7 @@
           </tr>
           <tr class="tr">
             <td class="td">
-              Script
+              <label class="label">Script</label>
             </td>
             <td class="td">
               <button class="button" @click="onCreateScriptClicked">Create</button>
@@ -1281,7 +1206,7 @@ import { BindStoreModel, BindSelected, BindSelectedCopy, BindProp } from '@/deco
 import { JobStatus, TaskStatus, enumKeyToPretty, enumKeys } from '@/utils/Enums';
 import { SgAlert, AlertPlacement, AlertCategory } from '@/store/alert/types';
 import { ValidationProvider, ValidationObserver } from 'vee-validate';
-import { focusElement, stringToMap, mapToString } from '@/utils/Shared';
+import { focusElement, stringToMap, mapToString, truncateString } from '@/utils/Shared';
 import AgentSearch from '@/components/AgentSearch.vue';
 import { Agent } from "@/store/agent/types";
 import { Tabs, Tab } from 'vue-slim-tabs';
@@ -1289,7 +1214,6 @@ import { Schedule, ScheduleTriggerType } from "@/store/schedule/types";
 import ArtifactSearch from '@/components/ArtifactSearch.vue';
 import { Artifact } from '@/store/artifact/types';
 import Artifacts from './Artifacts.vue';
-import { User } from '@/store/user/types';
 import ScriptEditor from '@/components/ScriptEditor.vue';
 import { computeDownstreamTasks_inbound, 
          computeUpstreamTasks_outbound,
@@ -1321,11 +1245,7 @@ export default class JobDesigner extends Vue {
 
   @BindProp({storeType: StoreType.TeamStore, selectedModelName: 'selected', propName: 'id'})
   private selectedTeamId!: string;
-
-  private filterString = '';
   
-  private newJobName = '';
-
   private newTaskName = '';
 
   private newStepName = '';
@@ -1366,74 +1286,10 @@ export default class JobDesigner extends Vue {
     }
   }
 
-  private get filteredJobDefs(): object[]{
-    const filterUCase = this.filterString.toUpperCase();
-    // split by whitespace and remove empty entries
-    const filterUCaseItems = filterUCase.split(' ').map(item => item.trim()).filter(item => item);
-    return this.jobDefs.filter((jobDef: JobDef) => {
-      if(filterUCaseItems.length === 0){
-        return true;
-      }
-      else {
-        return filterUCaseItems.some((filter: string) => {
-          if(jobDef.name.toUpperCase().indexOf(filter) !== -1){
-            return true;
-          }
-          else if(this.getUser(jobDef.createdBy).name.toUpperCase().indexOf(filter) !== -1){
-            return true;
-          }
-          else {
-            return false;
-          }
-        });
-      }
-    });
-  }
-
-  private createNewJobDef(){
-    this.newJobName = '';
-    this.$modal.show('create-jobdef-modal');
-    focusElement('create-jobdef-modal-autofocus');
-  }
-
-  private cancelCreateNewJobDef(){
-    this.$modal.hide('create-jobdef-modal');
-  }
-
-  private async saveNewJobDef(){
-    if( ! await (<any>this.$refs.newJobValidationObserver).validate()){
-      return;
-    }
-
-    try {
-      const userEmail = this.$store.state[StoreType.TeamStore].userEmail;
-
-      this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Creating job - ${this.newJobName}`, AlertPlacement.FOOTER));
-      const newJob: JobDef = {
-        name: this.newJobName
-      }
-
-      const savedJob = await this.$store.dispatch(`${StoreType.JobDefStore}/save`, newJob);
-      this.$router.push(`/jobDesigner/${savedJob.id}`);
-    }
-    catch(err){
-      console.error(err);
-      showErrors('Error creating job', err);
-    }
-    finally {
-      this.$modal.hide('create-jobdef-modal');
-    }
-  }
-
-  private get defaultStoreType(){return StoreType.JobDefStore};
-
-  @BindStoreModel({selectedModelName: 'models'})
-  private jobDefs!: JobDef[];
-
-  @BindSelected()
+  @BindSelected({storeType: StoreType.JobDefStore})
   private jobDef!: JobDef;
 
-  @BindSelectedCopy()
+  @BindSelectedCopy({storeType: StoreType.JobDefStore})
   private jobDefForEdit!: JobDef;
 
   private taskDesignerMode = 'normal';
@@ -1492,47 +1348,27 @@ export default class JobDesigner extends Vue {
   @BindSelectedCopy({storeType: StoreType.ScriptStore})
   private selectedScriptCopy!: null|Script;
 
-
   private mounted(){
-    this.onJobDefChanged();
+    // Clear out any previous choices from previous designers
+    this.selectedStepDef = null;
+    this.selectedScript = null;
+    this.selectedTaskDef = null;
 
-    if(localStorage.getItem('jobDesigner_filterString')){
-      this.filterString = localStorage.getItem('jobDesigner_filterString');
+    // By default the job is selected
+    if(this.jobDefForEdit){
+      this.selectedItemForNav = this.jobDefForEdit;
+    }
+
+    if(localStorage.getItem('jobDesigner_navPanelWidth')){
+      const panelWidth = Number.parseInt(localStorage.getItem('jobDesigner_navPanelWidth'));
+      if(! isNaN(panelWidth)){
+        this.navPanelWidth = panelWidth;
+      }
     }
   }
 
   private beforeDestroy(){
-    localStorage.setItem('jobDesigner_filterString', this.filterString);
-  }
-
-  @Watch('jobDefForEdit')
-  private async onJobDefChanged(){
-    // Select the job by default whenever the selected job def itself changes
-    this.selectedItemForNav = this.jobDefForEdit;
-    this.selectedStepDefsForOrder = [];
-    this.selectedTaskDefForDesigner = null;
-
-    this.selectedTaskDef = null;
-    this.selectedStepDef = null;
-    this.selectedArtifactIds = [];
-    this.newRunJobVarKey = '';
-    this.newRunJobVarValue = '';
-
-    if(this.jobDefForEdit){
-      const runJobVarsAsString = sessionStorage.getItem(`runJobVars_${this.jobDefForEdit.id}`);
-
-      if(runJobVarsAsString){
-        this.runJobVars = JSON.parse(runJobVarsAsString);
-      }
-      else {
-        this.runJobVars = {};
-      }
-    }
-    else {
-      this.runJobVars = {};
-    }
-
-
+    localStorage.setItem('jobDesigner_navPanelWidth', ''+this.navPanelWidth);
   }
 
   private get taskDefs(){
@@ -1990,7 +1826,6 @@ export default class JobDesigner extends Vue {
           name: this.newScriptName, 
           scriptType: this.newScriptType, 
           code: '',
-          shadowCopyCode: '',
           lastEditedDate: (new Date()).toISOString()
         };
 
@@ -2135,24 +1970,6 @@ export default class JobDesigner extends Vue {
 
     // Trigger the filter and the getters will be reactive as the data loads
     return this.$store.getters[`${StoreType.ScheduleStore}/getByJobDefId`](jobDef.id);
-  }
-
-  private getScheduleLinkTextForJobDef(jobDef: JobDef): string {
-    const schedules = this.getSchedulesForJobDef(jobDef);
-
-    if(schedules.length === 0){
-      return 'none';
-    }
-    else if(schedules.length === 1){
-      return `${schedules[0].TriggerType}, ${schedules[0].isActive ? 'active' : 'in-active'}`;
-    }
-    else {
-      return `${schedules.length} schedules`;
-    }
-  }
-
-  private onClickedScheduleLinkText(jobDef: JobDef){
-    this.$router.push(`/jobDesigner/${jobDef.id}/schedule`);
   }
 
   private editSchedule: Schedule = <any>{TriggerType: ScheduleTriggerType.date};
@@ -2495,30 +2312,6 @@ export default class JobDesigner extends Vue {
       showErrors(`Error running job ${this.jobDef.name}`, err);
     }
   }
-
-  // for reactivity in a template
-  private loadedUsers = {};
-  private getUser(userId: string): User {
-    try {
-      if(!this.loadedUsers[userId]){
-        Vue.set(this.loadedUsers, userId, {name: 'loading...'});
-
-        (async () => {
-          this.loadedUsers[userId] = await this.$store.dispatch(`${StoreType.UserStore}/fetchModel`, userId);
-        })();
-      }
-
-      return this.loadedUsers[userId];
-    }
-    catch(err){
-      console.log('Error in loading a user.  Maybe it was deleted?', userId);
-      return {
-        name: 'Error',
-        email: 'Error'
-      }
-    }
-  }
-
   
   private showCreateItemMenu = false;
 
@@ -2572,28 +2365,58 @@ export default class JobDesigner extends Vue {
     this.navResizing = true;
   }
 
+  private navPanelWidth = 200;
+
+  private get editPanelMarginLeft(): number {
+    return this.navPanelWidth + 45;
+  }
+
+  private get maxNavPanelJobNameLength(): number {
+    return Math.floor(this.navPanelWidth / 10.5);
+  }
+
+  private get maxNavPanelTaskNameLength(): number {
+    return Math.floor(this.navPanelWidth / 9);
+  }
+
+  private get maxNavPanelStepNameLength(): number {
+    return Math.floor(this.navPanelWidth / 9.5);
+  }
+
+  private calcNavPanelJobName(jobDef: JobDef): string {
+    if(jobDef){
+      return truncateString(jobDef.name, this.maxNavPanelJobNameLength);
+    }
+    else {
+      return '';
+    }
+  }
+
+  private calcNavPanelTaskName(taskDef: TaskDef): string {
+    if(taskDef){
+      return truncateString(taskDef.name, this.maxNavPanelTaskNameLength);
+    }
+    else {
+      return '';
+    }
+  }
+
+  private calcNavPanelStepName(stepDef: StepDef): string {
+    if(stepDef){
+      return truncateString(stepDef.name, this.maxNavPanelStepNameLength);
+    }
+    else {
+      return '';
+    }
+  }
+
   private onMouseMove(event: MouseEvent){
     if(this.navResizing){
       const navPanel = <HTMLElement>this.$refs.navPanel;
 
       const newNavPanelWidth = event.pageX - navPanel.getBoundingClientRect().left;
       if(newNavPanelWidth > 200 && newNavPanelWidth < 400){
-        navPanel.style.width = `${newNavPanelWidth}px`;
-
-        const editJobPanel = <HTMLElement>this.$refs.editJobPanel;
-        if(editJobPanel){
-          editJobPanel.style.marginLeft = `${newNavPanelWidth+45}px`;
-        }
-        
-        const editTaskPanel = <HTMLElement>this.$refs.editTaskPanel;
-        if(editTaskPanel){
-          editTaskPanel.style.marginLeft = `${newNavPanelWidth+45}px`;
-        }
-
-        const editStepPanel = <HTMLElement>this.$refs.editStepPanel;
-        if(editStepPanel){
-          editStepPanel.style.marginLeft = `${newNavPanelWidth+45}px`;
-        }
+        this.navPanelWidth = newNavPanelWidth;
       }
     }
   }
@@ -2636,6 +2459,7 @@ export default class JobDesigner extends Vue {
     height: 90vh;
     overflow-y: auto;
     float: left;
+    border-right-width: 2px;
   }
 
   // for resizing the nav-job panel

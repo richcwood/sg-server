@@ -297,7 +297,7 @@
         <td class="td">
           <input type="checkbox" v-if="script" v-model="script.teamEditable" :disabled="script._originalAuthorUserId !== user.id" @change="onTeamEditableChanged(script)">
 
-          <template v-if="script._originalAuthorUserId !== user.id">
+          <template v-if="script && script._originalAuthorUserId !== user.id">
             <span class="button-spaced" style="color:gray;">(orignal author: {{getUser(script._originalAuthorUserId).name}})</span>
           </template>
         </td>
@@ -556,14 +556,10 @@ export default class InteractiveConsole extends Vue {
         name: this.newScriptName,
         scriptType: this.newScriptType,
         code: '',
-        shadowCopyCode: '',
         lastEditedDate: new Date().toISOString()
       };
 
-      this.script = await this.$store.dispatch(
-        `${StoreType.ScriptStore}/save`,
-        newScript
-      );
+      this.script = await this.$store.dispatch(`${StoreType.ScriptStore}/save`, newScript);
     } 
     catch (err) {
       console.error(err);
