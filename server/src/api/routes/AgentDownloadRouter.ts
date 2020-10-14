@@ -102,10 +102,14 @@ export class AgentDownloadRouter {
     if (!arch) {
       arch = '';
     } else {
-      if (validArchitectures.indexOf(arch) < 0) {
-        next(new ValidationError('Invalid arch param'));
-        // res.status(422).send('Invalid arch param');
-        return;
+      if ((platform == 'macos' || platform == 'linux') && arch == 'x64') {
+        arch = ''
+      } else {
+        if (validArchitectures.indexOf(arch) < 0) {
+          next(new ValidationError('Invalid arch param'));
+          // res.status(422).send('Invalid arch param');
+          return;
+        }
       }
     }
 
@@ -671,10 +675,14 @@ export class AgentDownloadRouter {
     if (!arch) {
       arch = '';
     } else {
-      if (validArchitectures.indexOf(arch) < 0) {
-        next(new ValidationError('Invalid arch param'));
-        // res.status(422).send('Invalid arch param');
-        return;
+      if ((platform == 'macos' || platform == 'linux') && arch == 'x64') {
+        arch = ''
+      } else {
+        if (validArchitectures.indexOf(arch) < 0) {
+          next(new ValidationError('Invalid arch param'));
+          // res.status(422).send('Invalid arch param');
+          return;
+        }
       }
     }
 
