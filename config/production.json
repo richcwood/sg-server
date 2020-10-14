@@ -28,5 +28,8 @@
   "sgTestUserPassword": "mypassword",
   "sgTestTeam": "5de95c0453162e8891f5a830",
   "sgAdminTeam": "5f57b2f14b5da00017df0d4f",
-  "sgTeam": "5e99cbcb2317950015edb655"
+  "sgTeam": "5e99cbcb2317950015edb655",
+  "old_secret": "shhh",
+  "old_secret_expiration": "2020-10-15",
+  "secret": "-$op)):x3#m{OtRt$3Cnzqoq#9ar)UD7<zRSr?L"
 }

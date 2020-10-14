@@ -3,7 +3,6 @@
     "braintreeCustomerId": "5de9691f53162e8891f5aa99",
     "noAgentAvailableFailureRetryInterval": 5000,
     "logDest": "console",
-    "secret": "shhh",
     "sgTestUser": "testuser@saasglue.com",
     "sgTestUserPassword": "mypassword",
     "sgTestTeam": "5de95c0453162e8891f5a830",

@@ -283,7 +283,26 @@ class AppBuilder {
             // todo - verify the team id was sent in the request header
             // todo - verify the team id is in the JWT tokens teamIds array
             const secret = config.get('secret');
-            const jwtData = jwt.verify(authToken, secret);
+            let jwtData;
+            try {
+              jwtData = jwt.verify(authToken, secret);
+            } catch(err) {
+              if (err.name == 'JsonWebTokenError') {
+                const old_secret = config.get('old_secret');
+                if (old_secret) {
+                  const old_secret_expiration = config.get('old_secret_expiration');
+                  if (new Date() < new Date(old_secret_expiration)) {
+                    jwtData = jwt.verify(authToken, old_secret);
+                  } else {
+                    throw err;
+                  }
+                } else {
+                  throw err;
+                }
+              } else {
+                throw err;
+              }
+            }
             // logger.LogDebug('New request jwtData', { jwtData });
             // console.log('setUpJwtSecurity -> jwtData -> ', util.inspect(jwtData, false, null));
 
