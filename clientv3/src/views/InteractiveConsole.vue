@@ -630,7 +630,7 @@ export default class InteractiveConsole extends Vue {
                   name: "Step1",
                   script: {
                     scriptType: ScriptType[this.scriptCopy.scriptType],
-                    code: btoa(this.scriptCopy.shadowCopyCode)
+                    code: btoa(this.scriptCopy.code)
                   },
                   order: 0,
                   command: this.runScriptCommand,
