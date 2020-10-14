@@ -7,7 +7,7 @@ import _ from "lodash";
 
 export const actions: ActionTree<CoreState, RootState> = {  
   
-  async getOrCreate({dispatch, getters}, {scriptId, userId}: {scriptId: string, userId: string}): Promise<ScriptShadow> {
+  async getOrCreate({dispatch, getters}, {scriptId, userId, shadowCopyCode}: {scriptId: string, userId: string, shadowCopyCode?: string}): Promise<ScriptShadow> {
     if(!scriptId || !userId){
       throw `Error, tried to getOrCreate a scriptShadow with a missing scriptId ${scriptId} or userId ${userId}`;
     }
@@ -16,39 +16,33 @@ export const actions: ActionTree<CoreState, RootState> = {
 
     let existingScriptShadow: ScriptShadow
     
-    try {
-      const foundScriptShadows: ScriptShadow[] = await dispatch('fetchModelsByFilter', {filter: `_userId==${userId},_scriptId==${scriptId}`});
+    const foundScriptShadows: ScriptShadow[] = await dispatch('fetchModelsByFilter', {filter: `_userId==${userId},_scriptId==${scriptId}`});
 
-      if(foundScriptShadows.length === 0){
-        // Filters are cached and not reexamined.  If the filter was invoked and
-        // then we later created the script shadow, the filter will still return an empty array
-        existingScriptShadow = getters.getByScriptIdAndUserId(scriptId, userId);
-      }
-      else if(foundScriptShadows.length === 1){
-        existingScriptShadow = foundScriptShadows[0];
-      }
-      else if(foundScriptShadows.length > 1) {
-        console.error(`Found multiple script shadows for script ${scriptId} for the user ${userId}`);
-        existingScriptShadow = foundScriptShadows[0]; // I guess just pick the first one
-      }
+    if(foundScriptShadows.length === 0){
+      // Filters are cached and not reexamined.  If the filter was invoked and
+      // then we later created the script shadow, the filter will still return an empty array
+      existingScriptShadow = getters.getByScriptIdAndUserId(scriptId, userId);
     }
-    catch(err){
-      console.log('failed to fetch script shadow', existingScriptShadow);
-      console.log('going to create a new script shadow');
+    else if(foundScriptShadows.length === 1){
+      existingScriptShadow = foundScriptShadows[0];
+    }
+    else if(foundScriptShadows.length > 1) {
+      console.error(`Found multiple script shadows for script ${scriptId} for the user ${userId}`);
+      existingScriptShadow = foundScriptShadows[0]; // I guess just pick the first one
     }
 
     if(!existingScriptShadow){
       existingScriptShadow = await dispatch('save', {
         _userId: userId,
         _scriptId: scriptId,
-        shadowCopyCode: script.code
+        shadowCopyCode: shadowCopyCode || script.code
       });
     }
 
     return existingScriptShadow;
   },
 
-  save({commit, state}, model: Model|undefined = state.selectedCopy) : Promise<Model> {
+  save({commit, state, dispatch}, model: Model|undefined = state.selectedCopy) : Promise<Model> {
     // vue uses "binary" but the API only saves code in base64
     // Convert the code to base64 before persisting it to the api
     const scriptShadow = <ScriptShadow>model;
@@ -57,7 +51,7 @@ export const actions: ActionTree<CoreState, RootState> = {
       scriptShadowCopy.shadowCopyCode = btoa(scriptShadow.shadowCopyCode); 
     }
 
-    return coreActions.save({commit, state}, scriptShadowCopy);
+    return coreActions.save({commit, state, dispatch}, scriptShadowCopy);
   },
 
   fetchModel({commit, state}, id: string): Promise<Model>{

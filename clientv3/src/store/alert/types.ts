@@ -19,7 +19,7 @@ export class SgAlert  {
   constructor( public readonly message: string, 
                public readonly placement: AlertPlacement,
                public readonly category: AlertCategory = AlertCategory.INFO,
-               public readonly timeShown: number = 3000){
+               public readonly timeShown: number = 5000){
     // Just give it a random id;
     this.id = Math.random().toFixed(6).substring(2);
   }

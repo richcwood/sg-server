@@ -6,8 +6,8 @@ import { Task } from '@/store/task/types';
 import { Step } from '@/store/step/types';
 export const actions: ActionTree<CoreState, RootState> = {  
   
-  save({commit, state}, model?: Job) : Promise<Model> {
-    return coreActions.save({commit, state}, model);
+  save({commit, state, dispatch}, model?: Job) : Promise<Model> {
+    return coreActions.save({commit, state, dispatch}, model);
   },
 
   fetchModel({commit, state}, id: string): Promise<Model>{

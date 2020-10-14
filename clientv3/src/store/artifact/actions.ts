@@ -5,8 +5,8 @@ import { Artifact } from './types';
 
 export const actions: ActionTree<CoreState, RootState> = {  
   
-  save({commit, state}, model?: Artifact) : Promise<Model> {
-    return coreActions.save({commit, state}, model);
+  save({commit, state, dispatch}, model?: Artifact) : Promise<Model> {
+    return coreActions.save({commit, state, dispatch}, model);
   },
   
   fetchModel({commit, state}, id: string): Promise<Model>{

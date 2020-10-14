@@ -22,8 +22,8 @@ interface SaveNameOptions {
 export const actions: ActionTree<CoreState, RootState> = {  
   
   // The agent save isn't really used.
-  save({commit, state}, model?: Agent) : Promise<Model> {
-    return coreActions.save({commit, state}, model);
+  save({commit, state, dispatch}, model?: Agent) : Promise<Model> {
+    return coreActions.save({commit, state, dispatch}, model);
   },
 
   async saveSettings({commit, state}, {id, properties}: SaveSettingsOptions) : Promise<Model> {

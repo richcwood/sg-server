@@ -137,78 +137,6 @@
       </validation-observer>
     </modal>
 
-
-    <modal name="create-script-modal" :classes="'round-popup'" :width="450" :height="250">
-      <validation-observer ref="createScriptValidationObserver">
-        <table class="table" width="100%" height="100%">
-          <tbody class="tbody">
-             <tr class="tr">
-              <td class="td"></td>
-              <td class="td">Create a new script</td>
-            </tr>
-            <tr class="tr">
-              <td class="td">Script Name</td>
-              <td class="td">
-                <validation-provider name="Script Name" rules="required|object-name" v-slot="{ errors }">
-                  <input class="input" id="create-script-modal-autofocus" type="text" v-on:keyup.enter="saveNewScript" v-model="newScriptName" placeholder="Enter the new script name">
-                  <div v-if="errors && errors.length > 0" class="message validation-error is-danger">{{ errors[0] }}</div>
-                </validation-provider>
-              </td>
-            </tr>
-            <tr class="tr">
-              <td class="td">Script Type</td>
-              <td class="td">
-                <validation-provider name="Script Type" rules="required" v-slot="{ errors }">
-                  <select class="input select" style="width: 250px; margin-top: 10px;" v-model="newScriptType">
-                    <option v-for="(value, key) in scriptTypesForMonaco" v-bind:key="`scriptType${key}-${value}`" :value="key"> {{value}} </option>
-                  </select>
-                  <div v-if="errors && errors.length > 0" class="message validation-error is-danger">{{ errors[0] }}</div>
-                </validation-provider>
-              </td>
-            </tr>
-            <tr class="tr">
-              <td class="td"></td>
-              <td class="td">
-                <button class="button is-primary" @click="saveNewScript">Create new script</button> 
-                <button class="button button-spaced" @click="cancelCreateNewScript">Cancel</button>
-              </td>
-            </tr>
-          </tbody> 
-        </table>
-      </validation-observer>
-    </modal>
-
-
-    <modal name="clone-script-modal" :classes="'round-popup'" :width="400" :height="200">
-      <validation-observer ref="cloneScriptValidationObserver">
-        <table class="table" width="100%" height="100%">
-          <tbody class="tbody">
-             <tr class="tr">
-              <td class="td"></td>
-              <td class="td">Clone script</td>
-            </tr>
-            <tr class="tr">
-              <td class="td">Script Name</td>
-              <td class="td">
-                <validation-provider name="Script Name" rules="required|object-name" v-slot="{ errors }">
-                  <input class="input" id="clone-script-modal-autofocus" type="text" v-on:keyup.enter="cloneScript" v-model="cloneScriptName" placeholder="Enter the new script name">
-                  <div v-if="errors && errors.length > 0" class="message validation-error is-danger">{{ errors[0] }}</div>
-                </validation-provider>
-              </td>
-            </tr>
-            <tr class="tr">
-              <td class="td"></td>
-              <td class="td">
-                <button class="button is-primary" @click="cloneScript">Clone script</button> 
-                <button class="button button-spaced" @click="cancelCloneScript">Cancel</button>
-              </td>
-            </tr>
-          </tbody> 
-        </table>
-      </validation-observer>
-    </modal>
-
-
     <modal name="edit-schedule-modal" :classes="'round-popup'" :width="700" :height="800">
       <table class="table">
         <tbody class="tbody">
@@ -1165,9 +1093,7 @@
               <label class="label">Script</label>
             </td>
             <td class="td">
-              <button class="button" @click="onCreateScriptClicked">Create</button>
-              <script-search :scriptId="selectedStepDefForEdit._scriptId" @scriptPicked="onScriptPicked"></script-search>
-              <button class="button button-spaced" :disabled="!selectedScript" @click="onCloneScriptClicked">Clone</button>
+              <script-search-with-create :scriptId="selectedStepDefForEdit._scriptId" @scriptPicked="onScriptPicked"></script-search-with-create>
             </td>
           </tr>
           <tr class="tr">
@@ -1196,7 +1122,6 @@ import moment from 'moment';
 import axios from 'axios';
 import _ from 'lodash';
 import DesignerTask from '@/components/DesignerTask.vue';
-import ScriptSearch from '@/components/ScriptSearch.vue';
 import { StoreType } from '@/store/types';
 import { JobDef, JobDefStatus } from '@/store/jobDef/types';
 import { TaskDef, TaskDefTarget } from '@/store/taskDef/types';
@@ -1222,10 +1147,11 @@ import { computeDownstreamTasks_inbound,
 import { ClickOutside } from '@/directive';
 import { Route } from 'vue-router';
 import { showErrors } from '@/utils/ErrorHandler'; 
+import ScriptSearchWithCreate from '@/components/ScriptSearchWithCreate.vue';
 
 @Component({
   components: {
-    Tabs, Tab, AgentSearch, DesignerTask, ScriptSearch, ScriptEditor, ValidationProvider, ValidationObserver, ArtifactSearch
+    Tabs, Tab, AgentSearch, DesignerTask, ScriptSearchWithCreate, ScriptEditor, ValidationProvider, ValidationObserver, ArtifactSearch
   },
   directives: { ClickOutside }
 })
@@ -1804,45 +1730,7 @@ export default class JobDesigner extends Vue {
     }
   }
 
-  private newScriptName: string = '';
   private newScriptType: ScriptType = ScriptType.NODE;
-  private cloneScriptName: string = ';'
-
-  private onCreateScriptClicked(){
-    this.newScriptName = '';
-    this.$modal.show('create-script-modal');
-    focusElement('create-script-modal-autofocus');
-  }
-  
-  private async saveNewScript(){
-    try {
-      if(this.selectedStepDefForEdit){
-        if( ! await (<any>this.$refs.createScriptValidationObserver).validate()){
-          return;
-        }
-
-        this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Creating script - ${this.newScriptName}`, AlertPlacement.FOOTER));      
-        const newScript = {
-          name: this.newScriptName, 
-          scriptType: this.newScriptType, 
-          code: '',
-          lastEditedDate: (new Date()).toISOString()
-        };
-
-        const savedScript = await this.$store.dispatch(`${StoreType.ScriptStore}/save`, newScript);
-        this.selectedStepDefForEdit._scriptId = savedScript.id;
-        // Sadly the _scriptId isn't always reactive (if it's undefined at first)
-        this.onSelectedStepDefForEditChanged();
-      }
-    }
-    catch(err){
-      console.error(err);
-      showErrors('Error creating script', err);
-    }
-    finally{
-      this.$modal.hide('create-script-modal');
-    }
-  }
 
   private onScriptPicked(script: Script){
     if(script){
@@ -1854,51 +1742,6 @@ export default class JobDesigner extends Vue {
 
     // Changing the ._scriptId property isn't reactive but just trigger it manually
     this.onSelectedStepDefForEditChanged();
-  }
-
-  private async onCloneScriptClicked(){
-    if(this.selectedScript){
-      this.cloneScriptName = `${this.selectedScript.name}Copy`;
-      this.$modal.show('clone-script-modal');
-      focusElement('clone-script-modal-autofocus');
-    }
-  }
-
-  private async cloneScript(){
-    try {
-      if(this.selectedScript){
-        if( ! await (<any>this.$refs.cloneScriptValidationObserver).validate()){
-          return;
-        }
-
-        this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Cloning script - ${this.cloneScriptName}`, AlertPlacement.FOOTER));      
-        const newScript = {
-          name: this.cloneScriptName,
-          scriptType: this.selectedScript.scriptType,
-          code: this.selectedScript.code,
-          shadowCopyCode: this.selectedScript.code,
-          lastEditedDate: (new Date()).toISOString()
-        };
-
-        const newSavedScript = await this.$store.dispatch(`${StoreType.ScriptStore}/save`, newScript);
-        this.selectedStepDefForEdit._scriptId = newSavedScript.id;
-      }
-    }
-    catch(err){
-      console.error(err);
-      showErrors('Error cloning script', err);
-    }
-    finally{
-      this.$modal.hide('clone-script-modal');
-    }
-  }
-
-  private cancelCloneScript(){
-    this.$modal.hide('clone-script-modal');
-  }
-
-  private cancelCreateNewScript(){
-    this.$modal.hide('create-script-modal');
   }
 
   private onTargetAgentPicked(agent: Agent){

@@ -240,16 +240,18 @@ export default class ScriptEditor extends Vue {
   private scriptEditor: monaco.editor.IStandaloneCodeEditor; 
 
   private scriptShadowCopySaveInterval: any;
+  
+  private monacoModelListener;
 
   private mounted(){
     // load all team vars when the component is mounted - they are small objects
     this.$store.dispatch(`${StoreType.TeamVariableStore}/fetchModelsByFilter`);
 
-    monaco.editor.onDidCreateModel((model: monaco.editor.ITextModel) => {
+    this.monacoModelListener = monaco.editor.onDidCreateModel((model: monaco.editor.ITextModel) => {
       model.onDidChangeContent((e: monaco.editor.IModelContentChangedEvent) => {
         if (this.scriptShadow) {
           const newCode = model.getLinesContent().join('\n');
-
+          
           if(this.scriptShadow.shadowCopyCode !== newCode){
             this.scriptShadow.shadowCopyCode = newCode;
             this.hasScriptShadowChanged = true;
@@ -261,24 +263,30 @@ export default class ScriptEditor extends Vue {
           }
         }
       });
+
+      model.dispose
     });
 
     if(localStorage.getItem('scriptEditor_theme')){
       this.theme = localStorage.getItem('scriptEditor_theme');
     }
 
-    this.onScriptChanged();
     this.onJobDefChanged();
+    this.onScriptShadowChanged();
   }
 
   private beforeDestroy(){
     if(this.scriptShadowCopySaveInterval){
       clearInterval(this.scriptShadowCopySaveInterval);
     }
+
+    if(this.monacoModelListener){
+      this.monacoModelListener.dispose();
+    }
   }
 
   private async tryToSaveScriptShadowCopy(){
-    if(this.hasScriptShadowChanged){
+    if(this.scriptShadow && this.hasScriptShadowChanged){
       this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Saving backup of script - ${this.script.name}`, AlertPlacement.FOOTER));
     
       try {
@@ -300,25 +308,15 @@ export default class ScriptEditor extends Vue {
   @Watch('theme')
   private onThemeChanged(){
     if(this.scriptEditor){
-      this.onScriptChanged(); // just re-trigger the entire editor creation
-
       localStorage.setItem('scriptEditor_theme', this.theme);
+      this.onScriptShadowChanged();
     }
   }
 
   @Prop() private script!: Script;
 
-  @Watch('script')
-  private async onScriptChanged() {
-    if(this.script && this.loggedInUserId){
-      this.scriptShadow = await this.$store.dispatch(`${StoreType.ScriptShadowStore}/getOrCreate`, {scriptId: this.script.id, userId: this.loggedInUserId});
-    }
-    else {
-      this.scriptShadow = null;
-    }
-  }
-
-  private scriptShadow: ScriptShadow|null = null;
+  @BindSelected({storeType: StoreType.ScriptShadowStore})
+  private scriptShadow!: ScriptShadow|null;
   private hasScriptShadowChanged = false;
 
   @Watch('scriptShadow')
@@ -366,7 +364,7 @@ export default class ScriptEditor extends Vue {
       if(this.script){
         this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Saving script type - ${this.script.name}`, AlertPlacement.FOOTER));      
  
-        await this.$store.dispatch(`${StoreType.ScriptStore}/save`, this.script);
+        await this.$store.dispatch(`${StoreType.ScriptStore}/save`, {script: this.script});
         this.onScriptShadowChanged();
         this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Script type updated`, AlertPlacement.FOOTER));
       }
@@ -389,7 +387,7 @@ export default class ScriptEditor extends Vue {
 
   private async revertScriptChanges(){
     try {
-      if(this.script){
+      if(this.script && this.scriptShadow){
         //revert the shadow copy
         this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Reverting script - ${this.script.name}`, AlertPlacement.FOOTER));      
         
@@ -414,14 +412,14 @@ export default class ScriptEditor extends Vue {
 
   private async onPublishScriptClicked(){
     try {
-      if(this.script){
+      if(this.script && this.scriptShadow){
         this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Saving script - ${this.script.name}`, AlertPlacement.FOOTER));      
         
         const updatedScript = {
           id: this.script.id,
           code: this.scriptShadow.shadowCopyCode
         };
-        this.script = await this.$store.dispatch(`${StoreType.ScriptStore}/save`, updatedScript);
+        this.script = await this.$store.dispatch(`${StoreType.ScriptStore}/save`, {script: updatedScript});
         
         // And update the shadow copy
         const updatedScriptShadow = {
