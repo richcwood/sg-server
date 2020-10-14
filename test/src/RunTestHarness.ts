@@ -48,6 +48,7 @@ import { PaymentMethodSchema } from '../../server/src/api/domain/PaymentMethod';
 import { PaymentTransactionSchema } from '../../server/src/api/domain/PaymentTransaction';
 import { convertData as convertRequestData } from '../../server/src/api/utils/RequestConverters';
 import { rabbitMQPublisher } from '../../server/src/api/utils/RabbitMQPublisher';
+import { braintreeClientTokenService } from '../../server/src/api/services/BraintreeClientTokenService';
 import { MissingObjectError, ValidationError, FreeTierLimitExceededError } from '../../server/src/api/utils/Errors';
 import * as path from 'path';
 import * as es from 'event-stream';
@@ -1190,13 +1191,17 @@ let BraintreeTesting = async () => {
     privateKey: privateKey
   });
 
-  const teamId = config.get('sgTestTeam');
+  const teamId = config.get('sgTeam');
 
-  let result = await gateway.customer.create({
-    id: teamId,
-    firstName: "Test team"
-  });
-  console.log('result -> ', util.inspect(result, false, null));
+  try {
+    let result = await gateway.customer.create({
+      id: teamId,
+      firstName: "Test team"
+    });
+    console.log('result -> ', util.inspect(result, false, null));
+  } catch(err) {
+    console.log(err);
+  }
 
   gateway.customer.find("5de9691f53162e8891f5aa99", function (err, address) {
     if (err) console.log('err -> ', err);
@@ -1225,6 +1230,8 @@ let BraintreeTesting = async () => {
     if (err) console.log('err -> ', err);
     console.log('address -> ', util.inspect(address, false, null));
   });
+
+  process.exit();
 
   // gateway.clientToken.generate({
   //   customerId: '5de9691f53162e8891f5aa99'
@@ -1512,6 +1519,28 @@ let PublishJobTask = async () => {
 
 
 
+let CreateBrainTreeCompanyForTeams = async () => {
+  const auth = `${config.get('adminToken')};`;
+  mongoose.connect(config.get('mongoUrl'), { useNewUrlParser: true });
+
+  const teams = await teamService.findAllTeamsInternal({});
+
+  if (_.isArray(teams) && teams.length > 0) {
+    for (let i = 0; i < teams.length; i++) {
+      let team = teams[i];
+      team.id = team._id;
+
+      let res: any = await braintreeClientTokenService.createBrainTreeCustomer(team);
+
+      console.log('res -> ', JSON.stringify(res, null, 4));
+    }
+  }
+  
+  process.exit(0);
+}
+
+
+
 let ProcessOrphanedTasks = async () => {
     const auth = `${config.get('adminToken')};`;
     mongoose.connect(config.get('mongoUrl'), { useNewUrlParser: true });
@@ -1790,7 +1819,8 @@ let SendTestBrowserAlert = async() => {
 }
 
 
-FixTeamDBRecords();
+CreateBrainTreeCompanyForTeams();
+// FixTeamDBRecords();
 // FixScriptDBRecords();
 // SendTestBrowserAlert();
 // ConfigNewRabbitMQServer();

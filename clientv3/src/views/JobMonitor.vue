@@ -82,7 +82,7 @@
               {{job.name}}
             </template>
           </td>
-          <td class="td">{{getUser(job.createdBy).name}}</td>
+          <td class="td">{{getUser(job.createdBy, job.name).name}}</td>
           <td class="td">{{enumKeyToPretty(JobStatus, job.status)}}</td>
           <td class="td">{{momentToStringV1(job.dateStarted)}}</td>
           <td class="td">{{momentToStringV1(job.dateCompleted)}}</td>
@@ -101,6 +101,7 @@ import { BindStoreModel } from '@/decorator';
 import { momentToStringV1, momentToStringV3 } from '@/utils/DateTime';
 import moment from 'moment';
 import axios from 'axios';
+import _ from 'lodash';
 import { JobStatus, TaskStatus, enumKeyToPretty, enumKeys } from '@/utils/Enums';
 import { User } from '@/store/user/types';
 
@@ -162,7 +163,7 @@ export default class JobMonitor extends Vue {
           if(job.name.toUpperCase().indexOf(filter) !== -1){
             return true;
           }
-          else if(this.getUser(job.createdBy).name.toUpperCase().indexOf(filter) !== -1){
+          else if(this.getUser(job.createdBy, job.name).name.toUpperCase().indexOf(filter) !== -1){
             return true;
           }
           else {
@@ -222,17 +223,21 @@ export default class JobMonitor extends Vue {
 
   // for reactivity in a template
   private loadedUsers = {};
-  private getUser(userId: string): User {
+  private getUser(userId: string, jobName: string): User {
     try {
-      if(!this.loadedUsers[userId]){
-        Vue.set(this.loadedUsers, userId, {name: 'loading...'});
+      if(jobName.startsWith('Inactive agent job')) {
+        return { name: userId, email: '' };
+      } else {
+        if(!this.loadedUsers[userId]){
+          Vue.set(this.loadedUsers, userId, {name: userId});
 
-        (async () => {
-          this.loadedUsers[userId] = await this.$store.dispatch(`${StoreType.UserStore}/fetchModel`, userId);
-        })();
+          (async () => {
+            this.loadedUsers[userId] = await this.$store.dispatch(`${StoreType.UserStore}/fetchModel`, userId);
+          })();
+        }
+
+        return this.loadedUsers[userId];
       }
-
-      return this.loadedUsers[userId];
     }
     catch(err){
       console.log('Error in loading a user.  Maybe it was deleted?', userId);

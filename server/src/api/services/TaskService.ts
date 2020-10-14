@@ -80,7 +80,7 @@ export class TaskService {
             filter = defaultFilter;
 
         const task: TaskSchema = await TaskModel.findOneAndUpdate(filter, data, { new: true }).select();
-        console.log('TaskService -> updateTask -> task -> ', JSON.stringify(task, null, 4));
+        // console.log('TaskService -> updateTask -> task -> ', JSON.stringify(task, null, 4));
         if (!task)
             throw new MissingObjectError(`Task "${id}" not found with filter "${JSON.stringify(filter)}"`);
 

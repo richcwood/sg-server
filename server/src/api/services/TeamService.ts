@@ -6,6 +6,7 @@ import { BaseLogger } from '../../shared/SGLogger';
 import { SGStrings } from '../../shared/SGStrings';
 import { SGUtils } from '../../shared/SGUtils';
 import { rabbitMQPublisher, PayloadOperation } from '../utils/RabbitMQPublisher';
+import { braintreeClientTokenService } from '../services/BraintreeClientTokenService';
 import * as mongodb from 'mongodb';
 import * as config from 'config';
 import * as _ from 'lodash';
@@ -38,12 +39,20 @@ export class TeamService {
   }
 
 
-  public async createUnassignedTeam(data: any, responseFields?: string): Promise<object> {
+  public async createUnassignedTeam(data: any, logger: BaseLogger, responseFields?: string): Promise<object> {
     let newTeam: TeamSchema;
     data.userAssigned = false;
     const teamModel = new TeamModel(data);
     newTeam = await teamModel.save();
 
+    /// Create company in braintree for billing
+    let res: any = await braintreeClientTokenService.createBrainTreeCustomer(newTeam);
+    if (!res.success) {
+      logger.LogError(`Error creating braintree customer: ${res.message}`, res);
+    } else {
+      logger.LogDebug(`Created braintree customer`, res);
+    }
+    
     if (responseFields) {
       return this.findTeam(newTeam.id, responseFields);
     }
@@ -111,19 +120,6 @@ export class TeamService {
     const teamExchange = SGStrings.GetTeamRoutingPrefix(newTeam._id);
     await rmqAdmin.createExchange(teamExchange, 'topic', false, true);
     await rmqAdmin.createUser(newUsername, newTeam.rmqPassword, teamExchange);
-
-    // let createAgentStubData = {
-    //   name: `BuildAgentStub - ${newTeam.id.toHexString()} - ${platform}${arch} - ${agentStubVersion}`,
-    //   runtimeVars: {
-    //     teamId: _teamId,
-    //     agentVersion: agentStubVersion,
-    //     platform: platform,
-    //     arch: arch,
-    //     secret: config.get("secret")
-    //   }
-    // };
-    // await localRestAccess.RestAPICall('job', 'POST', config.get("sgTeam"), {_jobDefId: config.get('buildAgentStubJobDefId')}, data);
-
 
     if (responseFields) {
       return this.findTeam(newTeam.id, responseFields);
