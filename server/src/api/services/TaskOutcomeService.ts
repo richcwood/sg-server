@@ -326,7 +326,7 @@ export class TaskOutcomeService {
         let success: boolean = false;
         try {
             let getTaskRoutesRes = await GetTaskRoutes(_teamId, task, logger);
-            console.log('PublishTask -> getTaskRoutesRes -> ', JSON.stringify(getTaskRoutesRes, null, 4));
+            // console.log('PublishTask -> getTaskRoutesRes -> ', JSON.stringify(getTaskRoutesRes, null, 4));
             if (!getTaskRoutesRes.routes) {
                 let deltas: any;
                 let taskFailed: boolean = false;
@@ -354,7 +354,7 @@ export class TaskOutcomeService {
             } else {
                 if (getTaskRoutesRes.task)
                     task = getTaskRoutesRes.task;
-                console.log('PublishTask -> task -> ', JSON.stringify(task, null, 4));
+                // console.log('PublishTask -> task -> ', JSON.stringify(task, null, 4));
                 const resFindJob = await jobService.findJob(_teamId, task._jobId, 'runtimeVars');
                 if (!resFindJob || (_.isArray(resFindJob) && resFindJob.length === 0)) {
                     throw new MissingObjectError(`Job ${task._jobId} not found.`);

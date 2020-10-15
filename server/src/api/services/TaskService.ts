@@ -67,11 +67,11 @@ export class TaskService {
 
 
     public async updateTask(_teamId: mongodb.ObjectId, id: mongodb.ObjectId, data: any, logger: BaseLogger, filter?: any, correlationId?: string, responseFields?: string): Promise<object> {
-        logger.LogDebug('TaskService -> updateTask ->', {
-            'id': id,
-            'data': JSON.stringify(data, null, 4),
-            'filter': JSON.stringify(filter, null, 4)
-        });
+        // logger.LogDebug('TaskService -> updateTask ->', {
+        //     'id': id,
+        //     'data': JSON.stringify(data, null, 4),
+        //     'filter': JSON.stringify(filter, null, 4)
+        // });
 
         const defaultFilter = { _id: id, _teamId };
         if (filter)

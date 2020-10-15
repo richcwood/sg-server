@@ -50,6 +50,7 @@ import { convertData as convertRequestData } from '../../server/src/api/utils/Re
 import { rabbitMQPublisher } from '../../server/src/api/utils/RabbitMQPublisher';
 import { braintreeClientTokenService } from '../../server/src/api/services/BraintreeClientTokenService';
 import { MissingObjectError, ValidationError, FreeTierLimitExceededError } from '../../server/src/api/utils/Errors';
+import { CheckWaitingForAgentTasks } from '../../server/src/api/utils/Shared';
 import * as path from 'path';
 import * as es from 'event-stream';
 import * as truncate from 'truncate-utf8-bytes';
@@ -516,6 +517,22 @@ let DeleteMongoData = async () => {
   await mongoRepo.DeleteByQuery({ _teamId: { $nin: teamsToKeep } }, 'schedule');
   await mongoRepo.DeleteByQuery({ _id: { $nin: teamsToKeep } }, 'team');
   await mongoRepo.DeleteByQuery({ email: { $nin: usersToKeep } }, 'user');
+
+  process.exit();
+}
+
+
+let RunCheckWaitingForAgentTasks = async (_teamId: string) => {
+  mongoose.connect(config.get('mongoUrl'), { useNewUrlParser: true });
+
+  let logger = new BaseLogger('RunTestHarness');
+  logger.Start();
+
+  const amqpUrl = config.get('amqpUrl');
+  const rmqVhost = config.get('rmqVhost');
+  let amqp: AMQPConnector = new AMQPConnector('RunTestHarness', '', amqpUrl, rmqVhost, 1, (activeMessages) => { }, logger);
+
+  await CheckWaitingForAgentTasks(new mongodb.ObjectId(_teamId), null, logger, amqp);
 
   process.exit();
 }
@@ -1819,7 +1836,8 @@ let SendTestBrowserAlert = async() => {
 }
 
 
-CreateBrainTreeCompanyForTeams();
+RunCheckWaitingForAgentTasks('5f57b2f14b5da00017df0d4f');
+// CreateBrainTreeCompanyForTeams();
 // FixTeamDBRecords();
 // FixScriptDBRecords();
 // SendTestBrowserAlert();
