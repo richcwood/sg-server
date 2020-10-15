@@ -64,6 +64,21 @@ export class TaskOutcomeController {
   }
 
 
+  public async deleteTaskOutcome(req: Request, resp: Response, next: NextFunction): Promise<void> {
+    const _teamId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._teamid);
+    const response: ResponseWrapper = resp['body'];
+    try {
+      const _jobId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._jobId);
+      response.data = await taskOutcomeService.deleteTaskOutcome(_teamId, _jobId, req.header('correlationId'));
+      response.statusCode = ResponseCode.OK;
+      next();
+    }
+    catch (err) {
+      next(err);
+    }
+  }
+
+
   public async createTaskOutcome(req: Request, resp: Response, next: NextFunction): Promise<void> {
     const logger: BaseLogger = (<any>req).logger;
     let _teamId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._teamid);

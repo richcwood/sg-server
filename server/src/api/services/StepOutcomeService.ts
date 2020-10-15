@@ -46,6 +46,30 @@ export class StepOutcomeService {
     }
 
 
+    public async deleteStepOutcome(_teamId: mongodb.ObjectId, _jobId: mongodb.ObjectId, correlationId?: string): Promise<object> {
+        const filter = { _jobId, _teamId };
+
+        let res: any = {"ok": 1, "deletedCount": 0};
+
+        const stepOutcomesQuery = await StepOutcomeModel.find(filter).select('id');
+        if (_.isArray(stepOutcomesQuery) && stepOutcomesQuery.length === 0) {
+            res.n = 0;
+        } else {
+            res.n = stepOutcomesQuery.length;
+            for (let i = 0; i < stepOutcomesQuery.length; i++) {
+                const stepOutcome: any = stepOutcomesQuery[i];
+                let deleted = await StepOutcomeModel.deleteOne({_id: stepOutcome._id});
+                if (deleted.ok) {
+                    res.deletedCount += deleted.deletedCount;
+                    await rabbitMQPublisher.publish(_teamId, "StepOutcome", correlationId, PayloadOperation.DELETE, { id: stepOutcome._id });
+                }
+            }
+        }
+
+        return res;
+    }
+
+
     public async createStepOutcomeInternal(data: any): Promise<object> {
         const model = new StepOutcomeModel(data);
         await model.save();

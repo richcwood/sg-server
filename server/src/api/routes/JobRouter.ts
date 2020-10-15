@@ -13,6 +13,7 @@ export class JobRouter {
         this.router.post('/ic/', jobController.createInteractiveConsoleJob);
         this.router.post('/', jobController.createJob);
         this.router.put('/:jobId', jobController.updateJob);
+        this.router.delete('/', jobController.deleteJobDefJobs);
     }
 }
 

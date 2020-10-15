@@ -67,6 +67,21 @@ export class TaskController {
     }
 
 
+    public async deleteTask(req: Request, resp: Response, next: NextFunction): Promise<void> {
+        const _teamId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._teamid);
+        const response: ResponseWrapper = resp['body'];
+        try {
+            const _jobId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._jobId);
+            response.data = await taskService.deleteTask(_teamId, _jobId, req.header('correlationId'));
+            response.statusCode = ResponseCode.OK;
+            next();
+        }
+        catch (err) {
+            next(err);
+        }
+    }
+
+
     public async createTask(req: Request, resp: Response, next: NextFunction): Promise<void> {
         const _teamId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._teamid);
         const response: ResponseWrapper = resp['body'];

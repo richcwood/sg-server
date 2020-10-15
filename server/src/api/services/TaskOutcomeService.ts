@@ -54,6 +54,30 @@ export class TaskOutcomeService {
     }
 
 
+    public async deleteTaskOutcome(_teamId: mongodb.ObjectId, _jobId: mongodb.ObjectId, correlationId?: string): Promise<object> {
+        const filter = { _jobId, _teamId };
+
+        let res: any = {"ok": 1, "deletedCount": 0};
+
+        const taskOutcomesQuery = await TaskOutcomeModel.find(filter).select('id');
+        if (_.isArray(taskOutcomesQuery) && taskOutcomesQuery.length === 0) {
+            res.n = 0;
+        } else {
+            res.n = taskOutcomesQuery.length;
+            for (let i = 0; i < taskOutcomesQuery.length; i++) {
+                const taskOutcome: any = taskOutcomesQuery[i];
+                let deleted = await TaskOutcomeModel.deleteOne({_id: taskOutcome._id});
+                if (deleted.ok) {
+                    res.deletedCount += deleted.deletedCount;
+                    await rabbitMQPublisher.publish(_teamId, "TaskOutcome", correlationId, PayloadOperation.DELETE, { id: taskOutcome._id });
+                }
+            }
+        }
+
+        return res;
+    }
+
+
     public async createTaskOutcomeInternal(data: any): Promise<object> {
         const model = new TaskOutcomeModel(data);
         await model.save();

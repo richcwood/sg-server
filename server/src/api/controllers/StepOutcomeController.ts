@@ -81,6 +81,21 @@ export class StepOutcomeController {
   }
 
 
+  public async deleteStepOutcome(req: Request, resp: Response, next: NextFunction): Promise<void> {
+    const _teamId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._teamid);
+    const response: ResponseWrapper = resp['body'];
+    try {
+      const _jobId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._jobId);
+      response.data = await stepOutcomeService.deleteStepOutcome(_teamId, _jobId, req.header('correlationId'));
+      response.statusCode = ResponseCode.OK;
+      next();
+    }
+    catch (err) {
+      next(err);
+    }
+  }
+
+
   public async createStepOutcome(req: Request, resp: Response, next: NextFunction): Promise<void> {
     let _teamId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._teamid);
     if (_teamId.toHexString() == config.get('sgAdminTeam') && req.body._teamId && req.body._teamId != _teamId.toHexString())

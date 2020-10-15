@@ -27,7 +27,7 @@ export class JobController {
             const _teamId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._teamid);
             const response: ResponseWrapper = (resp as any).body;
             const job = await jobService.findJob(_teamId, new mongodb.ObjectId(req.params.jobId), (<string>req.query.responseFields));
-            console.log('JobController -> getJob -> job -> ', JSON.stringify(job, null, 4));
+            // console.log('JobController -> getJob -> job -> ', JSON.stringify(job, null, 4));
 
             if (_.isArray(job) && job.length === 0) {
                 next(new MissingObjectError(`Job ${req.params.jobId} not found.`));
@@ -62,6 +62,27 @@ export class JobController {
 
             let newJob = await jobService.createJob(_teamId, req.body, createdBy, TaskSource.CONSOLE, logger, req.header('correlationId'), (<string>req.query.responseFields));
             response.data = convertResponseData(JobSchema, newJob);
+            response.statusCode = ResponseCode.CREATED;
+            next();
+        }
+        catch (err) {
+            next(err);
+        }
+    }
+
+
+    public async deleteJobDefJobs(req: Request, resp: Response, next: NextFunction): Promise<void> {
+        const logger: BaseLogger = (<any>req).logger;
+        const _teamId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._teamid);
+        const response: ResponseWrapper = resp['body'];
+        try {
+            let filter: any = { _teamId };
+            if (Object.keys(req.headers).indexOf('_jobdefid') >= 0)
+                filter._jobDefId = mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._jobdefid);
+            if (Object.keys(req.headers).indexOf('name') >= 0)
+                filter.name = { $regex: <string>req.headers.name };
+            let res = await jobService.deleteJobDefJobs(_teamId, filter, logger, req.header('correlationId'));
+            response.data = res;
             response.statusCode = ResponseCode.CREATED;
             next();
         }

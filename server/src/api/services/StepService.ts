@@ -3,6 +3,7 @@ import { StepSchema, StepModel } from '../domain/Step';
 import { rabbitMQPublisher, PayloadOperation } from '../utils/RabbitMQPublisher';
 import { MissingObjectError, ValidationError } from '../utils/Errors';
 import * as mongodb from 'mongodb';
+import * as _ from 'lodash';
 
 
 export class StepService {
@@ -33,6 +34,30 @@ export class StepService {
         const model = new StepModel(data);
         await model.save();
         return;
+    }
+
+
+    public async deleteStep(_teamId: mongodb.ObjectId, _jobId: mongodb.ObjectId, correlationId?: string): Promise<object> {
+        const filter = { _jobId, _teamId };
+
+        let res: any = {"ok": 1, "deletedCount": 0};
+
+        const stepsQuery = await StepModel.find(filter).select('id');
+        if (_.isArray(stepsQuery) && stepsQuery.length === 0) {
+            res.n = 0;
+        } else {
+            res.n = stepsQuery.length;
+            for (let i = 0; i < stepsQuery.length; i++) {
+                const step: any = stepsQuery[i];
+                let deleted = await StepModel.deleteOne({_id: step._id});
+                if (deleted.ok) {
+                    res.deletedCount += deleted.deletedCount;
+                    await rabbitMQPublisher.publish(_teamId, "Step", correlationId, PayloadOperation.DELETE, { id: step._id });
+                }
+            }
+        }
+
+        return res;
     }
 
 
