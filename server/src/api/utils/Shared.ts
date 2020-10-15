@@ -178,7 +178,11 @@ let CheckWaitingForAgentTasks = async (_teamId: mongodb.ObjectId, _agentId: mong
     const noAgentTasks = await taskService.findAllTasksInternal(noAgentTasksFilter);
     if (_.isArray(noAgentTasks) && noAgentTasks.length > 0) {
         for (let i = 0; i < noAgentTasks.length; i++) {
-            let updatedTask: any = await taskService.updateTask(_teamId, noAgentTasks[i]._id, { $pull: { attemptedRunAgentIds: _agentId } }, logger);
+            let updatedTask: any;
+            if (_agentId)
+                updatedTask = await taskService.updateTask(_teamId, noAgentTasks[i]._id, { $pull: { attemptedRunAgentIds: _agentId } }, logger);
+            else
+                updatedTask = await taskService.updateTask(_teamId, noAgentTasks[i]._id, { attemptedRunAgentIds: [] }, logger);
 
             const tasks = await taskService.findAllJobTasks(_teamId, updatedTask._jobId, 'toRoutes');
             const tasksToRoutes = SGUtils.flatMap(x => x, tasks.map((t) => SGUtils.flatMap(x => x[0], t.toRoutes)));
