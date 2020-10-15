@@ -36,7 +36,7 @@ let GetTaskRoutes = async (_teamId: mongodb.ObjectId, task: TaskSchema, logger: 
         const targetAgentQuery = await agentService.findAllAgents(_teamId, { '_id': task.targetAgentId, 'offline': false, 'lastHeartbeatTime': { $gte: (new Date().getTime()) - parseInt(activeAgentTimeoutSeconds) * 1000 } }, 'lastHeartbeatTime tags propertyOverrides numActiveTasks attemptedRunAgentIds');
         if (!targetAgentQuery || (_.isArray(targetAgentQuery) && targetAgentQuery.length === 0)) {
             const errMsg = `Target agent not available`;
-            logger.LogError(errMsg, { Class: 'Shared', Method: 'GetTaskRoutes', _teamId, _jobId: task._jobId, task: task });
+            logger.LogDebug(errMsg, { Class: 'Shared', Method: 'GetTaskRoutes', _teamId, _jobId: task._jobId, task: task });
             return { routes: null, error: errMsg, failureCode: Enums.TaskFailureCode.NO_AGENT_AVAILABLE };
         }
 
@@ -55,7 +55,7 @@ let GetTaskRoutes = async (_teamId: mongodb.ObjectId, task: TaskSchema, logger: 
 
             if (agentsWithRequiredTags.length < 1) {
                 const errMsg = `No agents with tags required to complete this task`;
-                logger.LogError(errMsg, { Class: 'Shared', Method: 'GetTaskRoutes', _teamId, _jobId: task._jobId, task: task });
+                logger.LogDebug(errMsg, { Class: 'Shared', Method: 'GetTaskRoutes', _teamId, _jobId: task._jobId, task: task });
                 return { routes: null, error: errMsg, failureCode: Enums.TaskFailureCode.NO_AGENT_AVAILABLE };
             }
 
