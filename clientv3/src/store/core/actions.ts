@@ -2,7 +2,6 @@ import { Commit, Dispatch } from 'vuex';
 import { CoreState, Model } from '@/store/types';
 import axios from 'axios';
 import lodash from 'lodash';
-import store from '..';
 
 // For pagination, what are the defaults for max models loaded, the default page size etc.
 const DEFAULT_MAX_PAGE_TOTAL = 2500;
