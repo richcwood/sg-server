@@ -186,14 +186,14 @@ export default class TaskMonitorDetails extends Vue {
   private readonly enumKeyToPretty = enumKeyToPretty;
   private readonly TaskDefTarget = TaskDefTarget;
 
-  @Prop()
-  private filterTaskOutcomeStatus = '';
+  @Prop({default: ''})
+  private filterTaskOutcomeStatus!: string;
 
-  @Prop()
-  private filterTaskOutcomeAgent = '';
+  @Prop({default: ''})
+  private filterTaskOutcomeAgent!: string;
 
-  @Prop()
-  private filterStepOutcome = '';
+  @Prop({default: ''})
+  private filterStepOutcome!: string;
 
   @Prop()
   private selectedTaskId!: string;

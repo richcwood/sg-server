@@ -33,7 +33,7 @@ const saveScriptEdits = async (next: (options?: any) => {}) => {
         id: scriptCopy.id,
         shadowCopyCode: scriptCopy.shadowCopyCode
       };
-      await store.dispatch(`${StoreType.ScriptStore}/save`, scriptForSave);
+      await store.dispatch(`${StoreType.ScriptStore}/save`, {script: scriptForSave});
       scriptCopy.code = scriptCopy.shadowCopyCode;
       store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Saved a backup of script - ${scriptCopy.name}`, AlertPlacement.FOOTER));
     }

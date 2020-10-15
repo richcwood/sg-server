@@ -1,4 +1,4 @@
-import { Commit } from 'vuex';
+import { Commit, Dispatch } from 'vuex';
 import { CoreState, Model } from '@/store/types';
 import axios from 'axios';
 import lodash from 'lodash';
@@ -99,7 +99,7 @@ export class FetchModelDebouncer {
 
 export const actions = {  
   
-  async save({commit, state}: {commit: Commit, state: CoreState}, model: Model|undefined = state.selectedCopy) : Promise<Model> {
+  async save({commit, state, dispatch}, model: Model|undefined = state.selectedCopy) : Promise<Model> {
     if(!model){
       throw 'Tried to save a model but the stores selected copy was not set';
     }
@@ -124,7 +124,7 @@ export const actions = {
     // In any case, you can't use the old object that was selected - that reference is dead
     if(isSelectedNewModel){
       // This code simply updates the selected model with the real value that is now in the store
-      commit('select', updatedModel);
+      await dispatch('select', updatedModel);
     }
 
     return updatedModel;

@@ -249,7 +249,7 @@ export default class Scripts extends Vue {
 
       const script = await this.$store.dispatch(
         `${StoreType.ScriptStore}/save`,
-        newScript
+        {script: newScript}
       );
 
       // select the script in the interactive console

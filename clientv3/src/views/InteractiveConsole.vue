@@ -1,73 +1,5 @@
 <template>
   <div class="main" style="margin-left: 12px; margin-right: 12px;">
-
-    <!-- Create script modal -->
-    <modal name="create-script-modal" :classes="'round-popup'" :width="450" :height="250">
-      <validation-observer ref="createScriptValidationObserver">
-        <table class="table" width="100%" height="100%">
-          <tbody class="tbody">
-            <tr class="tr">
-              <td class="td"></td>
-              <td class="td">Create a new script</td>
-            </tr>
-            <tr class="tr">
-              <td class="td">Script Name</td>
-              <td class="td">
-                <validation-provider
-                  name="Script Name"
-                  rules="required|object-name"
-                  v-slot="{ errors }"
-                >
-                  <input
-                    class="input"
-                    id="create-script-modal-autofocus"
-                    type="text"
-                    v-on:keyup.enter="saveNewScript"
-                    v-model="newScriptName"
-                    placeholder="Enter the new script name"
-                  />
-                  <div
-                    v-if="errors && errors.length > 0"
-                    class="message validation-error is-danger"
-                  >{{ errors[0] }}</div>
-                </validation-provider>
-              </td>
-            </tr>
-            <tr class="tr">
-              <td class="td">Script Type</td>
-              <td class="td">
-                <validation-provider name="Script Type" rules="required" v-slot="{ errors }">
-                  <select
-                    class="input select"
-                    style="width: 250px; margin-top: 10px;"
-                    v-model="newScriptType"
-                  >
-                    <option
-                      v-for="(value, key) in scriptTypesForMonaco"
-                      v-bind:key="`scriptType${key}-${value}`"
-                      :value="key"
-                    >{{value}}</option>
-                  </select>
-                  <div
-                    v-if="errors && errors.length > 0"
-                    class="message validation-error is-danger"
-                  >{{ errors[0] }}</div>
-                </validation-provider>
-              </td>
-            </tr>
-            <tr class="tr">
-              <td class="td"></td>
-              <td class="td">
-                <button class="button is-primary" @click="saveNewScript">Create new script</button>
-                <button class="button button-spaced" @click="cancelCreateNewScript">Cancel</button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </validation-observer>
-    </modal>
-
-
     <!-- Pick agents modal - for running scripts -->
     <modal name="pick-agents-modal" :classes="'round-popup'" :width="800" :height="700">
       <validation-observer ref="runScriptValidationObserver">
@@ -231,45 +163,12 @@
     </modal>
 
 
-    <!-- Clone script modal -->
-    <modal name="clone-script-modal" :classes="'round-popup'" :width="400" :height="200">
-      <validation-observer ref="cloneScriptValidationObserver">
-        <table class="table" width="100%" height="100%">
-          <tbody class="tbody">
-             <tr class="tr">
-              <td class="td"></td>
-              <td class="td">Clone script</td>
-            </tr>
-            <tr class="tr">
-              <td class="td">Script Name</td>
-              <td class="td">
-                <validation-provider name="Script Name" rules="required|object-name" v-slot="{ errors }">
-                  <input class="input" id="clone-script-modal-autofocus" type="text" v-on:keyup.enter="cloneScript" v-model="cloneScriptName" placeholder="Enter the new script name">
-                  <div v-if="errors && errors.length > 0" class="message validation-error is-danger">{{ errors[0] }}</div>
-                </validation-provider>
-              </td>
-            </tr>
-            <tr class="tr">
-              <td class="td"></td>
-              <td class="td">
-                <button class="button is-primary" @click="cloneScript">Clone script</button> 
-                <button class="button button-spaced" @click="cancelCloneScript">Cancel</button>
-              </td>
-            </tr>
-          </tbody> 
-        </table>
-      </validation-observer>
-    </modal>
-
-
 
 
     <table class="table" style="width: 100%;">
       <tr class="tr">
         <td class="td" colspan="2">
-          <button class="button" @click="onCreateScriptClicked">Create Script</button>
-          <script-search :scriptId="scriptId" @scriptPicked="onScriptPicked"></script-search>
-          <button class="button button-spaced" style="margin-left: 12px;" :disabled="!scriptCopy" @click="onCloneScriptClicked">Clone</button>
+          <script-search-with-create :scriptId="scriptId" @scriptPicked="onScriptPicked"></script-search-with-create>
         </td>
       </tr>
     </table>
@@ -295,9 +194,9 @@
           <label class="label">Team Members Can Edit</label>
         </td>
         <td class="td">
-          <input type="checkbox" v-if="script" v-model="script.teamEditable" :disabled="script._originalAuthorUserId !== user.id" @change="onTeamEditableChanged(script)">
+          <input type="checkbox" v-if="script" v-model="script.teamEditable" :disabled="script._originalAuthorUserId !== loggedInUserId" @change="onTeamEditableChanged(script)">
 
-          <template v-if="script && script._originalAuthorUserId !== user.id">
+          <template v-if="script && script._originalAuthorUserId !== loggedInUserId">
             <span class="button-spaced" style="color:gray;">(orignal author: {{getUser(script._originalAuthorUserId).name}})</span>
           </template>
         </td>
@@ -340,7 +239,7 @@
 
 <script lang="ts">
 import { Component, Prop, Vue, Watch } from "vue-property-decorator";
-import { BindStoreModel } from "@/decorator";
+import { BindStoreModel, BindProp } from "@/decorator";
 import { StoreType } from "@/store/types";
 import { Agent } from "../store/agent/types";
 import { User } from "@/store/user/types";
@@ -349,8 +248,8 @@ import axios from "axios";
 import { SgAlert, AlertPlacement, AlertCategory } from "@/store/alert/types";
 import { focusElement } from "@/utils/Shared";
 import { Script, ScriptType, scriptTypesForMonaco } from "@/store/script/types";
+import { ScriptShadow } from '@/store/scriptShadow/types';
 import { TaskDefTarget } from "@/store/taskDef/types";
-import ScriptSearch from "@/components/ScriptSearch.vue";
 import { BindSelected, BindSelectedCopy } from "@/decorator";
 import { ValidationProvider, ValidationObserver } from "vee-validate";
 import _ from "lodash";
@@ -366,10 +265,11 @@ import AgentSearch from '@/components/AgentSearch.vue';
 import ScriptEditor from '@/components/ScriptEditor.vue';
 import { showErrors } from '@/utils/ErrorHandler';
 import TaskMonitorDetails from "@/components/TaskMonitorDetails.vue";
+import ScriptSearchWithCreate from '@/components/ScriptSearchWithCreate.vue';
 import moment from 'moment';
 
 @Component({
-  components: { AgentSearch, ScriptSearch, ScriptEditor, ValidationProvider, ValidationObserver, TaskMonitorDetails },
+  components: { AgentSearch, ScriptSearchWithCreate, ScriptEditor, ValidationProvider, ValidationObserver, TaskMonitorDetails },
   props: {}
 })
 export default class InteractiveConsole extends Vue {
@@ -382,10 +282,6 @@ export default class InteractiveConsole extends Vue {
   private readonly StepStatus = StepStatus;
   private readonly TaskFailureCode = TaskFailureCode;
   private readonly enumKeyToPretty = enumKeyToPretty;
-
-  private newScriptName: string = '';
-  private newScriptType: ScriptType = ScriptType.NODE;
-  private cloneScriptName: string = '';
 
   private runAgentTarget = TaskDefTarget.SINGLE_AGENT;
   private runAgentTargetAgentId = '';
@@ -404,16 +300,19 @@ export default class InteractiveConsole extends Vue {
   @BindSelected({ storeType: <any>StoreType.ScriptStore.toString() })
   private script!: Script | null;
 
-  @BindStoreModel({storeType: StoreType.SecurityStore, selectedModelName: 'user'})
-  private user: any;
-
   @BindSelectedCopy({ storeType: StoreType.ScriptStore })
   private scriptCopy!: Script | null;
+
+  @BindSelected({storeType: StoreType.ScriptShadowStore})
+  private scriptShadow!: ScriptShadow|null;
 
   @BindSelected({ storeType: StoreType.JobStore })
   private selectedJob!: Job | null;
 
   private runningJobs: Job[] = [];
+
+  @BindProp({storeType: StoreType.SecurityStore, selectedModelName: 'user', propName: 'id'})
+  private loggedInUserId!: string;
 
   private async mounted() {
     if(this.script){
@@ -422,7 +321,6 @@ export default class InteractiveConsole extends Vue {
   }
 
   private beforeDestroy(){
-
     if(this.scriptCopy){
       // update script with a version of itself to undo any unsaved changes.  If changes have already
       // been saved it won't matter
@@ -497,19 +395,13 @@ export default class InteractiveConsole extends Vue {
 
   private async onTeamEditableChanged(script: Script){
     try {
-      await this.$store.dispatch(`${StoreType.ScriptStore}/save`, {id: script.id, teamEditable: script.teamEditable});
+      await this.$store.dispatch(`${StoreType.ScriptStore}/save`, {script: {id: script.id, teamEditable: script.teamEditable}});
       this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Script saved`, AlertPlacement.FOOTER));
     }
     catch(err){
       console.error(err);
       showErrors('Error saving the script', err);
     }
-  }
-
-  private onCreateScriptClicked() {
-    this.newScriptName = '';
-    this.$modal.show('create-script-modal');
-    focusElement('create-script-modal-autofocus');
   }
 
   private onScriptPicked(script: Script) {
@@ -531,62 +423,6 @@ export default class InteractiveConsole extends Vue {
     }
   }
 
-  private async onCloneScriptClicked() {
-    if(this.script){
-      this.cloneScriptName = `${this.script.name}Copy`;
-      this.$modal.show('clone-script-modal');
-      focusElement('clone-script-modal-autofocus');
-    }
-  }
-
-  private async saveNewScript() {
-    if (!(await (<any>this.$refs.createScriptValidationObserver).validate())) {
-      return;
-    }
-
-    try {
-      this.$store.dispatch(
-        `${StoreType.AlertStore}/addAlert`,
-        new SgAlert(
-          `Creating script - ${this.newScriptName}`,
-          AlertPlacement.FOOTER
-        )
-      );
-      const newScript = {
-        name: this.newScriptName,
-        scriptType: this.newScriptType,
-        code: '',
-        lastEditedDate: new Date().toISOString()
-      };
-
-      this.script = await this.$store.dispatch(`${StoreType.ScriptStore}/save`, newScript);
-    } 
-    catch (err) {
-      console.error(err);
-      showErrors('Error creating script', err);
-    } 
-    finally {
-      this.$modal.hide("create-script-modal");
-    }
-  }
-
-  private cancelCreateNewScript() {
-    this.$modal.hide("create-script-modal");
-  }
-
-  private async onSaveScriptClicked() {
-    try {
-      if (this.scriptCopy) {
-        this.script = await this.$store.dispatch(`${StoreType.ScriptStore}/save`, this.scriptCopy);
-        this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Script saved`, AlertPlacement.FOOTER));
-      }
-    } 
-    catch (err) {
-      console.error(err);
-      showErrors('Error saving script', err);
-    }
-  }
-
   private async onRunScriptClicked() {
     this.$modal.show('pick-agents-modal');
   }
@@ -605,6 +441,10 @@ export default class InteractiveConsole extends Vue {
 
   private async onRunScript(){
     if( ! await (<any>this.$refs.runScriptValidationObserver).validate()){
+      return;
+    }
+    if(!this.scriptShadow){
+      console.error('Script shadow was not loaded so it could not be run.');
       return;
     }
 
@@ -630,7 +470,7 @@ export default class InteractiveConsole extends Vue {
                   name: "Step1",
                   script: {
                     scriptType: ScriptType[this.scriptCopy.scriptType],
-                    code: btoa(this.scriptCopy.shadowCopyCode)
+                    code: btoa(this.scriptShadow.shadowCopyCode) // api wants it encoded
                   },
                   order: 0,
                   command: this.runScriptCommand,
@@ -655,38 +495,6 @@ export default class InteractiveConsole extends Vue {
     finally {
       this.$modal.hide('pick-agents-modal');
     }
-  }
-
-  private async cloneScript(){
-    if(this.scriptCopy){
-      if( ! await (<any>this.$refs.cloneScriptValidationObserver).validate()){
-        return;
-      }
-
-      try {
-        this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Cloning script - ${this.cloneScriptName}`, AlertPlacement.FOOTER));      
-        const newScript = {
-          name: this.cloneScriptName, 
-          scriptType: this.scriptCopy.scriptType, 
-          code: this.scriptCopy.shadowCopyCode, 
-          shadowCopyCode: this.script.shadowCopyCode,
-          lastEditedDate: (new Date()).toISOString()
-        };
-
-        this.script = await this.$store.dispatch(`${StoreType.ScriptStore}/save`, newScript);
-      }
-      catch(err){
-        console.error(err);
-        showErrors('Error cloning script', err);
-      }
-      finally{
-        this.$modal.hide('clone-script-modal');
-      }
-    }
-  }
-
-  private cancelCloneScript(){
-    this.$modal.hide('clone-script-modal');
   }
 
   private async onCancelJobClicked(){

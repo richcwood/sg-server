@@ -5,8 +5,8 @@ import { JobDef } from './types';
 import { TaskDef } from '../taskDef/types';
 export const actions: ActionTree<CoreState, RootState> = {  
   
-  save({commit, state}, model?: JobDef) : Promise<Model> {
-    return coreActions.save({commit, state}, model);
+  save({commit, state, dispatch}, model?: JobDef) : Promise<Model> {
+    return coreActions.save({commit, state, dispatch}, model);
   },
 
   fetchModel({commit, state}, id: string): Promise<Model>{

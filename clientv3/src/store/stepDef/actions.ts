@@ -7,8 +7,8 @@ import { stompInitialized, getStompHandler, getCorrelationId } from '../../utils
 
 export const actions: ActionTree<CoreState, RootState> = {  
   
-  save({commit, state}, model?: StepDef) : Promise<Model> {
-    return coreActions.save({commit, state}, model);
+  save({commit, state, dispatch}, model?: StepDef) : Promise<Model> {
+    return coreActions.save({commit, state, dispatch}, model);
   },
 
   fetchModel({commit, state}, id: string): Promise<Model>{

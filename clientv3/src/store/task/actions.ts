@@ -4,8 +4,8 @@ import { CoreState, RootState, Model } from '@/store/types';
 import { Task } from './types';
 export const actions: ActionTree<CoreState, RootState> = {  
   
-  save({commit, state}, model?: Task) : Promise<Model> {
-    return coreActions.save({commit, state}, model);
+  save({commit, state, dispatch}, model?: Task) : Promise<Model> {
+    return coreActions.save({commit, state, dispatch}, model);
   },
 
   fetchModel({commit, state}, id: string): Promise<Model>{
