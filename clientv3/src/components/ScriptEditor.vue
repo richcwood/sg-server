@@ -187,7 +187,11 @@
           <option value="vs-dark">Dark</option>
           <option value="hc-black">Black</option>
         </select>
-        <select :disabled="!isScriptEditable(script)" class="input select button-spaced" style="width: 250px; margin-bottom: 10px;" v-model="script.scriptType">
+        <select :disabled="!isScriptEditable(script)" 
+                class="input select button-spaced" 
+                style="width: 250px; margin-bottom: 10px;" 
+                @change="onScriptTypeChanged"
+                v-model="script.scriptType">
           <option v-for="(value, key) in scriptTypesForMonaco" v-bind:key="`scriptType${key}-${value}`" :value="key">
             {{value}}
           </option>
@@ -354,7 +358,6 @@ export default class ScriptEditor extends Vue {
     }
   }
 
-  @Watch('script.scriptType')
   private async onScriptTypeChanged(newScriptType: ScriptType){
     if(!this.isScriptEditable(this.script)){
       return;
@@ -364,14 +367,17 @@ export default class ScriptEditor extends Vue {
       if(this.script){
         this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Saving script type - ${this.script.name}`, AlertPlacement.FOOTER));      
  
-        await this.$store.dispatch(`${StoreType.ScriptStore}/save`, {script: this.script});
+        await this.$store.dispatch(`${StoreType.ScriptStore}/save`, {script: {
+          id: this.script.id,
+          scriptType: this.script.scriptType
+        }});
         this.onScriptShadowChanged();
         this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Script type updated`, AlertPlacement.FOOTER));
       }
     }
     catch(err){
       console.error(err);
-      showErrors('Error publishing script', err);
+      showErrors('Error saving script type', err);
     }
   }
 

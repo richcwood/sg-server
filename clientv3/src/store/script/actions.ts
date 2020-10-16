@@ -20,11 +20,11 @@ export const actions: ActionTree<CoreState, RootState> = {
 
     const updatedScript = await coreActions.save({commit, state, dispatch}, scriptCopy);
 
+    // If shadowCopyCode is specified, then immediately try to create a script shadow for the script
+    // This really should only be used for when you're cloning a script
     if(shadowCopyCode){
-      const userId = rootState[StoreType.SecurityStore].user.id;
       await dispatch(`${StoreType.ScriptShadowStore}/getOrCreate`, {
-        scriptId: updatedScript.id,
-        userId,
+        script: updatedScript,
         shadowCopyCode
       }, {root: true});
     }
@@ -53,10 +53,9 @@ export const actions: ActionTree<CoreState, RootState> = {
 
     try {
       if(selectedScript){
-        const userId = rootState[StoreType.SecurityStore].user.id;
         // just select the script shadow by default each time
         const scriptShadow = await dispatch(`${StoreType.ScriptShadowStore}/getOrCreate`, 
-                                              {scriptId: selectedScript.id, userId},
+                                              {script: selectedScript},
                                               {root: true});
         await dispatch(`${StoreType.ScriptShadowStore}/select`, scriptShadow, {root: true});
       }
