@@ -16,13 +16,21 @@ export const mutations: MutationTree<CoreState> = {
         }
         catch(err){
           // too much data to convert in db right now - can remove once script.code is converted to base64
-          console.log(`Failed to base64 decode the scriptShadow ${scriptShadow._scriptId}. Trying to parse it as json`);
+          console.log(`Failed to base64 decode the scriptShadow ${scriptShadow.id}. Trying to parse it as json`);
           scriptShadow.shadowCopyCode = JSON.parse(scriptShadow.shadowCopyCode);
         }
       }
     }
 
-    coreMutations.addModels(state, models);
+    // Use the scriptId + userId as a composite key for shadow scripts
+    const newModels = models.filter((newModel: any) => {
+      return ! state.models.find(existingModel => {
+           existingModel._scriptId === newModel._scriptId 
+        && existingModel._userId === newModel._userId;
+      });
+    });
+
+    state.models.push(...newModels);
   },
 
   select(state: CoreState, model: ScriptShadow){
