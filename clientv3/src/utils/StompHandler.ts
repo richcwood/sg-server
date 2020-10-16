@@ -110,13 +110,13 @@ class StompHandler {
 
     if(message.operation === 1){ // create
       if(!localStorage.getItem('silence_bp')){
-        console.log('adding a model ', storeName, message.model);
+        console.log('Browser Push, adding a model ', storeName, message.model);
       }
       this.store.commit(`${storeName}/addModels`, [message.model]);
     }
     else if(message.operation === 2){ // update
       if(!localStorage.getItem('silence_bp')){
-        console.log('updating a model ', storeName, message.model);
+        console.log('Browser push, updating a model ', storeName, message.model);
       }
 
       // only provide an update for models already in the store
@@ -139,7 +139,11 @@ class StompHandler {
       }
     }
     else if(message.operation === 3){ // delete
-      console.warn('Handle a delete in the stream API handler -- ', message);
+      if(!localStorage.getItem('silence_bp')){
+        console.warn('Browser Push, deleting a model ', storeName, message);
+      }
+      
+      this.store.commit(`${storeName}/delete`, message.model);
     }
   }
 
