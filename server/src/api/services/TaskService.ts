@@ -4,6 +4,7 @@ import { rabbitMQPublisher, PayloadOperation } from '../utils/RabbitMQPublisher'
 import { BaseLogger } from '../../shared/SGLogger';
 import { MissingObjectError, ValidationError } from '../utils/Errors';
 import * as mongodb from 'mongodb';
+import * as _ from 'lodash';
 
 
 export class TaskService {
@@ -39,6 +40,30 @@ export class TaskService {
     public async findTaskByName(_teamId: mongodb.ObjectId, _jobId: mongodb.ObjectId, taskName: string, responseFields?: string) {
         let task = await TaskModel.find({ _teamId, _jobId, name: taskName }).select(responseFields);
         return convertData(TaskSchema, task);
+    }
+
+
+    public async deleteTask(_teamId: mongodb.ObjectId, _jobId: mongodb.ObjectId, correlationId?: string): Promise<object> {
+        const filter = { _jobId, _teamId };
+
+        let res: any = {"ok": 1, "deletedCount": 0};
+
+        const tasksQuery = await TaskModel.find(filter).select('id');
+        if (_.isArray(tasksQuery) && tasksQuery.length === 0) {
+            res.n = 0;
+        } else {
+            res.n = tasksQuery.length;
+            for (let i = 0; i < tasksQuery.length; i++) {
+                const task: any = tasksQuery[i];
+                let deleted = await TaskModel.deleteOne({_id: task._id});
+                if (deleted.ok) {
+                    res.deletedCount += deleted.deletedCount;
+                    await rabbitMQPublisher.publish(_teamId, "Task", correlationId, PayloadOperation.DELETE, { id: task._id });
+                }
+            }
+        }
+
+        return res;
     }
 
 

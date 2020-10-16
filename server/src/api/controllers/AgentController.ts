@@ -344,6 +344,29 @@ export class AgentController {
     }
 
 
+    public async stopAgent(req: Request, resp: Response, next: NextFunction): Promise<void> {
+        // console.log('updateAgentProperties -> ', JSON.stringify(req.body, null, 4));
+        const _teamId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._teamid);
+        const _agentId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.params.agentId);
+        const response: ResponseWrapper = resp['body'];
+        try {
+            await rabbitMQPublisher.publishToAgent(_teamId, _agentId, {stopAgent: 1});
+            response.data = {};
+            response.statusCode = ResponseCode.OK;
+            next();
+        }
+        catch (err) {
+            // If req.params.agentId wasn't a mongo id then we will get a CastError - basically same as if the id wasn't found
+            if (err instanceof CastError) {
+                next(new MissingObjectError(`Agent ${req.params.agentId} not found.`));
+            }
+            else {
+                next(err);
+            }
+        }
+    }
+
+
     public async processOrphanedTasks(req: Request, resp: Response, next: NextFunction): Promise<void> {
         const logger: BaseLogger = (<any>req).logger;
         const _teamId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._teamid);

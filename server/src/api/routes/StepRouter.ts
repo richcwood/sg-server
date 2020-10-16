@@ -12,7 +12,8 @@ export class StepRouter {
     this.router.get('/:stepId', stepController.getStep);
     this.router.post('/', stepController.createStep);
     this.router.put('/:stepId', stepController.updateStep);
-}
+    this.router.delete('/', stepController.deleteStep);
+  }
 }
 
 export const stepRouterSingleton = new StepRouter();

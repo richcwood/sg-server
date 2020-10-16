@@ -12,7 +12,8 @@ export class TaskRouter {
     this.router.get('/:taskId', taskController.getTask);
     this.router.post('/', taskController.createTask);
     this.router.put('/:taskId', taskController.updateTask);
-}
+    this.router.delete('/', taskController.deleteTask);
+  }
 }
 
 export const taskRouterSingleton = new TaskRouter();

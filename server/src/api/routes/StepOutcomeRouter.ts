@@ -8,11 +8,12 @@ export class StepOutcomeRouter {
   constructor() {
     this.router = Router();
 
-    this.router.get('/',  stepOutcomeController.getManyStepOutcomes);
+    this.router.get('/', stepOutcomeController.getManyStepOutcomes);
     this.router.get('/:stepOutcomeId', stepOutcomeController.getStepOutcome);
     this.router.post('/', stepOutcomeController.createStepOutcome);
     this.router.put('/:stepOutcomeId', stepOutcomeController.updateStepOutcome);
-}
+    this.router.delete('/', stepOutcomeController.deleteStepOutcome);
+  }
 }
 
 export const stepOutcomeRouterSingleton = new StepOutcomeRouter();
