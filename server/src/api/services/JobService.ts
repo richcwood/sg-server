@@ -62,16 +62,16 @@ export class JobService {
     }
 
 
-    public async deleteJobDefJobs(_teamId: mongodb.ObjectId, filterJobDef: any, logger: BaseLogger, correlationId?: string): Promise<object> {
+    public async deleteJobs(_teamId: mongodb.ObjectId, filter: any, logger: BaseLogger, correlationId?: string): Promise<object> {
         let res: any = {"ok": 1, "deletedCount": 0};
 
-        const jobDefJobsQuery = await JobModel.find(filterJobDef).select('id');
-        if (_.isArray(jobDefJobsQuery) && jobDefJobsQuery.length === 0) {
+        const jobsQuery = await JobModel.find(filter).select('id');
+        if (_.isArray(jobsQuery) && jobsQuery.length === 0) {
             res.n = 0;
         } else {
-            res.n = jobDefJobsQuery.length;
-            for (let i = 0; i < jobDefJobsQuery.length; i++) {
-                const job: any = jobDefJobsQuery[i];
+            res.n = jobsQuery.length;
+            for (let i = 0; i < jobsQuery.length; i++) {
+                const job: any = jobsQuery[i];
 
                 let deleteStepOutcomeRes: any = await stepOutcomeService.deleteStepOutcome(_teamId, job._id, correlationId);
                 if (deleteStepOutcomeRes.n != deleteStepOutcomeRes.deletedCount)

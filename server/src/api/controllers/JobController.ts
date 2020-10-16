@@ -71,17 +71,19 @@ export class JobController {
     }
 
 
-    public async deleteJobDefJobs(req: Request, resp: Response, next: NextFunction): Promise<void> {
+    public async deleteJobs(req: Request, resp: Response, next: NextFunction): Promise<void> {
         const logger: BaseLogger = (<any>req).logger;
         const _teamId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._teamid);
         const response: ResponseWrapper = resp['body'];
         try {
             let filter: any = { _teamId };
             if (Object.keys(req.headers).indexOf('_jobdefid') >= 0)
-                filter._jobDefId = mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._jobdefid);
+                filter._jobDefId = new mongodb.ObjectId(<string>req.headers._jobdefid);
             if (Object.keys(req.headers).indexOf('name') >= 0)
                 filter.name = { $regex: <string>req.headers.name };
-            let res = await jobService.deleteJobDefJobs(_teamId, filter, logger, req.header('correlationId'));
+            if (Object.keys(req.headers).indexOf('status') >= 0)
+                filter.status = req.headers.status;
+            let res = await jobService.deleteJobs(_teamId, filter, logger, req.header('correlationId'));
             response.data = res;
             response.statusCode = ResponseCode.CREATED;
             next();
