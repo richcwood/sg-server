@@ -2150,6 +2150,9 @@ export default class JobDesigner extends Vue {
       const runJobVarsClone = _.clone(this.runJobVars);
       runJobVarsClone[this.newRunJobVarKey] = this.newRunJobVarValue;
       this.runJobVars = runJobVarsClone;
+      this.newRunJobVarKey = '';
+      this.newRunJobVarValue = '';
+      (<any>this).$refs.addRunJobVarsValidationObserver.reset();
     }
   }
 
