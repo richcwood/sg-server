@@ -68,7 +68,7 @@ export default class Test20 extends TestBase.default {
         let script_obj2: ScriptSchema = {'_teamId': _teamId, 'name': 'Stop instance', 'scriptType': Enums.ScriptType.PYTHON, 'code': script2_b64, _originalAuthorUserId: this.sgUser.id, _lastEditedUserId: this.sgUser.id, lastEditedDate: new Date(), shadowCopyCode: script1_b64 };
         script_obj2 = await self.CreateScript(script_obj2, _teamId);
         self.scripts.push(script_obj2);
-        let taskDefInactiveAgent: any = { 'name': 'InactiveAgentTask', 'script': { '_id': script_obj2['id'], }, 'arguments': '' };
+        let taskDefInactiveAgent: any = { 'name': 'InactiveAgentTask', 'script': { '_id': script_obj2['id'] }, 'arguments': '' };
 
 
         let agent = _.filter(self.testSetup.agents, a => a.machineId == 'TestAgent1')[0];
