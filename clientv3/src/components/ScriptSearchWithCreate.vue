@@ -212,7 +212,7 @@ export default class ScriptSearchWithCreate extends Vue {
           code: this.script.code,
           lastEditedDate: (new Date()).toISOString()
         };
-        this.script = await this.$store.dispatch(`${StoreType.ScriptStore}/save`, {script: newScript, shadowCopyCode: this.scriptShadow.shadowCopyCode});
+        this.script = await this.$store.dispatch(`${StoreType.ScriptStore}/save`, {script: newScript, initialShadow: this.scriptShadow.shadowCopyCode});
         this.onScriptPicked(this.script);
       }
       catch(err){

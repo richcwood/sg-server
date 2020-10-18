@@ -6,7 +6,7 @@ import _ from "lodash";
 
 export const actions: ActionTree<CoreState, RootState> = {  
   
-  async save({commit, state, dispatch, rootState}, {script, shadowCopyCode}) : Promise<Model> {
+  async save({commit, state, dispatch}, {script, initialShadow}) : Promise<Model> {
     if(!script){
       script = state.selectedCopy;
     }
@@ -18,18 +18,17 @@ export const actions: ActionTree<CoreState, RootState> = {
       scriptCopy.code = btoa(script.code);
     }
 
-    const updatedScript = await coreActions.save({commit, state, dispatch}, scriptCopy);
+    const savedScript = await coreActions.save({commit, state, dispatch}, scriptCopy);
 
-    // If shadowCopyCode is specified, then immediately try to create a script shadow for the script
-    // This really should only be used for when you're cloning a script
-    if(shadowCopyCode){
-      await dispatch(`${StoreType.ScriptShadowStore}/getOrCreate`, {
-        script: updatedScript,
-        shadowCopyCode
+    // Create the shadow immediately from the shadow of the original script
+    if(initialShadow){
+      dispatch(`${StoreType.ScriptShadowStore}/getOrCreate`, {
+        id: savedScript.id,
+        code: initialShadow
       }, {root: true});
     }
 
-    return updatedScript;
+    return savedScript;
   },
 
   fetchModel({commit, state}, id: string): Promise<Model>{
@@ -55,7 +54,7 @@ export const actions: ActionTree<CoreState, RootState> = {
       if(selectedScript){
         // just select the script shadow by default each time
         const scriptShadow = await dispatch(`${StoreType.ScriptShadowStore}/getOrCreate`, 
-                                              {script: selectedScript},
+                                              selectedScript,
                                               {root: true});
         await dispatch(`${StoreType.ScriptShadowStore}/select`, scriptShadow, {root: true});
       }

@@ -11,7 +11,7 @@ export const actions: ActionTree<CoreState, RootState> = {
   // We kind of use a composite key of scriptId+userId to identify and load script shadows
   // We can't really use the store with the filters because we end up creating multiple script shadow
   // copies during the first creation of a shadow
-  async getOrCreate({dispatch, commit, state, rootState}, {script, shadowCopyCode}: {script: Script, shadowCopyCode?: string}): Promise<ScriptShadow> {
+  async getOrCreate({dispatch, commit, state, rootState}, script: Script): Promise<ScriptShadow> {
     const userId = rootState[StoreType.SecurityStore].user.id;
 
     if(!script || !userId){
@@ -41,7 +41,7 @@ export const actions: ActionTree<CoreState, RootState> = {
             scriptShadow = await dispatch( 'save', {
                                            _userId: userId,
                                            _scriptId: script.id,
-                                           shadowCopyCode: shadowCopyCode || script.code});
+                                           shadowCopyCode: btoa(script.code)});
           }
         }
         catch(err){

@@ -1291,6 +1291,8 @@ export default class JobDesigner extends Vue {
         this.navPanelWidth = panelWidth;
       }
     }
+
+    this.onJobDefForEditChanged();
   }
 
   private beforeDestroy(){
@@ -2117,11 +2119,29 @@ export default class JobDesigner extends Vue {
   private newRunJobVarKey = '';
   private newRunJobVarValue = '';
   private runJobId = null;
+
+  @Watch('jobDefForEdit')
+  private onJobDefForEditChanged(){
+    if(this.jobDefForEdit){
+      const localStorageKey = `jobDesigner_runJobVars_${this.jobDefForEdit.id}`;
+      if(localStorage.getItem(localStorageKey)){
+        try {
+          this.runJobVars = JSON.parse(localStorage.getItem(localStorageKey));
+        }
+        catch(err){
+          console.warn('Unable to restore ', localStorageKey);
+          localStorage.removeItem(localStorageKey);
+          this.runJobVars = {};
+        }
+      }
+    }
+  }
   
   @Watch('runJobVars')
   private onRunJobVarsChanged(){
     if(this.jobDefForEdit){
-      sessionStorage.setItem(`runJobVars_${this.jobDefForEdit.id}`, JSON.stringify(this.runJobVars));
+      console.log('saving runjob var for ', this.jobDefForEdit.id);
+      localStorage.setItem(`jobDesigner_runJobVars_${this.jobDefForEdit.id}`, JSON.stringify(this.runJobVars));
     }
   }
 
@@ -2130,6 +2150,9 @@ export default class JobDesigner extends Vue {
       const runJobVarsClone = _.clone(this.runJobVars);
       runJobVarsClone[this.newRunJobVarKey] = this.newRunJobVarValue;
       this.runJobVars = runJobVarsClone;
+      this.newRunJobVarKey = '';
+      this.newRunJobVarValue = '';
+      (<any>this).$refs.addRunJobVarsValidationObserver.reset();
     }
   }
 

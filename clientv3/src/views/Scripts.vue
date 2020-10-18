@@ -247,10 +247,7 @@ export default class Scripts extends Vue {
         lastEditedDate: new Date().toISOString()
       };
 
-      const script = await this.$store.dispatch(
-        `${StoreType.ScriptStore}/save`,
-        {script: newScript}
-      );
+      const script = await this.$store.dispatch(`${StoreType.ScriptStore}/save`, {script: newScript});
 
       // select the script in the interactive console
       this.$router.push(`interactiveConsole/${script.id}`);
