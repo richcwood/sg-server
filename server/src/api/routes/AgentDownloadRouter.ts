@@ -204,6 +204,7 @@ export class AgentDownloadRouter {
     //  the AGENT_CREATE_TIMEOUT period is exceeded a new agent will be created
     const platformKey = `agent_stub_install.${platform}${arch}`;
     const statusKey = `agent_stub_install.${platform}${arch}.status`;
+    const versionKey = `agent_stub_install.${platform}${arch}.version`;
     const lastUpdateTimeKey = `agent_stub_install.${platform}${arch}.lastUpdateTime`;
 
     // response.data = '';
@@ -225,6 +226,9 @@ export class AgentDownloadRouter {
     let queryStatusError = {};
     queryStatusError[statusKey] = { $eq: 'error' };
 
+    let queryCurrentAgentStubVersion = {};
+    queryCurrentAgentStubVersion[versionKey] = { $ne: agentStubVersion };
+
     let queryAgentCreateTimeout = {};
     const agentCreateTimeout = new Date().getTime() - parseInt(config.get('AGENT_CREATE_TIMEOUT'), 10) * 1000;
     queryAgentCreateTimeout[lastUpdateTimeKey] = { $lt: agentCreateTimeout };
@@ -235,7 +239,7 @@ export class AgentDownloadRouter {
     // s3Path += '.gz';
     let queryUpdate = {};
     const lastUpdateTime = new Date().getTime();
-    queryUpdate[platformKey] = { 'status': 'creating', 'lastUpdateTime': lastUpdateTime, 'message': '' };
+    queryUpdate[platformKey] = { 'status': 'creating', 'lastUpdateTime': lastUpdateTime, 'message': '', version: agentStubVersion };
 
     const team: any = await this.mongoRepo.Update('team', {
       $and: [
@@ -247,6 +251,7 @@ export class AgentDownloadRouter {
             queryStatusNotExists,
             queryLastUpdateTimeNotExists,
             queryStatusError,
+            queryCurrentAgentStubVersion,
             { $and: [queryStatusCreating, queryAgentCreateTimeout] }
           ]
         }
