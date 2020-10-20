@@ -54,7 +54,7 @@ export default class AgentSearch extends Vue {
 
   private get agent(): Agent|null {
     try {
-      if(this.agentId && this.agentId.trim()){
+      if(this.agentId && this.agentId.trim() && !this.agentId.trim().startsWith('2')){
         if(!this.loadedAgents[this.agentId]){
           Vue.set(this.loadedAgents, this.agentId, {name: 'loading...'});
 
@@ -69,6 +69,9 @@ export default class AgentSearch extends Vue {
 
         return this.loadedAgents[this.agentId];
       }
+      else if(this.agentId && this.agentId.trim()){
+        return { name: this.agentId, id: this.agentId };
+      }
       else {
         return null;
       }
@@ -81,7 +84,7 @@ export default class AgentSearch extends Vue {
 
   private async onSearchKeyDown(){
     try {
-      if(this.search.trim().length > 0){
+      if(this.search.trim().length > 0 && !this.search.trim().startsWith('@')){
         const agents = await this.$store.dispatch(`${StoreType.AgentStore}/fetchModelsByFilter`, {filter: `name~=${this.search}`});
         agents.sort((agentA: Agent, agentB: Agent) => agentA.name.localeCompare(agentB.name));
         if(agents.length > 8){
@@ -89,6 +92,9 @@ export default class AgentSearch extends Vue {
         }
         
         this.choices = agents;
+      }
+      else if(this.search.trim().length > 0 ){
+        this.choices = [{ name: this.search.trim(), id: this.search.trim() }];
       }
     }
     catch(err){
