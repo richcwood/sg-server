@@ -135,12 +135,16 @@ export class JobService {
         if ('name' in data)
             jobName = data.name;
 
+        let createdBy = jobDef.createdBy;
+        if ('createdBy' in data)
+            createdBy = data.createdBy;
+    
         let job: any = {
             _teamId: _teamId,
             _jobDefId: jobDef._id,
             runId: jobDef.lastRunId,
             name: jobName,
-            createdBy: jobDef.createdBy,
+            createdBy: createdBy,
             dateCreated: new Date().toISOString(),
             dateScheduled: data.dateScheduled,
             status: Enums.JobStatus.NOT_STARTED,
@@ -406,7 +410,7 @@ export class JobService {
                 const job = queryNotStartedJobs[i];
                 if (_.isNumber(jobDef.misfireGraceTime) && job.dateScheduled) {
                     const lag = Math.floor((currentTime.getTime() - job.dateScheduled.getTime()) / 1000)
-                    console.log(`LaunchReadyJobs -> lag -> ${lag}`);
+                    // console.log(`LaunchReadyJobs -> lag -> ${lag}`);
                     if (lag <= jobDef.misfireGraceTime) {
                         jobsToRun.push(job);
                     } else {
@@ -492,7 +496,7 @@ export class JobService {
             }
         }
 
-        console.log('CheckJobStatus -> taskStatuses -> ', JSON.stringify(taskStatuses, null, 4));
+        // console.log('CheckJobStatus -> taskStatuses -> ', JSON.stringify(taskStatuses, null, 4));
         let isJobComplete = true;
         if (taskStatuses[Enums.TaskStatus.NOT_STARTED] > 0 ||
             taskStatuses[Enums.TaskStatus.WAITING_FOR_AGENT] > 0 ||
@@ -549,7 +553,7 @@ export class JobService {
         }
 
         const status = await this.CheckJobStatus(_teamId, _jobId, job.status);
-        console.log('JobService -> UpdateJobStatus -> status -> ', status, ', job.status -> ', job.status);
+        // console.log('JobService -> UpdateJobStatus -> status -> ', status, ', job.status -> ', job.status);
         if (status != job.status) {
             let update = {};
             update['status'] = status;
