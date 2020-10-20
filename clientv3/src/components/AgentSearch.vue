@@ -54,7 +54,7 @@ export default class AgentSearch extends Vue {
 
   private get agent(): any|null {
     try {
-      if(this.agentId && this.agentId.trim() && !this.agentId.trim().startsWith('2')){
+      if(this.agentId && this.agentId.trim() && !this.agentId.trim().startsWith('@')){
         if(!this.loadedAgents[this.agentId]){
           Vue.set(this.loadedAgents, this.agentId, {name: 'loading...'});
 
