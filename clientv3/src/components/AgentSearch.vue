@@ -41,7 +41,7 @@ export default class AgentSearch extends Vue {
   private finishedMounting = false;
 
   private search = '';
-  private choices: Agent[] = [];
+  private choices: any[] = [];
 
   private mounted(){
     this.onSearchKeyDown = _.debounce(this.onSearchKeyDown, 400);
@@ -52,7 +52,7 @@ export default class AgentSearch extends Vue {
   // A reactive map
   private loadedAgents = {};
 
-  private get agent(): Agent|null {
+  private get agent(): any|null {
     try {
       if(this.agentId && this.agentId.trim() && !this.agentId.trim().startsWith('2')){
         if(!this.loadedAgents[this.agentId]){
