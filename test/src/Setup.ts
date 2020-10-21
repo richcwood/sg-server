@@ -249,8 +249,8 @@ export default class TestSetup {
             if ('inactivePeriodWaitTime' in agent)
                 params.inactivePeriodWaitTime = agent.inactivePeriodWaitTime;
 
-            if ('inactiveAgentTask' in agent)
-                params.inactiveAgentTask = agent.inactiveAgentTask;
+            if ('inactiveAgentJob' in agent)
+                params.inactiveAgentJob = agent.inactiveAgentJob;
 
             if ('handleGeneralTasks' in agent)
                 params.handleGeneralTasks = agent.handleGeneralTasks;

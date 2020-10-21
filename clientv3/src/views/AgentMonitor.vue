@@ -437,7 +437,7 @@ export default class AgentMonitor extends Vue {
   }
 
   private get selectedInactiveAgentScript(): string {
-    const sharedId = this.getSelectedAgentsSharedPropertyOverride('inactiveAgentTask');
+    const sharedId = this.getSelectedAgentsSharedPropertyOverride('inactiveAgentJob');
 
     if(sharedId === '<>'){
       return '';
@@ -457,7 +457,7 @@ export default class AgentMonitor extends Vue {
   }
 
   private set selectedInactiveAgentScript(newValue: string) {
-    this.setSelectedAgentsSharedPropertyOverride('inactiveAgentTask', newValue);
+    this.setSelectedAgentsSharedPropertyOverride('inactiveAgentJob', newValue);
   }
 
   // The set of tags shared across all selected agents - tag must exist for all agents
@@ -492,7 +492,7 @@ export default class AgentMonitor extends Vue {
         const properties = {
           maxActiveTasks: selectedAgent.propertyOverrides.maxActiveTasks,
           handleGeneralTasks: selectedAgent.propertyOverrides.handleGeneralTasks,
-          inactiveAgentTask: selectedAgent.propertyOverrides.inactiveAgentTask,
+          inactiveAgentJob: selectedAgent.propertyOverrides.inactiveAgentJob,
           inactivePeriodWaitTime: selectedAgent.propertyOverrides.inactivePeriodWaitTime
         };
 
