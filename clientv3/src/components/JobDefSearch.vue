@@ -3,18 +3,17 @@
     <span style="position: relative;">
       <input :disabled="disabled" 
              class="control input search-input" 
-             :class="{activeAgent: agent && isAgentActive(agent)}"
              style="padding-left: 30px;" 
              @focus="onSearchInputFocus" 
              @blur="onSearchInputBlur" 
              @keydown="onSearchKeyDown" 
              v-model="search" 
-             placeholder="Agent name">
+             placeholder="Job name">
       <font-awesome-icon icon="search" style="position: absolute; left: 20px; top: 10px; color: #dbdbdb;" />
     </span>
     <div class="search-choices" v-if="choices.length > 0">
       <div class="search-choice" v-for="choice in choices" v-bind:key="choice.id" @mousedown="onSearchOnMouseDown(choice)">
-        <span :class="{activeAgent: isAgentActive(choice)}">{{choice.name}}</span>
+        {{choice.name}}
       </div>
     </div>
   </span>
@@ -23,25 +22,21 @@
 <script lang="ts">
 import _ from 'lodash';
 import { Component, Prop, Vue, Watch } from 'vue-property-decorator';
-import { Agent } from '@/store/agent/types';
+import { JobDef } from '@/store/jobdef/types';
 import { LinkedModel, StoreType } from '@/store/types';
 import { SgAlert, AlertPlacement, AlertCategory } from '@/store/alert/types';
-import { isAgentActive } from '@/store/agent/agentUtils';
 
 @Component
-export default class AgentSearch extends Vue {
+export default class JobDefSearch extends Vue {
 
-  // expose to template
-  private readonly isAgentActive = isAgentActive;
-
-  @Prop() private agentId!: string;
+  @Prop() private jobDefId!: string;
 
   @Prop() private disabled!: boolean;
 
   private finishedMounting = false;
 
   private search = '';
-  private choices: Agent[] = [];
+  private choices: JobDef[] = [];
 
   private mounted(){
     this.onSearchKeyDown = _.debounce(this.onSearchKeyDown, 400);
@@ -50,31 +45,31 @@ export default class AgentSearch extends Vue {
   }
 
   // A reactive map
-  private loadedAgents = {};
+  private loadedJobDefs = {};
 
-  private get agent(): Agent|null {
+  private get jobDef(): JobDef|null {
     try {
-      if(this.agentId && this.agentId.trim()){
-        if(!this.loadedAgents[this.agentId]){
-          Vue.set(this.loadedAgents, this.agentId, {name: 'loading...'});
+      if(this.jobDefId && this.jobDefId.trim()){
+        if(!this.loadedJobDefs[this.jobDefId]){
+          Vue.set(this.loadedJobDefs, this.jobDefId, {name: 'loading...'});
 
           (async () => {
-            this.loadedAgents[this.agentId] = await this.$store.dispatch(`${StoreType.AgentStore}/fetchModel`, this.agentId);
-            this.search = this.loadedAgents[this.agentId].name;
+            this.loadedJobDefs[this.jobDefId] = await this.$store.dispatch(`${StoreType.JobDefStore}/fetchModel`, this.jobDefId);
+            this.search = this.loadedJobDefs[this.jobDefId].name;
           })();
         }
         else {
-          this.search = this.loadedAgents[this.agentId].name;
+          this.search = this.loadedJobDefs[this.jobDefId].name;
         }
 
-        return this.loadedAgents[this.agentId];
+        return this.loadedJobDefs[this.jobDefId];
       }
       else {
         return null;
       }
     }
     catch(err){
-      console.log('Error in agent search finding agent by id', this.agentId);
+      console.error('Error in jobDef search finding jobDef by id', this.jobDefId);
       return null;
     }
   }
@@ -82,27 +77,27 @@ export default class AgentSearch extends Vue {
   private async onSearchKeyDown(keyboardEvent?: KeyboardEvent){
     try {
       if(this.search.trim().length > 0){
-        const agents = await this.$store.dispatch(`${StoreType.AgentStore}/fetchModelsByFilter`, {filter: `name~=${this.search}`});
-        agents.sort((agentA: Agent, agentB: Agent) => agentA.name.localeCompare(agentB.name));
-        if(agents.length > 8){
-          agents.splice(8);
+        const jobDefs = await this.$store.dispatch(`${StoreType.JobDefStore}/fetchModelsByFilter`, {filter: `name~=${this.search}`});
+        jobDefs.sort((jobDefA: JobDef, jobDefB: JobDef) => jobDefA.name.localeCompare(jobDefB.name));
+        if(jobDefs.length > 8){
+          jobDefs.splice(8);
         }
         
-        this.choices = agents;
+        this.choices = jobDefs;
       }
       else if(keyboardEvent && keyboardEvent.code === 'Enter'){
-        this.$emit('agentPicked'); // Clear the choice
+        this.$emit('jobDefPicked'); // Clear the choice
       }
     }
     catch(err){
-      this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Error searching agents: ${err}`, AlertPlacement.WINDOW, AlertCategory.ERROR));
+      this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Error searching jobDefs: ${err}`, AlertPlacement.WINDOW, AlertCategory.ERROR));
     }
   }
 
-  private onSearchOnMouseDown(agent: Agent){
+  private onSearchOnMouseDown(jobDef: JobDef){
     this.choices = [];
-    this.search = agent.name;
-    this.$emit('agentPicked', agent);
+    this.search = jobDef.name;
+    this.$emit('jobDefPicked', jobDef);
   }
 
   private onSearchInputFocus(){
@@ -115,10 +110,10 @@ export default class AgentSearch extends Vue {
     this.choices = [];
 
     if(this.finishedMounting && !this.search){
-      this.$emit('agentPicked');
+      this.$emit('jobDefPicked');
     }
-    else if(this.agent && this.agent.name !== this.search){
-      this.search = this.agent.name;
+    else if(this.jobDef && this.jobDef.name !== this.search){
+      this.search = this.jobDef.name;
     }
   }
 }
@@ -160,7 +155,7 @@ export default class AgentSearch extends Vue {
     cursor: pointer;
   }
 
-  .activeAgent {
+  .activejobDef {
     color: green;
   }
 </style>

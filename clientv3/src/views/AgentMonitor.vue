@@ -85,14 +85,14 @@
           <tabs>
             <tab title="Settings">
               <validation-observer ref="agentSettingsValidationObserver">
-                <table class="table" style="width: 525px; margin-top: 10px;">
+                <table class="table" style="width: 575px; margin-top: 10px;">
                   <tr class="tr">
                     <td class="td">
                       Agent name
                     </td>
                     <td class="td">
                       <validation-provider name="Agent Name" rules="agent-name" v-slot="{ errors }">
-                        <input class="input" type="text" style="width: 200px; margin-left: 10px;" v-model="selectedAgentName" :disabled="selectedAgents.length !== 1"/>
+                        <input class="input" type="text" style="width: 300px; margin-left: 10px;" v-model="selectedAgentName" :disabled="selectedAgents.length !== 1"/>
                         <div v-if="errors && errors.length > 0" class="message validation-error is-danger">{{ errors[0] }}</div>
                       </validation-provider>
                     </td>
@@ -103,7 +103,7 @@
                     </td>
                     <td class="td">
                       <validation-provider name="Max Active Tasks" rules="agent-positiveNumber" v-slot="{ errors }">
-                        <input class="input" type="text" style="width: 200px; margin-left: 10px;" v-model="selectedMaxActiveTasks" :disabled="selectedAgents.length === 0"/>
+                        <input class="input" type="text" style="width: 300px; margin-left: 10px;" v-model="selectedMaxActiveTasks" :disabled="selectedAgents.length === 0"/>
                         <div v-if="errors && errors.length > 0" class="message validation-error is-danger">{{ errors[0] }}</div>
                       </validation-provider>
                     </td>
@@ -122,19 +122,72 @@
                     </td>
                     <td class="td">
                       <validation-provider name="Inactive Agent Timeout(ms)" rules="agent-positiveNumber" v-slot="{ errors }">
-                        <input class="input" type="text" style="width: 200px; margin-left: 10px;" v-model="selectedInactiveAgentTimeout" :disabled="selectedAgents.length === 0"/>
+                        <input class="input" type="text" style="width: 300px; margin-left: 10px;" v-model="selectedInactiveAgentTimeout" :disabled="selectedAgents.length === 0"/>
                         <div v-if="errors && errors.length > 0" class="message validation-error is-danger">{{ errors[0] }}</div>
                       </validation-provider>
                     </td>
                   </tr>
                   <tr class="tr">
                     <td class="td">
+                      Inactive Agent Job
+                    </td>
+                    <td class="td">
+                      <job-def-search :jobDefId="selectedInactiveAgentJobDefId" @jobDefPicked="onJobDefPicked" :disabled="selectedAgents.length === 0"></job-def-search>
+                    </td>
+                  </tr>
+                  <tr class="tr">
+                    <td class="td">
+                      Inactive Job Vars
+                    </td>
+                    <td class="td">
+                      <validation-provider name="RuntimeVars" rules="variable-map" v-slot="{ errors }">
+                        <input class="input" 
+                               type="text" 
+                               style="width: 300px; margin-left: 10px;" 
+                               v-model="selectedInactiveAgentJobDefRuntimeVars" 
+                               @change="selectedInactiveAgentJobDefRuntimeVarsChanged"
+                               :disabled="selectedAgents.length === 0" 
+                               placeholder="key=val,key=val"/>
+                        <div v-if="errors && errors.length > 0" class="message validation-error is-danger">{{ errors[0] }}</div>
+                      </validation-provider>
+                    </td>
+                  </tr>
+
+<!--
+                  <tr class="tr">
+                    <td class="td">
                       Inactive Agent Script
                     </td>
                     <td class="td">
-                      <script-search :scriptId="selectedInactiveAgentScript" @scriptPicked="onScriptPicked"></script-search>
+                      <script-search :scriptId="selectedInactiveAgentScript" @scriptPicked="onScriptPicked" :disabled="selectedAgents.length === 0"></script-search>
                     </td>
                   </tr>
+                  <tr class="tr">
+                    <td class="td">
+                      Inactive Script Arguments
+                    </td>
+                    <td class="td">
+                      <input class="input" type="text" style="width: 300px; margin-left: 10px;" v-model="selectedInactiveAgentArguments" :disabled="selectedAgents.length === 0"/>
+                    </td>
+                  </tr>
+                  <tr class="tr">
+                    <td class="td">
+                      Inactive Script Variables
+                    </td>
+                    <td class="td">
+                      <validation-provider name="Arguments" rules="variable-map" v-slot="{ errors }">
+                        <input class="input" 
+                               type="text" 
+                               style="width: 300px; margin-left: 10px;" 
+                               v-model="selectedAgentsInactiveScriptVariablesString" 
+                               @change="selectedAgentsInactiveScriptVariablesStringChanged"
+                               :disabled="selectedAgents.length === 0" 
+                               placeholder="key=val,key=val"/>
+                        <div v-if="errors && errors.length > 0" class="message validation-error is-danger">{{ errors[0] }}</div>
+                      </validation-provider>
+                    </td>
+                  </tr>
+-->
                   <tr class="tr">
                     <td class="td">
                     </td>
@@ -203,14 +256,22 @@ import { JobDef } from '@/store/jobDef/types';
 import { showErrors } from '@/utils/ErrorHandler';
 import { Script } from "@/store/script/types";
 import ScriptSearch from "@/components/ScriptSearch.vue";
+import JobDefSearch from "@/components/JobDefSearch.vue";
 import { ValidationProvider, ValidationObserver } from 'vee-validate';
 
 enum UpdateTagType {
   ADD, DELETE
 };
 
+interface InactiveAgentTask {
+  name: string,
+  script: {_id: string},
+  arguments: string[],
+  variables: {[key: string]: string}
+}
+
 @Component({
-  components: { Tabs, Tab, ScriptSearch, ValidationObserver, ValidationProvider },
+  components: { Tabs, Tab, ScriptSearch, JobDefSearch, ValidationObserver, ValidationProvider },
   props: { },
 })
 export default class AgentMonitor extends Vue {
@@ -225,6 +286,8 @@ export default class AgentMonitor extends Vue {
   private lastCountForSort = 0;
 
   private filterString = '';
+
+  private selectedAgentsInactiveScriptVariablesString = '';
 
   private mounted(){
     // restore last filters if possible
@@ -329,6 +392,7 @@ export default class AgentMonitor extends Vue {
 
     // Need to do this to make the object reactive / change
     this.selectedAgentCopies = newCopies;
+    this.recomputeSelectedInactiveAgentJobDefId();
   }
 
   // Whenever you save agents, you need to recreate the copies to be reactive
@@ -436,14 +500,175 @@ export default class AgentMonitor extends Vue {
     this.setSelectedAgentsSharedPropertyOverride('inactivePeriodWaitTime', newValue);
   }
 
-  private get selectedInactiveAgentScript(): string {
-    const sharedId = this.getSelectedAgentsSharedPropertyOverride('inactiveAgentTask');
+  private selectedInactiveAgentJobDefId = '';
 
-    if(sharedId === '<>'){
-      return '';
+  private recomputeSelectedInactiveAgentJobDefId(){
+    const selectedAgentIds = Object.keys(this.selectedAgentCopies);
+    let sharedId = '';
+
+    if(selectedAgentIds.length > 0){
+      const firstInactiveJob = this.selectedAgentCopies[selectedAgentIds[0]].propertyOverrides['inactiveAgentJob'];
+    
+      if(selectedAgentIds.length === 1){
+        if(firstInactiveJob && firstInactiveJob.id && firstInactiveJob.id._jobDefId){
+          sharedId = firstInactiveJob.id._jobDefId;
+        }
+      }
+      else if(firstInactiveJob && firstInactiveJob.id && firstInactiveJob.id._jobDefId) {
+        if( selectedAgentIds.splice(1).map((agentId: string) => {
+              return this.selectedAgentCopies[agentId].propertyOverrides['inactiveAgentJob'];
+            }).every((inactiveAgentJob: any) => {
+              return  _.isEqual(inactiveAgentJob && inactiveAgentJob.id, firstInactiveJob.id);
+            })){
+          sharedId = firstInactiveJob.id._jobDefId;
+        }
+      }
+    }
+
+    this.selectedInactiveAgentJobDefId = sharedId;
+  }
+
+  private onJobDefPicked(jobDef: JobDef|undefined){
+    this.selectedInactiveAgentJobDefId = jobDef ? jobDef.id : '';
+
+    const selectedAgentIds = Object.keys(this.selectedAgentCopies);
+    selectedAgentIds.map((selectedAgentId: string) => {
+      const selectedAgentCopy = this.selectedAgentCopies[selectedAgentId];
+      if(!selectedAgentCopy.propertyOverrides['inactiveAgentJob']){
+        selectedAgentCopy.propertyOverrides['inactiveAgentJob'] = {
+          id: {_jobDefId: this.selectedInactiveAgentJobDefId},
+          runtimeVars: {}
+        };
+      }
+      else {
+        selectedAgentCopy.propertyOverrides['inactiveAgentJob'].id = {_jobDefId: this.selectedInactiveAgentJobDefId}
+      }
+    });
+  }
+
+  private selectedInactiveAgentJobDefRuntimeVars = '';
+
+  private recomputeSelectedInactiveAgentJobDefRuntimeVars(){
+    const selectedAgentIds = Object.keys(this.selectedAgentCopies);
+    let firstRuntimeVars;
+
+    if(selectedAgentIds.length > 0){
+      const firstInactiveJob = this.selectedAgentCopies[selectedAgentIds[0]].propertyOverrides['inactiveAgentJob'];
+    
+      if(firstInactiveJob && firstInactiveJob.runtimeVars){
+        if(selectedAgentIds.length === 1){
+          firstRuntimeVars = firstInactiveJob.runtimeVars;
+        }
+        else {
+          if( selectedAgentIds.splice(1).map((agentId: string) => {
+                return this.selectedAgentCopies[agentId].propertyOverrides['inactiveAgentJob'];
+              }).every((inactiveAgentJob: any) => {
+                return  _.isEqual(inactiveAgentJob && inactiveAgentJob.runtimeVars, firstRuntimeVars);
+              })){
+            firstRuntimeVars = firstInactiveJob.runtimeVars;
+          }
+        }
+      }
+    }
+
+    if(firstRuntimeVars){
+      this.selectedInactiveAgentJobDefRuntimeVars = mapToString(firstRuntimeVars);
     }
     else {
-      return sharedId;
+      this.selectedInactiveAgentJobDefRuntimeVars = '<>';
+    }
+  }
+
+  private selectedInactiveAgentJobDefRuntimeVarsChanged(){
+    let newVariablesMap;
+    try {
+      newVariablesMap = stringToMap(this.selectedInactiveAgentJobDefRuntimeVars);
+    }
+    catch(err){
+      console.log('variables not well formed', err);
+      return;
+    }
+
+    const selectedAgentIds = Object.keys(this.selectedAgentCopies);
+    for(const selectedAgentId of selectedAgentIds){
+      const agentCopy = this.selectedAgentCopies[selectedAgentId];
+      if(!agentCopy.propertyOverrides['inactiveAgentJob']){
+        agentCopy.propertyOverrides['inactiveAgentJob'] = {
+          id: {_jobDefId: ''}
+        }
+      }
+
+      agentCopy.propertyOverrides['inactiveAgentJob'].runtimeVars = newVariablesMap;
+    }
+  }
+
+
+
+
+
+
+
+
+
+
+
+  ////////////////////////////////////////////////////////////////////////////////////////////
+/*
+  private getOrCreateInactiveAgentTask(agentId: string): any {
+    if(!this.selectedAgentCopies[agentId].propertyOverrides['inactiveAgentTask']){
+      this.selectedAgentCopies[agentId].propertyOverrides['inactiveAgentTask'] = {
+        name: 'InactiveAgentTask',
+        script: {
+            //_id: xxx
+        },
+        arguments: [], 
+        variables: {}
+      };
+    }
+    
+    return this.selectedAgentCopies[agentId].propertyOverrides['inactiveAgentTask'];
+  }
+
+  private getSelectedAgentsInactiveAgentTask(): InactiveAgentTask|null {
+    const selectedAgentIds = Object.keys(this.selectedAgentCopies);
+
+    if(selectedAgentIds.length > 0){
+      const firstValue = this.getOrCreateInactiveAgentTask(selectedAgentIds[0]);
+    
+      if( selectedAgentIds.map((agentId: string) => {
+            return this.getOrCreateInactiveAgentTask(agentId);
+          }).every((val: InactiveAgentTask) => {
+            return     val.script._id === firstValue.script.id
+                   && _.isEqual(val.variables, firstValue.variables)
+                   &&  _.isEqual(_.sortBy(val.arguments), _.sortBy(firstValue.arguments));
+          })){
+        return firstValue;
+      }
+      else {
+        return null; // they don't all match
+      }
+    }
+    else {
+      return null;
+    }
+  }
+
+  private setSelectedAgentsInactiveAgentTask(key: string, value: any){
+    const selectedAgentIds = Object.keys(this.selectedAgentCopies);
+    for(const selectedAgentId of selectedAgentIds){
+      const inactiveAgentTask = this.getOrCreateInactiveAgentTask(selectedAgentId);
+      inactiveAgentTask[key] = value;
+    }
+  }
+
+  private get selectedInactiveAgentScript(): string {
+    const firstInactiveAgentTask = this.getSelectedAgentsInactiveAgentTask();
+
+    if(firstInactiveAgentTask){
+      return firstInactiveAgentTask.script._id;
+    }
+    else {
+      return '';
     }
   }
 
@@ -456,9 +681,82 @@ export default class AgentMonitor extends Vue {
     }
   }
 
-  private set selectedInactiveAgentScript(newValue: string) {
-    this.setSelectedAgentsSharedPropertyOverride('inactiveAgentTask', newValue);
+  private set selectedInactiveAgentScript(newScriptId: string) {
+    this.setSelectedAgentsInactiveAgentTask('script', {_id: newScriptId});
   }
+
+  private get selectedInactiveAgentArguments(): string {
+    const firstInactiveAgentTask = this.getSelectedAgentsInactiveAgentTask();
+
+    if(firstInactiveAgentTask){
+      return firstInactiveAgentTask.arguments.join(',');
+    }
+    else {
+      return '';
+    }
+  }
+
+  private set selectedInactiveAgentArguments(newValue: string) {
+    this.setSelectedAgentsInactiveAgentTask('arguments', newValue.split(','));
+  }
+
+  private getSelectedInactiveAgentVariables(): string {
+    const selectedAgentIds = Object.keys(this.selectedAgentCopies);
+
+    if(selectedAgentIds.length > 0){
+      const firstCopy = this.selectedAgentCopies[selectedAgentIds[0]];
+      const firstVariables =    firstCopy.propertyOverrides['inactiveAgentTask'] 
+                             && firstCopy.propertyOverrides['inactiveAgentTask'].variables;
+    
+      if(selectedAgentIds.length === 1){
+        return mapToString(firstVariables);
+      }
+      else {
+
+        if( selectedAgentIds.splice(1).map((agentId: string) => {
+              const copy = this.selectedAgentCopies[agentId];
+              return    copy.propertyOverrides['inactiveAgentTask'] 
+                     && copy.propertyOverrides['inactiveAgentTask'].variables;
+            }).every((copyVariables: any) => {
+              return  _.isEqual(firstVariables, copyVariables);
+            })){
+          return mapToString(firstVariables);
+        }
+        else {
+          return '<>'; // they don't all match
+        }
+      }
+    }
+    else {
+      return '';
+    }
+  }
+
+  private selectedAgentsInactiveScriptVariablesStringChanged(){
+    let newVariablesMap;
+    try {
+      newVariablesMap = stringToMap(this.selectedAgentsInactiveScriptVariablesString);
+    }
+    catch(err){
+      console.log('variables not well formed', err);
+      return;
+    }
+
+    const selectedAgentIds = Object.keys(this.selectedAgentCopies);
+    for(const selectedAgentId of selectedAgentIds){
+      const agentCopy = this.selectedAgentCopies[selectedAgentId];
+      if(!agentCopy.propertyOverrides['inactiveAgentTask']){
+        agentCopy.propertyOverrides['inactiveAgentTask'] = {
+          name: 'InactiveAgentTask', script: {}, arguments: [], variables: {}
+        }
+      }
+
+      agentCopy.propertyOverrides['inactiveAgentTask'].variables = newVariablesMap;
+    }
+
+    console.log(`selectedAgentsInactiveScriptVariablesStringChanged invoked and variables now`, JSON.stringify(this.getSelectedInactiveAgentVariables()));
+  }
+*/
 
   // The set of tags shared across all selected agents - tag must exist for all agents
   private get selectedAgentTags(): string[] {
@@ -493,7 +791,8 @@ export default class AgentMonitor extends Vue {
           maxActiveTasks: selectedAgent.propertyOverrides.maxActiveTasks,
           handleGeneralTasks: selectedAgent.propertyOverrides.handleGeneralTasks,
           inactiveAgentTask: selectedAgent.propertyOverrides.inactiveAgentTask,
-          inactivePeriodWaitTime: selectedAgent.propertyOverrides.inactivePeriodWaitTime
+          inactivePeriodWaitTime: selectedAgent.propertyOverrides.inactivePeriodWaitTime,
+          inactiveAgentJob: selectedAgent.propertyOverrides.inactiveAgentJob
         };
 
         // If there is only a single agent selected and the name has changed, update the name

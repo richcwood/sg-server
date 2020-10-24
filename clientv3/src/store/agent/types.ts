@@ -33,7 +33,7 @@ export interface Agent extends Model {
   archived: boolean,
   cron?: string,
   name: string,
-  propertyOverrides: {[key: string]: string},
+  propertyOverrides: {[key: string]: any},
   sysInfo: any,
   createDate: string,
   offline: boolean,

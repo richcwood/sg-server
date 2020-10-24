@@ -74,7 +74,7 @@ export default class ScriptSearch extends Vue {
     }
   }
 
-  private async onSearchKeyDown(){
+  private async onSearchKeyDown(keyboardEvent?: KeyboardEvent){
     try {
       if(this.search.trim().length > 0){
         const {data: {data}} = await axios.get(`/api/v0/script?filter=${encodeURIComponent('name~='+this.search)}`);
@@ -85,6 +85,9 @@ export default class ScriptSearch extends Vue {
         }
         
         this.choices = scripts;
+      }
+      else if(keyboardEvent && keyboardEvent.code === 'Enter'){
+        this.$emit('scriptPicked'); // Clear the choice
       }
     }
     catch(err){
@@ -112,8 +115,7 @@ export default class ScriptSearch extends Vue {
     if(this.finishedMounting && !this.search){
       this.$emit('scriptPicked');
     }
-
-    if(this.script && this.script.name !== this.search){
+    else if(this.script && this.script.name !== this.search){
       this.search = this.script.name;
     }
   }
