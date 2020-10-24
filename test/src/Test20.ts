@@ -213,6 +213,13 @@ export default class Test20 extends TestBase.WorkflowTestBase {
         if (!result)
             return result;
 
+
+        resApiCall = await self.testSetup.RestAPICall(`agent/properties/${agentId}`, 'PUT', _teamId, null, { inactiveAgentJob: {}, inactivePeriodWaitTime: 60000 });
+        if (resApiCall.data.statusCode != 200) {
+            self.logger.LogError('Failed', { Message: `agent/properties/${agentId} PUT returned ${resApiCall.data.statusCode}` });
+            return false;
+        }
+
         return true;
     }
 }

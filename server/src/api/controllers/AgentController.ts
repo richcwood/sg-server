@@ -295,12 +295,26 @@ export class AgentController {
         const userEmail: string = <string>req.headers.email;
         const response: ResponseWrapper = resp['body'];
         try {
-            let updatedAgent: any = await agentService.updateAgentProperties(_teamId, _agentId, convertRequestData(AgentSchema, req.body), userEmail, req.header('correlationId'), (<string>req.query.responseFields));
+            let responseFields: string = (<string>req.query.responseFields);
+            if (req.body.maxActiveTasks && responseFields) {
+                if (responseFields.indexOf('propertyOverrides') < 0) {
+                    responseFields += " propertyOverrides";
+                }
+                if (responseFields.indexOf('numActiveTasks') < 0) {
+                    responseFields += " numActiveTasks";
+                }
+            }
+            let updatedAgent: any = await agentService.updateAgentProperties(_teamId, _agentId, convertRequestData(AgentSchema, req.body), userEmail, req.header('correlationId'), responseFields);
 
             if (_.isArray(updatedAgent) && updatedAgent.length === 0) {
                 next(new MissingObjectError(`Agent ${req.params.agentId} not found.`));
             }
             else {
+                if (req.body.maxActiveTasks && ('numActiveTasks' in updatedAgent) && ('propertyOverrides' in updatedAgent) && ('maxActiveTasks' in updatedAgent.propertyOverrides)) {
+                    if (parseInt(updatedAgent.propertyOverrides.maxActiveTasks) > updatedAgent.numActiveTasks)
+                        await CheckWaitingForAgentTasks(_teamId, _agentId, logger, amqp);
+                }
+            
                 response.data = convertResponseData(AgentSchema, updatedAgent);
                 response.statusCode = ResponseCode.OK;
                 next();
