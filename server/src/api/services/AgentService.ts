@@ -13,7 +13,7 @@ import { taskService } from '../services/TaskService';
 import { localRestAccess } from '../utils/LocalRestAccess';
 
 
-const userConfigurableProperties: string[] = ['maxActiveTasks', 'inactivePeriodWaitTime', 'inactiveAgentTask', 'handleGeneralTasks', 'trackSysInfo'];
+const userConfigurableProperties: string[] = ['maxActiveTasks', 'inactivePeriodWaitTime', 'inactiveAgentJob', 'handleGeneralTasks', 'trackSysInfo'];
 
 const systemProperties: string[] = ['machineId', 'ipAddress', 'reportedVersion', 'lastHeartbeatTime', 'numActiveTasks', 'sysInfo', 'cron'];
 

@@ -128,7 +128,10 @@ export class AgentController {
             let agent = await agentService.findAgentByMachineName(_teamId, machineId, (<string>req.query.responseFields));
 
             if (_.isArray(agent) && agent.length === 0) {
-                next(new MissingObjectError(`Agent '${machineId}" in team "${_teamId.toHexString()}' not found.`));
+                response.data = '';
+                response.statusCode = ResponseCode.NOT_FOUND;
+                next();            
+                // next(new MissingObjectError(`Agent '${machineId}" in team "${_teamId.toHexString()}' not found.`));
             }
             else {
                 response.data = await addServerPropertiesToAgent(convertResponseData(AgentSchema, agent[0]));

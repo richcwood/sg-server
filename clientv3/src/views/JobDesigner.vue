@@ -1175,7 +1175,7 @@ export default class JobDesigner extends Vue {
   private newTaskName = '';
 
   private newStepName = '';
-
+ 
   private collapsedTaskDefIds: string[] = [];
 
   private onNavTaskDefClicked(taskDef: TaskDef){
@@ -1746,7 +1746,7 @@ export default class JobDesigner extends Vue {
     this.onSelectedStepDefForEditChanged();
   }
 
-  private onTargetAgentPicked(agent: Agent){
+  private onTargetAgentPicked(agent: any){
     if(agent){
       this.selectedTaskDefForEdit.targetAgentId = agent.id;
     }

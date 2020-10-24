@@ -349,6 +349,44 @@ export class TaskOutcomeService {
     async PublishTask(_teamId: mongodb.ObjectId, task: TaskSchema, logger: BaseLogger, amqp: AMQPConnector) {
         let success: boolean = false;
         try {
+            const resFindJob = await jobService.findJob(_teamId, task._jobId, 'runtimeVars');
+            if (!resFindJob || (_.isArray(resFindJob) && resFindJob.length === 0)) {
+                throw new MissingObjectError(`Job ${task._jobId} for task ${task._id} not found.`);
+            }
+
+            const job: JobSchema = resFindJob[0];
+
+            if (task.target == Enums.TaskDefTarget.SINGLE_SPECIFIC_AGENT) {
+                let targetAgentId: string = task.targetAgentId;
+
+                let runtimeVarsTask: any = {};
+                if (task.runtimeVars)
+                    runtimeVarsTask = Object.assign(runtimeVarsTask, task.runtimeVars);
+
+                let arrFound: string[] = task.targetAgentId.match(/@sgg?(\([^)]*\))/g);
+                if (arrFound) {
+                    // replace runtime variable in target agent id
+                    try {
+                        let varKey = arrFound[0].substr(5, arrFound[0].length - 6);
+                        if (varKey.substr(0, 1) === '"' && varKey.substr(varKey.length - 1, 1) === '"')
+                            varKey = varKey.slice(1, -1);
+                        if (runtimeVarsTask[varKey]) {
+                            targetAgentId = runtimeVarsTask[varKey];
+                        } else if (job.runtimeVars[varKey]) {
+                            targetAgentId = job.runtimeVars[varKey];
+                        } else {
+                            const teamVar = await teamVariableService.findTeamVariableByName(_teamId, varKey, 'value');
+                            if (_.isArray(teamVar) && teamVar.length > 0)
+                                targetAgentId = teamVar[0].value;
+                        }
+                    } catch (e) {
+                        logger.LogError(`Error in arguments @sgg capture for targetAgentId string \"${task.targetAgentId}\": ${e.message}`, { Class: 'JobRouter', Method: 'PublishTask', _teamId, task: task });
+                    }
+                }
+
+                task.targetAgentId = targetAgentId;
+            }
+
             let getTaskRoutesRes = await GetTaskRoutes(_teamId, task, logger);
             // console.log('PublishTask -> getTaskRoutesRes -> ', JSON.stringify(getTaskRoutesRes, null, 4));
             if (!getTaskRoutesRes.routes) {
@@ -379,12 +417,6 @@ export class TaskOutcomeService {
                 if (getTaskRoutesRes.task)
                     task = getTaskRoutesRes.task;
                 // console.log('PublishTask -> task -> ', JSON.stringify(task, null, 4));
-                const resFindJob = await jobService.findJob(_teamId, task._jobId, 'runtimeVars');
-                if (!resFindJob || (_.isArray(resFindJob) && resFindJob.length === 0)) {
-                    throw new MissingObjectError(`Job ${task._jobId} not found.`);
-                }
-
-                const job: JobSchema = resFindJob[0];
                 const routes = getTaskRoutesRes.routes;
                 let steps: StepSchema[] = [];
                 let runtimeVarsTask: any = {};
@@ -451,7 +483,7 @@ export class TaskOutcomeService {
                 task.scriptsToInject = allScriptsToInject;
                 let convertedTask: any = convertData(TaskSchema, task);
                 convertedTask.steps = steps;
-                console.log('PublishTask -> task with steps -> ', JSON.stringify(convertedTask, null, 4));
+                // console.log('PublishTask -> task with steps -> ', JSON.stringify(convertedTask, null, 4));
 
                 let ttl = config.get('defaultQueuedTaskTTL');
 
@@ -503,7 +535,7 @@ export class TaskOutcomeService {
                 }
                 const task: TaskSchema = tasks[0];
 
-                console.log('OnTaskSkipped -> task -> ', JSON.stringify(task, null, 4));
+                // console.log('OnTaskSkipped -> task -> ', JSON.stringify(task, null, 4));
 
                 const currentTaskStatus = task.status;
                 if (currentTaskStatus != null) {
@@ -514,7 +546,7 @@ export class TaskOutcomeService {
                 task.status = Enums.TaskStatus.SKIPPED;
                 resUpdate = await taskService.updateTask(_teamId, task.id, { status: Enums.TaskStatus.SKIPPED }, logger);
 
-                console.log('OnTaskSkipped -> resUpdate -> ', JSON.stringify(resUpdate, null, 4));
+                // console.log('OnTaskSkipped -> resUpdate -> ', JSON.stringify(resUpdate, null, 4));
 
                 if (task.down_dep) {
                     let dependentTask: string[] = await this.GetDependentTasks(task.down_dep);
