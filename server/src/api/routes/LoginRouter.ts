@@ -5,6 +5,7 @@ import { MongoRepo } from '../../shared/MongoLib';
 import { userService } from '../services/UserService';
 import { teamService } from '../services/TeamService';
 import { TeamSchema } from '../domain/Team';
+import { UserSchema } from '../domain/User';
 import { convertData as convertResponseData } from '../utils/ResponseConverters';
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
@@ -39,7 +40,7 @@ export default class LoginRouter {
 
     // todo - any chance of sql injection here?
     // const loginResults: any = await mongoLib.GetOneByQuery({email: req.body.email}, 'user', {});
-    const loginResults: any = await userService.findAllUsersInternal({ email: req.body.email }, 'id passwordHash email teamIds teamIdsInvited name companyName')
+    const loginResults: any = await userService.findAllUsersInternal({ email: req.body.email }, 'id passwordHash email teamIds teamIdsInvited name companyName teamAccessRightIds')
     
     if (!loginResults || (_.isArray(loginResults) && loginResults .length < 1)) {
       res.status(401).send('Authentication failed');
@@ -57,6 +58,7 @@ export default class LoginRouter {
         id: loginResult._id,
         email: loginResult.email,
         teamIds: loginResult.teamIds,
+        teamAccessRightIds: UserSchema.convertTeamAccessRightsToBitset(loginResult),
         teamIdsInvited: loginResult.teamIdsInvited,
         name: loginResult.name,
         companyName: loginResult.companyName,
@@ -114,6 +116,7 @@ export default class LoginRouter {
         id: loginResults._id,
         email: loginResults.email,
         teamIds: loginResults.teamIds,
+        teamAccessRightIds: UserSchema.convertTeamAccessRightsToBitset(loginResults),
         exp: Math.floor(jwtExpiration / 1000)
       }, secret);//KeysUtil.getPrivate()); // todo - create a public / private key
 

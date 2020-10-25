@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { jobDefController } from '../controllers/JobDefController';
+import { verifyAccessRights } from '../utils/AccessRightsVerifier';
 
 export class JobDefRouter {
 
@@ -8,7 +9,7 @@ export class JobDefRouter {
   constructor() {
     this.router = Router();
 
-    this.router.get('/',  jobDefController.getManyJobDefs);
+    this.router.get('/', verifyAccessRights(['JOB_DEF_READ', 'GLOBAL']), jobDefController.getManyJobDefs);
     this.router.get('/:jobDefId', jobDefController.getJobDef);
     this.router.post('/', jobDefController.createJobDef);
     this.router.post('/cron', jobDefController.createJobDefFromCron);

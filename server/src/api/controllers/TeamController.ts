@@ -101,6 +101,7 @@ export class TeamController {
           id: userUpdated._id,
           email: userUpdated.email,
           teamIds: userUpdated.teamIds,
+          teamAccessRightIds: UserSchema.convertTeamAccessRightsToBitset(userUpdated),
           teamIdsInvited: userUpdated.teamIdsInvited,
           name: userUpdated.name,
           companyName: userUpdated.companyName,

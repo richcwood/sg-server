@@ -1,7 +1,6 @@
-import { modelOptions, prop, getModelForClass } from '@typegoose/typegoose';
+import { modelOptions, prop, arrayProp, getModelForClass } from '@typegoose/typegoose';
 import { FilterOperator } from '../utils/BulkGet';
-import * as Enums from '../../shared/Enums';
-import { AccessRight } from '../../shared/Enums';
+import Bitset from 'bitset';
 import * as mongodb from 'mongodb';
 
 
@@ -32,8 +31,11 @@ export class UserSchema {
   @prop({ default: []})
   teamIdsInvited?: { _teamId: string, inviteKey: string }[];
 
-  @prop({ default: [] })
-  accessRightIds?: AccessRight[];
+  @prop({default: []})
+  accessRightIds?: number[];
+
+  @prop({ default: {} })
+  teamAccessRightIds?: {[_teamId: string] : string[]};
 
   @prop({ required: true })
   email: string;
@@ -76,6 +78,25 @@ export class UserSchema {
     '__v': 'version'
   };
 
+  // Helper to convert a user's teamAccessRightIds into bitsets
+  public static convertTeamAccessRightsToBitset(user: UserSchema){
+    if(user.teamAccessRightIds){
+      const bitsets = {};
+      for(let teamId of Object.keys(user.teamAccessRightIds)){
+        const accessRightIds = user.teamAccessRightIds[teamId];
+        const bitset = new Bitset();
+        for(let accessRightId of accessRightIds){
+          bitset.set(accessRightId, 1);
+        }
+        bitsets[teamId] = bitset.toString(16); // more efficient as hex
+      }
+      return bitsets;
+    }
+    else {
+      return {};
+    }
+  }
+
   // Converters for values to/from the database.  Converter functions take the entire model
   public static readonly dataConverters = {
     // This isn't hooked up yet until needed - if it does, then call this in the controller layer on data before passing to service
@@ -86,6 +107,10 @@ export class UserSchema {
     },
 
     fromDB: {
+      teamAccessRightIds: (user: UserSchema) => {
+        return UserSchema.convertTeamAccessRightsToBitset(user);
+      }
+
       // version: (data) => {
       //   return undefined; // remove the version field - api users won't see it
       // }

@@ -159,7 +159,7 @@ class AppBuilder {
       // Write back the cookie to refresh it with a new life and to let the client know
       // if they were invited to new teams, joined new teams etc.
       const userId = new mongodb.ObjectId(req.headers.userid);
-      const user: UserSchema = <UserSchema>await userService.findUser(userId, 'id passwordHash email teamIds teamIdsInvited name companyName');
+      const user: UserSchema = <UserSchema>await userService.findUser(userId, 'id passwordHash email teamIds teamIdsInvited name companyName teamAccessRightIds');
 
       const jwtExpiration = Date.now() + (1000 * 60 * 60 * 24); // 1 day
       const secret = config.get('secret');
@@ -167,6 +167,7 @@ class AppBuilder {
         id: user._id,
         email: user.email,
         teamIds: user.teamIds,
+        teamAccessRightIds: UserSchema.convertTeamAccessRightsToBitset(user),
         teamIdsInvited: user.teamIdsInvited,
         name: user.name,
         companyName: user.companyName,
@@ -174,7 +175,7 @@ class AppBuilder {
       }, secret);//KeysUtil.getPrivate()); // todo - create a public / private key
 
       res.cookie('Auth', token, { secure: false, expires: new Date(jwtExpiration) });
-      res.send('OK');
+      res.send('OKz');
     });
 
     this.app.use(`${apiURLBase}/team`, teamRouter);
@@ -309,6 +310,7 @@ class AppBuilder {
             req.headers.userid = jwtData.id;
             req.headers.email = jwtData.email;
             req.headers.teamIds = jwtData.teamIds;
+            req.headers.teamAccessRightIds = jwtData.teamAccessRightIds;
 
             if ('agentStubVersion' in jwtData) {
               // todo: access rights - agents should have restricted access - for now, full

@@ -29,14 +29,16 @@ export class ValidationError extends Error {
 }
 
 
-// export class ResourceValidationError extends Error {
+export class ForbiddenError extends Error {
+  private readonly path: string | undefined;
 
-//   public readonly errors: ValidationError[];
+  constructor (message: string, path?: string) {
+      super(message);
+      this.name = 'Forbidden';
+      this.path = path;
+  }
 
-//   constructor(message: string, errors: ValidationError[]) {
-//       super(message);
-//       this.name = 'ResourceValidationError';
-//       this.errors = errors;
-//   }
-
-// }
+  public getPath(): string | undefined {
+      return this.path;
+  }
+}

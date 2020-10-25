@@ -13,6 +13,7 @@ import { faSearch } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 import { initValidation } from './utils/Validation';
 import VueSplit from 'vue-split-panel';
+import bitset from 'bitset';
 
 library.add(faSearch);
 Vue.component('font-awesome-icon', FontAwesomeIcon);
@@ -101,5 +102,6 @@ if((<any>window).webpackHotUpdate){
   (<any>window).axios = axios;
   (<any>window).moment = moment;
   (<any>window)._ = _;
+  (<any>window).bitset = bitset;
 }
 

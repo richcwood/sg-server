@@ -13,7 +13,7 @@ import { teamService } from './TeamService';
 export class JoinTeamService {
     public async userJoinTeam(_userId: mongodb.ObjectId, _teamId: string, token: string): Promise<object> {
         /// Check if the invited user exists
-        const userModel: any = await userService.findUser(_userId, '_id email teamIds teamIdsInvited teamIdsInactive');
+        const userModel: any = await userService.findUser(_userId, '_id email teamIds teamAccessRightIds teamIdsInvited teamIdsInactive');
         if (!userModel)
             throw new ValidationError('Something went wrong. Please request a new invite from the team administrator.');
 
@@ -95,7 +95,7 @@ export class JoinTeamService {
 
     public async anonymousJoinTeam(_userId: mongodb.ObjectId, token: string): Promise<object> {
         /// Check if the invited user exists
-        const userModel: any = await userService.findUser(_userId, '_id email name companyName emailConfirmed teamIds teamIdsInvited teamIdsInactive');
+        const userModel: any = await userService.findUser(_userId, '_id email name companyName emailConfirmed teamIds teamAccessRightIds teamIdsInvited teamIdsInactive');
         console.log('\n\nHELLO userModel -> ', userModel);
         if (!userModel)
             throw new ValidationError('Something went wrong. Please request a new invite from the team administrator.');

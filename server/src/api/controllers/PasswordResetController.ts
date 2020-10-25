@@ -29,6 +29,7 @@ export class PasswordResetController {
                 id: updatedUser._id,
                 email: updatedUser.email,
                 teamIds: updatedUser.teamIds,
+                teamAccessRightIds: UserSchema.convertTeamAccessRightsToBitset(updatedUser),
                 teamIdsInvited: updatedUser.teamIdsInvited,
                 name: updatedUser.name,
                 companyName: updatedUser.companyName,
