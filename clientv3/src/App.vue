@@ -4,6 +4,7 @@
       <div v-if="alertWindow" name="alertMessage" style="background-color:white; width:100%; height:100%; padding:20px;">
         <p :class="enumKeyToPretty(AlertCategory, alertWindow.category)" v-html="alertWindow.message">
         </p>
+        <br><br>
         <button class="button" @click="closeAlert">Close</button>
       </div>
     </modal>

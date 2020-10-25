@@ -44,6 +44,13 @@ export default class JobDefSearch extends Vue {
     this.finishedMounting = true;
   }
 
+  @Watch('jobDefId')
+  private onJobDefIdChanged(){
+    if(this.jobDef){
+      this.search = this.jobDef.name;
+    }
+  }
+
   // A reactive map
   private loadedJobDefs = {};
 

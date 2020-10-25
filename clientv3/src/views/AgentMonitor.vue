@@ -294,6 +294,9 @@ export default class AgentMonitor extends Vue {
     if(localStorage.getItem('agentMonitor_filterString')){
       this.filterString = localStorage.getItem('agentMonitor_filterString');
     }
+    else {
+      this.onFilterStringChanged();
+    }
   }
 
   private beforeDestroy(){
@@ -393,6 +396,7 @@ export default class AgentMonitor extends Vue {
     // Need to do this to make the object reactive / change
     this.selectedAgentCopies = newCopies;
     this.recomputeSelectedInactiveAgentJobDefId();
+    this.recomputeSelectedInactiveAgentJobDefRuntimeVars();
   }
 
   // Whenever you save agents, you need to recreate the copies to be reactive
@@ -563,7 +567,7 @@ export default class AgentMonitor extends Vue {
           if( selectedAgentIds.splice(1).map((agentId: string) => {
                 return this.selectedAgentCopies[agentId].propertyOverrides['inactiveAgentJob'];
               }).every((inactiveAgentJob: any) => {
-                return  _.isEqual(inactiveAgentJob && inactiveAgentJob.runtimeVars, firstRuntimeVars);
+                return  _.isEqual(inactiveAgentJob && inactiveAgentJob.runtimeVars, firstInactiveJob.runtimeVars);
               })){
             firstRuntimeVars = firstInactiveJob.runtimeVars;
           }
@@ -601,162 +605,6 @@ export default class AgentMonitor extends Vue {
       agentCopy.propertyOverrides['inactiveAgentJob'].runtimeVars = newVariablesMap;
     }
   }
-
-
-
-
-
-
-
-
-
-
-
-  ////////////////////////////////////////////////////////////////////////////////////////////
-/*
-  private getOrCreateInactiveAgentTask(agentId: string): any {
-    if(!this.selectedAgentCopies[agentId].propertyOverrides['inactiveAgentTask']){
-      this.selectedAgentCopies[agentId].propertyOverrides['inactiveAgentTask'] = {
-        name: 'InactiveAgentTask',
-        script: {
-            //_id: xxx
-        },
-        arguments: [], 
-        variables: {}
-      };
-    }
-    
-    return this.selectedAgentCopies[agentId].propertyOverrides['inactiveAgentTask'];
-  }
-
-  private getSelectedAgentsInactiveAgentTask(): InactiveAgentTask|null {
-    const selectedAgentIds = Object.keys(this.selectedAgentCopies);
-
-    if(selectedAgentIds.length > 0){
-      const firstValue = this.getOrCreateInactiveAgentTask(selectedAgentIds[0]);
-    
-      if( selectedAgentIds.map((agentId: string) => {
-            return this.getOrCreateInactiveAgentTask(agentId);
-          }).every((val: InactiveAgentTask) => {
-            return     val.script._id === firstValue.script.id
-                   && _.isEqual(val.variables, firstValue.variables)
-                   &&  _.isEqual(_.sortBy(val.arguments), _.sortBy(firstValue.arguments));
-          })){
-        return firstValue;
-      }
-      else {
-        return null; // they don't all match
-      }
-    }
-    else {
-      return null;
-    }
-  }
-
-  private setSelectedAgentsInactiveAgentTask(key: string, value: any){
-    const selectedAgentIds = Object.keys(this.selectedAgentCopies);
-    for(const selectedAgentId of selectedAgentIds){
-      const inactiveAgentTask = this.getOrCreateInactiveAgentTask(selectedAgentId);
-      inactiveAgentTask[key] = value;
-    }
-  }
-
-  private get selectedInactiveAgentScript(): string {
-    const firstInactiveAgentTask = this.getSelectedAgentsInactiveAgentTask();
-
-    if(firstInactiveAgentTask){
-      return firstInactiveAgentTask.script._id;
-    }
-    else {
-      return '';
-    }
-  }
-
-  private onScriptPicked(script: Script|undefined) {
-    if(script){
-      this.selectedInactiveAgentScript = script.id;
-    }
-    else {
-      this.selectedInactiveAgentScript = null;
-    }
-  }
-
-  private set selectedInactiveAgentScript(newScriptId: string) {
-    this.setSelectedAgentsInactiveAgentTask('script', {_id: newScriptId});
-  }
-
-  private get selectedInactiveAgentArguments(): string {
-    const firstInactiveAgentTask = this.getSelectedAgentsInactiveAgentTask();
-
-    if(firstInactiveAgentTask){
-      return firstInactiveAgentTask.arguments.join(',');
-    }
-    else {
-      return '';
-    }
-  }
-
-  private set selectedInactiveAgentArguments(newValue: string) {
-    this.setSelectedAgentsInactiveAgentTask('arguments', newValue.split(','));
-  }
-
-  private getSelectedInactiveAgentVariables(): string {
-    const selectedAgentIds = Object.keys(this.selectedAgentCopies);
-
-    if(selectedAgentIds.length > 0){
-      const firstCopy = this.selectedAgentCopies[selectedAgentIds[0]];
-      const firstVariables =    firstCopy.propertyOverrides['inactiveAgentTask'] 
-                             && firstCopy.propertyOverrides['inactiveAgentTask'].variables;
-    
-      if(selectedAgentIds.length === 1){
-        return mapToString(firstVariables);
-      }
-      else {
-
-        if( selectedAgentIds.splice(1).map((agentId: string) => {
-              const copy = this.selectedAgentCopies[agentId];
-              return    copy.propertyOverrides['inactiveAgentTask'] 
-                     && copy.propertyOverrides['inactiveAgentTask'].variables;
-            }).every((copyVariables: any) => {
-              return  _.isEqual(firstVariables, copyVariables);
-            })){
-          return mapToString(firstVariables);
-        }
-        else {
-          return '<>'; // they don't all match
-        }
-      }
-    }
-    else {
-      return '';
-    }
-  }
-
-  private selectedAgentsInactiveScriptVariablesStringChanged(){
-    let newVariablesMap;
-    try {
-      newVariablesMap = stringToMap(this.selectedAgentsInactiveScriptVariablesString);
-    }
-    catch(err){
-      console.log('variables not well formed', err);
-      return;
-    }
-
-    const selectedAgentIds = Object.keys(this.selectedAgentCopies);
-    for(const selectedAgentId of selectedAgentIds){
-      const agentCopy = this.selectedAgentCopies[selectedAgentId];
-      if(!agentCopy.propertyOverrides['inactiveAgentTask']){
-        agentCopy.propertyOverrides['inactiveAgentTask'] = {
-          name: 'InactiveAgentTask', script: {}, arguments: [], variables: {}
-        }
-      }
-
-      agentCopy.propertyOverrides['inactiveAgentTask'].variables = newVariablesMap;
-    }
-
-    console.log(`selectedAgentsInactiveScriptVariablesStringChanged invoked and variables now`, JSON.stringify(this.getSelectedInactiveAgentVariables()));
-  }
-*/
 
   // The set of tags shared across all selected agents - tag must exist for all agents
   private get selectedAgentTags(): string[] {
@@ -807,6 +655,7 @@ export default class AgentMonitor extends Vue {
       await Promise.all(savePromises);
       this.refreshSelectedAgentCopies();
 
+      this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert('Saved agent settings.', AlertPlacement.WINDOW, AlertCategory.INFO));
       this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert('Saved agent settings.', AlertPlacement.FOOTER, AlertCategory.INFO));
     }
     catch(err) {
