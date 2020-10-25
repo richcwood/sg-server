@@ -62,7 +62,8 @@ let self: Test9;
 export default class Test9 extends TestBase.FailedTestBase {
 
     constructor(testSetup) {
-        super('Test9', testSetup);        this.description = 'Failed job with multiple dependencies with required task/agent tags and routing';
+        super('Test9', testSetup);
+        this.description = 'Failed job with multiple dependencies with required task/agent tags and routing';
         self = this;
     }
 

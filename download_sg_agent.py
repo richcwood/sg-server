@@ -27,7 +27,7 @@ def RestAPILogin():
     global email
     global password
 
-    url = 'http://saasglue.herokuapp.com/login/apiLogin'
+    url = 'http://console.saasglue.com/login/apiLogin'
     
     headers = {
         'Content-Type': 'application/json'
@@ -61,7 +61,7 @@ def GetDownloadUrl():
     
     print('token = ', token)
 
-    url = 'https://saasglue.herokuapp.com/api/v0/agentDownload/agentstub/{}'.format(platform)
+    url = 'https://console.saasglue.com/api/v0/agentDownload/agentstub/{}'.format(platform)
     if arch:
         url += ('/' + arch)
 
