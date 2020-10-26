@@ -36,8 +36,8 @@
                 "${workspaceFolder}/server/dist/**/*.js"
             ],
             "env": {
-                "environment": "debug",
-                "NODE_ENV": "debug"
+                "environment": "production",
+                "NODE_ENV": "production"
             }
         },
         {

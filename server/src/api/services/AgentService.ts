@@ -158,11 +158,16 @@ export class AgentService {
             if (key == "_id")
                 continue;
             if (userEmail != config.get('sgAdminUser')) {
-                if (userConfigurableProperties.indexOf(key) < 0)
-                    throw new ValidationError(`Invalid property - "${key}"`);
+                if (userConfigurableProperties.indexOf(key) < 0) {
+                    if (systemProperties.indexOf(key) < 0)
+                        delete data.key;
+                    else
+                        throw new ValidationError(`Unable to modify property - "${key}"`);
+                }
             } else {
-                if (systemProperties.indexOf(key) >= 0)
-                    throw new ValidationError(`Invalid property - "${key}"`);
+                if (systemProperties.indexOf(key) < 0)
+                    delete data.key;
+                    // throw new ValidationError(`Invalid property - "${key}"`);
             }
             if (data[key] != null)
                 updates[`propertyOverrides.${key}`] = data[key];
