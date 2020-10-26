@@ -96,9 +96,10 @@ if(invitedTeamToken){ // direct or generic
 })();
 
 
+(<any>window).store = store;
+
 // If is local development - include this stuff in console for easy debugging / testing
 if((<any>window).webpackHotUpdate){
-  (<any>window).store = store;
   (<any>window).axios = axios;
   (<any>window).moment = moment;
   (<any>window)._ = _;

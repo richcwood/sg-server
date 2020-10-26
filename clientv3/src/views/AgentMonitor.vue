@@ -54,6 +54,11 @@
             </td>
           </tr>
           <tr class="tr">
+            <td class="td">
+              <input type="checkbox" v-model="includeInactiveAgents"/> Include inactive agents
+            </td>
+          </tr>
+          <tr class="tr">
             <th class="th"></th>
             <th class="th">Name</th>
             <th class="th">Status</th>
@@ -152,42 +157,6 @@
                       </validation-provider>
                     </td>
                   </tr>
-
-<!--
-                  <tr class="tr">
-                    <td class="td">
-                      Inactive Agent Script
-                    </td>
-                    <td class="td">
-                      <script-search :scriptId="selectedInactiveAgentScript" @scriptPicked="onScriptPicked" :disabled="selectedAgents.length === 0"></script-search>
-                    </td>
-                  </tr>
-                  <tr class="tr">
-                    <td class="td">
-                      Inactive Script Arguments
-                    </td>
-                    <td class="td">
-                      <input class="input" type="text" style="width: 300px; margin-left: 10px;" v-model="selectedInactiveAgentArguments" :disabled="selectedAgents.length === 0"/>
-                    </td>
-                  </tr>
-                  <tr class="tr">
-                    <td class="td">
-                      Inactive Script Variables
-                    </td>
-                    <td class="td">
-                      <validation-provider name="Arguments" rules="variable-map" v-slot="{ errors }">
-                        <input class="input" 
-                               type="text" 
-                               style="width: 300px; margin-left: 10px;" 
-                               v-model="selectedAgentsInactiveScriptVariablesString" 
-                               @change="selectedAgentsInactiveScriptVariablesStringChanged"
-                               :disabled="selectedAgents.length === 0" 
-                               placeholder="key=val,key=val"/>
-                        <div v-if="errors && errors.length > 0" class="message validation-error is-danger">{{ errors[0] }}</div>
-                      </validation-provider>
-                    </td>
-                  </tr>
--->
                   <tr class="tr">
                     <td class="td">
                     </td>
@@ -287,9 +256,15 @@ export default class AgentMonitor extends Vue {
 
   private filterString = '';
 
+  private includeInactiveAgents = true;
+
   private selectedAgentsInactiveScriptVariablesString = '';
 
   private mounted(){
+    if(localStorage.getItem('agentMonitor_includeInactiveAgents') !== undefined){
+      this.includeInactiveAgents = localStorage.getItem('agentMonitor_includeInactiveAgents') === 'true';
+    }
+
     // restore last filters if possible
     if(localStorage.getItem('agentMonitor_filterString')){
       this.filterString = localStorage.getItem('agentMonitor_filterString');
@@ -302,6 +277,7 @@ export default class AgentMonitor extends Vue {
   private beforeDestroy(){
     // save current filters
     localStorage.setItem('agentMonitor_filterString', this.filterString);
+    localStorage.setItem('agentMonitor_includeInactiveAgents', this.includeInactiveAgents ? 'true': 'false');
   }
 
   private get agents(): Agent[] {
@@ -322,8 +298,11 @@ export default class AgentMonitor extends Vue {
     const filterUCase = this.filterString.toUpperCase();
     // split by whitespace and remove empty entries
     const filterUCaseItems = filterUCase.split(' ').map(item => item.trim()).filter(item => item);
-    return this.agents.filter((agent: Agent) => {
-      if(filterUCaseItems.length === 0){
+    const filteredAgents = this.agents.filter((agent: Agent) => {
+      if(!this.includeInactiveAgents && !isAgentActive(agent)){
+        return false;
+      }
+      else if(filterUCaseItems.length === 0){
         return true;
       }
       else {
@@ -346,6 +325,18 @@ export default class AgentMonitor extends Vue {
         });
       }
     });
+
+    return filteredAgents.sort((a: Agent, b: Agent) => {
+      const aIsActive = isAgentActive(a);
+      const bIsActive = isAgentActive(b);
+
+      if(aIsActive !== bIsActive){
+        return aIsActive ? -1 : 1;
+      }
+      else {
+        return a.name.localeCompare(b.name);
+      }
+    })
   }
 
   @Watch('filterString')

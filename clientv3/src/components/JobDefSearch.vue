@@ -22,7 +22,7 @@
 <script lang="ts">
 import _ from 'lodash';
 import { Component, Prop, Vue, Watch } from 'vue-property-decorator';
-import { JobDef } from '@/store/jobdef/types';
+import { JobDef } from '@/store/jobDef/types';
 import { LinkedModel, StoreType } from '@/store/types';
 import { SgAlert, AlertPlacement, AlertCategory } from '@/store/alert/types';
 
