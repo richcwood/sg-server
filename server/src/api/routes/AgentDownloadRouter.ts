@@ -220,8 +220,8 @@ export class AgentDownloadRouter {
     let queryLastUpdateTimeNotExists = {};
     queryLastUpdateTimeNotExists[lastUpdateTimeKey] = { $exists: false }
 
-    let queryStatusCreating = {};
-    queryStatusCreating[statusKey] = { $eq: 'creating' };
+    // let queryStatusCreating = {};
+    // queryStatusCreating[statusKey] = { $eq: 'creating' };
 
     let queryStatusError = {};
     queryStatusError[statusKey] = { $eq: 'error' };
@@ -229,9 +229,9 @@ export class AgentDownloadRouter {
     let queryCurrentAgentStubVersion = {};
     queryCurrentAgentStubVersion[versionKey] = { $ne: agentStubVersion };
 
-    let queryAgentCreateTimeout = {};
-    const agentCreateTimeout = new Date().getTime() - parseInt(config.get('AGENT_CREATE_TIMEOUT'), 10) * 1000;
-    queryAgentCreateTimeout[lastUpdateTimeKey] = { $lt: agentCreateTimeout };
+    // let queryAgentCreateTimeout = {};
+    // const agentCreateTimeout = new Date().getTime() - parseInt(config.get('AGENT_CREATE_TIMEOUT'), 10) * 1000;
+    // queryAgentCreateTimeout[lastUpdateTimeKey] = { $lt: agentCreateTimeout };
 
     // let s3Path = `agent-stub/${environment}/${_teamId}/${platform}${arch}/${agentStubVersion}/sg-agent-launcher`;
     // if (platform == 'win')
@@ -251,8 +251,7 @@ export class AgentDownloadRouter {
             queryStatusNotExists,
             queryLastUpdateTimeNotExists,
             queryStatusError,
-            queryCurrentAgentStubVersion,
-            { $and: [queryStatusCreating, queryAgentCreateTimeout] }
+            queryCurrentAgentStubVersion
           ]
         }
       ]
@@ -539,15 +538,15 @@ export class AgentDownloadRouter {
     let queryLastUpdateTimeNotExists = {};
     queryLastUpdateTimeNotExists[lastUpdateTimeKey] = { $exists: false }
 
-    let queryStatusCreating = {};
-    queryStatusCreating[statusKey] = { $eq: 'creating' };
+    // let queryStatusCreating = {};
+    // queryStatusCreating[statusKey] = { $eq: 'creating' };
 
     let queryStatusError = {};
     queryStatusError[statusKey] = { $eq: 'error' };
 
-    let queryAgentCreateTimeout = {};
-    const agentCreateTimeout = new Date().getTime() - parseInt(config.get('AGENT_CREATE_TIMEOUT'), 10) * 1000;
-    queryAgentCreateTimeout[lastUpdateTimeKey] = { $lt: agentCreateTimeout };
+    // let queryAgentCreateTimeout = {};
+    // const agentCreateTimeout = new Date().getTime() - parseInt(config.get('AGENT_CREATE_TIMEOUT'), 10) * 1000;
+    // queryAgentCreateTimeout[lastUpdateTimeKey] = { $lt: agentCreateTimeout };
 
     // let s3Path = `agent/${environment}/${_teamId}/${platform}${arch}/${agentVersion}/sg-agent`;
     // if (platform == 'win')
@@ -566,8 +565,7 @@ export class AgentDownloadRouter {
             queryPlatformNotExists,
             queryStatusNotExists,
             queryLastUpdateTimeNotExists,
-            queryStatusError,
-            { $and: [queryStatusCreating, queryAgentCreateTimeout] }
+            queryStatusError
           ]
         }
       ]

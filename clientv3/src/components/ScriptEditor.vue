@@ -1,12 +1,12 @@
 <template>
   <div>
 
-    <modal name="kpg" :classes="'round-popup'" width="700" height="725" background="white">
+    <modal name="sgg" :classes="'round-popup'" width="700" height="725" background="white">
       <div style="width: 100%; height: 100%; background: white;">
         <table class="table">
           <tr class="tr">
             <td class="td" colspan="2">
-              KPG: <strong>K</strong>iki <strong>P</strong>arameters <strong>G</Strong>lobal
+              sgg: <strong>s</strong>aas <strong>g</strong>lue <strong>g</Strong>lobal
               <br>
               Excellent instructions here some day.
             </td>
@@ -91,7 +91,7 @@
         <table class="table">
           <tr class="tr">
             <td class="td">
-              <button class="button" @click="onCloseKpg">Close</button>
+              <button class="button" @click="onCloseSgg">Close</button>
             </td>
           </tr>
         </table>
@@ -103,7 +103,7 @@
         <button class="button" @click="onClickedExitFullScreen">Exit full screen</button>
         <span class="variables">
           Static variables: 
-          <a @click="onKpgVariablesClicked">@sgg</a> | 
+          <a @click="onSggVariablesClicked">@sgg</a> | 
           <a>@sgs</a> |
           <a>@sgo</a>
         </span>
@@ -516,22 +516,22 @@ export default class ScriptEditor extends Vue {
 
   private selectedJobDef: JobDef|null = null;
 
-  private onKpgVariablesClicked(){
-    this.$modal.show('kpg');
+  private onSggVariablesClicked(){
+    this.$modal.show('sgg');
   }
 
   private onClickedTeamVar(teamVar: TeamVar){
     this.fullScreenEditor.trigger('keyboard', 'type', {text: `@sgg("${teamVar.name}")`});
-    this.$modal.hide('kpg');
+    this.$modal.hide('sgg');
   } 
 
   private onClickedJobDefVar(varKey: string, varValue: string){
     this.fullScreenEditor.trigger('keyboard', 'type', {text: `@sgg("${varKey}")`});
-    this.$modal.hide('kpg');
+    this.$modal.hide('sgg');
   }
 
-  private onCloseKpg(){
-    this.$modal.hide('kpg');
+  private onCloseSgg(){
+    this.$modal.hide('sgg');
   }
 
   @BindProp({storeType: StoreType.SecurityStore, selectedModelName: 'user', propName: 'id'})
@@ -661,7 +661,7 @@ td {
 }
 
 // Make sure the alert-modal shows on top of all other modals
-[data-modal="kpg"] { 
+[data-modal="sgg"] { 
   z-index: 1000 !important;
 }
 </style>
