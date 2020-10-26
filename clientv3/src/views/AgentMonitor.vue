@@ -298,7 +298,7 @@ export default class AgentMonitor extends Vue {
     const filterUCase = this.filterString.toUpperCase();
     // split by whitespace and remove empty entries
     const filterUCaseItems = filterUCase.split(' ').map(item => item.trim()).filter(item => item);
-    return this.agents.filter((agent: Agent) => {
+    const filteredAgents = this.agents.filter((agent: Agent) => {
       if(!this.includeInactiveAgents && !isAgentActive(agent)){
         return false;
       }
@@ -325,6 +325,18 @@ export default class AgentMonitor extends Vue {
         });
       }
     });
+
+    return filteredAgents.sort((a: Agent, b: Agent) => {
+      const aIsActive = isAgentActive(a);
+      const bIsActive = isAgentActive(b);
+
+      if(aIsActive !== bIsActive){
+        return aIsActive ? -1 : 1;
+      }
+      else {
+        return a.name.localeCompare(b.name);
+      }
+    })
   }
 
   @Watch('filterString')
