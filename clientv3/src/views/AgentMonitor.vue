@@ -505,17 +505,17 @@ export default class AgentMonitor extends Vue {
       const firstInactiveJob = this.selectedAgentCopies[selectedAgentIds[0]].propertyOverrides['inactiveAgentJob'];
     
       if(selectedAgentIds.length === 1){
-        if(firstInactiveJob && firstInactiveJob.id && firstInactiveJob.id._jobDefId){
-          sharedId = firstInactiveJob.id._jobDefId;
+        if(firstInactiveJob && firstInactiveJob.id){
+          sharedId = firstInactiveJob.id;
         }
       }
-      else if(firstInactiveJob && firstInactiveJob.id && firstInactiveJob.id._jobDefId) {
+      else if(firstInactiveJob && firstInactiveJob.id) {
         if( selectedAgentIds.splice(1).map((agentId: string) => {
               return this.selectedAgentCopies[agentId].propertyOverrides['inactiveAgentJob'];
             }).every((inactiveAgentJob: any) => {
               return  _.isEqual(inactiveAgentJob && inactiveAgentJob.id, firstInactiveJob.id);
             })){
-          sharedId = firstInactiveJob.id._jobDefId;
+          sharedId = firstInactiveJob.id;
         }
       }
     }
