@@ -392,7 +392,7 @@
         <div class="hero-body">
           <div class="container">
             <h1 class="title">
-              Log in to your Saas Glue account
+              Log in to your saas glue account
             </h1>
           </div>
         </div>

@@ -45,25 +45,21 @@ const loadPaginatedModels = async function({state, commit, preCommit, filter}: {
       console.error(`Oops, looks like you tried to bulk load a model type with more than the default limit of ${DEFAULT_MAX_PAGE_TOTAL}. url=${state._url('GET')}, totalModelCount=${paginationTotal}`);
     }
     else if(paginationTotal > DEFAULT_MAX_PAGE_SIZE) {
-      const paginatedPromises = []; 
 
-      // Kick off all of the bulk model loads to happen in parallel
-      // uh oh - figure out how we did this - hard to do with lastId in parallel... poop
+      let lastId = firstResponse.data.data[firstResponse.data.data.length - 1].id;
       for(let pageIndex = 1; pageIndex * DEFAULT_MAX_PAGE_SIZE < paginationTotal; pageIndex++){
-        paginatedPromises.push(axios.get(`${state._url('GET')}?${createFilterUrlParams(filter)}`).then((response) => {            
-          fetchedModels.push(...response.data.data);
-          if(preCommit){
-            // Do not await on the preCommit - it should immediately generate promises before invoking any await code to not block main thread
-            preCommit(response);
-          }                        
-          commit(`${state._storeName}/addModels`, response.data.data, {root: true});
-        }));
-      }
-      
-      // Even though we loaded all of the data in parallel, we can't return from this entire function until all promises have completed
-      await Promise.all(paginatedPromises);
+        const response = await axios.get(`${state._url('GET')}?${createFilterUrlParams(filter)}&lastId=${lastId}`);            
+        fetchedModels.push(...response.data.data);
+        if(preCommit){
+          // Do not await on the preCommit - it should immediately generate promises before invoking any await code to not block main thread
+          preCommit(response);
+        }                        
+        commit(`${state._storeName}/addModels`, response.data.data, {root: true});
+        lastId = response.data.data[response.data.data.length - 1].id;
+      };
     }
   }
+  
 
   return fetchedModels;
 };
