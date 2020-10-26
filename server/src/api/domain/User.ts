@@ -35,7 +35,7 @@ export class UserSchema {
   accessRightIds?: number[];
 
   @prop({ default: {} })
-  teamAccessRightIds?: {[_teamId: string] : string[]};
+  teamAccessRightIds?: {[_teamId: string] : number[]};
 
   @prop({ required: true })
   email: string;
