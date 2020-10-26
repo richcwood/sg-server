@@ -531,12 +531,12 @@ export default class AgentMonitor extends Vue {
       const selectedAgentCopy = this.selectedAgentCopies[selectedAgentId];
       if(!selectedAgentCopy.propertyOverrides['inactiveAgentJob']){
         selectedAgentCopy.propertyOverrides['inactiveAgentJob'] = {
-          id: {_jobDefId: this.selectedInactiveAgentJobDefId},
+          id: this.selectedInactiveAgentJobDefId,
           runtimeVars: {}
         };
       }
       else {
-        selectedAgentCopy.propertyOverrides['inactiveAgentJob'].id = {_jobDefId: this.selectedInactiveAgentJobDefId}
+        selectedAgentCopy.propertyOverrides['inactiveAgentJob'].id = this.selectedInactiveAgentJobDefId
       }
     });
   }
@@ -589,7 +589,7 @@ export default class AgentMonitor extends Vue {
       const agentCopy = this.selectedAgentCopies[selectedAgentId];
       if(!agentCopy.propertyOverrides['inactiveAgentJob']){
         agentCopy.propertyOverrides['inactiveAgentJob'] = {
-          id: {_jobDefId: ''}
+          id: ''
         }
       }
 
