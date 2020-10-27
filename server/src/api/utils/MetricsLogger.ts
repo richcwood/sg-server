@@ -153,7 +153,7 @@ export class MetricsLogger {
       return entry[1] !== undefined ? `${entry[0]}="${entry[1]}"` : ''
     }).join(' ');
     // Rich - switch to a new logger statement that goes to a new file metrics.log that only has metrics
-    // This entry should be prepended with the current date+time
+    // This entry should be prepended with the current date+time DateTime="add_date_time" + the metricsLogString
     console.log(metricsLogString);
   }
 }
