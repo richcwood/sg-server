@@ -1,3 +1,6 @@
+import { MetricsLogger } from './utils/MetricsLogger';
+MetricsLogger.init();
+
 import express = require('express');
 import { NextFunction, Request, Response } from 'express';
 import path = require('path');
