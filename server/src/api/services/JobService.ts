@@ -439,20 +439,36 @@ export class JobService {
                     this.updateJob(_teamId, jobsToRun[i]._id, { status: Enums.JobStatus.SKIPPED, error: "Job skipped due to coalesce" });
                 }
                 const jobToRun = jobsToRun[jobsToRun.length - 1];
-                const resJobQuery = await this.updateJob(_teamId, jobToRun._id, { status: Enums.JobStatus.RUNNING, dateStarted: new Date().toISOString() }, { status: Enums.JobStatus.NOT_STARTED });
-                if (resJobQuery) {
-                    logger.LogDebug('Launching next available job', { _jobDefId: jobToRun._jobDefId.toHexString(), _jobId: jobToRun._id.toHexString() });
+                try {
+                    await this.updateJob(_teamId, jobToRun._id, { status: Enums.JobStatus.RUNNING, dateStarted: new Date().toISOString() }, { status: Enums.JobStatus.NOT_STARTED });
                     await this.LaunchTasksWithNoUpstreamDependencies(_teamId, jobToRun._id, logger);
+                } catch(err) {
+                    if (!(err instanceof MissingObjectError)) {   
+                        logger.LogError('Launching next available job', { _jobDefId: jobToRun._jobDefId.toHexString(), _jobId: jobToRun._id.toHexString() });
+                    }                 
                 }
+                // if (resJobQuery) {
+                //     logger.LogDebug('Launching next available job', { _jobDefId: jobToRun._jobDefId.toHexString(), _jobId: jobToRun._id.toHexString() });
+                //     await this.LaunchTasksWithNoUpstreamDependencies(_teamId, jobToRun._id, logger);
+                // }
             } else {
                 /// Run up to maxInstances jobs (minus count of jobs already running) - remaining jobs will stay in "not started" status
                 for (let i = 0; i < numJobsToStart; i++) {
                     const jobToRun = jobsToRun[i];
-                    const resJobQuery = await this.updateJob(_teamId, jobToRun._id, { status: Enums.JobStatus.RUNNING, dateStarted: new Date().toISOString() }, { status: Enums.JobStatus.NOT_STARTED });
-                    if (resJobQuery) {
-                        logger.LogDebug('Launching next available job', { _jobDefId: _jobDefId.toHexString(), _jobId: jobToRun._id.toHexString() });
+
+                    try {
+                        await this.updateJob(_teamId, jobToRun._id, { status: Enums.JobStatus.RUNNING, dateStarted: new Date().toISOString() }, { status: Enums.JobStatus.NOT_STARTED });
                         await this.LaunchTasksWithNoUpstreamDependencies(_teamId, jobToRun._id, logger);
+                    } catch(err) {
+                        if (!(err instanceof MissingObjectError)) {   
+                            logger.LogDebug('Launching next available job', { _jobDefId: _jobDefId.toHexString(), _jobId: jobToRun._id.toHexString() });
+                        }                 
                     }
+                    // const resJobQuery = await this.updateJob(_teamId, jobToRun._id, { status: Enums.JobStatus.RUNNING, dateStarted: new Date().toISOString() }, { status: Enums.JobStatus.NOT_STARTED });
+                    // if (resJobQuery) {
+                    //     logger.LogDebug('Launching next available job', { _jobDefId: _jobDefId.toHexString(), _jobId: jobToRun._id.toHexString() });
+                    //     await this.LaunchTasksWithNoUpstreamDependencies(_teamId, jobToRun._id, logger);
+                    // }
                 }
             }
         }
