@@ -14,6 +14,7 @@ export class JobRouter {
         this.router.post('/', jobController.createJob);
         this.router.put('/:jobId', jobController.updateJob);
         this.router.delete('/', jobController.deleteJobs);
+        this.router.delete('/:jobId', jobController.deleteJob);
     }
 }
 

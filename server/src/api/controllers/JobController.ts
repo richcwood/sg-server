@@ -85,7 +85,23 @@ export class JobController {
                 filter.status = req.headers.status;
             let res = await jobService.deleteJobs(_teamId, filter, logger, req.header('correlationId'));
             response.data = res;
-            response.statusCode = ResponseCode.CREATED;
+            response.statusCode = ResponseCode.OK;
+            next();
+        }
+        catch (err) {
+            next(err);
+        }
+    }
+
+
+    public async deleteJob(req: Request, resp: Response, next: NextFunction): Promise<void> {
+        const logger: BaseLogger = (<any>req).logger;
+        const _teamId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._teamid);
+        const response: ResponseWrapper = resp['body'];
+        try {
+            let filter: any = { _id: new mongodb.ObjectId(req.params.jobId), _teamId };
+            response.data = await jobService.deleteJobs(_teamId, filter, logger, req.header('correlationId'));
+            response.statusCode = ResponseCode.OK;
             next();
         }
         catch (err) {
