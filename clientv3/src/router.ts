@@ -248,7 +248,8 @@ router.afterEach(async (to: Route, from: Route) => {
     const gtagFunction = (<any>window).gtag;
     // do not use the full route because it will include variables like ids
     // that will not aggregate nicely and don't really matter
-    gtagFunction('config', 'UA-34147266-3', {'page_path': to.name});
+    // This key only works with console.saasglue.com
+    gtagFunction('config', 'UA-181507791-1', {'page_path': to.name});
   }
   
 
