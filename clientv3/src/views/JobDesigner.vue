@@ -1766,13 +1766,14 @@ export default class JobDesigner extends Vue {
 
         const newVars = _.clone(this.jobDefForEdit.runtimeVars);
         newVars[this.newRuntimeVarKey] = this.newRuntimeVarValue;
-        const jobDefUpdate = {
-          id: this.jobDefForEdit.id,
-          runtimeVars: newVars
-        };
+        this.jobDefForEdit.runtimeVars = newVars;
 
-        this.jobDef = await this.$store.dispatch(`${StoreType.JobDefStore}/save`, jobDefUpdate);
+        await this.$store.dispatch(`${StoreType.JobDefStore}/save`, this.jobDefForEdit);
         this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Saved job`, AlertPlacement.FOOTER));
+
+        (<any>this).$refs.addRuntimeVarValidationObserver.reset();
+        this.newRuntimeVarKey = '';
+        this.newRuntimeVarValue = '';
       }
       catch(err){
         console.error(err);
@@ -1786,12 +1787,9 @@ export default class JobDesigner extends Vue {
       try {
         const newVars = _.clone(this.jobDefForEdit.runtimeVars);
         delete newVars[tagKey];
-        const jobDefUpdate = {
-          id: this.jobDefForEdit.id,
-          runtimeVars: newVars
-        };
+        this.jobDefForEdit.runtimeVars = newVars;
 
-        this.jobDef = await this.$store.dispatch(`${StoreType.JobDefStore}/save`, jobDefUpdate);
+        await this.$store.dispatch(`${StoreType.JobDefStore}/save`, this.jobDefForEdit);
         this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Saved job`, AlertPlacement.FOOTER));
       }
       catch(err){
@@ -2140,7 +2138,6 @@ export default class JobDesigner extends Vue {
   @Watch('runJobVars')
   private onRunJobVarsChanged(){
     if(this.jobDefForEdit){
-      console.log('saving runjob var for ', this.jobDefForEdit.id);
       localStorage.setItem(`jobDesigner_runJobVars_${this.jobDefForEdit.id}`, JSON.stringify(this.runJobVars));
     }
   }
