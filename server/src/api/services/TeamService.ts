@@ -44,14 +44,6 @@ export class TeamService {
     data.userAssigned = false;
     const teamModel = new TeamModel(data);
     newTeam = await teamModel.save();
-
-    /// Create company in braintree for billing
-    let res: any = await braintreeClientTokenService.createBrainTreeCustomer(newTeam);
-    if (!res.success) {
-      logger.LogError(`Error creating braintree customer: ${res.message}`, res);
-    } else {
-      logger.LogDebug(`Created braintree customer`, res);
-    }
     
     if (responseFields) {
       return this.findTeam(newTeam.id, responseFields);
@@ -79,9 +71,16 @@ export class TeamService {
       newTeam = await TeamModel.findOneAndUpdate({ userAssigned: false }, data, { new: true });
       // const unassignedTeamQuery: any = await TeamModel.find({ userAssigned: false }).limit(1)
       if (!newTeam) {
-        data.userAssigned = true;
         const teamModel = new TeamModel(data);
         newTeam = await teamModel.save();
+      }
+
+      /// Create company in braintree for billing
+      let res: any = await braintreeClientTokenService.createBrainTreeCustomer(newTeam);
+      if (!res.success) {
+        logger.LogError(`Error creating braintree customer: ${res.message}`, res);
+      } else {
+        logger.LogDebug(`Created braintree customer`, res);
       }
 
       let dataUpdates: any = {};

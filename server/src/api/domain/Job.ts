@@ -71,7 +71,9 @@ export class JobSchema {
     public static readonly validFilters = {
         'name': [FilterOperator.LIKE],
         'dateCompleted': [FilterOperator.LESS_THAN,FilterOperator.LESS_THAN_EQUAL_TO,FilterOperator.GREATER_THAN,FilterOperator.GREATER_THAN_EQUAL_TO],
-        'dateStarted': [FilterOperator.LESS_THAN,FilterOperator.LESS_THAN_EQUAL_TO,FilterOperator.GREATER_THAN,FilterOperator.GREATER_THAN_EQUAL_TO]
+        'dateStarted': [FilterOperator.LESS_THAN,FilterOperator.LESS_THAN_EQUAL_TO,FilterOperator.GREATER_THAN,FilterOperator.GREATER_THAN_EQUAL_TO],
+        '_jobDefId': [FilterOperator.EQUALS],
+        'status': [FilterOperator.EQUALS]
         // 'dog.name': [FilterOperator.IN, FilterOperator.EQUALS, FilterOperator.NOT_EQUALS, FilterOperator.LIKE
         // ],
         // 'dog.smell': [FilterOperator.LIKE],

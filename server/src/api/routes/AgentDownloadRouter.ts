@@ -321,17 +321,6 @@ export class AgentDownloadRouter {
         next();
       }
     }
-
-    // Rich todo Happens in StartServer.ts jwt ...
-    //https://www.npmjs.com/package/express-jwt
-
-    // const result = {
-    //   team: req.body._teamId,
-    //   team: req.headers._teamId
-    // }
-
-    // res.download('./server/src/api/routes/ml-workshop.zip');
-    //res.json(result);
   }
 
 
@@ -638,17 +627,6 @@ export class AgentDownloadRouter {
         next();
       }
     }
-
-    // Rich todo Happens in StartServer.ts jwt ...
-    //https://www.npmjs.com/package/express-jwt
-
-    // const result = {
-    //   team: req.body._teamId,
-    //   team: req.headers._teamId
-    // }
-
-    // res.download('./server/src/api/routes/ml-workshop.zip');
-    //res.json(result);
   }
 
 
