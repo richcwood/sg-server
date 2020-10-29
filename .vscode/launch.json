@@ -36,8 +36,8 @@
                 "${workspaceFolder}/server/dist/**/*.js"
             ],
             "env": {
-                "environment": "production",
-                "NODE_ENV": "production"
+                "environment": "debug",
+                "NODE_ENV": "debug"
             }
         },
         {
@@ -69,7 +69,7 @@
             ],
             "program": "${workspaceFolder}/test/dist/sg-server/test/src/RunUnitTestsHarness.js",
             "args": [
-                "Test4.js"
+                "Test1.js,Test2.js"
             ],
             "outFiles": [
                 "${workspaceFolder}/test/dist/test/**/*.js"

@@ -1,4 +1,38 @@
+import * as os from 'os';
 import * as mongoose from 'mongoose';
+import * as config from 'config';
+import { LogLevel } from '../../shared/Enums';
+
+const environment = config.get('environment');
+
+let Log = (values: any, logLevel: LogLevel) => {
+  values = Object.assign({ _logLevel: logLevel, _appName: 'MetricsLogger', _sourceHost: this.machineId = os.hostname(), _timeStamp: new Date().toISOString() }, values);
+  if (environment == 'production')
+      console.log(JSON.stringify(values));
+  else
+      console.log(JSON.stringify(values, null, 4));
+}
+
+let LogMetrics = (values: any) => {
+  Log(values, LogLevel.INFO);
+}
+
+let LogError = (msg: string, values: any) => {
+  Log(Object.assign({ 'msg': msg }, values), LogLevel.ERROR);
+}
+
+let LogWarning = (msg: string, values: any) => {
+  Log(Object.assign({ 'msg': msg }, values), LogLevel.WARNING);
+}
+
+let LogInfo = (msg: string, values: any) => {
+  Log(Object.assign({ 'msg': msg }, values), LogLevel.INFO);
+}
+
+let LogDebug = (msg: string, values: any) => {
+  Log(Object.assign({ 'msg': msg }, values), LogLevel.DEBUG);
+}
+
 
 interface Metrics {
   [key: string] : string|number;
@@ -30,8 +64,7 @@ export class MetricsLogger {
       setInterval(MetricsLogger.logMetrics, 30000);
     }
     else {
-      // Rich - switch this to a warn logger statement
-      console.warn('You tried to initialize the MetricsLogger multiple times');
+      LogError('You tried to initialize the MetricsLogger multiple times', {});
     }
   }
 
@@ -77,11 +110,11 @@ export class MetricsLogger {
       MetricsLogger.appendCpuUsage(metrics);
       MetricsLogger.appendMemoryUsage(metrics);
       MetricsLogger.appendSqlUsage(metrics);
-      MetricsLogger.log(metrics);
+      LogMetrics(metrics);
+      // MetricsLogger.log(metrics);
     }
     catch(err){
-      // Rich - switch this to error logger statement
-      console.error('Error trying to logMetrics', err);
+      LogError('Error trying to logMetrics', {err});
     }
   }
 
@@ -148,12 +181,12 @@ export class MetricsLogger {
     }
   }
 
-  private static log(metrics: Metrics){
-    const metricsLogString = Object.entries(metrics).map((entry: any) => {
-      return entry[1] !== undefined ? `${entry[0]}="${entry[1]}"` : ''
-    }).join(' ');
-    // Rich - switch to a new logger statement that goes to a new file metrics.log that only has metrics
-    // This entry should be prepended with the current date+time DateTime="add_date_time" + the metricsLogString
-    console.log(metricsLogString);
-  }
+  // private static log(metrics: Metrics){
+  //   const metricsLogString = Object.entries(metrics).map((entry: any) => {
+  //     return entry[1] !== undefined ? `${entry[0]}="${entry[1]}"` : ''
+  //   }).join(' ');
+  //   // Rich - switch to a new logger statement that goes to a new file metrics.log that only has metrics
+  //   // This entry should be prepended with the current date+time DateTime="add_date_time" + the metricsLogString
+  //   console.log(metricsLogString);
+  // }
 }

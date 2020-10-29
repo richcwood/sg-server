@@ -109,39 +109,60 @@ export class StepOutcomeService {
             if (!skipLasteUpdateIdCheck && ('lastUpdateId' in data))
                 filter['lastUpdateId'] = { $lt: data.lastUpdateId };
 
-            let updatedStepOutcome: any = undefined;
-
-            if ('stdout' in data) {
-                updatedStepOutcome = await new Promise(async (resolve, reject) => {
-                    await StepOutcomeModel.findById(id, async (err, stepOutcome) => {
-                        if (err) reject(err);
-                        let stdout = '';
-                        if (stepOutcome.stdout)
-                            stdout += stepOutcome.stdout;
-                        if (data.stdout)
-                            stdout += data.stdout;
-                        let newModel = await StepOutcomeModel.findByIdAndUpdate(id, { $set: { stdout: stdout } }, { new: true });
-                        data.stdout = newModel.stdout;
-                        resolve(newModel);
-                    });
-                });
+            let updatedStepOutcome = await StepOutcomeModel.findOne(filter).select('stdout stderr');
+            if (!updatedStepOutcome) {
+                const stepOutcomeExisting = await StepOutcomeModel.findOne(defaultFilter).select('id');
+                if (!stepOutcomeExisting)
+                    throw new MissingObjectError(`StepDef '${id}" not found with filter "${JSON.stringify(filter, null, 4)}'.`)
+                return stepOutcomeExisting;
             }
 
-            if ('stderr' in data) {
-                updatedStepOutcome = await new Promise(async (resolve, reject) => {
-                    await StepOutcomeModel.findById(id, async (err, stepOutcome) => {
-                        if (err) reject(err);
-                        let stderr = '';
-                        if (stepOutcome.stderr)
-                            stderr += stepOutcome.stderr;
-                        if (data.stderr)
-                            stderr += data.stderr;
-                        let newModel = await StepOutcomeModel.findByIdAndUpdate(id, { $set: { stderr: stderr } }, { new: true });
-                        data.stderr = newModel.stderr;
-                        resolve(newModel);
-                    });
-                });
-            }
+            let stdout = '';
+            if (updatedStepOutcome.stdout)
+                stdout += updatedStepOutcome.stdout;
+            if (data.stdout)
+                stdout += data.stdout;
+            data.stdout = stdout;
+
+            let stderr = '';
+            if (updatedStepOutcome.stderr)
+                stderr += updatedStepOutcome.stderr;
+            if (data.stderr)
+                stderr += data.stderr;
+            data.stderr = stderr;
+
+            
+            // if ('stdout' in data) {
+            //     updatedStepOutcome = await new Promise(async (resolve, reject) => {
+            //         await StepOutcomeModel.findById(id, async (err, stepOutcome) => {
+            //             if (err) reject(err);
+            //             let stdout = '';
+            //             if (stepOutcome.stdout)
+            //                 stdout += stepOutcome.stdout;
+            //             if (data.stdout)
+            //                 stdout += data.stdout;
+            //             let newModel = await StepOutcomeModel.findByIdAndUpdate(id, { $set: { stdout: stdout } }, { new: true });
+            //             data.stdout = newModel.stdout;
+            //             resolve(newModel);
+            //         });
+            //     });
+            // }
+
+            // if ('stderr' in data) {
+            //     updatedStepOutcome = await new Promise(async (resolve, reject) => {
+            //         await StepOutcomeModel.findById(id, async (err, stepOutcome) => {
+            //             if (err) reject(err);
+            //             let stderr = '';
+            //             if (stepOutcome.stderr)
+            //                 stderr += stepOutcome.stderr;
+            //             if (data.stderr)
+            //                 stderr += data.stderr;
+            //             let newModel = await StepOutcomeModel.findByIdAndUpdate(id, { $set: { stderr: stderr } }, { new: true });
+            //             data.stderr = newModel.stderr;
+            //             resolve(newModel);
+            //         });
+            //     });
+            // }
 
             updatedStepOutcome = await StepOutcomeModel.findOneAndUpdate(filter, data, { new: true });
 
