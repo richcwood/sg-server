@@ -98,7 +98,7 @@ export class StepOutcomeService {
     }
 
 
-    public async updateStepOutcome(_teamId: mongodb.ObjectId, id: mongodb.ObjectId, data: any, logger: BaseLogger, filter?: any, correlationId?: string, responseFields?: string, skipLasteUpdateIdCheck: boolean = false): Promise<object> {
+    public async updateStepOutcome(_teamId: mongodb.ObjectId, id: mongodb.ObjectId, data: any, logger: BaseLogger, filter?: any, correlationId?: string, responseFields?: string, skipLastUpdateIdCheck: boolean = false): Promise<object> {
         try {
             const defaultFilter = { _id: id, _teamId };
             if (filter)
@@ -106,14 +106,14 @@ export class StepOutcomeService {
             else
                 filter = defaultFilter;
 
-            if (!skipLasteUpdateIdCheck && ('lastUpdateId' in data))
+            if (!skipLastUpdateIdCheck && ('lastUpdateId' in data))
                 filter['lastUpdateId'] = { $lt: data.lastUpdateId };
 
             let updatedStepOutcome = await StepOutcomeModel.findOne(filter).select('stdout stderr');
             if (!updatedStepOutcome) {
                 const stepOutcomeExisting = await StepOutcomeModel.findOne(defaultFilter).select('id');
                 if (!stepOutcomeExisting)
-                    throw new MissingObjectError(`StepDef '${id}" not found with filter "${JSON.stringify(filter, null, 4)}'.`)
+                    throw new MissingObjectError(`StepOutcome "${id}" not found with filter "${JSON.stringify(defaultFilter, null, 4)}".`)
                 return stepOutcomeExisting;
             }
 
@@ -167,7 +167,7 @@ export class StepOutcomeService {
             updatedStepOutcome = await StepOutcomeModel.findOneAndUpdate(filter, data, { new: true });
 
             if (!updatedStepOutcome)
-                throw new MissingObjectError(`StepOutcome '${id}" not found with filter "${JSON.stringify(filter, null, 4)}'.`)
+                throw new MissingObjectError(`StepOutcome "${id}" not found with filter "${JSON.stringify(filter, null, 4)}".`)
 
             if (updatedStepOutcome.status == TaskStatus.FAILED) {
                 await SGUtils.OnStepFailed(_teamId, updatedStepOutcome, logger);

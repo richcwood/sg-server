@@ -203,7 +203,7 @@ export default class Test20 extends TestBase.WorkflowTestBase {
                 stdout: `start\ndone\n@sgo{"rtKey": "rtVal"}\n@sgo{"agentId": "${agentId}"}\n@sgo{"outVal": "val"}\n`,
                 stderr: '',
                 exitCode: 0,
-                lastUpdateId: 2,
+                lastUpdateId: 1,
                 type: 'StepOutcome'
             }
         };

@@ -46,12 +46,23 @@ let GetTaskRoutes = async (_teamId: mongodb.ObjectId, task: TaskSchema, logger: 
     ///     required tags, log an error and return.
     else if (task.target & (Enums.TaskDefTarget.SINGLE_AGENT_WITH_TAGS | Enums.TaskDefTarget.ALL_AGENTS_WITH_TAGS)) {
         if (_.isPlainObject(task.requiredTags) && Object.keys(task.requiredTags).length > 0) {
-            let agentsWithRequiredTags = [];
-            const agents = await agentService.findAllAgents(_teamId, { 'offline': false, 'lastHeartbeatTime': { $gte: (new Date().getTime()) - parseInt(activeAgentTimeoutSeconds) * 1000 } }, 'lastHeartbeatTime tags propertyOverrides numActiveTasks attemptedRunAgentIds');
-            for (let i = 0; i < Object.keys(agents).length; i++) {
-                if (!Object.keys(task.requiredTags).some(tagKey => !(tagKey in agents[i].tags) || (task.requiredTags[tagKey] != agents[i].tags[tagKey])))
-                    agentsWithRequiredTags.push(agents[i]);
+            // let agentsWithRequiredTags = [];
+            let filter: any = {};
+            filter.offline = false;
+            filter.lastHeartbeatTime = { $gte: (new Date().getTime()) - parseInt(activeAgentTimeoutSeconds) * 1000 };
+            filter['$and'] = [];
+            for (let i = 0; i < Object.keys(task.requiredTags).length; i++) {
+                const tagKey = Object.keys(task.requiredTags)[i];
+                const tagFilterKey: string = `tags.${tagKey}`;
+                let tagFilter: any = {};
+                tagFilter[tagFilterKey] = task.requiredTags[tagKey];
+                filter['$and'].push(tagFilter);
             }
+            const agentsWithRequiredTags = await agentService.findAllAgents(_teamId, filter, 'lastHeartbeatTime propertyOverrides numActiveTasks attemptedRunAgentIds');
+            // for (let i = 0; i < Object.keys(agents).length; i++) {
+            //     if (!Object.keys(task.requiredTags).some(tagKey => !(tagKey in agents[i].tags) || (task.requiredTags[tagKey] != agents[i].tags[tagKey])))
+            //         agentsWithRequiredTags.push(agents[i]);
+            // }
 
             if (agentsWithRequiredTags.length < 1) {
                 const errMsg = `No agents with tags required to complete this task`;
@@ -98,14 +109,28 @@ let GetTaskRoutes = async (_teamId: mongodb.ObjectId, task: TaskSchema, logger: 
     }
     /// For aws lambda objectives, route the task to a saas glue aws lambda agent
     else if (task.target == Enums.TaskDefTarget.AWS_LAMBDA) {
-        let agentsWithRequiredTags = [];
+        // let agentsWithRequiredTags = [];
         const sgAdminTeam = new mongodb.ObjectId(config.get('sgAdminTeam'));
         const requiredTags = config.get('awsLambdaRequiredTags');
-        const agents = await agentService.findAllAgents(sgAdminTeam, { 'offline': false, 'lastHeartbeatTime': { $gte: (new Date().getTime()) - parseInt(activeAgentTimeoutSeconds) * 1000 } }, 'lastHeartbeatTime tags propertyOverrides numActiveTasks attemptedRunAgentIds');
-        for (let i = 0; i < Object.keys(agents).length; i++) {
-            if (!Object.keys(requiredTags).some(tagKey => !(tagKey in agents[i].tags) || (requiredTags[tagKey] != agents[i].tags[tagKey])))
-                agentsWithRequiredTags.push(agents[i]);
+
+        let filter: any = {};
+        filter.offline = false;
+        filter.lastHeartbeatTime = { $gte: (new Date().getTime()) - parseInt(activeAgentTimeoutSeconds) * 1000 };
+        filter['$and'] = [];
+        for (let i = 0; i < Object.keys(requiredTags).length; i++) {
+            const tagKey = Object.keys(requiredTags)[i];
+            const tagFilterKey: string = `tags.${tagKey}`;
+            let tagFilter: any = {};
+            tagFilter[tagFilterKey] = requiredTags[tagKey];
+            filter['$and'].push(tagFilter);
         }
+        const agentsWithRequiredTags = await agentService.findAllAgents(sgAdminTeam, filter, 'lastHeartbeatTime propertyOverrides numActiveTasks attemptedRunAgentIds');
+
+        // const agents = await agentService.findAllAgents(sgAdminTeam, { 'offline': false, 'lastHeartbeatTime': { $gte: (new Date().getTime()) - parseInt(activeAgentTimeoutSeconds) * 1000 } }, 'lastHeartbeatTime tags propertyOverrides numActiveTasks attemptedRunAgentIds');
+        // for (let i = 0; i < Object.keys(agents).length; i++) {
+        //     if (!Object.keys(requiredTags).some(tagKey => !(tagKey in agents[i].tags) || (requiredTags[tagKey] != agents[i].tags[tagKey])))
+        //         agentsWithRequiredTags.push(agents[i]);
+        // }
 
         if (agentsWithRequiredTags.length < 1) {
             const errMsg = `No lambda runner agents available`;
