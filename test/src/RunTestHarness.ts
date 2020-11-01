@@ -1332,35 +1332,26 @@ let GenerateToken = async () => {
   //   "agentStubVersion": "v0.0.0.260"
   // };
 
+  // const body = {
+  //   "teamIds": [
+  //     "5e99cbcb2317950015edb655"
+  //   ],
+  //   "agentStubVersion": "v0.0.0.2"
+  // };
+
+  // const body = {
+  //   "id": "5de8810275ad92e5bb8de78a",
+  //   "email": "admin@saasglue.com",
+  //   "teamIds": [],
+  //   "teamAccessRightIds": {}
+  // }
+
   const body = {
-    "teamIds": [
-      "5e99cbcb2317950015edb655"
-    ],
-    "agentStubVersion": "v0.0.0.2"
-  };
-
-  // const body = {
-  //   id: '5de8810275ad92e5bb8de78a',
-  //   email: 'admin@saasglue.com',
-  //   teamIds: '',
-  //   ipV6: '::1',
-  //   ipRange: '127.0.0.1/32'
-  // };
-
-  // const body = {
-  //   id: '5e99cbcb2317950015edb655',
-  //   email: 'scheduler@saasglue.com',
-  //   teamIds: '',
-  //   ipV6: '::ffff:10.47.238.174',
-  //   ipRange: '34.198.95.38/32'
-  // };
-
-  // const body = {
-  //   id: '5de8810275ad92e5bb8de78a',
-  //   email: 'admin@saasglue.com',
-  //   teamIds: '',
-  //   ipRange: '96.60.74.166/32'
-  // };
+    "id": "5de8810275ad92e5bb8de78a",
+    "email": "scheduler@saasglue.com",
+    "teamIds": [],
+    "teamAccessRightIds": {}
+  }
 
 
   var token = jwt.sign(body, secret);//KeysUtil.getPrivate()); // todo - create a public / private key
@@ -1836,7 +1827,7 @@ let SendTestBrowserAlert = async() => {
 }
 
 
-RunCheckWaitingForAgentTasks('5f57b2f14b5da00017df0d4f');
+// RunCheckWaitingForAgentTasks('5f57b2f14b5da00017df0d4f');
 // CreateBrainTreeCompanyForTeams();
 // FixTeamDBRecords();
 // FixScriptDBRecords();
@@ -1877,7 +1868,7 @@ RunCheckWaitingForAgentTasks('5f57b2f14b5da00017df0d4f');
 // SubmitInvoicesForPayment();
 // TestBraintreeWebhook();
 // CreateInvoicePDF(0);
-// GenerateToken();
+GenerateToken();
 // AgentRestAPICall();
 // DeleteJobs({'_jobDefId': process.argv[2]});
 // DeleteJobDefs({"name": /Cron.*/});
