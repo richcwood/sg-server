@@ -239,7 +239,7 @@ export class JobService {
                 }
             }
 
-            await this.LaunchReadyJobs(_teamId, job._jobDefId);
+            this.LaunchReadyJobs(_teamId, job._jobDefId);
 
             if (responseFields) {
                 // It's is a bit wasteful to do another query but I can't chain a save with a select
@@ -390,86 +390,100 @@ export class JobService {
             return;
 
         const currentTime: Date = new Date();
-        const jobDefs: JobDefSchema[] = <JobDefSchema[]>await jobDefService.findJobDef(_teamId, _jobDefId, 'maxInstances misfireGraceTime coalesce status');
-        if (!jobDefs || (_.isArray(jobDefs) && jobDefs.length === 0))
-            throw new MissingObjectError(`Job template ${_jobDefId.toHexString()} not found.`);
-        const jobDef: JobDefSchema = jobDefs[0];
-
-        /// Don't launch any jobs if the JobDef is paused
-        if (jobDef.status == Enums.JobDefStatus.PAUSED) {
-            logger.LogInfo('Not launching job because job template paused', { _jobDefId: _jobDefId.toHexString() });
+        const jobDef: JobDefSchema = await JobDefModel.findOneAndUpdate({ _teamId, _id: _jobDefId, launchingJobs: { $ne: true } }, { launchingJobs: true }).select('maxInstances misfireGraceTime coalesce status');
+        if (!jobDef) {
+            const jobDefsExisting = await JobDefModel.findOne({ _teamId, _id: _jobDefId }).select('id');
+            if (!jobDefsExisting)
+                throw new MissingObjectError(`Job template ${_jobDefId.toHexString()} not found.`);
             return;
         }
 
-        /// Get jobs created but not started - if we're past the misfire grace time, skip the job
-        ///     If multiple ready jobs and coalesce is true, run the most recent and skip the rest
-        const queryNotStartedJobs: JobSchema[] = await this.findAllJobsInternal({ _jobDefId: _jobDefId, _teamId, status: Enums.JobStatus.NOT_STARTED });
-        let jobsToRun: JobSchema[] = [];
-        if (_.isArray(queryNotStartedJobs) && queryNotStartedJobs.length > 0) {
-            for (let i = 0; i < queryNotStartedJobs.length; i++) {
-                const job = queryNotStartedJobs[i];
-                if (_.isNumber(jobDef.misfireGraceTime) && job.dateScheduled) {
-                    const lag = Math.floor((currentTime.getTime() - job.dateScheduled.getTime()) / 1000)
-                    // console.log(`LaunchReadyJobs -> lag -> ${lag}`);
-                    if (lag <= jobDef.misfireGraceTime) {
-                        jobsToRun.push(job);
-                    } else {
-                        this.updateJob(_teamId, job._id, { status: Enums.JobStatus.SKIPPED, error: "Exceeded misfire grace time" });
-                    }
-                } else {
-                    jobsToRun.push(job);
-                }
+        try {
+            /// Don't launch any jobs if the JobDef is paused
+            if (jobDef.status == Enums.JobDefStatus.PAUSED) {
+                logger.LogInfo('Not launching job because job template paused', { _jobDefId: _jobDefId.toHexString() });
+                return;
             }
 
-            /// Get count of running jobs
-            let numRunningJobs: number = 0;
-            const queryRunningJobs: JobSchema[] = await this.findAllJobsInternal({ _jobDefId: _jobDefId, _teamId, status: Enums.JobStatus.RUNNING }, 'id');
-            if (_.isArray(queryRunningJobs) && queryRunningJobs.length > 0)
-                numRunningJobs = queryRunningJobs.length;
-
-            /// Can't start more than maxInstances jobs
-            let numJobsToStart = jobsToRun.length;
-            if (jobDef.maxInstances)
-                numJobsToStart = Math.min(jobDef.maxInstances - numRunningJobs, numJobsToStart);
-
-            // console.log(`LaunchReadyJobs -> numRunningJobs -> ${numRunningJobs}, notStartedJobs -> ${queryNotStartedJobs.length}, numJobsToStart -> ${numJobsToStart}, coalesce -> ${jobDef.coalesce}`);
-            /// If "coalesce", skip all ready jobs except the most recent
-            if ((numJobsToStart > 0) && jobDef.coalesce) {
-                for (let i = 0; i < jobsToRun.length - 1; i++) {
-                    this.updateJob(_teamId, jobsToRun[i]._id, { status: Enums.JobStatus.SKIPPED, error: "Job skipped due to coalesce" });
+            /// Get jobs created but not started - if we're past the misfire grace time, skip the job
+            ///     If multiple ready jobs and coalesce is true, run the most recent and skip the rest
+            const queryNotStartedJobs: JobSchema[] = await this.findAllJobsInternal({ _jobDefId, _teamId, status: Enums.JobStatus.NOT_STARTED });
+            let jobsToRun: JobSchema[] = [];
+            if (_.isArray(queryNotStartedJobs) && queryNotStartedJobs.length > 0) {
+                for (let i = 0; i < queryNotStartedJobs.length; i++) {
+                    const job = queryNotStartedJobs[i];
+                    if (_.isNumber(jobDef.misfireGraceTime) && job.dateScheduled) {
+                        const lag = Math.floor((currentTime.getTime() - job.dateScheduled.getTime()) / 1000)
+                        // console.log(`LaunchReadyJobs -> lag -> ${lag}`);
+                        if (lag <= jobDef.misfireGraceTime) {
+                            jobsToRun.push(job);
+                        } else {
+                            this.updateJob(_teamId, job._id, { status: Enums.JobStatus.SKIPPED, error: "Exceeded misfire grace time" });
+                        }
+                    } else {
+                        jobsToRun.push(job);
+                    }
                 }
-                const jobToRun = jobsToRun[jobsToRun.length - 1];
-                try {
-                    await this.updateJob(_teamId, jobToRun._id, { status: Enums.JobStatus.RUNNING, dateStarted: new Date().toISOString() }, { status: Enums.JobStatus.NOT_STARTED });
-                    await this.LaunchTasksWithNoUpstreamDependencies(_teamId, jobToRun._id, logger);
-                } catch(err) {
-                    if (!(err instanceof MissingObjectError)) {   
-                        logger.LogError('Launching next available job', { _jobDefId: jobToRun._jobDefId.toHexString(), _jobId: jobToRun._id.toHexString() });
-                    }                 
-                }
-                // if (resJobQuery) {
-                //     logger.LogDebug('Launching next available job', { _jobDefId: jobToRun._jobDefId.toHexString(), _jobId: jobToRun._id.toHexString() });
-                //     await this.LaunchTasksWithNoUpstreamDependencies(_teamId, jobToRun._id, logger);
-                // }
-            } else {
-                /// Run up to maxInstances jobs (minus count of jobs already running) - remaining jobs will stay in "not started" status
-                for (let i = 0; i < numJobsToStart; i++) {
-                    const jobToRun = jobsToRun[i];
 
+                /// Get count of running jobs
+                let numRunningJobs: number = 0;
+                const queryRunningJobs: JobSchema[] = await this.findAllJobsInternal({ _jobDefId: _jobDefId, _teamId, status: Enums.JobStatus.RUNNING }, 'id');
+                if (_.isArray(queryRunningJobs) && queryRunningJobs.length > 0)
+                    numRunningJobs = queryRunningJobs.length;
+
+                /// Can't start more than maxInstances jobs
+                let numJobsToStart = jobsToRun.length;
+                if (jobDef.maxInstances)
+                    numJobsToStart = Math.min(jobDef.maxInstances - numRunningJobs, numJobsToStart);
+
+                // console.log(`LaunchReadyJobs -> numRunningJobs -> ${numRunningJobs}, notStartedJobs -> ${queryNotStartedJobs.length}, numJobsToStart -> ${numJobsToStart}, coalesce -> ${jobDef.coalesce}`);
+                /// If "coalesce", skip all ready jobs except the most recent
+                if ((numJobsToStart > 0) && jobDef.coalesce) {
+                    for (let i = 0; i < jobsToRun.length - 1; i++) {
+                        this.updateJob(_teamId, jobsToRun[i]._id, { status: Enums.JobStatus.SKIPPED, error: "Job skipped due to coalesce" });
+                    }
+                    const jobToRun = jobsToRun[jobsToRun.length - 1];
                     try {
                         await this.updateJob(_teamId, jobToRun._id, { status: Enums.JobStatus.RUNNING, dateStarted: new Date().toISOString() }, { status: Enums.JobStatus.NOT_STARTED });
                         await this.LaunchTasksWithNoUpstreamDependencies(_teamId, jobToRun._id, logger);
-                    } catch(err) {
-                        if (!(err instanceof MissingObjectError)) {   
-                            logger.LogDebug('Launching next available job', { _jobDefId: _jobDefId.toHexString(), _jobId: jobToRun._id.toHexString() });
-                        }                 
+                    } catch (err) {
+                        if (!(err instanceof MissingObjectError)) {
+                            logger.LogError('Launching next available job', { _jobDefId: jobToRun._jobDefId.toHexString(), _jobId: jobToRun._id.toHexString() });
+                        }
                     }
-                    // const resJobQuery = await this.updateJob(_teamId, jobToRun._id, { status: Enums.JobStatus.RUNNING, dateStarted: new Date().toISOString() }, { status: Enums.JobStatus.NOT_STARTED });
                     // if (resJobQuery) {
-                    //     logger.LogDebug('Launching next available job', { _jobDefId: _jobDefId.toHexString(), _jobId: jobToRun._id.toHexString() });
+                    //     logger.LogDebug('Launching next available job', { _jobDefId: jobToRun._jobDefId.toHexString(), _jobId: jobToRun._id.toHexString() });
                     //     await this.LaunchTasksWithNoUpstreamDependencies(_teamId, jobToRun._id, logger);
                     // }
+                } else {
+                    /// Run up to maxInstances jobs (minus count of jobs already running) - remaining jobs will stay in "not started" status
+                    for (let i = 0; i < numJobsToStart; i++) {
+                        const jobToRun = jobsToRun[i];
+
+                        try {
+                            await this.updateJob(_teamId, jobToRun._id, { status: Enums.JobStatus.RUNNING, dateStarted: new Date().toISOString() }, { status: Enums.JobStatus.NOT_STARTED });
+                            await this.LaunchTasksWithNoUpstreamDependencies(_teamId, jobToRun._id, logger);
+                        } catch (err) {
+                            if (!(err instanceof MissingObjectError)) {
+                                logger.LogDebug('Launching next available job', { _jobDefId: _jobDefId.toHexString(), _jobId: jobToRun._id.toHexString() });
+                            }
+                        }
+                        // const resJobQuery = await this.updateJob(_teamId, jobToRun._id, { status: Enums.JobStatus.RUNNING, dateStarted: new Date().toISOString() }, { status: Enums.JobStatus.NOT_STARTED });
+                        // if (resJobQuery) {
+                        //     logger.LogDebug('Launching next available job', { _jobDefId: _jobDefId.toHexString(), _jobId: jobToRun._id.toHexString() });
+                        //     await this.LaunchTasksWithNoUpstreamDependencies(_teamId, jobToRun._id, logger);
+                        // }
+                    }
                 }
+            }
+        } finally {
+            try {
+                await JobDefModel.findOneAndUpdate({ _teamId, _id: _jobDefId }, { launchingJobs: false }).select('_id');
+                let jobNotStarted: any = JobModel.find({ _teamId, _jobDefId, status: Enums.JobStatus.NOT_STARTED }).limit(1);
+                if (_.isArray(jobNotStarted) && jobNotStarted.length > 0)
+                    this.LaunchReadyJobs(_teamId, _jobDefId);
+            } catch (err) {
+                logger.LogError('Error in LaunchReadyJobs finally block', { err, _jobDefId: _jobDefId.toHexString() });
             }
         }
     }

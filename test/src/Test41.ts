@@ -1,7 +1,7 @@
 import * as config from 'config';
 import * as TestBase from './TestBase';
 import { SGUtils } from '../../server/src/shared/SGUtils';
-import { ScriptType } from '../../server/src/shared/Enums';
+import { ScriptType, JobDefStatus } from '../../server/src/shared/Enums';
 import * as _ from 'lodash';
 
 
@@ -48,6 +48,7 @@ export default class Test41 extends TestBase.WorkflowTestBase {
                     name: 'Job 41',
                     coalesce: true,
                     maxInstances: 1,
+                    status: JobDefStatus.PAUSED,
                     taskDefs: [
                         {
                             name: 'Task 1',
@@ -73,9 +74,11 @@ export default class Test41 extends TestBase.WorkflowTestBase {
                 return false;
             }
 
-            if (i == 0)
+            if (i == 4)
                 startedJobId = resApiCall.data.data.id;
         }
+
+        resApiCall = await this.testSetup.RestAPICall(`jobdef/${jobDefs['Job 41'].id}`, 'PUT', _teamId, null, { status: JobDefStatus.RUNNING });
 
         const jobStartedBP: any = {
             domainType: 'Job',
@@ -84,7 +87,7 @@ export default class Test41 extends TestBase.WorkflowTestBase {
             {
                 _teamId: config.get('sgTestTeam'),
                 _jobDefId: jobDefs[properties.jobDefs[0].name].id,
-                runId: 0,
+                runId: 4,
                 name: properties.jobDefs[0].name,
                 status: 0,
                 id: startedJobId,

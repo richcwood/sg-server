@@ -94,7 +94,7 @@ export class TaskActionService {
                 taskFailed = true;
                 deltas = { status: TaskStatus.FAILED, failureCode: getTaskRoutesRes.failureCode, route: 'fail' };
                 updatedTask = await taskService.updateTask(_teamId, _taskId, deltas, logger)
-                logger.LogError(`Unhandled failure code: ${getTaskRoutesRes.failureCode}`, { Class: 'TaskOutcomeService', Method: 'PublishTask', _teamId, task: task });
+                logger.LogError(`Unhandled failure code: ${getTaskRoutesRes.failureCode}`, { Class: 'TaskOutcomeService', Method: 'requeueTask', _teamId, task: task });
             }
 
             if (taskFailed) {

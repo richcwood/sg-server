@@ -209,7 +209,7 @@ export class TaskOutcomeService {
                             }
                         }
 
-                        jobService.LaunchReadyJobs(_teamId, job._jobDefId);
+                        // jobService.LaunchReadyJobs(_teamId, job._jobDefId);
                     }
 
                     if (updatedTaskOutcome.status == Enums.TaskStatus.INTERRUPTED && (job.onJobTaskInterruptedAlertEmail || job.onJobTaskInterruptedAlertSlackURL)) {

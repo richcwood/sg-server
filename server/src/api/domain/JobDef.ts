@@ -67,6 +67,9 @@ export class JobDefSchema {
   @prop()
   onJobTaskInterruptedAlertSlackURL?: string;
 
+  @prop({ default: false })
+  launchingJobs?: boolean;
+
   // https://hooks.slack.com/services/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
 
   // Define which filters are legal for which props (including nested props (not sure about nested arrays))
