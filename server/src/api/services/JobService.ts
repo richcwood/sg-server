@@ -74,20 +74,20 @@ export class JobService {
                 const job: any = jobsQuery[i];
 
                 let deleteStepOutcomeRes: any = await stepOutcomeService.deleteStepOutcome(_teamId, job._id, correlationId);
-                if (deleteStepOutcomeRes.n != deleteStepOutcomeRes.deletedCount)
-                    logger.LogError(`Error deleting step outcomes for job "${job._id}": ${deleteStepOutcomeRes.n} step outcomes exist but ${deleteStepOutcomeRes.deletedCount} deleted`, {});
+                // if (deleteStepOutcomeRes.n != deleteStepOutcomeRes.deletedCount)
+                //     logger.LogError(`Error deleting step outcomes for job "${job._id}": ${deleteStepOutcomeRes.n} step outcomes exist but ${deleteStepOutcomeRes.deletedCount} deleted`, {});
 
                 let deleteTaskOutcomeRes: any = await taskOutcomeService.deleteTaskOutcome(_teamId, job._id, correlationId);
-                if (deleteTaskOutcomeRes.n != deleteTaskOutcomeRes.deletedCount)
-                    logger.LogError(`Error deleting task outcomes for job "${job._id}": ${deleteTaskOutcomeRes.n} task outcomes exist but ${deleteTaskOutcomeRes.deletedCount} deleted`, {});
+                // if (deleteTaskOutcomeRes.n != deleteTaskOutcomeRes.deletedCount)
+                //     logger.LogError(`Error deleting task outcomes for job "${job._id}": ${deleteTaskOutcomeRes.n} task outcomes exist but ${deleteTaskOutcomeRes.deletedCount} deleted`, {});
 
                 let deleteStepRes: any = await stepService.deleteStep(_teamId, job._id, correlationId);
-                if (deleteStepRes.n != deleteStepRes.deletedCount)
-                    logger.LogError(`Error deleting steps for job "${job._id}": ${deleteStepRes.n} steps exist but ${deleteStepRes.deletedCount} deleted`, {});
+                // if (deleteStepRes.n != deleteStepRes.deletedCount)
+                //     logger.LogError(`Error deleting steps for job "${job._id}": ${deleteStepRes.n} steps exist but ${deleteStepRes.deletedCount} deleted`, {});
 
                 let deleteTaskRes: any = await taskService.deleteTask(_teamId, job._id, correlationId);
-                if (deleteTaskRes.n != deleteTaskRes.deletedCount)
-                    logger.LogError(`Error deleting tasks for job "${job._id}": ${deleteTaskRes.n} tasks exist but ${deleteTaskRes.deletedCount} deleted`, {});
+                // if (deleteTaskRes.n != deleteTaskRes.deletedCount)
+                //     logger.LogError(`Error deleting tasks for job "${job._id}": ${deleteTaskRes.n} tasks exist but ${deleteTaskRes.deletedCount} deleted`, {});
 
                 let deleted = await JobModel.deleteOne({_id: job._id});
                 if (deleted.ok) {

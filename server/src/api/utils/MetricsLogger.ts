@@ -165,7 +165,8 @@ export class MetricsLogger {
   private static appendSqlUsage(metrics: Metrics){
     if(MetricsLogger.sql_count > 0){
       metrics.SqlCount = MetricsLogger.sql_count;
-      metrics.SqlAvgTime = (MetricsLogger.sql_totalTime / MetricsLogger.sql_count).toFixed(2);
+      metrics.SqlTime = MetricsLogger.sql_totalTime;
+      // metrics.SqlAvgTime = (MetricsLogger.sql_totalTime / MetricsLogger.sql_count).toFixed(2);
 
       // Compute the slowest 3 collections and total time waited on them
       const slowestCollections = Object.entries(MetricsLogger.sql_timesPerCollection).sort((a: any, b: any) => b[1] - a[1]).splice(0, 3);
