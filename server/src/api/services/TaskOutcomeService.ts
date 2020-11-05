@@ -487,6 +487,8 @@ export class TaskOutcomeService {
 
                 let ttl = config.get('defaultQueuedTaskTTL');
 
+                await taskService.updateTask(_teamId, task._id, { status: Enums.TaskStatus.PUBLISHED, failureCode: '' }, logger);
+
                 for (let i = 0; i < routes.length; i++) {
                     if (routes[i]['type'] == 'queue') {
                         await amqp.PublishQueue(SGStrings.GetTeamExchangeName(_teamId.toHexString()), routes[i]['route'], convertedTask, routes[i]['queueAssertArgs'], { 'expiration': ttl });
@@ -494,8 +496,6 @@ export class TaskOutcomeService {
                         await amqp.PublishRoute(SGStrings.GetTeamExchangeName(_teamId.toHexString()), routes[i]['route'], convertedTask);
                     }
                 }
-
-                await taskService.updateTask(_teamId, task._id, { status: Enums.TaskStatus.PUBLISHED, route: '', failureCode: '' }, logger);
                 success = true;
             }
 

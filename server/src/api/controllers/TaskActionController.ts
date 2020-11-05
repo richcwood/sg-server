@@ -10,9 +10,10 @@ export class TaskActionController {
 
     public async republishTask(req: Request, resp: Response, next: NextFunction): Promise<void> {
         try {
+            const logger: BaseLogger = (<any>req).logger;
             const _teamId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._teamid);
             const response: ResponseWrapper = resp['body'];
-            const res = await taskActionService.republishTask(_teamId, new mongodb.ObjectId(req.params.taskId));
+            const res = await taskActionService.republishTask(_teamId, new mongodb.ObjectId(req.params.taskId), logger);
             response.data = res;
             response.statusCode = ResponseCode.OK;
             next();

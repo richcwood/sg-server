@@ -26,35 +26,47 @@ amqp.Start();
 
 export class TaskActionService {
 
-    public async republishTask(_teamId: mongodb.ObjectId, _taskId: mongodb.ObjectId, correlationId?: string, responseFields?: string): Promise<object> {
-        const filter = { _id: _taskId, _teamId };
+    public async republishTask(_teamId: mongodb.ObjectId, _taskId: mongodb.ObjectId, logger: BaseLogger, correlationId?: string, responseFields?: string): Promise<object> {
+        const filter = { _id: _taskId, _teamId, status: { $lte: TaskStatus.PUBLISHED } };
 
-        let taskUpdateQuery = {};
-        taskUpdateQuery['$unset'] = { 'runtimeVars.route': '' };
-        taskUpdateQuery['$set'] = { 'route': '', 'status': null, 'failureCode': null };
-        let updatedTask: TaskSchema = await TaskModel.findOneAndUpdate(filter, taskUpdateQuery, { new: true });
-        if (!updatedTask) {
-            logger.LogError(`Task ${_taskId} not found with filter ${JSON.stringify(filter)}`, {});
-            return {};
-        }
+        // let taskUpdateQuery = {};
+        // taskUpdateQuery['$unset'] = { 'runtimeVars.route': '' };
+        // taskUpdateQuery['$set'] = { 'status': null, 'failureCode': null };
+        // let updatedTask: TaskSchema = await TaskModel.findOneAndUpdate(filter, taskUpdateQuery, { new: true });
+        // if (!updatedTask) {
+        //     logger.LogError(`Task ${_taskId} not found with filter ${JSON.stringify(filter)}`, {});
+        //     return {};
+        // }
 
-        await rabbitMQPublisher.publish(_teamId, "Task", correlationId, PayloadOperation.UPDATE, convertData(TaskSchema, updatedTask));
+        // await rabbitMQPublisher.publish(_teamId, "Task", correlationId, PayloadOperation.UPDATE, convertData(TaskSchema, updatedTask));
 
-        const tasks = await taskService.findAllJobTasks(_teamId, updatedTask._jobId, 'toRoutes');
-        const tasksToRoutes = SGUtils.flatMap(x => x, tasks.map((t) => SGUtils.flatMap(x => x[0], t.toRoutes)));
-        if ((!updatedTask.up_dep || (Object.keys(updatedTask.up_dep).length < 1)) && (tasksToRoutes.indexOf(updatedTask.name) < 0)) {
-            if (updatedTask.status == null) {
-                updatedTask.status = TaskStatus.NOT_STARTED;
-                await taskService.updateTask(_teamId, updatedTask._id, { status: updatedTask.status }, logger, { status: null }, null, null);
-                await taskOutcomeService.PublishTask(_teamId, updatedTask, logger, amqp);
+        // const tasks = await taskService.findAllJobTasks(_teamId, updatedTask._jobId, 'toRoutes');
+        // const tasksToRoutes = SGUtils.flatMap(x => x, tasks.map((t) => SGUtils.flatMap(x => x[0], t.toRoutes)));
+        // if ((!updatedTask.up_dep || (Object.keys(updatedTask.up_dep).length < 1)) && (tasksToRoutes.indexOf(updatedTask.name) < 0)) {
+        //     if (updatedTask.status == null) {
+        //         updatedTask.status = TaskStatus.NOT_STARTED;
+        //         await taskService.updateTask(_teamId, updatedTask._id, { status: updatedTask.status }, logger, { status: null }, null, null);
+        //         await taskOutcomeService.PublishTask(_teamId, updatedTask, logger, amqp);
+        //     }
+        // }
+
+        try {
+            let taskUpdateQuery = {};
+            taskUpdateQuery['$unset'] = { 'runtimeVars.route': '' };
+            taskUpdateQuery['$set'] = { status: TaskStatus.NOT_STARTED, failureCode: '' };
+
+            let updatedTask: any = await taskService.updateTask(_teamId, _taskId, taskUpdateQuery, logger, filter, null, null);
+            await taskOutcomeService.PublishTask(_teamId, updatedTask, logger, amqp);
+
+            if (responseFields) {
+                return taskService.findTask(_teamId, _taskId, responseFields);
             }
-        }
-
-        if (responseFields) {
-            return taskService.findTask(_teamId, _taskId, responseFields);
-        }
-        else {
-            return updatedTask; // fully populated model
+            else {
+                return updatedTask; // fully populated model
+            }
+        } catch (err) {
+            logger.LogError(`Error republishing task: ${err.message}`, { Class: 'TaskActionService', Method: 'republishTask', _taskId });
+            return { success: false };
         }
     }
 
@@ -112,7 +124,7 @@ export class TaskActionService {
                 }
             }
 
-            updatedTask = await taskService.updateTask(_teamId, _taskId, { status: TaskStatus.PUBLISHED, route: '', failureCode: '' }, logger);
+            updatedTask = await taskService.updateTask(_teamId, _taskId, { status: TaskStatus.PUBLISHED, failureCode: '' }, logger);
         }
 
         await rabbitMQPublisher.publish(_teamId, "Task", correlationId, PayloadOperation.UPDATE, convertData(TaskSchema, updatedTask));

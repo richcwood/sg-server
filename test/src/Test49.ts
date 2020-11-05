@@ -202,15 +202,15 @@ export default class Test49 extends TestBase.WorkflowTestBase {
             operation: 2,
             model:
             {
-                status: null,
-                autoRestart: true,
+                status: TaskStatus.PUBLISHED,
+                // autoRestart: true,
                 //                attemptedRunAgentIds: ['5f20a331fbab450ed2e8bb1a'],
-                _teamId: config.get('sgTestTeam'),
-                _jobId: job.id,
-                name: 'Task 1',
-                targetAgentId: null,
-                target: TaskDefTarget.SINGLE_AGENT,
-                source: 1,
+                // _teamId: config.get('sgTestTeam'),
+                // _jobId: job.id,
+                // name: 'Task 1',
+                // targetAgentId: null,
+                // target: TaskDefTarget.SINGLE_AGENT,
+                // source: 1,
                 type: 'Task'
             }
         };
