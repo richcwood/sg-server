@@ -15,7 +15,7 @@
   "rmqUsername": "bartSpikeUser",
   "rmqPassword": "RocketDog99!",
   "rmqVhost": "bartsVHost",
-  "inactiveAgentQueueTTLHours": 168,
+  "inactiveAgentQueueTTLHours": 24,
   "agentCrashRestartInterval": 30000,
   "mongoUrl": "mongodb+srv://sgApp:qBVgdcOa5V0L4cPL@cluster0.hbuyr.mongodb.net/sg_prod?retryWrites=true&w=majority",
   "mongoDbName": "sg_prod",
