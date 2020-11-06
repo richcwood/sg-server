@@ -20,6 +20,7 @@ export class AgentRouter {
         this.router.put('/name/:agentId', agentController.updateAgentName);
         this.router.put('/stop/:agentId', agentController.stopAgent);
         this.router.post('/cancelorphanedtasks/:agentId', agentController.processOrphanedTasks);
+        this.router.delete('/:agentId', agentController.deleteAgent);
     }
 }
 

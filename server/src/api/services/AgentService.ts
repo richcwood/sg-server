@@ -77,6 +77,15 @@ export class AgentService {
     }
 
 
+    public async deleteAgent(_teamId: mongodb.ObjectId, id: mongodb.ObjectId, correlationId?: string): Promise<object> {
+        const deleted = await AgentModel.deleteOne({ _id: id, _teamId });
+
+        await rabbitMQPublisher.publish(_teamId, "Agent", correlationId, PayloadOperation.DELETE, { _id: id });
+
+        return deleted;
+    }
+
+
     public async createAgentInternal(data: any): Promise<object> {
         const model = new AgentModel(data);
         await model.save();

@@ -1325,12 +1325,12 @@ let BraintreeTesting = async () => {
 let GenerateToken = async () => {
   const secret = config.get('secret');
 
-  const body = {
-    "teamIds": [
-      "5e99cbcb2317950015edb655"
-    ],
-    "agentStubVersion": "v0.0.0.33"
-  }
+  // const body = {
+  //   "teamIds": [
+  //     "5e99cbcb2317950015edb655"
+  //   ],
+  //   "agentStubVersion": "v0.0.0.33"
+  // }
 
   // const body = {
   //   "teamIds": [
@@ -1346,12 +1346,12 @@ let GenerateToken = async () => {
   //   "agentStubVersion": "v0.0.0.2"
   // };
 
-  // const body = {
-  //   "id": "5de8810275ad92e5bb8de78a",
-  //   "email": "admin@saasglue.com",
-  //   "teamIds": [],
-  //   "teamAccessRightIds": {}
-  // }
+  const body = {
+    "id": "5de8810275ad92e5bb8de78a",
+    "email": "admin@saasglue.com",
+    "teamIds": [],
+    "teamAccessRightIds": {}
+  }
 
   // const body = {
   //   "id": "5de8810275ad92e5bb8de78a",

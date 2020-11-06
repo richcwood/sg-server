@@ -186,6 +186,20 @@ export class AgentController {
     }
 
 
+    public async deleteAgent(req: Request, resp: Response, next: NextFunction): Promise<void> {
+        const _teamId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._teamid);
+        const response: ResponseWrapper = resp['body'];
+        try {
+            response.data = await agentService.deleteAgent(_teamId, new mongodb.ObjectId(req.params.agentId), req.header('correlationId'));
+            response.statusCode = ResponseCode.OK;
+            next();
+        }
+        catch (err) {
+            next(err);
+        }
+    }
+
+
     public async createAgent(req: Request, resp: Response, next: NextFunction): Promise<void> {
         const logger: BaseLogger = (<any>req).logger;
         const _teamId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._teamid);
