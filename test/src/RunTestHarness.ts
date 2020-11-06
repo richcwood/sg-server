@@ -1325,6 +1325,13 @@ let BraintreeTesting = async () => {
 let GenerateToken = async () => {
   const secret = config.get('secret');
 
+  const body = {
+    "teamIds": [
+      "5e99cbcb2317950015edb655"
+    ],
+    "agentStubVersion": "v0.0.0.33"
+  }
+
   // const body = {
   //   "teamIds": [
   //     "5de95c0453162e8891f5a830"
@@ -1346,12 +1353,12 @@ let GenerateToken = async () => {
   //   "teamAccessRightIds": {}
   // }
 
-  const body = {
-    "id": "5de8810275ad92e5bb8de78a",
-    "email": "scheduler@saasglue.com",
-    "teamIds": [],
-    "teamAccessRightIds": {}
-  }
+  // const body = {
+  //   "id": "5de8810275ad92e5bb8de78a",
+  //   "email": "scheduler@saasglue.com",
+  //   "teamIds": [],
+  //   "teamAccessRightIds": {}
+  // }
 
 
   var token = jwt.sign(body, secret);//KeysUtil.getPrivate()); // todo - create a public / private key

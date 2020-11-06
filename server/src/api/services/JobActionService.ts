@@ -26,7 +26,7 @@ export class JobActionService {
             for (let i = 0; i < tasksToInterruptQuery.length; i++) {
                 const taskToInterrupt = tasksToInterruptQuery[i];
                 try {
-                    await taskService.updateTask(_teamId, taskToInterrupt._id, { status: null, failureCode: null }, logger);
+                    await taskService.updateTask(_teamId, taskToInterrupt._id, { status: null, failureCode: '' }, logger);
                 } catch (e) {
                     logger.LogWarning(`Error canceling job task: ${e}`, { taskToInterrupt });
                 }
