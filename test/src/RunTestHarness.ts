@@ -6,6 +6,7 @@ import axios from 'axios';
 import { exec } from 'child_process';
 import { MongoRepo } from '../../server/src/shared/MongoLib';
 import { SGUtils } from '../../server/src/shared/SGUtils';
+import { SGStrings } from '../../server/src/shared/SGStrings';
 import { BaseLogger } from '../../server/src/shared/SGLogger';
 import { AMQPConnector } from '../../server/src/shared/AMQPLib';
 import { StompConnector } from '../../server/src/shared/StompLib';
@@ -379,6 +380,30 @@ let RabbitMQAdminTest = async () => {
 
     let res = await rmqAdmin.setPolicy('DLX-Agent', '^team-.*\.agent.*', { 'dead-letter-exchange': 'dlx-agent' }, 'queues');
     console.log(res);
+  } catch (e) {
+    console.error(e);
+  }
+}
+
+
+let RabbitMQTeamSetup = async (teamId: string) => {
+  mongoose.connect(config.get('mongoUrl'), { useNewUrlParser: true });
+  const rmqAdminUrl = config.get('rmqAdminUrl');
+  let rmqVhost = config.get('rmqVhost');
+
+  let logger = new BaseLogger('RunTestHarness');
+  logger.Start();
+
+  try {
+    let team: any = await teamService.findTeam(teamId);
+  
+    const rmqAdmin = new RabbitMQAdmin(rmqAdminUrl, rmqVhost, logger);
+    const newUsername = team._id.toString();
+
+    const teamExchange = SGStrings.GetTeamRoutingPrefix(team._id);
+    await rmqAdmin.createExchange(teamExchange, 'topic', false, true);
+    await rmqAdmin.createUser(newUsername, team.rmqPassword, teamExchange);
+    console.log(`Finished setting up team ${teamId}`);
   } catch (e) {
     console.error(e);
   }
@@ -1325,33 +1350,19 @@ let BraintreeTesting = async () => {
 let GenerateToken = async () => {
   const secret = config.get('secret');
 
-  // const body = {
-  //   "teamIds": [
-  //     "5e99cbcb2317950015edb655"
-  //   ],
-  //   "agentStubVersion": "v0.0.0.33"
-  // }
-
-  // const body = {
-  //   "teamIds": [
-  //     "5de95c0453162e8891f5a830"
-  //   ],
-  //   "agentStubVersion": "v0.0.0.260"
-  // };
-
-  // const body = {
-  //   "teamIds": [
-  //     "5e99cbcb2317950015edb655"
-  //   ],
-  //   "agentStubVersion": "v0.0.0.2"
-  // };
-
   const body = {
-    "id": "5de8810275ad92e5bb8de78a",
-    "email": "admin@saasglue.com",
-    "teamIds": [],
-    "teamAccessRightIds": {}
+    "teamIds": [
+      "5f57b2f14b5da00017df0d4f"
+    ],
+    "agentStubVersion": "v0.0.0.36"
   }
+
+  // const body = {
+  //   "id": "5de8810275ad92e5bb8de78a",
+  //   "email": "admin@saasglue.com",
+  //   "teamIds": [],
+  //   "teamAccessRightIds": {}
+  // }
 
   // const body = {
   //   "id": "5de8810275ad92e5bb8de78a",
@@ -1879,6 +1890,7 @@ GenerateToken();
 // AgentRestAPICall();
 // DeleteJobs({'_jobDefId': process.argv[2]});
 // DeleteJobDefs({"name": /Cron.*/});
+// RabbitMQTeamSetup(process.argv[2]);
 
 
 // (async () => {

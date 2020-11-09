@@ -68,54 +68,54 @@ let teamsToKeep = ['5de95c0453162e8891f5a830'];
             }
         }
 
-        if (process.argv[3]) {
-            let exchanges = await rmqAdmin.getExchanges(process.argv[3]);
-            console.log(exchanges);
+        // if (process.argv[3]) {
+        //     let exchanges = await rmqAdmin.getExchanges(process.argv[3]);
+        //     console.log(exchanges);
             
-            for (let index = 0; index < exchanges.length; index++) {
-                try {
-                    let remove = true;
-                    for (let i = 0; i < teamsToKeep.length; i++) {
-                        if (exchanges[index].indexOf(teamsToKeep[i]) >= 0) {
-                            remove = false;
-                            break;
-                        }
-                    }
+        //     for (let index = 0; index < exchanges.length; index++) {
+        //         try {
+        //             let remove = true;
+        //             for (let i = 0; i < teamsToKeep.length; i++) {
+        //                 if (exchanges[index].indexOf(teamsToKeep[i]) >= 0) {
+        //                     remove = false;
+        //                     break;
+        //                 }
+        //             }
 
-                    if (remove) {
-                        let res = await rmqAdmin.deleteExchange(exchanges[index]);
-                        // console.log('remove exchange res -> ', res);
-                    }
-                    // console.log(res);
-                } catch(e) {
-                    console.log(`Error deleting exchange: "${exchanges[index]}": ${util.inspect(e, false, null)}`);
-                }
-            }
-        }
+        //             if (remove) {
+        //                 let res = await rmqAdmin.deleteExchange(exchanges[index]);
+        //                 // console.log('remove exchange res -> ', res);
+        //             }
+        //             // console.log(res);
+        //         } catch(e) {
+        //             console.log(`Error deleting exchange: "${exchanges[index]}": ${util.inspect(e, false, null)}`);
+        //         }
+        //     }
+        // }
 
-        if (process.argv[4]) {
-            let users = await rmqAdmin.getUsers(process.argv[4]);
-            console.log(users);
+        // if (process.argv[4]) {
+        //     let users = await rmqAdmin.getUsers(process.argv[4]);
+        //     console.log(users);
             
-            for (let index = 0; index < users.length; index++) {
-                try {
-                    let remove = true;
-                    for (let i = 0; i < teamsToKeep.length; i++) {
-                        if (users[index].indexOf(teamsToKeep[i]) >= 0) {
-                            remove = false;
-                            break;
-                        }
-                    }
+        //     for (let index = 0; index < users.length; index++) {
+        //         try {
+        //             let remove = true;
+        //             for (let i = 0; i < teamsToKeep.length; i++) {
+        //                 if (users[index].indexOf(teamsToKeep[i]) >= 0) {
+        //                     remove = false;
+        //                     break;
+        //                 }
+        //             }
 
-                    if (remove) {
-                        let res = await rmqAdmin.deleteUser(users[index]);
-                        // console.log('remove user res -> ', res);
-                    }
-                } catch(e) {
-                    console.log(`Error deleting user: "${users[index]}": ${util.inspect(e, false, null)}`);
-                }
-            }
-        }
+        //             if (remove) {
+        //                 let res = await rmqAdmin.deleteUser(users[index]);
+        //                 // console.log('remove user res -> ', res);
+        //             }
+        //         } catch(e) {
+        //             console.log(`Error deleting user: "${users[index]}": ${util.inspect(e, false, null)}`);
+        //         }
+        //     }
+        // }
     }
     catch (e) {
         console.error(e);
@@ -123,4 +123,4 @@ let teamsToKeep = ['5de95c0453162e8891f5a830'];
 })();
 
 
-// to delete all exchange, queues and users except our test items:  node test/dist/test/src/rmq_utils.js ^team- ^team- ^5
+// to delete all exchange, queues and users except our test items:  node test/dist/sg-server/test/src/rmq_utils.js ^team- ^team- ^5
