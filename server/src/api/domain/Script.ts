@@ -39,8 +39,8 @@ export class ScriptSchema {
   @prop({ required: true })
   lastEditedDate: Date;
 
-  @prop({ required: true })
-  shadowCopyCode: string;
+  @prop()
+  shadowCopyCode?: string;
 
   @prop({ default: true })
   isActive?: boolean;
