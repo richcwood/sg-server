@@ -391,6 +391,9 @@ let RabbitMQTeamSetup = async (teamId: string) => {
   const rmqAdminUrl = config.get('rmqAdminUrl');
   let rmqVhost = config.get('rmqVhost');
 
+  console.log('rmqAdminUrl -> ', rmqAdminUrl);
+  console.log('rmqVhost -> ', rmqVhost);
+
   let logger = new BaseLogger('RunTestHarness');
   logger.Start();
 
@@ -1350,12 +1353,12 @@ let BraintreeTesting = async () => {
 let GenerateToken = async () => {
   const secret = config.get('secret');
 
-  const body = {
-    "teamIds": [
-      "5f57b2f14b5da00017df0d4f"
-    ],
-    "agentStubVersion": "v0.0.0.36"
-  }
+  // const body = {
+  //   "teamIds": [
+  //     "5f57b2f14b5da00017df0d4f"
+  //   ],
+  //   "agentStubVersion": "v0.0.0.36"
+  // }
 
   // const body = {
   //   "id": "5de8810275ad92e5bb8de78a",
@@ -1364,12 +1367,12 @@ let GenerateToken = async () => {
   //   "teamAccessRightIds": {}
   // }
 
-  // const body = {
-  //   "id": "5de8810275ad92e5bb8de78a",
-  //   "email": "scheduler@saasglue.com",
-  //   "teamIds": [],
-  //   "teamAccessRightIds": {}
-  // }
+  const body = {
+    "id": "5de8810275ad92e5bb8de78a",
+    "email": "scheduler@saasglue.com",
+    "teamIds": [],
+    "teamAccessRightIds": {}
+  }
 
 
   var token = jwt.sign(body, secret);//KeysUtil.getPrivate()); // todo - create a public / private key
@@ -1886,11 +1889,16 @@ let SendTestBrowserAlert = async() => {
 // SubmitInvoicesForPayment();
 // TestBraintreeWebhook();
 // CreateInvoicePDF(0);
-GenerateToken();
+// GenerateToken();
 // AgentRestAPICall();
 // DeleteJobs({'_jobDefId': process.argv[2]});
 // DeleteJobDefs({"name": /Cron.*/});
-// RabbitMQTeamSetup(process.argv[2]);
+RabbitMQTeamSetup(process.argv[2]);
+
+
+// RabbitMQTeamSetup('5f57b2f14b5da00017df0d4f');
+// RabbitMQTeamSetup('5e99cbcb2317950015edb655');
+// RabbitMQTeamSetup('5de95c0453162e8891f5a830');
 
 
 // (async () => {
