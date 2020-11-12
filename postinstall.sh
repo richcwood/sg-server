@@ -4,7 +4,7 @@ npm i
 cd ../clientv3
 npm i
 
-if [ $NODE_ENV == "production" ]
+if [ "$NODE_ENV" == "production" ]
 then
 	npm run build
 else
