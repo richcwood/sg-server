@@ -244,7 +244,7 @@ class BaseLogger {
             return;
 
         values = Object.assign({ _logLevel: logLevel, _appName: this.appName, _ipAddress: this.ipAddress, _sourceHost: this.machineId, _timeStamp: new Date().toISOString() }, values);
-        if (environment == 'production')
+        if (environment == 'production' || environment == 'stage')
             console.log(JSON.stringify(values));
         else
             console.log(JSON.stringify(values, null, 4));
