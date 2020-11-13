@@ -1869,7 +1869,7 @@ let SendTestBrowserAlert = async() => {
 // RabbitMQSetup();
 // RabbitMQAdminTest();
 // AMQPTest();
-// StompTest();
+StompTest();
 // ScheduleScript();
 // DownloadAgent();
 // CreateUser(process.argv[2], process.argv[3], process.argv[4] ? process.argv[4].split(',') : []);
@@ -1889,7 +1889,7 @@ let SendTestBrowserAlert = async() => {
 // SubmitInvoicesForPayment();
 // TestBraintreeWebhook();
 // CreateInvoicePDF(0);
-GenerateToken();
+// GenerateToken();
 // AgentRestAPICall();
 // DeleteJobs({'_jobDefId': process.argv[2]});
 // DeleteJobDefs({"name": /Cron.*/});
