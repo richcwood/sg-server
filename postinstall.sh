@@ -8,5 +8,5 @@ if [ "$VUE_APP_ENV" == "production" ]
 then
 	npm run build
 else
-	npm run build --mode $NODE_ENV
+	npm run build-stage
 fi
