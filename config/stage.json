@@ -18,7 +18,7 @@
     "inactiveAgentQueueTTLHours": 24,
     "agentCrashRestartInterval": 30000,
     "mongoUrl": "mongodb://sgApp:qBVgdcOa5V0L4cPL@18.221.130.250:27017/sg_prod?retryWrites=true&w=majority",
-    "mongoDbName": "sg_prod",
+    "mongoDbName": "sg_stage",
     "useSSL": "true",
     "logDest": "file",
     "adminToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0ZWFtSWRzIjpbIjVmNTdiMmYxNGI1ZGEwMDAxN2RmMGQ0ZiJdLCJhZ2VudFN0dWJWZXJzaW9uIjoidjAuMC4wLjM2IiwiaWF0IjoxNjA0OTgzOTkyfQ.l7QWveHPAzLibDU4msyAL3bGeoLXju5KWCyMJEuYc9w",
