@@ -17,7 +17,7 @@
     "rmqVhost": "sg",
     "inactiveAgentQueueTTLHours": 24,
     "agentCrashRestartInterval": 30000,
-    "mongoUrl": "mongodb://sgApp:qBVgdcOa5V0L4cPL@18.221.130.250:27017/sg_prod?retryWrites=true&w=majority",
+    "mongoUrl": "mongodb://sgApp:qBVgdcOa5V0L4cPL@18.220.67.147:27017/sg_prod?retryWrites=true&w=majority",
     "mongoDbName": "sg_stage",
     "useSSL": "true",
     "logDest": "file",
