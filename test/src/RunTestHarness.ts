@@ -1863,13 +1863,13 @@ let SendTestBrowserAlert = async() => {
 // DumpMongoData('./production_20200615.json');
 // LoadMongoData('./testdata_1.json');
 // DumpSettingsFromMongo();
-// LoadSettingsToMongo();
+LoadSettingsToMongo();
 // TestForEach();
 // UpdateAgentVersion();
 // RabbitMQSetup();
 // RabbitMQAdminTest();
 // AMQPTest();
-StompTest();
+// StompTest();
 // ScheduleScript();
 // DownloadAgent();
 // CreateUser(process.argv[2], process.argv[3], process.argv[4] ? process.argv[4].split(',') : []);
