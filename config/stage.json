@@ -19,7 +19,7 @@
     "agentCrashRestartInterval": 30000,
     "mongoUrl": "mongodb://sgApp:qBVgdcOa5V0L4cPL@3.136.37.119:27017/sg_prod?retryWrites=true&w=majority",
     "mongoDbName": "sg_prod",
-    "useSSL": "true",
+    "useSSL": "false",
     "logDest": "file",
     "adminToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0ZWFtSWRzIjpbIjVmNTdiMmYxNGI1ZGEwMDAxN2RmMGQ0ZiJdLCJhZ2VudFN0dWJWZXJzaW9uIjoidjAuMC4wLjM2IiwiaWF0IjoxNjA0OTgzOTkyfQ.l7QWveHPAzLibDU4msyAL3bGeoLXju5KWCyMJEuYc9w",
     "schedulerToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0ZWFtSWRzIjpbIjVmNTdiMmYxNGI1ZGEwMDAxN2RmMGQ0ZiJdLCJhZ2VudFN0dWJWZXJzaW9uIjoidjAuMC4wLjM2IiwiaWF0IjoxNjA0OTg0MDIzfQ.ZApSwbvY-XJf0eXHlO4YuYNl66eZ9a2n2bZZsrT8L1E",
