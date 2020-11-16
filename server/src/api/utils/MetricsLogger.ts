@@ -7,7 +7,7 @@ const environment = config.get('environment');
 
 let Log = (values: any, logLevel: LogLevel) => {
   values = Object.assign({ _logLevel: logLevel, _appName: 'MetricsLogger', _sourceHost: this.machineId = os.hostname(), _timeStamp: new Date().toISOString() }, values);
-  if (environment == 'production')
+  if (environment == 'production' || environment == 'stage')
       console.log(JSON.stringify(values));
   else
       console.log(JSON.stringify(values, null, 4));

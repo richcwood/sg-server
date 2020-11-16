@@ -1866,7 +1866,7 @@ let SendTestBrowserAlert = async() => {
 // LoadSettingsToMongo();
 // TestForEach();
 // UpdateAgentVersion();
-RabbitMQSetup();
+// RabbitMQSetup();
 // RabbitMQAdminTest();
 // AMQPTest();
 // StompTest();
@@ -1896,9 +1896,9 @@ RabbitMQSetup();
 // RabbitMQTeamSetup(process.argv[2]);
 
 
-// RabbitMQTeamSetup('5f57b2f14b5da00017df0d4f');
-// RabbitMQTeamSetup('5e99cbcb2317950015edb655');
-// RabbitMQTeamSetup('5de95c0453162e8891f5a830');
+RabbitMQTeamSetup('5f57b2f14b5da00017df0d4f');
+RabbitMQTeamSetup('5e99cbcb2317950015edb655');
+RabbitMQTeamSetup('5de95c0453162e8891f5a830');
 
 
 // (async () => {
