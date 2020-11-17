@@ -1211,5 +1211,54 @@ export class SGUtils {
             }
         });
     }
+
+
+    static SendInternalEmail = async (senderAddress: string, recipientAddress: string, subject: string, body: string, logger: BaseLogger) => {
+        var nodemailer = require('nodemailer');
+
+        const boundaryId = `__saasglue_${SGUtils.makeNumericId(9)}__`;
+
+        let rawMsg = base64EncodedEmailTemplate;
+
+        rawMsg = rawMsg.replace('{content_html}', '' + Buffer.from(body).toString('base64'));
+
+        rawMsg = rawMsg.replace('{content_text}', '' + Buffer.from(body).toString('base64'));
+
+        rawMsg = rawMsg.replace(/{boundary_id}/g, '' + boundaryId);
+        rawMsg = rawMsg.replace(/{subject}/g, '' + subject);
+        rawMsg = rawMsg.replace(/{reply_to}/g, '' + senderAddress);
+        rawMsg = rawMsg.replace(/{to_address}/g, '' + recipientAddress);
+        rawMsg = rawMsg.replace(/{from}/g, '' + senderAddress);
+
+        const host = config.get('SendGridSMTPHost');
+        const port = config.get('SendGridSMTPPort');
+
+        var settings = {
+            host: host,
+            port: port,
+            requiresAuth: true,
+            auth: {
+                user: 'apikey',
+                pass: process.env.SENDGRID_API_KEY
+            }
+        };
+        var smtpTransport = nodemailer.createTransport(settings);
+
+        let message = {
+            envelope: {
+                from: senderAddress,
+                to: [recipientAddress]
+            },
+            raw: rawMsg
+        };
+
+        smtpTransport.sendMail(message, function (error, response) {
+            smtpTransport.close();
+
+            if (error) {
+                logger.LogError(`Error sending email: ${error}`, { recipientAddress: recipientAddress, subject: subject });
+            }
+        });
+    }
 }
 

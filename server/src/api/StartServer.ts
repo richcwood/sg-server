@@ -69,7 +69,6 @@ const app: express.Application = express();
 const appName = 'SaasGlueAPI';
 
 var options = {
-  useMongoClient: true,
   autoIndex: false, // Don't build indexes
   reconnectTries: Number.MAX_VALUE, // Never stop trying to reconnect
   reconnectInterval: 500, // Reconnect every 500ms

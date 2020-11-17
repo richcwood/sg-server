@@ -223,9 +223,9 @@ export const defaultBulkGet = async function(filter: any, req: Request, resp: Re
 
     const response: ResponseWrapper = (resp as any).body;
     
-    console.log('defaultBulkGet');
+    // console.log('defaultBulkGet');
     response.data = convertData(schemaClass, await query.exec());
-    console.log('defaultBulkGet -> response.data -> ', response.data);
+    // console.log('defaultBulkGet -> response.data -> ', response.data);
 
     if(!response.meta){
       response.meta = {};
@@ -237,7 +237,7 @@ export const defaultBulkGet = async function(filter: any, req: Request, resp: Re
   }
   catch(err){
     // Mongo CastError occurs when the ids aren't well formed
-    console.log('defaultBulkGet -> err -> ', err);
+    // console.log('defaultBulkGet -> err -> ', err);
     if(err instanceof CastError){
       next(new MissingObjectError(`Filter ids don't appear to be valid ${req.query.filter}.`));
     }

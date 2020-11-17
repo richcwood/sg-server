@@ -380,7 +380,7 @@ export class TaskOutcomeService {
                                 targetAgentId = teamVar[0].value;
                         }
                     } catch (e) {
-                        logger.LogError(`Error in arguments @sgg capture for targetAgentId string \"${task.targetAgentId}\": ${e.message}`, { Class: 'JobRouter', Method: 'PublishTask', _teamId, task: task });
+                        logger.LogError(`Error in arguments @sgg capture for targetAgentId string \"${task.targetAgentId}\": ${e.message}`, { Class: 'TaskOutcomeService', Method: 'PublishTask', _teamId, task: task });
                     }
                 }
 
@@ -457,7 +457,7 @@ export class TaskOutcomeService {
                                     }
                                 }
                             } catch (e) {
-                                logger.LogError(`Error in arguments @sgg capture for string \"${arrFindVarsArgs[i]}\": ${e.message}`, { Class: 'JobRouter', Method: 'PublishTask', _teamId, task: task });
+                                logger.LogError(`Error in arguments @sgg capture for string \"${arrFindVarsArgs[i]}\": ${e.message}`, { Class: 'TaskOutcomeService', Method: 'PublishTask', _teamId, task: task });
                             }
                         }
                     }
@@ -491,6 +491,7 @@ export class TaskOutcomeService {
 
                 for (let i = 0; i < routes.length; i++) {
                     if (routes[i]['type'] == 'queue') {
+                        // logger.LogDebug(`Publishing task`, { Class: 'TaskOutcomeService', Method: 'PublishTask', _teamId, task: convertedTask, route: routes[i]['route'] });
                         await amqp.PublishQueue(SGStrings.GetTeamExchangeName(_teamId.toHexString()), routes[i]['route'], convertedTask, routes[i]['queueAssertArgs'], { 'expiration': ttl });
                     } else {
                         await amqp.PublishRoute(SGStrings.GetTeamExchangeName(_teamId.toHexString()), routes[i]['route'], convertedTask);
@@ -502,6 +503,7 @@ export class TaskOutcomeService {
             await jobService.UpdateJobStatus(_teamId, task._jobId, logger, null);
             return { success };
         } catch (err) {
+            // logger.LogDebug(`Error publishing task`, { Class: 'TaskOutcomeService', Method: 'PublishTask', err });
             task.error = err.message;
             await amqp.PublishQueue('worker', config.get('rmqTaskLaunchErrorQueue'), convertData(TaskSchema, task), { exclusive: false, durable: true, autoDelete: false });
             return { success: false };

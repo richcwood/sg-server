@@ -29,8 +29,9 @@ export class SignupController {
 
     public async confirmNewUser(req: Request, resp: Response, next: NextFunction): Promise<void> {
         const response: ResponseWrapper = resp['body'];
+        const logger: BaseLogger = (<any>req).logger;
         try {
-            const updatedUser: any = await signupService.confirmNewUser(req.body);
+            const updatedUser: any = await signupService.confirmNewUser(req.body, logger);
 
             if (_.isArray(updatedUser) && updatedUser.length === 0) {
                 next(new MissingObjectError(`User ${req.body.email} not found.`));
