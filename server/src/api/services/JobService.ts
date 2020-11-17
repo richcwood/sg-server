@@ -395,6 +395,8 @@ export class JobService {
             const jobDefsExisting = await JobDefModel.findOne({ _teamId, _id: _jobDefId }).select('id');
             if (!jobDefsExisting)
                 throw new MissingObjectError(`Job template ${_jobDefId.toHexString()} not found.`);
+            else
+                logger.LogError('Not launching job because job template launchingJobs property is true', { _jobDefId: _jobDefId.toHexString() });
             return;
         }
 

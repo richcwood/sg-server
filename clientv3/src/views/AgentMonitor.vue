@@ -722,12 +722,25 @@ export default class AgentMonitor extends Vue {
 
   private selectedAgentForCronImport: Agent|null = null;
   private rawCronJobs = [];
+  private rawCronEnvVars = {};
 
   private onImportCronClicked(agent: Agent){
     if(agent.cron){
       // Split and show non-empty rows
       this.selectedAgentForCronImport = agent;
-      this.rawCronJobs = agent.cron.split('\n').filter(entry => entry.trim());
+      
+      const tmpCronEntries = agent.cron.split('\n').filter(entry => entry.trim());
+      for (let i = 0; i < tmpCronEntries.length; i++) {
+        const cronEntry = tmpCronEntries[i];
+        if (cronEntry.startsWith('#'))
+          continue;
+        if (cronEntry.split(' ').length > 5) {
+          this.rawCronJobs.push(cronEntry);
+        } else if (cronEntry.match(/[A-Za-z]=.+/g)) {
+          const ev = cronEntry.split('=');
+          this.rawCronEnvVars[ev[0]] = ev[1];
+        }
+      }
       this.$modal.show('import-cron-modal');
     }
   }
@@ -738,6 +751,7 @@ export default class AgentMonitor extends Vue {
       
       const {data: {data}} = await axios.post('/api/v0/jobdef/cron', {
         cronString: rawCronJob, 
+        envVars: this.rawCronEnvVars,
         _agentId: this.selectedAgentForCronImport.id
       });
 

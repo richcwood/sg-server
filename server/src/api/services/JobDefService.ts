@@ -210,7 +210,7 @@ export class JobDefService {
 
     const tokens = data.cronString.split(' ');
 
-    const code = SGUtils.btoa(tokens.slice(6).join(' '));
+    const code = SGUtils.btoa(tokens.slice(5).join(' '));
     const script_data = {
       _teamId,
       name: `cron-${agent.machineId}-${cronJobUniqueId}`,
@@ -237,6 +237,7 @@ export class JobDefService {
       _taskDefId: taskDef._id,
       name: 'step',
       _scriptId: script._id,
+      variables: data.envVars,
       order: 1
     };
     await stepDefService.createStepDef(_teamId, stepDef_data, correlationId, '_id');
