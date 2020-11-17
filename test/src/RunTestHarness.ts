@@ -1133,24 +1133,29 @@ let StopScheduler = async () => {
 
 
 let SendTestEmail = async () => {
-  // using Twilio SendGrid's v3 Node.js Library
-  // https://github.com/sendgrid/sendgrid-nodejs
-  try {
-    console.log('sending email');
-    const sgMail = require('@sendgrid/mail');
-    sgMail.setApiKey(process.env.SENDGRID_API_KEY);
-    const msg = {
-      to: 'rich@saasglue.com',
-      from: 'rich@saasglue.com',
-      subject: 'Sending with Twilio SendGrid is Fun',
-      text: Buffer.from('and easy to do anywhere, even with Node.js').toString('base64'),
-      html: Buffer.from('<strong>and easy to do anywhere, even with Node.js</strong>').toString('base64')
-    };
-    sgMail.send(msg);
-  }
-  catch (err) {
-    console.log(err);
-  }
+  let logger = new BaseLogger('SendTestEmailSMTP');
+  logger.Start();
+
+  await SGUtils.SendInternalEmail('rich@saasglue.com', 'rich@saasglue.com,jay@saasglue.com', 'email test', 'a message', logger);
+
+  // // using Twilio SendGrid's v3 Node.js Library
+  // // https://github.com/sendgrid/sendgrid-nodejs
+  // try {
+  //   console.log('sending email');
+  //   const sgMail = require('@sendgrid/mail');
+  //   sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+  //   const msg = {
+  //     to: 'rich@saasglue.com',
+  //     from: 'rich@saasglue.com',
+  //     subject: 'Sending with Twilio SendGrid is Fun',
+  //     text: Buffer.from('and easy to do anywhere, even with Node.js').toString('base64'),
+  //     html: Buffer.from('<strong>and easy to do anywhere, even with Node.js</strong>').toString('base64')
+  //   };
+  //   sgMail.send(msg);
+  // }
+  // catch (err) {
+  //   console.log(err);
+  // }
 }
 
 
@@ -1880,7 +1885,7 @@ let SendTestBrowserAlert = async() => {
 // CreateUser('testuser@saasglue.com', 'mypassword', ['5de95c0453162e8891f5a830']);
 // StopScheduler();
 // MongoMapTest();
-// SendTestEmail();
+SendTestEmail();
 // SendTestEmailSMTP();
 // SendTestSlack();
 // CreateAgentInstall('5de9691f53162e8891f5aa99', 'v0.0.0.156', 'node10', 'macos', '');
@@ -1896,9 +1901,9 @@ let SendTestBrowserAlert = async() => {
 // RabbitMQTeamSetup(process.argv[2]);
 
 
-RabbitMQTeamSetup('5f57b2f14b5da00017df0d4f');
-RabbitMQTeamSetup('5e99cbcb2317950015edb655');
-RabbitMQTeamSetup('5de95c0453162e8891f5a830');
+// RabbitMQTeamSetup('5f57b2f14b5da00017df0d4f');
+// RabbitMQTeamSetup('5e99cbcb2317950015edb655');
+// RabbitMQTeamSetup('5de95c0453162e8891f5a830');
 
 
 // (async () => {

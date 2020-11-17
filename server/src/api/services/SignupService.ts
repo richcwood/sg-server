@@ -59,7 +59,7 @@ export class SignupService {
     }
 
 
-    public async confirmNewUser(data: any): Promise<object> {
+    public async confirmNewUser(data: any, logger: BaseLogger): Promise<object> {
         if (!data.emailConfirmCode)
             throw new ValidationError(`Request body missing "emailConfirmCode" parameter`);
 
@@ -93,6 +93,13 @@ export class SignupService {
         }
 
         updatedUser = await UserModel.findOneAndUpdate(userFilter, { emailConfirmed: true, $unset: { emailConfirmCodeExpiration: '', emailConfirmCode: '' }, }, { new: true });
+
+        try {
+            let newEmailNotificationMessage = JSON.stringify(updatedUser, null, 4);
+            await SGUtils.SendInternalEmail('rich@saasglue.com', 'jack@saasglue.com,jay@saasglue.com,jack@saasglue.com', 'New user signed up', newEmailNotificationMessage, logger);
+        } catch (e) {
+            logger.LogError(`Error sending new user notification message: ${e.message}`, updatedUser);
+        }
 
         return updatedUser; // fully populated model
     }
