@@ -628,6 +628,14 @@
               </tr>
               <tr class="tr">
                 <td class="td">
+                  <label class="label">Id</label>
+                </td>
+                <td class="td">
+                  {{jobDef.id}}
+                </td>
+              </tr>
+              <tr class="tr">
+                <td class="td">
                   <label class="label">Run Count</label>
                 </td>
                 <td class="td">
