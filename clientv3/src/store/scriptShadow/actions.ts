@@ -41,7 +41,7 @@ export const actions: ActionTree<CoreState, RootState> = {
             scriptShadow = await dispatch( 'save', {
                                            _userId: userId,
                                            _scriptId: script.id,
-                                           shadowCopyCode: btoa(script.code)});
+                                           shadowCopyCode: script.code});
           }
         }
         catch(err){
