@@ -221,6 +221,7 @@
 <script lang="ts">
 import _ from 'lodash';
 import { Component, Prop, Vue, Watch } from 'vue-property-decorator';
+import { ScriptName } from '../store/scriptName/types';
 import { Script, ScriptType, scriptTypesForMonaco } from '@/store/script/types';
 import { ScriptShadow } from '@/store/scriptShadow/types';
 import { StoreType } from '@/store/types';
@@ -280,6 +281,7 @@ export default class ScriptEditor extends Vue {
 
     teamVarsForAutoComplete = this.teamVars;
     jobDefForAutoComplete = this.jobDef;
+    scriptNamesForAutoComplete = this.scriptNames;
   }
 
   private beforeDestroy(){
@@ -515,6 +517,9 @@ export default class ScriptEditor extends Vue {
     teamVarsForAutoComplete = this.teamVars;
   }
 
+  @BindStoreModel({storeType: StoreType.ScriptNameStore, selectedModelName: 'models'})
+  private scriptNames!: ScriptName[];
+
   @Prop() private jobDef!: JobDef;
 
   @Watch('jobDef')
@@ -619,7 +624,7 @@ const appendJobDefAutoCompleteItems = function(range, items){
 
     for(let [varKey, varValue] of Object.entries(jobDefForAutoComplete.runtimeVars)){
       items.push({
-        label: `sgg ${varKey} [${varValue}] (Job Def)`, 
+        label: `sgg ${varKey} [${varValue}] (Job)`, 
         kind: monaco.languages.CompletionItemKind.Function,
         insertText: `@sgg("${varKey}")`, 
         range: range
@@ -635,9 +640,25 @@ const appendTeamVarAutoCompleteItems = function(range, items){
 
     for(let teamVar of teamVarsForAutoComplete){
       items.push({
-        label: `sgg ${teamVar.name} (Team Vars)`, 
+        label: `sgg ${teamVar.name} (Team Var)`, 
         kind: monaco.languages.CompletionItemKind.Function,
         insertText: `@sgg("${teamVar.name}")`, 
+        range: range
+      });
+    }
+  }
+};
+
+let scriptNamesForAutoComplete: ScriptName[];
+
+const appendScriptNameAutoCompleteItems = function(range, items){
+  if(scriptNamesForAutoComplete){
+
+    for(let scriptName of scriptNamesForAutoComplete){
+      items.push({
+        label: `sgs ${scriptName.name}`, 
+        kind: monaco.languages.CompletionItemKind.Function,
+        insertText: `@sgs("${scriptName.name}")`, 
         range: range
       });
     }
@@ -652,6 +673,7 @@ const createDependencyProposals = function(range) {
   const items = [];
   appendJobDefAutoCompleteItems(range, items);
   appendTeamVarAutoCompleteItems(range, items);
+  appendScriptNameAutoCompleteItems(range, items);
   return items;
 }
 

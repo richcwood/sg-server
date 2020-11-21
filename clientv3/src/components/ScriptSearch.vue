@@ -77,8 +77,11 @@ export default class ScriptSearch extends Vue {
   private async onSearchKeyDown(keyboardEvent?: KeyboardEvent){
     try {
       if(this.search.trim().length > 0){
-        const {data: {data}} = await axios.get(`/api/v0/script?filter=${encodeURIComponent('name~='+this.search)}`);
-        const scripts = data;
+        
+        // ScriptNames are a subset of scripts and are the same names and ids
+        // so you can just use them as scripts in this component
+        const scripts = this.$store.getters[`${StoreType.ScriptNameStore}/searchByName`](this.search);
+
         scripts.sort((scriptA: Script, scriptB: Script) => scriptA.name.localeCompare(scriptB.name));
         if(scripts.length > 8){
           scripts.splice(8);

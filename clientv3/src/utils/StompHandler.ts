@@ -105,7 +105,7 @@ class StompHandler {
     }
   }
 
-  private defaultMessageHandler(message: DomainMessage){
+  public defaultMessageHandler(message: DomainMessage){
     const storeName = `${message.domainType.substring(0, 1).toLowerCase()}${message.domainType.substring(1)}Store`;
 
     if(message.operation === 1){ // create
