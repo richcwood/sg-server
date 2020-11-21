@@ -8,7 +8,7 @@
             <td class="td" colspan="2">
               sgg: <strong>s</strong>aas <strong>g</strong>lue <strong>g</Strong>lobal
               <br>
-              Excellent instructions here some day.
+              Insert saas glue variables into your script
             </td>
           </tr>
           <tr class="tr">
@@ -98,7 +98,7 @@
       </div>
     </modal>
 
-    <modal name="script-editor-fullscreen" :classes="'round-popup'" :adaptive="true" width="100%" height="100%" background="white">
+    <modal name="script-editor-fullscreen" :clickToClose="false" :classes="'round-popup'" :adaptive="true" width="100%" height="100%" background="white">
       <div style="margin: 6px;">
         <button class="button" @click="onClickedExitFullScreen">Exit full screen</button>
         <span class="variables">
@@ -226,12 +226,12 @@ import { ScriptShadow } from '@/store/scriptShadow/types';
 import { StoreType } from '@/store/types';
 import { SgAlert, AlertPlacement, AlertCategory } from '@/store/alert/types';
 import { showErrors } from '@/utils/ErrorHandler'; 
-import { JobDef } from '@/store/jobDef/types';
-import { TeamVar } from '@/store/teamVar/types';
+import { JobDef } from '../store/jobDef/types';
+import { TeamVar } from '../store/teamVar/types';
 import { BindStoreModel, BindSelected, BindSelectedCopy, BindProp } from '@/decorator';
 import { User } from '@/store/user/types';
 import axios from 'axios';
-import * as monaco from "monaco-editor";
+import * as monaco from 'monaco-editor';
 
 @Component
 export default class ScriptEditor extends Vue {
@@ -277,6 +277,9 @@ export default class ScriptEditor extends Vue {
 
     this.onJobDefChanged();
     this.onScriptShadowChanged();
+
+    teamVarsForAutoComplete = this.teamVars;
+    jobDefForAutoComplete = this.jobDef;
   }
 
   private beforeDestroy(){
@@ -450,7 +453,7 @@ export default class ScriptEditor extends Vue {
       this.$modal.show('script-editor-fullscreen');
       setTimeout(() => {
         const scriptEditorFullScreenEl = (<any>this.$refs).scriptEditorFullScreen;
-        scriptEditorFullScreenEl.innerHTML = ""; // clear old stuff out
+        scriptEditorFullScreenEl.innerHTML = ''; // clear old stuff out
 
         this.fullScreenEditor = monaco.editor.create(scriptEditorFullScreenEl, {
           value: this.scriptShadow.shadowCopyCode,
@@ -507,11 +510,18 @@ export default class ScriptEditor extends Vue {
   @BindStoreModel({storeType: StoreType.TeamVariableStore, selectedModelName: 'models'})
   private teamVars!: TeamVar[];
 
+  @Watch('teamVars')
+  private onTeamVarsChanged(){
+    teamVarsForAutoComplete = this.teamVars;
+  }
+
   @Prop() private jobDef!: JobDef;
 
   @Watch('jobDef')
   private onJobDefChanged(){
     this.selectedJobDef = this.jobDef;
+
+    jobDefForAutoComplete = this.selectedJobDef;
   }
 
   private selectedJobDef: JobDef|null = null;
@@ -600,6 +610,71 @@ export default class ScriptEditor extends Vue {
     this.$modal.hide('job-step-details');
   }
 }
+
+
+let jobDefForAutoComplete: undefined|JobDef;
+
+const appendJobDefAutoCompleteItems = function(range, items){
+  if(jobDefForAutoComplete && jobDefForAutoComplete.runtimeVars){
+
+    for(let [varKey, varValue] of Object.entries(jobDefForAutoComplete.runtimeVars)){
+      items.push({
+        label: `sgg ${varKey} [${varValue}] (Job Def)`, 
+        kind: monaco.languages.CompletionItemKind.Function,
+        insertText: `@sgg("${varKey}")`, 
+        range: range
+      });
+    }
+  }
+};
+
+let teamVarsForAutoComplete: TeamVar[];
+
+const appendTeamVarAutoCompleteItems = function(range, items){
+  if(teamVarsForAutoComplete){
+
+    for(let teamVar of teamVarsForAutoComplete){
+      items.push({
+        label: `sgg ${teamVar.name} (Team Vars)`, 
+        kind: monaco.languages.CompletionItemKind.Function,
+        insertText: `@sgg("${teamVar.name}")`, 
+        range: range
+      });
+    }
+  }
+};
+
+// a globally accessible auto completion for monaco auto-complete
+// This code will only be invoked once when the class is loaded
+const createDependencyProposals = function(range) {
+  // returning a static list of proposals, not even looking at the prefix (filtering is done by the Monaco editor),
+  // here you could do a server side lookup
+  const items = [];
+  appendJobDefAutoCompleteItems(range, items);
+  appendTeamVarAutoCompleteItems(range, items);
+  return items;
+}
+
+const uniqueLanguages = <string[]> _.uniq(Object.entries(scriptTypesForMonaco).map(entry => entry[1]));
+
+for(let language of uniqueLanguages){
+  monaco.languages.registerCompletionItemProvider(language, {
+    provideCompletionItems: function(model, position) {
+      const word = model.getWordUntilPosition(position);
+      const range = {
+        startLineNumber: position.lineNumber,
+        endLineNumber: position.lineNumber,
+        startColumn: word.startColumn,
+        endColumn: word.endColumn
+      };
+      return {
+        suggestions: createDependencyProposals(range)
+      };
+    }
+  });
+}
+
+
 </script>
 
 <style scoped lang="scss">
