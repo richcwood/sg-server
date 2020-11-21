@@ -45,6 +45,15 @@ export class ScriptSchema {
   @prop({ default: true })
   isActive?: boolean;
 
+  @prop({ required: false })
+  sggElems?: string[];
+
+  @prop({ required: false })
+  sgoElems?: string[];
+
+  @prop({ required: false })
+  sgsElems?: string[];
+
   // Define which filters are legal for which props (including nested props (not sure about nested arrays))
   public static readonly validFilters = {
     'name': [FilterOperator.LIKE]

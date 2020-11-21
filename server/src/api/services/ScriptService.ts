@@ -4,6 +4,7 @@ import { rabbitMQPublisher, PayloadOperation } from '../utils/RabbitMQPublisher'
 import { MissingObjectError, ValidationError } from '../utils/Errors';
 import * as mongodb from 'mongodb';
 import * as _ from 'lodash';
+import { SGUtils } from '../../shared/SGUtils';
 
 
 export class ScriptService {
@@ -37,17 +38,69 @@ export class ScriptService {
     }
 
 
+    public extractInjectionElems(data: any) {
+        const code: string = SGUtils.atob(data.code);
+        data.sggElems = [];
+        let arrSgg: string[] = code.match(/@sgg?(\([^)]*\))/g);
+        if (arrSgg) {
+            for (let i = 0; i < arrSgg.length; i++) {
+                let varKey = arrSgg[i].substr(5, arrSgg[i].length - 6);
+                if (varKey.substr(0, 1) === '"' && varKey.substr(varKey.length - 1, 1) === '"')
+                    varKey = varKey.slice(1, -1);
+                data.sggElems.push(varKey);
+            }
+        }
+
+        data.sgoElems = [];
+        let arrSgo: string[] = code.match(/@sgo?(\{[^}]*\})/g);
+        if (arrSgo) {
+            for (let i = 0; i < arrSgo.length; i++) {
+                try {
+                    data.sgoElems = Object.keys(JSON.parse(arrSgo[i].substring(4)));
+                } catch (e) {
+                    try {
+                        if (e.message.indexOf('Unexpected token \\') >= 0) {
+                            let newVal = arrSgo[i].substring(4).replace(/\\+"/g, '"');
+                            data.sgoElems = Object.keys(JSON.parse(newVal));
+                        } else {
+                            const re = /{['"]?([\w-]+)['"]?:[ '"]+([^,'"]+)['"]}/g;
+                            const s = arrSgo[i].substring(4);
+                            let m;
+                            while ((m = re.exec(s)) != null) {
+                                const key = m[1].trim();
+                                data.sgoElems.push(key);
+                            }
+                        }
+                    } catch (se) { }
+                }
+            }
+        }
+
+        data.sgsElems = [];
+        let arrSgs: string[] = code.match(/@sgs?(\([^)]*\))/g);
+        if (arrSgs) {
+            for (let i = 0; i < arrSgs.length; i++) {
+                let varKey = arrSgs[i].substr(5, arrSgs[i].length - 6);
+                if (varKey.substr(0, 1) === '"' && varKey.substr(varKey.length - 1, 1) === '"')
+                    varKey = varKey.slice(1, -1);
+                data.sgsElems.push(varKey);
+            }
+        }
+    }
+
+
     public async createScript(_teamId: mongodb.ObjectId, data: any, _userId: mongodb.ObjectId, correlationId: string, responseFields?: string): Promise<object> {
         data._teamId = _teamId;
 
         const existingScriptQuery: any = await this.findAllScriptsInternal({ _teamId, name: data.name });
         if (_.isArray(existingScriptQuery) && existingScriptQuery.length > 0)
             throw new ValidationError(`Script with name "${data.name}" already exists`);
-          
+
         if (!data.code)
             data.code = ' ';
-        if (!data.shadowCopyCode)
-            data.shadowCopyCode = data.code;
+        else if (data.code)
+            this.extractInjectionElems(data);
+
         data._originalAuthorUserId = _userId;
         data._lastEditedUserId = _userId;
         data.lastEditedDate = new Date();
@@ -72,6 +125,10 @@ export class ScriptService {
             if (_.isArray(existingScriptQuery) && existingScriptQuery.length > 0)
                 if (existingScriptQuery[0]._id.toHexString() != id.toHexString())
                     throw new ValidationError(`Script with name "${data.name}" already exists`);
+        }
+
+        if (data.code) {
+            this.extractInjectionElems(data);
         }
 
         const filter = { _id: id, _teamId, $or: [{ teamEditable: true }, { _originalAuthorUserId: _userId }] };

@@ -60,12 +60,12 @@ export class AMQPConnector {
         try {
             this.conn = await this.amqp.connect(this.url);
         } catch (e) {
-            this.LogError('Error starting AMQP connection to RabbitMQ: ' + e.message, e.stack, {});
+            this.LogError('Error starting AMQP connection to RabbitMQ', '', {error: e});
             await this.OnDisconnect();
             return false;
         }
         this.conn.on('error', (err) => {
-            this.LogError('AMQP connection error: ' + err.message, '', {});
+            this.LogError('AMQP connection error', '', {error: err});
             this.OnDisconnect();
         });
         this.conn.on('close', async () => {
@@ -108,7 +108,7 @@ export class AMQPConnector {
             await this.conn.close();
             this.LogDebug('Completed request to stop AMQP connection', {});
         } catch (e) {
-            this.LogError('Error stopping AMQP connection: ' + e.message, e.stack, {});
+            this.LogError('Error stopping AMQP connection', '', {error: e});
         }
     }
 
@@ -127,12 +127,12 @@ export class AMQPConnector {
         try {
             this.consumerChannel = await this.conn.createChannel();
         } catch (e) {
-            this.LogError('Error creating consumer channel: ' + e.message, e.stack, {});
+            this.LogError('Error creating consumer channel', '', {error: e});
             await this.OnDisconnect();
             return;
         }
         this.consumerChannel.on('error', (err) => {
-            this.LogError('Consumer channel error: ' + err.message, '', {});
+            this.LogError('Consumer channel error', '', {error: err});
             this.OnDisconnect();
         });
         this.consumerChannel.on('close', () => {
@@ -149,12 +149,12 @@ export class AMQPConnector {
         try {
             this.pubChannel = await this.conn.createConfirmChannel();
         } catch (e) {
-            this.LogError('Error creating publisher channel: ' + e.message, e.stack, {});
+            this.LogError('Error creating publisher channel', '', {error: e});
             await this.OnDisconnect();
             return;
         }
         this.pubChannel.on('error', (err) => {
-            this.LogError('Publisher channel error: ' + err.message, '', {});
+            this.LogError('Publisher channel error', '', {error: err});
             this.OnDisconnect();
         });
         this.pubChannel.on('close', () => {
@@ -279,7 +279,7 @@ export class AMQPConnector {
                                         else
                                             this.consumerChannel.reject(msg, true);
                                     } catch (e) {
-                                        this.LogError('Error occurred acking AMQP message: ' + e.message, e.stack, { 'EventArgs': util.inspect(msg, false, null) });
+                                        this.LogError('Error occurred acking AMQP message', '', { error: e, 'EventArgs': util.inspect(msg, false, null) });
                                     }
                                 }
                             }
@@ -328,7 +328,7 @@ export class AMQPConnector {
                                         else
                                             this.consumerChannel.reject(msg, true);
                                     } catch (e) {
-                                        this.LogError('Error occurred acking AMQP message: ' + e.message, e.stack, { 'EventArgs': util.inspect(msg, false, null) });
+                                        this.LogError('Error occurred acking AMQP message', '', { error: e, 'EventArgs': util.inspect(msg, false, null) });
                                     }
                                 }
                             }
@@ -362,7 +362,7 @@ export class AMQPConnector {
             await this.consumerChannel.cancel(sub.consumerTag);
             removeItemFromArray(this.subscriptions, sub);
         } catch (e) {
-            this.LogError('Error in StopConsumingQueue: ' + e.message, e.stack, {});
+            this.LogError('Error in StopConsumingQueue', '', {error: e});
         }
     }
 
@@ -371,7 +371,7 @@ export class AMQPConnector {
             this.LogDebug('Unbinding', { 'Exchange': exch, 'Queue': queue, 'Route': route });
             await this.consumerChannel.unbindQueue(queue, exch, route, args);
         } catch (e) {
-            this.LogError('Error in Unbind: ' + e.message, e.stack, {});
+            this.LogError('Error in Unbind', '', {error: e});
         }
     }
 
@@ -380,7 +380,7 @@ export class AMQPConnector {
             while (this.subscriptions.length > 0)
                 await this.StopConsumingQueue(this.subscriptions[0]);
         } catch (e) {
-            this.LogError('Error in StopConsuming: ' + e.message, e.stack, {});
+            this.LogError('Error in StopConsuming', '', {error: e});
         }
     }
 }
