@@ -1,6 +1,35 @@
 <template>
   <div>
 
+    <modal name="sgs" :classes="'round-popup'" width="700" height="725" background="white">
+      <div style="width: 100%; height: 100%; background: white;">
+        <table class="table">
+          <tr class="tr">
+            <td class="td">
+              sgs: <strong>s</strong>aas <strong>g</strong>lue <strong>s</Strong>cript
+              <br>
+              Insert a saas glue script into this script
+              <br>
+              You can also type "sgs" in the editor for auto complete
+              <br>
+            </td>
+          </tr>
+
+          <tr class="tr" v-for="scriptName in scriptNames" v-bind:key="scriptName.id">
+            <td class="td">
+              <a @click="onClickedScriptVar(scriptName)">{{scriptName.name}}</a>
+            </td>
+          </tr>
+
+          <tr class="tr">
+            <td class="td">
+              <button class="button" @click="onCloseSgs">Close</button>
+            </td>
+          </tr>
+        </table>
+      </div>
+    </modal>
+
     <modal name="sgg" :classes="'round-popup'" width="700" height="725" background="white">
       <div style="width: 100%; height: 100%; background: white;">
         <table class="table">
@@ -9,6 +38,9 @@
               sgg: <strong>s</strong>aas <strong>g</strong>lue <strong>g</Strong>lobal
               <br>
               Insert saas glue variables into your script
+              <br>
+              You can also type "sgg" in the editor for auto complete
+              <br>
             </td>
           </tr>
           <tr class="tr">
@@ -104,7 +136,7 @@
         <span class="variables">
           Static variables: 
           <a @click="onSggVariablesClicked">@sgg</a> | 
-          <a>@sgs</a> |
+          <a @click="onSgsVariablesClicked">@sgs</a> |
           <a>@sgo</a>
         </span>
       </div>
@@ -549,6 +581,20 @@ export default class ScriptEditor extends Vue {
     this.$modal.hide('sgg');
   }
 
+  private onSgsVariablesClicked(){
+    this.$modal.show('sgs');
+  }
+
+  private onClickedScriptVar(scriptName: ScriptName){
+    this.fullScreenEditor.trigger('keyboard', 'type', {text: `@sgs("${scriptName.name}")`});
+    this.$modal.hide('sgs');
+  }
+
+  private onCloseSgs(){
+    this.$modal.hide('sgs');
+  }
+
+
   @BindProp({storeType: StoreType.SecurityStore, selectedModelName: 'user', propName: 'id'})
   private loggedInUserId!: string;
 
@@ -759,6 +805,10 @@ td {
 
 // Make sure the alert-modal shows on top of all other modals
 [data-modal="sgg"] { 
+  z-index: 1000 !important;
+}
+
+[data-modal="sgs"] { 
   z-index: 1000 !important;
 }
 </style>
