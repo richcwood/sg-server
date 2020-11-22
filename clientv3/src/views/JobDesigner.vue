@@ -2,6 +2,44 @@
   <div @mousemove="onMouseMove" @mouseup="onMouseUp">
     <!-- Modals -->
 
+    <modal name="select-script-vars-modal" :classes="'round-popup'" :width="800" :height="550">
+      <table class="table" width="100%">
+        <tr class="tr">
+          <td class="td" colspan="2">
+            All of the @sgg variables found in this job's related scripts.
+            <br>
+            Click one to add a Job runtime variable with the same name.
+          </td>
+        </tr>
+        <tr class="tr" v-if="scriptSggs.length === 0">
+          <td class="td">
+            No @sgg variables were found in any of the scripts related to this job.
+          </td>
+        </tr>
+        <table v-else class="table sgg-list">
+          <tr class="tr">
+            <td class="td"><b>@sgg</b></td>
+            <td class="td"><b>Scripts that use the @sgg</b></td>
+          </tr>
+          <tr class="tr" v-for="sgg of scriptSggs" v-bind:key="`sgg-${sgg}`">
+            <td class="td">
+              <a @click="onClickedAddSggAsVar(sgg)">{{sgg}}</a>
+            </td>
+            <td class="td">
+              <span v-for="scriptName of scriptsBySggs[sgg]" v-bind:key="`sgg-${sgg}-${scriptName}`">
+                {{scriptName}} <br>
+              </span>
+            </td>
+          </tr>
+        </table>
+        <tr class="tr">
+          <td class="td">
+            <button class="button" @click="onCloseSelectScriptVarsClicked">Close</button>
+          </td>
+        </tr>
+      </table>
+    </modal>
+
     <modal name="create-taskdef-modal" :classes="'round-popup'" :width="400" :height="225">
       <validation-observer ref="newTaskValidationObserver">
         <table class="table" width="100%" height="100%">
@@ -561,6 +599,11 @@
               </td>
               <td class="td"></td>
             </tr>
+            <tr class="tr">
+              <td class="td" colspan="4">
+                <button class="button" @click="onSelectScriptVarsForRuntimeVarsClicked">Add Script Vars (@sgg)</button>
+              </td>
+            </tr>
             <tr class="tr"><td class="td"></td></tr>
             <tr class="tr"><td class="td">Variables for next run</td></tr>
             <tr class="tr">
@@ -579,7 +622,7 @@
               <td class="td">
                 <validation-observer ref="addRunJobVarsValidationObserver">
                   <validation-provider name="Variable Key" rules="required" v-slot="{ errors }"> 
-                    <input class="input" type="text" style="width: 250px;" v-model="newRunJobVarKey" placeholder="key"/>
+                    <input class="input" ref="newRunJobVarKeyInput" type="text" style="width: 250px;" v-model="newRunJobVarKey" placeholder="key"/>
                     <span v-if="errors && errors.length > 0" class="message validation-error is-danger">{{ errors[0] }}</span>
                   </validation-provider>
 
@@ -796,9 +839,16 @@
 
         <tab title="Runtime Variables">
           <div style="margin-top: 20px;">
+            <table class="table" style="width: 800px;">
+              <tr class="tr">
+                <td class="td" colspan="4">
+                  <button class="button" @click="onSelectScriptVarsClicked">Add Script Vars (@sgg)</button>
+                </td>
+              </tr>
+            </table>
             <table class="table striped-table" style="width: 800px;">
-              <tr v-if="Object.keys(jobDefForEdit.runtimeVars).length === 0">
-                <td colspan="4">
+              <tr class="tr" v-if="Object.keys(jobDefForEdit.runtimeVars).length === 0">
+                <td class="td" colspan="4">
                   No runtime vars yet
                 </td>
               </tr>
@@ -816,7 +866,7 @@
           <div>
             <validation-observer ref="addRuntimeVarValidationObserver">
               <validation-provider name="Variable Key" rules="required" v-slot="{ errors }"> 
-                <input class="input" type="text" style="width: 250px;" v-model="newRuntimeVarKey" placeholder="key"/>
+                <input class="input" ref="newRuntimeVarKeyInput" type="text" style="width: 250px;" v-model="newRuntimeVarKey" placeholder="key"/>
                 <span v-if="errors && errors.length > 0" class="message validation-error is-danger">{{ errors[0] }}</span>
               </validation-provider>
 
@@ -1131,10 +1181,10 @@ import axios from 'axios';
 import _ from 'lodash';
 import DesignerTask from '@/components/DesignerTask.vue';
 import { StoreType } from '@/store/types';
-import { JobDef, JobDefStatus } from '@/store/jobDef/types';
-import { TaskDef, TaskDefTarget } from '@/store/taskDef/types';
-import { StepDef } from '@/store/stepDef/types';
-import { Script, ScriptType, scriptTypesForMonaco } from '@/store/script/types';
+import { JobDef, JobDefStatus } from '../store/jobDef/types';
+import { TaskDef, TaskDefTarget } from '../store/taskDef/types';
+import { StepDef } from '../store/stepDef/types';
+import { Script, ScriptType, scriptTypesForMonaco } from '../store/script/types';
 import { BindStoreModel, BindSelected, BindSelectedCopy, BindProp } from '@/decorator';
 import { JobStatus, TaskStatus, enumKeyToPretty, enumKeys } from '@/utils/Enums';
 import { SgAlert, AlertPlacement, AlertCategory } from '@/store/alert/types';
@@ -1307,7 +1357,7 @@ export default class JobDesigner extends Vue {
     localStorage.setItem('jobDesigner_navPanelWidth', ''+this.navPanelWidth);
   }
 
-  private get taskDefs(){
+  private get taskDefs(): TaskDef[] {
     return this.$store.getters[`${StoreType.TaskDefStore}/getByJobDefId`](this.jobDefForEdit.id);
   }
 
@@ -1331,7 +1381,7 @@ export default class JobDesigner extends Vue {
     }
   }
 
-  private stepDefsForTaskDef(taskDef: TaskDef){
+  private stepDefsForTaskDef(taskDef: TaskDef): StepDef[] {
     return this.$store.getters[`${StoreType.StepDefStore}/getByTaskDefId`](taskDef.id);
   }
 
@@ -2295,6 +2345,80 @@ export default class JobDesigner extends Vue {
   private onMouseUp(){
     this.navResizing = false;
   }
+
+  private scriptSggs: string[] = [];
+  private scriptsBySggs: {[sggName: string]: string[]} = {};
+
+  private async calculateScriptSggs(){
+    const bySggs = {};
+    const sggs = [];
+
+    if(this.taskDefs){
+      const fetchScriptPromises = [];
+
+      for(let taskDef of this.taskDefs){
+        for(let stepDef of this.stepDefsForTaskDef(taskDef)){
+          fetchScriptPromises.push(this.$store.dispatch(`${StoreType.ScriptStore}/fetchModel`, stepDef._scriptId));
+        }
+      }
+
+      // wait until all the promises are done
+      const scripts: Script[] = await Promise.all(fetchScriptPromises);
+
+      // now gather the sggs per script
+      scripts.map((script: Script) => {
+        script.sggElems.map((sgg: string) => {
+          if(!bySggs[sgg]){
+            bySggs[sgg] = [];
+          }
+
+          if(bySggs[sgg].indexOf(script.name) === -1){
+            bySggs[sgg].push(script.name);
+          }
+
+          if(sggs.indexOf(sgg) === -1){
+            sggs.push(sgg);
+          }
+        });
+      });
+    }
+
+    this.scriptsBySggs = bySggs;
+    this.scriptSggs = sggs.sort();
+  }
+
+  private selectScriptsType = '';
+
+  private onSelectScriptVarsClicked(){
+    this.calculateScriptSggs();
+    this.selectScriptsType = 'runtime-vars';
+    this.$modal.show('select-script-vars-modal');
+  }
+
+  private onSelectScriptVarsForRuntimeVarsClicked(){
+    this.calculateScriptSggs();
+    this.selectScriptsType = 'runjobs-vars';
+    this.$modal.show('select-script-vars-modal');
+  }
+
+  private onClickedAddSggAsVar(sgg: string){
+    this.$modal.hide('select-script-vars-modal');
+
+    if(this.selectScriptsType === 'runtime-vars'){
+      this.newRuntimeVarKey = sgg;
+      (<any>this.$refs.newRuntimeVarKeyInput).focus();
+      (<any>this.$refs.newRuntimeVarKeyInput).scrollIntoView();
+    }
+    else {
+      this.newRunJobVarKey = sgg;
+      (<any>this.$refs.newRunJobVarKeyInput).focus();
+      (<any>this.$refs.newRunJobVarKeyInput).scrollIntoView();
+    }
+  }
+
+  private onCloseSelectScriptVarsClicked(){
+    this.$modal.hide('select-script-vars-modal');
+  }
 }
 </script>
 
@@ -2431,6 +2555,12 @@ export default class JobDesigner extends Vue {
     border-color: lightgray;
     padding: 8px; 
     border-radius: 4px;
+  }
+
+  .sgg-list {
+    overflow-y: scroll; 
+    display: block;
+    height: 400px;
   }
   
 </style>
