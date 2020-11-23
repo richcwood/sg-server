@@ -2,13 +2,15 @@
   <div @mousemove="onMouseMove" @mouseup="onMouseUp">
     <!-- Modals -->
 
-    <modal name="select-script-vars-modal" :classes="'round-popup'" :width="800" :height="550">
+    <modal name="select-script-vars-modal" :classes="'round-popup'" :width="600" :height="750">
       <table class="table" width="100%">
         <tr class="tr">
           <td class="td" colspan="2">
-            All of the @sgg variables found in this job's related scripts.
+            Here are all the @sgg variables referenced in this job's related scripts.
             <br>
-            Click one to add a Job runtime variable with the same name.
+            Click one to add a runtime variable.
+            <br>
+            <br>
           </td>
         </tr>
         <tr class="tr" v-if="scriptSggs.length === 0">
@@ -23,7 +25,14 @@
           </tr>
           <tr class="tr" v-for="sgg of scriptSggs" v-bind:key="`sgg-${sgg}`">
             <td class="td">
-              <a @click="onClickedAddSggAsVar(sgg)">{{sgg}}</a>
+              <template v-if="selectScriptsType === 'runtime-vars'">
+                <span v-if="jobDefForEdit.runtimeVars[sgg]">{{sgg}}</span>
+                <a v-else @click="onClickedAddSggAsVar(sgg)">{{sgg}}</a>
+              </template>
+              <template v-else>
+                <span v-if="runJobVars[sgg]">{{sgg}}</span>
+                <a v-else @click="onClickedAddSggAsVar(sgg)">{{sgg}}</a>
+              </template>
             </td>
             <td class="td">
               <span v-for="scriptName of scriptsBySggs[sgg]" v-bind:key="`sgg-${sgg}-${scriptName}`">
@@ -2560,7 +2569,7 @@ export default class JobDesigner extends Vue {
   .sgg-list {
     overflow-y: scroll; 
     display: block;
-    height: 400px;
+    height: 450px;
   }
   
 </style>
