@@ -6,7 +6,7 @@ import { BaseLogger } from '../../shared/SGLogger';
 import { SGStrings } from '../../shared/SGStrings';
 import { SGUtils } from '../../shared/SGUtils';
 import { rabbitMQPublisher, PayloadOperation } from '../utils/RabbitMQPublisher';
-import { braintreeClientTokenService } from '../services/BraintreeClientTokenService';
+import { stripeClientTokenService } from '../services/StripeClientTokenService';
 import * as mongodb from 'mongodb';
 import * as config from 'config';
 import * as _ from 'lodash';
@@ -75,15 +75,16 @@ export class TeamService {
         newTeam = await teamModel.save();
       }
 
-      /// Create company in braintree for billing
-      let res: any = await braintreeClientTokenService.createBrainTreeCustomer(newTeam);
+      let dataUpdates: any = {};
+      /// Create company in stripe for billing
+      let res: any = await stripeClientTokenService.createStripeCustomer(newTeam);
       if (!res.success) {
-        logger.LogError(`Error creating braintree customer: ${res.message}`, res);
+        logger.LogError(`Error creating stripe customer`, {error: res.err});
       } else {
-        logger.LogDebug(`Created braintree customer`, res);
+        logger.LogDebug(`Created stripe customer`, {customer: res.customer});
+        dataUpdates.stripe_id = res.customer.id;
       }
 
-      let dataUpdates: any = {};
       /// Create general team invite link
       const secret = config.get('secret');
       const jwtExpiration = Date.now() + (1000 * 60 * 60 * 24 * 180); // 180 days

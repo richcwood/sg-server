@@ -50,6 +50,7 @@ import { PaymentTransactionSchema } from '../../server/src/api/domain/PaymentTra
 import { convertData as convertRequestData } from '../../server/src/api/utils/RequestConverters';
 import { rabbitMQPublisher } from '../../server/src/api/utils/RabbitMQPublisher';
 import { braintreeClientTokenService } from '../../server/src/api/services/BraintreeClientTokenService';
+import { stripeClientTokenService } from '../../server/src/api/services/StripeClientTokenService';
 import { MissingObjectError, ValidationError, FreeTierLimitExceededError } from '../../server/src/api/utils/Errors';
 import { CheckWaitingForAgentTasks } from '../../server/src/api/utils/Shared';
 import * as path from 'path';
@@ -1553,6 +1554,27 @@ let PublishJobTask = async () => {
 
 
 
+let CreateStripeCompanyForTeams = async () => {
+  mongoose.connect(config.get('mongoUrl'), { useNewUrlParser: true });
+
+  const teams = await teamService.findAllTeamsInternal({userAssigned: true});
+
+  if (_.isArray(teams) && teams.length > 0) {
+    for (let i = 0; i < teams.length; i++) {
+      let team = teams[i];
+      team.id = team._id;
+
+      let res: any = await stripeClientTokenService.createStripeCustomer(team);
+
+      console.log('res -> ', JSON.stringify(res, null, 4));
+    }
+  }
+  
+  process.exit(0);
+}
+
+
+
 let CreateBrainTreeCompanyForTeams = async () => {
   const auth = `${config.get('adminToken')};`;
   mongoose.connect(config.get('mongoUrl'), { useNewUrlParser: true });
@@ -1855,6 +1877,7 @@ let SendTestBrowserAlert = async() => {
 
 // RunCheckWaitingForAgentTasks('5f57b2f14b5da00017df0d4f');
 // CreateBrainTreeCompanyForTeams();
+CreateStripeCompanyForTeams();
 // FixTeamDBRecords();
 // FixScriptDBRecords();
 // SendTestBrowserAlert();
@@ -1885,7 +1908,7 @@ let SendTestBrowserAlert = async() => {
 // CreateUser('testuser@saasglue.com', 'mypassword', ['5de95c0453162e8891f5a830']);
 // StopScheduler();
 // MongoMapTest();
-SendTestEmail();
+// SendTestEmail();
 // SendTestEmailSMTP();
 // SendTestSlack();
 // CreateAgentInstall('5de9691f53162e8891f5aa99', 'v0.0.0.156', 'node10', 'macos', '');

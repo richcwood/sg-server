@@ -21,6 +21,9 @@ export class TeamSchema {
   ownerId?: mongodb.ObjectId;
 
   @prop({ default: '' })
+  stripe_id?: string;
+
+  @prop({ default: '' })
   billing_address1?: string;
 
   @prop({ default: '' })
@@ -36,7 +39,13 @@ export class TeamSchema {
   billing_zip?: string;
 
   @prop({ default: '' })
+  billing_country?: string;
+
+  @prop({ default: '' })
   billing_email?: string;
+
+  @prop({ default: '' })
+  billing_phone?: string;
 
   @prop({ default: true })
   isActive?: boolean;
