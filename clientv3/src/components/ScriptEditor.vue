@@ -1,6 +1,35 @@
 <template>
   <div>
 
+    <modal name="sgs" :classes="'round-popup'" width="700" height="725" background="white">
+      <div style="width: 100%; height: 100%; background: white;">
+        <table class="table">
+          <tr class="tr">
+            <td class="td">
+              sgs: <strong>s</strong>aas <strong>g</strong>lue <strong>s</Strong>cript
+              <br>
+              Insert a saas glue script into this script
+              <br>
+              You can also type "sgs" in the editor for auto complete
+              <br>
+            </td>
+          </tr>
+
+          <tr class="tr" v-for="scriptName in scriptNames" v-bind:key="scriptName.id">
+            <td class="td">
+              <a @click="onClickedScriptVar(scriptName)">{{scriptName.name}}</a>
+            </td>
+          </tr>
+
+          <tr class="tr">
+            <td class="td">
+              <button class="button" @click="onCloseSgs">Close</button>
+            </td>
+          </tr>
+        </table>
+      </div>
+    </modal>
+
     <modal name="sgg" :classes="'round-popup'" width="700" height="725" background="white">
       <div style="width: 100%; height: 100%; background: white;">
         <table class="table">
@@ -8,7 +37,10 @@
             <td class="td" colspan="2">
               sgg: <strong>s</strong>aas <strong>g</strong>lue <strong>g</Strong>lobal
               <br>
-              Excellent instructions here some day.
+              Insert saas glue variables into your script
+              <br>
+              You can also type "sgg" in the editor for auto complete
+              <br>
             </td>
           </tr>
           <tr class="tr">
@@ -98,13 +130,13 @@
       </div>
     </modal>
 
-    <modal name="script-editor-fullscreen" :classes="'round-popup'" :adaptive="true" width="100%" height="100%" background="white">
+    <modal name="script-editor-fullscreen" :clickToClose="false" :classes="'round-popup'" :adaptive="true" width="100%" height="100%" background="white">
       <div style="margin: 6px;">
         <button class="button" @click="onClickedExitFullScreen">Exit full screen</button>
         <span class="variables">
           Static variables: 
           <a @click="onSggVariablesClicked">@sgg</a> | 
-          <a>@sgs</a> |
+          <a @click="onSgsVariablesClicked">@sgs</a> |
           <a>@sgo</a>
         </span>
       </div>
@@ -221,17 +253,18 @@
 <script lang="ts">
 import _ from 'lodash';
 import { Component, Prop, Vue, Watch } from 'vue-property-decorator';
+import { ScriptName } from '../store/scriptName/types';
 import { Script, ScriptType, scriptTypesForMonaco } from '@/store/script/types';
 import { ScriptShadow } from '@/store/scriptShadow/types';
 import { StoreType } from '@/store/types';
 import { SgAlert, AlertPlacement, AlertCategory } from '@/store/alert/types';
 import { showErrors } from '@/utils/ErrorHandler'; 
-import { JobDef } from '@/store/jobDef/types';
-import { TeamVar } from '@/store/teamVar/types';
+import { JobDef } from '../store/jobDef/types';
+import { TeamVar } from '../store/teamVar/types';
 import { BindStoreModel, BindSelected, BindSelectedCopy, BindProp } from '@/decorator';
 import { User } from '@/store/user/types';
 import axios from 'axios';
-import * as monaco from "monaco-editor";
+import * as monaco from 'monaco-editor';
 
 @Component
 export default class ScriptEditor extends Vue {
@@ -277,6 +310,10 @@ export default class ScriptEditor extends Vue {
 
     this.onJobDefChanged();
     this.onScriptShadowChanged();
+
+    teamVarsForAutoComplete = this.teamVars;
+    jobDefForAutoComplete = this.jobDef;
+    scriptNamesForAutoComplete = this.scriptNames;
   }
 
   private beforeDestroy(){
@@ -450,7 +487,7 @@ export default class ScriptEditor extends Vue {
       this.$modal.show('script-editor-fullscreen');
       setTimeout(() => {
         const scriptEditorFullScreenEl = (<any>this.$refs).scriptEditorFullScreen;
-        scriptEditorFullScreenEl.innerHTML = ""; // clear old stuff out
+        scriptEditorFullScreenEl.innerHTML = ''; // clear old stuff out
 
         this.fullScreenEditor = monaco.editor.create(scriptEditorFullScreenEl, {
           value: this.scriptShadow.shadowCopyCode,
@@ -507,11 +544,21 @@ export default class ScriptEditor extends Vue {
   @BindStoreModel({storeType: StoreType.TeamVariableStore, selectedModelName: 'models'})
   private teamVars!: TeamVar[];
 
+  @Watch('teamVars')
+  private onTeamVarsChanged(){
+    teamVarsForAutoComplete = this.teamVars;
+  }
+
+  @BindStoreModel({storeType: StoreType.ScriptNameStore, selectedModelName: 'models'})
+  private scriptNames!: ScriptName[];
+
   @Prop() private jobDef!: JobDef;
 
   @Watch('jobDef')
   private onJobDefChanged(){
     this.selectedJobDef = this.jobDef;
+
+    jobDefForAutoComplete = this.selectedJobDef;
   }
 
   private selectedJobDef: JobDef|null = null;
@@ -533,6 +580,20 @@ export default class ScriptEditor extends Vue {
   private onCloseSgg(){
     this.$modal.hide('sgg');
   }
+
+  private onSgsVariablesClicked(){
+    this.$modal.show('sgs');
+  }
+
+  private onClickedScriptVar(scriptName: ScriptName){
+    this.fullScreenEditor.trigger('keyboard', 'type', {text: `@sgs("${scriptName.name}")`});
+    this.$modal.hide('sgs');
+  }
+
+  private onCloseSgs(){
+    this.$modal.hide('sgs');
+  }
+
 
   @BindProp({storeType: StoreType.SecurityStore, selectedModelName: 'user', propName: 'id'})
   private loggedInUserId!: string;
@@ -600,6 +661,88 @@ export default class ScriptEditor extends Vue {
     this.$modal.hide('job-step-details');
   }
 }
+
+
+let jobDefForAutoComplete: undefined|JobDef;
+
+const appendJobDefAutoCompleteItems = function(range, items){
+  if(jobDefForAutoComplete && jobDefForAutoComplete.runtimeVars){
+
+    for(let [varKey, varValue] of Object.entries(jobDefForAutoComplete.runtimeVars)){
+      items.push({
+        label: `sgg ${varKey} [${varValue}] (Job)`, 
+        kind: monaco.languages.CompletionItemKind.Function,
+        insertText: `@sgg("${varKey}")`, 
+        range: range
+      });
+    }
+  }
+};
+
+let teamVarsForAutoComplete: TeamVar[];
+
+const appendTeamVarAutoCompleteItems = function(range, items){
+  if(teamVarsForAutoComplete){
+
+    for(let teamVar of teamVarsForAutoComplete){
+      items.push({
+        label: `sgg ${teamVar.name} (Team Var)`, 
+        kind: monaco.languages.CompletionItemKind.Function,
+        insertText: `@sgg("${teamVar.name}")`, 
+        range: range
+      });
+    }
+  }
+};
+
+let scriptNamesForAutoComplete: ScriptName[];
+
+const appendScriptNameAutoCompleteItems = function(range, items){
+  if(scriptNamesForAutoComplete){
+
+    for(let scriptName of scriptNamesForAutoComplete){
+      items.push({
+        label: `sgs ${scriptName.name}`, 
+        kind: monaco.languages.CompletionItemKind.Function,
+        insertText: `@sgs("${scriptName.name}")`, 
+        range: range
+      });
+    }
+  }
+};
+
+// a globally accessible auto completion for monaco auto-complete
+// This code will only be invoked once when the class is loaded
+const createDependencyProposals = function(range) {
+  // returning a static list of proposals, not even looking at the prefix (filtering is done by the Monaco editor),
+  // here you could do a server side lookup
+  const items = [];
+  appendJobDefAutoCompleteItems(range, items);
+  appendTeamVarAutoCompleteItems(range, items);
+  appendScriptNameAutoCompleteItems(range, items);
+  return items;
+}
+
+const uniqueLanguages = <string[]> _.uniq(Object.entries(scriptTypesForMonaco).map(entry => entry[1]));
+
+for(let language of uniqueLanguages){
+  monaco.languages.registerCompletionItemProvider(language, {
+    provideCompletionItems: function(model, position) {
+      const word = model.getWordUntilPosition(position);
+      const range = {
+        startLineNumber: position.lineNumber,
+        endLineNumber: position.lineNumber,
+        startColumn: word.startColumn,
+        endColumn: word.endColumn
+      };
+      return {
+        suggestions: createDependencyProposals(range)
+      };
+    }
+  });
+}
+
+
 </script>
 
 <style scoped lang="scss">
@@ -662,6 +805,10 @@ td {
 
 // Make sure the alert-modal shows on top of all other modals
 [data-modal="sgg"] { 
+  z-index: 1000 !important;
+}
+
+[data-modal="sgs"] { 
   z-index: 1000 !important;
 }
 </style>

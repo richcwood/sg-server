@@ -26,5 +26,6 @@ export interface Script extends Model {
   scriptType: ScriptType,
   code: string, // in base64
   lastEditedDate: Date,
-  teamEditable?: boolean
+  teamEditable?: boolean,
+  sggElems?: string[]
 };

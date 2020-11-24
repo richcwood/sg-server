@@ -13,6 +13,7 @@ import { stepDefStore } from '@/store/stepDef/index';
 import { teamStore } from '@/store/team/index';
 import { alertStore } from '@/store/alert/index';
 import { agentStore } from '@/store/agent/index';
+import { scriptNameStore } from '@/store/scriptName/index';
 import { scriptStore } from '@/store/script/index';
 import { userScriptShadowCopyStore } from '@/store/scriptShadow/index';
 import { scheduleStore } from '@/store/schedule/index';
@@ -44,6 +45,7 @@ const store: StoreOptions<RootState> = {
         teamStore,
         alertStore,
         agentStore,
+        scriptNameStore,
         scriptStore,
         userScriptShadowCopyStore,
         scheduleStore,

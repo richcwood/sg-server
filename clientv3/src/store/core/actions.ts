@@ -4,8 +4,8 @@ import axios from 'axios';
 import lodash from 'lodash';
 
 // For pagination, what are the defaults for max models loaded, the default page size etc.
-const DEFAULT_MAX_PAGE_TOTAL = 2500;
-const DEFAULT_MAX_PAGE_SIZE = 250;
+const DEFAULT_MAX_PAGE_TOTAL = 3000;
+const DEFAULT_MAX_PAGE_SIZE = 500;
 
 
 // Helper functions
@@ -27,7 +27,13 @@ const createFilterUrlParams = function(filter?: string, lastId?: string): string
 const loadPaginatedModels = async function({state, commit, preCommit, filter}: {state: CoreState, commit: Commit, preCommit?: Function, filter?: string}): Promise<object[]>{  
   const fetchedModels = [];
 
-  const firstResponse: any = await axios.get(`${state._url('GET')}?${createFilterUrlParams(filter)}`);
+  let baseUrl = `${state._url('GET')}?`;
+
+  if(state._responseFields){
+    baseUrl += `responseFields=${state._responseFields()}&`;
+  }
+
+  const firstResponse: any = await axios.get(`${baseUrl}${createFilterUrlParams(filter)}`);
   fetchedModels.push(...firstResponse.data.data);
   // Allow a handler to perform a bulk load before data is commited to the store
   if(preCommit){
@@ -42,13 +48,13 @@ const loadPaginatedModels = async function({state, commit, preCommit, filter}: {
     const paginationTotal = firstResponse.data.meta.count;
 
     if(paginationTotal > DEFAULT_MAX_PAGE_TOTAL){
-      console.error(`Oops, looks like you tried to bulk load a model type with more than the default limit of ${DEFAULT_MAX_PAGE_TOTAL}. url=${state._url('GET')}, totalModelCount=${paginationTotal}`);
+      console.error(`Oops, looks like you tried to bulk load a model type with more than the default limit of ${DEFAULT_MAX_PAGE_TOTAL}. url=${baseUrl}, totalModelCount=${paginationTotal}`);
     }
     else if(paginationTotal > DEFAULT_MAX_PAGE_SIZE) {
 
       let lastId = firstResponse.data.data[firstResponse.data.data.length - 1].id;
       for(let pageIndex = 1; pageIndex * DEFAULT_MAX_PAGE_SIZE < paginationTotal; pageIndex++){
-        const response = await axios.get(`${state._url('GET')}?${createFilterUrlParams(filter)}&lastId=${lastId}`);            
+        const response = await axios.get(`${baseUrl}${createFilterUrlParams(filter)}&lastId=${lastId}`);            
         fetchedModels.push(...response.data.data);
         if(preCommit){
           // Do not await on the preCommit - it should immediately generate promises before invoking any await code to not block main thread

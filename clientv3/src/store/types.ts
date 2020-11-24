@@ -27,6 +27,7 @@ export interface CoreState {
   storeUtils?: StoreUtils;
   _storeName: string;
   _url: (action?: string) => string;
+  _responseFields?: (action?: string) => string;
   _promiseStore: PromiseStore;
   _fetchModelDebouncer?: FetchModelDebouncer;
 };
@@ -54,6 +55,7 @@ export enum StoreType {
   AlertStore = 'alertStore',
   AgentStore = 'agentStore',
   SecurityStore = 'securityStore',
+  ScriptNameStore = 'scriptNameStore',
   ScriptStore = 'scriptStore',
   ScriptShadowStore = 'userScriptShadowCopyStore',
   ScheduleStore = 'scheduleStore',
