@@ -1877,7 +1877,7 @@ let SendTestBrowserAlert = async() => {
 
 // RunCheckWaitingForAgentTasks('5f57b2f14b5da00017df0d4f');
 // CreateBrainTreeCompanyForTeams();
-CreateStripeCompanyForTeams();
+// CreateStripeCompanyForTeams();
 // FixTeamDBRecords();
 // FixScriptDBRecords();
 // SendTestBrowserAlert();
@@ -1913,7 +1913,7 @@ CreateStripeCompanyForTeams();
 // SendTestSlack();
 // CreateAgentInstall('5de9691f53162e8891f5aa99', 'v0.0.0.156', 'node10', 'macos', '');
 // BraintreeTesting();
-// CreateInvoices();
+CreateInvoices();
 // SubmitInvoicesForPayment();
 // TestBraintreeWebhook();
 // CreateInvoicePDF(0);

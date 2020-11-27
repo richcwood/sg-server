@@ -37,7 +37,6 @@ import { handleBuildResponseWrapper, handleResponse, handleStartTimer } from './
 import { stepRouter } from './routes/StepRouter';
 import { teamStorageRouter } from './routes/TeamStorageRouter';
 import { paymentTransactionRouter } from './routes/PaymentTransactionRouter';
-import { braintreeClientTokenRouter } from './routes/BraintreeClientTokenRouter';
 import { invoiceRouter } from './routes/InvoiceRouter';
 import { signupRouter } from './routes/SignupRouter';
 import { teamInviteRouter } from './routes/TeamInviteRouter';
@@ -62,6 +61,7 @@ import { userService } from './services/UserService';
 import { ValidationError } from './utils/Errors';
 import * as morgan from 'morgan';
 import * as fs from 'fs';
+import { stripeClientTokenRouter } from './routes/StripClientTokenRouter';
 
 // Create a new express application instance
 const app: express.Application = express();
@@ -208,7 +208,7 @@ class AppBuilder {
     // this.app.use(`${apiURLBase}/paymentmethod`, paymentMethodRouter);
     this.app.use(`${apiURLBase}/payinvoiceauto`, payInvoiceAutoRouter);
     this.app.use(`${apiURLBase}/payinvoicemanual`, payInvoiceManualRouter);
-    this.app.use(`${apiURLBase}/paymenttoken`, braintreeClientTokenRouter);
+    this.app.use(`${apiURLBase}/paymenttoken`, stripeClientTokenRouter);
     this.app.use(`${apiURLBase}/paymenttransaction`, paymentTransactionRouter);
     this.app.use(`${apiURLBase}/invoice`, invoiceRouter);
     this.app.use(`${apiURLBase}/invite`, teamInviteRouter);

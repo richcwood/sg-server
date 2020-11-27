@@ -31,19 +31,19 @@ export class PaymentTransactionSchema {
   createdAt: Date;
 
   @prop({ required: true })
-  paymentInstrument: string;
+  charges: any[];
 
   @prop({ required: true })
-  paymentInstrumentType: string;
-
-  @prop({ required: true })
-  transactionType: string;
+  refunds: any[];
 
   @prop({ required: true })
   status: string;
 
   @prop({ required: true })
   amount: number;
+
+  @prop()
+  refunded?: boolean;
 
   // Define which filters are legal for which props (including nested props (not sure about nested arrays))
   public static readonly validFilters = {

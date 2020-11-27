@@ -47,6 +47,9 @@ export class TeamSchema {
   @prop({ default: '' })
   billing_phone?: string;
 
+  @prop({ default: 'usd' })
+  billing_currency?: string;
+
   @prop({ default: true })
   isActive?: boolean;
 

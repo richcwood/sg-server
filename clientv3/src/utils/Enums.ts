@@ -16,7 +16,7 @@ enum InvoiceStatus { CREATED = 0, SUBMITTED = 1, PAID = 2, PARTIALLY_PAID = 3, R
 
 enum PaymentMethodType {CREDIT_CARD = 0}
 
-enum PaymentTransactionSource {BRAINTREE = 0}
+enum PaymentTransactionSource {STRIPE = 0}
 
 enum PaymentTransactionType {CHARGE = 0}
 
