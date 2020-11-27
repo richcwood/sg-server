@@ -41,7 +41,7 @@
   "braintreeMerchantId": "qqw7vz689mqcbmrx",
   "braintreePublicKey": "w3tb6v49k4s2vynj",
   "braintreePrivateKey": "f739a9b8d0de2a584052d56d97c811f1",
-  "S3_BUCKET_INVOICES": "saasglue-invoices",
+  "S3_BUCKET_INVOICES": "sg-invoices",
   "S3_BUCKET_AGENT_BINARIES": "sg-agent-binaries",
   "S3_URL_EXPIRATION_SECONDS": 600,
   "S3_BUCKET_TEAM_ARTIFACTS": "sg-team-artifacts",

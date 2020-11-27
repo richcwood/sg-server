@@ -8,6 +8,7 @@ export class StripeClientTokenRouter {
   constructor() {
     this.router = Router();
 
+    this.router.get('/', stripeClientTokenController.getStripePublicToken);
     this.router.post('/', stripeClientTokenController.createStripeClientSecret);
   }
 }

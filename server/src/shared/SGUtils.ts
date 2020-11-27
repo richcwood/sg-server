@@ -482,32 +482,59 @@ export class SGUtils {
         invoice_raw = invoice_raw.replace('{start_date}', moment(invoice.startDate).format('MMMM d, YYYY'));
         invoice_raw = invoice_raw.replace('{end_date}', moment(invoice.endDate).format('MMMM d, YYYY'));
 
-        invoice_raw = invoice_raw.replace('{payment_method}', '' + paymentTransaction.paymentInstrumentType);
-        invoice_raw = invoice_raw.replace('{payment_details}', '' + paymentTransaction.paymentInstrument);
+        invoice_raw = invoice_raw.replace('{payment_method}', '' + paymentTransaction.charges[0].paymentCardBrand);
+        invoice_raw = invoice_raw.replace('{payment_details}', '' + paymentTransaction.charges[0].paymentInstrument);
 
+        let scriptTotal = invoice.numScripts * invoice.scriptRate;
+        if (scriptTotal < .01)
+            scriptTotal = 0;
+        let scriptRate = '0';
+        if (invoice.scriptRate > 0)
+            scriptRate = invoice.scriptRate.toFixed(8);
         invoice_raw = invoice_raw.replace('{scripts_qty}', '' + invoice.numScripts);
-        invoice_raw = invoice_raw.replace('{scripts_rate}', '' + invoice.scriptRate);
-        invoice_raw = invoice_raw.replace('{scripts_total}', '' + invoice.numScripts * invoice.scriptRate);
+        invoice_raw = invoice_raw.replace('{scripts_rate}', '' + scriptRate);
+        invoice_raw = invoice_raw.replace('{scripts_total}', '' + scriptTotal.toFixed(2));
 
         invoice_raw = invoice_raw.replace('{ic_scripts_qty}', '' + invoice.numICScripts);
 
-        invoice_raw = invoice_raw.replace('{storage_qty}', '' + invoice.storageMB);
+        let storageTotal = invoice.storageMB * invoice.jobStoragePerMBRate;
+        if (storageTotal < .01)
+            storageTotal = 0;
+        let storageMB = '0';
+        if (invoice.storageMB > 0)
+            storageMB = invoice.storageMB.toFixed(8);
+        invoice_raw = invoice_raw.replace('{storage_qty}', '' + storageMB);
         invoice_raw = invoice_raw.replace('{storage_rate}', '' + invoice.jobStoragePerMBRate);
-        invoice_raw = invoice_raw.replace('{storage_total}', '' + invoice.storageMB * invoice.jobStoragePerMBRate);
+        invoice_raw = invoice_raw.replace('{storage_total}', '' + storageTotal.toFixed(2));
 
+        let newAgentsTotal = invoice.numNewAgents * invoice.newAgentRate;
+        if (newAgentsTotal < .01)
+            newAgentsTotal = 0;
         invoice_raw = invoice_raw.replace('{new_agents_qty}', '' + invoice.numNewAgents);
         invoice_raw = invoice_raw.replace('{new_agents_rate}', '' + invoice.newAgentRate);
-        invoice_raw = invoice_raw.replace('{new_agents_total}', '' + invoice.numNewAgents * invoice.newAgentRate);
+        invoice_raw = invoice_raw.replace('{new_agents_total}', '' + newAgentsTotal.toFixed(2));
 
-        invoice_raw = invoice_raw.replace('{artifacts_downloaded_qty}', '' + invoice.artifactsDownloadedGB);
+        let artifactsDownloadedTotal = invoice.artifactsDownloadedGB * invoice.artifactsDownloadedPerGBRate;
+        if (artifactsDownloadedTotal < .01)
+            artifactsDownloadedTotal = 0;
+        let artifactsDownloadedGB = '0';
+        if (invoice.artifactsDownloadedGB > 0)
+            artifactsDownloadedGB = invoice.artifactsDownloadedGB.toFixed(8);
+        invoice_raw = invoice_raw.replace('{artifacts_downloaded_qty}', '' + artifactsDownloadedGB);
         invoice_raw = invoice_raw.replace('{artifacts_downloaded_rate}', '' + invoice.artifactsDownloadedPerGBRate);
-        invoice_raw = invoice_raw.replace('{artifacts_downloaded_total}', '' + invoice.artifactsDownloadedGB * invoice.artifactsDownloadedPerGBRate);
+        invoice_raw = invoice_raw.replace('{artifacts_downloaded_total}', '' + artifactsDownloadedTotal.toFixed(2));
 
-        invoice_raw = invoice_raw.replace('{artifacts_storage_qty}', '' + invoice.artifactsStorageGB);
+        let artifactsStorageTotal = invoice.artifactsStorageGB * invoice.artifactsStoragePerGBRate;
+        if (artifactsStorageTotal < .01)
+            artifactsStorageTotal = 0;
+        let artifactsStorageGB = '0';
+        if (invoice.artifactsStorageGB > 0)
+            artifactsStorageGB = invoice.artifactsStorageGB.toFixed(8);
+        invoice_raw = invoice_raw.replace('{artifacts_storage_qty}', '' + artifactsStorageGB);
         invoice_raw = invoice_raw.replace('{artifacts_storage_rate}', '' + invoice.artifactsStoragePerGBRate);
-        invoice_raw = invoice_raw.replace('{artifacts_storage_total}', '' + invoice.artifactsStorageGB * invoice.artifactsStoragePerGBRate);
+        invoice_raw = invoice_raw.replace('{artifacts_storage_total}', '' + artifactsStorageTotal.toFixed(2));
 
-        invoice_raw = invoice_raw.replace('{total}', '' + invoice.billAmount);
+        invoice_raw = invoice_raw.replace('{total}', '' + (invoice.billAmount/100.0).toFixed(2));
         console.log(invoice_raw);
 
         return invoice_raw;
@@ -534,7 +561,10 @@ export class SGUtils {
         const invoice_text: string = await SGUtils.GenerateInvoice(team._id, invoiceModel, paymentTransaction, "text");
         await SGUtils.GenerateInvoicePDF(invoice_html, localInvoicePDFPath);
 
-        let s3Path = `invoice/${config.get('environment')}/${team._id}/${invoiceDateString}/${invoicePDFFileName}`;
+        let s3Path = `${team._id}/${invoiceDateString}/${invoicePDFFileName}`;
+        const environment = config.get('environment');
+        if (environment != 'production')
+            s3Path = environment + '/' + s3Path;
         const s3Access = new S3Access();
         await s3Access.uploadFileToS3(localInvoicePDFPath, s3Path, config.get('S3_BUCKET_INVOICES'));
 

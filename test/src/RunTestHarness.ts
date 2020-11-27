@@ -1890,7 +1890,7 @@ let SendTestBrowserAlert = async() => {
 // CreateTeam("saas glue admin", "5ef125b4fb07e500150507ca");
 // DumpMongoData('./production_20200615.json');
 // LoadMongoData('./testdata_1.json');
-// DumpSettingsFromMongo();
+DumpSettingsFromMongo();
 // LoadSettingsToMongo();
 // TestForEach();
 // UpdateAgentVersion();
@@ -1913,7 +1913,7 @@ let SendTestBrowserAlert = async() => {
 // SendTestSlack();
 // CreateAgentInstall('5de9691f53162e8891f5aa99', 'v0.0.0.156', 'node10', 'macos', '');
 // BraintreeTesting();
-CreateInvoices();
+// CreateInvoices();
 // SubmitInvoicesForPayment();
 // TestBraintreeWebhook();
 // CreateInvoicePDF(0);

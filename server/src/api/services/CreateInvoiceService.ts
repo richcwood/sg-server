@@ -22,6 +22,7 @@ export class CreateInvoiceService {
     public async createInvoice(data: any, mongoLib: MongoRepo, logger: BaseLogger, correlationId: string, responseFields?: string): Promise<object> {
         if (!data._teamId)
             throw new MissingObjectError('Missing _teamId');
+        data._teamId = new mongodb.ObjectId(data._teamId);
         if (!data.startDate)
             throw new MissingObjectError('Missing startDate');
         const startDate = moment(data.startDate);
@@ -113,7 +114,7 @@ export class CreateInvoiceService {
         data.artifactsDownloadedGB = 0;
         let taskOutcomesFilter: any = {};
         taskOutcomesFilter['_teamId'] = data._teamId;
-        taskOutcomesFilter['dateStarted'] = { $gte: startDate.toDate() };
+        taskOutcomesFilter['dateStarted'] = { $gte: startDate.toDate(), $lt: endDate.toDate() };
 
         let artifactDownloadsQuery = await TaskOutcomeModel.aggregate([
             { $match: taskOutcomesFilter },
@@ -165,18 +166,27 @@ export class CreateInvoiceService {
                 data.artifactsDownloadedPerGBRate = billingSettings.defaultArtifactsDownloadedPerGBRate;
         }
 
+        data.billAmount = 0;
         const scriptBillAmount = SGUtils.scriptBillingCalculator(data.scriptPricing, data.numScripts);
         data.scriptRate = 0;
         if (data.numScripts > 0)
             data.scriptRate = scriptBillAmount / data.numScripts;
+        if (scriptBillAmount >= .01)
+            data.billAmount += scriptBillAmount;
 
-        data.billAmount = scriptBillAmount +
-            (data.jobStoragePerMBRate * data.storageMB) +
-            (data.newAgentRate * data.numNewAgents) +
-            (data.artifactsStoragePerGBRate * data.artifactsStorageGB) +
-            (data.artifactsDownloadedPerGBRate * data.artifactsDownloadedGB);
+        if (data.artifactsDownloadedPerGBRate * data.artifactsDownloadedGB >= .01)
+            data.billAmount += (data.artifactsDownloadedPerGBRate * data.artifactsDownloadedGB);
+        if (data.artifactsStoragePerGBRate * data.artifactsStorageGB >= .01)
+            data.billAmount += (data.artifactsStoragePerGBRate * data.artifactsStorageGB);
+        if (data.newAgentRate >= .01)
+            data.billAmount += (data.newAgentRate * data.numNewAgents);
+        if (data.jobStoragePerMBRate * data.storageMB >= .01)
+            data.billAmount += (data.jobStoragePerMBRate * data.storageMB);
         // if (data.billAmount <= 0)
         //     return null;
+
+        if (data.billAmount > 0)
+            data.billAmount = (Math.round(data.billAmount * 100) / 100)*100;
 
         data.paidAmount = 0.0;
 
