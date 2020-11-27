@@ -105,7 +105,7 @@ export const actions = {
       throw 'Tried to save a model but the stores selected copy was not set';
     }
 
-    const isSelectedNewModel = !model.id && model === state.selectedCopy;
+    const isSelectedNewModel = state.selectedCopy && model.id === state.selectedCopy.id;
     let response: any;
     if(model.id){
       response = await axios.put(`${state._url('UPDATE')}/${model.id}`, model);
