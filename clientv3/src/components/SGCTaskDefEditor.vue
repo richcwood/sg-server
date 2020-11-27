@@ -77,11 +77,14 @@
             </td>
             <td class="td">
               <div class="select">
-                <select v-model="stepDefCopy.lambdaRuntime">
-                  <option v-for="runtime in LambaRuntimes" :key="runtime" :value="runtime">
-                    {{runtime}}
-                  </option>
-                </select>
+                <validation-provider name="Lambda Runtime" rules="required" v-slot="{ errors }">
+                  <select v-model="stepDefCopy.lambdaRuntime">
+                    <option v-for="runtime in LambaRuntimes" :key="runtime" :value="runtime">
+                      {{runtime}}
+                    </option>
+                  </select>
+                  <div v-if="errors && errors.length > 0" class="message validation-error is-danger">{{ errors[0] }}</div>
+                </validation-provider>
               </div>
             </td>
           </tr>
@@ -144,10 +147,7 @@
               <label class="label">Lambda Dependencies</label>
             </td>
             <td class="td">
-              <validation-provider name="Lambda Dependencies" rules="required|object-name" v-slot="{ errors }">
-                <input class="input" v-model="stepDefCopy.lambdaDependencies" placeholder="compression;axios">
-                <div v-if="errors && errors.length > 0" class="message validation-error is-danger">{{ errors[0] }}</div>
-              </validation-provider>
+              <input class="input" v-model="stepDefCopy.lambdaDependencies" placeholder="compression;axios">
             </td>
             <td class="td">
             </td>

@@ -42,8 +42,6 @@ export interface StepDef extends Model {
   lambdaRole?: string,
   lambdaMemorySize?: number, // One of LambdaMemorySizes
   lambdaTimeout?: number, // 1 seconds to 900
-
-  // lambda if lambdaCodeSource === 'zipFile'
   lambdaFunctionHandler?: string, // entry point to lambda function
   lambdaDependencies?: string, // lambda packages required to run function
 };

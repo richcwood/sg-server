@@ -1083,7 +1083,7 @@ import DesignerTask from '@/components/DesignerTask.vue';
 import { StoreType } from '@/store/types';
 import { JobDef, JobDefStatus } from '../store/jobDef/types';
 import { TaskDef, TaskDefTarget } from '../store/taskDef/types';
-import { StepDef } from '../store/stepDef/types';
+import { LambaRuntimes, StepDef } from '../store/stepDef/types';
 import { Script, ScriptType, scriptTypesForMonaco } from '../store/script/types';
 import { BindStoreModel, BindSelected, BindSelectedCopy, BindProp } from '@/decorator';
 import { JobStatus, TaskStatus, enumKeyToPretty, enumKeys } from '@/utils/Enums';
@@ -1453,7 +1453,8 @@ export default class JobDesigner extends Vue {
           lambdaMemorySize: 128,
           lambdaTimeout: 3,
           lambdaFunctionHandler: '',
-          lambdaDependencies: ''
+          lambdaDependencies: '',
+          lambdaRuntime: LambaRuntimes[0]
         };
 
         await this.$store.dispatch(`${StoreType.StepDefStore}/save`, newLambdaStep);
