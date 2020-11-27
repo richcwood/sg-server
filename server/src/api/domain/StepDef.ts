@@ -37,6 +37,9 @@ export class StepDefSchema {
   @mapProp({of: String, default: new Map([])})
   variables?: Map<string, string>;
 
+  @prop({ default: 'script' })
+  lambdaCodeSource?: string;
+
   @prop({ default: '' })
   lambdaRuntime?: string;
 
