@@ -132,6 +132,15 @@ const initValidation = function(){
     }
   });
 
+  vee_validate_extend('lambdaTimeout', value => {
+    if( value >= 1 && value <= 900){
+      return true;
+    }
+    else {
+      return '{_field_} should be in a number between 1 and 900';
+    }
+  });
+
 }
 
 export { initValidation };

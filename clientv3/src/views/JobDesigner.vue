@@ -84,7 +84,7 @@
           <tbody class="tbody">
             <tr class="tr">
               <td class="td"></td>
-              <td class="td">Create a new <span v-if="newTaskTarget === TaskDefTarget.AWS_LAMBDA">SGC</span> task</td>
+              <td class="td">Create a new <span v-if="isSGCTaskDefType(newTaskTarget)">SGC</span> task</td>
             </tr>
             <tr class="tr">
               <td class="td">Task Name</td>
@@ -581,8 +581,8 @@
         </span>
         <span v-else class="nav-spacer">
         </span>
-        {{calcNavPanelTaskName(taskDef)}}
-        <span v-if="!isNavTaskDefCollapsed(taskDef)">
+        {{calcNavPanelTaskName(taskDef)}} <span v-if="isSGCTaskDefType(taskDef.target)">(sgc)</span>
+        <span v-if="!isNavTaskDefCollapsed(taskDef) && !isSGCTaskDefType(taskDef.target)">
           <div class="nav-step" :class="{selected: stepDef === selectedItemForNav}" @click.stop="selectItemForNav(stepDef)" v-for="stepDef in stepDefsForTaskDef(taskDef)" v-bind:key="stepDef.id">
             {{calcNavPanelStepName(stepDef)}}
           </div>
@@ -996,12 +996,16 @@
     </div>
 
     <!-- Edit task -->
-    <task-def-editor v-if="selectedTaskDefForEdit" 
+    <task-def-editor v-if="selectedTaskDefForEdit && selectedTaskDefForEdit.target !== TaskDefTarget.AWS_LAMBDA" 
                      :style="{'margin-left': editPanelMarginLeft+'px'}"
                      @editStepDef="onEditStepDefClicked"
                      @createNewStepDef="onCreateStepDefClicked"
                      @deleteStepDef="onDeleteStepDefClicked">
     </task-def-editor>
+
+    <s-g-c-task-def-editor v-if="selectedTaskDefForEdit && selectedTaskDefForEdit.target === TaskDefTarget.AWS_LAMBDA" 
+                     :style="{'margin-left': editPanelMarginLeft+'px'}">
+    </s-g-c-task-def-editor>
 
 
     <!-- Edit step -->
@@ -1103,10 +1107,21 @@ import { Route } from 'vue-router';
 import { showErrors } from '@/utils/ErrorHandler'; 
 import ScriptSearchWithCreate from '@/components/ScriptSearchWithCreate.vue';
 import TaskDefEditor from '@/components/TaskDefEditor.vue';
+import SGCTaskDefEditor from '@/components/SGCTaskDefEditor.vue';
 
 @Component({
   components: {
-    Tabs, Tab, AgentSearch, DesignerTask, ScriptSearchWithCreate, ScriptEditor, TaskDefEditor, ValidationProvider, ValidationObserver, ArtifactSearch
+    Tabs, 
+    Tab, 
+    AgentSearch, 
+    DesignerTask, 
+    ScriptSearchWithCreate, 
+    ScriptEditor, 
+    TaskDefEditor, 
+    SGCTaskDefEditor,
+    ValidationProvider, 
+    ValidationObserver, 
+    ArtifactSearch
   },
   directives: { ClickOutside }
 })
@@ -1166,6 +1181,10 @@ export default class JobDesigner extends Vue {
     else {
       return false;
     }
+  }
+
+  private isSGCTaskDefType(target: TaskDefTarget){
+    return target === TaskDefTarget.AWS_LAMBDA;
   }
 
   @BindSelected({storeType: StoreType.JobDefStore})
@@ -1417,7 +1436,28 @@ export default class JobDesigner extends Vue {
         artifacts: []
       };
 
-      await this.$store.dispatch(`${StoreType.TaskDefStore}/save`, newTask);
+      const createdTask = await this.$store.dispatch(`${StoreType.TaskDefStore}/save`, newTask);
+
+      // Rich todo - remove this when you auto-create step defs for aws lambda
+      // if it was a lambda, create a step right away
+      if(createdTask.target === TaskDefTarget.AWS_LAMBDA){
+        // create a step def by default
+        const newLambdaStep: StepDef = {
+          _taskDefId: createdTask.id,
+          name: 'AwsLambda', // Rich - is this right?
+          order: 1,
+          arguments: '',
+          variables: {},
+          requiredTags: {},
+          lambdaCodeSource: 'script',
+          lambdaMemorySize: 128,
+          lambdaTimeout: 3,
+          lambdaFunctionHandler: '',
+          lambdaDependencies: ''
+        };
+
+        await this.$store.dispatch(`${StoreType.StepDefStore}/save`, newLambdaStep);
+      }
     }
     catch(err){
       console.error(err);
@@ -1438,7 +1478,7 @@ export default class JobDesigner extends Vue {
     this.$modal.hide('create-stepdef-modal');
   }
 
-  private async saveNewStepDef(){
+  private async saveNewStepDef(){ 
     if( ! await (<any>this.$refs.newStepValidationObserver).validate()){
       return;
     }

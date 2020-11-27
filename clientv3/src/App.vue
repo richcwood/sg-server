@@ -15,7 +15,7 @@
     <div class="nav-bar" v-if="! isOnLandingPage()">
 
       <div class="left-nav">
-        <img src="/logo2_alpha.png" class="logo">
+        <img src="/logo2_beta.png" class="logo">
         <router-link :class="{'active-link': isLinkActive(['downloadAgent'])}" to="/downloadAgent">Download Agent</router-link> |
         <router-link :class="{'active-link': isLinkActive(['jobList', 'jobDesigner'])}" to="/jobList">Job Designer</router-link> |
         <router-link :class="{'active-link': isLinkActive(['jobMonitor', 'jobDetailsMonitor'])}" to="/">Job Monitor</router-link> |
