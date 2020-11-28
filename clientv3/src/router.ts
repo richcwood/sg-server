@@ -14,7 +14,7 @@ import InteractiveConsole from '@/views/InteractiveConsole.vue';
 import DownloadAgent from '@/views/DownloadAgent.vue';
 import TeamVars from '@/views/TeamVars.vue';
 import Artifacts from '@/views/Artifacts.vue';
-import Invoices from '@/views/Invoices.vue';
+import InvoicesStripe from '@/views/InvoicesStripe.vue';
 import TeamAlerts from '@/views/TeamAlerts.vue';
 import Scripts from '@/views/Scripts.vue';
 import Settings from '@/views/Settings.vue';
@@ -185,7 +185,7 @@ const router = new Router({
     {
       path: '/invoices',
       name: 'invoices',
-      component: Invoices
+      component: InvoicesStripe
     },
     {
       path: '/teamAlerts',
