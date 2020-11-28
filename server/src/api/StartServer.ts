@@ -53,6 +53,7 @@ import { payInvoiceManualRouter } from './routes/PayInvoiceManualRouter';
 import { createInvoiceRouter } from './routes/CreateInvoiceRouter';
 import { updateTeamStorageUsageRouter } from './routes/UpdateTeamStorageUsageRouter';
 import { userScriptShadowCopyRouter } from './routes/UserScriptShadowCopyRouter';
+import { paymentMethodRouter } from './routes/PaymentMethodRouter';
 const IPCIDR = require('ip-cidr');
 import { read } from 'fs';
 import { JobStatus } from '../shared/Enums';
@@ -205,7 +206,7 @@ class AppBuilder {
     this.app.use(`${apiURLBase}/taskdef`, taskDefRouter);
     this.app.use(`${apiURLBase}/stepdef`, stepDefRouter);
     this.app.use(`${apiURLBase}/user`, userRouter);
-    // this.app.use(`${apiURLBase}/paymentmethod`, paymentMethodRouter);
+    this.app.use(`${apiURLBase}/paymentmethod`, paymentMethodRouter);
     this.app.use(`${apiURLBase}/payinvoiceauto`, payInvoiceAutoRouter);
     this.app.use(`${apiURLBase}/payinvoicemanual`, payInvoiceManualRouter);
     this.app.use(`${apiURLBase}/paymenttoken`, stripeClientTokenRouter);
