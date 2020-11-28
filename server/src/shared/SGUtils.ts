@@ -479,8 +479,8 @@ export class SGUtils {
         invoice_raw = invoice_raw.replace(/{saasglue_favicon_png}/g, '' + config.get('SaasglueFaviconPng'));
         invoice_raw = invoice_raw.replace('{customer_info}', customer_info);
 
-        invoice_raw = invoice_raw.replace('{start_date}', moment(invoice.startDate).format('MMMM d, YYYY'));
-        invoice_raw = invoice_raw.replace('{end_date}', moment(invoice.endDate).format('MMMM d, YYYY'));
+        invoice_raw = invoice_raw.replace('{start_date}', moment(invoice.startDate).format('MMMM D, YYYY'));
+        invoice_raw = invoice_raw.replace('{end_date}', moment(invoice.endDate).format('MMMM D, YYYY'));
 
         invoice_raw = invoice_raw.replace('{payment_method}', '' + paymentTransaction.charges[0].paymentCardBrand);
         invoice_raw = invoice_raw.replace('{payment_details}', '' + paymentTransaction.charges[0].paymentInstrument);
@@ -490,7 +490,7 @@ export class SGUtils {
             scriptTotal = 0;
         let scriptRate = '0';
         if (invoice.scriptRate > 0)
-            scriptRate = invoice.scriptRate.toFixed(8);
+            scriptRate = invoice.scriptRate.toFixed(6);
         invoice_raw = invoice_raw.replace('{scripts_qty}', '' + invoice.numScripts);
         invoice_raw = invoice_raw.replace('{scripts_rate}', '' + scriptRate);
         invoice_raw = invoice_raw.replace('{scripts_total}', '' + scriptTotal.toFixed(2));
@@ -561,6 +561,8 @@ export class SGUtils {
         const invoice_text: string = await SGUtils.GenerateInvoice(team._id, invoiceModel, paymentTransaction, "text");
         await SGUtils.GenerateInvoicePDF(invoice_html, localInvoicePDFPath);
 
+        fs.writeFileSync(`./invoice_${team._id}_${invoiceDateString}.html`, invoice_html, 'utf-8');
+
         let s3Path = `${team._id}/${invoiceDateString}/${invoicePDFFileName}`;
         const environment = config.get('environment');
         if (environment != 'production')
@@ -574,7 +576,6 @@ export class SGUtils {
         const sgMail = require('@sendgrid/mail');
         sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
-        const fs = require('fs');
         await new Promise((resolve, reject) => {
             fs.readFile(localInvoicePDFPath, (err, data) => {
                 try {
