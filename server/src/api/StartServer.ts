@@ -42,7 +42,7 @@ import { signupRouter } from './routes/SignupRouter';
 import { teamInviteRouter } from './routes/TeamInviteRouter';
 import { joinTeamRouter } from './routes/JoinTeamRouter';
 import { passwordResetRouter } from './routes/PasswordResetRouter';
-import { ForgotPasswordRouter } from './routes/ForgotPasswordRouter';
+import { forgotPasswordRouter } from './routes/ForgotPasswordRouter';
 import { taskActionRouter } from './routes/TaskActionRouter';
 import { taskOutcomeActionRouter } from './routes/TaskOutcomeActionRouter';
 import { jobActionRouter } from './routes/JobActionRouter';
@@ -214,7 +214,7 @@ class AppBuilder {
     this.app.use(`${apiURLBase}/invite`, teamInviteRouter);
     this.app.use(`${apiURLBase}/join`, joinTeamRouter);
     this.app.use(`${apiURLBase}/reset`, passwordResetRouter);
-    this.app.use(`${apiURLBase}/forgot`, ForgotPasswordRouter);
+    this.app.use(`${apiURLBase}/forgot`, forgotPasswordRouter);
     this.app.use(`${apiURLBase}/taskaction`, taskActionRouter);
     this.app.use(`${apiURLBase}/taskoutcomeaction`, taskOutcomeActionRouter);
     this.app.use(`${apiURLBase}/jobaction`, jobActionRouter);
