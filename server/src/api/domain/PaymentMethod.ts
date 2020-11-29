@@ -26,6 +26,9 @@ export class PaymentMethodSchema {
   @prop({ required: true })
   stripePaymentMethodId: string;
 
+  @prop({required: false})
+  cardBrand?: string;
+
   @prop({ required: true })
   last4: string;
 

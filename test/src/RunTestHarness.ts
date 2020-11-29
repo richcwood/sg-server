@@ -1890,7 +1890,7 @@ let SendTestBrowserAlert = async() => {
 // CreateTeam("saas glue admin", "5ef125b4fb07e500150507ca");
 // DumpMongoData('./production_20200615.json');
 // LoadMongoData('./testdata_1.json');
-// DumpSettingsFromMongo();
+DumpSettingsFromMongo();
 // LoadSettingsToMongo();
 // TestForEach();
 // UpdateAgentVersion();
@@ -1916,7 +1916,7 @@ let SendTestBrowserAlert = async() => {
 // CreateInvoices();
 // SubmitInvoicesForPayment();
 // TestBraintreeWebhook();
-CreateInvoicePDF(0);
+// CreateInvoicePDF(0);
 // GenerateToken();
 // AgentRestAPICall();
 // DeleteJobs({'_jobDefId': process.argv[2]});

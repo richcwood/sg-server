@@ -54,7 +54,6 @@ export class PayInvoiceManualService {
 
         const stripe = new Stripe(privateKey, stripeApiVersion);
 
-
         if (data.amount < amount)
             amount = data.amount;
 
@@ -72,17 +71,20 @@ export class PayInvoiceManualService {
             logger.LogInfo('Payment processing succeeded', paymentIntent);
 
             if (paymentIntent.status != 'succeeded')
-                throw new Error("Payment processing failed");
+                throw new Error("Manual payment processing failed");
 
             let charges: any[] = [];
+            let amount_captured: number = 0;
             for (let i = 0; i < paymentIntent.charges.data.length; i++) {
                 let charge: any = paymentIntent.charges.data[i];
+                amount_captured += charge.amount_captured;
                 charges.push({
                     paymentInstrument: charge.payment_method_details.card.last4,
                     paymentInstrumentType: charge.payment_method_details.type,
                     paymentCardBrand: charge.payment_method_details.card.brand,
                     status: charge.status,
-                    amount: charge.amount
+                    amount: charge.amount,
+                    amount_captured: charge.amount_captured
                 });
             }
 
@@ -94,7 +96,8 @@ export class PayInvoiceManualService {
                 createdAt: paymentIntent.created * 1000,
                 charges: charges,
                 status: paymentIntent.status,
-                amount: paymentIntent.amount
+                amount: paymentIntent.amount,
+                amount_captured: amount_captured
             };
             const newPaymentTransaction: any = await paymentTransactionService.createPaymentTransaction(_teamId, paymentTransactionData, correlationId);
             await rabbitMQPublisher.publish(_teamId, "PaymentTransaction", correlationId, PayloadOperation.UPDATE, convertData(PaymentTransactionSchema, newPaymentTransaction));
