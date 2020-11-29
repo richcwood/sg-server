@@ -550,6 +550,7 @@ export default class InteractiveConsole extends Vue {
       };
 
       if(runInLambda){
+        this.runAgentTarget = TaskDefTarget.AWS_LAMBDA;
         newStep.lambdaRuntime = this.lambdaConfig.lambdaRuntime;
         newStep.lambdaRole = this.lambdaConfig.lambdaRole;
         newStep.lambdaMemorySize = this.lambdaConfig.lambdaMemorySize;

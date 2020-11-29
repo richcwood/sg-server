@@ -1437,28 +1437,6 @@ export default class JobDesigner extends Vue {
       };
 
       const createdTask = await this.$store.dispatch(`${StoreType.TaskDefStore}/save`, newTask);
-
-      // Rich todo - remove this when you auto-create step defs for aws lambda
-      // if it was a lambda, create a step right away
-      if(createdTask.target === TaskDefTarget.AWS_LAMBDA){
-        // create a step def by default
-        const newLambdaStep: StepDef = {
-          _taskDefId: createdTask.id,
-          name: 'AwsLambda', // Rich - is this right?
-          order: 1,
-          arguments: '',
-          variables: {},
-          requiredTags: {},
-          lambdaCodeSource: 'script',
-          lambdaMemorySize: 128,
-          lambdaTimeout: 3,
-          lambdaFunctionHandler: '',
-          lambdaDependencies: '',
-          lambdaRuntime: LambaRuntimes[0]
-        };
-
-        await this.$store.dispatch(`${StoreType.StepDefStore}/save`, newLambdaStep);
-      }
     }
     catch(err){
       console.error(err);
