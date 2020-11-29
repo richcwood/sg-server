@@ -93,7 +93,7 @@
               <label class="label">Lambda IAM Role</label>
             </td>
             <td class="td">
-              <validation-provider name="Lambda IAM Role" rules="required|object-name" v-slot="{ errors }">
+              <validation-provider name="Lambda IAM Role" rules="required" v-slot="{ errors }">
                 <input class="input" v-model="stepDefCopy.lambdaRole">
                 <div v-if="errors && errors.length > 0" class="message validation-error is-danger">{{ errors[0] }}</div>
               </validation-provider>
