@@ -298,6 +298,30 @@ export class JobService {
 
                 const taskModel: TaskSchema = <TaskSchema>await taskService.createTask(_teamId, task, correlationId);
 
+                // if (taskModel.target == Enums.TaskDefTarget.AWS_LAMBDA) {
+                //     const newLambdaStep: StepSchema = {
+                //       _taskId: taskModel.id,
+                //       _teamId,
+                //       _jobId: newJob._id,
+                //       name: 'AwsLambda',
+                //       script: {
+                //         "scriptType": "PYTHON",
+                //         "code": "aW1wb3J0IHRpbWUKcHJpbnQgJ3N0YXJ0Jwp0aW1lLnNsZWVwKDUpCnByaW50ICdkb25lJwpwcmludCAnQHNnb3sicm91dGUiOiAib2sifSc="
+                //     },
+                //       order: 1,
+                //       arguments: '',
+                //       variables: new Map([]),
+                //       lambdaCodeSource: 'script',
+                //       lambdaMemorySize: 128,
+                //       lambdaTimeout: 3,
+                //       lambdaFunctionHandler: '',
+                //       lambdaDependencies: '',
+                //       lambdaRuntime: '.NET Core 3.1 (C#/PowerShell)'
+                //     };
+                //   }
+              
+
+
                 for (let step of task.steps) {
                     let script: ScriptSchema;
                     if (step.script.script_id) {
