@@ -576,7 +576,7 @@
       
       <div class="nav-job-item" :class="{selected: jobDefForEdit === selectedItemForNav}" @click="selectItemForNav(jobDefForEdit)"> {{calcNavPanelJobName(jobDefForEdit)}}</div>
       <div class="nav-task" :class="{selected: taskDef === selectedItemForNav}" @click="selectItemForNav(taskDef)" v-for="taskDef in taskDefs" v-bind:key="taskDef.id">
-        <span v-if="stepDefsForTaskDef(taskDef).length > 0">
+        <span v-if="!isSGCTaskDefType(taskDef.target) && stepDefsForTaskDef(taskDef).length > 0">
           <span class="nav-expander" @click.stop="onNavTaskDefClicked(taskDef)">{{isNavTaskDefCollapsed(taskDef) ? '+' : '-'}}</span>
         </span>
         <span v-else class="nav-spacer">
@@ -1437,6 +1437,11 @@ export default class JobDesigner extends Vue {
       };
 
       const createdTask = await this.$store.dispatch(`${StoreType.TaskDefStore}/save`, newTask);
+
+      if(this.isSGCTaskDefType(this.newTaskTarget)){
+        // Load the step def immediately and wait on this - if anyone views the steps, they are supposed to be in the store right away
+        await this.$store.dispatch(`${StoreType.StepDefStore}/fetchModelsByFilter`, {filter: `_taskDefId==${createdTask.id}`});
+      }
     }
     catch(err){
       console.error(err);
