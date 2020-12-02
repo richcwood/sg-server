@@ -16,8 +16,8 @@ export class TaskService {
     //   return query;
     // }
 
-    public async findAllTasksInternal(filter?: any, responseFields?: string) {
-        return TaskModel.find(filter).select(responseFields);
+    public async findAllTasksInternal(filter?: any, responseFields?: string, limit: number = 100) {
+        return TaskModel.find(filter).select(responseFields).limit(limit);
     }
 
 

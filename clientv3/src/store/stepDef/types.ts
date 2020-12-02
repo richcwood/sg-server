@@ -1,20 +1,20 @@
 import { Model, LinkedModel } from '@/store/types'
 
 export const LambaRuntimes: string[] = [
-  '.NET Core 3.1 (C#/PowerShell)',
-  '.NET Core 2.1 (C#/PowerShell)',
-  'Go 1.x',
-  'Java 11 (Corretto)',
-  'Java 8',
-  'Java 8 (Corretto)',
-  'Node.js 12.x',
-  'Node.js 10.x',
-  'Python 3.8',
-  'Python 2.7',
-  'Python 3.6',
-  'Python 3.7',
-  'Ruby 2.7',
-  'Ruby 2.5'
+  'dotnetcore3.1',
+  'dotnetcore2.1',
+  'go1.x',
+  'java11',
+  'java8',
+  'java8.al2',
+  'nodejs12.x',
+  'nodejs10.x',
+  'python3.8',
+  'python2.7',
+  'python3.6',
+  'python3.7',
+  'ruby2.7',
+  'ruby2.5'
 ];
 
 export const LambdaMemorySizes: number[] = [];

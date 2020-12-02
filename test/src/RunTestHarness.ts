@@ -1361,7 +1361,7 @@ let GenerateToken = async () => {
 
   const body = {
     "teamIds": [
-      "5f57b2f14b5da00017df0d4f"
+      "5f6ace3c180ba50d80ee4034"
     ],
     "agentStubVersion": "v0.0.0.37"
   }
@@ -1877,7 +1877,7 @@ let SendTestBrowserAlert = async() => {
 
 // RunCheckWaitingForAgentTasks('5f57b2f14b5da00017df0d4f');
 // CreateBrainTreeCompanyForTeams();
-CreateStripeCompanyForTeams();
+// CreateStripeCompanyForTeams();
 // FixTeamDBRecords();
 // FixScriptDBRecords();
 // SendTestBrowserAlert();
@@ -1917,7 +1917,7 @@ CreateStripeCompanyForTeams();
 // SubmitInvoicesForPayment();
 // TestBraintreeWebhook();
 // CreateInvoicePDF(0);
-// GenerateToken();
+GenerateToken();
 // AgentRestAPICall();
 // DeleteJobs({'_jobDefId': process.argv[2]});
 // DeleteJobDefs({"name": /Cron.*/});

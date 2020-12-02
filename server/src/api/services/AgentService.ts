@@ -119,7 +119,7 @@ export class AgentService {
         // }
 
         const filter = { _id: id, _teamId };
-        const updatedAgent = await AgentModel.findOneAndUpdate(filter, data).select('_id offline lastHeartbeatTime targetVersion');
+        const updatedAgent = await AgentModel.findOneAndUpdate(filter, data).select('_id offline lastHeartbeatTime targetVersion tags');
 
         if (!updatedAgent)
             throw new MissingObjectError(`Agent with id '${id}" not found with filter "${JSON.stringify(filter, null, 4)}'.`)
