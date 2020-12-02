@@ -341,8 +341,10 @@ export class JobService {
                         lambdaRole: config.get('lambda-admin-iam-role')
                     });
 
-                    if (task.target == Enums.TaskDefTarget.AWS_LAMBDA)
-                        step.s3Bucket = config.get('S3_BUCKET_TEAM_ARTIFACTS');                    
+                    if (task.target == Enums.TaskDefTarget.AWS_LAMBDA) {
+                        step.s3Bucket = config.get('S3_BUCKET_TEAM_ARTIFACTS');
+                        step.lambdaAWSRegion = config.get('AWS_REGION');
+                    }
 
                     await stepService.createStep(_teamId, step, correlationId);
                 }
