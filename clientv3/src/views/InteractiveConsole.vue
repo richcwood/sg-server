@@ -132,12 +132,6 @@
                   <td class="td">
                     <label class="label">Lambda IAM Role</label>
                   </td>
-                  <td class="td">
-                    <validation-provider name="Lambda IAM Role" rules="required" v-slot="{ errors }">
-                      <input class="input" v-model="lambdaConfig.lambdaRole">
-                      <div v-if="errors && errors.length > 0" class="message validation-error is-danger">{{ errors[0] }}</div>
-                    </validation-provider>
-                  </td>
                 </tr>
                 <tr class="tr">
                   <td class="td">
@@ -552,7 +546,6 @@ export default class InteractiveConsole extends Vue {
       if(runInLambda){
         this.runAgentTarget = TaskDefTarget.AWS_LAMBDA;
         newStep.lambdaRuntime = this.lambdaConfig.lambdaRuntime;
-        newStep.lambdaRole = this.lambdaConfig.lambdaRole;
         newStep.lambdaMemorySize = this.lambdaConfig.lambdaMemorySize;
         newStep.lambdaTimeout = this.lambdaConfig.lambdaTimeout;
         newStep.lambdaDependencies = this.lambdaConfig.lambdaDependencies;

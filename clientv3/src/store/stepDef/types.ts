@@ -39,7 +39,6 @@ export interface StepDef extends Model {
   lambdaCodeSource?: string, // 'script' || 'zipFile' 
   lambdaZipfile?: string, // this is an artifact.id
   lambdaRuntime?: string, // One of LambdaRuntimes
-  lambdaRole?: string,
   lambdaMemorySize?: number, // One of LambdaMemorySizes
   lambdaTimeout?: number, // 1 seconds to 900
   lambdaFunctionHandler?: string, // entry point to lambda function

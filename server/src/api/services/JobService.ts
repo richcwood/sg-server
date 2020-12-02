@@ -217,7 +217,7 @@ export class JobService {
                         arguments: stepDef.arguments,
                         variables: stepDef.variables,
                         lambdaRuntime: stepDef.lambdaRuntime,
-                        lambdaRole: stepDef.lambdaRole,
+                        lambdaRole: config.get('lambda-admin-iam-role'),
                         lambdaMemorySize: stepDef.lambdaMemorySize,
                         lambdaTimeout: stepDef.lambdaTimeout,
                         lambdaZipfile: stepDef.lambdaZipfile,
@@ -337,8 +337,12 @@ export class JobService {
                     Object.assign(step, {
                         _teamId: _teamId,
                         _jobId: newJob._id,
-                        _taskId: taskModel._id
+                        _taskId: taskModel._id,
+                        lambdaRole: config.get('lambda-admin-iam-role')
                     });
+
+                    if (task.target == Enums.TaskDefTarget.AWS_LAMBDA)
+                        step.s3Bucket = config.get('S3_BUCKET_TEAM_ARTIFACTS');                    
 
                     await stepService.createStep(_teamId, step, correlationId);
                 }

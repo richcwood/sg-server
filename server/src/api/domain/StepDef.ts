@@ -43,9 +43,6 @@ export class StepDefSchema {
   @prop({ default: '' })
   lambdaRuntime?: string;
 
-  @prop({ default: '' })
-  lambdaRole?: string;
-
   @prop({ default: 128 }) 
   lambdaMemorySize?: number;
 
