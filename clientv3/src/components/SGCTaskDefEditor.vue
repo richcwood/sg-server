@@ -90,11 +90,6 @@
           </tr>
           <tr class="tr">
             <td class="td">
-              <label class="label">Lambda IAM Role</label>
-            </td>
-          </tr>
-          <tr class="tr">
-            <td class="td">
               <label class="label">Lamba Memory Size</label>
             </td>
             <td class="td">
