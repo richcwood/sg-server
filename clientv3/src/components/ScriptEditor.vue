@@ -450,20 +450,21 @@ export default class ScriptEditor extends Vue {
     }
   }
 
-  private async onPublishScriptClicked(){
+  private async onPublishScriptClicked(){ 
     try {
       if(this.script && this.scriptShadow){
-        this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Saving script - ${this.script.name}`, AlertPlacement.FOOTER));      
+        this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Saving script - ${this.script.name}`, AlertPlacement.FOOTER));   
+        
+        // Update the shadow copy fist, otherwise the script is selected when it's saved and it overwrites
+        // the shadow's changes
+        await this.$store.dispatch(`${StoreType.ScriptShadowStore}/save`);
+        this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Script published`, AlertPlacement.FOOTER));
         
         // Update the original script
         await this.$store.dispatch(`${StoreType.ScriptStore}/save`, {script: {
           id: this.script.id,
           code: this.scriptShadow.shadowCopyCode
         }});
-        
-        // And update the shadow copy
-        await this.$store.dispatch(`${StoreType.ScriptShadowStore}/save`);
-        this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Script published`, AlertPlacement.FOOTER));
       }
     }
     catch(err){
