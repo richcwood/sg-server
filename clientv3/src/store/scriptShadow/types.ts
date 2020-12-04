@@ -5,5 +5,5 @@ export interface ScriptShadow extends Model {
   _teamId?: string,
   _userId: string,
   _scriptId: string,
-  shadowCopyCode: string // in base64
+  shadowCopyCode: string // this will always be in base 64 encoding on the client and the API
 };

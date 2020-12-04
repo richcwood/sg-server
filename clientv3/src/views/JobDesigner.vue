@@ -1063,7 +1063,7 @@
           </tr>
           <tr class="tr">
             <td class="td" colspan="3">
-              <script-editor :script="selectedScriptCopy" :jobDef="jobDef"></script-editor>
+              <script-editor :script="selectedScript" :jobDef="jobDef"></script-editor>
             </td>
           </tr>
         </table>
@@ -1221,9 +1221,6 @@ export default class JobDesigner extends Vue {
 
   @BindSelected({storeType: StoreType.ScriptStore})
   private selectedScript!: null|Script;
-
-  @BindSelectedCopy({storeType: StoreType.ScriptStore})
-  private selectedScriptCopy!: null|Script;
 
   private mounted(){
     // Clear out any previous choices from previous designers

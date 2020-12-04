@@ -109,7 +109,7 @@
 import _ from 'lodash';
 import { Component, Prop, Vue, Watch } from 'vue-property-decorator';
 import { LinkedModel, StoreType } from '@/store/types';
-import { BindProp, BindSelected } from "@/decorator";
+import { BindProp, BindSelected, BindSelectedCopy } from "../decorator";
 import { SgAlert, AlertPlacement, AlertCategory } from '@/store/alert/types';
 import ScriptSearch from "@/components/ScriptSearch.vue";
 import { ValidationProvider, ValidationObserver } from "vee-validate";
@@ -130,7 +130,7 @@ export default class ScriptSearchWithCreate extends Vue {
   @BindSelected({ storeType: <any>StoreType.ScriptStore.toString() })
   private script!: Script | null;
 
-  @BindSelected({ storeType: <any>StoreType.ScriptShadowStore.toString() })
+  @BindSelectedCopy({ storeType: <any>StoreType.ScriptShadowStore.toString() })
   private scriptShadow!: Script | null;
 
   private newScriptName: string = '';
@@ -212,7 +212,7 @@ export default class ScriptSearchWithCreate extends Vue {
           code: this.script.code,
           lastEditedDate: (new Date()).toISOString()
         };
-        this.script = await this.$store.dispatch(`${StoreType.ScriptStore}/save`, {script: newScript, initialShadow: this.scriptShadow.shadowCopyCode});
+        await this.$store.dispatch(`${StoreType.ScriptStore}/save`, {script: newScript, initialShadow: this.scriptShadow.shadowCopyCode});
         this.onScriptPicked(this.script);
       }
       catch(err){

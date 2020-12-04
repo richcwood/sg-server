@@ -6,21 +6,10 @@ import _ from "lodash";
 
 export const actions: ActionTree<CoreState, RootState> = {  
   
-  async save({commit, state, dispatch}, {script, initialShadow}) : Promise<Model> {
-    if(!script){
-      script = state.selectedCopy;
-    }
+  async save({commit, state, dispatch}, {script, initialShadow}: {script?: Script, initialShadow?: string}) : Promise<Model> {
+    const savedScript = await coreActions.save({commit, state, dispatch}, script);
 
-    // vue uses "binary" but the API only saves code in base64
-    // Convert the code to base64 before persisting it to the api
-    const scriptCopy = _.clone(script);
-    if(script.code){
-      scriptCopy.code = btoa(script.code);
-    }
-
-    const savedScript = await coreActions.save({commit, state, dispatch}, scriptCopy);
-
-    // Create the shadow immediately from the shadow of the original script
+    // Create the shadow immediately from the shadow of the original script if initialShadow code was passed
     if(initialShadow){
       dispatch(`${StoreType.ScriptShadowStore}/getOrCreate`, {
         id: savedScript.id,
