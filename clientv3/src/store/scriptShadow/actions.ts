@@ -57,16 +57,8 @@ export const actions: ActionTree<CoreState, RootState> = {
     return state._promiseStore.get(promiseKey).promise;
   },
 
-  save({commit, state, dispatch}, model: Model|undefined = state.selectedCopy) : Promise<Model> {
-    // vue uses "binary" but the API only saves code in base64
-    // Convert the code to base64 before persisting it to the api
-    const scriptShadow = <ScriptShadow>model;
-    const scriptShadowCopy = _.clone(scriptShadow);
-    if(scriptShadow.shadowCopyCode){
-      scriptShadowCopy.shadowCopyCode = btoa(scriptShadow.shadowCopyCode); 
-    }
-
-    return coreActions.save({commit, state, dispatch}, scriptShadowCopy);
+  save({commit, state, dispatch}, model: ScriptShadow) : Promise<Model> {
+    return coreActions.save({commit, state, dispatch}, model);
   },
 
   // For Script shadows, we can ONLY ever get them via the getOrCreate method above.  Otherwise,

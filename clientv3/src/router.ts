@@ -24,23 +24,17 @@ import { SgAlert, AlertPlacement, AlertCategory } from "@/store/alert/types";
 Vue.use(Router);
 
 // helper to auto-save the selected script copy shadow code if it's changed
-const saveScriptEdits = async (next: (options?: any) => {}) => {
+const tryToSaveScriptEdits = async (next: (options?: any) => {}) => {
   try {
-      if(store.state[StoreType.ScriptStore].selectedCopy){
+    if(store.state[StoreType.ScriptShadowStore].storeUtils.hasSelectedCopyChanged()){
       // try to save the script's shadow copy
-      const scriptCopy = store.state[StoreType.ScriptStore].selectedCopy;
-      const scriptForSave = {
-        id: scriptCopy.id,
-        shadowCopyCode: scriptCopy.shadowCopyCode
-      };
-      await store.dispatch(`${StoreType.ScriptStore}/save`, {script: scriptForSave});
-      scriptCopy.code = scriptCopy.shadowCopyCode;
-      store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Saved a backup of script - ${scriptCopy.name}`, AlertPlacement.FOOTER));
+      await store.dispatch(`${StoreType.ScriptShadowStore}/save`);
+      store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Saved a backup of script`, AlertPlacement.FOOTER));
     }
   }
   catch(err){
     console.error(err);
-    store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Failed to save a backup of your script`, AlertPlacement.FOOTER, AlertCategory.ERROR));
+    store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Failed to save a backup of script`, AlertPlacement.FOOTER, AlertCategory.ERROR));
   }
   finally {
     return next(true);
@@ -129,9 +123,7 @@ const router = new Router({
           }
         },
         async beforeLeave(to: Route, from: Route, next: (options?: any) => {}){
-          if(store.state[StoreType.ScriptStore].storeUtils.hasSelectedCopyChanged()){
-            await saveScriptEdits(next);
-          }
+          tryToSaveScriptEdits(next);
         }
       }
     },
@@ -166,9 +158,7 @@ const router = new Router({
           }
         },
         async beforeLeave(to: Route, from: Route, next: (options?: any) => {}){
-          if(store.state[StoreType.ScriptStore].storeUtils.hasSelectedCopyChanged()){
-            await saveScriptEdits(next);
-          }
+          tryToSaveScriptEdits(next);
         }
       } 
     },

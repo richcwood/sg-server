@@ -15,13 +15,12 @@
       </section>
 
       <div class="centered-flex">
-        <div class="box" style="min-width: 400px; cursor: pointer;" @click="onGetStartedLoginClicked">
-          Existing customers -><br>
-          Login
+        <div style="font-weight: 700; font-size: 32px;">
+          <a @click="onGetStartedLoginClicked">Existing Users Login Here</a>
         </div>
-        <div class="box" style="min-width: 400px; cursor: pointer;" @click="onGetStartedEnterEmailClicked">
-          I'm new to Saas Glue -><br>
-          Create an account or join a team
+        <br>
+        <div style="font-weight: 700; font-size: 32px;">
+          <a @click="onGetStartedEnterEmailClicked">New Users Start Here</a>
         </div>
       </div>
     </div>
@@ -109,6 +108,8 @@
         <div style="max-width: 400px; margin-bottom: 25px; font-weight: 700;">
           We've sent a 6-digit confirmation code to {{emailAddress}}. 
           <br><br>It will expire shortly, so enter it soon.
+          <br><br>
+          Don't forget to check your <span style="font-size: 24px;">spam</span> for the email.
         </div>
         <div class="field">
           <input class="input confirm-letter" ref="confirmLetter1" type="text" v-model="confirmLetter1" @keyup="onConfirmLetterKeyUp(1)">
@@ -134,7 +135,7 @@
         </div>
       </section>
       <div>
-        <a @click.prevent="onBackToEmailConfirmPageClicked">Back to email confirmation page</a>
+        <a @click.prevent="onBackToEmailConfirmPageClicked">Back to the email confirmation page</a>
       </div>
     </div>
 
@@ -445,7 +446,10 @@
           <div class="field-body">
             <div class="field">
               <p class="control">
-              <a style="margin-left: -125px;" @click.prevent="onForgotPasswordClicked">Forgot password?</a>     
+                <a style="margin-left: -125px;" @click.prevent="onForgotPasswordClicked">Forgot password?</a>     
+              </p>
+              <p class="control" style="margin-top: 12px;">
+                <a style="margin-left: -185px;" @click="page = 'getStarted'">Start over</a>
               </p>
             </div>
           </div>
@@ -501,8 +505,11 @@
         <div class="hero-body">
           <div class="container">
             <h1 class="title">
-              Email sent. <br>  Please check your email and follow the instructions.
+              Email sent to reset your password. 
+              <br><br>  Please check your email and follow the instructions.
+              <br><br> Don't forget to check your spam folders for the email.
             </h1>
+            
           </div>
         </div>
       </section>
@@ -641,6 +648,10 @@
         else {
           this.page = 'getStarted';
         }
+      }
+
+      if(localStorage.getItem('testPage')){
+        this.page = localStorage.getItem('testPage');
       }
     }
 
