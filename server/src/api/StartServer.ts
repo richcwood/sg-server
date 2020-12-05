@@ -31,7 +31,7 @@ import { taskOutcomeRouter } from './routes/TaskOutcomeRouter';
 import { stepOutcomeRouter } from './routes/StepOutcomeRouter';
 import { userRouter } from './routes/UserRouter';
 import GitHookRouter from './routes/GitHookRouter';
-import BraintreeHookRouter from './routes/BraintreeHookRouter';
+import StripeWebhookRouter from './routes/StripeWebhookRouter';
 import { handleErrors } from './utils/ErrorMiddleware';
 import { handleBuildResponseWrapper, handleResponse, handleStartTimer } from './utils/ResponseMiddleware';
 import { stepRouter } from './routes/StepRouter';
@@ -53,6 +53,7 @@ import { payInvoiceManualRouter } from './routes/PayInvoiceManualRouter';
 import { createInvoiceRouter } from './routes/CreateInvoiceRouter';
 import { updateTeamStorageUsageRouter } from './routes/UpdateTeamStorageUsageRouter';
 import { userScriptShadowCopyRouter } from './routes/UserScriptShadowCopyRouter';
+import { paymentMethodRouter } from './routes/PaymentMethodRouter';
 const IPCIDR = require('ip-cidr');
 import { read } from 'fs';
 import { JobStatus } from '../shared/Enums';
@@ -78,6 +79,8 @@ var options = {
   useNewUrlParser: true
 };
 mongoose.connect(config.get('mongoUrl'), options);
+
+app.use(`/api/v0/stripewebhook`, bodyParser.raw({type: "*/*"}), new StripeWebhookRouter().router);
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -161,7 +164,6 @@ class AppBuilder {
     this.app.use(`/login`, new LoginRouter().router);
 
     this.app.use(`${apiURLBase}/githook`, new GitHookRouter().router);
-    this.app.use(`${apiURLBase}/braintreehook`, new BraintreeHookRouter().router);
     this.app.use(`${apiURLBase}/signup`, signupRouter);
 
     this.setUpJwtSecurity();
@@ -205,7 +207,7 @@ class AppBuilder {
     this.app.use(`${apiURLBase}/taskdef`, taskDefRouter);
     this.app.use(`${apiURLBase}/stepdef`, stepDefRouter);
     this.app.use(`${apiURLBase}/user`, userRouter);
-    // this.app.use(`${apiURLBase}/paymentmethod`, paymentMethodRouter);
+    this.app.use(`${apiURLBase}/paymentmethod`, paymentMethodRouter);
     this.app.use(`${apiURLBase}/payinvoiceauto`, payInvoiceAutoRouter);
     this.app.use(`${apiURLBase}/payinvoicemanual`, payInvoiceManualRouter);
     this.app.use(`${apiURLBase}/paymenttoken`, stripeClientTokenRouter);
@@ -244,6 +246,10 @@ class AppBuilder {
       // }
 
       if (req.method === 'POST' && req.path.match('/api/v[0-9]+/signup')) {
+        next();
+        return;
+      }
+      else if (req.method === 'POST' && req.path.match('/api/v[0-9]+/stripewebhook')) {
         next();
         return;
       }

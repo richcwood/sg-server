@@ -43,7 +43,7 @@ export class CreateInvoiceService {
 
         const freeTierSettings = await settingsService.findSettings('FreeTierLimits');
 
-        /// Get the number of new agents since the start of the billing cycle minus the first ten free agents
+        /// Get the number of new agents since the start of the billing cycle minus the free tier free agents
         data.numNewAgents = 0;
         let newAgentsFilter: any = {};
         newAgentsFilter['_teamId'] = data._teamId;
@@ -57,21 +57,21 @@ export class CreateInvoiceService {
         if (_.isArray(numNewAgentsQuery) && (numNewAgentsQuery.length > 0))
             numNewAgents = numNewAgentsQuery[0].num_new_agents;
 
-        let numOldAgents = 0;
-        let oldAgentsFilter: any = {};
-        oldAgentsFilter['_teamId'] = data._teamId;
-        oldAgentsFilter['createDate'] = { $lt: startDate.toDate() };
+        // let numOldAgents = 0;
+        // let oldAgentsFilter: any = {};
+        // oldAgentsFilter['_teamId'] = data._teamId;
+        // oldAgentsFilter['createDate'] = { $lt: startDate.toDate() };
 
-        let numOldAgentsQuery = await AgentModel.aggregate([
-            { $match: oldAgentsFilter },
-            { $count: "num_old_agents" }
-        ]);
-        if (_.isArray(numOldAgentsQuery) && numOldAgentsQuery.length > 0)
-            numOldAgents = numOldAgentsQuery[0].num_old_agents;
-        let freeAgents = freeTierSettings.maxAgents - numOldAgents;
-        freeAgents = Math.max(freeAgents, 0);
+        // let numOldAgentsQuery = await AgentModel.aggregate([
+        //     { $match: oldAgentsFilter },
+        //     { $count: "num_old_agents" }
+        // ]);
+        // if (_.isArray(numOldAgentsQuery) && numOldAgentsQuery.length > 0)
+        //     numOldAgents = numOldAgentsQuery[0].num_old_agents;
+        // let freeAgents = freeTierSettings.maxAgents - numOldAgents;
+        // freeAgents = Math.max(freeAgents, 0);
 
-        data.numNewAgents = numNewAgents - freeAgents;
+        data.numNewAgents = numNewAgents - freeTierSettings.maxAgents;
         data.numNewAgents = Math.max(data.numNewAgents, 0);
 
         /// Get current job history storage amount

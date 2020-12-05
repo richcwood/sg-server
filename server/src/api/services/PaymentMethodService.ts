@@ -29,7 +29,7 @@ export class PaymentMethodService {
     }
 
 
-    public async createPaymentMethod(_teamId: mongodb.ObjectId, data: any, correlationId: string, responseFields?: string): Promise<object> {
+    public async createPaymentMethod(_teamId: mongodb.ObjectId, data: any, correlationId?: string, responseFields?: string): Promise<object> {
         data._teamId = _teamId;
         const paymentMethodModel = new PaymentMethodModel(data);
         const newPaymentMethod = await paymentMethodModel.save();
@@ -46,7 +46,7 @@ export class PaymentMethodService {
     }
 
 
-    public async updatePaymentMethod(_teamId: mongodb.ObjectId, id: mongodb.ObjectId, data: any, correlationId: string, responseFields?: string): Promise<object> {
+    public async updatePaymentMethod(_teamId: mongodb.ObjectId, id: mongodb.ObjectId, data: any, correlationId?: string, responseFields?: string): Promise<object> {
         const filter = { _id: id, _teamId };
         const updatedPaymentMethod = await PaymentMethodModel.findOneAndUpdate(filter, data, { new: true }).select(responseFields);
 
@@ -60,7 +60,7 @@ export class PaymentMethodService {
     }
 
 
-    public async deletePaymentMethod(_teamId: mongodb.ObjectId, id: mongodb.ObjectId, correlationId: string): Promise<object> {
+    public async deletePaymentMethod(_teamId: mongodb.ObjectId, id: mongodb.ObjectId, correlationId?: string): Promise<object> {
         const deleted = await PaymentMethodModel.deleteOne({ _id: id, _teamId });
 
         await rabbitMQPublisher.publish(_teamId, "PaymentMethod", correlationId, PayloadOperation.DELETE, { _id: id });

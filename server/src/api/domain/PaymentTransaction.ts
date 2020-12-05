@@ -42,6 +42,12 @@ export class PaymentTransactionSchema {
   @prop({ required: true })
   amount: number;
 
+  @prop({ default: 0 })
+  amount_captured: number;
+
+  @prop({ default: 0 })
+  amount_refunded: number;
+
   @prop()
   refunded?: boolean;
 

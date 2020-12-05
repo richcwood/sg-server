@@ -73,17 +73,21 @@ export class PayInvoiceAutoService {
                 logger.LogInfo('Payment processing succeeded', paymentIntent);
 
                 if (paymentIntent.status != 'succeeded')
-                    throw new Error("Payment processing failed");
+                    throw new Error("Auto payment processing failed");
 
                 let charges: any[] = [];
+                let amount_captured: number = 0;
                 for (let i = 0; i < paymentIntent.charges.data.length; i++) {
                     let charge: any = paymentIntent.charges.data[i];
+                    amount_captured += charge.amount_captured;
                     charges.push({ 
+                        id: charge.id,
                         paymentInstrument: charge.payment_method_details.card.last4,
                         paymentInstrumentType: charge.payment_method_details.type,
                         paymentCardBrand: charge.payment_method_details.card.brand,
                         status: charge.status,
-                        amount: charge.amount
+                        amount: charge.amount,
+                        amount_captured: charge.amount_captured
                     });
                 }
         
@@ -95,7 +99,8 @@ export class PayInvoiceAutoService {
                     createdAt: paymentIntent.created * 1000,
                     charges: charges,
                     status: paymentIntent.status,
-                    amount: paymentIntent.amount
+                    amount: paymentIntent.amount,
+                    amount_captured: amount_captured
                 };
                 const newPaymentTransaction: any = await paymentTransactionService.createPaymentTransaction(_teamId, paymentTransactionData, correlationId);
                 await rabbitMQPublisher.publish(_teamId, "PaymentTransaction", correlationId, PayloadOperation.UPDATE, convertData(PaymentTransactionSchema, newPaymentTransaction));
@@ -113,6 +118,32 @@ export class PayInvoiceAutoService {
                 return { success: true, paymentTransactionData };
             } catch (err) {
                 logger.LogError('Payment processing failed', { team, data, paymentIntent, error: err });
+
+                let charges: any[] = [];
+                for (let i = 0; i < err.payment_intent.charges.data.length; i++) {
+                    let charge: any = err.payment_intent.charges.data[i];
+                    charges.push({
+                        paymentInstrument: charge.payment_method_details.card.last4,
+                        paymentInstrumentType: charge.payment_method_details.type,
+                        paymentCardBrand: charge.payment_method_details.card.brand,
+                        status: charge.status,
+                        amount: charge.amount
+                    });
+                }
+    
+                const paymentTransactionData = {
+                    _teamId: _teamId,
+                    _invoiceId: new mongodb.ObjectId(invoice._id),
+                    source: PaymentTransactionSource.STRIPE,
+                    processorTransactionId: err.payment_intent.id,
+                    createdAt: err.payment_intent.created * 1000,
+                    charges: charges,
+                    status: err.message,
+                    amount: err.payment_intent.amount
+                };
+                const newPaymentTransaction: any = await paymentTransactionService.createPaymentTransaction(_teamId, paymentTransactionData, correlationId);
+                await rabbitMQPublisher.publish(_teamId, "PaymentTransaction", correlationId, PayloadOperation.UPDATE, convertData(PaymentTransactionSchema, newPaymentTransaction));
+    
                 const updatedInvoice: any = await invoiceService.updateInvoice(_teamId, invoice._id, { status: InvoiceStatus.REJECTED }, correlationId);
                 await rabbitMQPublisher.publish(_teamId, "Invoice", correlationId, PayloadOperation.UPDATE, convertData(InvoiceSchema, updatedInvoice));
     
@@ -130,57 +161,6 @@ export class PayInvoiceAutoService {
                 // console.log('PI retrieved: ', paymentIntentRetrieved.id);
             }
         }
-
-        // let charges: any[] = [];
-        // for (let i = 0; i < paymentIntent.charges.data.length; i++) {
-        //     let charge: any = paymentIntent.charges.data[i];
-        //     charges.push({ 
-        //         paymentInstrument: charge.payment_method_details.card.last4,
-        //         paymentInstrumentType: charge.payment_method_details.type,
-        //         paymentCardBrand: charge.payment_method_details.card.brand,
-        //         status: charge.status,
-        //         amount: charge.amount
-        //     });
-        // }
-
-        // const paymentTransactionData = {
-        //     _teamId: _teamId,
-        //     _invoiceId: new mongodb.ObjectId(invoice._id),
-        //     source: PaymentTransactionSource.STRIPE,
-        //     processorTransactionId: paymentIntent.id,
-        //     createdAt: paymentIntent.created * 1000,
-        //     charges: charges,
-        //     status: paymentIntent.status,
-        //     amount: paymentIntent.amount
-        // };
-        // const newPaymentTransaction: any = await paymentTransactionService.createPaymentTransaction(_teamId, paymentTransactionData, correlationId);
-        // await rabbitMQPublisher.publish(_teamId, "PaymentTransaction", correlationId, PayloadOperation.UPDATE, convertData(PaymentTransactionSchema, newPaymentTransaction));
-
-        // if (paymentIntent.status == 'succeeded') {
-        //     logger.LogInfo('Payment processing succeeded', paymentIntent);
-
-        //     let updatedInvoice: any = await invoiceService.updateInvoice(_teamId, invoice._id, { paidAmount: invoice.paidAmount + amount, status: InvoiceStatus.PAID }, correlationId);
-        //     await SGUtils.CreateAndSendInvoice(team, updatedInvoice, paymentTransactionData, logger);
-
-        //     if (team.paymentStatus == TeamPaymentStatus.DELINQUENT) {
-        //         const getDelinquentInvoices: InvoiceSchema[] = await invoiceService.findAllInvoicesInternal({ _teamId, status: InvoiceStatus.REJECTED }, '_id');
-        //         if (_.isArray(getDelinquentInvoices) && getDelinquentInvoices.length === 0)
-        //             await teamService.updateTeam(_teamId, { paymentStatus: TeamPaymentStatus.HEALTHY, paymentStatusDate: new Date() }, correlationId);
-        //     }
-
-        //     await rabbitMQPublisher.publish(_teamId, "Invoice", correlationId, PayloadOperation.UPDATE, convertData(InvoiceSchema, updatedInvoice));
-        // } else {
-        //     logger.LogInfo('Payment processing failed', paymentIntent);
-        //     const updatedInvoice: any = await invoiceService.updateInvoice(_teamId, invoice._id, { status: InvoiceStatus.REJECTED }, correlationId);
-        //     await rabbitMQPublisher.publish(_teamId, "Invoice", correlationId, PayloadOperation.UPDATE, convertData(InvoiceSchema, updatedInvoice));
-
-        //     if (team.paymentStatus == TeamPaymentStatus.HEALTHY) {
-        //         const updatedTeam: any = await teamService.updateTeam(_teamId, { paymentStatus: TeamPaymentStatus.DELINQUENT, paymentStatusDate: new Date() }, correlationId);
-        //         await rabbitMQPublisher.publish(_teamId, "Team", correlationId, PayloadOperation.UPDATE, convertData(TeamSchema, updatedTeam));
-        //     }
-        // }
-
-        // return paymentTransactionData;
     }
 }
 

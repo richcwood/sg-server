@@ -47,7 +47,7 @@ export class PaymentTransactionService {
     }
 
 
-    public async updatePaymentTransaction(_teamId: mongodb.ObjectId, id: mongodb.ObjectId, data: any, correlationId: string, responseFields?: string): Promise<object> {
+    public async updatePaymentTransaction(_teamId: mongodb.ObjectId, id: mongodb.ObjectId, data: any, correlationId?: string, responseFields?: string): Promise<object> {
         if ('_invoiceId' in data)
             throw new ValidationError('Unable to update _invoiceId field');
         if ('source' in data)
