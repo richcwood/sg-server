@@ -21,31 +21,17 @@
           </form>
         </div>
       </validation-observer>
-    </modal>
+    </modal> 
 
-    <modal name="confirm-payment-modal" :classes="'round-popup'" :width="400" :height="200">
-      <table class="table" width="100%" height="100%">
-        <tbody class="tbody">
-          <tr class="tr">
-            <td class="td"></td>
-            <td class="td">Send payment?</td>
-          </tr>
-          <tr class="tr">
-            <td class="td">Amount</td>
-            <td class="td">{{paymentAmount}}</td>
-          </tr>
-          <tr class="tr" v-if="isPaying">
-            <td class="td" colspan="2">Submitting payment. Please wait...</td>
-          </tr>
-          <tr class="tr">
-            <td class="td"></td>
-            <td class="td">
-              <button class="button is-primary" @click="submitPayment" :disabled="isPaying">Send Payment</button> 
-              <button class="button button-spaced" @click="cancelPayment" :disabled="isPaying">Cancel</button>
-            </td>
-          </tr>
-        </tbody> 
-      </table>
+    <modal name="delete-payment-modal" :classes="'round-popup'" :width="600" :height="200">
+      <div style="background-color: white; width: 100%; height: 100%; padding: 20px;">
+        <div v-if="paymentMethodToDelete">
+          Are you sure you want to delete the payment method <b>{{paymentMethodToDelete.name}}</b>?
+          <br><br>
+          <button class="button" @click="onCancelDeletePaymentMethodClicked">Cancel</button>
+          <button class="button is-danger button-spaced" @click="deletePaymentMethod">Delete Payment Method</button>
+        </div>
+      </div>
     </modal>
 
 
@@ -60,7 +46,7 @@
         <tr class="tr">
           <td class="td">
             <span style="font-size: 24px;">Payment Methods</span>
-            <div v-if="unPaidInvoices.length === 0">
+            <div v-if="paymentMethods.length === 0">
               No payment methods added yet
             </div>
             <table v-else class="table">
@@ -86,11 +72,11 @@
                   {{paymentMethod.cardBrand}}
                 </td>
                 <td class="td">
-                  <span v-if="paymentMethod.default"> Team Default Payment Method</span>
-                  <button class="button vertical-aligned-center">Make Default</button>
+                  <span v-if="isDefaultPaymentMethod(paymentMethod)" style="color: green;">Default</span>
+                  <button v-else class="button vertical-aligned-center" @click="makeDefaultPaymentMethod(paymentMethod)">Make Default</button>
                 </td>
                 <td class="td">
-                  <button class="button vertical-aligned-center" >Delete Method</button>
+                  <button class="button vertical-aligned-center" @click="onDeletePaymentMethodClicked(paymentMethod)">Delete Method</button>
                 </td>
               </tr>
             </table>
@@ -141,18 +127,7 @@
                   {{invoice.paidAmount.toFixed(2)}}
                 </td>
                 <td class="td">
-                  <input class="input vertical-aligned-center" 
-                         type="text" 
-                         style="width: 75px;" 
-                         v-model="paymentAmounts[invoice.id]">
-                  <select class="input select button-spaced vertical-aligned-center" style="width: 150px;">
-                    <option v-for="paymentMethod in paymentMethods" :key="`${invoice.id}-${paymentMethod.id}`" :value="paymentMethod.id">
-                      {{paymentMethod.name}}
-                    </option>
-                  </select> 
-                  <button class="button is-primary button-spaced vertical-aligned-center"  
-                          @click="onSubmitPaymentClicked(invoice)" 
-                          :disabled="shouldDisablePaymentSubmit(invoice)">Submit Payment</button>
+                  <invoice-payment :invoice="invoice"></invoice-payment>
                 </td>
               </tr>
             </table>
@@ -235,14 +210,15 @@ import { Invoice, InvoiceStatus } from '@/store/invoice/types';
 import { PaymentTransaction, PaymentTransactionType, PaymentTransactionStatus } from '@/store/paymentTransaction/types';
 import { momentToStringV3 } from '../utils/DateTime';
 import { enumKeyToPretty, enumKeys, TeamPricingTier } from '../utils/Enums';
-import { Team } from '@/store/team/types';
-import { showErrors } from '@/utils/ErrorHandler';
+import { Team } from '../store/team/types';
+import { showErrors } from '../utils/ErrorHandler';
 import axios from 'axios';
 import { loadStripe } from '@stripe/stripe-js';
 import { PaymentMethod } from '../store/paymentMethod/types';
+import InvoicePayment from '../components/InvoicePayment.vue';
 
 @Component({
-  components: { ValidationProvider, ValidationObserver },
+  components: { ValidationProvider, ValidationObserver, InvoicePayment  },
   props: { },
 })
 export default class InvoicesStripe extends Vue { 
@@ -359,8 +335,7 @@ export default class InvoicesStripe extends Vue {
         }
       );
 
-      console.log('add card results', addCardResults);
-      this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Added credit card to your account`, AlertPlacement.WINDOW));
+      this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Added credit card to your account.<br><br>  It might take up to a minute to show in your payment methods.`, AlertPlacement.WINDOW));
     }
     catch(err){
       this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Error adding card:<br><br> ${err} <br><br>`, AlertPlacement.WINDOW));
@@ -381,72 +356,60 @@ export default class InvoicesStripe extends Vue {
     return this.$store.getters[`${StoreType.InvoiceStore}/getPaidInvoices`];
   }
 
-  private get unPaidInvoices(){
+  private get unPaidInvoices() : Invoice[] {
     return this.$store.getters[`${StoreType.InvoiceStore}/getUnPaidInvoices`];
   }
+  
+  @BindSelected({storeType: StoreType.TeamStore})
+  private selectedTeam!: Team;
 
-  private paymentAmounts = {};
-
-  private invoiceToPay = null;
-  private paymentAmount = 0;
-  private isPaying = false;
-
-  private shouldDisablePaymentSubmit(invoice: Invoice) {
-    //if(this.canSubmitPayment){
-      return !this.paymentAmounts[invoice.id];
-    //}
-    //else {
-    //  return true;
-    //}
+  private isDefaultPaymentMethod(paymentMethod){
+    return this.selectedTeam.defaultPaymentMethodId === paymentMethod.id;
   }
 
-  private async onSubmitPaymentClicked(invoice: Invoice){
+  private async makeDefaultPaymentMethod(paymentMethod: PaymentMethod){
     try {
-      this.invoiceToPay = invoice;
-      this.paymentAmount = this.paymentAmounts[this.invoiceToPay.id];
-      if(!this.paymentAmount){
-        this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Please specify a payment for the invoice`, AlertPlacement.WINDOW));
-        return;
-      }
+       await this.$store.dispatch(`${StoreType.TeamStore}/save`, {
+         id: this.selectedTeam.id,
+         defaultPaymentMethodId: paymentMethod.id
+       });
 
-      this.$modal.show('confirm-payment-modal');
+       this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Updated the default payment method`, AlertPlacement.FOOTER));
     }
     catch(err){
-      console.error('Unable to submit payment', err);
-      this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Error processing card.`, AlertPlacement.WINDOW));
+      console.error(err);
+      showErrors('Error updating the default payment method', err);
     }
   }
 
-  private async submitPayment(){
-    // try {
-    //   this.isPaying = true;
-    //   const {nonce} = await this.paymentDropin.requestPaymentMethod();
+  private paymentMethodToDelete: null | PaymentMethod = null;
 
-    //   const res = await axios.post('api/v0/payinvoicemanual', {
-    //     nonce,
-    //     _invoiceId: this.invoiceToPay.id,
-    //     amount: this.paymentAmount
-    //   });
-
-    //   this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Payment processed`, AlertPlacement.FOOTER));
-    //   this.onUnPaidInvoicesChanged();
-    // }
-    // catch(err){
-    //   console.error('Unable to submit payment', err);
-    //   this.showAddCardError(err);
-    // }
-    // finally {
-    //   this.isPaying = false;
-    //   this.invoiceToPay = null;
-    //   this.paymentAmount = 0;
-    //   this.$modal.hide('confirm-payment-modal');
-    // }
+  private onDeletePaymentMethodClicked(paymentMethod: PaymentMethod){
+    this.paymentMethodToDelete = paymentMethod;
+    this.$modal.show('delete-payment-modal');
   }
 
-  private cancelPayment(){
-    this.invoiceToPay = null;
-    this.paymentAmount = 0;
-    this.$modal.hide('confirm-payment-modal');
+  private onCancelDeletePaymentMethodClicked(){
+    this.paymentMethodToDelete = null;
+    this.$modal.hide('delete-payment-modal');
+  }
+
+  private async deletePaymentMethod(){
+    if(!this.paymentMethodToDelete){
+      return;
+    }
+
+    try {
+      await this.$store.dispatch(`${StoreType.PaymentMethodStore}/delete`, this.paymentMethodToDelete);
+      this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Deleted the payment method`, AlertPlacement.WINDOW));
+    }
+    catch(err){
+      console.error(err);
+      showErrors(`Unable to delete the payment method.`, err);
+    }
+    finally {
+      this.$modal.hide('delete-payment-modal');
+    }
   }
 }
 </script>

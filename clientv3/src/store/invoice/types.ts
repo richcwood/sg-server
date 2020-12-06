@@ -3,6 +3,7 @@ import { Model } from '@/store/types'
 export enum InvoiceStatus { CREATED = 0, SUBMITTED = 1, PAID = 2, REJECTED = 3 };
 
 export interface Invoice extends Model {
+  id?: string;
   _teamId: string;
   
   startDate: Date;
