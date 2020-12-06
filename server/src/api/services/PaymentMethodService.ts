@@ -1,8 +1,11 @@
+
 import { convertData } from '../utils/ResponseConverters';
 import { PaymentMethodSchema, PaymentMethodModel } from '../domain/PaymentMethod';
 import { rabbitMQPublisher, PayloadOperation } from '../utils/RabbitMQPublisher';
 import { MissingObjectError, ValidationError } from '../utils/Errors';
+import { teamService } from '../services/TeamService';
 import * as mongodb from 'mongodb';
+import * as _ from 'lodash';
 
 
 export class PaymentMethodService {
@@ -62,6 +65,22 @@ export class PaymentMethodService {
 
     public async deletePaymentMethod(_teamId: mongodb.ObjectId, id: mongodb.ObjectId, correlationId?: string): Promise<object> {
         const deleted = await PaymentMethodModel.deleteOne({ _id: id, _teamId });
+
+        const teamModel: any = await teamService.findTeam(new mongodb.ObjectId(_teamId), '_id defaultPaymentMethodId');
+        if (!teamModel)
+            throw new MissingObjectError(`No team found with id "${_teamId.toHexString()}"`);
+
+        if (teamModel._id.toHexString() == id.toHexString()) {
+            const paymentMethods = await this.findAllPaymentMethodsInternal({_teamId}, '_id');
+            if (_.isArray(paymentMethods) && paymentMethods.length > 0) {
+                teamModel.defaultPaymentMethodId = paymentMethods[0]._id;
+                await teamModel.save();
+            } else {
+                teamModel.defaultPaymentMethodId = null;
+                await teamModel.save();
+            }
+            await rabbitMQPublisher.publish(_teamId, "Team", correlationId, PayloadOperation.UPDATE, { _id: id, defaultPaymentMethodId: teamModel.defaultPaymentMethodId });
+        }
 
         await rabbitMQPublisher.publish(_teamId, "PaymentMethod", correlationId, PayloadOperation.DELETE, { _id: id });
 
