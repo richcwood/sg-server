@@ -59,8 +59,8 @@ export class TeamSchema {
   @prop()
   defaultTimeZone?: string;
 
-  // @prop({ required: false })
-  // defaultPaymentMethodId?: mongodb.ObjectId;
+  @prop({ required: false })
+  defaultPaymentMethodId?: mongodb.ObjectId;
 
   @prop({ default: TeamPaymentStatus.HEALTHY })
   paymentStatus?: TeamPaymentStatus;

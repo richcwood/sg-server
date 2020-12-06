@@ -32,9 +32,6 @@ export class PaymentMethodSchema {
   @prop({ required: true })
   last4: string;
 
-  @prop({ default: false})
-  default: boolean;
-
 
   // Define which filters are legal for which props (including nested props (not sure about nested arrays))
   public static readonly validFilters = {
