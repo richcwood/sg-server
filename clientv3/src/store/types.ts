@@ -63,7 +63,8 @@ export enum StoreType {
   ArtifactStore = 'artifactStore',
   InvoiceStore = 'invoiceStore',
   PaymentTransactionStore = 'paymentTransactionStore',
-  UserStore = 'userStore'
+  UserStore = 'userStore',
+  PaymentMethodStore = 'paymentMethodStore'
 }
 
 export enum ModelBaseUrlType {
@@ -84,5 +85,6 @@ export enum ModelBaseUrlType {
   artifact = 'artifact',
   invoice = 'invoice',
   paymentTransaction = 'paymenttransaction',
-  user = 'user'
+  user = 'user',
+  paymentMethod = 'paymentMethod'
 }

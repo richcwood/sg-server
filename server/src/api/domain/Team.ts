@@ -47,6 +47,9 @@ export class TeamSchema {
   @prop({ default: '' })
   billing_phone?: string;
 
+  @prop({ default: 'usd' })
+  billing_currency?: string;
+
   @prop({ default: true })
   isActive?: boolean;
 
@@ -56,8 +59,8 @@ export class TeamSchema {
   @prop()
   defaultTimeZone?: string;
 
-  // @prop({ required: false })
-  // defaultPaymentMethodId?: mongodb.ObjectId;
+  @prop({ required: false })
+  defaultPaymentMethodId?: mongodb.ObjectId;
 
   @prop({ default: TeamPaymentStatus.HEALTHY })
   paymentStatus?: TeamPaymentStatus;

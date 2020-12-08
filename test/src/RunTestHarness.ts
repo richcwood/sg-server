@@ -913,15 +913,15 @@ let CreateInvoices = async () => {
 
 
 let CreateInvoicePDF = async (_invoiceId) => {
-  let invoice_html = fs.readFileSync('server/resources/invoice_template.html', 'utf8');
+  let invoice_html = fs.readFileSync('./invoice_5f57b2f14b5da00017df0d4f_November_2020.html', 'utf8');
 
-  let customer_info = `
-  AlertSense<br>
-  Lynn Watson<br>
-  lynn@alertsense.com
-  `
-  invoice_html = invoice_html.replace('{customer_info}', customer_info);
-  console.log(invoice_html);
+  // let customer_info = `
+  // AlertSense<br>
+  // Lynn Watson<br>
+  // lynn@alertsense.com
+  // `
+  // invoice_html = invoice_html.replace('{customer_info}', customer_info);
+  // console.log(invoice_html);
 
   var options = { format: 'Letter' };
 

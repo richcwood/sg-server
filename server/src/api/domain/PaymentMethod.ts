@@ -24,10 +24,13 @@ export class PaymentMethodSchema {
   type: PaymentMethodType;
 
   @prop({ required: true })
-  token: string;
+  stripePaymentMethodId: string;
 
-  @prop({ default: false})
-  default: boolean;
+  @prop({required: false})
+  cardBrand?: string;
+
+  @prop({ required: true })
+  last4: string;
 
 
   // Define which filters are legal for which props (including nested props (not sure about nested arrays))

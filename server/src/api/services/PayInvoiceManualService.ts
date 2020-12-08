@@ -9,13 +9,12 @@ import { InvoiceSchema } from '../domain/Invoice';
 import { invoiceService } from './InvoiceService';
 import { InvoiceStatus, TeamPaymentStatus } from '../../shared/Enums';
 import { TeamSchema } from '../domain/Team';
-import { PaymentTransactionStatus } from '../../shared/Enums';
 import { SGUtils } from '../../shared/SGUtils';
 import * as _ from 'lodash';
 import * as config from 'config';
 import { teamService } from './TeamService';
 import * as mongodb from 'mongodb';
-import * as braintree from 'braintree';
+import { Stripe } from 'stripe';
 
 
 export class PayInvoiceManualService {
@@ -28,8 +27,8 @@ export class PayInvoiceManualService {
         if (!data.amount)
             throw new ValidationError(`Request body missing "amount" parameter`);
 
-        if (!data.nonce)
-            throw new ValidationError(`Request body missing "nonce" parameter`);
+        if (!data.paymentMethodId)
+            throw new ValidationError(`Request body missing "paymentMethodId" parameter`);
 
         const team: any = await teamService.findTeam(_teamId, 'paymentStatus, billing_email');
         if (_.isArray(team) && team.length === 0)
@@ -50,47 +49,55 @@ export class PayInvoiceManualService {
             return { _teamId: _teamId, amount: 0 };
         }
 
+        let stripeApiVersion = config.get('stripeApiVersion');
+        let privateKey = config.get('stripePrivateKey');
+
+        const stripe = new Stripe(privateKey, stripeApiVersion);
+
         if (data.amount < amount)
             amount = data.amount;
 
-        let merchantId = config.get('braintreeMerchantId');
-        let publicKey = config.get('braintreePublicKey');
-        let privateKey = config.get('braintreePrivateKey');
+        let paymentIntent: any = {};
+        try {
+            paymentIntent = await stripe.paymentIntents.create({
+                amount: amount,
+                currency: team.billing_currency,
+                customer: team.stripe_id,
+                payment_method: data.paymentMethodId,
+                off_session: true,
+                confirm: true,
+            });
 
-        let gateway = braintree.connect({
-            environment: braintree.Environment.Sandbox,
-            merchantId: merchantId,
-            publicKey: publicKey,
-            privateKey: privateKey
-        });
+            logger.LogInfo('Payment processing succeeded', paymentIntent);
 
-        let transactionResponse = await gateway.transaction.sale({
-            amount: amount,
-            paymentMethodNonce: data.nonce,
-            customerId: _teamId.toHexString(),
-            options: {
-                submitForSettlement: true
-            },
-            customFields: {
-                invoice_id: invoice._id.toHexString()
+            if (paymentIntent.status != 'succeeded')
+                throw new Error("Manual payment processing failed");
+
+            let charges: any[] = [];
+            let amount_captured: number = 0;
+            for (let i = 0; i < paymentIntent.charges.data.length; i++) {
+                let charge: any = paymentIntent.charges.data[i];
+                amount_captured += charge.amount_captured;
+                charges.push({
+                    paymentInstrument: charge.payment_method_details.card.last4,
+                    paymentInstrumentType: charge.payment_method_details.type,
+                    paymentCardBrand: charge.payment_method_details.card.brand,
+                    status: charge.status,
+                    amount: charge.amount,
+                    amount_captured: charge.amount_captured
+                });
             }
-        });
-
-        const transaction: any = transactionResponse.transaction;
-        if (transactionResponse.success) {
-            logger.LogInfo('Payment processing succeeded', transactionResponse);
 
             const paymentTransactionData = {
                 _teamId: _teamId,
                 _invoiceId: new mongodb.ObjectId(invoice._id),
-                source: PaymentTransactionSource.BRAINTREE,
-                processorTransactionId: transaction.id,
-                createdAt: transaction.createdAt,
-                paymentInstrument: transaction.creditCard.maskedNumber,
-                paymentInstrumentType: transaction.paymentInstrumentType,
-                transactionType: transaction.type,
-                status: transaction.processorResponseText,
-                amount: amount
+                source: PaymentTransactionSource.STRIPE,
+                processorTransactionId: paymentIntent.id,
+                createdAt: paymentIntent.created * 1000,
+                charges: charges,
+                status: paymentIntent.status,
+                amount: paymentIntent.amount,
+                amount_captured: amount_captured
             };
             const newPaymentTransaction: any = await paymentTransactionService.createPaymentTransaction(_teamId, paymentTransactionData, correlationId);
             await rabbitMQPublisher.publish(_teamId, "PaymentTransaction", correlationId, PayloadOperation.UPDATE, convertData(PaymentTransactionSchema, newPaymentTransaction));
@@ -112,39 +119,50 @@ export class PayInvoiceManualService {
             }
 
             await rabbitMQPublisher.publish(_teamId, "Invoice", correlationId, PayloadOperation.UPDATE, convertData(InvoiceSchema, updatedInvoice));
+            return { success: true, paymentTransactionData };
+        } catch (err) {
+            logger.LogError('Payment processing failed', { team, data, paymentIntent, error: err });
 
-            return paymentTransactionData;
-        } else {
-            logger.LogInfo('Payment processing failed', transactionResponse);
-
-            if (transactionResponse.transaction) {
-                const paymentTransactionData = {
-                    _teamId: _teamId,
-                    _invoiceId: new mongodb.ObjectId(invoice._id),
-                    source: PaymentTransactionSource.BRAINTREE,
-                    processorTransactionId: transaction.id,
-                    createdAt: transaction.createdAt,
-                    paymentInstrument: transaction.creditCard.maskedNumber,
-                    paymentInstrumentType: transaction.paymentInstrumentType,
-                    transactionType: transaction.type,
-                    status: transaction.processorResponseText,
-                    amount: amount
-                };
-                const newPaymentTransaction: any = await paymentTransactionService.createPaymentTransaction(_teamId, paymentTransactionData, correlationId);
-                await rabbitMQPublisher.publish(_teamId, "PaymentTransaction", correlationId, PayloadOperation.UPDATE, convertData(PaymentTransactionSchema, newPaymentTransaction));
-
-                const updatedInvoice: any = await invoiceService.updateInvoice(_teamId, invoice._id, { status: InvoiceStatus.REJECTED }, correlationId);
-                await rabbitMQPublisher.publish(_teamId, "Invoice", correlationId, PayloadOperation.UPDATE, convertData(InvoiceSchema, updatedInvoice));
-
-                if (team.paymentStatus == TeamPaymentStatus.HEALTHY) {
-                    const updatedTeam: any = await teamService.updateTeam(_teamId, { paymentStatus: TeamPaymentStatus.DELINQUENT, paymentStatusDate: new Date() }, correlationId);
-                    await rabbitMQPublisher.publish(_teamId, "Team", correlationId, PayloadOperation.UPDATE, convertData(TeamSchema, updatedTeam));
-                }
-
-                return paymentTransactionData;
-            } else {
-                throw new ValidationError(`Error processing payment: ${transactionResponse.message}`);
+            let charges: any[] = [];
+            for (let i = 0; i < err.payment_intent.charges.data.length; i++) {
+                let charge: any = err.payment_intent.charges.data[i];
+                charges.push({
+                    paymentInstrument: charge.payment_method_details.card.last4,
+                    paymentInstrumentType: charge.payment_method_details.type,
+                    paymentCardBrand: charge.payment_method_details.card.brand,
+                    status: charge.status,
+                    amount: charge.amount
+                });
             }
+
+            const paymentTransactionData = {
+                _teamId: _teamId,
+                _invoiceId: new mongodb.ObjectId(invoice._id),
+                source: PaymentTransactionSource.STRIPE,
+                processorTransactionId: err.payment_intent.id,
+                createdAt: err.payment_intent.created * 1000,
+                charges: charges,
+                status: err.message,
+                amount: err.payment_intent.amount
+            };
+            const newPaymentTransaction: any = await paymentTransactionService.createPaymentTransaction(_teamId, paymentTransactionData, correlationId);
+            await rabbitMQPublisher.publish(_teamId, "PaymentTransaction", correlationId, PayloadOperation.UPDATE, convertData(PaymentTransactionSchema, newPaymentTransaction));
+
+            const updatedInvoice: any = await invoiceService.updateInvoice(_teamId, invoice._id, { status: InvoiceStatus.REJECTED }, correlationId);
+            await rabbitMQPublisher.publish(_teamId, "Invoice", correlationId, PayloadOperation.UPDATE, convertData(InvoiceSchema, updatedInvoice));
+
+            if (team.paymentStatus == TeamPaymentStatus.HEALTHY) {
+                const updatedTeam: any = await teamService.updateTeam(_teamId, { paymentStatus: TeamPaymentStatus.DELINQUENT, paymentStatusDate: new Date() }, correlationId);
+                await rabbitMQPublisher.publish(_teamId, "Team", correlationId, PayloadOperation.UPDATE, convertData(TeamSchema, updatedTeam));
+            }
+
+            return { success: false, err };
+
+            // Error code will be authentication_required if authentication is needed
+            // logger.LogError('Error processing payment', {error: err});
+            // console.log('Error code is: ', err.code);
+            // const paymentIntentRetrieved = await stripe.paymentIntents.retrieve(err.raw.payment_intent.id);
+            // console.log('PI retrieved: ', paymentIntentRetrieved.id);
         }
     }
 }
