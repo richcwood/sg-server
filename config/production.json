@@ -33,5 +33,9 @@
   "sgTeam": "5e99cbcb2317950015edb655",
   "old_secret": "shhh",
   "old_secret_expiration": "2020-11-05",
-  "secret": "-$op)):x3#m{OtRt$3Cnzqoq#9ar)UD7<zRSr?L"
+  "secret": "-$op)):x3#m{OtRt$3Cnzqoq#9ar)UD7<zRSr?L",
+  "stripeApiVersion": "2020-08-27",
+  "stripePublicKey": "pk_live_51Hq1pkE7OqlLKVtkvf6LzpCtYuWTuUrgdqO06OdL21pzBbJe25YsaHeYtMuwhvJ1R6F2X7QX8C4VvUzTHShEulJm00VNLAP2AW",
+  "stripePrivateKey": "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",
+  "stripeWebhookSecret": "whsec_kgxRlp3dZ0kO9ERPsMOMpILwPWM96qzf"
 }
