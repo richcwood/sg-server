@@ -63,7 +63,7 @@ export { InvoiceStatus };
 enum PaymentMethodType {CREDIT_CARD = 0}
 export { PaymentMethodType };
 
-enum PaymentTransactionSource {BRAINTREE = 0}
+enum PaymentTransactionSource {STRIPE = 0}
 export { PaymentTransactionSource };
 
 enum PaymentTransactionType {CHARGE = 0}

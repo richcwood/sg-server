@@ -19,9 +19,10 @@ import { TaskSource } from '../../shared/Enums';
 
 
 export class CreateInvoiceService {
-    public async createInvoice(_teamId: mongodb.ObjectId, data: any, mongoLib: MongoRepo, logger: BaseLogger, correlationId: string, responseFields?: string): Promise<object> {
-        data._teamId = _teamId;
-
+    public async createInvoice(data: any, mongoLib: MongoRepo, logger: BaseLogger, correlationId: string, responseFields?: string): Promise<object> {
+        if (!data._teamId)
+            throw new MissingObjectError('Missing _teamId');
+        data._teamId = new mongodb.ObjectId(data._teamId);
         if (!data.startDate)
             throw new MissingObjectError('Missing startDate');
         const startDate = moment(data.startDate);
@@ -42,10 +43,10 @@ export class CreateInvoiceService {
 
         const freeTierSettings = await settingsService.findSettings('FreeTierLimits');
 
-        /// Get the number of new agents since the start of the billing cycle minus the first ten free agents
+        /// Get the number of new agents since the start of the billing cycle minus the free tier free agents
         data.numNewAgents = 0;
         let newAgentsFilter: any = {};
-        newAgentsFilter['_teamId'] = _teamId;
+        newAgentsFilter['_teamId'] = data._teamId;
         newAgentsFilter['createDate'] = { $gte: startDate.toDate() };
 
         let numNewAgents: number = 0;
@@ -56,30 +57,30 @@ export class CreateInvoiceService {
         if (_.isArray(numNewAgentsQuery) && (numNewAgentsQuery.length > 0))
             numNewAgents = numNewAgentsQuery[0].num_new_agents;
 
-        let numOldAgents = 0;
-        let oldAgentsFilter: any = {};
-        oldAgentsFilter['_teamId'] = _teamId;
-        oldAgentsFilter['createDate'] = { $lt: startDate.toDate() };
+        // let numOldAgents = 0;
+        // let oldAgentsFilter: any = {};
+        // oldAgentsFilter['_teamId'] = data._teamId;
+        // oldAgentsFilter['createDate'] = { $lt: startDate.toDate() };
 
-        let numOldAgentsQuery = await AgentModel.aggregate([
-            { $match: oldAgentsFilter },
-            { $count: "num_old_agents" }
-        ]);
-        if (_.isArray(numOldAgentsQuery) && numOldAgentsQuery.length > 0)
-            numOldAgents = numOldAgentsQuery[0].num_old_agents;
-        let freeAgents = freeTierSettings.maxAgents - numOldAgents;
-        freeAgents = Math.max(freeAgents, 0);
+        // let numOldAgentsQuery = await AgentModel.aggregate([
+        //     { $match: oldAgentsFilter },
+        //     { $count: "num_old_agents" }
+        // ]);
+        // if (_.isArray(numOldAgentsQuery) && numOldAgentsQuery.length > 0)
+        //     numOldAgents = numOldAgentsQuery[0].num_old_agents;
+        // let freeAgents = freeTierSettings.maxAgents - numOldAgents;
+        // freeAgents = Math.max(freeAgents, 0);
 
-        data.numNewAgents = numNewAgents - freeAgents;
+        data.numNewAgents = numNewAgents - freeTierSettings.maxAgents;
         data.numNewAgents = Math.max(data.numNewAgents, 0);
 
         /// Get current job history storage amount
-        let team = await teamService.findTeam(_teamId, 'jobStorageSpaceHighWatermark');
+        let team = await teamService.findTeam(data._teamId, 'jobStorageSpaceHighWatermark');
         data.storageMB = Math.round(team.jobStorageSpaceHighWatermark / (1024 * 1024));
 
         /// Get number of non-interactive console scripts executed in billing period
         let invoiceScriptsFilter: any = {};
-        invoiceScriptsFilter['_teamId'] = _teamId;
+        invoiceScriptsFilter['_teamId'] = data._teamId;
         invoiceScriptsFilter['dateStarted'] = { $gte: startDate.toDate(), $lt: endDate.toDate() };
         invoiceScriptsFilter['_invoiceId'] = { $exists: false };
         invoiceScriptsFilter['source'] = TaskSource.JOB;
@@ -95,7 +96,7 @@ export class CreateInvoiceService {
 
         /// Get number of interactive console scripts executed in billing period
         let invoiceICScriptsFilter: any = {};
-        invoiceICScriptsFilter['_teamId'] = _teamId;
+        invoiceICScriptsFilter['_teamId'] = data._teamId;
         invoiceICScriptsFilter['dateStarted'] = { $gte: startDate.toDate(), $lt: endDate.toDate() };
         invoiceICScriptsFilter['_invoiceId'] = { $exists: false };
         invoiceICScriptsFilter['source'] = TaskSource.CONSOLE;
@@ -112,8 +113,8 @@ export class CreateInvoiceService {
         /// Get total artifacts downloaded size for this billing period
         data.artifactsDownloadedGB = 0;
         let taskOutcomesFilter: any = {};
-        taskOutcomesFilter['_teamId'] = _teamId;
-        taskOutcomesFilter['dateStarted'] = { $gte: startDate.toDate() };
+        taskOutcomesFilter['_teamId'] = data._teamId;
+        taskOutcomesFilter['dateStarted'] = { $gte: startDate.toDate(), $lt: endDate.toDate() };
 
         let artifactDownloadsQuery = await TaskOutcomeModel.aggregate([
             { $match: taskOutcomesFilter },
@@ -128,7 +129,7 @@ export class CreateInvoiceService {
         /// Get total artifacts storage for this billing period
         data.artifactsStorageGB = 0;
         let teamStorageFilter: any = {};
-        teamStorageFilter['_teamId'] = _teamId;
+        teamStorageFilter['_teamId'] = data._teamId;
         teamStorageFilter['date'] = { $gte: startDate.toDate(), $lte: endDate.toDate() };
 
         let artifactStorageQuery = await TeamStorageModel.find(teamStorageFilter).select('numobservations bytes');
@@ -165,18 +166,27 @@ export class CreateInvoiceService {
                 data.artifactsDownloadedPerGBRate = billingSettings.defaultArtifactsDownloadedPerGBRate;
         }
 
+        data.billAmount = 0;
         const scriptBillAmount = SGUtils.scriptBillingCalculator(data.scriptPricing, data.numScripts);
         data.scriptRate = 0;
         if (data.numScripts > 0)
             data.scriptRate = scriptBillAmount / data.numScripts;
+        if (scriptBillAmount >= .01)
+            data.billAmount += scriptBillAmount;
 
-        data.billAmount = scriptBillAmount +
-            (data.jobStoragePerMBRate * data.storageMB) +
-            (data.newAgentRate * data.numNewAgents) +
-            (data.artifactsStoragePerGBRate * data.artifactsStorageGB) +
-            (data.artifactsDownloadedPerGBRate * data.artifactsDownloadedGB);
+        if (data.artifactsDownloadedPerGBRate * data.artifactsDownloadedGB >= .01)
+            data.billAmount += (data.artifactsDownloadedPerGBRate * data.artifactsDownloadedGB);
+        if (data.artifactsStoragePerGBRate * data.artifactsStorageGB >= .01)
+            data.billAmount += (data.artifactsStoragePerGBRate * data.artifactsStorageGB);
+        if (data.newAgentRate >= .01)
+            data.billAmount += (data.newAgentRate * data.numNewAgents);
+        if (data.jobStoragePerMBRate * data.storageMB >= .01)
+            data.billAmount += (data.jobStoragePerMBRate * data.storageMB);
         // if (data.billAmount <= 0)
         //     return null;
+
+        if (data.billAmount > 0)
+            data.billAmount = (Math.round(data.billAmount * 100) / 100)*100;
 
         data.paidAmount = 0.0;
 
@@ -186,15 +196,15 @@ export class CreateInvoiceService {
         // const res = await StepOutcomeModel.udpateMany( invoiceScriptsFilter, { $set: { _invoiceId: newInvoice._id }});
         const res: any = await mongoLib.UpdateMany('stepOutcome', invoiceScriptsFilter, { $set: { _invoiceId: newInvoice._id } });
         if (res.matchedCount != res.modifiedCount != newInvoice.numScripts) {
-            logger.LogError(`Create invoice error: counts mismatch`, { _teamId, _invoiceId: newInvoice._id, numScripts: newInvoice.numScripts, matchedCount: res.matchedCount, modifiedCount: res.modifiedCount });
+            logger.LogError(`Create invoice error: counts mismatch`, { _teamId: data._teamId, _invoiceId: newInvoice._id, numScripts: newInvoice.numScripts, matchedCount: res.matchedCount, modifiedCount: res.modifiedCount });
         }
         await mongoLib.UpdateMany('stepOutcome', invoiceICScriptsFilter, { $set: { _invoiceId: newInvoice._id } });
 
-        await rabbitMQPublisher.publish(_teamId, "Invoice", correlationId, PayloadOperation.CREATE, convertData(InvoiceSchema, newInvoice));
+        await rabbitMQPublisher.publish(data._teamId, "Invoice", correlationId, PayloadOperation.CREATE, convertData(InvoiceSchema, newInvoice));
 
         if (responseFields) {
             // It's is a bit wasteful to do another query but I can't chain a save with a select
-            return invoiceService.findInvoice(_teamId, newInvoice.id, responseFields);
+            return invoiceService.findInvoice(data._teamId, newInvoice.id, responseFields);
         }
         else {
             return newInvoice; // fully populated model

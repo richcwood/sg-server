@@ -15,7 +15,7 @@ import * as _ from 'lodash';
 import * as config from 'config';
 import { teamService } from './TeamService';
 import * as mongodb from 'mongodb';
-import * as braintree from 'braintree';
+import { Stripe } from 'stripe';
 
 
 export class PayInvoiceAutoService {
@@ -25,7 +25,7 @@ export class PayInvoiceAutoService {
         if (!data._invoiceId)
             throw new ValidationError(`Request body missing "_invoiceId" parameter`);
 
-        const team: any = await teamService.findTeam(_teamId, 'paymentStatus, billing_email');
+        const team: any = await teamService.findTeam(_teamId, 'paymentStatus billing_email stripe_id billing_currency');
         if (_.isArray(team) && team.length === 0)
             throw new MissingObjectError(`Team '${_teamId}' not found`);
 
@@ -44,69 +44,123 @@ export class PayInvoiceAutoService {
             return { _teamId: _teamId, amount: 0 };
         }
 
-        let merchantId = config.get('braintreeMerchantId');
-        let publicKey = config.get('braintreePublicKey');
-        let privateKey = config.get('braintreePrivateKey');
+        let stripeApiVersion = config.get('stripeApiVersion');
+        let privateKey = config.get('stripePrivateKey');
 
-        let gateway = braintree.connect({
-            environment: braintree.Environment.Sandbox,
-            merchantId: merchantId,
-            publicKey: publicKey,
-            privateKey: privateKey
+        const stripe = new Stripe(privateKey, stripeApiVersion);
+
+        const paymentMethods = await stripe.paymentMethods.list({
+            customer: team.stripe_id,
+            type: 'card'
         });
 
-        let transactionResponse = await gateway.transaction.sale({
-            amount: amount,
-            customerId: _teamId.toHexString(),
-            options: {
-                submitForSettlement: true
-            },
-            customFields: {
-                invoice_id: invoice._id.toHexString()
-            }
-        });
+        let paymentIntent: any = {};
+        for (let i = 0; i < paymentMethods.data.length; i++) {
+            try {
+                const paymentMethod: any = paymentMethods.data[i];
+                if (paymentMethod.type != 'card')
+                    continue;
 
-        const transaction: any = transactionResponse.transaction;
-        const paymentTransactionData = {
-            _teamId: _teamId,
-            _invoiceId: new mongodb.ObjectId(invoice._id),
-            source: PaymentTransactionSource.BRAINTREE,
-            processorTransactionId: transaction.id,
-            createdAt: transaction.createdAt,
-            paymentInstrument: transaction.creditCard.maskedNumber,
-            paymentInstrumentType: transaction.paymentInstrumentType,
-            transactionType: transaction.type,
-            status: transaction.processorResponseText,
-            amount: amount
-        };
-        const newPaymentTransaction: any = await paymentTransactionService.createPaymentTransaction(_teamId, paymentTransactionData, correlationId);
-        await rabbitMQPublisher.publish(_teamId, "PaymentTransaction", correlationId, PayloadOperation.UPDATE, convertData(PaymentTransactionSchema, newPaymentTransaction));
+                paymentIntent = await stripe.paymentIntents.create({
+                    amount: amount,
+                    currency: team.billing_currency,
+                    customer: team.stripe_id,
+                    payment_method: paymentMethod.id,
+                    off_session: true,
+                    confirm: true,
+                });
 
-        if (transactionResponse.success) {
-            logger.LogInfo('Payment processing succeeded', transactionResponse);
+                logger.LogInfo('Payment processing succeeded', paymentIntent);
 
-            let updatedInvoice: any = await invoiceService.updateInvoice(_teamId, invoice._id, { paidAmount: invoice.paidAmount + amount, status: InvoiceStatus.PAID }, correlationId);
-            await SGUtils.CreateAndSendInvoice(team, updatedInvoice, paymentTransactionData, logger);
+                if (paymentIntent.status != 'succeeded')
+                    throw new Error("Auto payment processing failed");
 
-            if (team.paymentStatus == TeamPaymentStatus.DELINQUENT) {
-                const getDelinquentInvoices: InvoiceSchema[] = await invoiceService.findAllInvoicesInternal({ _teamId, status: InvoiceStatus.REJECTED }, '_id');
-                if (_.isArray(getDelinquentInvoices) && getDelinquentInvoices.length === 0)
-                    await teamService.updateTeam(_teamId, { paymentStatus: TeamPaymentStatus.HEALTHY, paymentStatusDate: new Date() }, correlationId);
-            }
+                let charges: any[] = [];
+                let amount_captured: number = 0;
+                for (let i = 0; i < paymentIntent.charges.data.length; i++) {
+                    let charge: any = paymentIntent.charges.data[i];
+                    amount_captured += charge.amount_captured;
+                    charges.push({ 
+                        id: charge.id,
+                        paymentInstrument: charge.payment_method_details.card.last4,
+                        paymentInstrumentType: charge.payment_method_details.type,
+                        paymentCardBrand: charge.payment_method_details.card.brand,
+                        status: charge.status,
+                        amount: charge.amount,
+                        amount_captured: charge.amount_captured
+                    });
+                }
+        
+                const paymentTransactionData = {
+                    _teamId: _teamId,
+                    _invoiceId: new mongodb.ObjectId(invoice._id),
+                    source: PaymentTransactionSource.STRIPE,
+                    processorTransactionId: paymentIntent.id,
+                    createdAt: paymentIntent.created * 1000,
+                    charges: charges,
+                    status: paymentIntent.status,
+                    amount: paymentIntent.amount,
+                    amount_captured: amount_captured
+                };
+                const newPaymentTransaction: any = await paymentTransactionService.createPaymentTransaction(_teamId, paymentTransactionData, correlationId);
+                await rabbitMQPublisher.publish(_teamId, "PaymentTransaction", correlationId, PayloadOperation.UPDATE, convertData(PaymentTransactionSchema, newPaymentTransaction));
+        
+                let updatedInvoice: any = await invoiceService.updateInvoice(_teamId, invoice._id, { paidAmount: invoice.paidAmount + amount, status: InvoiceStatus.PAID }, correlationId);
+                await SGUtils.CreateAndSendInvoice(team, updatedInvoice, paymentTransactionData, logger);
+    
+                if (team.paymentStatus == TeamPaymentStatus.DELINQUENT) {
+                    const getDelinquentInvoices: InvoiceSchema[] = await invoiceService.findAllInvoicesInternal({ _teamId, status: InvoiceStatus.REJECTED }, '_id');
+                    if (_.isArray(getDelinquentInvoices) && getDelinquentInvoices.length === 0)
+                        await teamService.updateTeam(_teamId, { paymentStatus: TeamPaymentStatus.HEALTHY, paymentStatusDate: new Date() }, correlationId);
+                }
+    
+                await rabbitMQPublisher.publish(_teamId, "Invoice", correlationId, PayloadOperation.UPDATE, convertData(InvoiceSchema, updatedInvoice));
+                return { success: true, paymentTransactionData };
+            } catch (err) {
+                logger.LogError('Payment processing failed', { team, data, paymentIntent, error: err });
 
-            await rabbitMQPublisher.publish(_teamId, "Invoice", correlationId, PayloadOperation.UPDATE, convertData(InvoiceSchema, updatedInvoice));
-        } else {
-            logger.LogInfo('Payment processing failed', transactionResponse);
-            const updatedInvoice: any = await invoiceService.updateInvoice(_teamId, invoice._id, { status: InvoiceStatus.REJECTED }, correlationId);
-            await rabbitMQPublisher.publish(_teamId, "Invoice", correlationId, PayloadOperation.UPDATE, convertData(InvoiceSchema, updatedInvoice));
+                let charges: any[] = [];
+                for (let i = 0; i < err.payment_intent.charges.data.length; i++) {
+                    let charge: any = err.payment_intent.charges.data[i];
+                    charges.push({
+                        paymentInstrument: charge.payment_method_details.card.last4,
+                        paymentInstrumentType: charge.payment_method_details.type,
+                        paymentCardBrand: charge.payment_method_details.card.brand,
+                        status: charge.status,
+                        amount: charge.amount
+                    });
+                }
+    
+                const paymentTransactionData = {
+                    _teamId: _teamId,
+                    _invoiceId: new mongodb.ObjectId(invoice._id),
+                    source: PaymentTransactionSource.STRIPE,
+                    processorTransactionId: err.payment_intent.id,
+                    createdAt: err.payment_intent.created * 1000,
+                    charges: charges,
+                    status: err.message,
+                    amount: err.payment_intent.amount
+                };
+                const newPaymentTransaction: any = await paymentTransactionService.createPaymentTransaction(_teamId, paymentTransactionData, correlationId);
+                await rabbitMQPublisher.publish(_teamId, "PaymentTransaction", correlationId, PayloadOperation.UPDATE, convertData(PaymentTransactionSchema, newPaymentTransaction));
+    
+                const updatedInvoice: any = await invoiceService.updateInvoice(_teamId, invoice._id, { status: InvoiceStatus.REJECTED }, correlationId);
+                await rabbitMQPublisher.publish(_teamId, "Invoice", correlationId, PayloadOperation.UPDATE, convertData(InvoiceSchema, updatedInvoice));
+    
+                if (team.paymentStatus == TeamPaymentStatus.HEALTHY) {
+                    const updatedTeam: any = await teamService.updateTeam(_teamId, { paymentStatus: TeamPaymentStatus.DELINQUENT, paymentStatusDate: new Date() }, correlationId);
+                    await rabbitMQPublisher.publish(_teamId, "Team", correlationId, PayloadOperation.UPDATE, convertData(TeamSchema, updatedTeam));
+                }
 
-            if (team.paymentStatus == TeamPaymentStatus.HEALTHY) {
-                const updatedTeam: any = await teamService.updateTeam(_teamId, { paymentStatus: TeamPaymentStatus.DELINQUENT, paymentStatusDate: new Date() }, correlationId);
-                await rabbitMQPublisher.publish(_teamId, "Team", correlationId, PayloadOperation.UPDATE, convertData(TeamSchema, updatedTeam));
+                return { success: false, err };
+
+                // Error code will be authentication_required if authentication is needed
+                // logger.LogError('Error processing payment', {error: err});
+                // console.log('Error code is: ', err.code);
+                // const paymentIntentRetrieved = await stripe.paymentIntents.retrieve(err.raw.payment_intent.id);
+                // console.log('PI retrieved: ', paymentIntentRetrieved.id);
             }
         }
-
-        return paymentTransactionData;
     }
 }
 

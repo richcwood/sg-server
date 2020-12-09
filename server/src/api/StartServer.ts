@@ -31,19 +31,18 @@ import { taskOutcomeRouter } from './routes/TaskOutcomeRouter';
 import { stepOutcomeRouter } from './routes/StepOutcomeRouter';
 import { userRouter } from './routes/UserRouter';
 import GitHookRouter from './routes/GitHookRouter';
-import BraintreeHookRouter from './routes/BraintreeHookRouter';
+import StripeWebhookRouter from './routes/StripeWebhookRouter';
 import { handleErrors } from './utils/ErrorMiddleware';
 import { handleBuildResponseWrapper, handleResponse, handleStartTimer } from './utils/ResponseMiddleware';
 import { stepRouter } from './routes/StepRouter';
 import { teamStorageRouter } from './routes/TeamStorageRouter';
 import { paymentTransactionRouter } from './routes/PaymentTransactionRouter';
-import { braintreeClientTokenRouter } from './routes/BraintreeClientTokenRouter';
 import { invoiceRouter } from './routes/InvoiceRouter';
 import { signupRouter } from './routes/SignupRouter';
 import { teamInviteRouter } from './routes/TeamInviteRouter';
 import { joinTeamRouter } from './routes/JoinTeamRouter';
 import { passwordResetRouter } from './routes/PasswordResetRouter';
-import { ForgotPasswordRouter } from './routes/ForgotPasswordRouter';
+import { forgotPasswordRouter } from './routes/ForgotPasswordRouter';
 import { taskActionRouter } from './routes/TaskActionRouter';
 import { taskOutcomeActionRouter } from './routes/TaskOutcomeActionRouter';
 import { jobActionRouter } from './routes/JobActionRouter';
@@ -54,6 +53,7 @@ import { payInvoiceManualRouter } from './routes/PayInvoiceManualRouter';
 import { createInvoiceRouter } from './routes/CreateInvoiceRouter';
 import { updateTeamStorageUsageRouter } from './routes/UpdateTeamStorageUsageRouter';
 import { userScriptShadowCopyRouter } from './routes/UserScriptShadowCopyRouter';
+import { paymentMethodRouter } from './routes/PaymentMethodRouter';
 const IPCIDR = require('ip-cidr');
 import { read } from 'fs';
 import { JobStatus } from '../shared/Enums';
@@ -62,6 +62,7 @@ import { userService } from './services/UserService';
 import { ValidationError } from './utils/Errors';
 import * as morgan from 'morgan';
 import * as fs from 'fs';
+import { stripeClientTokenRouter } from './routes/StripClientTokenRouter';
 
 // Create a new express application instance
 const app: express.Application = express();
@@ -78,6 +79,8 @@ var options = {
   useNewUrlParser: true
 };
 mongoose.connect(config.get('mongoUrl'), options);
+
+app.use(`/api/v0/stripewebhook`, bodyParser.raw({type: "*/*"}), new StripeWebhookRouter().router);
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -161,7 +164,6 @@ class AppBuilder {
     this.app.use(`/login`, new LoginRouter().router);
 
     this.app.use(`${apiURLBase}/githook`, new GitHookRouter().router);
-    this.app.use(`${apiURLBase}/braintreehook`, new BraintreeHookRouter().router);
     this.app.use(`${apiURLBase}/signup`, signupRouter);
 
     this.setUpJwtSecurity();
@@ -205,16 +207,16 @@ class AppBuilder {
     this.app.use(`${apiURLBase}/taskdef`, taskDefRouter);
     this.app.use(`${apiURLBase}/stepdef`, stepDefRouter);
     this.app.use(`${apiURLBase}/user`, userRouter);
-    // this.app.use(`${apiURLBase}/paymentmethod`, paymentMethodRouter);
+    this.app.use(`${apiURLBase}/paymentmethod`, paymentMethodRouter);
     this.app.use(`${apiURLBase}/payinvoiceauto`, payInvoiceAutoRouter);
     this.app.use(`${apiURLBase}/payinvoicemanual`, payInvoiceManualRouter);
-    this.app.use(`${apiURLBase}/paymenttoken`, braintreeClientTokenRouter);
+    this.app.use(`${apiURLBase}/paymenttoken`, stripeClientTokenRouter);
     this.app.use(`${apiURLBase}/paymenttransaction`, paymentTransactionRouter);
     this.app.use(`${apiURLBase}/invoice`, invoiceRouter);
     this.app.use(`${apiURLBase}/invite`, teamInviteRouter);
     this.app.use(`${apiURLBase}/join`, joinTeamRouter);
     this.app.use(`${apiURLBase}/reset`, passwordResetRouter);
-    this.app.use(`${apiURLBase}/forgot`, ForgotPasswordRouter);
+    this.app.use(`${apiURLBase}/forgot`, forgotPasswordRouter);
     this.app.use(`${apiURLBase}/taskaction`, taskActionRouter);
     this.app.use(`${apiURLBase}/taskoutcomeaction`, taskOutcomeActionRouter);
     this.app.use(`${apiURLBase}/jobaction`, jobActionRouter);
@@ -244,6 +246,10 @@ class AppBuilder {
       // }
 
       if (req.method === 'POST' && req.path.match('/api/v[0-9]+/signup')) {
+        next();
+        return;
+      }
+      else if (req.method === 'POST' && req.path.match('/api/v[0-9]+/stripewebhook')) {
         next();
         return;
       }
