@@ -293,7 +293,11 @@ export class AgentController {
         const _agentId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.params.agentId);
         const response: ResponseWrapper = resp['body'];
         try {
-            let responseFields: string = (<string>req.query.responseFields).trim();
+            let responseFields: string = (<string>req.query.responseFields);
+            if (!responseFields)
+                responseFields = '';
+            else
+                responseFields = responseFields.trim();
             if (responseFields.indexOf('tags') < 0)
                 responseFields += ' tags';
             let updatedAgent: any = await agentService.updateAgentTags(_teamId, _agentId, convertRequestData(AgentSchema, req.body), req.header('correlationId'), responseFields);

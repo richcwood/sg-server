@@ -10,6 +10,7 @@ import * as Enums from '../../shared/Enums';
 import { taskOutcomeService } from '../services/TaskOutcomeService';
 import { stepOutcomeService } from '../services/StepOutcomeService';
 import { taskService } from '../services/TaskService';
+import { TaskDefModel } from '../domain/TaskDef';
 import { localRestAccess } from '../utils/LocalRestAccess';
 
 
@@ -78,6 +79,10 @@ export class AgentService {
 
 
     public async deleteAgent(_teamId: mongodb.ObjectId, id: mongodb.ObjectId, correlationId?: string): Promise<object> {
+        let cntTaskDefsTargetingThisAgent = await TaskDefModel.count({_teamId, targetAgentId: id.toHexString()});
+        if (cntTaskDefsTargetingThisAgent > 0)
+            throw new ValidationError(`There are ${cntTaskDefsTargetingThisAgent} job tasks that target this agent`);
+
         const deleted = await AgentModel.deleteOne({ _id: id, _teamId });
 
         await rabbitMQPublisher.publish(_teamId, "Agent", correlationId, PayloadOperation.DELETE, { _id: id });
