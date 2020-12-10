@@ -28,9 +28,9 @@
       </div>
 
       <div class="right-nav">
-        <div v-if="userTeamIds.length > 1" class="dropdown is-right" :class="{'is-active': showTeamsMenu}" v-click-outside="onClickedOutsideTeamsMenu">
+        <div v-if="userTeamIds.length > 2" class="dropdown is-right" :class="{'is-active': showTeamsMenu}" v-click-outside="onClickedOutsideTeamsMenu">
           <div class="dropdown-trigger">
-            <a class="main-nav-link" @click.prevent="onClickedTeamsMenu">{{selectedTeamName}}</a> |
+            <a class="main-nav-link" @click.prevent="onClickedTeamsMenu">{{selectedTeamName}}</a><span class="nav-spacer">|</span>
           </div>
           <div class="dropdown-menu" id="dropdown-menu" role="menu">
             <div class="dropdown-content" role="menu">
@@ -50,7 +50,7 @@
           </div>
         </div>
         <div v-else>
-          {{selectedTeamName}} |
+          <span class="main-nav-link" style="margin-right: 5px;">{{selectedTeamName}}</span><span class="nav-spacer">|</span>
         </div>
 
         <div class="dropdown is-right" :class="{'is-active': showUserMenu}" v-click-outside="onClickedOutsideUserMenu">
