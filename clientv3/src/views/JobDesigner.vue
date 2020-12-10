@@ -596,7 +596,7 @@
 
 
     <!-- Edit job, including task routes designer -->
-    <div class="edit-job" v-if="jobDefForEdit && selectedItemForNav === jobDefForEdit" :style="{'margin-left': editPanelMarginLeft+'px'}">
+    <div class="edit-job" v-if="jobDefForEdit && selectedItemForNav && selectedItemForNav.id === jobDefForEdit.id" :style="{'margin-left': editPanelMarginLeft+'px'}">
 
       <tabs :defaultIndex="3">
 
@@ -1641,14 +1641,14 @@ export default class JobDesigner extends Vue {
           return;
         }
 
-        const newVars = _.clone(this.jobDefForEdit.runtimeVars);
-        newVars[this.newRuntimeVarKey] = this.newRuntimeVarValue;
-        this.jobDefForEdit.runtimeVars = newVars;
-
-        await this.$store.dispatch(`${StoreType.JobDefStore}/save`, this.jobDefForEdit);
+        await this.$store.dispatch(`${StoreType.JobDefStore}/save`, {
+          id: this.jobDefForEdit.id,
+          runtimeVars: _.extend({[this.newRuntimeVarKey]: this.newRuntimeVarValue}, this.jobDefForEdit.runtimeVars)
+        });
         this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Saved job`, AlertPlacement.FOOTER));
 
         (<any>this).$refs.addRuntimeVarValidationObserver.reset();
+        
         this.newRuntimeVarKey = '';
         this.newRuntimeVarValue = '';
       }
