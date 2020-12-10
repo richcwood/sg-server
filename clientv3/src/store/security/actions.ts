@@ -85,7 +85,6 @@ export const actions: ActionTree<SecurityStore, RootState> = {
       const startingTeam = teams.find((team: any) => team.id === localStorageStartTeamId);
       if(startingTeam){
         selectedTeam = await store.dispatch(`${StoreType.TeamStore}/select`, startingTeam);
-        store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Welcome to saas glue ${state.user.name}`, AlertPlacement.FOOTER_RIGHT, AlertCategory.INFO, -1));
       }
       else {
         console.warn(`Did not find the local storage starting teamId ${localStorageStartTeamId}.`);
@@ -95,6 +94,8 @@ export const actions: ActionTree<SecurityStore, RootState> = {
     if(!selectedTeam){
       selectedTeam = await store.dispatch(`${StoreType.TeamStore}/select`, teams[0]);
     }
+
+    store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Welcome to saas glue ${state.user.name}`, AlertPlacement.FOOTER_RIGHT, AlertCategory.INFO, -1));
 
     // Initialize the single stomp handler
     const stompOptions: InitStompOptions = { 
