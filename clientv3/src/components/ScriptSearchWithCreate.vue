@@ -58,7 +58,7 @@
               <td class="td"></td>
               <td class="td">
                 <button class="button is-primary" @click="saveNewScript">Create new script</button>
-                <button class="button button-spaced" @click="cancelCreateNewScript">Cancel</button>
+                <button class="button button-spaced"  @click="cancelCreateNewScript">Cancel</button>
               </td>
             </tr>
           </tbody>
@@ -230,5 +230,15 @@ export default class ScriptSearchWithCreate extends Vue {
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped lang="scss">
   
+  table {
+    border-width: 0;
+  }
 
+  td {
+    border-width: 0 !important;
+  }
+
+  .button-spaced {
+    margin-left: 12px;
+  }
 </style>
