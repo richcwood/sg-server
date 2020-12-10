@@ -89,20 +89,23 @@
 
     <div class="nav-footer">
       <span v-if="alertFooter" class="footer-message" :class="AlertCategory[alertFooter.category]">{{alertFooter.message}}</span>
+      <span v-else>&nbsp;</span>
+      
+      <span v-if="alertFooterRight" class="footer-message nav-footer-right" :class="AlertCategory[alertFooterRight.category]">{{alertFooterRight.message}}</span>
     </div>
   </div>
 </template>
 
 
 <script lang="ts">
-import router from '@/router';
-import { ClickOutside } from '@/directive';
+import router from './router';
+import { ClickOutside } from './directive';
 import { Component, Vue, Watch } from 'vue-property-decorator';
-import { StoreType } from '@/store/types';
-import { enumKeyToPretty } from '@/utils/Enums';
-import { Team } from '@/store/team/types';
-import { SgAlert, AlertPlacement, AlertCategory } from '@/store/alert/types';
-import { BindSelected, BindStoreModel } from '@/decorator';
+import { StoreType } from './store/types';
+import { enumKeyToPretty } from './utils/Enums';
+import { Team } from './store/team/types';
+import { SgAlert, AlertPlacement, AlertCategory } from './store/alert/types';
+import { BindSelected, BindStoreModel } from './decorator';
 import axios from 'axios';
 import Cookies from 'js-cookie';
 
@@ -126,6 +129,9 @@ export default class App extends Vue {
 
   @BindStoreModel({storeType: StoreType.AlertStore, selectedModelName: 'currentFooter'})
   private alertFooter!: SgAlert;
+
+  @BindStoreModel({storeType: StoreType.AlertStore, selectedModelName: 'currentFooterRight'})
+  private alertFooterRight!: SgAlert;
 
   @BindStoreModel({storeType: StoreType.AlertStore, selectedModelName: 'currentWindow'})
   private alertWindow!: SgAlert;
@@ -383,9 +389,11 @@ export default class App extends Vue {
 }
 
 .nav-footer {
+  display: flex;
+  justify-content: space-between;
   position: fixed;
   height: 25px;
-  background-color: white;
+  background-color: black;
   border-top: 1px solid $grey-lighter;
   left: 0px;
   bottom: 0px;
@@ -397,12 +405,22 @@ export default class App extends Vue {
   padding-bottom: 8px;
 }
 
+.nav-footer-right {
+  margin-right: 5px;
+}
+
 [name=alertMessage] .Error {
   color: red;
 }
 
 .footer-message {
+  color: white;
+  font-weight: 700;
   margin-left: 10px;
+}
+
+.footer-message.WARNING{
+  color: orange;
 }
 
 .footer-message.ERROR{

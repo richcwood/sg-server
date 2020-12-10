@@ -11,6 +11,11 @@ export const mutations: MutationTree<AlertStore> = {
       state.currentFooter = footerAlert;
     }
 
+    const footerAlertRight = models.find(m => m.placement === AlertPlacement.FOOTER_RIGHT);
+    if(footerAlertRight){
+      state.currentFooterRight = footerAlertRight;
+    }
+
     // just take the first footer if it exists
     const windowAlert = models.find(m => m.placement === AlertPlacement.WINDOW);
     if(windowAlert){
@@ -31,12 +36,18 @@ export const mutations: MutationTree<AlertStore> = {
     if(model === state.currentFooter){
       state.currentFooter = null;
     }
+
+    if(model === state.currentFooterRight){
+      state.currentFooterRight = null;
+    }
+
     // Remove the alert from the store - it will dissapear
     state.models.splice(state.models.indexOf(model), 1);
   },
 
   removeAll(state){
     state.currentFooter = null;
+    state.currentFooterRight = null;
     state.currentWindow = null;
     state.models.splice(0);
   }
