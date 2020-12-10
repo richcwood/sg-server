@@ -1018,7 +1018,7 @@
             </td>
             <td class="td">
               <validation-provider name="Step Name" rules="required|object-name" v-slot="{ errors }">
-                <input class="input" style="width: 250px;"  v-model="selectedStepDefForEdit.name">
+                <input class="input" style="width: 475px;"  v-model="selectedStepDefForEdit.name">
                 <div v-if="errors && errors.length > 0" class="message validation-error is-danger">{{ errors[0] }}</div>
               </validation-provider>
             </td>
@@ -1028,7 +1028,7 @@
               <label class="label">Arguments</label>
             </td>
             <td class="td">
-              <input class="control input" style="width: 250px;" v-model="selectedStepDefForEdit.arguments">
+              <input class="control input" style="width: 475px;" v-model="selectedStepDefForEdit.arguments">
             </td>
           </tr>
           <tr class="tr">
@@ -1037,7 +1037,7 @@
             </td>
             <td class="td">
               <div class="select is-multiple">
-                <select multiple size="5" style="width: 250px; margin-bottom: 10px;" v-model="selectedStepDefVariables">
+                <select multiple size="5" style="width: 475px; margin-bottom: 10px;" v-model="selectedStepDefVariables">
                   <option v-for="(value, key) in selectedStepDefForEdit.variables" v-bind:key="key" :value="key">{{`${key}=${value}`}}</option>
                 </select>
               </div>
