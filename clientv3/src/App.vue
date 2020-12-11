@@ -28,7 +28,7 @@
       </div>
 
       <div class="right-nav">
-        <div v-if="userTeamIds.length > 2" class="dropdown is-right" :class="{'is-active': showTeamsMenu}" v-click-outside="onClickedOutsideTeamsMenu">
+        <div v-if="userTeamIds.length > 1" class="dropdown is-right" :class="{'is-active': showTeamsMenu}" v-click-outside="onClickedOutsideTeamsMenu">
           <div class="dropdown-trigger">
             <a class="main-nav-link" @click.prevent="onClickedTeamsMenu">{{selectedTeamName}}</a><span class="nav-spacer">|</span>
           </div>
@@ -90,7 +90,7 @@
     <div class="nav-footer">
       <span v-if="alertFooter" class="footer-message" :class="AlertCategory[alertFooter.category]">{{alertFooter.message}}</span>
       <span v-else>&nbsp;</span>
-      
+
       <span v-if="alertFooterRight" class="footer-message nav-footer-right" :class="AlertCategory[alertFooterRight.category]">{{alertFooterRight.message}}</span>
     </div>
   </div>
