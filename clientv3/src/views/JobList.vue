@@ -36,7 +36,7 @@
 
     <!-- Job Def selection -->
     <div>
-      <table class="table" width="650px">
+      <table class="table" width="100%">
         <tbody class="tbody">
           <tr class="tr">
             <td class="td">
@@ -47,7 +47,7 @@
             </td>
           </tr>
           <tr class="tr">
-            <td class="td"><button class="button" @click="createNewJobDef">Create new job</button></td>
+            <td class="td"><button class="button is-primary" @click="createNewJobDef">Create new job</button></td>
           </tr>
 
           <tr class="tr">

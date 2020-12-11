@@ -87,7 +87,7 @@
       <router-view/>
     </div>
 
-    <div class="nav-footer">
+    <div class="nav-footer" v-if="! isOnLandingPage()">
       <span v-if="alertFooter" class="footer-message" :class="AlertCategory[alertFooter.category]">{{alertFooter.message}}</span>
       <span v-else>&nbsp;</span>
 

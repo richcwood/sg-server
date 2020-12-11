@@ -245,7 +245,7 @@
         <button class="button is-primary button-spaced" :disabled="!isScriptShadowDifferentThanScript" @click="onPublishScriptClicked">Publish</button>
       </div>
         
-      <div ref="scriptEditor" style="width: 100%; height: 250px; background: hsl(0, 0%, 98%);"></div>
+      <div ref="scriptEditor" style="width: 100%; height: 450px; background: hsl(0, 0%, 98%);"></div>
     </div>
   </div>
 </template>
@@ -369,7 +369,10 @@ export default class ScriptEditor extends Vue {
         language: (<any>scriptTypesForMonaco)[this.script.scriptType],
         theme: this.theme,
         automaticLayout: true,
-        readOnly: !this.isScriptEditable(this.script)
+        readOnly: !this.isScriptEditable(this.script),
+        minimap: {
+          enabled: false
+        }
       });
 
       if(this.scriptShadowCopySaveInterval){

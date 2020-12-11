@@ -39,8 +39,11 @@
 
 
     <div v-if="agents.length === 0">
-      There are no agents created yet.  
-      <br>Create a Job in the Designer and download / some agents to see them here.
+      <div style="font-size: 26px; margin-top">
+        There are no agents created yet. 
+        <br>
+        Download an agent from the "Download Agent" menu and once the agent starts you will see it in this screen.
+      </div>
     </div>
     <Split v-else style="height: 1000px;" direction="vertical">
       <SplitArea :size="35">

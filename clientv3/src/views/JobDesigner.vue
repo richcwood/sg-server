@@ -78,13 +78,19 @@
       </table>
     </modal>
 
-    <modal name="create-taskdef-modal" :classes="'round-popup'" :width="400" :height="225">
+    <modal name="create-taskdef-modal" :classes="'round-popup'" :width="450" :height="275">
       <validation-observer ref="newTaskValidationObserver">
         <table class="table" width="100%" height="100%">
           <tbody class="tbody">
             <tr class="tr">
               <td class="td"></td>
-              <td class="td">Create a new <span v-if="isSGCTaskDefType(newTaskTarget)">SGC</span> task</td>
+              <td class="td">
+                Create a new <span v-if="isSGCTaskDefType(newTaskTarget)">SGC</span> task
+                <template v-if="isSGCTaskDefType(newTaskTarget)">
+                  <br><br>
+                  A <b>S</b>aas <b>G</b>lue <b>C</b>ompute task runs on AWS lambda instead of running on your own agent environments.
+                </template>
+              </td>
             </tr>
             <tr class="tr">
               <td class="td">Task Name</td>
