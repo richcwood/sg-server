@@ -38,7 +38,7 @@ export class CreateInvoiceService {
 
         let startDate = moment(billingDate).startOf('month');
 
-        let endDate = startDate.endOf('month');
+        let endDate = moment(billingDate).endOf('month');
 
         let matchingInvoices: any = InvoiceModel.find({ _teamId: data._teamId, month: billingMonth, year: billingYear }).limit(1);
         if (_.isArray(matchingInvoices) && matchingInvoices.length > 0) {
