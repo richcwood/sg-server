@@ -78,7 +78,7 @@
             <td class="td">
               <div class="select">
                 <validation-provider name="Lambda Runtime" rules="required" v-slot="{ errors }">
-                  <select v-model="stepDefCopy.lambdaRuntime">
+                  <select v-model="stepDefCopy.lambdaRuntime" style="width: 250px;">
                     <option v-for="runtime in LambaRuntimes" :key="runtime" :value="runtime">
                       {{runtime}}
                     </option>
@@ -94,7 +94,7 @@
             </td>
             <td class="td">
               <div class="select">
-                <select v-model="stepDefCopy.lambdaMemorySize">
+                <select v-model="stepDefCopy.lambdaMemorySize" style="width: 250px;">
                   <option v-for="memSize in LambdaMemorySizes" :key="memSize" :value="memSize">
                     {{memSize}} mb
                   </option>

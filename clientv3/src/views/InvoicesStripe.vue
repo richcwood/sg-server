@@ -1,19 +1,25 @@
 <template>
   <div>
     <!-- modals -->
-    <modal name="add-payment-modal" :classes="'round-popup'" :width="650" :height="250">
+    <modal name="add-payment-modal" :classes="'round-popup'" :width="650" :height="325">
       <validation-observer ref="addPaymentValidationObserver">
         <div style="background-color: white; width: 100%; height: 100%; padding: 20px;">
-          <div>Enter your credit card information</div>
+          <div>Enter your credit card information for saas glue billing.</div>
+          <div>Your credit card information is protected by Stripe Payments Service 
+            <a href="https://stripe.com/" target="_blank">
+              <img src="StripeLogo.png" width="60px" height="auto" style="margin-bottom: -5px;">
+            </a>
+          </div>
           <validation-provider name="Card Holder Name" rules="required|object-name" v-slot="{ errors }">
-            <input class="input" id="cardholder-name" type="text" style="margin-top: 20px; margin-left: 50px; margin-bottom: 20px; width: 550px" v-model="cardHolderName" placeholder="Card holder name">
+            <img src="Lock.png" width="40px" height="auto" style="margin-top: 18px;">
+            <input class="input" id="cardholder-name" type="text" style="margin-top: 20px; margin-left: 5px; margin-bottom: 20px; width: 550px" v-model="cardHolderName" placeholder="Card holder name">
             <div v-if="errors && errors.length > 0" class="message validation-error is-danger">{{ errors[0] }}</div>
           </validation-provider>
           <!-- placeholder for Strip injected elements -->
           <form id="setup-form" :data-secret="client_secret">
             <div id="card-element"></div>
             <button class="button is-primary" style="margin-top: 35px; margin-left: 50px;" @click.prevent="onSaveCardClicked">
-              Save Card
+              Save Card Securely
             </button>
             <button class="button" style="margin-top: 35px; margin-left: 10px;" @click.prevent="onCancelSaveCardClicked">
               Cancel

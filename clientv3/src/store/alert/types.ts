@@ -2,7 +2,8 @@ import { Model, LinkedModel } from '@/store/types'
 
 export enum AlertPlacement {
   'WINDOW' = 0,
-  'FOOTER' = 1
+  'FOOTER' = 1,
+  'FOOTER_RIGHT' = 2
 }
 
 export enum AlertCategory {
@@ -28,5 +29,8 @@ export class SgAlert  {
 export interface AlertStore {
   models: SgAlert[],
   currentFooter: SgAlert | null,
+  currentFooterRight: SgAlert | null,
   currentWindow: SgAlert | null
 }
+
+(<any>window).SGA = SgAlert;

@@ -161,18 +161,18 @@
 <script lang="ts">
 import _ from 'lodash';
 import { Component, Prop, Vue, Watch } from 'vue-property-decorator';
-import { StoreType } from '@/store/types';
-import { SgAlert, AlertPlacement, AlertCategory } from '@/store/alert/types';
-import { showErrors } from '@/utils/ErrorHandler'; 
+import { StoreType } from '../store/types';
+import { SgAlert, AlertPlacement, AlertCategory } from '../store/alert/types';
+import { showErrors } from '../utils/ErrorHandler'; 
 import { TaskDef, TaskDefTarget } from '../store/taskDef/types';
 import { StepDef } from '../store/stepDef/types';
 import { Artifact } from '../store/artifact/types';
-import { BindStoreModel, BindSelected, BindSelectedCopy, BindProp } from '@/decorator';
+import { BindStoreModel, BindSelected, BindSelectedCopy, BindProp } from '../decorator';
 import axios from 'axios';
-import { focusElement, stringToMap, mapToString } from '@/utils/Shared';
+import { focusElement, stringToMap, mapToString } from '../utils/Shared';
 import { ValidationProvider, ValidationObserver } from 'vee-validate';
-import AgentSearch from '@/components/AgentSearch.vue';
-import ArtifactSearch from '@/components/ArtifactSearch.vue';
+import AgentSearch from './AgentSearch.vue';
+import ArtifactSearch from '../components/ArtifactSearch.vue';
 
 @Component({
   components: {
@@ -202,7 +202,7 @@ export default class TaskDefEditor extends Vue {
 
   private taskDef_requiredTags_string = '';
 
-  @Watch('taskDef')
+  @Watch('taskDef', {immediate: true})
   private onTaskDefChanged(){
     if(this.taskDef){
       this.taskDef_requiredTags_string = mapToString(this.taskDef.requiredTags);

@@ -3,6 +3,7 @@ import { FontAwesomeLayersTextProps } from '@fortawesome/vue-fontawesome';
 export interface User {
   email: string;
   teamIds?: string[];
+  name: string;
 }
 
 

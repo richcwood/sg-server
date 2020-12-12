@@ -7,6 +7,7 @@ import { mutations } from './mutations';
 export const state: AlertStore = {
   models: [],
   currentFooter: null,
+  currentFooterRight: null,
   currentWindow: null
 };
 

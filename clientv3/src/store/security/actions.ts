@@ -95,6 +95,8 @@ export const actions: ActionTree<SecurityStore, RootState> = {
       selectedTeam = await store.dispatch(`${StoreType.TeamStore}/select`, teams[0]);
     }
 
+    store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Welcome to saas glue ${state.user.name}`, AlertPlacement.FOOTER_RIGHT, AlertCategory.INFO, -1));
+
     // Initialize the single stomp handler
     const stompOptions: InitStompOptions = { 
       store,

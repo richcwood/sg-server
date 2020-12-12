@@ -78,13 +78,19 @@
       </table>
     </modal>
 
-    <modal name="create-taskdef-modal" :classes="'round-popup'" :width="400" :height="225">
+    <modal name="create-taskdef-modal" :classes="'round-popup'" :width="450" :height="275">
       <validation-observer ref="newTaskValidationObserver">
         <table class="table" width="100%" height="100%">
           <tbody class="tbody">
             <tr class="tr">
               <td class="td"></td>
-              <td class="td">Create a new <span v-if="isSGCTaskDefType(newTaskTarget)">SGC</span> task</td>
+              <td class="td">
+                Create a new <span v-if="isSGCTaskDefType(newTaskTarget)">SGC</span> task
+                <template v-if="isSGCTaskDefType(newTaskTarget)">
+                  <br><br>
+                  A <b>S</b>aas <b>G</b>lue <b>C</b>ompute task runs on AWS lambda instead of running on your own agent environments.
+                </template>
+              </td>
             </tr>
             <tr class="tr">
               <td class="td">Task Name</td>
@@ -596,7 +602,7 @@
 
 
     <!-- Edit job, including task routes designer -->
-    <div class="edit-job" v-if="jobDefForEdit && selectedItemForNav === jobDefForEdit" :style="{'margin-left': editPanelMarginLeft+'px'}">
+    <div class="edit-job" v-if="jobDefForEdit && selectedItemForNav && selectedItemForNav.id === jobDefForEdit.id" :style="{'margin-left': editPanelMarginLeft+'px'}">
 
       <tabs :defaultIndex="3">
 
@@ -1018,7 +1024,7 @@
             </td>
             <td class="td">
               <validation-provider name="Step Name" rules="required|object-name" v-slot="{ errors }">
-                <input class="input" style="width: 250px;"  v-model="selectedStepDefForEdit.name">
+                <input class="input" style="width: 475px;"  v-model="selectedStepDefForEdit.name">
                 <div v-if="errors && errors.length > 0" class="message validation-error is-danger">{{ errors[0] }}</div>
               </validation-provider>
             </td>
@@ -1028,7 +1034,7 @@
               <label class="label">Arguments</label>
             </td>
             <td class="td">
-              <input class="control input" style="width: 250px;" v-model="selectedStepDefForEdit.arguments">
+              <input class="control input" style="width: 475px;" v-model="selectedStepDefForEdit.arguments">
             </td>
           </tr>
           <tr class="tr">
@@ -1037,7 +1043,7 @@
             </td>
             <td class="td">
               <div class="select is-multiple">
-                <select multiple size="5" style="width: 250px; margin-bottom: 10px;" v-model="selectedStepDefVariables">
+                <select multiple size="5" style="width: 475px; margin-bottom: 10px;" v-model="selectedStepDefVariables">
                   <option v-for="(value, key) in selectedStepDefForEdit.variables" v-bind:key="key" :value="key">{{`${key}=${value}`}}</option>
                 </select>
               </div>
@@ -1641,14 +1647,14 @@ export default class JobDesigner extends Vue {
           return;
         }
 
-        const newVars = _.clone(this.jobDefForEdit.runtimeVars);
-        newVars[this.newRuntimeVarKey] = this.newRuntimeVarValue;
-        this.jobDefForEdit.runtimeVars = newVars;
-
-        await this.$store.dispatch(`${StoreType.JobDefStore}/save`, this.jobDefForEdit);
+        await this.$store.dispatch(`${StoreType.JobDefStore}/save`, {
+          id: this.jobDefForEdit.id,
+          runtimeVars: _.extend({[this.newRuntimeVarKey]: this.newRuntimeVarValue}, this.jobDefForEdit.runtimeVars)
+        });
         this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Saved job`, AlertPlacement.FOOTER));
 
         (<any>this).$refs.addRuntimeVarValidationObserver.reset();
+        
         this.newRuntimeVarKey = '';
         this.newRuntimeVarValue = '';
       }

@@ -16,21 +16,21 @@
 
       <div class="left-nav">
         <img src="/logo2_beta.png" class="logo">
-        <router-link :class="{'active-link': isLinkActive(['downloadAgent'])}" to="/downloadAgent">Download Agent</router-link> |
-        <router-link :class="{'active-link': isLinkActive(['jobList', 'jobDesigner'])}" to="/jobList">Job Designer</router-link> |
-        <router-link :class="{'active-link': isLinkActive(['jobMonitor', 'jobDetailsMonitor'])}" to="/">Job Monitor</router-link> |
-        <router-link :class="{'active-link': isLinkActive(['agentMonitor'])}" to="/agentMonitor">Agents</router-link> | 
-        <router-link :class="{'active-link': isLinkActive(['interactiveConsole'])}" to="/interactiveConsole">Console</router-link> |
-        <router-link :class="{'active-link': isLinkActive(['artifacts'])}" to="/artifacts">Artifacts</router-link> |
-        <router-link :class="{'active-link': isLinkActive(['teamVars'])}" to="/teamVars">Team Vars</router-link> |
-        <router-link :class="{'active-link': isLinkActive(['teamAlerts'])}" to="/teamAlerts">Team Alerts</router-link> |
-        <router-link :class="{'active-link': isLinkActive(['scripts'])}" to="/scripts">Scripts</router-link>
+        <router-link :class="{'active-link': isLinkActive(['downloadAgent'])}" class="main-nav-link" to="/downloadAgent">Download Agent</router-link><span class="nav-spacer">|</span>
+        <router-link :class="{'active-link': isLinkActive(['jobList', 'jobDesigner'])}" class="main-nav-link" to="/jobList">Designer</router-link><span class="nav-spacer">|</span>
+        <router-link :class="{'active-link': isLinkActive(['jobMonitor', 'jobDetailsMonitor'])}" class="main-nav-link" to="/">Monitor</router-link><span class="nav-spacer">|</span>
+        <router-link :class="{'active-link': isLinkActive(['agentMonitor'])}" class="main-nav-link" to="/agentMonitor">Agents</router-link> <span class="nav-spacer">|</span> 
+        <router-link :class="{'active-link': isLinkActive(['interactiveConsole'])}" class="main-nav-link" to="/interactiveConsole">Console</router-link><span class="nav-spacer">|</span>
+        <router-link :class="{'active-link': isLinkActive(['artifacts'])}" class="main-nav-link" to="/artifacts">Artifacts</router-link><span class="nav-spacer">|</span>
+        <router-link :class="{'active-link': isLinkActive(['teamVars'])}" class="main-nav-link" to="/teamVars">Vars</router-link><span class="nav-spacer">|</span>
+        <router-link :class="{'active-link': isLinkActive(['teamAlerts'])}" class="main-nav-link" to="/teamAlerts">Alerts</router-link><span class="nav-spacer">|</span>
+        <router-link :class="{'active-link': isLinkActive(['scripts'])}" class="main-nav-link" to="/scripts">Scripts</router-link>
       </div>
 
       <div class="right-nav">
         <div v-if="userTeamIds.length > 1" class="dropdown is-right" :class="{'is-active': showTeamsMenu}" v-click-outside="onClickedOutsideTeamsMenu">
           <div class="dropdown-trigger">
-            <a href="" @click.prevent="onClickedTeamsMenu">{{selectedTeamName}}</a> |
+            <a class="main-nav-link" @click.prevent="onClickedTeamsMenu">{{selectedTeamName}}</a><span class="nav-spacer">|</span>
           </div>
           <div class="dropdown-menu" id="dropdown-menu" role="menu">
             <div class="dropdown-content" role="menu">
@@ -50,12 +50,12 @@
           </div>
         </div>
         <div v-else>
-          {{selectedTeamName}} |
+          <span class="main-nav-link" style="margin-right: 5px;">{{selectedTeamName}}</span><span class="nav-spacer">|</span>
         </div>
 
         <div class="dropdown is-right" :class="{'is-active': showUserMenu}" v-click-outside="onClickedOutsideUserMenu">
           <div class="dropdown-trigger">
-            <a href="" @click.prevent="onClickedUserMenu">{{userName}} </a>
+            <a class="main-nav-link" :class="{'active-link': isLinkActive(['inviteTeammates', 'invitationsForMe', 'invoices', 'settings'])}"  @click.prevent="onClickedUserMenu">{{userName}} </a>
           </div>
           <div class="dropdown-menu" id="dropdown-menu" role="menu">
             <div class="dropdown-content" role="menu">
@@ -87,22 +87,25 @@
       <router-view/>
     </div>
 
-    <div class="nav-footer">
+    <div class="nav-footer" v-if="! isOnLandingPage()">
       <span v-if="alertFooter" class="footer-message" :class="AlertCategory[alertFooter.category]">{{alertFooter.message}}</span>
+      <span v-else>&nbsp;</span>
+
+      <span v-if="alertFooterRight" class="footer-message nav-footer-right" :class="AlertCategory[alertFooterRight.category]">{{alertFooterRight.message}}</span>
     </div>
   </div>
 </template>
 
 
 <script lang="ts">
-import router from '@/router';
-import { ClickOutside } from '@/directive';
+import router from './router';
+import { ClickOutside } from './directive';
 import { Component, Vue, Watch } from 'vue-property-decorator';
-import { StoreType } from '@/store/types';
-import { enumKeyToPretty } from '@/utils/Enums';
-import { Team } from '@/store/team/types';
-import { SgAlert, AlertPlacement, AlertCategory } from '@/store/alert/types';
-import { BindSelected, BindStoreModel } from '@/decorator';
+import { StoreType } from './store/types';
+import { enumKeyToPretty } from './utils/Enums';
+import { Team } from './store/team/types';
+import { SgAlert, AlertPlacement, AlertCategory } from './store/alert/types';
+import { BindSelected, BindStoreModel } from './decorator';
 import axios from 'axios';
 import Cookies from 'js-cookie';
 
@@ -126,6 +129,9 @@ export default class App extends Vue {
 
   @BindStoreModel({storeType: StoreType.AlertStore, selectedModelName: 'currentFooter'})
   private alertFooter!: SgAlert;
+
+  @BindStoreModel({storeType: StoreType.AlertStore, selectedModelName: 'currentFooterRight'})
+  private alertFooterRight!: SgAlert;
 
   @BindStoreModel({storeType: StoreType.AlertStore, selectedModelName: 'currentWindow'})
   private alertWindow!: SgAlert;
@@ -331,19 +337,33 @@ export default class App extends Vue {
 }
 
 .nav-bar {
-  padding: 30px;
   display: flex;
   justify-content: space-between;
   align-items: center;
   min-width: 1200px;
+  padding-left: 10px;
+  padding-right: 10px;
+  padding-top: 10px;
+  padding-bottom: 10px;
+  background-color: black;
 
-  a {
+  .main-nav-link {
     font-weight: bold;
-    color: #2c3e50;
+    //color: #2c3e50;
+    color: white;
 
     &.active-link {
       color: #42b983;
+      font-size: 1.2em;
+      margin-bottom: -2px;
     }
+  }
+
+  .nav-spacer {
+    color: white;
+    font-size: 1em;
+    margin-left: 5px;
+    margin-right: 5px;
   }
 
   .left-nav {
@@ -354,6 +374,7 @@ export default class App extends Vue {
   .right-nav {
     display: flex;
     align-items: flex-end;
+    margin-bottom: -10px;
   }
 
   a {
@@ -368,9 +389,11 @@ export default class App extends Vue {
 }
 
 .nav-footer {
+  display: flex;
+  justify-content: space-between;
   position: fixed;
   height: 25px;
-  background-color: white;
+  background-color: black;
   border-top: 1px solid $grey-lighter;
   left: 0px;
   bottom: 0px;
@@ -382,12 +405,22 @@ export default class App extends Vue {
   padding-bottom: 8px;
 }
 
+.nav-footer-right {
+  margin-right: 5px;
+}
+
 [name=alertMessage] .Error {
   color: red;
 }
 
 .footer-message {
+  color: white;
+  font-weight: 700;
   margin-left: 10px;
+}
+
+.footer-message.WARNING{
+  color: orange;
 }
 
 .footer-message.ERROR{
@@ -395,6 +428,7 @@ export default class App extends Vue {
 }
 
 .nav-main {
+  margin-top: 10px;
   margin-bottom: 25px;
 }
 
