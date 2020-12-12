@@ -58,7 +58,7 @@ export class CreateInvoiceService {
         data.numNewAgents = 0;
         let newAgentsFilter: any = {};
         newAgentsFilter['_teamId'] = data._teamId;
-        newAgentsFilter['createDate'] = { $gte: startDate.toDate() };
+        newAgentsFilter['createDate'] = { $gte: data.startDate };
 
         let numNewAgents: number = 0;
         let numNewAgentsQuery = await AgentModel.aggregate([
@@ -71,7 +71,7 @@ export class CreateInvoiceService {
         // let numOldAgents = 0;
         // let oldAgentsFilter: any = {};
         // oldAgentsFilter['_teamId'] = data._teamId;
-        // oldAgentsFilter['createDate'] = { $lt: startDate.toDate() };
+        // oldAgentsFilter['createDate'] = { $lte: data.startDate };
 
         // let numOldAgentsQuery = await AgentModel.aggregate([
         //     { $match: oldAgentsFilter },
@@ -92,7 +92,7 @@ export class CreateInvoiceService {
         /// Get number of non-interactive console scripts executed in billing period
         let invoiceScriptsFilter: any = {};
         invoiceScriptsFilter['_teamId'] = data._teamId;
-        invoiceScriptsFilter['dateStarted'] = { $gte: startDate.toDate(), $lt: endDate.toDate() };
+        invoiceScriptsFilter['dateStarted'] = { $gte: data.startDate, $lte: data.endDate };
         invoiceScriptsFilter['_invoiceId'] = { $exists: false };
         invoiceScriptsFilter['source'] = TaskSource.JOB;
 
@@ -108,7 +108,7 @@ export class CreateInvoiceService {
         /// Get number of interactive console scripts executed in billing period
         let invoiceICScriptsFilter: any = {};
         invoiceICScriptsFilter['_teamId'] = data._teamId;
-        invoiceICScriptsFilter['dateStarted'] = { $gte: startDate.toDate(), $lt: endDate.toDate() };
+        invoiceICScriptsFilter['dateStarted'] = { $gte: data.startDate, $lte: data.endDate };
         invoiceICScriptsFilter['_invoiceId'] = { $exists: false };
         invoiceICScriptsFilter['source'] = TaskSource.CONSOLE;
 
@@ -125,7 +125,7 @@ export class CreateInvoiceService {
         data.artifactsDownloadedGB = 0;
         let taskOutcomesFilter: any = {};
         taskOutcomesFilter['_teamId'] = data._teamId;
-        taskOutcomesFilter['dateStarted'] = { $gte: startDate.toDate(), $lt: endDate.toDate() };
+        taskOutcomesFilter['dateStarted'] = { $gte: data.startDate, $lte: data.endDate };
 
         let artifactDownloadsQuery = await TaskOutcomeModel.aggregate([
             { $match: taskOutcomesFilter },
@@ -141,7 +141,7 @@ export class CreateInvoiceService {
         data.artifactsStorageGB = 0;
         let teamStorageFilter: any = {};
         teamStorageFilter['_teamId'] = data._teamId;
-        teamStorageFilter['date'] = { $gte: startDate.toDate(), $lte: endDate.toDate() };
+        teamStorageFilter['date'] = { $gte: data.startDate, $lte: data.endDate };
 
         let artifactStorageQuery = await TeamStorageModel.find(teamStorageFilter).select('numobservations bytes');
         if (_.isArray(artifactStorageQuery) && artifactStorageQuery.length > 0) {
