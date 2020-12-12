@@ -1565,8 +1565,10 @@ let CreateStripeCompanyForTeams = async () => {
       team.id = team._id;
 
       let res: any = await stripeClientTokenService.createStripeCustomer(team);
-
       console.log('res -> ', JSON.stringify(res, null, 4));
+
+      let updateRes = await teamService.updateTeam(team.id, {stripe_id: res.customer.id});
+      console.log('updateRes -> ', JSON.stringify(updateRes, null, 4));
     }
   }
   
@@ -1877,7 +1879,7 @@ let SendTestBrowserAlert = async() => {
 
 // RunCheckWaitingForAgentTasks('5f57b2f14b5da00017df0d4f');
 // CreateBrainTreeCompanyForTeams();
-// CreateStripeCompanyForTeams();
+CreateStripeCompanyForTeams();
 // FixTeamDBRecords();
 // FixScriptDBRecords();
 // SendTestBrowserAlert();
@@ -1890,7 +1892,7 @@ let SendTestBrowserAlert = async() => {
 // CreateTeam("saas glue admin", "5ef125b4fb07e500150507ca");
 // DumpMongoData('./production_20200615.json');
 // LoadMongoData('./testdata_1.json');
-DumpSettingsFromMongo();
+// DumpSettingsFromMongo();
 // LoadSettingsToMongo();
 // TestForEach();
 // UpdateAgentVersion();

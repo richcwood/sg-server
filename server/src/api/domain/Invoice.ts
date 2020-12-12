@@ -18,6 +18,12 @@ export class InvoiceSchema {
   _teamId: mongodb.ObjectId;
 
   @prop({ required: true })
+  month: number;
+
+  @prop({ required: true })
+  year: number;
+
+  @prop({ required: true })
   startDate: Date;
 
   @prop({ required: true })
