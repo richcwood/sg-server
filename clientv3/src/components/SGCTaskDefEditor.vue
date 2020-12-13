@@ -73,7 +73,7 @@
 
           <tr class="tr">
             <td class="td">
-              <label class="label">Lamba Runtimes</label>
+              <label class="label">Lamba Runtime</label>
             </td>
             <td class="td">
               <div class="select">

@@ -16,8 +16,8 @@ import { BaseLogger } from '../../shared/SGLogger';
 export class InvoiceController {
 
     public async getManyInvoices(req: Request, resp: Response, next: NextFunction): Promise<void> {
-        // const _teamId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._teamid);
-        defaultBulkGet({}, req, resp, next, InvoiceSchema, InvoiceModel, invoiceService);
+        const _teamId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._teamid);
+        defaultBulkGet({_teamId}, req, resp, next, InvoiceSchema, InvoiceModel, invoiceService);
     }
 
 
