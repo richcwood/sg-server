@@ -5,12 +5,13 @@
              class="control input search-input" 
              :class="{activeAgent: agent && isAgentActive(agent)}"
              style="padding-left: 30px;" 
+             :style="{width: width}"
              @focus="onSearchInputFocus" 
              @blur="onSearchInputBlur" 
              @keydown="onSearchKeyDown" 
              v-model="search" 
              placeholder="Agent name">
-      <font-awesome-icon icon="search" style="position: absolute; left: 20px; top: 10px; color: #dbdbdb;" />
+      <font-awesome-icon icon="search" style="position: absolute; left: 10px; top: 10px; color: #dbdbdb;" />
     </span>
     <div class="search-choices" v-if="choices.length > 0">
       <div class="search-choice" v-for="choice in choices" v-bind:key="choice.id" @mousedown="onSearchOnMouseDown(choice)">
@@ -37,6 +38,8 @@ export default class AgentSearch extends Vue {
   @Prop() private agentId!: string;
 
   @Prop() private disabled!: boolean;
+
+  @Prop({default: '250px'}) private width!: string;
 
   private finishedMounting = false;
 
@@ -134,7 +137,6 @@ export default class AgentSearch extends Vue {
   }
 
   .search-input {
-    margin-left: 10px;
     width: 250px;
   }
 
