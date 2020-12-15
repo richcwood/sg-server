@@ -37,6 +37,9 @@ export class ScheduleService {
 
 
     public async createSchedule(_teamId: mongodb.ObjectId, data: any, correlationId: string, responseFields?: string): Promise<object> {
+        if (data.Seconds)
+            throw new ValidationError('Seconds interval not supported');
+
         data._teamId = _teamId;
         const scheduleModel = new ScheduleModel(data);
         const newSchedule = await scheduleModel.save();
@@ -56,6 +59,9 @@ export class ScheduleService {
 
 
     public async updateSchedule(_teamId: mongodb.ObjectId, id: mongodb.ObjectId, data: any, correlationId: string, responseFields?: string): Promise<object> {
+        if (data.Seconds)
+            throw new ValidationError('Seconds interval not supported');
+
         const filter = { _id: id, _teamId };
         data.scheduleError = '';
 

@@ -431,10 +431,10 @@
                   </tr>
                   <tr class="tr">
                     <td class="td">
-                      Seconds
+                      Minutes
                     </td>
                     <td class="td">
-                      <input class="input" type="text" v-model="editSchedule_interval.Seconds">
+                      <input class="input" type="text" v-model="editSchedule_interval.Minutes">
                     </td>
                   </tr>
                   <tr class="tr">
