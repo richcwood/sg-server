@@ -157,7 +157,7 @@
     <table class="table" style="width: 100%;">
       <tr class="tr">
         <td class="td" colspan="2">
-          <script-search-with-create :scriptId="scriptId" @scriptPicked="onScriptPicked"></script-search-with-create>
+          <script-search-with-create :width="'400px'" :scriptId="scriptId" @scriptPicked="onScriptPicked"></script-search-with-create>
         </td>
       </tr>
     </table>
