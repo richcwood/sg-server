@@ -66,6 +66,18 @@ export class InvoiceSchema {
   numNewAgents: number;
 
   @prop({ required: true })
+  awsLambdaComputeGbSecondsRate: number;
+
+  @prop({ required: true })
+  awsLambdaComputeGbSeconds: number;
+
+  @prop({ required: true })
+  awsLambdaRequestsRate: number;
+
+  @prop({ required: true })
+  awsLambdaRequests: number;
+
+  @prop({ required: true })
   billAmount: number;
 
   @prop({ required: true })

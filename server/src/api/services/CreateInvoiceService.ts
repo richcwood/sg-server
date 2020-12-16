@@ -163,6 +163,45 @@ export class CreateInvoiceService {
             data.artifactsStorageGB = Math.max(data.artifactsStorageGB, 0);
         }
 
+
+
+        // /// Get total aws lambda requests for this billing period
+        // data.awsLambdaRequests = 0;
+        // let awsLambdaRequestsFilter: any = {};
+        // awsLambdaRequestsFilter['_teamId'] = data._teamId;
+        // awsLambdaRequestsFilter['dateStarted'] = { $gte: data.startDate, $lte: data.endDate };
+        // awsLambdaRequestsFilter['_invoiceId'] = { $exists: false };
+        // awsLambdaRequestsFilter['sgcBilledDuration'] = { $exists: true };
+
+        // let awsLambdaRequestsQuery = await StepOutcomeModel.aggregate([
+        //     { $match: awsLambdaRequestsFilter },
+        //     { $group: { _id: null, sumAwsLambdaRequests: { $sum: "$awsLambdaRequests" } } }
+        // ]);
+        // if (_.isArray(awsLambdaRequestsQuery) && awsLambdaRequestsQuery.length > 0) {
+        //     data.artifactsDownloadedGB = awsLambdaRequestsQuery[0].sumArtifactsDownloadedSize / 1024 / 1024 / 1024;
+        //     data.artifactsDownloadedGB = data.artifactsDownloadedGB - freeTierSettings.freeArtifactsDownloadBytes;
+        //     data.artifactsDownloadedGB = Math.max(data.artifactsDownloadedGB, 0);
+        // }
+
+        // /// Get total aws lambda gb seconds for this billing period
+        // data.awsLambdaComputeGbSeconds = 0;
+        // let taskOutcomesFilter: any = {};
+        // taskOutcomesFilter['_teamId'] = data._teamId;
+        // taskOutcomesFilter['dateStarted'] = { $gte: data.startDate, $lte: data.endDate };
+
+        // let artifactDownloadsQuery = await TaskOutcomeModel.aggregate([
+        //     { $match: taskOutcomesFilter },
+        //     { $group: { _id: null, sumArtifactsDownloadedSize: { $sum: "$artifactsDownloadedSize" } } }
+        // ]);
+        // if (_.isArray(artifactDownloadsQuery) && artifactDownloadsQuery.length > 0) {
+        //     data.artifactsDownloadedGB = artifactDownloadsQuery[0].sumArtifactsDownloadedSize / 1024 / 1024 / 1024;
+        //     data.artifactsDownloadedGB = data.artifactsDownloadedGB - freeTierSettings.freeArtifactsDownloadBytes;
+        //     data.artifactsDownloadedGB = Math.max(data.artifactsDownloadedGB, 0);
+        // }
+
+
+
+
         /// Get billing rates from default settings if not provided explicitly
         if (!data.scriptPricing || !data.jobStoragePerMBRate || !data.newAgentRate || !data.defaultArtifactsStoragePerGBRate || !data.artifactsDownloadedPerGBRate) {
             if (!data.scriptPricing)
