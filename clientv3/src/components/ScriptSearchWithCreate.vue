@@ -98,7 +98,7 @@
 
 
   <button class="button" @click="onCreateScriptClicked">Create Script</button>
-  <script-search :scriptId="scriptId" @scriptPicked="onScriptPicked"></script-search>
+  <script-search :width="width" :scriptId="scriptId" @scriptPicked="onScriptPicked"></script-search>
   <button class="button button-spaced" style="margin-left: 12px;" :disabled="!script" @click="onCloneScriptClicked">Clone</button>
 
 
@@ -126,6 +126,8 @@ export default class ScriptSearchWithCreate extends Vue {
   private readonly scriptTypesForMonaco = scriptTypesForMonaco;
 
   @Prop() private scriptId!: string;
+
+  @Prop({default: '250px'}) private width!: string;
 
   @BindSelected({ storeType: <any>StoreType.ScriptStore.toString() })
   private script!: Script | null;

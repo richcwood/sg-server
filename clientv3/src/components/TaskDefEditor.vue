@@ -35,7 +35,7 @@
             </td>
             <td class="td">
               <validation-provider name="Task Name" rules="required|object-name" v-slot="{ errors }">
-                <input class="input" v-model="taskDef.name">
+                <input class="input" style="width: 350px;" v-model="taskDef.name">
                 <div v-if="errors && errors.length > 0" class="message validation-error is-danger">{{ errors[0] }}</div>
               </validation-provider>
             </td>
@@ -44,115 +44,109 @@
           </tr>
 
           <tr class="tr">
-            <td class="td"></td>
             <td class="td">
-              Run on single agent
+              <label class="label" style="width: 150px;">Target Agent(s)</label>
             </td>
             <td class="td">
-              <span style="margin-left:40px;">Run on multiple agents</span>
-            </td>
-          </tr>
-          <tr class="tr">
-            <td class="td"></td>
-            <td class="td">
-              <input type="radio" class="radio" v-model="taskDef.target" :value="TaskDefTarget.SINGLE_SPECIFIC_AGENT"/> This agent
-            </td>
-            <td class="td">
-              <input type="radio" class="radio" style="margin-left: 40px;" v-model="taskDef.target" :value="TaskDefTarget.ALL_AGENTS_WITH_TAGS"/> Active agents with tags
+              <select class="input" style="width: 350px;" v-model="taskDef.target">
+                <option v-for="(targetIndex, targetName) in TargetAgentChoices" :key="`target-choice-${targetIndex}`" :value="targetIndex">
+                  {{targetName}}
+                </option>
+              </select>
             </td>
           </tr>
-          <tr class="tr">
-            <td class="td"></td>
+
+          <tr class="tr" v-if="taskDef.target === TaskDefTarget.SINGLE_SPECIFIC_AGENT">
             <td class="td">
-              <agent-search :agentId="taskDef.targetAgentId"  @agentPicked="onTargetAgentPicked" :disabled="taskDef.target !== TaskDefTarget.SINGLE_SPECIFIC_AGENT"></agent-search>
+              <label class="label" style="width: 150px;">Target Agent</label>
+            </td>
+            <td class="td">
+              <agent-search :agentId="taskDef.targetAgentId" :width="'350px'" @agentPicked="onTargetAgentPicked"></agent-search>
+            </td>
+          </tr>
+
+          <tr class="tr" v-if="taskDef.target === TaskDefTarget.ALL_AGENTS_WITH_TAGS || taskDef.target === TaskDefTarget.SINGLE_AGENT_WITH_TAGS">
+            <td class="td">
+              <label class="label" style="width: 150px;">Target Agent Tags</label>
             </td>
             <td class="td">
               <validation-provider name="Target Tags" rules="variable-map" v-slot="{ errors }">
-                <input type="text" class="input" style="margin-left: 60px;" v-model="taskDef_requiredTags_string" :disabled="taskDef.target !== TaskDefTarget.ALL_AGENTS_WITH_TAGS"/> 
-                <div v-if="errors && errors.length > 0" class="message validation-error is-danger" style="margin-left: 60px;">{{ errors[0] }}</div>
+                <input type="text" class="input" v-model="taskDef_requiredTags_string"/> 
+                <div v-if="errors && errors.length > 0" class="message validation-error is-danger">{{ errors[0] }}</div>
               </validation-provider>
-            </td>
-          </tr>
-          <tr class="tr">
-            <td class="td"></td>
-            <td class="td">
-              <input type="radio" class="radio" v-model="taskDef.target" :value="TaskDefTarget.SINGLE_AGENT_WITH_TAGS"/> An agent with tags
-            </td>
-            <td class="td">
-              <input type="radio" class="radio" style="margin-left: 40px;" v-model="taskDef.target" :value="TaskDefTarget.ALL_AGENTS"/> All active agents
-            </td>
-          </tr>
-          <tr class="tr">
-            <td class="td"></td>
-            <td class="td">
-              <validation-provider name="Target Tags" rules="variable-map" v-slot="{ errors }">
-                <input type="text" class="input" style="margin-left: 20px;" v-model="taskDef_requiredTags_string" :disabled="taskDef.target !== TaskDefTarget.SINGLE_AGENT_WITH_TAGS"/> 
-                <div v-if="errors && errors.length > 0" class="message validation-error is-danger" style="margin-left: 20px;">{{ errors[0] }}</div>
-              </validation-provider>
-            </td>
-          </tr>
-          <tr class="tr">
-            <td class="td"></td>
-            <td class="td">
-              <input type="radio" class="radio" v-model="taskDef.target" :value="TaskDefTarget.SINGLE_AGENT"/> Any active agent
             </td>
           </tr>
 
           <tr class="tr">
-            <td class="td"></td>
+            <td class="td">
+              <label class="label" style="width: 150px;">Auto Restart</label>
+            </td>
             <td class="td">
               <input type="checkbox" 
                 v-model="taskDef.autoRestart" 
                 :disabled="taskDef.target === TaskDefTarget.ALL_AGENTS || taskDef.target === TaskDefTarget.ALL_AGENTS_WITH_TAGS">
-              Auto restart
             </td>
           </tr>
+
           <tr class="tr">
             <td class="td"></td>
             <td class="td">
               <button class="button is-primary" :disabled="!hasTaskDefChanged" @click="onSaveTaskDefClicked">Save</button>
               <button class="button button-spaced" :disabled="!hasTaskDefChanged" @click="cancelTaskDefChanges">Cancel</button>
             </td>
-            <td class="td"></td>
+          </tr>
+
+          <tr class="tr">
+            <td class="td" colspan="2">
+              <span style="margin-top: 15px;"> </span>
+            </td>
+          </tr>
+
+          <tr class="tr">
+            <td class="td">
+              <label class="label" style="width: 150px;">Steps</label>
+            </td>
+            <td class="td">
+              <div class="select is-multiple">
+                <select multiple size="8" style="width: 350px; height:200px; margin-bottom: 10px;" v-model="selectedStepDefsForOrder">
+                  <option v-for="stepDef in stepDefs" v-bind:key="stepDef.id" :value="stepDef">{{`${stepDef.name}`}}</option>
+                </select>
+              </div>
+              <div>
+                <button class="button" style="width: 120px;" :disabled="!selectedStepDefForOrder || isSelectedStepDefFirst()" @click="onMoveStepDefUpClicked">Move Up</button>
+                <button class="button button-spaced" style="width: 120px;" :disabled="!selectedStepDefForOrder || isSelectedStepDefLast()" @click="onMoveStepDefDownClicked">Move Down</button>
+              </div>
+              <div style="margin-top: 10px;">
+                <button class="button" style="width: 120px;" @click="createNewStepDef">Create Step</button>
+                <button class="button button-spaced"  style="width: 120px;" :disabled="!selectedStepDefForOrder" @click="onDeleteStepDefClicked">Delete</button>
+                <button class="button button-spaced" :disabled="!selectedStepDefForOrder" @click="onEditStepDefClicked">Edit</button>
+              </div>
+            </td>
+          </tr>
+
+          <tr class="tr">
+            <td class="td" colspan="2">
+              <span style="margin-top: 15px;"> </span>
+            </td>
+          </tr>
+
+          <tr class="tr">
+            <td class="td">
+              <label class="label" style="width: 150px;">Artifacts</label>
+            </td>
+            <td class="td">
+              <div class="select is-multiple">
+                <select multiple size="8" style="width: 350px; height: 200px; margin-bottom: 10px;" v-model="selectedArtifactIds">
+                  <option v-for="artifactId in taskDef.artifacts" v-bind:key="artifactId" :value="artifactId">{{getArtifact(artifactId).prefix}} {{getArtifact(artifactId).name}}</option>
+                </select>
+              </div>
+              <div>
+                <button class="button" @click="onAddArtifactClicked">Add Artifact(s)</button>
+                <button class="button button-spaced" @click="onRemoveArtifactClicked" :disabled="selectedArtifactIds.length === 0" >Remove Artifact(s)</button>
+              </div>
+            </td>
           </tr>
         </table>
-
-        <div style="display: flex;">
-          <div style="margin-left: 25px;">
-            <div>
-              Task steps
-            </div>
-            <div class="select is-multiple">
-              <select multiple size="8" style="width: 350px; height:200px; margin-bottom: 10px;" v-model="selectedStepDefsForOrder">
-                <option v-for="stepDef in stepDefs" v-bind:key="stepDef.id" :value="stepDef">{{`${stepDef.name}`}}</option>
-              </select>
-            </div>
-            <div>
-              <button class="button" @click="createNewStepDef">Create Step</button>
-              <button class="button button-spaced" :disabled="!selectedStepDefForOrder" @click="onDeleteStepDefClicked">Delete</button>
-              <button class="button button-spaced" :disabled="!selectedStepDefForOrder" @click="onEditStepDefClicked">Edit</button>
-              <p style="margin-top: 5px;"></p>
-              <button class="button" :disabled="!selectedStepDefForOrder || isSelectedStepDefFirst()" @click="onMoveStepDefUpClicked">Move Up</button>
-              <button class="button button-spaced" :disabled="!selectedStepDefForOrder || isSelectedStepDefLast()" @click="onMoveStepDefDownClicked">Move Down</button>
-            </div>
-          </div>
-
-          <div style="margin-left: 35px;">
-            <div>
-              Task artifacts
-            </div>
-            <div class="select is-multiple">
-              <select multiple size="8" style="width: 350px; height: 200px; margin-bottom: 10px;" v-model="selectedArtifactIds">
-                <option v-for="artifactId in taskDef.artifacts" v-bind:key="artifactId" :value="artifactId">{{getArtifact(artifactId).prefix}} {{getArtifact(artifactId).name}}</option>
-              </select>
-            </div>
-            <div>
-              <button class="button" @click="onAddArtifactClicked">Add Artifact(s)</button>
-              <button class="button button-spaced" @click="onRemoveArtifactClicked" :disabled="selectedArtifactIds.length === 0" >Remove Artifact(s)</button>
-            </div>
-          </div>
-        </div>
-
       </validation-observer>
     </div>
   </div>
@@ -183,6 +177,13 @@ export default class TaskDefEditor extends Vue {
 
   // Expose to template
   private readonly TaskDefTarget = TaskDefTarget;
+  private readonly TargetAgentChoices = {
+    'Any Available Agent': TaskDefTarget.SINGLE_AGENT,
+    'A Specific Agent': TaskDefTarget.SINGLE_SPECIFIC_AGENT,
+    'A Single Agent With Tags': TaskDefTarget.SINGLE_AGENT_WITH_TAGS,
+    'All Active Agents': TaskDefTarget.ALL_AGENTS,
+    'All Active Agents With Tags': TaskDefTarget.ALL_AGENTS_WITH_TAGS
+  };
   
   @BindSelectedCopy({storeType: StoreType.TaskDefStore})
   private taskDef!: null|TaskDef;

@@ -537,6 +537,8 @@
         </tbody> 
       </table>
     </modal>
+
+
     
 
     <!-- Job tasks / steps navigation / selection -->
@@ -604,7 +606,7 @@
     <!-- Edit job, including task routes designer -->
     <div class="edit-job" v-if="jobDefForEdit && selectedItemForNav && selectedItemForNav.id === jobDefForEdit.id" :style="{'margin-left': editPanelMarginLeft+'px'}">
 
-      <tabs :defaultIndex="3">
+      <tabs :defaultIndex="3" :onSelect="onTabSelected">
 
         <tab :title="runTabTitle">
           <table class="table">
@@ -1247,6 +1249,49 @@ export default class JobDesigner extends Vue {
     }
 
     this.onJobDefForEditChanged();
+
+    // Change the stupid styling of the stupid vue-slim-tabs crap
+    let stylingCheckCount = 0;
+    const stylingCheckInterval = setInterval(() => {
+      const tabListEl = document.getElementsByClassName('vue-tablist')[0];
+
+      if(tabListEl){
+        (<HTMLElement>tabListEl).style.borderBottomStyle = 'none';
+      }
+
+      if(tabListEl || stylingCheckCount++ > 10){
+        clearInterval(stylingCheckInterval);
+      }
+    }, 25);
+
+    this.onTabSelected();
+  }
+
+  private onTabSelected(){
+    console.log('onTabSelected!');
+    // Change the stupid styling of the stupid vue-slim-tabs crap
+    let stylingCheckCount = 0;
+    const stylingCheckInterval = setInterval(() => {
+      let foundStuff = false;
+
+      if(document.querySelector('[role=tab][aria-selected=true]')){
+        (<any>document.querySelector('[role=tab][aria-selected=true]')).style.backgroundColor = 'whitesmoke';
+        (<any>document.querySelector('[role=tab][aria-selected=true]')).style.fontWeight = 'bold';
+        foundStuff = true;
+      }
+
+      const notSelected = document.querySelectorAll('[role=tab][aria-selected=false]');
+      if(notSelected && notSelected.length > 0){
+        notSelected.forEach((el: any) => {
+          el.style.backgroundColor = 'white';
+          el.style.fontWeight = '';
+        });
+      }
+
+      if(foundStuff || stylingCheckCount++ > 10){
+        clearInterval(stylingCheckInterval);
+      }
+    }, 25);
   }
 
   private beforeDestroy(){
@@ -2148,7 +2193,7 @@ export default class JobDesigner extends Vue {
 }
 </script>
 
-<style scoped lang="scss">
+<style  lang="scss">
   table {
     // The borders just make things really ugly
     td,th  {
@@ -2260,16 +2305,17 @@ export default class JobDesigner extends Vue {
     background-color: $white-ter;
     padding: 8px;
     border-bottom: 1px solid lightgray;
+    border-radius: inherit;
   }
 
   .task-designer-body {
-    background-color: rgb(216, 240, 250);
+    background-color: #ebf6fa;
     padding-top: 20px;
     padding-left: 10px;
     padding-right: 10px;
     padding-bottom: 10px;
-    min-height: 500px;
-    overflow-x: scroll;
+    height: 81vh;
+    border-radius: inherit;
   }
 
   .cron-options-table {
