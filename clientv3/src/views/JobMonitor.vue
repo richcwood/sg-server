@@ -83,7 +83,7 @@
             </template>
           </td>
           <td class="td">{{getUser(job.createdBy, job.name).name}}</td>
-          <td class="td">{{enumKeyToPretty(JobStatus, job.status)}}</td>
+          <td class="td" :style="{color: calcJobStatusColor(job.status)}" >{{enumKeyToPretty(JobStatus, job.status)}}</td>
           <td class="td">{{momentToStringV1(job.dateStarted)}}</td>
           <td class="td">{{momentToStringV1(job.dateCompleted)}}</td>
         </tr>
@@ -95,15 +95,15 @@
 <script lang="ts">
 import { Component, Vue } from 'vue-property-decorator';
 import Datepicker from 'vuejs-datepicker';
-import { StoreType } from '@/store/types';
-import { Job } from '@/store/job/types';
-import { BindStoreModel } from '@/decorator';
-import { momentToStringV1, momentToStringV3 } from '@/utils/DateTime';
+import { StoreType } from '../store/types';
+import { Job } from '../store/job/types';
+import { BindStoreModel } from '../decorator';
+import { momentToStringV1, momentToStringV3 } from '../utils/DateTime';
 import moment from 'moment';
 import axios from 'axios';
 import _ from 'lodash';
-import { JobStatus, TaskStatus, enumKeyToPretty, enumKeys } from '@/utils/Enums';
-import { User } from '@/store/user/types';
+import { JobStatus, TaskStatus, enumKeyToPretty, enumKeys } from '../utils/Enums';
+import { User } from '../store/user/types';
 
 @Component({
   components: {
@@ -173,9 +173,21 @@ export default class JobMonitor extends Vue {
       }
     });
 
-    // sort by dateStarted
+    const statusToSortValue = (status: JobStatus) => {
+      if(status === JobStatus.COMPLETED){
+        return JobStatus.COMPLETED + 100;
+      }
+      else {
+        return status;
+      }
+    }
+
+    // sort by status, dateStarted
     filteredJobs.sort((jobA: Job, jobB: Job) => {
-      if(jobA.dateStarted && jobB.dateStarted){
+      if(jobA.status != jobB.status){
+        return statusToSortValue(jobA.status) - statusToSortValue(jobB.status);
+      }
+      else if(jobA.dateStarted && jobB.dateStarted){
         return (new Date(jobB.dateStarted)).getTime() - (new Date(jobA.dateStarted)).getTime();
       }
       else {
@@ -184,6 +196,20 @@ export default class JobMonitor extends Vue {
     });
 
     return filteredJobs;
+  }
+
+  private calcJobStatusColor(status: JobStatus){
+    switch(status){
+      case JobStatus.NOT_STARTED:
+      case JobStatus.COMPLETED:
+        return 'black';
+      case JobStatus.RUNNING:
+        return 'green';
+      case JobStatus.FAILED:
+        return 'red';
+      default:
+        return 'orange';
+    }
   }
 
   private async mounted(){
