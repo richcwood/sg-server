@@ -40,7 +40,7 @@ export class CreateInvoiceService {
         let endDate = moment.utc(billingDate).endOf('month');
         data.endDate = endDate.toDate();
 
-        let matchingInvoices: any = InvoiceModel.find({ _teamId: data._teamId, month: billingMonth, year: billingYear }).limit(1);
+        let matchingInvoices: any = await InvoiceModel.find({ _teamId: data._teamId, month: billingMonth, year: billingYear }).limit(1);
         if (_.isArray(matchingInvoices) && matchingInvoices.length > 0) {
             logger.LogError('Error creating invoice - invoice already created', {month: billingMonth, year: billingYear, invoice: matchingInvoices[0]});
             throw new ValidationError(`Invoice already exists for ${startDate.format("MMM YYYY")} with id ${matchingInvoices[0]._id}`)
