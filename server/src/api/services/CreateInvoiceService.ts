@@ -35,9 +35,9 @@ export class CreateInvoiceService {
             billingYear = data.year;
 
         let billingDate = new Date(billingYear, billingMonth, 1);
-        let startDate = moment(billingDate).startOf('month');
+        let startDate = moment.utc(billingDate).startOf('month');
         data.startDate = startDate.toDate();
-        let endDate = moment(billingDate).endOf('month');
+        let endDate = moment.utc(billingDate).endOf('month');
         data.endDate = endDate.toDate();
 
         let matchingInvoices: any = InvoiceModel.find({ _teamId: data._teamId, month: billingMonth, year: billingYear }).limit(1);
@@ -163,47 +163,34 @@ export class CreateInvoiceService {
             data.artifactsStorageGB = Math.max(data.artifactsStorageGB, 0);
         }
 
+        /// Get total aws lambda requests for this billing period
+        data.awsLambdaRequests = 0;
+        let awsLambdaRequestsFilter: any = {};
+        awsLambdaRequestsFilter['_teamId'] = data._teamId;
+        awsLambdaRequestsFilter['dateStarted'] = { $gte: data.startDate, $lte: data.endDate };
+        awsLambdaRequestsFilter['_invoiceId'] = { $exists: false };
+        awsLambdaRequestsFilter['sgcBilledDuration'] = { $exists: true };
 
+        let awsLambdaRequestsQuery = await StepOutcomeModel.aggregate([
+            { $match: awsLambdaRequestsFilter },
+            { $count: "num_requests" }
+        ]);
+        if (_.isArray(awsLambdaRequestsQuery) && awsLambdaRequestsQuery.length > 0) {
+            data.awsLambdaRequests = awsLambdaRequestsQuery[0].num_requests;
+        }
 
-        // /// Get total aws lambda requests for this billing period
-        // data.awsLambdaRequests = 0;
-        // let awsLambdaRequestsFilter: any = {};
-        // awsLambdaRequestsFilter['_teamId'] = data._teamId;
-        // awsLambdaRequestsFilter['dateStarted'] = { $gte: data.startDate, $lte: data.endDate };
-        // awsLambdaRequestsFilter['_invoiceId'] = { $exists: false };
-        // awsLambdaRequestsFilter['sgcBilledDuration'] = { $exists: true };
-
-        // let awsLambdaRequestsQuery = await StepOutcomeModel.aggregate([
-        //     { $match: awsLambdaRequestsFilter },
-        //     { $group: { _id: null, sumAwsLambdaRequests: { $sum: "$awsLambdaRequests" } } }
-        // ]);
-        // if (_.isArray(awsLambdaRequestsQuery) && awsLambdaRequestsQuery.length > 0) {
-        //     data.artifactsDownloadedGB = awsLambdaRequestsQuery[0].sumArtifactsDownloadedSize / 1024 / 1024 / 1024;
-        //     data.artifactsDownloadedGB = data.artifactsDownloadedGB - freeTierSettings.freeArtifactsDownloadBytes;
-        //     data.artifactsDownloadedGB = Math.max(data.artifactsDownloadedGB, 0);
-        // }
-
-        // /// Get total aws lambda gb seconds for this billing period
-        // data.awsLambdaComputeGbSeconds = 0;
-        // let taskOutcomesFilter: any = {};
-        // taskOutcomesFilter['_teamId'] = data._teamId;
-        // taskOutcomesFilter['dateStarted'] = { $gte: data.startDate, $lte: data.endDate };
-
-        // let artifactDownloadsQuery = await TaskOutcomeModel.aggregate([
-        //     { $match: taskOutcomesFilter },
-        //     { $group: { _id: null, sumArtifactsDownloadedSize: { $sum: "$artifactsDownloadedSize" } } }
-        // ]);
-        // if (_.isArray(artifactDownloadsQuery) && artifactDownloadsQuery.length > 0) {
-        //     data.artifactsDownloadedGB = artifactDownloadsQuery[0].sumArtifactsDownloadedSize / 1024 / 1024 / 1024;
-        //     data.artifactsDownloadedGB = data.artifactsDownloadedGB - freeTierSettings.freeArtifactsDownloadBytes;
-        //     data.artifactsDownloadedGB = Math.max(data.artifactsDownloadedGB, 0);
-        // }
-
-
-
+        /// Get total aws lambda gb seconds for this billing period
+        data.awsLambdaComputeGbSeconds = 0;
+        let awsLambdaComputeGbSecondsQuery = await StepOutcomeModel.aggregate([
+            { $match: awsLambdaRequestsFilter },
+            { $group: { _id: null, sumAwsLambdaComputeGbSeconds: { $sum: { $multiply: [ "$sgcMemSize", "$sgcBilledDuration", 1/1000.0, 1/1024.0 ] } } } }
+        ]);
+        if (_.isArray(awsLambdaComputeGbSecondsQuery) && awsLambdaComputeGbSecondsQuery.length > 0) {
+            data.awsLambdaComputeGbSeconds = awsLambdaComputeGbSecondsQuery[0].sumAwsLambdaComputeGbSeconds;
+        }
 
         /// Get billing rates from default settings if not provided explicitly
-        if (!data.scriptPricing || !data.jobStoragePerMBRate || !data.newAgentRate || !data.defaultArtifactsStoragePerGBRate || !data.artifactsDownloadedPerGBRate) {
+        if (!data.scriptPricing || !data.jobStoragePerMBRate || !data.newAgentRate || !data.defaultArtifactsStoragePerGBRate || !data.artifactsDownloadedPerGBRate || !data.awsLambdaComputeGbSecondsRate || !data.awsLambdaRequestsRate) {
             if (!data.scriptPricing)
                 data.scriptPricing = billingSettings.defaultScriptPricing;
             if (!data.jobStoragePerMBRate)
@@ -214,6 +201,10 @@ export class CreateInvoiceService {
                 data.artifactsStoragePerGBRate = billingSettings.defaultArtifactsStoragePerGBRate;
             if (!data.artifactsDownloadedPerGBRate)
                 data.artifactsDownloadedPerGBRate = billingSettings.defaultArtifactsDownloadedPerGBRate;
+            if (!data.awsLambdaComputeGbSecondsRate)
+                data.awsLambdaComputeGbSecondsRate = billingSettings.defaultAwsLambdaComputeGbSecondsRate;
+            if (!data.awsLambdaRequestsRate)
+                data.awsLambdaRequestsRate = billingSettings.defaultAwsLambdaRequestsRate;
         }
 
         data.billAmount = 0;
@@ -232,6 +223,11 @@ export class CreateInvoiceService {
             data.billAmount += (data.newAgentRate * data.numNewAgents);
         if (data.jobStoragePerMBRate * data.storageMB >= .01)
             data.billAmount += (data.jobStoragePerMBRate * data.storageMB);
+        if (data.awsLambdaComputeGbSecondsRate * data.awsLambdaComputeGbSeconds >= .01)
+            data.billAmount += (data.awsLambdaComputeGbSecondsRate * data.awsLambdaComputeGbSeconds);
+        if (data.awsLambdaRequestsRate * data.awsLambdaRequests >= .01)
+            data.billAmount += (data.awsLambdaRequestsRate * data.awsLambdaRequests);
+
         // if (data.billAmount <= 0)
         //     return null;
 
