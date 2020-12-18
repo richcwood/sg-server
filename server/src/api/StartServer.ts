@@ -3,6 +3,7 @@ MetricsLogger.init();
 
 import express = require('express');
 import { NextFunction, Request, Response } from 'express';
+const enforce = require('express-sslify');
 import path = require('path');
 import util = require('util');
 const bodyParser = require('body-parser');
@@ -64,8 +65,6 @@ import * as morgan from 'morgan';
 import * as fs from 'fs';
 import { stripeClientTokenRouter } from './routes/StripClientTokenRouter';
 
-
-const env = process.env.NODE_ENV || 'development';
 
 // Create a new express application instance
 const app: express.Application = express();
@@ -202,14 +201,7 @@ class AppBuilder {
       res.send('OKz');
     });
 
-    /* At the top, with other redirect methods before other routes */
-    this.app.get('*', function (req, res, next) {
-      if (req.headers['x-forwarded-proto'] != 'https')
-        res.redirect(['https://', req.get('Host'), req.url].join(''));
-        // res.redirect('https://console.saasglue.com' + req.url)
-      else
-        next() /* Continue to other routes if we're not redirecting */
-    })
+    this.app.use(enforce.HTTPS({ trustProtoHeader: true }));
 
     this.app.use(`${apiURLBase}/team`, teamRouter);
     this.app.use(`${apiURLBase}/agentDownload`, agentDownloadRouter);
