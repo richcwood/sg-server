@@ -63,6 +63,7 @@ import { ValidationError } from './utils/Errors';
 import * as morgan from 'morgan';
 import * as fs from 'fs';
 import { stripeClientTokenRouter } from './routes/StripClientTokenRouter';
+import sslRedirect from 'heroku-ssl-redirect';
 
 
 // Create a new express application instance
@@ -121,7 +122,8 @@ class AppBuilder {
     this.setUpLogger();
     this.setUpMongoLib();
 
-    this.app.use((req, res, next) => {this.ensureSecure(req, res, next)});
+    app.use(sslRedirect());
+    // this.app.use((req, res, next) => {this.ensureSecure(req, res, next)});
   }
 
   private setUpClient() {
