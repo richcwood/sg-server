@@ -194,7 +194,7 @@ class AppBuilder {
     });
 
     // enable ssl redirect
-    app.use(sslRedirect());
+    // app.use(sslRedirect());
 
     this.app.use(`${apiURLBase}/team`, teamRouter);
     this.app.use(`${apiURLBase}/agentDownload`, agentDownloadRouter);
