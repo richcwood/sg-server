@@ -1,7 +1,6 @@
 import { MetricsLogger } from './utils/MetricsLogger';
 MetricsLogger.init();
 
-const sslRedirect = require('heroku-ssl-redirect');
 import express = require('express');
 import { NextFunction, Request, Response } from 'express';
 import path = require('path');
@@ -65,10 +64,20 @@ import * as morgan from 'morgan';
 import * as fs from 'fs';
 import { stripeClientTokenRouter } from './routes/StripClientTokenRouter';
 
+
+const env = process.env.NODE_ENV || 'development';
+
 // Create a new express application instance
 const app: express.Application = express();
 
 const appName = 'SaasGlueAPI';
+
+var forceSsl = function (req, res, next) {
+  if (req.headers['x-forwarded-proto'] !== 'https') {
+      return res.redirect(['https://', req.get('Host'), req.url].join(''));
+  }
+  return next();
+};
 
 var options = {
   autoIndex: false, // Don't build indexes
@@ -193,8 +202,14 @@ class AppBuilder {
       res.send('OKz');
     });
 
-    // enable ssl redirect
-    this.app.use(sslRedirect());
+    /* At the top, with other redirect methods before other routes */
+    this.app.get('*', function (req, res, next) {
+      if (req.headers['x-forwarded-proto'] != 'https')
+        res.redirect(['https://', req.get('Host'), req.url].join(''));
+        // res.redirect('https://console.saasglue.com' + req.url)
+      else
+        next() /* Continue to other routes if we're not redirecting */
+    })
 
     this.app.use(`${apiURLBase}/team`, teamRouter);
     this.app.use(`${apiURLBase}/agentDownload`, agentDownloadRouter);
