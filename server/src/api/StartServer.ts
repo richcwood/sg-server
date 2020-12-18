@@ -122,7 +122,10 @@ class AppBuilder {
     this.setUpLogger();
     this.setUpMongoLib();
 
-    app.use(sslRedirect());
+    app.use(sslRedirect([
+      'other',
+      'production'
+    ]));
     // this.app.use((req, res, next) => {this.ensureSecure(req, res, next)});
   }
 
