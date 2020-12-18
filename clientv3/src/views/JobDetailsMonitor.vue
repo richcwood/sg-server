@@ -254,7 +254,7 @@ import { User } from '@/store/user/types';
 import { showErrors } from '@/utils/ErrorHandler';
 import { Artifact } from '@/store/artifact/types';
 import { TaskDef } from '../store/taskDef/types';
-import TaskMonitorDetails from "@/components/TaskMonitorDetails.vue";
+import TaskMonitorDetails from '../components/TaskMonitorDetails.vue';
 
 @Component({
   components: {

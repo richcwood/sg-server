@@ -240,12 +240,12 @@
           (used in {{scriptStepDefUsageCount}} <a @click="onClickScriptJobUsage"> job steps</a>)
         </div>
         <span style="flex-grow: 1"> </span>
-        <button class="button button-spaced" :disabled="!hasScriptChanged" @click="onClickedScriptDiff">Diff</button>
-        <button class="button button-spaced" :disabled="!hasScriptChanged" @click="warnRevertScriptChanges">Revert</button>
-        <button class="button is-primary button-spaced" :disabled="!hasScriptChanged" @click="onPublishScriptClicked">Publish</button>
+        <button class="button button-spaced" :disabled="!isScriptShadowDifferentThanScript" @click="onClickedScriptDiff">Diff</button>
+        <button class="button button-spaced" :disabled="!isScriptShadowDifferentThanScript" @click="warnRevertScriptChanges">Revert</button>
+        <button class="button is-primary button-spaced" :disabled="!isScriptShadowDifferentThanScript" @click="onPublishScriptClicked">Publish</button>
       </div>
         
-      <div ref="scriptEditor" style="width: 100%; height: 250px; background: hsl(0, 0%, 98%);"></div>
+      <div ref="scriptEditor" style="width: 100%; height: 450px; background: hsl(0, 0%, 98%);"></div>
     </div>
   </div>
 </template>
@@ -254,14 +254,14 @@
 import _ from 'lodash';
 import { Component, Prop, Vue, Watch } from 'vue-property-decorator';
 import { ScriptName } from '../store/scriptName/types';
-import { Script, ScriptType, scriptTypesForMonaco } from '@/store/script/types';
-import { ScriptShadow } from '@/store/scriptShadow/types';
-import { StoreType } from '@/store/types';
+import { Script, ScriptType, scriptTypesForMonaco } from '../store/script/types';
+import { ScriptShadow } from '../store/scriptShadow/types';
+import { StoreType } from '../store/types';
 import { SgAlert, AlertPlacement, AlertCategory } from '@/store/alert/types';
 import { showErrors } from '@/utils/ErrorHandler'; 
 import { JobDef } from '../store/jobDef/types';
 import { TeamVar } from '../store/teamVar/types';
-import { BindStoreModel, BindSelected, BindSelectedCopy, BindProp } from '@/decorator';
+import { BindStoreModel, BindSelected, BindSelectedCopy, BindProp } from '../decorator';
 import { User } from '@/store/user/types';
 import axios from 'axios';
 import * as monaco from 'monaco-editor';
@@ -288,10 +288,13 @@ export default class ScriptEditor extends Vue {
       model.onDidChangeContent((e: monaco.editor.IModelContentChangedEvent) => {
         if (this.scriptShadow) {
           const newCode = model.getLinesContent().join('\n');
+          const newCodeInBase64 = btoa(newCode); // models always store code in base 64
           
-          if(this.scriptShadow.shadowCopyCode !== newCode){
-            this.scriptShadow.shadowCopyCode = newCode;
-            this.hasScriptShadowChanged = true;
+          if(this.scriptShadow.shadowCopyCode !== newCodeInBase64){
+            this.$store.commit(`${StoreType.ScriptShadowStore}/updateSelectedCopy`, {
+              id: this.scriptShadow.id, 
+              shadowCopyCode: newCodeInBase64
+              });
           }
 
           // If the change was made in the full screen editor then we need to copy the changes to the regular editor
@@ -327,17 +330,11 @@ export default class ScriptEditor extends Vue {
   }
 
   private async tryToSaveScriptShadowCopy(){
-    if(this.scriptShadow && this.hasScriptShadowChanged){
+    if(this.hasScriptShadowChanged){
       this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Saving backup of script - ${this.script.name}`, AlertPlacement.FOOTER));
     
       try {
-        const scriptShadowForSave = {
-          id: this.scriptShadow.id,
-          shadowCopyCode: this.scriptShadow.shadowCopyCode
-        };
-
-        this.scriptShadow = await this.$store.dispatch(`${StoreType.ScriptShadowStore}/save`, scriptShadowForSave);
-        this.hasScriptShadowChanged = false; // now the script shadow is up to date
+        await this.$store.dispatch(`${StoreType.ScriptShadowStore}/save`);
       }
       catch(err){
         this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Saving backup of script - ${this.script.name} failed`, AlertPlacement.FOOTER, AlertCategory.ERROR));
@@ -356,9 +353,8 @@ export default class ScriptEditor extends Vue {
 
   @Prop() private script!: Script;
 
-  @BindSelected({storeType: StoreType.ScriptShadowStore})
+  @BindSelectedCopy({storeType: StoreType.ScriptShadowStore})
   private scriptShadow!: ScriptShadow|null;
-  private hasScriptShadowChanged = false;
 
   @Watch('scriptShadow')
   private onScriptShadowChanged() {
@@ -369,11 +365,14 @@ export default class ScriptEditor extends Vue {
 
     if(this.scriptShadow){
       this.scriptEditor = monaco.editor.create(scriptEditor, {
-        value: this.scriptShadow.shadowCopyCode,
+        value: atob(this.scriptShadow.shadowCopyCode),
         language: (<any>scriptTypesForMonaco)[this.script.scriptType],
         theme: this.theme,
         automaticLayout: true,
-        readOnly: !this.isScriptEditable(this.script)
+        readOnly: !this.isScriptEditable(this.script),
+        minimap: {
+          enabled: false
+        }
       });
 
       if(this.scriptShadowCopySaveInterval){
@@ -386,7 +385,11 @@ export default class ScriptEditor extends Vue {
     }
   }
 
-  private get hasScriptChanged(): boolean {
+  private get hasScriptShadowChanged(): boolean {
+    return this.$store.state[StoreType.ScriptShadowStore].storeUtils.hasSelectedCopyChanged();
+  }
+
+  private get isScriptShadowDifferentThanScript(): boolean {
     if(this.script && this.scriptShadow){
       return this.script.code !== this.scriptShadow.shadowCopyCode;
     }
@@ -402,8 +405,6 @@ export default class ScriptEditor extends Vue {
 
     try {
       if(this.script){
-        this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Saving script type - ${this.script.name}`, AlertPlacement.FOOTER));      
- 
         await this.$store.dispatch(`${StoreType.ScriptStore}/save`, {script: {
           id: this.script.id,
           scriptType: this.script.scriptType
@@ -414,7 +415,7 @@ export default class ScriptEditor extends Vue {
     }
     catch(err){
       console.error(err);
-      showErrors('Error saving script type', err);
+      showErrors('Error updating the script type', err);
     }
   }
 
@@ -438,14 +439,13 @@ export default class ScriptEditor extends Vue {
           id: this.scriptShadow.id,
           shadowCopyCode: this.script.code
         };
-        this.scriptShadow = await this.$store.dispatch(`${StoreType.ScriptShadowStore}/save`, revertedScriptShadow);
-        this.onScriptShadowChanged(); // will reset the editor
+        await this.$store.dispatch(`${StoreType.ScriptShadowStore}/save`, revertedScriptShadow);
         this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Script reverted`, AlertPlacement.FOOTER));
       }
     }
     catch(err){
       console.error(err);
-      showErrors('Error reverting script', err);
+      showErrors('Error reverting script changes', err);
       
     }
     finally {
@@ -453,25 +453,21 @@ export default class ScriptEditor extends Vue {
     }
   }
 
-  private async onPublishScriptClicked(){
+  private async onPublishScriptClicked(){ 
     try {
       if(this.script && this.scriptShadow){
-        this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Saving script - ${this.script.name}`, AlertPlacement.FOOTER));      
+        this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Saving script - ${this.script.name}`, AlertPlacement.FOOTER));   
         
-        const updatedScript = {
+        // Update the shadow copy fist, otherwise the script is selected when it's saved and it overwrites
+        // the shadow's changes
+        await this.$store.dispatch(`${StoreType.ScriptShadowStore}/save`);
+        this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Script published`, AlertPlacement.FOOTER));
+        
+        // Update the original script
+        await this.$store.dispatch(`${StoreType.ScriptStore}/save`, {script: {
           id: this.script.id,
           code: this.scriptShadow.shadowCopyCode
-        };
-        this.script = await this.$store.dispatch(`${StoreType.ScriptStore}/save`, {script: updatedScript});
-        
-        // And update the shadow copy
-        const updatedScriptShadow = {
-          id: this.scriptShadow.id,
-          shadowCopyCode: this.scriptShadow.shadowCopyCode
-        };
-        this.scriptShadow = await this.$store.dispatch(`${StoreType.ScriptShadowStore}/save`, updatedScriptShadow);
-
-        this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Script published`, AlertPlacement.FOOTER));
+        }});
       }
     }
     catch(err){
@@ -490,7 +486,7 @@ export default class ScriptEditor extends Vue {
         scriptEditorFullScreenEl.innerHTML = ''; // clear old stuff out
 
         this.fullScreenEditor = monaco.editor.create(scriptEditorFullScreenEl, {
-          value: this.scriptShadow.shadowCopyCode,
+          value: atob(this.scriptShadow.shadowCopyCode),
           language: (<any>scriptTypesForMonaco)[this.script.scriptType],
           theme: this.theme,    
           automaticLayout: true,
@@ -524,8 +520,8 @@ export default class ScriptEditor extends Vue {
         const scriptLanguage = (<any>scriptTypesForMonaco)[this.script.scriptType];
 
         this.scriptDiffEditor.setModel({
-          original: monaco.editor.createModel(this.script.code, scriptLanguage),
-          modified: monaco.editor.createModel(this.scriptShadow.shadowCopyCode, scriptLanguage)
+          original: monaco.editor.createModel(atob(this.script.code), scriptLanguage),
+          modified: monaco.editor.createModel(atob(this.scriptShadow.shadowCopyCode), scriptLanguage)
         });
       }, 100);
     }

@@ -12,8 +12,8 @@
         <tr class="tr">
           <td class="td">
             <div v-if="stepOutcomeForPopup  && stepOutcomeForPopup.runCode" 
-                 style="overflow: scroll; width: 750px; height: 525px;" 
-                 v-html="'<pre>' + stepOutcomeForPopup.runCode + '</pre>'"></div>
+                 style="overflow: scroll; width: 750px; height: 525px;"
+                 v-html="'<pre>' + stepOutcomeRunCodeBase64Decoded + '</pre>'"></div>
             <div v-else>
               Code was missing
             </div>
@@ -172,7 +172,7 @@ import axios from 'axios';
 import { showErrors } from '@/utils/ErrorHandler';
 import { TaskDefTarget } from "@/store/taskDef/types";
 import { momentToStringV1 } from '@/utils/DateTime';
-import { StepOutcome } from '@/store/stepOutcome/types';
+import { StepOutcome } from '../store/stepOutcome/types';
 import { BindStoreModel } from '@/decorator';
 
 @Component
@@ -360,6 +360,15 @@ export default class TaskMonitorDetails extends Vue {
       }
 
       return tailRow;
+    }
+    else {
+      return '';
+    }
+  }
+
+  private get stepOutcomeRunCodeBase64Decoded(){
+    if(this.stepOutcomeForPopup && this.stepOutcomeForPopup.runCode){
+      return atob(this.stepOutcomeForPopup.runCode);
     }
     else {
       return '';

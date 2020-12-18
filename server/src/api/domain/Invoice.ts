@@ -18,6 +18,12 @@ export class InvoiceSchema {
   _teamId: mongodb.ObjectId;
 
   @prop({ required: true })
+  month: number;
+
+  @prop({ required: true })
+  year: number;
+
+  @prop({ required: true })
   startDate: Date;
 
   @prop({ required: true })
@@ -58,6 +64,18 @@ export class InvoiceSchema {
 
   @prop({ required: true })
   numNewAgents: number;
+
+  @prop({ required: true })
+  awsLambdaComputeGbSecondsRate: number;
+
+  @prop({ required: true })
+  awsLambdaComputeGbSeconds: number;
+
+  @prop({ required: true })
+  awsLambdaRequestsRate: number;
+
+  @prop({ required: true })
+  awsLambdaRequests: number;
 
   @prop({ required: true })
   billAmount: number;

@@ -14,7 +14,7 @@
     </div>
 
     <div class="select is-multiple" style="margin-top: 8px; margin-left: 10px;"> 
-      <select multiple size="8" style="width: 600px;" v-model="selectedArtifacts">
+      <select :multiple="allowMultiple" size="10" style="width: 600px; height: 350px;" v-model="selectedArtifacts">
         <option v-for="result in searchResults" v-bind:key="result.id" :value="result.id">
           {{result.prefix}}{{result.name}}
         </option>
@@ -35,6 +35,7 @@ import axios from 'axios';
 export default class ArtifactSearch extends Vue {
 
   @Prop() private disabled!: boolean;
+  @Prop({default: true}) private allowMultiple!: boolean;
   
   private searchPrefix = '';
   private searchName = '';

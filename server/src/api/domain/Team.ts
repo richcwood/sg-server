@@ -123,7 +123,7 @@ export class TeamSchema {
   public static readonly validFilters = {
     'name': [FilterOperator.LIKE],
     'paymentStatusDate': [FilterOperator.LESS_THAN],
-    'id': [FilterOperator.IN],
+    'id': [FilterOperator.IN, FilterOperator.EQUALS],
     'userAssigned': [FilterOperator.EQUALS],
     'isActive': [FilterOperator.EQUALS]
     // 'dog.name': [FilterOperator.IN, FilterOperator.EQUALS, FilterOperator.NOT_EQUALS, FilterOperator.LIKE

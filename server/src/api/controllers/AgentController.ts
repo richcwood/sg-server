@@ -21,7 +21,7 @@ import { TaskFailureCode } from '../../shared/Enums';
 import { taskService } from '../services/TaskService';
 import { AMQPConnector } from '../../shared/AMQPLib';
 import { rabbitMQPublisher } from '../utils/RabbitMQPublisher';
-import { CheckWaitingForAgentTasks } from '../utils/Shared';
+import { CheckWaitingForAgentTasks, CheckWaitingForLambdaRunnerTasks } from '../utils/Shared';
 
 
 const stompUrl = config.get('stompUrl');
@@ -29,6 +29,8 @@ const rmqVhost = config.get('rmqVhost');
 const rmqAdminUrl = config.get('rmqAdminUrl');
 const inactiveAgentQueueTTLHours = parseInt(config.get('inactiveAgentQueueTTLHours'), 10);
 const activeAgentTimeoutSeconds = parseInt(config.get('activeAgentTimeoutSeconds'), 10);
+const adminTeamId = config.get("sgAdminTeam");
+const awsLambdaRequiredTags = config.get("awsLambdaRequiredTags");
 
 
 let appName: string = 'TaskOutcomeService';
@@ -242,6 +244,20 @@ export class AgentController {
                 }
 
                 await CheckWaitingForAgentTasks(_teamId, _agentId, logger, amqp);
+
+                if (_teamId == adminTeamId) {
+                    let isLambdaRunnerAgent: boolean = true;
+                    for (let i = 0; i < Object.keys(awsLambdaRequiredTags).length; i++) {
+                        const key = Object.keys(awsLambdaRequiredTags)[i];
+                        if (agent.tags[key] != awsLambdaRequiredTags[key]) {
+                            isLambdaRunnerAgent = false;
+                            break;
+                        }
+                    }
+
+                    if (isLambdaRunnerAgent)
+                        await CheckWaitingForLambdaRunnerTasks(_agentId, logger, amqp);
+                }
                 // updatedAgent = await agentService.updateAgentHeartbeat(_teamId, _agentId, { offline: false }, req.header('correlationId'), (<string>req.query.responseFields));
             }
 
@@ -277,9 +293,30 @@ export class AgentController {
         const _agentId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.params.agentId);
         const response: ResponseWrapper = resp['body'];
         try {
-            let updatedAgent: any = await agentService.updateAgentTags(_teamId, _agentId, convertRequestData(AgentSchema, req.body), req.header('correlationId'), (<string>req.query.responseFields));
+            let responseFields: string = (<string>req.query.responseFields);
+            if (!responseFields)
+                responseFields = '';
+            else
+                responseFields = responseFields.trim();
+            if (responseFields.indexOf('tags') < 0)
+                responseFields += ' tags';
+            let updatedAgent: any = await agentService.updateAgentTags(_teamId, _agentId, convertRequestData(AgentSchema, req.body), req.header('correlationId'), responseFields);
 
             await CheckWaitingForAgentTasks(_teamId, _agentId, logger, amqp);
+
+            if (_teamId == adminTeamId) {
+                let isLambdaRunnerAgent: boolean = true;
+                for (let i = 0; i < Object.keys(awsLambdaRequiredTags).length; i++) {
+                    const key = Object.keys(awsLambdaRequiredTags)[i];
+                    if (updatedAgent.tags[key] != awsLambdaRequiredTags[key]) {
+                        isLambdaRunnerAgent = false;
+                        break;
+                    }
+                }
+
+                if (isLambdaRunnerAgent)
+                    await CheckWaitingForLambdaRunnerTasks(_agentId, logger, amqp);
+            }
 
             if (_.isArray(updatedAgent) && updatedAgent.length === 0) {
                 next(new MissingObjectError(`Agent ${req.params.agentId} not found.`));
@@ -317,6 +354,9 @@ export class AgentController {
                 if (responseFields.indexOf('numActiveTasks') < 0) {
                     responseFields += " numActiveTasks";
                 }
+                if (responseFields.indexOf('tags') < 0) {
+                    responseFields += " tags";
+                }
             }
             let updatedAgent: any = await agentService.updateAgentProperties(_teamId, _agentId, convertRequestData(AgentSchema, req.body), userEmail, req.header('correlationId'), responseFields);
 
@@ -325,8 +365,23 @@ export class AgentController {
             }
             else {
                 if (req.body.maxActiveTasks && ('numActiveTasks' in updatedAgent) && ('propertyOverrides' in updatedAgent) && ('maxActiveTasks' in updatedAgent.propertyOverrides)) {
-                    if (parseInt(updatedAgent.propertyOverrides.maxActiveTasks) > updatedAgent.numActiveTasks)
+                    if (parseInt(updatedAgent.propertyOverrides.maxActiveTasks) > updatedAgent.numActiveTasks) {
                         await CheckWaitingForAgentTasks(_teamId, _agentId, logger, amqp);
+
+                        if (_teamId == adminTeamId) {
+                            let isLambdaRunnerAgent: boolean = true;
+                            for (let i = 0; i < Object.keys(awsLambdaRequiredTags).length; i++) {
+                                const key = Object.keys(awsLambdaRequiredTags)[i];
+                                if (updatedAgent.tags[key] != awsLambdaRequiredTags[key]) {
+                                    isLambdaRunnerAgent = false;
+                                    break;
+                                }
+                            }
+            
+                            if (isLambdaRunnerAgent)
+                                await CheckWaitingForLambdaRunnerTasks(_agentId, logger, amqp);
+                        }
+                    }
                 }
             
                 response.data = convertResponseData(AgentSchema, updatedAgent);

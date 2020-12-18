@@ -1,7 +1,7 @@
 <template>
   <span class="auto-complete">
     <span style="position: relative;">
-      <input :disabled="disabled" class="control input search-input" style="padding-left: 30px;" @focus="onSearchInputFocus" @blur="onSearchInputBlur" @keydown="onSearchKeyDown" v-model="search" placeholder="Script name">
+      <input :disabled="disabled" class="control input search-input" style="padding-left: 30px;" :style="{width: width}" @focus="onSearchInputFocus" @blur="onSearchInputBlur" @keydown="onSearchKeyDown" v-model="search" placeholder="Script name">
       <font-awesome-icon icon="search" style="position: absolute; left: 20px; top: 10px; color: #dbdbdb;" />
     </span>
     <div class="search-choices" v-if="choices.length > 0">
@@ -24,6 +24,8 @@ export default class ScriptSearch extends Vue {
   @Prop() private scriptId!: string;
 
   @Prop() private disabled!: boolean;
+
+  @Prop({default: '250px'}) private width!: string;
 
   private search = '';
   private choices: Script[] = [];

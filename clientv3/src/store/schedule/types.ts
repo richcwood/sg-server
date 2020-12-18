@@ -40,7 +40,6 @@ export interface Schedule extends Model {
       Days: number,
       Hours: number,
       Minutes: number,
-      Seconds: number,
       Start_Date: string,
       End_Date: string,
       Jitter: number

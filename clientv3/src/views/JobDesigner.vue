@@ -49,13 +49,48 @@
       </table>
     </modal>
 
-    <modal name="create-taskdef-modal" :classes="'round-popup'" :width="400" :height="225">
+    <modal name="create-taskdef-modal-choose-target" :classes="'round-popup'" :width="400" :height="325">
+      <table class="table" width="100%" height="100%">
+        <tr class="tr">
+          <td class="td">
+            What type of task do you want?
+            <br><br>
+            A <b>s</b>aas <b>g</b>lue compute task (SGC) runs in the saas glue cloud rather than on one of your agents.
+            <br>
+            <br>
+          </td>
+        </tr>
+        <tr class="tr">
+          <td class="td">
+            <button class="button" @click="createNewTaskDef">Create Regular Task</button>
+          </td>
+        </tr>
+        <tr class="tr">
+          <td class="td">
+            <button class="button" @click="createNewSGCTaskDef">Create SGC Task</button>
+          </td>
+        </tr>
+        <tr class="tr">
+          <td class="td">
+            <button class="button" @click="cancelCreateNewTaskDef_chooseTarget">Cancel</button>
+          </td>
+        </tr>
+      </table>
+    </modal>
+
+    <modal name="create-taskdef-modal" :classes="'round-popup'" :width="450" :height="275">
       <validation-observer ref="newTaskValidationObserver">
         <table class="table" width="100%" height="100%">
           <tbody class="tbody">
             <tr class="tr">
               <td class="td"></td>
-              <td class="td">Create a new task</td>
+              <td class="td">
+                Create a new <span v-if="isSGCTaskDefType(newTaskTarget)">SGC</span> task
+                <template v-if="isSGCTaskDefType(newTaskTarget)">
+                  <br><br>
+                  A <b>S</b>aas <b>G</b>lue <b>C</b>ompute task runs on AWS lambda instead of running on your own agent environments.
+                </template>
+              </td>
             </tr>
             <tr class="tr">
               <td class="td">Task Name</td>
@@ -396,10 +431,10 @@
                   </tr>
                   <tr class="tr">
                     <td class="td">
-                      Seconds
+                      Minutes
                     </td>
                     <td class="td">
-                      <input class="input" type="text" v-model="editSchedule_interval.Seconds">
+                      <input class="input" type="text" v-model="editSchedule_interval.Minutes">
                     </td>
                   </tr>
                   <tr class="tr">
@@ -470,28 +505,6 @@
     </modal>
 
 
-    <modal name="add-artifact-modal" :classes="'round-popup'" :width="700" :height="700">
-      <table class="table" width="100%" height="100%">
-        <tbody class="tbody">
-          <tr class="tr">
-            <td class="td">Add Artifact(s)</td>
-          </tr>
-          <tr class="tr">
-            <td class="td">
-              <artifact-search id="artifactsearch-modal-autofocus" @artifactsPicked="onArtifactsPicked"></artifact-search>
-            </td>
-          </tr>
-          <tr class="tr">
-            <td class="td">
-              <button class="button is-primary" style="margin-left: 10px;" :disabled="artifactSearchSelectedArtifactIds.length === 0" @click="addArtifacts">Add Artifact(s)</button> 
-              <button class="button button-spaced" @click="cancelAddArtifact">Cancel</button>
-            </td>
-          </tr>
-        </tbody> 
-      </table>
-    </modal>
-
-
     <modal name="route-all-to-taskdef-modal" :classes="'round-popup'" :width="500" :height="300">
       <table class="table" width="100%" height="100%">
         <tbody class="tbody">
@@ -524,6 +537,8 @@
         </tbody> 
       </table>
     </modal>
+
+
     
 
     <!-- Job tasks / steps navigation / selection -->
@@ -544,6 +559,9 @@
           <div class="dropdown-content">
             <a class="dropdown-item" @click.prevent="onNavMenuCreateTaskClicked" >
               Create Task
+            </a>
+            <a class="dropdown-item" @click.prevent="onNavMenuCreateSGComputeTaskClicked">
+              Create SGC Task
             </a>
             <template v-if="selectedTaskDefForEdit === null">
               <span class="dropdown-item" style="color: lightgray;">Create Step</span>
@@ -566,13 +584,13 @@
       
       <div class="nav-job-item" :class="{selected: jobDefForEdit === selectedItemForNav}" @click="selectItemForNav(jobDefForEdit)"> {{calcNavPanelJobName(jobDefForEdit)}}</div>
       <div class="nav-task" :class="{selected: taskDef === selectedItemForNav}" @click="selectItemForNav(taskDef)" v-for="taskDef in taskDefs" v-bind:key="taskDef.id">
-        <span v-if="stepDefsForTaskDef(taskDef).length > 0">
+        <span v-if="!isSGCTaskDefType(taskDef.target) && stepDefsForTaskDef(taskDef).length > 0">
           <span class="nav-expander" @click.stop="onNavTaskDefClicked(taskDef)">{{isNavTaskDefCollapsed(taskDef) ? '+' : '-'}}</span>
         </span>
         <span v-else class="nav-spacer">
         </span>
-        {{calcNavPanelTaskName(taskDef)}}
-        <span v-if="!isNavTaskDefCollapsed(taskDef)">
+        {{calcNavPanelTaskName(taskDef)}} <span v-if="isSGCTaskDefType(taskDef.target)">(sgc)</span>
+        <span v-if="!isNavTaskDefCollapsed(taskDef) && !isSGCTaskDefType(taskDef.target)">
           <div class="nav-step" :class="{selected: stepDef === selectedItemForNav}" @click.stop="selectItemForNav(stepDef)" v-for="stepDef in stepDefsForTaskDef(taskDef)" v-bind:key="stepDef.id">
             {{calcNavPanelStepName(stepDef)}}
           </div>
@@ -586,9 +604,9 @@
 
 
     <!-- Edit job, including task routes designer -->
-    <div class="edit-job" v-if="jobDefForEdit && selectedItemForNav === jobDefForEdit" :style="{'margin-left': editPanelMarginLeft+'px'}">
+    <div class="edit-job" v-if="jobDefForEdit && selectedItemForNav && selectedItemForNav.id === jobDefForEdit.id" :style="{'margin-left': editPanelMarginLeft+'px'}">
 
-      <tabs :defaultIndex="3">
+      <tabs :defaultIndex="3" :onSelect="onTabSelected">
 
         <tab :title="runTabTitle">
           <table class="table">
@@ -895,7 +913,7 @@
         <tab title="Workflow Designer">
           <div class="task-designer">
             <div class="task-designer-nav">
-              <button class="button" :disabled="selectedTaskDefTarget" @click="createNewTaskDef">New Task</button>
+              <button class="button" :disabled="selectedTaskDefTarget" @click="createNewTaskDef_chooseTarget">New Task</button>
               <button class="button button-spaced" :disabled="selectedTaskDefTarget || !selectedTaskDefForDesigner" @click="editTaskDef(selectedTaskDefForDesigner)">Edit Task</button>
               <button class="button button-spaced" :disabled="selectedTaskDefTarget || !selectedTaskDefForDesigner" @click="onDeleteTaskDefClicked">Delete Task</button>
               <button class="button button-spaced" :disabled="selectedTaskDefTarget || !selectedTaskDefForDesigner" @click="onRouteAllTasksToClicked">Route All To {{selectedTaskDefForDesigner && selectedTaskDefForDesigner.name}}</button>
@@ -986,135 +1004,16 @@
     </div>
 
     <!-- Edit task -->
-    <div class="edit-task" v-if="selectedTaskDefForEdit" :style="{'margin-left': editPanelMarginLeft+'px'}">
-      <validation-observer ref="editTaskDefValidationObserver">
-        <table class="table">
-          <tr class="tr">
-            <td class="td">
-              <label class="label">Task Name</label>
-            </td>
-            <td class="td">
-              <validation-provider name="Task Name" rules="required|object-name" v-slot="{ errors }">
-                <input class="input" v-model="selectedTaskDefForEdit.name">
-                <div v-if="errors && errors.length > 0" class="message validation-error is-danger">{{ errors[0] }}</div>
-              </validation-provider>
-            </td>
-            <td class="td">
-            </td>
-          </tr>
+    <task-def-editor v-if="selectedTaskDefForEdit && selectedTaskDefForEdit.target !== TaskDefTarget.AWS_LAMBDA" 
+                     :style="{'margin-left': editPanelMarginLeft+'px'}"
+                     @editStepDef="onEditStepDefClicked"
+                     @createNewStepDef="onCreateStepDefClicked"
+                     @deleteStepDef="onDeleteStepDefClicked">
+    </task-def-editor>
 
-          <tr class="tr">
-            <td class="td"></td>
-            <td class="td">
-              Run on single agent
-            </td>
-            <td class="td">
-              <span style="margin-left:40px;">Run on multiple agents</span>
-            </td>
-          </tr>
-          <tr class="tr">
-            <td class="td"></td>
-            <td class="td">
-              <input type="radio" class="radio" v-model="selectedTaskDefForEdit.target" :value="TaskDefTarget.SINGLE_SPECIFIC_AGENT"/> This agent
-            </td>
-            <td class="td">
-              <input type="radio" class="radio" style="margin-left: 40px;" v-model="selectedTaskDefForEdit.target" :value="TaskDefTarget.ALL_AGENTS_WITH_TAGS"/> Active agents with tags
-            </td>
-          </tr>
-          <tr class="tr">
-            <td class="td"></td>
-            <td class="td">
-              <agent-search :agentId="selectedTaskDefForEdit.targetAgentId"  @agentPicked="onTargetAgentPicked" :disabled="selectedTaskDefForEdit.target !== TaskDefTarget.SINGLE_SPECIFIC_AGENT"></agent-search>
-            </td>
-            <td class="td">
-              <validation-provider name="Target Tags" rules="variable-map" v-slot="{ errors }">
-                <input type="text" class="input" style="margin-left: 60px;" v-model="selectedTaskDefForEdit_requiredTags_string" :disabled="selectedTaskDefForEdit.target !== TaskDefTarget.ALL_AGENTS_WITH_TAGS"/> 
-                <div v-if="errors && errors.length > 0" class="message validation-error is-danger" style="margin-left: 60px;">{{ errors[0] }}</div>
-              </validation-provider>
-            </td>
-          </tr>
-          <tr class="tr">
-            <td class="td"></td>
-            <td class="td">
-              <input type="radio" class="radio" v-model="selectedTaskDefForEdit.target" :value="TaskDefTarget.SINGLE_AGENT_WITH_TAGS"/> An agent with tags
-            </td>
-            <td class="td">
-              <input type="radio" class="radio" style="margin-left: 40px;" v-model="selectedTaskDefForEdit.target" :value="TaskDefTarget.ALL_AGENTS"/> All active agents
-            </td>
-          </tr>
-          <tr class="tr">
-            <td class="td"></td>
-            <td class="td">
-              <validation-provider name="Target Tags" rules="variable-map" v-slot="{ errors }">
-                <input type="text" class="input" style="margin-left: 20px;" v-model="selectedTaskDefForEdit_requiredTags_string" :disabled="selectedTaskDefForEdit.target !== TaskDefTarget.SINGLE_AGENT_WITH_TAGS"/> 
-                <div v-if="errors && errors.length > 0" class="message validation-error is-danger" style="margin-left: 20px;">{{ errors[0] }}</div>
-              </validation-provider>
-            </td>
-          </tr>
-          <tr class="tr">
-            <td class="td"></td>
-            <td class="td">
-              <input type="radio" class="radio" v-model="selectedTaskDefForEdit.target" :value="TaskDefTarget.SINGLE_AGENT"/> Any active agent
-            </td>
-          </tr>
-
-          <tr class="tr">
-            <td class="td"></td>
-            <td class="td">
-              <input type="checkbox" 
-                v-model="selectedTaskDefForEdit.autoRestart" 
-                :disabled="selectedTaskDefForEdit.target === TaskDefTarget.ALL_AGENTS || selectedTaskDefForEdit.target === TaskDefTarget.ALL_AGENTS_WITH_TAGS">
-              Auto restart
-            </td>
-          </tr>
-          <tr class="tr">
-            <td class="td"></td>
-            <td class="td">
-              <button class="button is-primary" :disabled="!hasTaskDefChanged" @click="onSaveTaskDefClicked">Save</button>
-              <button class="button button-spaced" :disabled="!hasTaskDefChanged" @click="cancelTaskDefChanges">Cancel</button>
-            </td>
-            <td class="td"></td>
-          </tr>
-        </table>
-
-        <div style="display: flex;">
-          <div style="margin-left: 25px;">
-            <div>
-              Task steps
-            </div>
-            <div class="select is-multiple">
-              <select multiple size="8" style="width: 350px; height:200px; margin-bottom: 10px;" v-model="selectedStepDefsForOrder">
-                <option v-for="stepDef in stepDefs" v-bind:key="stepDef.id" :value="stepDef">{{`${stepDef.name}`}}</option>
-              </select>
-            </div>
-            <div>
-              <button class="button" @click="createNewStepDef">Create Step</button>
-              <button class="button button-spaced" :disabled="!selectedStepDefForOrder" @click="onDeleteStepDefClicked">Delete</button>
-              <button class="button button-spaced" :disabled="!selectedStepDefForOrder" @click="onEditStepDefClicked">Edit</button>
-              <p style="margin-top: 5px;"></p>
-              <button class="button" :disabled="!selectedStepDefForOrder || isSelectedStepDefFirst()" @click="onMoveStepDefUpClicked">Move Up</button>
-              <button class="button button-spaced" :disabled="!selectedStepDefForOrder || isSelectedStepDefLast()" @click="onMoveStepDefDownClicked">Move Down</button>
-            </div>
-          </div>
-
-          <div style="margin-left: 35px;">
-            <div>
-              Task artifacts
-            </div>
-            <div class="select is-multiple">
-              <select multiple size="8" style="width: 350px; height: 200px; margin-bottom: 10px;" v-model="selectedArtifactIds">
-                <option v-for="artifactId in selectedTaskDefForEdit.artifacts" v-bind:key="artifactId" :value="artifactId">{{getArtifact(artifactId).prefix}} {{getArtifact(artifactId).name}}</option>
-              </select>
-            </div>
-            <div>
-              <button class="button" @click="onAddArtifactClicked">Add Artifact(s)</button>
-              <button class="button button-spaced" @click="onRemoveArtifactClicked" :disabled="selectedArtifactIds.length === 0" >Remove Artifact(s)</button>
-            </div>
-          </div>
-        </div>
-
-      </validation-observer>
-    </div>
+    <s-g-c-task-def-editor v-if="selectedTaskDefForEdit && selectedTaskDefForEdit.target === TaskDefTarget.AWS_LAMBDA" 
+                     :style="{'margin-left': editPanelMarginLeft+'px'}">
+    </s-g-c-task-def-editor>
 
 
     <!-- Edit step -->
@@ -1127,7 +1026,7 @@
             </td>
             <td class="td">
               <validation-provider name="Step Name" rules="required|object-name" v-slot="{ errors }">
-                <input class="input" style="width: 250px;"  v-model="selectedStepDefForEdit.name">
+                <input class="input" style="width: 475px;"  v-model="selectedStepDefForEdit.name">
                 <div v-if="errors && errors.length > 0" class="message validation-error is-danger">{{ errors[0] }}</div>
               </validation-provider>
             </td>
@@ -1137,7 +1036,7 @@
               <label class="label">Arguments</label>
             </td>
             <td class="td">
-              <input class="control input" style="width: 250px;" v-model="selectedStepDefForEdit.arguments">
+              <input class="control input" style="width: 475px;" v-model="selectedStepDefForEdit.arguments">
             </td>
           </tr>
           <tr class="tr">
@@ -1146,7 +1045,7 @@
             </td>
             <td class="td">
               <div class="select is-multiple">
-                <select multiple size="5" style="width: 250px; margin-bottom: 10px;" v-model="selectedStepDefVariables">
+                <select multiple size="5" style="width: 475px; margin-bottom: 10px;" v-model="selectedStepDefVariables">
                   <option v-for="(value, key) in selectedStepDefForEdit.variables" v-bind:key="key" :value="key">{{`${key}=${value}`}}</option>
                 </select>
               </div>
@@ -1172,7 +1071,7 @@
           </tr>
           <tr class="tr">
             <td class="td" colspan="3">
-              <script-editor :script="selectedScriptCopy" :jobDef="jobDef"></script-editor>
+              <script-editor :script="selectedScript" :jobDef="jobDef"></script-editor>
             </td>
           </tr>
         </table>
@@ -1192,13 +1091,13 @@ import DesignerTask from '@/components/DesignerTask.vue';
 import { StoreType } from '@/store/types';
 import { JobDef, JobDefStatus } from '../store/jobDef/types';
 import { TaskDef, TaskDefTarget } from '../store/taskDef/types';
-import { StepDef } from '../store/stepDef/types';
+import { LambaRuntimes, StepDef } from '../store/stepDef/types';
 import { Script, ScriptType, scriptTypesForMonaco } from '../store/script/types';
 import { BindStoreModel, BindSelected, BindSelectedCopy, BindProp } from '@/decorator';
 import { JobStatus, TaskStatus, enumKeyToPretty, enumKeys } from '@/utils/Enums';
 import { SgAlert, AlertPlacement, AlertCategory } from '@/store/alert/types';
 import { ValidationProvider, ValidationObserver } from 'vee-validate';
-import { focusElement, stringToMap, mapToString, truncateString } from '@/utils/Shared';
+import { focusElement, truncateString } from '@/utils/Shared';
 import AgentSearch from '@/components/AgentSearch.vue';
 import { Agent } from "@/store/agent/types";
 import { Tabs, Tab } from 'vue-slim-tabs';
@@ -1215,10 +1114,22 @@ import { ClickOutside } from '@/directive';
 import { Route } from 'vue-router';
 import { showErrors } from '@/utils/ErrorHandler'; 
 import ScriptSearchWithCreate from '@/components/ScriptSearchWithCreate.vue';
+import TaskDefEditor from '@/components/TaskDefEditor.vue';
+import SGCTaskDefEditor from '@/components/SGCTaskDefEditor.vue';
 
 @Component({
   components: {
-    Tabs, Tab, AgentSearch, DesignerTask, ScriptSearchWithCreate, ScriptEditor, ValidationProvider, ValidationObserver, ArtifactSearch
+    Tabs, 
+    Tab, 
+    AgentSearch, 
+    DesignerTask, 
+    ScriptSearchWithCreate, 
+    ScriptEditor, 
+    TaskDefEditor, 
+    SGCTaskDefEditor,
+    ValidationProvider, 
+    ValidationObserver, 
+    ArtifactSearch
   },
   directives: { ClickOutside }
 })
@@ -1240,6 +1151,7 @@ export default class JobDesigner extends Vue {
   private selectedTeamId!: string;
   
   private newTaskName = '';
+  private newTaskTarget = TaskDefTarget.SINGLE_AGENT;
 
   private newStepName = '';
  
@@ -1279,6 +1191,10 @@ export default class JobDesigner extends Vue {
     }
   }
 
+  private isSGCTaskDefType(target: TaskDefTarget){
+    return target === TaskDefTarget.AWS_LAMBDA;
+  }
+
   @BindSelected({storeType: StoreType.JobDefStore})
   private jobDef!: JobDef;
 
@@ -1302,30 +1218,6 @@ export default class JobDesigner extends Vue {
   @BindSelectedCopy({storeType: StoreType.TaskDefStore})
   private selectedTaskDefForEdit!: null|TaskDef;
 
-  private selectedTaskDefForEdit_requiredTags_string = '';
-
-  @Watch('selectedTaskDefForEdit')
-  private onSelectedTaskDefForEditChanged(){
-    if(this.selectedTaskDefForEdit){
-      this.selectedTaskDefForEdit_requiredTags_string = mapToString(this.selectedTaskDefForEdit.requiredTags);
-    }
-    else {
-      this.selectedTaskDefForEdit_requiredTags_string = '';
-    }
-  }
-
-  @Watch('selectedTaskDefForEdit_requiredTags_string')
-  private onSelectedTaskDefForEdit_requiredTags_stringChanged(){
-    try {
-      this.selectedTaskDefForEdit.requiredTags = stringToMap(this.selectedTaskDefForEdit_requiredTags_string);
-    }
-    catch(err){ } // eat it - validator already gave warning
-  }
-
-  // Sadly bulma won't let me define a pretty multiselect and but enforce the user to only make a single selection (html can)
-  private selectedStepDefsForOrder: StepDef[] = [];
-  private selectedStepDefForOrder: null|StepDef = null;
-  
   private selectedStepDefVariables: any[] = [];
   private selectedStepDefVariable: any = null;
 
@@ -1337,9 +1229,6 @@ export default class JobDesigner extends Vue {
 
   @BindSelected({storeType: StoreType.ScriptStore})
   private selectedScript!: null|Script;
-
-  @BindSelectedCopy({storeType: StoreType.ScriptStore})
-  private selectedScriptCopy!: null|Script;
 
   private mounted(){
     // Clear out any previous choices from previous designers
@@ -1360,6 +1249,49 @@ export default class JobDesigner extends Vue {
     }
 
     this.onJobDefForEditChanged();
+
+    // Change the stupid styling of the stupid vue-slim-tabs crap
+    let stylingCheckCount = 0;
+    const stylingCheckInterval = setInterval(() => {
+      const tabListEl = document.getElementsByClassName('vue-tablist')[0];
+
+      if(tabListEl){
+        (<HTMLElement>tabListEl).style.borderBottomStyle = 'none';
+      }
+
+      if(tabListEl || stylingCheckCount++ > 10){
+        clearInterval(stylingCheckInterval);
+      }
+    }, 25);
+
+    this.onTabSelected();
+  }
+
+  private onTabSelected(){
+    console.log('onTabSelected!');
+    // Change the stupid styling of the stupid vue-slim-tabs crap
+    let stylingCheckCount = 0;
+    const stylingCheckInterval = setInterval(() => {
+      let foundStuff = false;
+
+      if(document.querySelector('[role=tab][aria-selected=true]')){
+        (<any>document.querySelector('[role=tab][aria-selected=true]')).style.backgroundColor = 'whitesmoke';
+        (<any>document.querySelector('[role=tab][aria-selected=true]')).style.fontWeight = 'bold';
+        foundStuff = true;
+      }
+
+      const notSelected = document.querySelectorAll('[role=tab][aria-selected=false]');
+      if(notSelected && notSelected.length > 0){
+        notSelected.forEach((el: any) => {
+          el.style.backgroundColor = 'white';
+          el.style.fontWeight = '';
+        });
+      }
+
+      if(foundStuff || stylingCheckCount++ > 10){
+        clearInterval(stylingCheckInterval);
+      }
+    }, 25);
   }
 
   private beforeDestroy(){
@@ -1370,33 +1302,12 @@ export default class JobDesigner extends Vue {
     return this.$store.getters[`${StoreType.TaskDefStore}/getByJobDefId`](this.jobDefForEdit.id);
   }
 
-  @Watch('selectedStepDefsForOrder')
-  private onselectedStepDefsForOrderChanged(){
-    if(this.selectedStepDefsForOrder.length === 1){
-      this.selectedStepDefForOrder = this.selectedStepDefsForOrder[0];
-    }
-    else {
-      this.selectedStepDefForOrder = null;
-    }
-  }
-
-  // based on selectedItemForNav being a taskDef
-  private get stepDefs(){
-    if(this.selectedItemForNav && this.selectedItemForNav.type === 'TaskDef'){
-      return this.stepDefsForTaskDef(<TaskDef>this.selectedItemForNav);
-    }
-    else {
-      return [];
-    }
-  }
-
   private stepDefsForTaskDef(taskDef: TaskDef): StepDef[] {
     return this.$store.getters[`${StoreType.StepDefStore}/getByTaskDefId`](taskDef.id);
   }
 
   private selectItemForNav(selectedItem: null|TaskDef|StepDef){
     this.selectedItemForNav = selectedItem;
-    this.selectedStepDefsForOrder = [];
     this.selectedTaskDefForDesigner = null;
 
     if(selectedItem){
@@ -1486,10 +1397,20 @@ export default class JobDesigner extends Vue {
       console.error(err);
       showErrors('Error saving job', err);
     }
+  } 
+
+  private createNewTaskDef_chooseTarget(){
+    this.$modal.show('create-taskdef-modal-choose-target');
+  }
+
+  private cancelCreateNewTaskDef_chooseTarget(){
+    this.$modal.hide('create-taskdef-modal-choose-target');
   }
 
   private createNewTaskDef(){
+    this.cancelCreateNewTaskDef_chooseTarget();
     this.newTaskName = ''; // reset
+    this.newTaskTarget = TaskDefTarget.SINGLE_AGENT;
     this.$modal.show('create-taskdef-modal');
     focusElement('create-taskdef-modal-autofocus');
   }
@@ -1501,6 +1422,14 @@ export default class JobDesigner extends Vue {
       this.taskDefToDelete = this.selectedTaskDefForDesigner;
       this.$modal.show('delete-taskdef-modal');
     }
+  }
+
+  private createNewSGCTaskDef(){
+    this.cancelCreateNewTaskDef_chooseTarget();
+    this.newTaskName = ''; // reset
+    this.newTaskTarget = TaskDefTarget.AWS_LAMBDA;
+    this.$modal.show('create-taskdef-modal');
+    focusElement('create-taskdef-modal-autofocus');
   }
 
   private onExitRouteEditClicked(){
@@ -1534,6 +1463,7 @@ export default class JobDesigner extends Vue {
 
   private cancelCreateNewTaskDef(){
     this.$modal.hide('create-taskdef-modal');
+    this.cancelCreateNewTaskDef_chooseTarget();
   }
 
   private async saveNewTaskDef(){
@@ -1546,7 +1476,7 @@ export default class JobDesigner extends Vue {
      
       const newTask: TaskDef = {
         _jobDefId: this.jobDefForEdit.id,
-        target: TaskDefTarget.SINGLE_AGENT,
+        target: this.newTaskTarget,
         name: this.newTaskName,
         requiredTags: {},
         fromRoutes: [],
@@ -1554,7 +1484,12 @@ export default class JobDesigner extends Vue {
         artifacts: []
       };
 
-      await this.$store.dispatch(`${StoreType.TaskDefStore}/save`, newTask);
+      const createdTask = await this.$store.dispatch(`${StoreType.TaskDefStore}/save`, newTask);
+
+      if(this.isSGCTaskDefType(this.newTaskTarget)){
+        // Load the step def immediately and wait on this - if anyone views the steps, they are supposed to be in the store right away
+        await this.$store.dispatch(`${StoreType.StepDefStore}/fetchModelsByFilter`, {filter: `_taskDefId==${createdTask.id}`});
+      }
     }
     catch(err){
       console.error(err);
@@ -1562,37 +1497,6 @@ export default class JobDesigner extends Vue {
     }
     finally {
       this.$modal.hide('create-taskdef-modal');
-    }
-  }
-
-  private get hasTaskDefChanged(){
-    return this.$store.state[StoreType.TaskDefStore].storeUtils.hasSelectedCopyChanged();
-  }
-
-  private cancelTaskDefChanges(){
-    // Just reselect the original job def
-    this.$store.dispatch(`${StoreType.TaskDefStore}/select`, this.selectedTaskDef);
-  }
-
-  private async onSaveTaskDefClicked(){
-    try {
-      if(this.selectedTaskDefForEdit){
-        if( ! await (<any>this.$refs.editTaskDefValidationObserver).validate()){
-          return;
-        }
-
-        if(    this.selectedTaskDefForEdit.target === TaskDefTarget.ALL_AGENTS 
-            || this.selectedTaskDefForEdit.target === TaskDefTarget.ALL_AGENTS_WITH_TAGS){
-          this.selectedTaskDefForEdit.autoRestart = false; // clear out this choice
-        }
-
-        this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Saving task - ${this.selectedTaskDefForEdit.name}`, AlertPlacement.FOOTER));      
-        await this.$store.dispatch(`${StoreType.TaskDefStore}/save`);
-      }
-    }
-    catch(err){
-      console.error(err);
-      showErrors('Error saving task', err);
     }
   }
 
@@ -1606,7 +1510,7 @@ export default class JobDesigner extends Vue {
     this.$modal.hide('create-stepdef-modal');
   }
 
-  private async saveNewStepDef(){
+  private async saveNewStepDef(){ 
     if( ! await (<any>this.$refs.newStepValidationObserver).validate()){
       return;
     }
@@ -1639,13 +1543,23 @@ export default class JobDesigner extends Vue {
     }
   }
 
+  // Called from task def editor
+  private onEditStepDefClicked(stepDef: StepDef){
+    this.selectedTaskDef = null;
+    this.selectedStepDef = stepDef;
+  }
+
+  // Called from task def editor
+  private onCreateStepDefClicked(){
+    this.createNewStepDef();
+  }
+
   private stepDefToDelete: StepDef | null = null;
 
-  private onDeleteStepDefClicked(){
-    if(this.selectedStepDefForOrder){
-      this.stepDefToDelete = this.selectedStepDefForOrder;
-      this.$modal.show('delete-stepdef-modal');
-    }
+  // Called from task def editor
+  private onDeleteStepDefClicked(stepDef: StepDef){
+    this.stepDefToDelete = stepDef;
+    this.$modal.show('delete-stepdef-modal');
   }
 
   private async deleteStepDef(){
@@ -1653,7 +1567,6 @@ export default class JobDesigner extends Vue {
       this.$modal.hide('delete-stepdef-modal');
       if(this.stepDefToDelete){
         await this.$store.dispatch(`${StoreType.StepDefStore}/delete`, this.stepDefToDelete);
-        this.selectedStepDefsForOrder = [];
         this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Deleted step - ${this.stepDefToDelete.name}`, AlertPlacement.FOOTER));
       }
     }
@@ -1669,49 +1582,6 @@ export default class JobDesigner extends Vue {
   private cancelDeleteStepDef(){
     this.stepDefToDelete = null;
     this.$modal.hide('delete-stepdef-modal');
-  }
-
-  private onEditStepDefClicked(){
-    if(this.selectedStepDefForOrder){
-      this.selectItemForNav(this.selectedStepDefForOrder);
-    }
-  }
-
-  private isSelectedStepDefFirst(){ 
-    return    this.selectedStepDefForOrder
-           && this.stepDefs[0] === this.selectedStepDefForOrder;
-  }
-
-  private isSelectedStepDefLast(){
-    const lastStepDefIndex = this.stepDefs.length - 1;
-    return    this.selectedStepDefForOrder
-           && this.stepDefs[lastStepDefIndex] === this.selectedStepDefForOrder;
-  }
-
-  private async onMoveStepDefUpClicked(){
-    if(this.selectedStepDefForOrder && ! this.isSelectedStepDefFirst()){
-      this.updateStepDefOrder(this.selectedStepDefForOrder, this.selectedStepDefForOrder.order - 1);
-    }
-  }
-
-  private onMoveStepDefDownClicked(){
-    if(this.selectedStepDefForOrder && ! this.isSelectedStepDefLast()){
-      this.updateStepDefOrder(this.selectedStepDefForOrder, this.selectedStepDefForOrder.order + 1);
-    }
-  }
-
-  private async updateStepDefOrder(stepDef: StepDef, newOrder: number){
-    // Mutate a temp object, real object persisted to the store on successful save
-    const tempStepDef = {id: stepDef.id, order: newOrder};
-
-    try {
-      await this.$store.dispatch(`${StoreType.StepDefStore}/save`, tempStepDef);
-      this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Updated step order`, AlertPlacement.FOOTER));
-    }
-    catch(err){
-      console.error(err);
-      showErrors('Error updating step', err);
-    }
   }
 
   private get hasStepDefChanged(){
@@ -1813,15 +1683,6 @@ export default class JobDesigner extends Vue {
     this.onSelectedStepDefForEditChanged();
   }
 
-  private onTargetAgentPicked(agent: any){
-    if(agent){
-      this.selectedTaskDefForEdit.targetAgentId = agent.id;
-    }
-    else {
-      this.selectedTaskDefForEdit.targetAgentId = null;
-    }
-  }
-
   private newRuntimeVarKey = '';
   private newRuntimeVarValue = '';
   private async onAddRuntimeVarClicked(){
@@ -1831,14 +1692,14 @@ export default class JobDesigner extends Vue {
           return;
         }
 
-        const newVars = _.clone(this.jobDefForEdit.runtimeVars);
-        newVars[this.newRuntimeVarKey] = this.newRuntimeVarValue;
-        this.jobDefForEdit.runtimeVars = newVars;
-
-        await this.$store.dispatch(`${StoreType.JobDefStore}/save`, this.jobDefForEdit);
+        await this.$store.dispatch(`${StoreType.JobDefStore}/save`, {
+          id: this.jobDefForEdit.id,
+          runtimeVars: _.extend({[this.newRuntimeVarKey]: this.newRuntimeVarValue}, this.jobDefForEdit.runtimeVars)
+        });
         this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Saved job`, AlertPlacement.FOOTER));
 
         (<any>this).$refs.addRuntimeVarValidationObserver.reset();
+        
         this.newRuntimeVarKey = '';
         this.newRuntimeVarValue = '';
       }
@@ -1999,110 +1860,6 @@ export default class JobDesigner extends Vue {
     }
   }
 
-  private onAddArtifactClicked(){
-    this.$modal.show('add-artifact-modal');
-  }
-
-  private cancelAddArtifact(){
-    this.$modal.hide('add-artifact-modal');
-  }
-
-  private artifactSearchSelectedArtifactIds: string[] = [];
-  private onArtifactsPicked(artifactIds: string[]){
-    this.artifactSearchSelectedArtifactIds = artifactIds;
-  }
-
-  private async addArtifacts(){
-    if(this.selectedTaskDefForEdit){
-      try {
-        const newArtifactIds: string[] = _.clone(this.selectedTaskDefForEdit.artifacts);
-        let addedArtifacts = false;
-
-        for(let selectedArtifactId of this.artifactSearchSelectedArtifactIds){
-          if(newArtifactIds.indexOf(selectedArtifactId) === -1){
-            newArtifactIds.push(selectedArtifactId);
-            addedArtifacts = true;
-          }
-        }
-        
-        if(addedArtifacts){
-          const newTask = {
-            id: this.selectedTaskDefForEdit.id,
-            artifacts: newArtifactIds
-          };
-
-          this.selectedTaskDef = await this.$store.dispatch(`${StoreType.TaskDefStore}/save`, newTask);
-          this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Saved task with the artifact`, AlertPlacement.FOOTER));
-        }
-      }
-      catch(err){
-        console.error(err);
-        showErrors('Error saving the artifact in the task', err);
-      }
-      finally {
-        this.$modal.hide('add-artifact-modal');
-      }
-    }
-  }
-
-  // for reactivity in a template
-  private loadedArtifacts = {};
-  private getArtifact(artifactId: string): Artifact {
-    try {
-      if(!this.loadedArtifacts[artifactId]){
-        Vue.set(this.loadedArtifacts, artifactId, {name: 'loading...'});
-
-        (async () => {
-          this.loadedArtifacts[artifactId] = await this.$store.dispatch(`${StoreType.ArtifactStore}/fetchModel`, artifactId);
-        })();
-      }
-
-      return this.loadedArtifacts[artifactId];
-    }
-    catch(err){
-      console.log('Error in loading an artifact.  Maybe it was deleted?', artifactId);
-      return {
-        prefix: 'Error',
-        name: 'Error',
-        _teamId: 'Error',
-        s3Path: 'Error'
-      }
-    }
-  }
-
-  private selectedArtifactIds: string[] = [];
-
-  private async onRemoveArtifactClicked(){
-    if(this.selectedTaskDefForEdit && this.selectedArtifactIds.length > 0){
-      try {
-        const newArtifactIds = _.clone(this.selectedTaskDefForEdit.artifacts);
-        let removedArtifacts = false;
-
-        for(let selectedArtifactId of this.selectedArtifactIds){
-          const selectedArtifactIndex = newArtifactIds.indexOf(selectedArtifactId);
-          if(selectedArtifactIndex !== -1){
-            newArtifactIds.splice(selectedArtifactIndex, 1);
-            removedArtifacts = true;
-          }
-        }
-        
-        if(removedArtifacts){
-          const newTask = {
-            id: this.selectedTaskDefForEdit.id,
-            artifacts: newArtifactIds
-          };
-
-          this.selectedTaskDef = await this.$store.dispatch(`${StoreType.TaskDefStore}/save`, newTask);
-          this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Saved task with the artifact`, AlertPlacement.FOOTER));
-        }
-      }
-      catch(err){
-        console.error(err);
-        showErrors('Error removing the artifact(s) from the task', err);
-      }
-    }
-  }
-
   private async onPauseResumeButtonClicked(){
     try {
       if(this.jobDefForEdit){
@@ -2256,6 +2013,11 @@ export default class JobDesigner extends Vue {
   private onNavMenuCreateTaskClicked(){
     this.showCreateItemMenu = false;
     this.createNewTaskDef(); 
+  }
+
+  private onNavMenuCreateSGComputeTaskClicked(){
+    this.showCreateItemMenu = false;
+    this.createNewSGCTaskDef();
   }
 
   private onNavMenuCreateStepClicked(){
@@ -2431,7 +2193,7 @@ export default class JobDesigner extends Vue {
 }
 </script>
 
-<style scoped lang="scss">
+<style  lang="scss">
   table {
     // The borders just make things really ugly
     td,th  {
@@ -2543,16 +2305,17 @@ export default class JobDesigner extends Vue {
     background-color: $white-ter;
     padding: 8px;
     border-bottom: 1px solid lightgray;
+    border-radius: inherit;
   }
 
   .task-designer-body {
-    background-color: rgb(216, 240, 250);
+    background-color: #ebf6fa;
     padding-top: 20px;
     padding-left: 10px;
     padding-right: 10px;
     padding-bottom: 10px;
-    min-height: 500px;
-    overflow-x: scroll;
+    height: 81vh;
+    border-radius: inherit;
   }
 
   .cron-options-table {

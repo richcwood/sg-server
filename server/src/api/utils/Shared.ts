@@ -15,6 +15,7 @@ import * as _ from 'lodash';
 
 const activeAgentTimeoutSeconds = config.get('activeAgentTimeoutSeconds');
 
+
 let GetTaskRoutes = async (_teamId: mongodb.ObjectId, task: TaskSchema, logger: BaseLogger) => {
     let routes: any[] = [];
     let updatedTask = undefined;
@@ -223,5 +224,35 @@ let CheckWaitingForAgentTasks = async (_teamId: mongodb.ObjectId, _agentId: mong
 }
 
 
+let CheckWaitingForLambdaRunnerTasks = async (_agentId: mongodb.ObjectId, logger: BaseLogger, amqp: AMQPConnector) => {
+    let noAgentTasksFilter = {};
+    noAgentTasksFilter['status'] = { $eq: Enums.TaskStatus.WAITING_FOR_AGENT };
+    noAgentTasksFilter['target'] = { $eq: Enums.TaskDefTarget.AWS_LAMBDA };
+    // noAgentTasksFilter['failureCode'] = { $eq: TaskFailureCode.NO_AGENT_AVAILABLE };
+    const noAgentTasks = await taskService.findAllTasksInternal(noAgentTasksFilter, '_id _teamId', 10);
+    if (_.isArray(noAgentTasks) && noAgentTasks.length > 0) {
+        for (let i = 0; i < noAgentTasks.length; i++) {
+            const teamIdTask = noAgentTasks[i]._teamId;
+            let updatedTask: any;
+            if (_agentId)
+                updatedTask = await taskService.updateTask(teamIdTask, noAgentTasks[i]._id, { $pull: { attemptedRunAgentIds: _agentId } }, logger);
+            else
+                updatedTask = await taskService.updateTask(teamIdTask, noAgentTasks[i]._id, { attemptedRunAgentIds: [] }, logger);
+
+            const tasks = await taskService.findAllJobTasks(teamIdTask, updatedTask._jobId, 'toRoutes');
+            const tasksToRoutes = SGUtils.flatMap(x => x, tasks.map((t) => SGUtils.flatMap(x => x[0], t.toRoutes)));
+            if ((!updatedTask.up_dep || (Object.keys(updatedTask.up_dep).length < 1)) && (tasksToRoutes.indexOf(updatedTask.name) < 0)) {
+                if (updatedTask.status == Enums.TaskStatus.WAITING_FOR_AGENT) {
+                    updatedTask.status = Enums.TaskStatus.NOT_STARTED;
+                    updatedTask = await taskService.updateTask(teamIdTask, updatedTask._id, { status: updatedTask.status }, logger, { status: Enums.TaskStatus.WAITING_FOR_AGENT }, null, null);
+                    await taskOutcomeService.PublishTask(teamIdTask, updatedTask, logger, amqp);
+                }
+            }
+        }
+    }
+}
+
+
 export { GetTaskRoutes };
 export { CheckWaitingForAgentTasks };
+export { CheckWaitingForLambdaRunnerTasks };

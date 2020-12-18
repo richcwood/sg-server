@@ -60,7 +60,7 @@
               <td class="td"></td>
               <td class="td">
                 <button class="button is-primary" @click="saveNewScript">Create new script</button>
-                <button class="button button-spaced" @click="cancelCreateNewScript">Cancel</button>
+                <button class="button button-spaced" style="margin-left: 12px;" @click="cancelCreateNewScript">Cancel</button>
               </td>
             </tr>
           </tbody>

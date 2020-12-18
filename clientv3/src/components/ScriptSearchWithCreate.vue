@@ -58,7 +58,7 @@
               <td class="td"></td>
               <td class="td">
                 <button class="button is-primary" @click="saveNewScript">Create new script</button>
-                <button class="button button-spaced" @click="cancelCreateNewScript">Cancel</button>
+                <button class="button button-spaced"  @click="cancelCreateNewScript">Cancel</button>
               </td>
             </tr>
           </tbody>
@@ -98,7 +98,7 @@
 
 
   <button class="button" @click="onCreateScriptClicked">Create Script</button>
-  <script-search :scriptId="scriptId" @scriptPicked="onScriptPicked"></script-search>
+  <script-search :width="width" :scriptId="scriptId" @scriptPicked="onScriptPicked"></script-search>
   <button class="button button-spaced" style="margin-left: 12px;" :disabled="!script" @click="onCloneScriptClicked">Clone</button>
 
 
@@ -109,7 +109,7 @@
 import _ from 'lodash';
 import { Component, Prop, Vue, Watch } from 'vue-property-decorator';
 import { LinkedModel, StoreType } from '@/store/types';
-import { BindProp, BindSelected } from "@/decorator";
+import { BindProp, BindSelected, BindSelectedCopy } from "../decorator";
 import { SgAlert, AlertPlacement, AlertCategory } from '@/store/alert/types';
 import ScriptSearch from "@/components/ScriptSearch.vue";
 import { ValidationProvider, ValidationObserver } from "vee-validate";
@@ -127,10 +127,12 @@ export default class ScriptSearchWithCreate extends Vue {
 
   @Prop() private scriptId!: string;
 
+  @Prop({default: '250px'}) private width!: string;
+
   @BindSelected({ storeType: <any>StoreType.ScriptStore.toString() })
   private script!: Script | null;
 
-  @BindSelected({ storeType: <any>StoreType.ScriptShadowStore.toString() })
+  @BindSelectedCopy({ storeType: <any>StoreType.ScriptShadowStore.toString() })
   private scriptShadow!: Script | null;
 
   private newScriptName: string = '';
@@ -212,7 +214,7 @@ export default class ScriptSearchWithCreate extends Vue {
           code: this.script.code,
           lastEditedDate: (new Date()).toISOString()
         };
-        this.script = await this.$store.dispatch(`${StoreType.ScriptStore}/save`, {script: newScript, initialShadow: this.scriptShadow.shadowCopyCode});
+        await this.$store.dispatch(`${StoreType.ScriptStore}/save`, {script: newScript, initialShadow: this.scriptShadow.shadowCopyCode});
         this.onScriptPicked(this.script);
       }
       catch(err){
@@ -230,5 +232,15 @@ export default class ScriptSearchWithCreate extends Vue {
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped lang="scss">
   
+  table {
+    border-width: 0;
+  }
 
+  td {
+    border-width: 0 !important;
+  }
+
+  .button-spaced {
+    margin-left: 12px;
+  }
 </style>

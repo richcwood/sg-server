@@ -1,10 +1,30 @@
 <template>
   <div class="main" style="margin-left: 36px; margin-right: 12px;">
-    <div style="font-size: 24px;">
+    <div style="font-size: 24px; margin-bottom: 12px;">
       Shared variables for your team
     </div>
 
-    <table class="table is-striped" width="800px">
+    <validation-observer ref="createTeamVarValidationObserver">
+      <div>
+        <validation-provider name="Key" rules="required" v-slot="{ errors }">     
+          <input class="input" style="width: 250px;" type="text" v-model="newKey" placeholder="key"/>
+          <span v-if="errors && errors.length > 0" class="message validation-error is-danger">{{ errors[0] }}</span>
+        </validation-provider>
+
+        <span style="font-weight: 700; size: 20px;">
+          =
+        </span>
+
+        <validation-provider name="Value" rules="required" v-slot="{ errors }">     
+          <input class="input" style="width: 250px;" type="text" v-model="newValue" placeholder="value"/>
+          <span v-if="errors && errors.length > 0" class="message validation-error is-danger">{{ errors[0] }}</span>
+        </validation-provider>
+        
+        <button class="button is-primary button-spaced" @click="onCreateVarClicked">Create</button>
+      </div>
+    </validation-observer>
+
+    <table class="table is-striped" width="800px" style="margin-top: 12px;">
       <tr class="tr" v-if="teamVars.length === 0">
         <td class="td" colspan="4">
           There are no variables for your team yet.
@@ -29,25 +49,6 @@
       </tr>
     </table>
 
-    <validation-observer ref="createTeamVarValidationObserver">
-      <div>
-        <validation-provider name="Key" rules="required" v-slot="{ errors }">     
-          <input class="input" style="width: 250px;" type="text" v-model="newKey" placeholder="key"/>
-          <span v-if="errors && errors.length > 0" class="message validation-error is-danger">{{ errors[0] }}</span>
-        </validation-provider>
-
-        <span style="font-weight: 700; size: 20px;">
-          =
-        </span>
-
-        <validation-provider name="Value" rules="required" v-slot="{ errors }">     
-          <input class="input" style="width: 250px;" type="text" v-model="newValue" placeholder="value"/>
-          <span v-if="errors && errors.length > 0" class="message validation-error is-danger">{{ errors[0] }}</span>
-        </validation-provider>
-        
-        <button class="button is-primary button-spaced" @click="onCreateVarClicked">Create</button>
-      </div>
-    </validation-observer>
   </div>
 </template>
 

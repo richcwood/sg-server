@@ -1,11 +1,13 @@
 import { convertData } from '../utils/ResponseConverters';
 import { TaskDefSchema, TaskDefModel } from '../domain/TaskDef';
+import { StepDefSchema, StepDefModel } from '../domain/StepDef';
 import { rabbitMQPublisher, PayloadOperation } from '../utils/RabbitMQPublisher';
 import { MissingObjectError, ValidationError } from '../utils/Errors';
 import { SGUtils } from '../../shared/SGUtils';
 import * as Enums from '../../shared/Enums';
 import * as mongodb from 'mongodb';
 import * as _ from 'lodash';
+import { stepDefService } from './StepDefService';
 
 
 export class TaskDefService {
@@ -75,6 +77,26 @@ export class TaskDefService {
     const newTaskDef = await taskDefModel.save();
 
     await rabbitMQPublisher.publish(_teamId, "TaskDef", correlationId, PayloadOperation.CREATE, convertData(TaskDefSchema, newTaskDef));
+
+    if (newTaskDef.target == Enums.TaskDefTarget.AWS_LAMBDA) {
+      const newLambdaStep: StepDefSchema = {
+        _teamId,
+        _taskDefId: newTaskDef._id,
+        _scriptId: null,
+        name: 'AwsLambda',
+        order: 1,
+        arguments: '',
+        variables: new Map([]),
+        lambdaCodeSource: 'script',
+        lambdaMemorySize: 128,
+        lambdaTimeout: 3,
+        lambdaFunctionHandler: '',
+        lambdaDependencies: '',
+        lambdaRuntime: '.NET Core 3.1 (C#/PowerShell)'
+      };
+      await stepDefService.createStepDef(_teamId, newLambdaStep, correlationId, 'id');
+    }
+
 
     if (responseFields) {
       // It's is a bit wasteful to do another query but I can't chain a save with a select

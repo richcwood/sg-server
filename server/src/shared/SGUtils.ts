@@ -534,8 +534,25 @@ export class SGUtils {
         invoice_raw = invoice_raw.replace('{artifacts_storage_rate}', '' + invoice.artifactsStoragePerGBRate);
         invoice_raw = invoice_raw.replace('{artifacts_storage_total}', '' + artifactsStorageTotal.toFixed(2));
 
+        let awsLambdaRequestsTotal = invoice.awsLambdaRequests * invoice.awsLambdaRequestsRate;
+        if (awsLambdaRequestsTotal < .01)
+            awsLambdaRequestsTotal = 0;
+        invoice_raw = invoice_raw.replace('{aws_lambda_requests}', '' + invoice.awsLambdaRequests);
+        invoice_raw = invoice_raw.replace('{aws_lambda_requests_rate}', '' + invoice.awsLambdaRequestsRate);
+        invoice_raw = invoice_raw.replace('{aws_lambda_requests_total}', '' + awsLambdaRequestsTotal.toFixed(2));
+
+        let awsLambdaComputeGBSecondsTotal = invoice.awsLambdaComputeGbSeconds * invoice.awsLambdaComputeGbSecondsRate;
+        if (awsLambdaComputeGBSecondsTotal < .01)
+            awsLambdaComputeGBSecondsTotal = 0;
+        let awsLambdaComputeGBSeconds = '0';
+        if (invoice.awsLambdaComputeGbSeconds > 0)
+            awsLambdaComputeGBSeconds = invoice.awsLambdaComputeGbSeconds.toFixed(8);
+        invoice_raw = invoice_raw.replace('{aws_lambda_compute_gb_seconds}', '' + awsLambdaComputeGBSeconds);
+        invoice_raw = invoice_raw.replace('{aws_lambda_compute_gb_seconds_rate}', '' + invoice.awsLambdaComputeGbSecondsRate);
+        invoice_raw = invoice_raw.replace('{aws_lambda_compute_gb_seconds_total}', '' + awsLambdaComputeGBSecondsTotal.toFixed(2));
+
         invoice_raw = invoice_raw.replace('{total}', '' + (invoice.billAmount/100.0).toFixed(2));
-        console.log(invoice_raw);
+        // console.log(invoice_raw);
 
         return invoice_raw;
     }

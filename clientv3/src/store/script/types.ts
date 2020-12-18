@@ -24,7 +24,7 @@ export interface Script extends Model {
   _lastEditedUserId: string,
   name: string,
   scriptType: ScriptType,
-  code: string, // in base64
+  code: string, // this will always be in base 64 encoding on the client and the API
   lastEditedDate: Date,
   teamEditable?: boolean,
   sggElems?: string[]

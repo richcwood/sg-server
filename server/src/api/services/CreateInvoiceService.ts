@@ -23,17 +23,28 @@ export class CreateInvoiceService {
         if (!data._teamId)
             throw new MissingObjectError('Missing _teamId');
         data._teamId = new mongodb.ObjectId(data._teamId);
-        if (!data.startDate)
-            throw new MissingObjectError('Missing startDate');
-        const startDate = moment(data.startDate);
-        if (!startDate.isValid())
-            throw new ValidationError(`Start date "${data.startDate}" is not a valid date`);
 
-        if (!data.endDate)
-            throw new MissingObjectError('Missing endDate');
-        const endDate = moment(data.endDate);
-        if (!endDate.isValid())
-            throw new ValidationError(`End date "${data.endDate}" is not a valid date`);
+        const currentTime = new Date();
+
+        let billingMonth = new Date(currentTime.getUTCFullYear(), currentTime.getUTCMonth()-1,1).getMonth()
+        if (data.month)
+            billingMonth = data.month;
+
+        let billingYear = new Date(currentTime.getUTCFullYear(), currentTime.getUTCMonth()-1,1).getFullYear();
+        if (data.year)
+            billingYear = data.year;
+
+        let billingDate = new Date(billingYear, billingMonth, 1);
+        let startDate = moment.utc(billingDate).startOf('month');
+        data.startDate = startDate.toDate();
+        let endDate = moment.utc(billingDate).endOf('month');
+        data.endDate = endDate.toDate();
+
+        let matchingInvoices: any = await InvoiceModel.find({ _teamId: data._teamId, month: billingMonth, year: billingYear }).limit(1);
+        if (_.isArray(matchingInvoices) && matchingInvoices.length > 0) {
+            logger.LogError('Error creating invoice - invoice already created', {month: billingMonth, year: billingYear, invoice: matchingInvoices[0]});
+            throw new ValidationError(`Invoice already exists for ${startDate.format("MMM YYYY")} with id ${matchingInvoices[0]._id}`)
+        }
 
         const daysInBillingPeriod = endDate.diff(startDate, 'days') + 1;
 
@@ -47,7 +58,7 @@ export class CreateInvoiceService {
         data.numNewAgents = 0;
         let newAgentsFilter: any = {};
         newAgentsFilter['_teamId'] = data._teamId;
-        newAgentsFilter['createDate'] = { $gte: startDate.toDate() };
+        newAgentsFilter['createDate'] = { $gte: data.startDate };
 
         let numNewAgents: number = 0;
         let numNewAgentsQuery = await AgentModel.aggregate([
@@ -60,7 +71,7 @@ export class CreateInvoiceService {
         // let numOldAgents = 0;
         // let oldAgentsFilter: any = {};
         // oldAgentsFilter['_teamId'] = data._teamId;
-        // oldAgentsFilter['createDate'] = { $lt: startDate.toDate() };
+        // oldAgentsFilter['createDate'] = { $lte: data.startDate };
 
         // let numOldAgentsQuery = await AgentModel.aggregate([
         //     { $match: oldAgentsFilter },
@@ -81,7 +92,7 @@ export class CreateInvoiceService {
         /// Get number of non-interactive console scripts executed in billing period
         let invoiceScriptsFilter: any = {};
         invoiceScriptsFilter['_teamId'] = data._teamId;
-        invoiceScriptsFilter['dateStarted'] = { $gte: startDate.toDate(), $lt: endDate.toDate() };
+        invoiceScriptsFilter['dateStarted'] = { $gte: data.startDate, $lte: data.endDate };
         invoiceScriptsFilter['_invoiceId'] = { $exists: false };
         invoiceScriptsFilter['source'] = TaskSource.JOB;
 
@@ -97,7 +108,7 @@ export class CreateInvoiceService {
         /// Get number of interactive console scripts executed in billing period
         let invoiceICScriptsFilter: any = {};
         invoiceICScriptsFilter['_teamId'] = data._teamId;
-        invoiceICScriptsFilter['dateStarted'] = { $gte: startDate.toDate(), $lt: endDate.toDate() };
+        invoiceICScriptsFilter['dateStarted'] = { $gte: data.startDate, $lte: data.endDate };
         invoiceICScriptsFilter['_invoiceId'] = { $exists: false };
         invoiceICScriptsFilter['source'] = TaskSource.CONSOLE;
 
@@ -114,7 +125,7 @@ export class CreateInvoiceService {
         data.artifactsDownloadedGB = 0;
         let taskOutcomesFilter: any = {};
         taskOutcomesFilter['_teamId'] = data._teamId;
-        taskOutcomesFilter['dateStarted'] = { $gte: startDate.toDate(), $lt: endDate.toDate() };
+        taskOutcomesFilter['dateStarted'] = { $gte: data.startDate, $lte: data.endDate };
 
         let artifactDownloadsQuery = await TaskOutcomeModel.aggregate([
             { $match: taskOutcomesFilter },
@@ -130,7 +141,7 @@ export class CreateInvoiceService {
         data.artifactsStorageGB = 0;
         let teamStorageFilter: any = {};
         teamStorageFilter['_teamId'] = data._teamId;
-        teamStorageFilter['date'] = { $gte: startDate.toDate(), $lte: endDate.toDate() };
+        teamStorageFilter['date'] = { $gte: data.startDate, $lte: data.endDate };
 
         let artifactStorageQuery = await TeamStorageModel.find(teamStorageFilter).select('numobservations bytes');
         if (_.isArray(artifactStorageQuery) && artifactStorageQuery.length > 0) {
@@ -152,8 +163,34 @@ export class CreateInvoiceService {
             data.artifactsStorageGB = Math.max(data.artifactsStorageGB, 0);
         }
 
+        /// Get total aws lambda requests for this billing period
+        data.awsLambdaRequests = 0;
+        let awsLambdaRequestsFilter: any = {};
+        awsLambdaRequestsFilter['_teamId'] = data._teamId;
+        awsLambdaRequestsFilter['dateStarted'] = { $gte: data.startDate, $lte: data.endDate };
+        awsLambdaRequestsFilter['_invoiceId'] = { $exists: false };
+        awsLambdaRequestsFilter['sgcBilledDuration'] = { $exists: true };
+
+        let awsLambdaRequestsQuery = await StepOutcomeModel.aggregate([
+            { $match: awsLambdaRequestsFilter },
+            { $count: "num_requests" }
+        ]);
+        if (_.isArray(awsLambdaRequestsQuery) && awsLambdaRequestsQuery.length > 0) {
+            data.awsLambdaRequests = awsLambdaRequestsQuery[0].num_requests;
+        }
+
+        /// Get total aws lambda gb seconds for this billing period
+        data.awsLambdaComputeGbSeconds = 0;
+        let awsLambdaComputeGbSecondsQuery = await StepOutcomeModel.aggregate([
+            { $match: awsLambdaRequestsFilter },
+            { $group: { _id: null, sumAwsLambdaComputeGbSeconds: { $sum: { $multiply: [ "$sgcMemSize", "$sgcBilledDuration", 1/1000.0, 1/1024.0 ] } } } }
+        ]);
+        if (_.isArray(awsLambdaComputeGbSecondsQuery) && awsLambdaComputeGbSecondsQuery.length > 0) {
+            data.awsLambdaComputeGbSeconds = awsLambdaComputeGbSecondsQuery[0].sumAwsLambdaComputeGbSeconds;
+        }
+
         /// Get billing rates from default settings if not provided explicitly
-        if (!data.scriptPricing || !data.jobStoragePerMBRate || !data.newAgentRate || !data.defaultArtifactsStoragePerGBRate || !data.artifactsDownloadedPerGBRate) {
+        if (!data.scriptPricing || !data.jobStoragePerMBRate || !data.newAgentRate || !data.defaultArtifactsStoragePerGBRate || !data.artifactsDownloadedPerGBRate || !data.awsLambdaComputeGbSecondsRate || !data.awsLambdaRequestsRate) {
             if (!data.scriptPricing)
                 data.scriptPricing = billingSettings.defaultScriptPricing;
             if (!data.jobStoragePerMBRate)
@@ -164,6 +201,10 @@ export class CreateInvoiceService {
                 data.artifactsStoragePerGBRate = billingSettings.defaultArtifactsStoragePerGBRate;
             if (!data.artifactsDownloadedPerGBRate)
                 data.artifactsDownloadedPerGBRate = billingSettings.defaultArtifactsDownloadedPerGBRate;
+            if (!data.awsLambdaComputeGbSecondsRate)
+                data.awsLambdaComputeGbSecondsRate = billingSettings.defaultAwsLambdaComputeGbSecondsRate;
+            if (!data.awsLambdaRequestsRate)
+                data.awsLambdaRequestsRate = billingSettings.defaultAwsLambdaRequestsRate;
         }
 
         data.billAmount = 0;
@@ -182,6 +223,11 @@ export class CreateInvoiceService {
             data.billAmount += (data.newAgentRate * data.numNewAgents);
         if (data.jobStoragePerMBRate * data.storageMB >= .01)
             data.billAmount += (data.jobStoragePerMBRate * data.storageMB);
+        if (data.awsLambdaComputeGbSecondsRate * data.awsLambdaComputeGbSeconds >= .01)
+            data.billAmount += (data.awsLambdaComputeGbSecondsRate * data.awsLambdaComputeGbSeconds);
+        if (data.awsLambdaRequestsRate * data.awsLambdaRequests >= .01)
+            data.billAmount += (data.awsLambdaRequestsRate * data.awsLambdaRequests);
+
         // if (data.billAmount <= 0)
         //     return null;
 
