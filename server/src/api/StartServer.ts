@@ -63,6 +63,7 @@ import { ValidationError } from './utils/Errors';
 import * as morgan from 'morgan';
 import * as fs from 'fs';
 import { stripeClientTokenRouter } from './routes/StripClientTokenRouter';
+var forceSSL = require('express-force-ssl');
 
 // Create a new express application instance
 const app: express.Application = express();
@@ -166,6 +167,8 @@ class AppBuilder {
     this.app.use(`${apiURLBase}/githook`, new GitHookRouter().router);
     this.app.use(`${apiURLBase}/signup`, signupRouter);
 
+    this.app.use(forceSSL);
+    
     this.setUpJwtSecurity();
 
     // Simple check for browser to validate the Auth cookie
