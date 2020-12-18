@@ -3,7 +3,6 @@ MetricsLogger.init();
 
 import express = require('express');
 import { NextFunction, Request, Response } from 'express';
-const enforce = require('express-sslify');
 import path = require('path');
 import util = require('util');
 const bodyParser = require('body-parser');
@@ -125,6 +124,11 @@ class AppBuilder {
 
     app.use(handleBuildResponseWrapper);
     // app.use(handleStartTimer);
+    
+    app.use((req, res, next) => {
+      this.addCorsHeaders(req, res, next);
+    });
+
     this.setUpClient();
     this.setUpLogger();
     this.setUpMongoLib();
@@ -167,6 +171,33 @@ class AppBuilder {
     });
   }
 
+  private addCorsHeaders(req: express.Request, res: express.Response, next: express.NextFunction): void {
+    const origin: string | undefined = req.get('Origin');
+    let sendOK = false;
+
+    if (origin) {
+      const logger: BaseLogger = (<any>req).logger;
+      logger.LogDebug('Added cors for request', {url: req.url, method: req.method});
+      res.set({
+        'Access-Control-Allow-Origin': origin,
+        'Access-Control-Allow-Headers': 'origin, x-requested-with, accept, content-type, authorization, x-csrf-token, correlationid',
+        'Access-Control-Max-Age': 3628800,
+        'Access-Control-Allow-Methods': 'GET, PUT, POST, DELETE, OPTIONS'
+      });
+
+      if (req.method === 'OPTIONS') {
+        // need to just send ok for a cors preflight check
+        sendOK = true;
+      }
+    }
+
+    if (sendOK) {
+      res.send('').status(200);
+    } else {
+      next();
+    }
+  }
+
   private setUpRoutes(): void {
     const apiURLBase = '/api/v0';
 
@@ -200,8 +231,6 @@ class AppBuilder {
       res.cookie('Auth', token, { secure: false, expires: new Date(jwtExpiration) });
       res.send('OKz');
     });
-
-    this.app.use(enforce.HTTPS({ trustProtoHeader: true }));
 
     this.app.use(`${apiURLBase}/team`, teamRouter);
     this.app.use(`${apiURLBase}/agentDownload`, agentDownloadRouter);
