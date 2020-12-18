@@ -3,6 +3,7 @@ MetricsLogger.init();
 
 import express = require('express');
 import { NextFunction, Request, Response } from 'express';
+const enforce = require('express-sslify');
 import path = require('path');
 import util = require('util');
 const bodyParser = require('body-parser');
@@ -231,6 +232,8 @@ class AppBuilder {
       res.cookie('Auth', token, { secure: false, expires: new Date(jwtExpiration) });
       res.send('OKz');
     });
+
+    this.app.use(enforce.HTTPS({ trustProtoHeader: true }));
 
     this.app.use(`${apiURLBase}/team`, teamRouter);
     this.app.use(`${apiURLBase}/agentDownload`, agentDownloadRouter);
