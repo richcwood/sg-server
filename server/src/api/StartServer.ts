@@ -63,8 +63,7 @@ import { ValidationError } from './utils/Errors';
 import * as morgan from 'morgan';
 import * as fs from 'fs';
 import { stripeClientTokenRouter } from './routes/StripClientTokenRouter';
-import sslRedirect from 'heroku-ssl-redirect';
-
+var forceSSL = require('express-force-ssl');
 
 // Create a new express application instance
 const app: express.Application = express();
@@ -121,12 +120,6 @@ class AppBuilder {
     this.setUpClient();
     this.setUpLogger();
     this.setUpMongoLib();
-
-    app.use(sslRedirect([
-      'other',
-      'production'
-    ]));
-    // this.app.use((req, res, next) => {this.ensureSecure(req, res, next)});
   }
 
   private setUpClient() {
@@ -166,17 +159,6 @@ class AppBuilder {
     });
   }
 
-  private ensureSecure(req, res, next) {
-    //Heroku stores the origin protocol in a header variable. The app itself is isolated within the dyno and all request objects have an HTTP protocol.
-    if (req.get('X-Forwarded-Proto') == 'https' || req.hostname == 'localhost') {
-      //Serve Angular App by passing control to the next middleware
-      next();
-    } else if (req.get('X-Forwarded-Proto') != 'https' && req.get('X-Forwarded-Port') != '443') {
-      //Redirect if not HTTP with original request URL
-      res.redirect('https://' + req.hostname + req.url);
-    }
-  }
-
   private setUpRoutes(): void {
     const apiURLBase = '/api/v0';
 
@@ -185,6 +167,14 @@ class AppBuilder {
     this.app.use(`${apiURLBase}/githook`, new GitHookRouter().router);
     this.app.use(`${apiURLBase}/signup`, signupRouter);
 
+    this.app.set('forceSSLOptions', {
+      enable301Redirects: true,
+      trustXFPHeader: false,
+      httpsPort: 443,
+      sslRequiredMessage: 'SSL Required.'
+    });    
+    this.app.use(forceSSL);
+    
     this.setUpJwtSecurity();
 
     // Simple check for browser to validate the Auth cookie
