@@ -1,6 +1,7 @@
 import { MetricsLogger } from './utils/MetricsLogger';
 MetricsLogger.init();
 
+const sslRedirect = require('heroku-ssl-redirect');
 import express = require('express');
 import { NextFunction, Request, Response } from 'express';
 import path = require('path');
@@ -63,10 +64,12 @@ import { ValidationError } from './utils/Errors';
 import * as morgan from 'morgan';
 import * as fs from 'fs';
 import { stripeClientTokenRouter } from './routes/StripClientTokenRouter';
-var forceSSL = require('express-force-ssl');
 
 // Create a new express application instance
 const app: express.Application = express();
+
+// enable ssl redirect
+app.use(sslRedirect());
 
 const appName = 'SaasGlueAPI';
 
