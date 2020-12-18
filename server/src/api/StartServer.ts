@@ -177,8 +177,7 @@ class AppBuilder {
     let sendOK = false;
 
     if (origin) {
-      const logger: BaseLogger = (<any>req).logger;
-      logger.LogDebug('Added cors for request', {url: req.url, method: req.method});
+      console.debug(`added cors for request url=${req.url}, method=${req.method}`);
       res.set({
         'Access-Control-Allow-Origin': origin,
         'Access-Control-Allow-Headers': 'origin, x-requested-with, accept, content-type, authorization, x-csrf-token, correlationid',
