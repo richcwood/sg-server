@@ -68,9 +68,6 @@ import { stripeClientTokenRouter } from './routes/StripClientTokenRouter';
 // Create a new express application instance
 const app: express.Application = express();
 
-// enable ssl redirect
-app.use(sslRedirect());
-
 const appName = 'SaasGlueAPI';
 
 var options = {
@@ -195,6 +192,9 @@ class AppBuilder {
       res.cookie('Auth', token, { secure: false, expires: new Date(jwtExpiration) });
       res.send('OKz');
     });
+
+    // enable ssl redirect
+    app.use(sslRedirect());
 
     this.app.use(`${apiURLBase}/team`, teamRouter);
     this.app.use(`${apiURLBase}/agentDownload`, agentDownloadRouter);
