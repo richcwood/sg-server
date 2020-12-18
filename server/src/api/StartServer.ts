@@ -170,14 +170,6 @@ class AppBuilder {
     this.app.use(`${apiURLBase}/githook`, new GitHookRouter().router);
     this.app.use(`${apiURLBase}/signup`, signupRouter);
 
-    this.app.set('forceSSLOptions', {
-      enable301Redirects: true,
-      trustXFPHeader: false,
-      httpsPort: 443,
-      sslRequiredMessage: 'SSL Required.'
-    });    
-    this.app.use(forceSSL);
-    
     this.setUpJwtSecurity();
 
     // Simple check for browser to validate the Auth cookie
