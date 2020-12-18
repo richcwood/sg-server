@@ -125,10 +125,6 @@ class AppBuilder {
 
     app.use(handleBuildResponseWrapper);
     // app.use(handleStartTimer);
-    
-    app.use((req, res, next) => {
-      this.addCorsHeaders(req, res, next);
-    });
 
     this.setUpClient();
     this.setUpLogger();
@@ -230,6 +226,11 @@ class AppBuilder {
 
       res.cookie('Auth', token, { secure: false, expires: new Date(jwtExpiration) });
       res.send('OKz');
+    });
+
+    
+    this.app.use((req, res, next) => {
+      this.addCorsHeaders(req, res, next);
     });
 
     this.app.use(enforce.HTTPS({ trustProtoHeader: true }));
