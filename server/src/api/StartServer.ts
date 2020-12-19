@@ -72,6 +72,8 @@ const app: express.Application = express();
 
 const appName = 'SaasGlueAPI';
 
+const environment = process.env.NODE_ENV || 'development';
+
 var options = {
   autoIndex: false, // Don't build indexes
   reconnectTries: Number.MAX_VALUE, // Never stop trying to reconnect
@@ -103,8 +105,16 @@ class AppBuilder {
 
     this.app.use(enforce.HTTPS({ trustProtoHeader: true }));
 
+    console.log('environment -> ', environment);
+
+    let origin = 'http://console.saasglue.com';
+    if (environment == 'stage')
+      origin = 'http://saasglue-stage.herokuapp.com';
+
+    console.log('origin -> ', origin);
+
     let corsOptions: any = {
-      origin: 'http://saasglue-stage.herokuapp.com',
+      origin: origin,
       methods: 'GET, PUT, POST, DELETE, OPTIONS',
       allowedHeaders: 'origin, x-requested-with, accept, content-type, x-csrf-token, correlationid, cookie, auth, host, referer, user-agent, _teamid',
       exposedHeaders: 'origin, x-requested-with, accept, content-type, x-csrf-token, correlationid, cookie, auth, referer, user-agent, _teamid',
