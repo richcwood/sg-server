@@ -4,7 +4,7 @@ MetricsLogger.init();
 import express = require('express');
 import { NextFunction, Request, Response } from 'express';
 const enforce = require('express-sslify');
-const cors = require('cors');
+// const cors = require('cors');
 import path = require('path');
 import util = require('util');
 const bodyParser = require('body-parser');
@@ -179,6 +179,7 @@ class AppBuilder {
 
     console.log('cors req -> ', JSON.stringify(req.headers, null, 4));
     console.log('cors origin -> ', origin);
+    console.log('cors method -> ', req.method);
 
     console.log(`added cors for request url=${req.url}, method=${req.method}`);
 
@@ -190,6 +191,7 @@ class AppBuilder {
     });
 
     if (req.method === 'OPTIONS') {
+      console.log('sending ok');
       // need to just send ok for a cors preflight check
       sendOK = true;
     }
