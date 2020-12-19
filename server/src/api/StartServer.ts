@@ -229,7 +229,7 @@ class AppBuilder {
       }, secret);//KeysUtil.getPrivate()); // todo - create a public / private key
 
       res.cookie('Auth', token, { secure: false, expires: new Date(jwtExpiration) });
-      res.send('OKz');
+      res.send('OK');
     });
 
     
