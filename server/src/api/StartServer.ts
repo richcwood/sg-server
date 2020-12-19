@@ -72,13 +72,6 @@ const app: express.Application = express();
 
 const appName = 'SaasGlueAPI';
 
-var forceSsl = function (req, res, next) {
-  if (req.headers['x-forwarded-proto'] !== 'https') {
-      return res.redirect(['https://', req.get('Host'), req.url].join(''));
-  }
-  return next();
-};
-
 var options = {
   autoIndex: false, // Don't build indexes
   reconnectTries: Number.MAX_VALUE, // Never stop trying to reconnect
@@ -239,7 +232,13 @@ class AppBuilder {
 
     // this.app.options('*', cors({origin: 'http://console.saasglue.com'})) // include before other routes
     let corsOptions: any = {
-      credentials: true, origin: '*', methods: 'GET, PUT, POST, DELETE, OPTIONS', allowedHeaders: 'origin, x-requested-with, accept, content-type, authorization, x-csrf-token, correlationid', maxAge: 3628800
+      credentials: true, 
+      origin: '*', 
+      methods: 'GET, PUT, POST, DELETE, OPTIONS', 
+      allowedHeaders: 'origin, x-requested-with, accept, content-type, authorization, x-csrf-token, correlationid', 
+      maxAge: 3628800,
+      optionsSuccessStatus: 200,
+      preflightContinue: true
     };
     this.app.use(cors(corsOptions));
     this.app.options('*', cors(corsOptions)) // include before other routes
