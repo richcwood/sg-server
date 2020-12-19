@@ -236,10 +236,10 @@ class AppBuilder {
     // this.app.use((req, res, next) => {
     //   this.addCorsHeaders(req, res, next);
     // });
-    // this.app.options('*', cors({origin: 'http://console.saasglue.com'})) // include before other routes
 
+    // this.app.options('*', cors({origin: 'http://console.saasglue.com'})) // include before other routes
     let corsOptions: any = {
-      credentials: true, origin: true, methods: 'GET, PUT, POST, DELETE, OPTIONS', allowedHeaders: 'origin, x-requested-with, accept, content-type, authorization, x-csrf-token, correlationid', maxAge: 3628800
+      credentials: true, origin: '*', methods: 'GET, PUT, POST, DELETE, OPTIONS', allowedHeaders: 'origin, x-requested-with, accept, content-type, authorization, x-csrf-token, correlationid', maxAge: 3628800
     };
     this.app.use(cors(corsOptions));
     this.app.options('*', cors(corsOptions)) // include before other routes

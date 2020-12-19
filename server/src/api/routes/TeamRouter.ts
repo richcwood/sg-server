@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { teamController } from '../controllers/TeamController';
+const cors = require('cors');
 
 export class TeamRouter {
 
@@ -8,11 +9,11 @@ export class TeamRouter {
   constructor() {
     this.router = Router();
 
-    this.router.get('/',  teamController.getManyTeams);
-    this.router.get('/:teamId', teamController.getTeam);
-    this.router.post('/', teamController.createTeam);
-    this.router.post('/unassigned', teamController.createUnassignedTeam);
-    this.router.put('/:teamId', teamController.updateTeam);
+    this.router.get('/', cors(),  teamController.getManyTeams);
+    this.router.get('/:teamId', cors(), teamController.getTeam);
+    this.router.post('/', cors(), teamController.createTeam);
+    this.router.post('/unassigned', cors(), teamController.createUnassignedTeam);
+    this.router.put('/:teamId', cors(), teamController.updateTeam);
   }
 }
 
