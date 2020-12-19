@@ -102,10 +102,9 @@ class AppBuilder {
     app.disable('etag');
 
     let corsOptions: any = {
-      credentials: true,
       origin: '*',
       methods: 'GET, PUT, POST, DELETE, OPTIONS',
-      allowedHeaders: 'origin, x-requested-with, accept, content-type, x-csrf-token, correlationid, Cookie',
+      allowedHeaders: 'origin, x-requested-with, accept, content-type, x-csrf-token, correlationid, Cookie, Auth',
       maxAge: 3628800,
       optionsSuccessStatus: 200,
       preflightContinue: true
