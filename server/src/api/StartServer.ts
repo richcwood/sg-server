@@ -172,8 +172,10 @@ class AppBuilder {
     const origin: string | undefined = req.get('Origin');
     let sendOK = false;
 
+    console.log('cors req -> ', JSON.stringify(req, null, 4));
+
     if (origin) {
-      console.debug(`added cors for request url=${req.url}, method=${req.method}`);
+      console.log(`added cors for request url=${req.url}, method=${req.method}`);
       res.set({
         'Access-Control-Allow-Origin': origin,
         'Access-Control-Allow-Headers': 'origin, x-requested-with, accept, content-type, authorization, x-csrf-token, correlationid',
