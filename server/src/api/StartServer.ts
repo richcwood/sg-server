@@ -4,6 +4,7 @@ MetricsLogger.init();
 import express = require('express');
 import { NextFunction, Request, Response } from 'express';
 const enforce = require('express-sslify');
+const cors = require('cors');
 import path = require('path');
 import util = require('util');
 const bodyParser = require('body-parser');
@@ -168,48 +169,34 @@ class AppBuilder {
     });
   }
 
-  private addCorsHeaders(req: express.Request, res: express.Response, next: express.NextFunction): void {
-    const origin: string | undefined = req.get('Origin');
-    let sendOK = false;
+  // private addCorsHeaders(req: express.Request, res: express.Response, next: express.NextFunction): void {
+  //   const origin: string | undefined = req.get('Origin');
+  //   let sendOK = false;
 
-    console.log('cors req -> ', JSON.stringify(req.headers, null, 4));
+  //   console.log('cors req -> ', JSON.stringify(req.headers, null, 4));
 
-    if (origin) {
-      console.log(`added cors for request url=${req.url}, method=${req.method}`);
+  //   if (origin) {
+  //     console.log(`added cors for request url=${req.url}, method=${req.method}`);
 
-      let newHeaders: any = {};
-      for (let i = 0; i < Object.keys(req.headers).length; i++) {
-        const key = Object.keys(req.headers)[i];
-        const val = req.headers[key];
-        newHeaders[key] = val;
-      }
+  //     res.set({
+  //       'Access-Control-Allow-Origin': origin,
+  //       'Access-Control-Allow-Headers': 'origin, x-requested-with, accept, content-type, authorization, x-csrf-token, correlationid',
+  //       'Access-Control-Max-Age': 3628800,
+  //       'Access-Control-Allow-Methods': 'GET, PUT, POST, DELETE, OPTIONS'
+  //     });
 
-      newHeaders['Access-Control-Allow-Origin'] = origin;
-      newHeaders['Access-Control-Allow-Headers'] = 'origin, x-requested-with, accept, content-type, authorization, x-csrf-token, correlationid';
-      newHeaders['Access-Control-Max-Age'] = 3628800;
-      newHeaders['Access-Control-Allow-Methods'] = 'GET, PUT, POST, DELETE, OPTIONS';
+  //     if (req.method === 'OPTIONS') {
+  //       // need to just send ok for a cors preflight check
+  //       sendOK = true;
+  //     }
+  //   }
 
-      res.set(newHeaders);
-      
-      // res.set({
-      //   'Access-Control-Allow-Origin': origin,
-      //   'Access-Control-Allow-Headers': 'origin, x-requested-with, accept, content-type, authorization, x-csrf-token, correlationid',
-      //   'Access-Control-Max-Age': 3628800,
-      //   'Access-Control-Allow-Methods': 'GET, PUT, POST, DELETE, OPTIONS'
-      // });
-
-      if (req.method === 'OPTIONS') {
-        // need to just send ok for a cors preflight check
-        sendOK = true;
-      }
-    }
-
-    if (sendOK) {
-      res.send('').status(200);
-    } else {
-      next();
-    }
-  }
+  //   if (sendOK) {
+  //     res.send('').status(200);
+  //   } else {
+  //     next();
+  //   }
+  // }
 
   private setUpRoutes(): void {
     const apiURLBase = '/api/v0';
@@ -246,10 +233,11 @@ class AppBuilder {
     });
 
     
-    this.app.use((req, res, next) => {
-      this.addCorsHeaders(req, res, next);
-    });
-
+    // this.app.use((req, res, next) => {
+    //   this.addCorsHeaders(req, res, next);
+    // });
+    // this.app.options('*', cors({origin: 'http://console.saasglue.com'})) // include before other routes
+    this.app.options('*', cors()) // include before other routes
     this.app.use(enforce.HTTPS({ trustProtoHeader: true }));
 
     this.app.use(`${apiURLBase}/team`, teamRouter);
