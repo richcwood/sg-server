@@ -102,13 +102,12 @@ class AppBuilder {
     app.disable('etag');
 
     let corsOptions: any = {
-      origin: '*',
+      origin: 'http://saasglue-stage.herokuapp.com',
       methods: 'GET, PUT, POST, DELETE, OPTIONS',
       allowedHeaders: 'origin, x-requested-with, accept, content-type, x-csrf-token, correlationid, cookie, auth, host, referer, user-agent',
       exposedHeaders: 'origin, x-requested-with, accept, content-type, x-csrf-token, correlationid, cookie, auth, referer, user-agent',
       maxAge: 3628800,
-      credentials: true,
-      preflightContinue: true
+      credentials: true
     };
     app.use(cors(corsOptions));
 
