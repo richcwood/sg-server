@@ -108,7 +108,7 @@ class AppBuilder {
       exposedHeaders: 'origin, x-requested-with, accept, content-type, x-csrf-token, correlationid, cookie, auth, referer, user-agent',
       maxAge: 3628800
     };
-    app.use(cors(corsOptions));
+    app.use(cors());
 
 
     if(config.get('httpLogs.enabled')){
