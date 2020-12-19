@@ -101,18 +101,17 @@ class AppBuilder {
   private setUpMiddleware() {
     app.disable('etag');
 
-    this.setUpCors();
+    this.app.use(enforce.HTTPS({ trustProtoHeader: true }));
 
-    app.use(enforce.HTTPS({ trustProtoHeader: true }));
-
-    // let corsOptions: any = {
-    //   origin: 'http://saasglue-stage.herokuapp.com',
-    //   methods: 'GET, PUT, POST, DELETE, OPTIONS',
-    //   allowedHeaders: 'origin, x-requested-with, accept, content-type, x-csrf-token, correlationid, cookie, auth, host, referer, user-agent, _teamid',
-    //   maxAge: 3628800,
-    //   credentials: true
-    // };
-    // app.use(cors(corsOptions));
+    let corsOptions: any = {
+      origin: 'http://saasglue-stage.herokuapp.com',
+      methods: 'GET, PUT, POST, DELETE, OPTIONS',
+      allowedHeaders: 'origin, x-requested-with, accept, content-type, x-csrf-token, correlationid, cookie, auth, host, referer, user-agent, _teamid',
+      exposedHeaders: 'origin, x-requested-with, accept, content-type, x-csrf-token, correlationid, cookie, auth, referer, user-agent, _teamid',
+      maxAge: 3628800,
+      credentials: true
+    };
+    app.use(cors(corsOptions));
 
 
     if(config.get('httpLogs.enabled')){
@@ -172,34 +171,6 @@ class AppBuilder {
     this.app.use((req, res, next) => {
       const mongoLib = new MongoRepo(appName, mongoUrl, mongoDbName, req.logger);
       req.mongoLib = mongoLib;
-      next();
-    });
-  }
-
-  private setUpCors() {
-    this.app.use((req, res, next) => {
-
-      const origin: string | undefined = req.get('Origin');
-
-      console.log('cors origin -> ', origin);
-
-      if (!origin) {
-        return next();
-      }
-
-      console.log('cors req -> ', JSON.stringify(req.headers, null, 4));
-      console.log('cors method -> ', req.method);
-
-      let corsOptions: any = {
-        origin,
-        methods: 'GET, PUT, POST, DELETE, OPTIONS',
-        allowedHeaders: 'origin, x-requested-with, accept, content-type, x-csrf-token, correlationid, cookie, auth, host, referer, user-agent, _teamid',
-        maxAge: 3628800,
-        credentials: true
-      };
-      
-      this.app.use(cors(corsOptions));
-
       next();
     });
   }
