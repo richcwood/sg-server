@@ -106,7 +106,8 @@ class AppBuilder {
       methods: 'GET, PUT, POST, DELETE, OPTIONS',
       allowedHeaders: 'origin, x-requested-with, accept, content-type, x-csrf-token, correlationid, cookie, auth, host, referer, user-agent',
       exposedHeaders: 'origin, x-requested-with, accept, content-type, x-csrf-token, correlationid, cookie, auth, referer, user-agent',
-      maxAge: 3628800
+      maxAge: 3628800,
+      credentials: true
     };
     app.use(cors());
 
