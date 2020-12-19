@@ -18,6 +18,7 @@ export const mutations: MutationTree<CoreState> = {
   select(state: CoreState, model: Team){
     coreMutations.select(state, model);
     axios.defaults.headers.common['_teamid'] = model.id;
+    axios.defaults.withCredentials = true;
   },
 
   setUserEmail(state: CoreState, userEmail: string){

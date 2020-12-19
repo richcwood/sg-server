@@ -186,5 +186,6 @@ const getCorrelationId = function(): string {
 // add the correlation id for every single request so I can compare the stomp message and see if my
 // app instance was the author of the change
 axios.defaults.headers.common['correlationId'] = correlationId;
+axios.defaults.withCredentials = true;
 
 export { StompHandler, initStompHandler, stompInitialized, getStompHandler, getCorrelationId };
