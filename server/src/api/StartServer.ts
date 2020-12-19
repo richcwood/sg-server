@@ -101,6 +101,18 @@ class AppBuilder {
   private setUpMiddleware() {
     app.disable('etag');
 
+    let corsOptions: any = {
+      credentials: true,
+      origin: '*',
+      methods: 'GET, PUT, POST, DELETE, OPTIONS',
+      allowedHeaders: 'origin, x-requested-with, accept, content-type, x-csrf-token, correlationid, Cookie',
+      maxAge: 3628800,
+      optionsSuccessStatus: 200,
+      preflightContinue: true
+    };
+    app.use(cors(corsOptions));
+
+
     if(config.get('httpLogs.enabled')){
       morgan.token('user_id', req => req.headers.userid);
       morgan.token('user_email', req => req.headers.email);
@@ -231,17 +243,17 @@ class AppBuilder {
     // });
 
     // this.app.options('*', cors({origin: 'http://console.saasglue.com'})) // include before other routes
-    let corsOptions: any = {
-      credentials: true, 
-      origin: '*', 
-      methods: 'GET, PUT, POST, DELETE, OPTIONS', 
-      allowedHeaders: 'origin, x-requested-with, accept, content-type, authorization, x-csrf-token, correlationid', 
-      maxAge: 3628800,
-      optionsSuccessStatus: 200,
-      preflightContinue: true
-    };
-    this.app.use(cors(corsOptions));
-    this.app.options('*', cors(corsOptions)) // include before other routes
+    // let corsOptions: any = {
+    //   credentials: true, 
+    //   origin: '*', 
+    //   methods: 'GET, PUT, POST, DELETE, OPTIONS', 
+    //   allowedHeaders: 'origin, x-requested-with, accept, content-type, authorization, x-csrf-token, correlationid', 
+    //   maxAge: 3628800,
+    //   optionsSuccessStatus: 200,
+    //   preflightContinue: true
+    // };
+    // this.app.use(cors(corsOptions));
+    // this.app.options('*', cors(corsOptions)) // include before other routes
     this.app.use(enforce.HTTPS({ trustProtoHeader: true }));
 
     this.app.use(`${apiURLBase}/team`, teamRouter);
