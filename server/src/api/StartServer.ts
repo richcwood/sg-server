@@ -109,7 +109,7 @@ class AppBuilder {
       maxAge: 3628800,
       credentials: true
     };
-    app.use(cors());
+    app.use(cors(corsOptions));
 
 
     if(config.get('httpLogs.enabled')){
