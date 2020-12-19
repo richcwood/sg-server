@@ -172,16 +172,31 @@ class AppBuilder {
     const origin: string | undefined = req.get('Origin');
     let sendOK = false;
 
-    console.log('cors req -> ', Object.keys(req), ' -> ', req);
+    console.log('cors req -> ', JSON.stringify(req.headers, null, 4));
 
     if (origin) {
       console.log(`added cors for request url=${req.url}, method=${req.method}`);
-      res.set({
-        'Access-Control-Allow-Origin': origin,
-        'Access-Control-Allow-Headers': 'origin, x-requested-with, accept, content-type, authorization, x-csrf-token, correlationid',
-        'Access-Control-Max-Age': 3628800,
-        'Access-Control-Allow-Methods': 'GET, PUT, POST, DELETE, OPTIONS'
-      });
+
+      let newHeaders: any = {};
+      for (let i = 0; i < Object.keys(req.headers).length; i++) {
+        const key = Object.keys(req.headers)[i];
+        const val = req.headers[key];
+        newHeaders[key] = val;
+      }
+
+      newHeaders['Access-Control-Allow-Origin'] = origin;
+      newHeaders['Access-Control-Allow-Headers'] = 'origin, x-requested-with, accept, content-type, authorization, x-csrf-token, correlationid';
+      newHeaders['Access-Control-Max-Age'] = 3628800;
+      newHeaders['Access-Control-Allow-Methods'] = 'GET, PUT, POST, DELETE, OPTIONS';
+
+      res.set(newHeaders);
+      
+      // res.set({
+      //   'Access-Control-Allow-Origin': origin,
+      //   'Access-Control-Allow-Headers': 'origin, x-requested-with, accept, content-type, authorization, x-csrf-token, correlationid',
+      //   'Access-Control-Max-Age': 3628800,
+      //   'Access-Control-Allow-Methods': 'GET, PUT, POST, DELETE, OPTIONS'
+      // });
 
       if (req.method === 'OPTIONS') {
         // need to just send ok for a cors preflight check
