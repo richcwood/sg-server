@@ -101,6 +101,8 @@ class AppBuilder {
   private setUpMiddleware() {
     app.disable('etag');
 
+    this.app.use(enforce.HTTPS({ trustProtoHeader: true }));
+
     let corsOptions: any = {
       origin: 'http://saasglue-stage.herokuapp.com',
       methods: 'GET, PUT, POST, DELETE, OPTIONS',
@@ -254,7 +256,6 @@ class AppBuilder {
     // };
     // this.app.use(cors(corsOptions));
     // this.app.options('*', cors(corsOptions)) // include before other routes
-    this.app.use(enforce.HTTPS({ trustProtoHeader: true }));
 
     this.app.use(`${apiURLBase}/team`, teamRouter);
     this.app.use(`${apiURLBase}/agentDownload`, agentDownloadRouter);
