@@ -172,7 +172,7 @@ class AppBuilder {
     const origin: string | undefined = req.get('Origin');
     let sendOK = false;
 
-    console.log('cors req -> ', JSON.stringify(req, null, 4));
+    console.log('cors req -> ', util.inspect(req, false, null));
 
     if (origin) {
       console.log(`added cors for request url=${req.url}, method=${req.method}`);
