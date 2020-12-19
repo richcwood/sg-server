@@ -178,21 +178,20 @@ class AppBuilder {
     let sendOK = false;
 
     console.log('cors req -> ', JSON.stringify(req.headers, null, 4));
+    console.log('cors origin -> ', origin);
 
-    if (origin) {
-      console.log(`added cors for request url=${req.url}, method=${req.method}`);
+    console.log(`added cors for request url=${req.url}, method=${req.method}`);
 
-      res.set({
-        'Access-Control-Allow-Origin': origin,
-        'Access-Control-Allow-Headers': 'origin, x-requested-with, accept, content-type, authorization, x-csrf-token, correlationid, Auth',
-        'Access-Control-Max-Age': 3628800,
-        'Access-Control-Allow-Methods': 'GET, PUT, POST, DELETE, OPTIONS'
-      });
+    res.set({
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Headers': 'origin, x-requested-with, accept, content-type, authorization, x-csrf-token, correlationid, Auth',
+      'Access-Control-Max-Age': 3628800,
+      'Access-Control-Allow-Methods': 'GET, PUT, POST, DELETE, OPTIONS'
+    });
 
-      if (req.method === 'OPTIONS') {
-        // need to just send ok for a cors preflight check
-        sendOK = true;
-      }
+    if (req.method === 'OPTIONS') {
+      // need to just send ok for a cors preflight check
+      sendOK = true;
     }
 
     if (sendOK) {
