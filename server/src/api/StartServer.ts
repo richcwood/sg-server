@@ -103,6 +103,8 @@ class AppBuilder {
 
     app.use(enforce.HTTPS({ trustProtoHeader: true }));
 
+    this.setUpCors();
+
     // let corsOptions: any = {
     //   origin: 'http://saasglue-stage.herokuapp.com',
     //   methods: 'GET, PUT, POST, DELETE, OPTIONS',
@@ -132,7 +134,6 @@ class AppBuilder {
     app.use(handleBuildResponseWrapper);
     // app.use(handleStartTimer);
 
-    this.setUpCors();
     this.setUpClient();
     this.setUpLogger();
     this.setUpMongoLib();
