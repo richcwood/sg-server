@@ -177,20 +177,26 @@ class AppBuilder {
 
   private setUpCors() {
     this.app.use((req, res, next) => {
+
       const origin: string | undefined = req.get('Origin');
+
+      console.log('cors req -> ', JSON.stringify(req.headers, null, 4));
+      console.log('cors origin -> ', origin);
+      console.log('cors method -> ', req.method);
+
       if (!origin) {
         return next();
       }
 
       let corsOptions: any = {
-        origin: 'http://saasglue-stage.herokuapp.com',
+        origin,
         methods: 'GET, PUT, POST, DELETE, OPTIONS',
         allowedHeaders: 'origin, x-requested-with, accept, content-type, x-csrf-token, correlationid, cookie, auth, host, referer, user-agent, _teamid',
         maxAge: 3628800,
         credentials: true
       };
       
-      app.use(cors(corsOptions));
+      this.app.use(cors(corsOptions));
 
       next();
     });
