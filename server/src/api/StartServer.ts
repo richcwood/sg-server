@@ -107,7 +107,8 @@ class AppBuilder {
       allowedHeaders: 'origin, x-requested-with, accept, content-type, x-csrf-token, correlationid, cookie, auth, host, referer, user-agent',
       exposedHeaders: 'origin, x-requested-with, accept, content-type, x-csrf-token, correlationid, cookie, auth, referer, user-agent',
       maxAge: 3628800,
-      credentials: true
+      credentials: true,
+      preflightContinue: true
     };
     app.use(cors(corsOptions));
 
