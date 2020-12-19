@@ -4,7 +4,7 @@ MetricsLogger.init();
 import express = require('express');
 import { NextFunction, Request, Response } from 'express';
 const enforce = require('express-sslify');
-// const cors = require('cors');
+const cors = require('cors');
 import path = require('path');
 import util = require('util');
 const bodyParser = require('body-parser');
@@ -101,15 +101,14 @@ class AppBuilder {
   private setUpMiddleware() {
     app.disable('etag');
 
-    // let corsOptions: any = {
-    //   origin: '*',
-    //   methods: 'GET, PUT, POST, DELETE, OPTIONS',
-    //   allowedHeaders: 'origin, x-requested-with, accept, content-type, x-csrf-token, correlationid, Cookie, Auth',
-    //   maxAge: 3628800,
-    //   optionsSuccessStatus: 200,
-    //   preflightContinue: true
-    // };
-    // app.use(cors(corsOptions));
+    let corsOptions: any = {
+      origin: '*',
+      methods: 'GET, PUT, POST, DELETE, OPTIONS',
+      allowedHeaders: 'origin, x-requested-with, accept, content-type, x-csrf-token, correlationid, cookie, auth, host, referer, user-agent',
+      exposedHeaders: 'origin, x-requested-with, accept, content-type, x-csrf-token, correlationid, cookie, auth, referer, user-agent',
+      maxAge: 3628800
+    };
+    app.use(cors(corsOptions));
 
 
     if(config.get('httpLogs.enabled')){
@@ -173,35 +172,35 @@ class AppBuilder {
     });
   }
 
-  private addCorsHeaders(req: express.Request, res: express.Response, next: express.NextFunction): void {
-    const origin: string | undefined = req.get('Origin');
-    let sendOK = false;
+  // private addCorsHeaders(req: express.Request, res: express.Response, next: express.NextFunction): void {
+  //   const origin: string | undefined = req.get('Origin');
+  //   let sendOK = false;
 
-    console.log('cors req -> ', JSON.stringify(req.headers, null, 4));
-    console.log('cors origin -> ', origin);
-    console.log('cors method -> ', req.method);
+  //   console.log('cors req -> ', JSON.stringify(req.headers, null, 4));
+  //   console.log('cors origin -> ', origin);
+  //   console.log('cors method -> ', req.method);
 
-    console.log(`added cors for request url=${req.url}, method=${req.method}`);
+  //   console.log(`added cors for request url=${req.url}, method=${req.method}`);
 
-    res.set({
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Headers': 'origin, x-requested-with, accept, content-type, authorization, x-csrf-token, correlationid, Auth',
-      'Access-Control-Max-Age': 3628800,
-      'Access-Control-Allow-Methods': 'GET, PUT, POST, DELETE, OPTIONS'
-    });
+  //   res.set({
+  //     'Access-Control-Allow-Origin': '*',
+  //     'Access-Control-Allow-Headers': 'origin, x-requested-with, accept, content-type, authorization, x-csrf-token, correlationid, Auth',
+  //     'Access-Control-Max-Age': 3628800,
+  //     'Access-Control-Allow-Methods': 'GET, PUT, POST, DELETE, OPTIONS'
+  //   });
 
-    if (req.method === 'OPTIONS') {
-      console.log('sending ok');
-      // need to just send ok for a cors preflight check
-      sendOK = true;
-    }
+  //   if (req.method === 'OPTIONS') {
+  //     console.log('sending ok');
+  //     // need to just send ok for a cors preflight check
+  //     sendOK = true;
+  //   }
 
-    if (sendOK) {
-      res.send('').status(200);
-    } else {
-      next();
-    }
-  }
+  //   if (sendOK) {
+  //     res.send('').status(200);
+  //   } else {
+  //     next();
+  //   }
+  // }
 
   private setUpRoutes(): void {
     const apiURLBase = '/api/v0';
@@ -238,9 +237,9 @@ class AppBuilder {
     });
 
     
-    this.app.use((req, res, next) => {
-      this.addCorsHeaders(req, res, next);
-    });
+    // this.app.use((req, res, next) => {
+    //   this.addCorsHeaders(req, res, next);
+    // });
 
     // this.app.options('*', cors({origin: 'http://console.saasglue.com'})) // include before other routes
     // let corsOptions: any = {
