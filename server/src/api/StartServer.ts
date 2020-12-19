@@ -101,9 +101,9 @@ class AppBuilder {
   private setUpMiddleware() {
     app.disable('etag');
 
-    app.use(enforce.HTTPS({ trustProtoHeader: true }));
-
     this.setUpCors();
+
+    app.use(enforce.HTTPS({ trustProtoHeader: true }));
 
     // let corsOptions: any = {
     //   origin: 'http://saasglue-stage.herokuapp.com',
@@ -181,13 +181,14 @@ class AppBuilder {
 
       const origin: string | undefined = req.get('Origin');
 
-      console.log('cors req -> ', JSON.stringify(req.headers, null, 4));
       console.log('cors origin -> ', origin);
-      console.log('cors method -> ', req.method);
 
       if (!origin) {
         return next();
       }
+
+      console.log('cors req -> ', JSON.stringify(req.headers, null, 4));
+      console.log('cors method -> ', req.method);
 
       let corsOptions: any = {
         origin,
