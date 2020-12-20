@@ -3,6 +3,8 @@ MetricsLogger.init();
 
 import express = require('express');
 import { NextFunction, Request, Response } from 'express';
+const enforce = require('express-sslify');
+const cors = require('cors');
 import path = require('path');
 import util = require('util');
 const bodyParser = require('body-parser');
@@ -64,10 +66,13 @@ import * as morgan from 'morgan';
 import * as fs from 'fs';
 import { stripeClientTokenRouter } from './routes/StripClientTokenRouter';
 
+
 // Create a new express application instance
 const app: express.Application = express();
 
 const appName = 'SaasGlueAPI';
+
+const environment = process.env.NODE_ENV || 'development';
 
 var options = {
   autoIndex: false, // Don't build indexes
@@ -98,6 +103,29 @@ class AppBuilder {
   private setUpMiddleware() {
     app.disable('etag');
 
+    this.app.use(enforce.HTTPS({ trustProtoHeader: true }));
+
+    console.log('setting up middleware');
+
+    console.log('environment -> ', environment);
+
+    let origin = 'http://console.saasglue.com';
+    if (environment == 'stage')
+      origin = 'http://saasglue-stage.herokuapp.com';
+
+    console.log('origin -> ', origin);
+
+    let corsOptions: any = {
+      origin: origin,
+      methods: 'GET, PUT, POST, DELETE, OPTIONS',
+      allowedHeaders: 'origin, x-requested-with, accept, content-type, x-csrf-token, correlationid, cookie, auth, host, referer, user-agent, _teamid',
+      exposedHeaders: 'origin, x-requested-with, accept, content-type, x-csrf-token, correlationid, cookie, auth, referer, user-agent, _teamid',
+      maxAge: 3628800,
+      credentials: true
+    };
+    app.use(cors(corsOptions));
+
+
     if(config.get('httpLogs.enabled')){
       morgan.token('user_id', req => req.headers.userid);
       morgan.token('user_email', req => req.headers.email);
@@ -116,6 +144,7 @@ class AppBuilder {
 
     app.use(handleBuildResponseWrapper);
     // app.use(handleStartTimer);
+
     this.setUpClient();
     this.setUpLogger();
     this.setUpMongoLib();
@@ -158,6 +187,36 @@ class AppBuilder {
     });
   }
 
+  // private addCorsHeaders(req: express.Request, res: express.Response, next: express.NextFunction): void {
+  //   const origin: string | undefined = req.get('Origin');
+  //   let sendOK = false;
+
+  //   console.log('cors req -> ', JSON.stringify(req.headers, null, 4));
+  //   console.log('cors origin -> ', origin);
+  //   console.log('cors method -> ', req.method);
+
+  //   console.log(`added cors for request url=${req.url}, method=${req.method}`);
+
+  //   res.set({
+  //     'Access-Control-Allow-Origin': '*',
+  //     'Access-Control-Allow-Headers': 'origin, x-requested-with, accept, content-type, authorization, x-csrf-token, correlationid, Auth',
+  //     'Access-Control-Max-Age': 3628800,
+  //     'Access-Control-Allow-Methods': 'GET, PUT, POST, DELETE, OPTIONS'
+  //   });
+
+  //   if (req.method === 'OPTIONS') {
+  //     console.log('sending ok');
+  //     // need to just send ok for a cors preflight check
+  //     sendOK = true;
+  //   }
+
+  //   if (sendOK) {
+  //     res.send('').status(200);
+  //   } else {
+  //     next();
+  //   }
+  // }
+
   private setUpRoutes(): void {
     const apiURLBase = '/api/v0';
 
@@ -189,8 +248,26 @@ class AppBuilder {
       }, secret);//KeysUtil.getPrivate()); // todo - create a public / private key
 
       res.cookie('Auth', token, { secure: false, expires: new Date(jwtExpiration) });
-      res.send('OKz');
+      res.send('OK');
     });
+
+    
+    // this.app.use((req, res, next) => {
+    //   this.addCorsHeaders(req, res, next);
+    // });
+
+    // this.app.options('*', cors({origin: 'http://console.saasglue.com'})) // include before other routes
+    // let corsOptions: any = {
+    //   credentials: true, 
+    //   origin: '*', 
+    //   methods: 'GET, PUT, POST, DELETE, OPTIONS', 
+    //   allowedHeaders: 'origin, x-requested-with, accept, content-type, authorization, x-csrf-token, correlationid', 
+    //   maxAge: 3628800,
+    //   optionsSuccessStatus: 200,
+    //   preflightContinue: true
+    // };
+    // this.app.use(cors(corsOptions));
+    // this.app.options('*', cors(corsOptions)) // include before other routes
 
     this.app.use(`${apiURLBase}/team`, teamRouter);
     this.app.use(`${apiURLBase}/agentDownload`, agentDownloadRouter);
