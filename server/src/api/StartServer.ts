@@ -105,6 +105,8 @@ class AppBuilder {
 
     this.app.use(enforce.HTTPS({ trustProtoHeader: true }));
 
+    console.log('setting up middleware');
+
     console.log('environment -> ', environment);
 
     let origin = 'http://console.saasglue.com';
