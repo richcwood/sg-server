@@ -64,7 +64,7 @@ export class StepDefSchema {
 
   // Define which filters are legal for which props (including nested props (not sure about nested arrays))
   public static readonly validFilters = {
-    'name': [FilterOperator.LIKE],
+    'name': [FilterOperator.LIKE, FilterOperator.EQUALS],
     '_taskDefId': [FilterOperator.EQUALS, FilterOperator.IN],
     '_scriptId': [FilterOperator.EQUALS]
   };

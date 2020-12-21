@@ -56,6 +56,18 @@ export class RabbitMQAdmin {
         });
     }
 
+    async getQueueDetails(queue: string) {
+        return new Promise((resolve, reject) => {
+            this.instance.get(`queues/${this.vhost}/${queue}`)
+                .then((response) => {
+                    resolve(response);
+                })
+                .catch((err) => {
+                    resolve();
+                })
+        });
+    }
+
     async purgeQueue(queue: string) {
         return new Promise((resolve, reject) => {
             this.instance.delete(`queues/${this.vhost}/${queue}/contents`)

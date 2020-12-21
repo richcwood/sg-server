@@ -103,27 +103,23 @@ class AppBuilder {
   private setUpMiddleware() {
     app.disable('etag');
 
-    this.app.use(enforce.HTTPS({ trustProtoHeader: true }));
+    if (environment != 'debug') {
+      this.app.use(enforce.HTTPS({ trustProtoHeader: true }));
 
-    console.log('setting up middleware');
+      let origin = 'http://console.saasglue.com';
+      if (environment == 'stage')
+        origin = 'http://saasglue-stage.herokuapp.com';
 
-    console.log('environment -> ', environment);
-
-    let origin = 'http://console.saasglue.com';
-    if (environment == 'stage')
-      origin = 'http://saasglue-stage.herokuapp.com';
-
-    console.log('origin -> ', origin);
-
-    let corsOptions: any = {
-      origin: origin,
-      methods: 'GET, PUT, POST, DELETE, OPTIONS',
-      allowedHeaders: 'origin, x-requested-with, accept, content-type, x-csrf-token, correlationid, cookie, auth, host, referer, user-agent, _teamid',
-      exposedHeaders: 'origin, x-requested-with, accept, content-type, x-csrf-token, correlationid, cookie, auth, referer, user-agent, _teamid',
-      maxAge: 3628800,
-      credentials: true
-    };
-    app.use(cors(corsOptions));
+      let corsOptions: any = {
+        origin: origin,
+        methods: 'GET, PUT, POST, DELETE, OPTIONS',
+        allowedHeaders: 'origin, x-requested-with, accept, content-type, x-csrf-token, correlationid, cookie, auth, host, referer, user-agent, _teamid',
+        exposedHeaders: 'origin, x-requested-with, accept, content-type, x-csrf-token, correlationid, cookie, auth, referer, user-agent, _teamid',
+        maxAge: 3628800,
+        credentials: true
+      };
+      app.use(cors(corsOptions));
+    }
 
 
     if(config.get('httpLogs.enabled')){

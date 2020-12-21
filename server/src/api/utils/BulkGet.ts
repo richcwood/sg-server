@@ -9,7 +9,7 @@ import { CastError } from 'mongoose';
 
 
 /*
-  usage example: [endpoint]?filter=dateCompleted<${Number(dateCutoff)}&limit=1&responseFields=id isActive billing_address1
+  usage example: [endpoint]?filter=dateCompleted<${Number(dateCutoff)},name~=the name&limit=1&responseFields=id isActive billing_address1
 */
 
 export enum FilterOperator {

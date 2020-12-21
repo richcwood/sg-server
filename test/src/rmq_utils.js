@@ -45,6 +45,11 @@ let teamsToKeep = ['5de95c0453162e8891f5a830'];
         if (process.argv[2]) {
             let queues = await rmqAdmin.getQueues(process.argv[2]);
             console.log(queues);
+
+            // for (let index = 0; index < queues.length; index++) {
+            //     let queue = await rmqAdmin.getQueueDetails(queues[index]);
+            //     console.log(queue.data.consumers);
+            // }
             
             for (let index = 0; index < queues.length; index++) {
                 try {

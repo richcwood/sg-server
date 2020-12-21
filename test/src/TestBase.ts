@@ -203,6 +203,13 @@ export default abstract class TestBase {
         return restAPICallRes.data.data;
     }
 
+    public async GetStepDefId(_taskDefId: mongodb.ObjectId, name: string, _teamId: mongodb.ObjectId) {
+        // console.log('CreateStepDefDef -> stepDefDef -> ', util.inspect(stepDefDef, false, 5, true));
+        let restAPICallRes: any = await this.testSetup.RestAPICall(`stepDef?filter=_taskDefId==${_taskDefId},name==${name}&responseFields=id`, 'GET', _teamId, null, null);
+        // console.log('CreateStepDefDef -> restAPICallRes -> ', util.inspect(restAPICallRes.data, false, null));
+        return restAPICallRes.data.data;
+    }
+
     public async GetJob(_jobId: mongodb.ObjectId, _teamId: mongodb.ObjectId) {
         // console.log('CreateJobDef -> jobDef -> ', util.inspect(jobDef, false, 5, true));
         let restAPICallRes: any = await this.testSetup.RestAPICall(`job/${_jobId}`, 'GET', _teamId, null, null);
@@ -1016,16 +1023,33 @@ export abstract class WorkflowTestBase extends TestBase {
 
                 taskDefTemplate.stepDefs = {};
                 let stepDef: any;
+                let order: number = 0;
                 for (stepDef of taskDef.stepDefs) {
+                    order++;
                     let stepDefTemplate: any = _.clone(StepDefTemplate);
                     Object.assign(stepDefTemplate, stepDef);
                     stepDefTemplate._taskDefId = taskDefTemplate.id;
                     stepDefTemplate._scriptId = scripts[stepDef.scriptName].id;
+                    stepDefTemplate.order = order;
 
-                    resApiCall = await this.testSetup.RestAPICall('stepDef', 'POST', _teamId, null, stepDefTemplate);
-                    if (resApiCall.data.statusCode != 201) {
-                        wftInst.logger.LogError('Failed', { Message: `stepDef POST returned ${resApiCall.data.statusCode}`, stepDefTemplate });
-                        throw new Error();
+                    let stepDefExisting = await this.GetStepDefId(stepDefTemplate._taskDefId, 'AwsLambda', stepDefTemplate._teamId);
+                    if (_.isArray(stepDefExisting) && stepDefExisting.length > 0) {
+                        if (stepDefExisting.length != 1) {
+                            wftInst.logger.LogError('Failed', { Message: `stepDef GET returned multiple results`, stepDefTemplate, stepDefExisting });
+                            throw new Error();
+                        }
+                        stepDefTemplate.id = stepDefExisting[0].id;
+                        resApiCall = await this.testSetup.RestAPICall(`stepDef/${stepDefTemplate.id}`, 'PUT', _teamId, null, stepDefTemplate);
+                        if (resApiCall.data.statusCode != 200) {
+                            wftInst.logger.LogError('Failed', { Message: `stepDef PUT returned ${resApiCall.data.statusCode}`, stepDefTemplate });
+                            throw new Error();
+                        }
+                    } else {
+                        resApiCall = await this.testSetup.RestAPICall('stepDef', 'POST', _teamId, null, stepDefTemplate);
+                        if (resApiCall.data.statusCode != 201) {
+                            wftInst.logger.LogError('Failed', { Message: `stepDef POST returned ${resApiCall.data.statusCode}`, stepDefTemplate });
+                            throw new Error();
+                        }
                     }
                     stepDefTemplate.id = resApiCall.data.data.id;
 

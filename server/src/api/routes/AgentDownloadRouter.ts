@@ -10,7 +10,7 @@ import { TeamPricingTier } from '../../shared/Enums';
 import { AgentModel } from '../domain/Agent';
 import { teamService } from '../services/TeamService';
 import { settingsService } from '../services/SettingsService';
-import { exec } from 'pkg';
+import { exec } from 'pkg'; 
 import * as config from 'config';
 const jwt = require('jsonwebtoken');
 import * as _ from 'lodash';

@@ -15,7 +15,7 @@ token = ''
 def RestAPILogin():
     global token
 
-    url = 'http://console.saasglue.com/login/apiLogin'
+    url = 'https://console.saasglue.com/login/apiLogin'
     
     headers = {
         'Content-Type': 'application/json'

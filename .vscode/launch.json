@@ -68,7 +68,7 @@
             "skipFiles": [
                 "<node_internals>/**"
             ],
-            "program": "${workspaceFolder}/test/dist/sg-server/test/src/RunTestHarness.js",
+            "program": "${workspaceFolder}/test/dist/sg-server/test/src/RunUnitTestsHarness.js",
             "args": [
                 "Test56.js"
             ],
@@ -76,7 +76,7 @@
                 "${workspaceFolder}/test/dist/test/**/*.js"
             ],
             "env": {
-                "NODE_ENV": "production",
+                "NODE_ENV": "debug",
                 "SENDGRID_API_KEY": "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"
             }
         }
