@@ -5,6 +5,7 @@ import time
 from datetime import datetime
 import socket
 import logging
+from logging.handlers import TimedRotatingFileHandler
 from threading import Event
 from threading import Thread
 from pytz import utc
@@ -95,16 +96,20 @@ if env != 'default':
 cm_logger = logging.getLogger('job_scheduler')
 cm_logger.setLevel(int(loggingLevel))
 
-formatter = logging.Formatter('%(asctime)s|host: %(host_name)s|app: %(app_name)s|level: %(levelname)s|message: %(message)s')
+formatter = logging.Formatter("{'_timeStamp': '%(asctime)s', '_sourceHost': '%(host_name)s', '_appName': '%(app_name)s', '_logLevel': %(levelno)s, 'details': %(message)s}")
 
 stdout_handler = logging.StreamHandler(sys.stdout)
 stdout_handler.setLevel(logging.DEBUG)
 stdout_handler.setFormatter(formatter)
 cm_logger.addHandler(stdout_handler)
 
+timed_rotating_file_handler = TimedRotatingFileHandler('./logs/jobscheduler.log', when='s', interval=30, backupCount=10)
+timed_rotating_file_handler.setLevel(logging.DEBUG)
+timed_rotating_file_handler.setFormatter(formatter)
+cm_logger.addHandler(timed_rotating_file_handler)
+
 host = socket.gethostname()
-cml_adapter = logging.LoggerAdapter(
-    cm_logger, {'build': environment, 'app_name': 'JobScheduler', 'host_name': host})
+cml_adapter = logging.LoggerAdapter(cm_logger, {'build': environment, 'app_name': 'JobScheduler', 'host_name': host})
 
 jobstores = {
     'default': MongoDBJobStore(database=mongoDbName, collection='scheduled_job_1', host=mongoUrl)
@@ -128,17 +133,17 @@ job_scheduler.configure(jobstores=jobstores, executors=executors,
 
 def logDebug(msgData):
     global cml_adapter
-    cml_adapter.debug(msgData)
+    cml_adapter.error(json.dumps(msgData))
 
 
 def logInfo(msgData):
     global cml_adapter
-    cml_adapter.info(msgData)
+    cml_adapter.error(json.dumps(msgData))
 
 
 def logError(msgData):
     global cml_adapter
-    cml_adapter.error(msgData)
+    cml_adapter.error(json.dumps(msgData))
 
 
 def RestAPICall(url, method, _teamId, headers, data={}):
@@ -170,19 +175,18 @@ def RestAPICall(url, method, _teamId, headers, data={}):
         if (str(res.status_code)[0] != '2'):
             raise Exception('Call to {} returned {} - {}'.format(url, res.status_code, res.text))
     except Exception as ex:
-        logError({'Method': 'RestAPICall', 'Error': ex, 'url': url,
-                  'method': method, '_teamId': _teamId, 'headers': headers, 'data': data})
+        logError({'msg': str(ex), 'Method': 'RestAPICall', 'url': url, 'method': method, '_teamId': _teamId, 'headers': headers, 'data': data})
 
 
 def on_launch_job(scheduled_time, job_id, _teamId, targetId):
-    logInfo({'Msg': 'Launching job', '_teamId': _teamId, '_jobDefId': targetId, 'date': datetime.now(), 'scheduled_time': scheduled_time})
+    logInfo({'msg': 'Launching job', '_teamId': _teamId, '_jobDefId': targetId, 'date': datetime.now(), 'scheduled_time': scheduled_time})
     RestAPICall('job', 'POST', _teamId, {'_jobDefId': targetId}, {'dateScheduled': scheduled_time})
 
     job = job_scheduler.get_job(job_id)
     if job:
         url = 'schedule/fromscheduler/{}'.format(job_id)
         RestAPICall(url, 'PUT', _teamId, {}, {'lastScheduledRunDate': scheduled_time, 'nextScheduledRunDate': job.next_run_time})
-        logInfo({'Msg': 'Updating job info 1', 'url': url, 'job_id': job_id, 'lastScheduledRunDate': scheduled_time, 'nextScheduledRunDate': job.next_run_time})
+        logInfo({'msg': 'Updating job info 1', 'url': url, 'job_id': job_id, 'lastScheduledRunDate': scheduled_time, 'nextScheduledRunDate': job.next_run_time})
 
 
 def on_message(delivery_tag, body, async_consumer):
@@ -361,7 +365,7 @@ def on_message(delivery_tag, body, async_consumer):
         if job:
             url = 'schedule/fromscheduler/{}'.format(job.id)
             RestAPICall(url, 'PUT', msg['_teamId'], {}, {'nextScheduledRunDate': job.next_run_time})
-            logInfo({'Msg': 'Updating job info 2', 'url': url, 'job_id': job.id, 'nextScheduledRunDate': job.next_run_time})
+            logInfo({'msg': 'Updating job info 2', 'url': url, 'job_id': job.id, 'nextScheduledRunDate': job.next_run_time})
 
         async_consumer.acknowledge_message(delivery_tag)
         # job_scheduler.print_jobs()
@@ -369,7 +373,7 @@ def on_message(delivery_tag, body, async_consumer):
         async_consumer.acknowledge_message(delivery_tag)
         url = 'schedule/fromscheduler/{}'.format(msg['id'])
         RestAPICall(url, 'PUT', msg['_teamId'], {}, {'scheduleError': ex.message})
-        logError({'Method': 'on_message', 'body': body, 'Error': ex})
+        logError({'msg': str(ex), 'Method': 'on_message', 'body': body})
     # finally:
     #     async_consumer.start_consuming()
 
@@ -428,7 +432,7 @@ def run_scheduler_async(args1, stop_event):
     try:
         job_scheduler.start()
     except Exception as e:
-        logError({'Method': 'run_scheduler_async', 'Error': e})
+        logError({'Msg': str(e), 'Method': 'run_scheduler_async'})
 
 
 def main():
@@ -446,16 +450,15 @@ def main():
         target=schedule_updates_handler, args=(1, handle_schedule_updates_thread_stop))
 
     try:
-        cml_adapter.info('Starting JobScheduler')
+        cml_adapter.info({'msg': 'Starting JobScheduler'})
         handle_schedule_updates_thread.start()
         while True:
-            schedule_updates_exception_occurred = wait_schedule_updates_handler_exception.wait(
-                5)
+            schedule_updates_exception_occurred = wait_schedule_updates_handler_exception.wait(5)
             if schedule_updates_exception_occurred:
-                cml_adapter.error('Exception occurred in on_message event')
+                cml_adapter.error({'msg': 'Exception occurred in on_message event'})
                 wait_schedule_updates_handler_exception.clear()
     except KeyboardInterrupt:
-        logInfo({'Method': 'main', 'Msg': 'process interrupted - exiting'})
+        logInfo({'msg': 'process interrupted - exiting', 'Method': 'main'})
         stop_schedule_updates_handler()
         handle_schedule_updates_thread_stop.set()
         handle_schedule_updates_thread.join()
@@ -464,7 +467,7 @@ def main():
         run_scheduler_async_thread.join()
         sys.exit(0)
     except Exception as ex:
-        logError({'Method': 'main', 'Error': ex})
+        logError({'msg': str(ex), 'Method': 'main'})
         traceback.print_exc(file=sys.stdout)
         sys.exit(0)
 
