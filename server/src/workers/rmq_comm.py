@@ -193,7 +193,7 @@ class AsyncConsumer(object):
         :param str reply_text: The text reason the channel was closed
 
         """
-        self._logger.info(json.dumps({"msg": "Channel was closed", "channel": channel, "reply_code": reply_code, "reply_text": reply_text}))
+        self._logger.info(json.dumps({"msg": "Channel was closed", "channel": str(channel), "reply_code": reply_code, "reply_text": reply_text}))
         self._connection.close()
 
     def setup_exchange(self, exchange_name):

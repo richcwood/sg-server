@@ -11,6 +11,8 @@ from threading import Thread
 from pytz import utc
 import json
 import requests
+import sendgrid
+from sendgrid.helpers.mail import *
 
 from rmq_comm import *
 
@@ -26,6 +28,8 @@ wait_schedule_updates_handler_exception = Event()
 env = 'default'
 if 'NODE_ENV' in os.environ:
     env = os.environ['NODE_ENV']
+
+sendGrid = sendgrid.SendGridAPIClient(api_key=os.environ.get('SENDGRID_API_KEY'))
 
 mongoUrl = None
 mongoDbName = None
@@ -146,6 +150,20 @@ def logError(msgData):
     cml_adapter.error(json.dumps(msgData))
 
 
+def sendEmail(from_mail, to_email, subject, body):
+    global sendGrid
+
+    from_email_obj = Email("rich@saasglue.com")
+    to_email_obj = To("rich@saasglue.com")
+    content = Content("text/plain", body)
+    mail = Mail(from_email_obj, to_email_obj, subject, content)
+    response = sendGrid.client.mail.send.post(request_body=mail.get())
+    if response.status_code != 202:
+        logError({"msg": "Error sending alert email", "Method": "sendEmail", "from_mail": from_mail, "to_email": to_email, "subject": subject, "body": body, "response": response.status_code + " - " + response.body})
+    # else:
+    #     logDebug({"msg": "successfully sent email"})
+
+
 def RestAPICall(url, method, _teamId, headers, data={}):
     global cml_adapter
     global token
@@ -175,7 +193,7 @@ def RestAPICall(url, method, _teamId, headers, data={}):
         if (str(res.status_code)[0] != '2'):
             raise Exception('Call to {} returned {} - {}'.format(url, res.status_code, res.text))
     except Exception as ex:
-        logError({'msg': str(ex), 'Method': 'RestAPICall', 'url': url, 'method': method, '_teamId': _teamId, 'headers': headers, 'data': data})
+        logError({"msg": str(ex), "Method": "RestAPICall", "url": url, "method": method, "_teamId": _teamId, "headers": headers, "data": data})
 
 
 def on_launch_job(scheduled_time, job_id, _teamId, targetId):
@@ -432,7 +450,7 @@ def run_scheduler_async(args1, stop_event):
     try:
         job_scheduler.start()
     except Exception as e:
-        logError({'Msg': str(e), 'Method': 'run_scheduler_async'})
+        logError({"Msg": str(e), "Method": "run_scheduler_async"})
 
 
 def main():
