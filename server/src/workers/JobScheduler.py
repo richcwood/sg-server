@@ -179,14 +179,14 @@ def RestAPICall(url, method, _teamId, headers, data={}):
 
 
 def on_launch_job(scheduled_time, job_id, _teamId, targetId):
-    logInfo({'msg': 'Launching job', '_teamId': _teamId, '_jobDefId': targetId, 'date': datetime.now(), 'scheduled_time': scheduled_time})
+    logInfo({"msg": "Launching job", "_teamId": _teamId, "_jobDefId": targetId, "date": datetime.now(), "scheduled_time": scheduled_time})
     RestAPICall('job', 'POST', _teamId, {'_jobDefId': targetId}, {'dateScheduled': scheduled_time})
 
     job = job_scheduler.get_job(job_id)
     if job:
         url = 'schedule/fromscheduler/{}'.format(job_id)
         RestAPICall(url, 'PUT', _teamId, {}, {'lastScheduledRunDate': scheduled_time, 'nextScheduledRunDate': job.next_run_time})
-        logInfo({'msg': 'Updating job info 1', 'url': url, 'job_id': job_id, 'lastScheduledRunDate': scheduled_time, 'nextScheduledRunDate': job.next_run_time})
+        logInfo({"msg": "Updating job info 1", "url": url, "job_id": job_id, "lastScheduledRunDate": scheduled_time, "nextScheduledRunDate": job.next_run_time})
 
 
 def on_message(delivery_tag, body, async_consumer):
@@ -365,7 +365,7 @@ def on_message(delivery_tag, body, async_consumer):
         if job:
             url = 'schedule/fromscheduler/{}'.format(job.id)
             RestAPICall(url, 'PUT', msg['_teamId'], {}, {'nextScheduledRunDate': job.next_run_time})
-            logInfo({'msg': 'Updating job info 2', 'url': url, 'job_id': job.id, 'nextScheduledRunDate': job.next_run_time})
+            logInfo({"msg": "Updating job info 2", "url": url, "job_id": job.id, "nextScheduledRunDate": job.next_run_time})
 
         async_consumer.acknowledge_message(delivery_tag)
         # job_scheduler.print_jobs()
@@ -373,7 +373,7 @@ def on_message(delivery_tag, body, async_consumer):
         async_consumer.acknowledge_message(delivery_tag)
         url = 'schedule/fromscheduler/{}'.format(msg['id'])
         RestAPICall(url, 'PUT', msg['_teamId'], {}, {'scheduleError': ex.message})
-        logError({'msg': str(ex), 'Method': 'on_message', 'body': body})
+        logError({"msg": str(ex), "Method": "on_message", "body": body})
     # finally:
     #     async_consumer.start_consuming()
 
@@ -450,15 +450,15 @@ def main():
         target=schedule_updates_handler, args=(1, handle_schedule_updates_thread_stop))
 
     try:
-        cml_adapter.info({'msg': 'Starting JobScheduler'})
+        cml_adapter.info({"msg": "Starting JobScheduler"})
         handle_schedule_updates_thread.start()
         while True:
             schedule_updates_exception_occurred = wait_schedule_updates_handler_exception.wait(5)
             if schedule_updates_exception_occurred:
-                cml_adapter.error({'msg': 'Exception occurred in on_message event'})
+                cml_adapter.error({"msg": "Exception occurred in on_message event"})
                 wait_schedule_updates_handler_exception.clear()
     except KeyboardInterrupt:
-        logInfo({'msg': 'process interrupted - exiting', 'Method': 'main'})
+        logInfo({"msg": "process interrupted - exiting", "Method": "main"})
         stop_schedule_updates_handler()
         handle_schedule_updates_thread_stop.set()
         handle_schedule_updates_thread.join()
@@ -467,7 +467,7 @@ def main():
         run_scheduler_async_thread.join()
         sys.exit(0)
     except Exception as ex:
-        logError({'msg': str(ex), 'Method': 'main'})
+        logError({"msg": str(ex), "Method": "main"})
         traceback.print_exc(file=sys.stdout)
         sys.exit(0)
 
