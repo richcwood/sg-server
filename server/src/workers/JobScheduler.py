@@ -96,7 +96,7 @@ if env != 'default':
 cm_logger = logging.getLogger('job_scheduler')
 cm_logger.setLevel(int(loggingLevel))
 
-formatter = logging.Formatter("{'_timeStamp': '%(asctime)s', '_sourceHost': '%(host_name)s', '_appName': '%(app_name)s', '_logLevel': %(levelno)s, 'details': %(message)s}")
+formatter = logging.Formatter('{"_timeStamp": "%(asctime)s", "_sourceHost": "%(host_name)s", "_appName": "%(app_name)s", "_logLevel": %(levelno)s, "details": %(message)s}')
 
 stdout_handler = logging.StreamHandler(sys.stdout)
 stdout_handler.setLevel(logging.DEBUG)
