@@ -137,17 +137,17 @@ job_scheduler.configure(jobstores=jobstores, executors=executors,
 
 def logDebug(msgData):
     global cml_adapter
-    cml_adapter.error(json.dumps(msgData))
+    cml_adapter.error(json.dumps(msgData, default=str))
 
 
 def logInfo(msgData):
     global cml_adapter
-    cml_adapter.error(json.dumps(msgData))
+    cml_adapter.error(json.dumps(msgData, default=str)))
 
 
 def logError(msgData):
     global cml_adapter
-    cml_adapter.error(json.dumps(msgData))
+    cml_adapter.error(json.dumps(msgData, default=str)))
 
 
 def sendEmail(from_mail, to_email, subject, body):
@@ -468,7 +468,7 @@ def main():
         target=schedule_updates_handler, args=(1, handle_schedule_updates_thread_stop))
 
     try:
-        cml_adapter.info({"msg": "Starting JobScheduler"})
+        logInfo({"msg": "Starting JobScheduler"})
         handle_schedule_updates_thread.start()
         while True:
             schedule_updates_exception_occurred = wait_schedule_updates_handler_exception.wait(5)
