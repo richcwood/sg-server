@@ -142,12 +142,12 @@ def logDebug(msgData):
 
 def logInfo(msgData):
     global cml_adapter
-    cml_adapter.error(json.dumps(msgData, default=str)))
+    cml_adapter.error(json.dumps(msgData, default=str))
 
 
 def logError(msgData):
     global cml_adapter
-    cml_adapter.error(json.dumps(msgData, default=str)))
+    cml_adapter.error(json.dumps(msgData, default=str))
 
 
 def sendEmail(from_mail, to_email, subject, body):
