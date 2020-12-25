@@ -87,7 +87,8 @@ export class AgentSchema {
         'tags': [FilterOperator.EQUALS],
         'offline': [FilterOperator.EQUALS],
         'lastHeartbeatTime': [FilterOperator.LESS_THAN, FilterOperator.GREATER_THAN_EQUAL_TO],
-        'targetVerson': [FilterOperator.EQUALS]
+        'targetVersion': [FilterOperator.EQUALS],
+        'reportedVersion': [FilterOperator.EQUALS]
         // 'dog.name': [FilterOperator.IN, FilterOperator.EQUALS, FilterOperator.NOT_EQUALS, FilterOperator.LIKE
         // ],
         // 'dog.smell': [FilterOperator.LIKE],
