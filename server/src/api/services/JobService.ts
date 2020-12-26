@@ -232,8 +232,11 @@ export class JobService {
                         }
                     };
 
-                    if (taskModel.target == Enums.TaskDefTarget.AWS_LAMBDA)
+
+                    if (taskModel.target == Enums.TaskDefTarget.AWS_LAMBDA) {
                         step.s3Bucket = config.get('S3_BUCKET_TEAM_ARTIFACTS');
+                        step.lambdaAWSRegion = config.get('AWS_REGION');
+                    }
 
                     const stepModel: StepSchema = <StepSchema>await stepService.createStep(_teamId, step, correlationId);
                 }
