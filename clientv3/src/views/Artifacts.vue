@@ -199,7 +199,7 @@ export default class Artifacts extends Vue {
         prefix: this.destinationFolder
       });
 
-      await axios.put(artifact.url, file, {headers: {'Content-Type': 'application/octet-stream'}})
+      await axios.put(artifact.url, file, {headers: {'Content-Type': 'multipart/form-data'}})
       Vue.set(this.fileUploadStatus, file.name, 'completed uploading file');
       // this.getUploadStatus[file.name] = 'completed uploading file';
     }
