@@ -1879,7 +1879,7 @@ let SendTestBrowserAlert = async() => {
 
 // RunCheckWaitingForAgentTasks('5f57b2f14b5da00017df0d4f');
 // CreateBrainTreeCompanyForTeams();
-CreateStripeCompanyForTeams();
+// CreateStripeCompanyForTeams();
 // FixTeamDBRecords();
 // FixScriptDBRecords();
 // SendTestBrowserAlert();
@@ -1887,7 +1887,7 @@ CreateStripeCompanyForTeams();
 // ProcessOrphanedTasks();
 // PublishJobTask();
 // PruneJobs(mongodb.ObjectId('5e33a89f9fb5d6880217da2c'));
-// UploadFileToS3('./test62lambda.zip');
+UploadFileToS3(process.argv[2]);
 // GetS3PrefixSize('production/5de95c0453162e8891f5a830/');
 // CreateTeam("saas glue admin", "5ef125b4fb07e500150507ca");
 // DumpMongoData('./production_20200615.json');
