@@ -24,7 +24,7 @@ export class ArtifactSchema {
   @prop({ required: true })
   s3Path: string;
 
-  @prop({ default: 'multipart/form-data' })
+  @prop({ default: 'application/octet-stream' })
   type: string;
 
   @prop({ default: '' })
