@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { artifactController } from '../controllers/ArtifactController';
+import { verifyAccessRights } from '../utils/AccessRightsVerifier';
 
 export class ArtifactRouter {
 
@@ -8,11 +9,11 @@ export class ArtifactRouter {
   constructor() {
     this.router = Router();
 
-    this.router.get('/', artifactController.getManyArtifacts);
-    this.router.get('/:artifactId', artifactController.getArtifact);
-    this.router.post('/', artifactController.createArtifact);
-    this.router.put('/:artifactId', artifactController.updateArtifact);
-    this.router.delete('/:artifactId', artifactController.deleteArtifact);
+    this.router.get('/', verifyAccessRights(['ARTIFACT_READ', 'GLOBAL']), artifactController.getManyArtifacts);
+    this.router.get('/:artifactId', verifyAccessRights(['ARTIFACT_READ', 'GLOBAL']), artifactController.getArtifact);
+    this.router.post('/', verifyAccessRights(['ARTIFACT_CREATE', 'GLOBAL']), artifactController.createArtifact);
+    this.router.put('/:artifactId', verifyAccessRights(['ARTIFACT_UPDATE', 'GLOBAL']), artifactController.updateArtifact);
+    this.router.delete('/:artifactId', verifyAccessRights(['ARTIFACT_DELETE', 'GLOBAL']), artifactController.deleteArtifact);
   }
 }
 

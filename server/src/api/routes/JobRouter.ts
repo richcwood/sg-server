@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { jobController } from '../controllers/JobController';
+import { verifyAccessRights } from '../utils/AccessRightsVerifier';
 
 export class JobRouter {
 
@@ -8,13 +9,13 @@ export class JobRouter {
     constructor() {
         this.router = Router();
 
-        this.router.get('/', jobController.getManyJobs);
-        this.router.get('/:jobId', jobController.getJob);
-        this.router.post('/ic/', jobController.createInteractiveConsoleJob);
-        this.router.post('/', jobController.createJob);
-        this.router.put('/:jobId', jobController.updateJob);
-        this.router.delete('/', jobController.deleteJobs);
-        this.router.delete('/:jobId', jobController.deleteJob);
+        this.router.get('/', verifyAccessRights(['JOB_READ', 'GLOBAL']), jobController.getManyJobs);
+        this.router.get('/:jobId', verifyAccessRights(['JOB_READ', 'GLOBAL']), jobController.getJob);
+        this.router.post('/ic/', verifyAccessRights(['JOB_CREATE_BY_IC', 'GLOBAL']), jobController.createInteractiveConsoleJob);
+        this.router.post('/', verifyAccessRights(['JOB_CREATE', 'GLOBAL']), jobController.createJob);
+        this.router.put('/:jobId', verifyAccessRights(['JOB_UPDATE', 'GLOBAL']), jobController.updateJob);
+        this.router.delete('/', verifyAccessRights(['JOB_DELETE', 'GLOBAL']), jobController.deleteJobs);
+        this.router.delete('/:jobId', verifyAccessRights(['JOB_DELETE', 'GLOBAL']), jobController.deleteJob);
     }
 }
 

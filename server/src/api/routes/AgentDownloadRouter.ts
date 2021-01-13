@@ -15,7 +15,7 @@ import * as config from 'config';
 const jwt = require('jsonwebtoken');
 import * as _ from 'lodash';
 import * as mongodb from 'mongodb';
-
+import { verifyAccessRights } from '../utils/AccessRightsVerifier';
 
 
 const mongoUrl = config.get('mongoUrl');
@@ -45,9 +45,9 @@ export class AgentDownloadRouter {
   }
 
   setRoutes() {
-    this.router.post('/agent/:version/:platform/:arch?', this.createAgent.bind(this)); // by the browser
-    this.router.post('/agentstub/:platform/:arch?', this.createAgentStub.bind(this)); // by the browser
-    this.router.get('/agent/:machineId/:platform/:arch?', this.downloadAgent.bind(this)); // by the browser
+    this.router.post('/agent/:version/:platform/:arch?', verifyAccessRights(['AGENT_DOWNLOAD_CREATE', 'GLOBAL']), this.createAgent.bind(this)); // by the browser
+    this.router.post('/agentstub/:platform/:arch?', verifyAccessRights(['AGENT_STUB_DOWNLOAD_CREATE', 'GLOBAL']), this.createAgentStub.bind(this)); // by the browser
+    this.router.get('/agent/:machineId/:platform/:arch?', verifyAccessRights(['AGENT_DOWNLOAD_GET', 'GLOBAL']), this.downloadAgent.bind(this)); // by the browser
     this.router.get('/agentstub/:platform/:arch?', this.downloadAgentStub.bind(this)); // by the browser
     this.router.get('/agentdownloadscript', this.downloadAgentDownloaderScript.bind(this)); // by the browser
   }

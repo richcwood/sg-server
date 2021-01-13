@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { userScriptShadowCopyController } from '../controllers/UserScriptShadowCopyController';
+import { verifyAccessRights } from '../utils/AccessRightsVerifier';
 
 export class UserScriptShadowCopyRouter {
 
@@ -8,11 +9,11 @@ export class UserScriptShadowCopyRouter {
   constructor() {
     this.router = Router();
 
-    this.router.get('/', userScriptShadowCopyController.getManyUserScriptShadowCopys);
-    this.router.get('/:userScriptShadowCopyId', userScriptShadowCopyController.getUserScriptShadowCopy);
-    this.router.post('/', userScriptShadowCopyController.createUserScriptShadowCopy);
-    this.router.put('/:userScriptShadowCopyId', userScriptShadowCopyController.updateUserScriptShadowCopy);
-    this.router.delete('/:userScriptShadowCopyId', userScriptShadowCopyController.deleteUserScriptShadowCopy);
+    this.router.get('/', verifyAccessRights(['SCRIPT_SHADOW_READ', 'GLOBAL']), userScriptShadowCopyController.getManyUserScriptShadowCopys);
+    this.router.get('/:userScriptShadowCopyId', verifyAccessRights(['SCRIPT_SHADOW_READ', 'GLOBAL']), userScriptShadowCopyController.getUserScriptShadowCopy);
+    this.router.post('/', verifyAccessRights(['SCRIPT_SHADOW_CREATE', 'GLOBAL']), userScriptShadowCopyController.createUserScriptShadowCopy);
+    this.router.put('/:userScriptShadowCopyId', verifyAccessRights(['SCRIPT_SHADOW_UPDATE', 'GLOBAL']), userScriptShadowCopyController.updateUserScriptShadowCopy);
+    this.router.delete('/:userScriptShadowCopyId', verifyAccessRights(['SCRIPT_SHADOW_DELETE', 'GLOBAL']), userScriptShadowCopyController.deleteUserScriptShadowCopy);
   }
 }
 

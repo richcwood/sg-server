@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { stepController } from '../controllers/StepController';
+import { verifyAccessRights } from '../utils/AccessRightsVerifier';
 
 export class StepRouter {
 
@@ -8,11 +9,11 @@ export class StepRouter {
   constructor() {
     this.router = Router();
 
-    this.router.get('/',  stepController.getManySteps);
-    this.router.get('/:stepId', stepController.getStep);
-    this.router.post('/', stepController.createStep);
-    this.router.put('/:stepId', stepController.updateStep);
-    this.router.delete('/', stepController.deleteStep);
+    this.router.get('/', verifyAccessRights(['STEP_READ', 'GLOBAL']),  stepController.getManySteps);
+    this.router.get('/:stepId', verifyAccessRights(['STEP_READ', 'GLOBAL']), stepController.getStep);
+    this.router.post('/', verifyAccessRights(['STEP_CREATE', 'GLOBAL']), stepController.createStep);
+    this.router.put('/:stepId', verifyAccessRights(['STEP_UPDATE', 'GLOBAL']), stepController.updateStep);
+    this.router.delete('/', verifyAccessRights(['STEP_DELETE', 'GLOBAL']), stepController.deleteStep);
   }
 }
 

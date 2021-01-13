@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { teamInviteController } from '../controllers/TeamInviteController';
+import { verifyAccessRights } from '../utils/AccessRightsVerifier';
 
 export class TeamInviteRouter {
 
@@ -8,7 +9,7 @@ export class TeamInviteRouter {
   constructor() {
     this.router = Router();
 
-    this.router.post('/direct', teamInviteController.inviteUserToTeamDirect);
+    this.router.post('/direct', verifyAccessRights(['TEAM_INVITE', 'GLOBAL']), teamInviteController.inviteUserToTeamDirect);
   }
 }
 

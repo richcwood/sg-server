@@ -27,8 +27,12 @@ import * as mongodb from 'mongodb';
 import { TeamSchema } from '../../server/src/api/domain/Team';
 import { SGUtils } from '../../server/src/shared/SGUtils';
 import * as Enums from '../../server/src/shared/Enums';
+import { AccessRightModel } from '../../server/src/api/domain/AccessRight';
 import * as path from 'path';
 const jwt = require('jsonwebtoken');
+import Bitset from 'bitset';
+const mongoose = require("mongoose");
+
 
 let env = 'UnitTest';
 
@@ -65,6 +69,8 @@ export default class TestSetup {
     public allScripts: any[] = [];
 
     constructor(appName: string, logger: BaseLogger) {
+        mongoose.connect(mongoUrl, { useNewUrlParser: true });
+          
         this.appName = appName;
         this.logger = logger;
         this.mongoRepo = new MongoRepo(appName, mongoUrl, mongoDbName, this.logger);
@@ -205,6 +211,15 @@ export default class TestSetup {
     }
 
 
+    convertTeamAccessRightsToBitset = (accessRightIds) => {
+        const bitset = new Bitset();
+        for (let accessRightId of accessRightIds) {
+            bitset.set(accessRightId, 1);
+        }
+        return bitset.toString(16); // more efficient as hex
+    }      
+
+
     async InitAgent(agent: any) {
         try {
             // let res: string[] = await this.Login();
@@ -212,14 +227,32 @@ export default class TestSetup {
             // let auth: string = tmp[0];
             // auth = auth.substring(5);
 
-            const jwtExpiration = Date.now() + (1000 * 60 * 60 * 24); // x minute(s)
+            let accessRightIds: string[] = [];
+            const accessRights = await AccessRightModel.find({name: {$in: ['AGENT_CREATE', 'AGENT_DOWNLOAD_GET', 'AGENT_LOG_CREATE', 'AGENT_READ', 'AGENT_UDPATE', 'AGENT_UPDATE_HEARTBEAT', 'JOB_CREATE', 'STEP_OUTCOME_CREATE', 'STEP_OUTCOME_UPDATE', 'TASK_OUTCOME_CREATE', 'TASK_OUTCOME_UPDATE']}}).select('rightId');          
+            for (let i = 0; i < accessRights.length; i++) {
+                accessRightIds.push(accessRights[i].rightId)
+            }
+            
+            let bits = this.convertTeamAccessRightsToBitset(accessRightIds);
+          
+            const body = {
+                "teamIds": [
+                    agent._teamId
+                ],
+                "agentStubVersion": "v0.0.0.42"
+              }
+            body["teamAccessRightIds"][agent._teamId] = bits;
 
-            const secret = config.get('secret');
-            var auth = jwt.sign({
-                teamIds: [agent._teamId],
-                email: `Agent-${agent.machineId}`,
-                exp: Math.floor(jwtExpiration / 1000)
-            }, secret);
+            const auth = jwt.sign(body, config.get('secret'));//KeysUtil.getPrivate()); // todo - create a public / private key
+            
+            // const jwtExpiration = Date.now() + (1000 * 60 * 60 * 24); // x minute(s)
+
+            // const secret = config.get('secret');
+            // var auth = jwt.sign({
+            //     teamIds: [agent._teamId],
+            //     email: `Agent-${agent.machineId}`,
+            //     exp: Math.floor(jwtExpiration / 1000)
+            // }, secret);
 
             let params: any = {
                 _agentId: agent.id,

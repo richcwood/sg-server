@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { passwordResetController } from '../controllers/PasswordResetController';
+import { verifyAccessRights } from '../utils/AccessRightsVerifier';
 
 export class PasswordResetRouter {
 
@@ -8,7 +9,7 @@ export class PasswordResetRouter {
   constructor() {
     this.router = Router();
 
-    this.router.post('/', passwordResetController.updatePassword);
+    this.router.post('/', verifyAccessRights(['PASSWORD_RESET', 'GLOBAL']), passwordResetController.updatePassword);
   }
 }
 

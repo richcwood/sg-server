@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { createInvoiceController } from '../controllers/CreateInvoiceController';
+import { verifyAccessRights } from '../utils/AccessRightsVerifier';
 
 export class CreateInvoiceRouter {
 
@@ -8,7 +9,7 @@ export class CreateInvoiceRouter {
   constructor() {
     this.router = Router();
 
-    this.router.post('/', createInvoiceController.createInvoice);
+    this.router.post('/', verifyAccessRights(['INVOICE_CREATE', 'GLOBAL']), createInvoiceController.createInvoice);
   }
 }
 

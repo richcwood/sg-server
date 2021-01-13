@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { forgotPasswordController } from '../controllers/ForgotPasswordController';
+import { verifyAccessRights } from '../utils/AccessRightsVerifier';
 
 export class ForgotPasswordRouter {
 
@@ -8,7 +9,7 @@ export class ForgotPasswordRouter {
   constructor() {
     this.router = Router();
 
-    this.router.post('/', forgotPasswordController.requestReset);
+    this.router.post('/', verifyAccessRights(['PASSWORD_FORGOT', 'GLOBAL']), forgotPasswordController.requestReset);
   }
 }
 

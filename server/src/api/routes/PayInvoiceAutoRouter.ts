@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { payInvoiceAutoController } from '../controllers/PayInvoiceAutoController';
+import { verifyAccessRights } from '../utils/AccessRightsVerifier';
 
 export class PayInvoiceAutoRouter {
 
@@ -8,7 +9,7 @@ export class PayInvoiceAutoRouter {
   constructor() {
     this.router = Router();
 
-    this.router.post('/', payInvoiceAutoController.payInvoiceAuto);
+    this.router.post('/', verifyAccessRights(['PAY_INVOICE_AUTO', 'GLOBAL']), payInvoiceAutoController.payInvoiceAuto);
   }
 }
 

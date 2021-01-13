@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { updateTeamStorageUsageController } from '../controllers/UpdateTeamStorageUsageController';
+import { verifyAccessRights } from '../utils/AccessRightsVerifier';
 
 export class UpdateTeamStorageUsageRouter {
 
@@ -8,7 +9,7 @@ export class UpdateTeamStorageUsageRouter {
   constructor() {
     this.router = Router();
 
-    this.router.post('/', updateTeamStorageUsageController.updateTeamStorageUsage);
+    this.router.post('/', verifyAccessRights(['TEAM_STORAGE_UPDATE', 'GLOBAL']), updateTeamStorageUsageController.updateTeamStorageUsage);
   }
 }
 

@@ -47,6 +47,8 @@ import { UserSchema } from '../../server/src/api/domain/User';
 import { InvoiceSchema } from '../../server/src/api/domain/Invoice';
 import { PaymentMethodSchema } from '../../server/src/api/domain/PaymentMethod';
 import { PaymentTransactionSchema } from '../../server/src/api/domain/PaymentTransaction';
+import { AccessRightModel } from '../../server/src/api/domain/AccessRight';
+import { UserModel } from '../../server/src/api/domain/User';
 import { convertData as convertRequestData } from '../../server/src/api/utils/RequestConverters';
 import { rabbitMQPublisher } from '../../server/src/api/utils/RabbitMQPublisher';
 import { braintreeClientTokenService } from '../../server/src/api/services/BraintreeClientTokenService';
@@ -66,6 +68,7 @@ import * as pdf from 'html-pdf';
 import * as bson from 'bson';
 import { TaskStatus } from '../../server/dist/shared/Enums';
 import RedisLib from '../../server/src/shared/RedisLib';
+import Bitset from 'bitset';
 
 
 const waitForAgentCreateInterval = 15000;
@@ -1014,6 +1017,181 @@ let CreateJob = async () => {
 }
 
 
+
+let CreateAccessRightIds = async () => {
+  const mongoose = require("mongoose");
+
+  const accessRights = [
+    { name: "GLOBAL", groupId: "0" },
+    { name: "AGENT_CANCEL_ORPHANED_TASKS", groupId: "10" },
+    { name: "AGENT_CREATE", groupId: "20" },
+    { name: "AGENT_DELETE", groupId: "10" },
+    { name: "AGENT_DOWNLOAD_CREATE", groupId: "10" },
+    { name: "AGENT_DOWNLOAD_GET", groupId: "20" },
+    { name: "AGENT_LOG_CREATE", groupId: "20" },
+    { name: "AGENT_READ", groupId: "40" },
+    { name: "AGENT_STOP", groupId: "40" },
+    { name: "AGENT_STUB_DOWNLOAD_CREATE", groupId: "10" },
+    { name: "AGENT_UDPATE", groupId: "40" },
+    { name: "AGENT_UPDATE_HEARTBEAT", groupId: "20" },
+    { name: "ARTIFACT_CREATE", groupId: "40" },
+    { name: "ARTIFACT_DELETE", groupId: "40" },
+    { name: "ARTIFACT_READ", groupId: "40" },
+    { name: "ARTIFACT_UPDATE", groupId: "40" },
+    { name: "INVOICE_CREATE", groupId: "10" },
+    { name: "INVOICE_READ", groupId: "30" },
+    { name: "INVOICE_UPDATE", groupId: "10" },
+    { name: "JOB_ACTION", groupId: "40" },
+    { name: "JOB_CREATE_BY_IC", groupId: "40" },
+    { name: "JOB_CREATE", groupId: "40" },
+    { name: "JOB_DEF_CREATE", groupId: "40" },
+    { name: "JOB_DEF_DELETE", groupId: "40" },
+    { name: "JOB_DEF_READ", groupId: "40" },
+    { name: "JOB_DEF_UPDATE", groupId: "40" },
+    { name: "JOB_DELETE", groupId: "10" },
+    { name: "JOB_READ", groupId: "40" },
+    { name: "JOB_UPDATE", groupId: "40" },
+    { name: "PASSWORD_FORGOT", groupId: "40" },
+    { name: "PASSWORD_RESET", groupId: "40" },
+    { name: "PAY_INVOICE_AUTO", groupId: "10" },
+    { name: "PAY_INVOICE_MANUAL", groupId: "30" },
+    { name: "PAYMENT_TOKEN_CREATE", groupId: "30" },
+    { name: "PAYMENT_TRANSACTION_CREATE", groupId: "10" },
+    { name: "PAYMENT_TRANSACTION_READ", groupId: "30" },
+    { name: "PAYMENT_TRANSACTION_UPDATE", groupId: "10" },
+    { name: "SCHEDULE_CREATE", groupId: "40" },
+    { name: "SCHEDULE_DELETE", groupId: "40" },
+    { name: "SCHEDULE_READ", groupId: "40" },
+    { name: "SCHEDULE_UPDATE_BY_SCHEDULER", groupId: "10" },
+    { name: "SCHEDULE_UPDATE", groupId: "40" },
+    { name: "SCRIPT_CREATE", groupId: "40" },
+    { name: "SCRIPT_READ", groupId: "40" },
+    { name: "SCRIPT_SHADOW_CREATE", groupId: "40" },
+    { name: "SCRIPT_SHADOW_DELETE", groupId: "40" },
+    { name: "SCRIPT_SHADOW_READ", groupId: "40" },
+    { name: "SCRIPT_SHADOW_UPDATE", groupId: "40" },
+    { name: "SCRIPT_UPDATE", groupId: "40" },
+    { name: "STEP_CREATE", groupId: "10" },
+    { name: "STEP_DEF_CREATE", groupId: "40" },
+    { name: "STEP_DEF_DELETE", groupId: "40" },
+    { name: "STEP_DEF_READ", groupId: "40" },
+    { name: "STEP_DEF_UPDATE", groupId: "40" },
+    { name: "STEP_DELETE", groupId: "10" },
+    { name: "STEP_OUTCOME_CREATE", groupId: "20" },
+    { name: "STEP_OUTCOME_DELETE", groupId: "10" },
+    { name: "STEP_OUTCOME_READ", groupId: "40" },
+    { name: "STEP_OUTCOME_UPDATE", groupId: "20" },
+    { name: "STEP_READ", groupId: "40" },
+    { name: "STEP_UPDATE", groupId: "10" },
+    { name: "TASK_ACTION", groupId: "40" },
+    { name: "TASK_CREATE", groupId: "10" },
+    { name: "TASK_DEF_CREATE", groupId: "40" },
+    { name: "TASK_DEF_DELETE", groupId: "40" },
+    { name: "TASK_DEF_READ", groupId: "40" },
+    { name: "TASK_DEF_UPDATE", groupId: "40" },
+    { name: "TASK_DELETE", groupId: "10" },
+    { name: "TASK_OUTCOME_CREATE", groupId: "20" },
+    { name: "TASK_OUTCOME_DELETE", groupId: "10" },
+    { name: "TASK_OUTCOME_READ", groupId: "40" },
+    { name: "TASK_OUTCOME_UPDATE", groupId: "20" },
+    { name: "TASK_READ", groupId: "40" },
+    { name: "TASK_UPDATE", groupId: "10" },
+    { name: "TEAM_CREATE_UNASSIGNED", groupId: "10" },
+    { name: "TEAM_CREATE", groupId: "40" },
+    { name: "TEAM_INVITE", groupId: "30" },
+    { name: "TEAM_JOIN", groupId: "40" },
+    { name: "TEAM_READ", groupId: "10" },
+    { name: "TEAM_STORAGE_CREATE", groupId: "10" },
+    { name: "TEAM_STORAGE_READ", groupId: "10" },
+    { name: "TEAM_STORAGE_UPDATE", groupId: "10" },
+    { name: "TEAM_UPDATE", groupId: "10" },
+    { name: "TEAM_VAR_CREATE", groupId: "40" },
+    { name: "TEAM_VAR_DELETE", groupId: "40" },
+    { name: "TEAM_VAR_READ", groupId: "40" },
+    { name: "TEAM_VAR_UPDATE", groupId: "40" },
+    { name: "USER_READ", groupId: "30" },
+    { name: "USER_UPDATE", groupId: "40" }
+  ];
+
+  console.log('mongoUrl -> @sgg("mongoUrl")');
+  mongoose.connect(config.get("mongoUrl"), { useNewUrlParser: true });
+  await AccessRightModel.deleteMany();
+
+  let rightId = 1;
+  for (let i = 0; i < accessRights.length; i++) {
+    const accessRightData = { rightId, name: accessRights[i].name, groupId: accessRights[i].groupId };
+    const accessRightsModel = new AccessRightModel(accessRightData);
+    const newAccessRight = await accessRightsModel.save();
+    console.log(`newAccessRight -> ${JSON.stringify(newAccessRight, null, 4)}`);
+    rightId += 1;
+  }
+}
+
+
+let GetAccessRightIdsForGroups = async (accessRightGroups) => {
+  let lstAccessRights: string[] = [];
+
+  const accessRights = await AccessRightModel.find({groupId: {$in: accessRightGroups}}).select('rightId');
+
+  for (let i = 0; i < accessRights.length; i++) {
+    lstAccessRights.push(accessRights[i].rightId)
+  }
+
+  return lstAccessRights;
+}
+
+
+let GetAccessRightIds = async (accessRightNames) => {
+  let lstAccessRights: string[] = [];
+
+  const accessRights = await AccessRightModel.find({name: {$in: accessRightNames}}).select('rightId');
+
+  for (let i = 0; i < accessRights.length; i++) {
+    lstAccessRights.push(accessRights[i].rightId)
+  }
+
+  return lstAccessRights;
+}
+
+
+let UpdateUserTeamAccessRights = async (userId, teamIds, groupIds) => {
+  const mongoose = require("mongoose");
+
+  console.log('mongoUrl -> @sgg("mongoUrl")');
+  mongoose.connect(config.get("mongoUrl"), { useNewUrlParser: true });
+
+  let teamAccessRightIds = {};
+  
+  let accessRightIds = await GetAccessRightIdsForGroups(groupIds);
+  // teamAccessRightIds['default'] = accessRightIds;
+  // teamAccessRightIds['5e99cbcb2317950015edb655'] = accessRightIds;
+  for (let i = 0; i < teamIds.length; i++)
+    teamAccessRightIds[teamIds[i]] = accessRightIds;
+
+  const user = await UserModel.updateOne({"_id" : new mongodb.ObjectId(userId)}, {teamAccessRightIds});
+
+  console.log(`user -> ${JSON.stringify(user, null, 4)}`);
+}
+
+
+let UpdateScheduleUserAccessRights = async () => {
+  const mongoose = require("mongoose");
+
+  console.log('mongoUrl -> @sgg("mongoUrl")');
+  mongoose.connect(config.get("mongoUrl"), { useNewUrlParser: true });
+
+  let teamAccessRightIds = {};
+  
+  let accessRightIds = [40,21];
+  teamAccessRightIds['default'] = accessRightIds;
+  // teamAccessRightIds['5e99cbcb2317950015edb655'] = accessRightIds;
+
+  const user = await UserModel.updateOne({"_id" : new mongodb.ObjectId('5ddea9c1f9ba5c1987c51e50')}, {teamAccessRightIds});
+
+  console.log(`user -> ${JSON.stringify(user, null, 4)}`);
+}
+
+
 let UploadFileToS3 = async (filePath: string) => {
   await new Promise(async (resolve, reject) => {
     try {
@@ -1030,7 +1208,13 @@ let UploadFileToS3 = async (filePath: string) => {
       };
 
       let res = await axios.put(url, filePath, options);
-      console.log(`${Object.keys(res.request)}\n\n\n${util.inspect(res.request, false, null)}`);
+      // console.log(`${Object.keys(res)}`);
+      // console.log(`${Object.keys(res.request)}\n\n\n${util.inspect(res.request, false, null)}`);
+      console.log(`status\n\n${res.status}\n\n\n`)
+      console.log(`statusText\n\n${res.statusText}\n\n\n`)
+      console.log(`headers\n\n${util.inspect(res.headers, false, null)}\n\n\n`)
+      console.log(`data\n\n${util.inspect(res.data, false, null)}\n\n\n`)
+      console.log(`config\n\n${util.inspect(res.config, false, null)}\n\n\n`)
     } catch (e) {
       console.log(`Error uploading log file '${filePath}': ${e.message}`, e.stack, util.inspect(e.response.data, false, null));
     }
@@ -1356,15 +1540,42 @@ let BraintreeTesting = async () => {
 }
 
 
+let convertTeamAccessRightsToBitset = (accessRightIds) => {
+  const bitset = new Bitset();
+  for (let accessRightId of accessRightIds) {
+    bitset.set(accessRightId, 1);
+  }
+  return bitset.toString(16); // more efficient as hex
+}
+
+
 let GenerateToken = async () => {
   const secret = config.get('secret');
 
+  const mongoose = require("mongoose");
+
+  console.log('mongoUrl -> @sgg("mongoUrl")');
+  mongoose.connect(config.get("mongoUrl"), { useNewUrlParser: true });
+
+  let accessRightIds = await GetAccessRightIds(['AGENT_CREATE', 'AGENT_DOWNLOAD_GET', 'AGENT_LOG_CREATE', 'AGENT_READ', 'AGENT_UDPATE', 'AGENT_UPDATE_HEARTBEAT', 'JOB_CREATE', 'STEP_OUTCOME_CREATE', 'STEP_OUTCOME_UPDATE', 'TASK_OUTCOME_CREATE', 'TASK_OUTCOME_UPDATE']);
+  let bits = convertTeamAccessRightsToBitset(accessRightIds);
+
   const body = {
     "teamIds": [
-      "5f6ace3c180ba50d80ee4034"
+      "5de95c0453162e8891f5a830"
     ],
-    "agentStubVersion": "v0.0.0.37"
+    "teamAccessRightIds": {
+      "5de95c0453162e8891f5a830": bits
+    },
+    "agentStubVersion": "v0.0.0.42"
   }
+
+  // const body = {
+  //   "teamIds": [
+  //     "5f6ace3c180ba50d80ee4034"
+  //   ],
+  //   "agentStubVersion": "v0.0.0.37"
+  // }
 
   // const body = {
   //   "id": "5de8810275ad92e5bb8de78a",
@@ -1887,7 +2098,7 @@ let SendTestBrowserAlert = async() => {
 // ProcessOrphanedTasks();
 // PublishJobTask();
 // PruneJobs(mongodb.ObjectId('5e33a89f9fb5d6880217da2c'));
-UploadFileToS3(process.argv[2]);
+// UploadFileToS3(process.argv[2]);
 // GetS3PrefixSize('production/5de95c0453162e8891f5a830/');
 // CreateTeam("saas glue admin", "5ef125b4fb07e500150507ca");
 // DumpMongoData('./production_20200615.json');
@@ -1919,11 +2130,14 @@ UploadFileToS3(process.argv[2]);
 // SubmitInvoicesForPayment();
 // TestBraintreeWebhook();
 // CreateInvoicePDF(0);
-// GenerateToken();
+GenerateToken();
 // AgentRestAPICall();
 // DeleteJobs({'_jobDefId': process.argv[2]});
 // DeleteJobDefs({"name": /Cron.*/});
 // RabbitMQTeamSetup(process.argv[2]);
+// CreateAccessRightIds();
+// UpdateUserTeamAccessRights(process.argv[2], process.argv[3].split(','), process.argv[4].split(','));
+// UpdateScheduleUserAccessRights();
 
 
 // RabbitMQTeamSetup('5f57b2f14b5da00017df0d4f');

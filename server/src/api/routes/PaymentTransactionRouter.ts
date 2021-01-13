@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { paymentTransactionController } from '../controllers/PaymentTransactionController';
+import { verifyAccessRights } from '../utils/AccessRightsVerifier';
 
 export class PaymentTransactionRouter {
 
@@ -8,10 +9,10 @@ export class PaymentTransactionRouter {
   constructor() {
     this.router = Router();
 
-    this.router.get('/', paymentTransactionController.getManyPaymentTransactions);
-    this.router.get('/:paymentTransactionId', paymentTransactionController.getPaymentTransaction);
-    this.router.post('/', paymentTransactionController.createPaymentTransaction);
-    this.router.put('/:paymentTransactionId', paymentTransactionController.updatePaymentTransaction);
+    this.router.get('/', verifyAccessRights(['PAYMENT_TRANSACTION_READ', 'GLOBAL']), paymentTransactionController.getManyPaymentTransactions);
+    this.router.get('/:paymentTransactionId', verifyAccessRights(['PAYMENT_TRANSACTION_READ', 'GLOBAL']), paymentTransactionController.getPaymentTransaction);
+    this.router.post('/', verifyAccessRights(['PAYMENT_TRANSACTION_CREATE', 'GLOBAL']), paymentTransactionController.createPaymentTransaction);
+    this.router.put('/:paymentTransactionId', verifyAccessRights(['PAYMENT_TRANSACTION_UPDATE', 'GLOBAL']), paymentTransactionController.updatePaymentTransaction);
   }
 }
 

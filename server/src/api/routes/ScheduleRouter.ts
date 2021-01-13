@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { scheduleController } from '../controllers/ScheduleController';
+import { verifyAccessRights } from '../utils/AccessRightsVerifier';
 
 export class ScheduleRouter {
 
@@ -8,12 +9,12 @@ export class ScheduleRouter {
   constructor() {
     this.router = Router();
 
-    this.router.get('/', scheduleController.getManySchedules);
-    this.router.get('/:scheduleId', scheduleController.getSchedule);
-    this.router.post('/', scheduleController.createSchedule);
-    this.router.put('/:scheduleId', scheduleController.updateSchedule);
-    this.router.put('/fromscheduler/:scheduleId', scheduleController.updateFromScheduler);
-    this.router.delete('/:scheduleId', scheduleController.deleteSchedule);
+    this.router.get('/', verifyAccessRights(['SCHEDULE_READ', 'GLOBAL']), scheduleController.getManySchedules);
+    this.router.get('/:scheduleId', verifyAccessRights(['SCHEDULE_READ', 'GLOBAL']), scheduleController.getSchedule);
+    this.router.post('/', verifyAccessRights(['SCHEDULE_CREATE', 'GLOBAL']), scheduleController.createSchedule);
+    this.router.put('/:scheduleId', verifyAccessRights(['SCHEDULE_UPDATE', 'GLOBAL']), scheduleController.updateSchedule);
+    this.router.put('/fromscheduler/:scheduleId', verifyAccessRights(['SCHEDULE_UPDATE_BY_SCHEDULER']), scheduleController.updateFromScheduler);
+    this.router.delete('/:scheduleId', verifyAccessRights(['SCHEDULE_DELETE', 'GLOBAL']), scheduleController.deleteSchedule);
   }
 }
 

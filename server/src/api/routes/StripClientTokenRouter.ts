@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { stripeClientTokenController } from '../controllers/StripeClientTokenController';
+import { verifyAccessRights } from '../utils/AccessRightsVerifier';
 
 export class StripeClientTokenRouter {
 
@@ -8,8 +9,8 @@ export class StripeClientTokenRouter {
   constructor() {
     this.router = Router();
 
-    this.router.get('/', stripeClientTokenController.getStripePublicToken);
-    this.router.post('/', stripeClientTokenController.createStripeClientSecret);
+    this.router.get('/', verifyAccessRights(['PAYMENT_TOKEN_CREATE', 'GLOBAL']), stripeClientTokenController.getStripePublicToken);
+    this.router.post('/', verifyAccessRights(['PAYMENT_TOKEN_CREATE', 'GLOBAL']), stripeClientTokenController.createStripeClientSecret);
   }
 }
 

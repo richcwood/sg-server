@@ -1,5 +1,7 @@
 import { Router } from 'express';
 import { scriptController } from '../controllers/ScriptController';
+import { verifyAccessRights } from '../utils/AccessRightsVerifier';
+
 
 export class ScriptRouter {
 
@@ -8,10 +10,10 @@ export class ScriptRouter {
   constructor() {
     this.router = Router();
 
-    this.router.get('/',  scriptController.getManyScripts);
-    this.router.get('/:scriptId', scriptController.getScript);
-    this.router.post('/', scriptController.createScript);
-    this.router.put('/:scriptId', scriptController.updateScript);
+    this.router.get('/', verifyAccessRights(['SCRIPT_READ', 'GLOBAL']),  scriptController.getManyScripts);
+    this.router.get('/:scriptId', verifyAccessRights(['SCRIPT_READ', 'GLOBAL']), scriptController.getScript);
+    this.router.post('/', verifyAccessRights(['SCRIPT_CREATE', 'GLOBAL']), scriptController.createScript);
+    this.router.put('/:scriptId', verifyAccessRights(['SCRIPT_UPDATE', 'GLOBAL']), scriptController.updateScript);
   }
 }
 

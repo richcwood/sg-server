@@ -2,6 +2,7 @@ import { modelOptions, prop, arrayProp, getModelForClass } from '@typegoose/type
 import { FilterOperator } from '../utils/BulkGet';
 import Bitset from 'bitset';
 import * as mongodb from 'mongodb';
+import { UserRole } from '../../shared/Enums';
 
 
 // Example of a schema / domain in Mongoose
@@ -30,9 +31,6 @@ export class UserSchema {
 
   @prop({ default: []})
   teamIdsInvited?: { _teamId: string, inviteKey: string }[];
-
-  @prop({default: []})
-  accessRightIds?: number[];
 
   @prop({ default: {} })
   teamAccessRightIds?: {[_teamId: string] : number[]};

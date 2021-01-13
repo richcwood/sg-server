@@ -3,6 +3,7 @@ import { ResponseWrapper, ResponseCode } from '../utils/Types';
 import * as config from 'config';
 import { ValidationError } from '../utils/Errors';
 import * as compressing from 'compressing';
+import { verifyAccessRights } from '../utils/AccessRightsVerifier';
 
 
 const multer = require('multer');
@@ -36,7 +37,7 @@ export class AgentLogRouter {
   constructor() {
     this.router = Router();
 
-    this.router.post('/', upload.single('logFile'), this.create.bind(this));
+    this.router.post('/', verifyAccessRights(['AGENT_LOG_CREATE']), upload.single('logFile'), this.create.bind(this));
   }
 
   async create(req: Request, res: Response, next: NextFunction) {

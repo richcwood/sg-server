@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { taskOutcomeActionController } from '../controllers/TaskOutcomeActionController';
+import { verifyAccessRights } from '../utils/AccessRightsVerifier';
 
 export class TaskOutcomeActionRouter {
 
@@ -8,9 +9,9 @@ export class TaskOutcomeActionRouter {
   constructor() {
     this.router = Router();
 
-    this.router.post('/cancel/:taskId', taskOutcomeActionController.cancelTaskOutcome);
-    this.router.post('/interrupt/:taskId', taskOutcomeActionController.interruptTaskOutcome);
-    this.router.post('/restart/:taskId', taskOutcomeActionController.restartTaskOutcome);
+    this.router.post('/cancel/:taskId', verifyAccessRights(['TASK_ACTION', 'GLOBAL']), taskOutcomeActionController.cancelTaskOutcome);
+    this.router.post('/interrupt/:taskId', verifyAccessRights(['TASK_ACTION', 'GLOBAL']), taskOutcomeActionController.interruptTaskOutcome);
+    this.router.post('/restart/:taskId', verifyAccessRights(['TASK_ACTION', 'GLOBAL']), taskOutcomeActionController.restartTaskOutcome);
   }
 }
 

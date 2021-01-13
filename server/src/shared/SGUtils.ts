@@ -10,6 +10,7 @@ import { TeamSchema } from '../api/domain/Team';
 import { InvoiceSchema } from '../api/domain/Invoice';
 import { JobSchema } from '../api/domain/Job';
 import { teamVariableService } from '../api/services/TeamVariableService';
+import { AccessRightModel, AccessRightSchema } from '../api/domain/AccessRight';
 import { BaseLogger } from './SGLogger';
 import { S3Access } from './S3Access';
 import * as mongodb from 'mongodb';
@@ -25,6 +26,8 @@ import axios from 'axios';
 import { scriptService } from '../api/services/ScriptService';
 import { ScriptSchema } from '../api/domain/Script';
 import { MongoDbSettings } from 'aws-sdk/clients/dms';
+import { UserRole } from 'aws-sdk/clients/workmail';
+import { userRouterSingleton } from '../api/routes/UserRouter';
 
 
 const ascii2utf8: any = {
@@ -1307,6 +1310,16 @@ export class SGUtils {
                 logger.LogError(`Error sending email: ${error}`, { recipientAddress: recipientAddress, subject: subject });
             }
         });
+    }
+
+
+    static GetAccessRightsForUserRole = async (role: Enums.UserRole) => {
+        let groupIds: number[] = [ Enums.UserRole.TEAM_USER ];
+        if (role == Enums.UserRole.TEAM_ADMINISTRATOR)
+            groupIds.push(Enums.UserRole.TEAM_ADMINISTRATOR);
+
+        const rightIds: number[] = await AccessRightModel.findMany({ groupId: { $in: groupIds } });
+        return rightIds;
     }
 }
 

@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { teamStorageController } from '../controllers/TeamStorageController';
+import { verifyAccessRights } from '../utils/AccessRightsVerifier';
 
 export class TeamStorageRouter {
 
@@ -8,10 +9,10 @@ export class TeamStorageRouter {
   constructor() {
     this.router = Router();
 
-    this.router.get('/', teamStorageController.getManyTeamStorages);
-    this.router.get('/:teamStorageId', teamStorageController.getTeamStorage);
-    this.router.post('/', teamStorageController.createTeamStorage);
-    this.router.put('/:teamStorageId', teamStorageController.updateTeamStorage);
+    this.router.get('/', verifyAccessRights(['TEAM_STORAGE_READ', 'GLOBAL']), teamStorageController.getManyTeamStorages);
+    this.router.get('/:teamStorageId', verifyAccessRights(['TEAM_STORAGE_READ', 'GLOBAL']), teamStorageController.getTeamStorage);
+    this.router.post('/', verifyAccessRights(['TEAM_STORAGE_CREATE', 'GLOBAL']), teamStorageController.createTeamStorage);
+    this.router.put('/:teamStorageId', verifyAccessRights(['TEAM_STORAGE_UPDATE', 'GLOBAL']), teamStorageController.updateTeamStorage);
   }
 }
 

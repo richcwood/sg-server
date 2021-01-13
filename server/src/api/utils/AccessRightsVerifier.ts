@@ -50,6 +50,19 @@ export const verifyAccessRights = (rightNamesToVerify: string[]) => {
         return next(new ForbiddenError(`User doesn't have access rights for this endpoint`, req.originalUrl));
       }
     }
+    else if(teamAccessRightIds && teamAccessRightIds['default']){
+      const rightIdsToVerify = await convertAccessRightNamesToIds(rightNamesToVerify);
+      const userRightsBitset = BitSet.fromHexString(teamAccessRightIds['default']);
+
+      if(rightIdsToVerify.some((rightId: number) => {
+        return userRightsBitset.get(rightId) === 1;
+      })){
+        return next();
+      }
+      else {
+        return next(new ForbiddenError(`User doesn't have access rights for this endpoint`, req.originalUrl));
+      }
+    }
     else {
       return next(); // no access right ids to verify
     }
