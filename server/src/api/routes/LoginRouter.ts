@@ -7,9 +7,11 @@ import { teamService } from '../services/TeamService';
 import { TeamSchema } from '../domain/Team';
 import { UserSchema } from '../domain/User';
 import { convertData as convertResponseData } from '../utils/ResponseConverters';
+import { AuthTokenType } from '../../shared/Enums';
+import { authenticateApiAccess } from '../../api/utils/Shared';
+
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
-import KeysUtil from '../KeysUtil';
 import * as _ from 'lodash';
 import * as config from 'config';
 
@@ -29,20 +31,9 @@ export default class LoginRouter {
   }
 
   async webLogin(req: Request, res: Response, next: NextFunction) {
-    // const mongoLib: MongoRepo = (<any>req).mongoLib;
-
-    // How to generate a bycrpted password 
-    // todo - use this code when you generate users in the system
-    // const salt = await bcrypt.genSalt(10);
-    // console.log('salt is ', salt);
-    // const passwordHash = await bcrypt.hash(req.body.password, salt);
-    // console.log('passwordHash is ', passwordHash);
-
-    // todo - any chance of sql injection here?
-    // const loginResults: any = await mongoLib.GetOneByQuery({email: req.body.email}, 'user', {});
     const loginResults: any = await userService.findAllUsersInternal({ email: req.body.email }, 'id passwordHash email teamIds teamIdsInvited name companyName teamAccessRightIds')
-    
-    if (!loginResults || (_.isArray(loginResults) && loginResults .length < 1)) {
+
+    if (!loginResults || (_.isArray(loginResults) && loginResults.length < 1)) {
       res.status(401).send('Authentication failed');
       return;
     }
@@ -56,6 +47,7 @@ export default class LoginRouter {
       const secret = config.get('secret');
       var token = jwt.sign({
         id: loginResult._id,
+        type: AuthTokenType.USER,
         email: loginResult.email,
         teamIds: loginResult.teamIds,
         teamAccessRightIds: UserSchema.convertTeamAccessRightsToBitset(loginResult),
@@ -67,17 +59,12 @@ export default class LoginRouter {
 
       res.cookie('Auth', token, { secure: false, expires: new Date(jwtExpiration) });
       const relatedTeams = await teamService.findAllTeamsInternal({ _id: { $in: loginResult.teamIds.map(id => new mongodb.ObjectId(id)) } });
-      // const relatedTeams = await mongoLib.GetManyByQuery({ _id: { $in: loginResult.teamIds.map(id => new mongodb.ObjectId(id)) } }, 'team', {});
 
-      // todo - dynmically fetch stomp user data
       const loginData = {
         // Use generic config names - slightly safer from lower skilled hackers  - probably doesn't matter
         config1: loginResult.email,
         config2: convertResponseData(TeamSchema, relatedTeams),
         config3: loginResult._id
-        // config3: 'wss://user:pass@funny-finch.rmq.cloudamqp.com/ws/stomp',
-        // config4: 'bart',
-        // config5: 'happy'
       };
 
       res.send(loginData);
@@ -87,53 +74,15 @@ export default class LoginRouter {
     }
   }
 
-  // todo - Have a seperate login for API users
-  // the Auth token won't be a cookie
   async apiLogin(req: Request, res: Response, next: NextFunction) {
-    const loginResults: any = await userService.findAllUsersInternal({ email: req.body.email }, 'id passwordHash email teamIds teamIdsInvited name companyName teamAccessRightIds')
-    
-    if (!loginResults || (_.isArray(loginResults) && loginResults .length < 1)) {
+    let [token, jwtExpiration, loginData] = await authenticateApiAccess(req.body.accessKeyId, req.body.accessKeySecret);
+
+    if (!token) {
       res.status(401).send('Authentication failed');
       return;
     }
 
-    const loginResult = loginResults[0];
-
-    if (await bcrypt.compare(req.body.password, loginResult.passwordHash)) {
-      // Create a JWT
-      const jwtExpiration = Date.now() + (1000 * 60 * 60 * 24); // x minute(s)
-
-      const secret = config.get('secret');
-      var token = jwt.sign({
-        id: loginResult._id,
-        email: loginResult.email,
-        teamIds: loginResult.teamIds,
-        teamAccessRightIds: UserSchema.convertTeamAccessRightsToBitset(loginResult),
-        teamIdsInvited: loginResult.teamIdsInvited,
-        name: loginResult.name,
-        companyName: loginResult.companyName,
-        exp: Math.floor(jwtExpiration / 1000)
-      }, secret);//KeysUtil.getPrivate()); // todo - create a public / private key
-
-      res.cookie('Auth', token, { secure: false, expires: new Date(jwtExpiration) });
-      const relatedTeams = await teamService.findAllTeamsInternal({ _id: { $in: loginResult.teamIds.map(id => new mongodb.ObjectId(id)) } });
-      // const relatedTeams = await mongoLib.GetManyByQuery({ _id: { $in: loginResult.teamIds.map(id => new mongodb.ObjectId(id)) } }, 'team', {});
-
-      // todo - dynmically fetch stomp user data
-      const loginData = {
-        // Use generic config names - slightly safer from lower skilled hackers  - probably doesn't matter
-        config1: loginResult.email,
-        config2: convertResponseData(TeamSchema, relatedTeams),
-        config3: loginResult._id
-        // config3: 'wss://user:pass@funny-finch.rmq.cloudamqp.com/ws/stomp',
-        // config4: 'bart',
-        // config5: 'happy'
-      };
-
-      res.send(loginData);
-    }
-    else {
-      res.status(401).send('Authentication failed');
-    }
+    res.cookie('Auth', token, { secure: false, expires: new Date(jwtExpiration) });
+    res.send(loginData);
   }
 };

@@ -56,15 +56,17 @@ import { createInvoiceRouter } from './routes/CreateInvoiceRouter';
 import { updateTeamStorageUsageRouter } from './routes/UpdateTeamStorageUsageRouter';
 import { userScriptShadowCopyRouter } from './routes/UserScriptShadowCopyRouter';
 import { paymentMethodRouter } from './routes/PaymentMethodRouter';
+import { accessKeyRouter } from './routes/AccessKeyRouter';
 const IPCIDR = require('ip-cidr');
 import { read } from 'fs';
-import { JobStatus } from '../shared/Enums';
+import { AuthTokenType } from '../shared/Enums';
 import { UserSchema } from './domain/User';
 import { userService } from './services/UserService';
 import { ValidationError } from './utils/Errors';
 import * as morgan from 'morgan';
 import * as fs from 'fs';
 import { stripeClientTokenRouter } from './routes/StripClientTokenRouter';
+import { authenticateApiAccess } from '../api/utils/Shared';
 
 
 // Create a new express application instance
@@ -299,10 +301,11 @@ class AppBuilder {
     this.app.use(`${apiURLBase}/createinvoice`, createInvoiceRouter);
     this.app.use(`${apiURLBase}/updateteamstorageusage`, updateTeamStorageUsageRouter);
     this.app.use(`${apiURLBase}/scriptshadow`, userScriptShadowCopyRouter);
+    this.app.use(`${apiURLBase}/accesskey`, accessKeyRouter);
   }
 
   private setUpJwtSecurity(): void {
-    app.use((req, res, next) => {
+    app.use( async (req, res, next) => {
       const logger: BaseLogger = (<any>req).logger;
       // // simple development
       // req.headers._teamid = '5d2f857e5a47381334ab3fab';
@@ -379,7 +382,26 @@ class AppBuilder {
             try {
               jwtData = jwt.verify(authToken, secret);
             } catch(err) {
-              if (err.name == 'JsonWebTokenError') {
+              if (err.name == 'TokenExpiredError') {
+                jwtData = jwt.decode(authToken);
+                if (jwtData.type == AuthTokenType.ACCESSKEY) {
+                  if (jwtData.refreshToken) {
+                    const jwtDataRefreshToken = jwt.verify(jwtData.refreshToken, secret);
+                    if (jwtDataRefreshToken.type != AuthTokenType.REFRESHKEY) {
+                      next(new ValidationError(`Access denied`));
+                      return;
+                    }
+                    let [newToken, newJwtExpiration, loginData] = await authenticateApiAccess(jwtData.accessKeyId, jwtData.accessKeySecret);
+
+                    if (!newToken) {
+                      res.status(401).send('Authentication failed');
+                      return;
+                    }
+                
+                    res.cookie('Auth', newToken, { secure: false, expires: new Date(newJwtExpiration) });                
+                  }
+                }
+              } else if (err.name == 'JsonWebTokenError') {
                 const old_secret = config.get('old_secret');
                 if (old_secret) {
                   const old_secret_expiration = config.get('old_secret_expiration');

@@ -1110,7 +1110,11 @@ let CreateAccessRightIds = async () => {
     { name: "TEAM_VAR_READ", groupId: "40" },
     { name: "TEAM_VAR_UPDATE", groupId: "40" },
     { name: "USER_READ", groupId: "30" },
-    { name: "USER_UPDATE", groupId: "40" }
+    { name: "USER_UPDATE", groupId: "40" },
+    { name: "ACCESSKEY_CREATE", groupId: "40" },
+    { name: "ACCESSKEY_DELETE", groupId: "40" },
+    { name: "ACCESSKEY_READ", groupId: "40" },
+    { name: "ACCESSKEY_UPDATE", groupId: "40" },
   ];
 
   console.log('mongoUrl -> @sgg("mongoUrl")');
@@ -2130,13 +2134,13 @@ let SendTestBrowserAlert = async() => {
 // SubmitInvoicesForPayment();
 // TestBraintreeWebhook();
 // CreateInvoicePDF(0);
-GenerateToken();
+// GenerateToken();
 // AgentRestAPICall();
 // DeleteJobs({'_jobDefId': process.argv[2]});
 // DeleteJobDefs({"name": /Cron.*/});
 // RabbitMQTeamSetup(process.argv[2]);
 // CreateAccessRightIds();
-// UpdateUserTeamAccessRights(process.argv[2], process.argv[3].split(','), process.argv[4].split(','));
+UpdateUserTeamAccessRights(process.argv[2], process.argv[3].split(','), process.argv[4].split(','));
 // UpdateScheduleUserAccessRights();
 
 

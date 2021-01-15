@@ -85,3 +85,9 @@ export { TaskDefTarget }
 
 enum UserRole { ADMINISTRATOR = 10, AGENT = 20, TEAM_ADMINISTRATOR = 30, TEAM_USER = 40 }
 export { UserRole }
+
+enum AccessKeyType { USER = 0, AGENT = 1 }
+export { AccessKeyType }
+
+enum AuthTokenType { USER = 0, ACCESSKEY = 1, REFRESHKEY = 2 }
+export { AuthTokenType }

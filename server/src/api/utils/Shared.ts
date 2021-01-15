@@ -8,9 +8,16 @@ import { taskOutcomeService } from '../services/TaskOutcomeService';
 import * as Enums from '../../shared/Enums';
 import { AMQPConnector } from '../../shared/AMQPLib';
 import { SGUtils } from '../../shared/SGUtils';
-import * as util from 'util';
 import * as mongodb from 'mongodb';
 import * as _ from 'lodash';
+
+import { teamService } from '../services/TeamService';
+import { accessKeyService } from '../services/AccessKeyService';
+import { TeamSchema } from '../domain/Team';
+import { convertData as convertResponseData } from '../utils/ResponseConverters';
+import { AuthTokenType } from '../../shared/Enums';
+import Bitset from 'bitset';
+const jwt = require('jsonwebtoken');
 
 
 const activeAgentTimeoutSeconds = config.get('activeAgentTimeoutSeconds');
@@ -253,6 +260,66 @@ let CheckWaitingForLambdaRunnerTasks = async (_agentId: mongodb.ObjectId, logger
 }
 
 
+
+let convertTeamAccessRightsToBitset = (accessRightIds: number[]) => {
+    const bitset = new Bitset();
+    for (let accessRightId of accessRightIds) {
+      bitset.set(accessRightId, 1);
+    }
+    return bitset.toString(16); // more efficient as hex
+  }
+
+
+let authenticateApiAccess = async (accessKeyId: string, accessKeySecret: string) => {
+    const loginResults: any = await accessKeyService.findAllAccessKeysInternal({ accessKeyId, accessKeySecret }, '_teamId expiration revokeTime accessRightIds')
+    console.log(`authenticating api access for client id ${accessKeyId}`);
+
+    if (!loginResults || (_.isArray(loginResults) && loginResults.length < 1)) {
+      return [null, null];
+    }
+
+    const loginResult = loginResults[0];
+
+    if (loginResult.expiration < new Date() || loginResult.revokeTime < new Date()) {
+      return [null, null];
+    }
+
+    // Create a JWT
+    const jwtExpiration = Date.now() + (1000 * 30); // 10 minute(s)
+    // const jwtExpiration = Date.now() + (1000 * 60 * 10); // 10 minute(s)
+
+    let teamAccessRightIds = {}
+    teamAccessRightIds[loginResult._teamId] = convertTeamAccessRightsToBitset(loginResult.accessRightIds);
+
+    const secret = config.get('secret');
+    
+    var refreshToken = jwt.sign({
+      id: loginResult._id,
+      type: AuthTokenType.REFRESHKEY
+    }, secret);//KeysUtil.getPrivate()); // todo - create a public / private key
+
+    var token = jwt.sign({
+      id: loginResult._id,
+      type: AuthTokenType.ACCESSKEY,
+      accessKeyId,
+      accessKeySecret,
+      expiration: loginResult.expiration,
+      teamIds: [loginResult._teamId],
+      teamAccessRightIds: teamAccessRightIds,
+      refreshToken: refreshToken,
+      exp: Math.floor(jwtExpiration / 1000)
+    }, secret);//KeysUtil.getPrivate()); // todo - create a public / private key
+
+    const loginData = {
+      // Use generic config names - slightly safer from lower skilled hackers  - probably doesn't matter
+      config3: loginResult._id
+    };
+
+    return [token, jwtExpiration, loginData];
+  }
+
+
 export { GetTaskRoutes };
 export { CheckWaitingForAgentTasks };
 export { CheckWaitingForLambdaRunnerTasks };
+export { authenticateApiAccess };

@@ -241,7 +241,8 @@ export default class TestSetup {
                 ],
                 "agentStubVersion": "v0.0.0.42"
               }
-            body["teamAccessRightIds"][agent._teamId] = bits;
+              body["teamAccessRightIds"] = [];
+              body["teamAccessRightIds"][agent._teamId] = bits;
 
             const auth = jwt.sign(body, config.get('secret'));//KeysUtil.getPrivate()); // todo - create a public / private key
             

@@ -1,30 +1,45 @@
 import { modelOptions, prop, getModelForClass } from '@typegoose/typegoose';
 import { FilterOperator } from '../utils/BulkGet';
 import * as mongodb from 'mongodb';
+import { AccessKeyType } from '../../shared/Enums';
 
 /// TODO: change some of these to required like ownerId and inviteLink
 // Example of a schema / domain in Mongoose
-@modelOptions({ schemaOptions: { collection: 'accessRight' } })
-export class AccessRightSchema {
+@modelOptions({ schemaOptions: { collection: 'accessKey' } })
+export class AccessKeySchema {
 
   _id?: mongodb.ObjectId;
 
   @prop()
   id?: mongodb.ObjectId;
+  
+  @prop({ required: true })
+  _teamId: mongodb.ObjectId;
 
   @prop({ required: true })
-  rightId?: number; // Use this id, not the _id/id to uniquely identify rights
+  accessKeyId?: string;
 
   @prop({ required: true })
-  name?: string;
+  accessKeySecret?: string;
 
   @prop({ required: true })
-  groupId?: number;
+  accessKeyType?: AccessKeyType;
+
+  @prop({ required: true })
+  description?: string;
+
+  @prop({ required: false })
+  expiration?: number;
+
+  @prop({ required: false })
+  revokeTime?: number;
+
+  @prop({ default: {} })
+  accessRightIds?: number[];
 
   // Define which filters are legal for which props (including nested props (not sure about nested arrays))
   public static readonly validFilters = {
-    'rightId': [FilterOperator.EQUALS, FilterOperator.IN],
-    'name': [FilterOperator.EQUALS, FilterOperator.IN]
+    'accessKeyId': [FilterOperator.EQUALS, FilterOperator.IN]
   };
 
   // 2 way map between field values the API client sees and what is stored in the database.  Allows client to use 'id' and database to use '_id'
@@ -55,4 +70,4 @@ export class AccessRightSchema {
   }
 };
 
-export const AccessRightModel = getModelForClass(AccessRightSchema);
+export const AccessKeyModel = getModelForClass(AccessKeySchema);
