@@ -11,10 +11,8 @@ import { SGUtils } from '../../shared/SGUtils';
 import * as mongodb from 'mongodb';
 import * as _ from 'lodash';
 
-import { teamService } from '../services/TeamService';
 import { accessKeyService } from '../services/AccessKeyService';
-import { TeamSchema } from '../domain/Team';
-import { convertData as convertResponseData } from '../utils/ResponseConverters';
+import { AccessRightModel } from '../domain/AccessRight';
 import { AuthTokenType } from '../../shared/Enums';
 import Bitset from 'bitset';
 const jwt = require('jsonwebtoken');
@@ -260,6 +258,29 @@ let CheckWaitingForLambdaRunnerTasks = async (_agentId: mongodb.ObjectId, logger
 }
 
 
+let GetAccessRightIdsForGroups = async (accessRightGroups) => {
+    let lstAccessRights: string[] = [];
+
+    const accessRights = await AccessRightModel.find({ groupId: { $in: accessRightGroups } }).select('rightId');
+
+    for (let i = 0; i < accessRights.length; i++) {
+        lstAccessRights.push(accessRights[i].rightId)
+    }
+
+    return lstAccessRights;
+}
+
+
+let GetAccessRightIdsForTeamUser = async () => {
+    return await GetAccessRightIdsForGroups([40]);
+}
+
+
+let GetAccessRightIdsForTeamAdmin = async () => {
+    return await GetAccessRightIdsForGroups([30, 40]);
+}
+
+
 
 let convertTeamAccessRightsToBitset = (accessRightIds: number[]) => {
     const bitset = new Bitset();
@@ -323,3 +344,5 @@ export { GetTaskRoutes };
 export { CheckWaitingForAgentTasks };
 export { CheckWaitingForLambdaRunnerTasks };
 export { authenticateApiAccess };
+export { GetAccessRightIdsForTeamUser };
+export { GetAccessRightIdsForTeamAdmin };

@@ -1,13 +1,11 @@
-import { UserSchema, UserModel } from '../domain/User';
-import { TeamSchema, TeamModel } from '../domain/Team';
 import { userService } from './UserService';
 import { SGUtils } from '../../shared/SGUtils';
-import { MissingObjectError, ValidationError } from '../utils/Errors';
+import { ValidationError } from '../utils/Errors';
+import { GetAccessRightIdsForTeamUser } from '../../api/utils/Shared';
 import * as _ from 'lodash';
 const jwt = require('jsonwebtoken');
 import * as config from 'config';
 import * as mongodb from 'mongodb';
-import { teamService } from './TeamService';
 
 
 export class JoinTeamService {
@@ -85,6 +83,7 @@ export class JoinTeamService {
             userModel.teamIdsInvited = newTeamIdsInvited;
         }
 
+        userModel.teamAccessRightIds[_teamId] = await GetAccessRightIdsForTeamUser();
         userModel.emailConfirmed = true;
 
         await userModel.save();
@@ -95,8 +94,7 @@ export class JoinTeamService {
 
     public async anonymousJoinTeam(_userId: mongodb.ObjectId, token: string): Promise<object> {
         /// Check if the invited user exists
-        const userModel: any = await userService.findUser(_userId, '_id email name companyName emailConfirmed teamIds teamAccessRightIds teamIdsInvited teamIdsInactive');
-        console.log('\n\nHELLO userModel -> ', userModel);
+        const userModel: any = await userService.findUser(_userId, '_id email teamIds teamAccessRightIds teamIdsInvited teamIdsInactive');
         if (!userModel)
             throw new ValidationError('Something went wrong. Please request a new invite from the team administrator.');
 
@@ -105,44 +103,57 @@ export class JoinTeamService {
         try {
             jwtData = jwt.verify(token, config.get('secret'));
         } catch (err) {
-            console.log('awww shizzz, jwt data failed', err);
             tokenIsValid = false;
         }
 
-        console.log('\n\nHELLO tokenIsVlaid -> ', tokenIsValid);
-        if (!tokenIsValid)
-            throw new ValidationError('Something went wrong. Please request a new invite from the team administrator.');
+        const _teamId = jwtData.InvitedTeamId;
 
         /// Check if the user is already in the team
         let userAlreadyInTeam: boolean = true;
-        if (userModel.teamIds.indexOf(jwtData.InvitedTeamId) < 0)
+        if (userModel.teamIds.indexOf(_teamId) < 0)
             userAlreadyInTeam = false;
 
-            console.log('\n\nHELLO userAlreadyInTeam -> ', userAlreadyInTeam);
         /// If the user is already in the team it doesn't matter if the token is valid or not - just remove the secret
         ///     and if somehow the team was added to the inactive list, remove it
         if (userAlreadyInTeam) {
+            if (_teamId in userModel.teamIdsInvited) {
+                let newTeamIdsInvited: any[] = [];
+                for (let i = 0; i < userModel.teamIdsInvited.length; i++) {
+                    if (userModel.teamIdsInvited[i]._teamId != _teamId) {
+                        newTeamIdsInvited.push(userModel.teamIdsInvited[i]);
+                    }
+                }
+                userModel.teamIdsInvited = newTeamIdsInvited;
+                if (userModel.teamIdsInactive.indexOf(_teamId) >= 0)
+                    userModel.teamIdsInactive = SGUtils.removeItemFromArray(userModel.teamIdsInactive, _teamId);
+                await userModel.save();
+            }
             return userModel;
         }
 
+        if (!tokenIsValid)
+            throw new ValidationError('Something went wrong. Please request a new invite from the team administrator.');
+
         /// If the user doesn't have a password yet, leave the team to which they are invited in the teamIdsInvited
         ///     array - this will get them routed to the page where they can enter their account details.
-        if (userModel.teamIdsInactive.indexOf(jwtData.InvitedTeamId) >= 0)
-            userModel.teamIdsInactive = SGUtils.removeItemFromArray(userModel.teamIdsInactive, jwtData.InvitedTeamId);
+        if (userModel.passwordHash) {
+            if (userModel.teamIdsInactive.indexOf(_teamId) >= 0)
+                userModel.teamIdsInactive = SGUtils.removeItemFromArray(userModel.teamIdsInactive, _teamId);
 
-            console.log('\n\nHELLO aaa -> ');
-        userModel.teamIds.push(jwtData.InvitedTeamId);
-        let newTeamIdsInvited: any[] = [];
-        for (let i = 0; i < userModel.teamIdsInvited.length; i++) {
-            if (userModel.teamIdsInvited[i]._teamId != jwtData.InvitedTeamId) {
-                newTeamIdsInvited.push(userModel.teamIdsInvited[i]);
+            userModel.teamIds.push(_teamId);
+            let newTeamIdsInvited: any[] = [];
+            for (let i = 0; i < userModel.teamIdsInvited.length; i++) {
+                if (userModel.teamIdsInvited[i]._teamId != _teamId) {
+                    newTeamIdsInvited.push(userModel.teamIdsInvited[i]);
+                }
             }
+            userModel.teamIdsInvited = newTeamIdsInvited;
         }
-        console.log('\n\nHELLO bbb -> ');
-        userModel.teamIdsInvited = newTeamIdsInvited;
+
+        userModel.teamAccessRightIds[_teamId] = await GetAccessRightIdsForTeamUser();
+        userModel.emailConfirmed = true;
 
         await userModel.save();
-        console.log('\n\nHELLO ccc -> ');
         return userModel;
     }
 
