@@ -115,6 +115,10 @@ export class UserService {
     //   updatedUser = await UserModel.findOneAndUpdate(filter, { teamIdsInvited: data.teamIdsInvited }, { new: true }).select(responseFields);
     // }
 
+    if (data.teamAccessRightIds) {
+      updatedUser = await UserModel.findOneAndUpdate(filter, { teamAccessRightIds: data.teamAccessRightIds }, { new: true }).select(responseFields);
+    }
+
     if (data.teamIdsInactive) {
       updatedUser = await UserModel.findOneAndUpdate(filter, { teamIdsInactive: data.teamIdsInactive }, { new: true }).select(responseFields);
     }

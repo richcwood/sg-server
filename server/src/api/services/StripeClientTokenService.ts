@@ -17,6 +17,8 @@ export class StripeClientTokenService {
 
         const stripe = new Stripe(privateKey, stripeApiVersion);
 
+        console.log(`team -> ${JSON.stringify(team, null, 4)}`);
+
         return await new Promise(async (resolve, reject) => {
             try {
                 let address: any = {
@@ -28,7 +30,7 @@ export class StripeClientTokenService {
                     state: team.billing_state
                 }
                 let metadata: any = {
-                    _teamId: team.id.toHexString()
+                    _teamId: team._id.toHexString()
                 }
                 let customer = await stripe.customers.create({
                     address: address,

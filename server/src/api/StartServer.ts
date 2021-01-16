@@ -391,7 +391,7 @@ class AppBuilder {
                       next(new ValidationError(`Access denied`));
                       return;
                     }
-                    let [newToken, newJwtExpiration, loginData] = await authenticateApiAccess(jwtData.accessKeyId, jwtData.accessKeySecret);
+                    let [newToken, newJwtExpiration, loginData] = await authenticateApiAccess(jwtData.accessKeyId, jwtData.accessKeySecret, logger);
 
                     if (!newToken) {
                       res.status(401).send('Authentication failed');

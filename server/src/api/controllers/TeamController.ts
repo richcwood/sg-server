@@ -10,6 +10,7 @@ import { convertData as convertRequestData } from '../utils/RequestConverters';
 import { UserSchema } from '../domain/User';
 import { userService } from '../services/UserService';
 import { BaseLogger } from '../../shared/SGLogger';
+import { GetAccessRightIdsForTeamAdmin } from '../../api/utils/Shared';
 const jwt = require('jsonwebtoken');
 import * as _ from 'lodash';
 import * as mongodb from 'mongodb';
@@ -93,7 +94,9 @@ export class TeamController {
         user.teamIds = [];
       user.teamIds.push(newTeam._id.toHexString());
 
-      const userUpdated: UserSchema = <UserSchema>await userService.updateUser(userId, { "teamIds": user.teamIds });
+      user.teamAccessRightIds[newTeam._id.toHexString()] = await GetAccessRightIdsForTeamAdmin();
+
+      const userUpdated: UserSchema = <UserSchema>await userService.updateUser(userId, { "teamIds": user.teamIds, "teamAccessRightIds": user.teamAccessRightIds });
   
       const jwtExpiration = Date.now() + (1000 * 60 * 60 * 24); // 1 day
       const secret = config.get('secret');

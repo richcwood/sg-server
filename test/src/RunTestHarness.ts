@@ -1777,7 +1777,6 @@ let CreateStripeCompanyForTeams = async () => {
   if (_.isArray(teams) && teams.length > 0) {
     for (let i = 0; i < teams.length; i++) {
       let team = teams[i];
-      team.id = team._id;
 
       let res: any = await stripeClientTokenService.createStripeCustomer(team);
       console.log('res -> ', JSON.stringify(res, null, 4));

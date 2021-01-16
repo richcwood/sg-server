@@ -13,7 +13,7 @@ export class PasswordResetService {
     public async updatePassword(data: any, logger: BaseLogger, responseFields?: string): Promise<object> {
         /// Check if the invited user exists
         const _userId = new mongodb.ObjectId(data.id);
-        const userModel: any = await userService.findUser(_userId, '_id email emailConfirmed teamAccessRightIds passwordHash dateCreated');
+        const userModel: any = await userService.findUser(_userId, '_id email emailConfirmed passwordHash dateCreated');
         if (!userModel)
             throw new ValidationError('Something went wrong. Please request a new password reset link.');
 

@@ -51,6 +51,7 @@ export class AccessKeyController {
         const logger: BaseLogger = (<any>req).logger;
         const _teamId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._teamid);
         const response: ResponseWrapper = resp['body'];
+        req.body.createdBy = new mongodb.ObjectId(<string>req.headers.userid);
         try {
             await FreeTierChecks.PaidTierRequired(_teamId, 'Please uprade to the paid tier to accessKey Jobs');
 
@@ -70,7 +71,7 @@ export class AccessKeyController {
         const _teamId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._teamid);
         const response: ResponseWrapper = resp['body'];
         try {
-            const updatedAccessKey: any = await accessKeyService.updateAccessKey(_teamId, new mongodb.ObjectId(req.params.accessKeyId), convertRequestData(AccessKeySchema, req.body), logger, req.header('correlationId'), (<string>req.query.responseFields));
+            const updatedAccessKey: any = await accessKeyService.updateAccessKey(_teamId, new mongodb.ObjectId(req.params.accessKeyId), convertRequestData(AccessKeySchema, req.body), req.header('correlationId'), (<string>req.query.responseFields));
 
             if (_.isArray(updatedAccessKey) && updatedAccessKey.length === 0) {
                 next(new MissingObjectError(`AccessKey ${req.params.accessKeyId} not found.`));

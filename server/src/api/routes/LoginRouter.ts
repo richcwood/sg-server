@@ -9,6 +9,7 @@ import { UserSchema } from '../domain/User';
 import { convertData as convertResponseData } from '../utils/ResponseConverters';
 import { AuthTokenType } from '../../shared/Enums';
 import { authenticateApiAccess } from '../../api/utils/Shared';
+import { BaseLogger } from '../../shared/SGLogger';
 
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
@@ -75,7 +76,8 @@ export default class LoginRouter {
   }
 
   async apiLogin(req: Request, res: Response, next: NextFunction) {
-    let [token, jwtExpiration, loginData] = await authenticateApiAccess(req.body.accessKeyId, req.body.accessKeySecret);
+    const logger: BaseLogger = (<any>req).logger;
+    let [token, jwtExpiration, loginData] = await authenticateApiAccess(req.body.accessKeyId, req.body.accessKeySecret, logger);
 
     if (!token) {
       res.status(401).send('Authentication failed');

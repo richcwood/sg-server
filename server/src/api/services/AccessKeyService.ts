@@ -115,30 +115,28 @@ export class AccessKeyService {
     }
 
 
-    public async updateAccessKey(_teamId: mongodb.ObjectId, id: mongodb.ObjectId, data: any, logger: BaseLogger, correlationId: string, responseFields?: string): Promise<object> {
+    public async updateAccessKey(_teamId: mongodb.ObjectId, id: mongodb.ObjectId, data: any, correlationId?: string, responseFields?: string): Promise<object> {
         const filter = { _id: id, _teamId };
 
-        const existingAccessKeyQuery = await this.findAllAccessKeysInternal(filter);
-        if (_.isArray(existingAccessKeyQuery) && existingAccessKeyQuery.length > 0) {
-            const existingAccessKey: AccessKeySchema = existingAccessKeyQuery[0];
-
-            if (data.accessKeyId && data.accessKeyId != existingAccessKey.accessKeyId)
-                throw new ValidationError('Cannot modify Access Key ID');
-            if (data.accessKeySecret && data.accessKeySecret != existingAccessKey.accessKeySecret)
-                throw new ValidationError('Cannot modify Access Key Secret');
-            if (data.accessKeyType && data.accessKeyType != existingAccessKey.accessKeyType)
-                throw new ValidationError('Cannot modify Access Key Type');
-            if (data.accessRightIds && existingAccessKey.accessKeyType == AccessKeyType.AGENT && data.accessRightIds.sort().join() != existingAccessKey.accessRightIds.sort().join())
-                throw new ValidationError('Cannot modify Agent Access Rights');
-        }
-
-        if (data.accessRightIds && data.accessKeyType != AccessKeyType.AGENT)
-            data.accessRightIds = await this.checkUserAccessRights(data.accessRightIds, logger);
+        if (data.hasOwnProperty('createdBy'))
+            throw new ValidationError('Cannot modify access key');
+        if (data.hasOwnProperty('accessKeyId'))
+            throw new ValidationError('Cannot modify access key');
+        if (data.hasOwnProperty('accessKeySecret'))
+            throw new ValidationError('Cannot modify access key');
+        if (data.hasOwnProperty('accessKeyType'))
+            throw new ValidationError('Cannot modify access key');
+        if (data.hasOwnProperty('description'))
+            throw new ValidationError('Cannot modify access key');
+        if (data.hasOwnProperty('expiration'))
+            throw new ValidationError('Cannot modify access key');
+        if (data.hasOwnProperty('accessRightIds'))
+            throw new ValidationError('Cannot modify access key');
 
         const updatedAccessKey = await AccessKeyModel.findOneAndUpdate(filter, data, { new: true }).select(responseFields);
 
         if (!updatedAccessKey)
-            throw new MissingObjectError(`Access Key '${id}" not found with filter "${JSON.stringify(filter, null, 4)}'.`)
+            throw new MissingObjectError(`Access Key not found with filter "${JSON.stringify(filter, null, 4)}".`)
 
         const deltas = Object.assign({ _id: id }, data);
         await rabbitMQPublisher.publish(_teamId, "AccessKey", correlationId, PayloadOperation.UPDATE, convertData(AccessKeySchema, deltas));

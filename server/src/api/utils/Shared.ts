@@ -259,7 +259,7 @@ let CheckWaitingForLambdaRunnerTasks = async (_agentId: mongodb.ObjectId, logger
 
 
 let GetAccessRightIdsForGroups = async (accessRightGroups) => {
-    let lstAccessRights: string[] = [];
+    let lstAccessRights: number[] = [];
 
     const accessRights = await AccessRightModel.find({ groupId: { $in: accessRightGroups } }).select('rightId');
 
@@ -291,7 +291,7 @@ let convertTeamAccessRightsToBitset = (accessRightIds: number[]) => {
   }
 
 
-let authenticateApiAccess = async (accessKeyId: string, accessKeySecret: string) => {
+let authenticateApiAccess = async (accessKeyId: string, accessKeySecret: string, logger: BaseLogger) => {
     const loginResults: any = await accessKeyService.findAllAccessKeysInternal({ accessKeyId, accessKeySecret }, '_teamId expiration revokeTime accessRightIds')
     console.log(`authenticating api access for client id ${accessKeyId}`);
 
@@ -335,6 +335,8 @@ let authenticateApiAccess = async (accessKeyId: string, accessKeySecret: string)
       // Use generic config names - slightly safer from lower skilled hackers  - probably doesn't matter
       config3: loginResult._id
     };
+
+    await accessKeyService.updateAccessKey(new mongodb.ObjectId(loginResult._teamId), new mongodb.ObjectId(loginResult._id), {lastUsed: new Date()});
 
     return [token, jwtExpiration, loginData];
   }

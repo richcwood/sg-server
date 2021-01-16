@@ -17,6 +17,9 @@ export class AccessKeySchema {
   _teamId: mongodb.ObjectId;
 
   @prop({ required: true })
+  createdBy: mongodb.ObjectId;
+
+  @prop({ required: true })
   accessKeyId?: string;
 
   @prop({ required: true })
@@ -36,6 +39,9 @@ export class AccessKeySchema {
 
   @prop({ default: {} })
   accessRightIds?: number[];
+
+  @prop({ required: false })
+  lastUsed?: number;
 
   // Define which filters are legal for which props (including nested props (not sure about nested arrays))
   public static readonly validFilters = {
