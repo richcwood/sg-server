@@ -53,8 +53,6 @@ export class AccessKeyController {
         const response: ResponseWrapper = resp['body'];
         req.body.createdBy = new mongodb.ObjectId(<string>req.headers.userid);
         try {
-            await FreeTierChecks.PaidTierRequired(_teamId, 'Please uprade to the paid tier to accessKey Jobs');
-
             const newAccessKey = await accessKeyService.createAccessKey(_teamId, convertRequestData(AccessKeySchema, req.body), logger, req.header('correlationId'), (<string>req.query.responseFields));
             response.data = convertResponseData(AccessKeySchema, newAccessKey);
             response.statusCode = ResponseCode.CREATED;
