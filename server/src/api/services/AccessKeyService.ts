@@ -48,7 +48,7 @@ export class AccessKeyService {
         let accessRightIdsToExclude: number[] = [];
         if (!accessRightsQuery || (_.isArray(accessRightsQuery) && accessRightsQuery.length === 0)) {
             logger.LogError('No rights found for ADMINISTRATOR UserRole', {});
-            accessRightIdsToExclude = [83,82,81,80,79,75,74,70,6863,61,57,55,50,41,37,35,32,27,19,17,10,7,6,5,4,3,2,1];
+            accessRightIdsToExclude = [82,81,80,79,75,74,70,68,63,61,57,55,50,41,37,35,32,27,19,17,10,7,6,5,4,3,2,1];
         } else {
             for (let i = 0; i < accessRightsQuery.length; i++) {
                 accessRightIdsToExclude.push(accessRightsQuery[i].rightId);
