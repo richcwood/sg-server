@@ -184,36 +184,6 @@ class AppBuilder {
     });
   }
 
-  // private addCorsHeaders(req: express.Request, res: express.Response, next: express.NextFunction): void {
-  //   const origin: string | undefined = req.get('Origin');
-  //   let sendOK = false;
-
-  //   console.log('cors req -> ', JSON.stringify(req.headers, null, 4));
-  //   console.log('cors origin -> ', origin);
-  //   console.log('cors method -> ', req.method);
-
-  //   console.log(`added cors for request url=${req.url}, method=${req.method}`);
-
-  //   res.set({
-  //     'Access-Control-Allow-Origin': '*',
-  //     'Access-Control-Allow-Headers': 'origin, x-requested-with, accept, content-type, authorization, x-csrf-token, correlationid, Auth',
-  //     'Access-Control-Max-Age': 3628800,
-  //     'Access-Control-Allow-Methods': 'GET, PUT, POST, DELETE, OPTIONS'
-  //   });
-
-  //   if (req.method === 'OPTIONS') {
-  //     console.log('sending ok');
-  //     // need to just send ok for a cors preflight check
-  //     sendOK = true;
-  //   }
-
-  //   if (sendOK) {
-  //     res.send('').status(200);
-  //   } else {
-  //     next();
-  //   }
-  // }
-
   private setUpRoutes(): void {
     const apiURLBase = '/api/v0';
 
@@ -247,24 +217,6 @@ class AppBuilder {
       res.cookie('Auth', token, { secure: false, expires: new Date(jwtExpiration) });
       res.send('OK');
     });
-
-    
-    // this.app.use((req, res, next) => {
-    //   this.addCorsHeaders(req, res, next);
-    // });
-
-    // this.app.options('*', cors({origin: 'http://console.saasglue.com'})) // include before other routes
-    // let corsOptions: any = {
-    //   credentials: true, 
-    //   origin: '*', 
-    //   methods: 'GET, PUT, POST, DELETE, OPTIONS', 
-    //   allowedHeaders: 'origin, x-requested-with, accept, content-type, authorization, x-csrf-token, correlationid', 
-    //   maxAge: 3628800,
-    //   optionsSuccessStatus: 200,
-    //   preflightContinue: true
-    // };
-    // this.app.use(cors(corsOptions));
-    // this.app.options('*', cors(corsOptions)) // include before other routes
 
     this.app.use(`${apiURLBase}/team`, teamRouter);
     this.app.use(`${apiURLBase}/agentDownload`, agentDownloadRouter);

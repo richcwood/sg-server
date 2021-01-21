@@ -97,21 +97,22 @@ export default class LoginRouter {
         return;
       }
 
-      // Create a JWT
-      const jwtExpiration = Date.now() + (1000 * 120); // 10 minute(s)
-      // const jwtExpiration = Date.now() + (1000 * 60 * 10); // 10 minute(s)
-
       let teamAccessRightIds = {}
       teamAccessRightIds[loginResult._teamId] = convertTeamAccessRightsToBitset(loginResult.accessRightIds);
 
       const secret = config.get('secret');
 
+      // Create a refresh JWT
+      const refreshJwtExpiration = Date.now() + (1000 * 60 * 60 * 24 * 7); // 1 week
       var refreshToken = jwt.sign({
         id: loginResult._id,
         type: AuthTokenType.REFRESHKEY,
-        accessKeyId: req.body.accessKeyId
+        accessKeyId: req.body.accessKeyId,
+        exp: Math.floor(refreshJwtExpiration / 1000)
       }, secret);//KeysUtil.getPrivate()); // todo - create a public / private key
-
+  
+      // Create an api JWT
+      const jwtExpiration = Date.now() + (1000 * 60 * 10); // 10 minute(s)
       var token = jwt.sign({
         id: loginResult._id,
         type: AuthTokenType.ACCESSKEY,
@@ -167,20 +168,21 @@ export default class LoginRouter {
         res.status(401).send('Authentication failed');
         return;
       }
-  
-      // Create a JWT
-      const jwtExpiration = Date.now() + (1000 * 120); // 10 minute(s)
-      // const jwtExpiration = Date.now() + (1000 * 60 * 10); // 10 minute(s)
-  
+    
       let teamAccessRightIds = {}
       teamAccessRightIds[loginResult._teamId] = convertTeamAccessRightsToBitset(loginResult.accessRightIds);
   
+      // Create a refresh JWT
+      const refreshJwtExpiration = Date.now() + (1000 * 60 * 60 * 24 * 7); // 1 week
       var refreshToken = jwt.sign({
         id: loginResult._id,
         type: AuthTokenType.REFRESHKEY,
-        accessKeyId: req.body.accessKeyId
+        accessKeyId: req.body.accessKeyId,
+        exp: Math.floor(refreshJwtExpiration / 1000)
       }, secret);//KeysUtil.getPrivate()); // todo - create a public / private key
   
+      // Create an api JWT
+      const jwtExpiration = Date.now() + (1000 * 60 * 10); // 10 minute(s)
       var token = jwt.sign({
         id: loginResult._id,
         type: AuthTokenType.ACCESSKEY,
