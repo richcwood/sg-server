@@ -15,5 +15,7 @@
       "cloud_platform": "aws",
       "lambda_runner": "true"
     },
-    "secret": "shhh"
+    "secret": "shhh",
+    "agentAccessKeyId": "GYIM9FJJWDCR91RTSC4U",
+    "agentAccessKeySecret": "c8bbaa2393485c4c65ab61c02eb05264b6c2c381"
 }

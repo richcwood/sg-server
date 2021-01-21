@@ -66,7 +66,6 @@ import { ValidationError } from './utils/Errors';
 import * as morgan from 'morgan';
 import * as fs from 'fs';
 import { stripeClientTokenRouter } from './routes/StripClientTokenRouter';
-import { authenticateApiAccess } from '../api/utils/Shared';
 
 
 // Create a new express application instance
@@ -385,21 +384,8 @@ class AppBuilder {
               if (err.name == 'TokenExpiredError') {
                 jwtData = jwt.decode(authToken);
                 if (jwtData.type == AuthTokenType.ACCESSKEY) {
-                  if (jwtData.refreshToken) {
-                    const jwtDataRefreshToken = jwt.verify(jwtData.refreshToken, secret);
-                    if (jwtDataRefreshToken.type != AuthTokenType.REFRESHKEY) {
-                      next(new ValidationError(`Access denied`));
-                      return;
-                    }
-                    let [newToken, newJwtExpiration, loginData] = await authenticateApiAccess(jwtData.accessKeyId, jwtData.accessKeySecret, logger);
-
-                    if (!newToken) {
-                      res.status(401).send('Authentication failed');
-                      return;
-                    }
-                
-                    res.cookie('Auth', newToken, { secure: false, expires: new Date(newJwtExpiration) });                
-                  }
+                  next(new ValidationError('The access token expired'));
+                  return;
                 }
               } else if (err.name == 'JsonWebTokenError') {
                 const old_secret = config.get('old_secret');
@@ -492,7 +478,7 @@ class AppBuilder {
             }
           }
           catch (err) {
-            logger.LogError(err.message, { Error: err, Headers: req.headers, Body: req.body, Params: req.params });
+            logger.LogError(err.message, { Error: err, Url: req.url, Headers: req.headers, Body: req.body, Params: req.params });
             // console.log(err);
             res.status(403).send('Redirect to login - Auth cookie not verified');
           }

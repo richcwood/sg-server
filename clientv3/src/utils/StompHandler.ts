@@ -108,6 +108,9 @@ class StompHandler {
   public defaultMessageHandler(message: DomainMessage){
     const storeName = `${message.domainType.substring(0, 1).toLowerCase()}${message.domainType.substring(1)}Store`;
 
+    if ( !this.store.state[storeName])
+      return;
+
     if(message.operation === 1){ // create
       if(!localStorage.getItem('silence_bp')){
         console.log('Browser Push, adding a model ', storeName, message.model);

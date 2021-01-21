@@ -281,7 +281,6 @@ let GetAccessRightIdsForTeamAdmin = async () => {
 }
 
 
-
 let convertTeamAccessRightsToBitset = (accessRightIds: number[]) => {
     const bitset = new Bitset();
     for (let accessRightId of accessRightIds) {
@@ -291,60 +290,9 @@ let convertTeamAccessRightsToBitset = (accessRightIds: number[]) => {
   }
 
 
-let authenticateApiAccess = async (accessKeyId: string, accessKeySecret: string, logger: BaseLogger) => {
-    const loginResults: any = await accessKeyService.findAllAccessKeysInternal({ accessKeyId, accessKeySecret }, '_teamId expiration revokeTime accessRightIds')
-    console.log(`authenticating api access for client id ${accessKeyId}`);
-
-    if (!loginResults || (_.isArray(loginResults) && loginResults.length < 1)) {
-      return [null, null];
-    }
-
-    const loginResult = loginResults[0];
-
-    if (loginResult.expiration < new Date() || loginResult.revokeTime < new Date()) {
-      return [null, null];
-    }
-
-    // Create a JWT
-    const jwtExpiration = Date.now() + (1000 * 30); // 10 minute(s)
-    // const jwtExpiration = Date.now() + (1000 * 60 * 10); // 10 minute(s)
-
-    let teamAccessRightIds = {}
-    teamAccessRightIds[loginResult._teamId] = convertTeamAccessRightsToBitset(loginResult.accessRightIds);
-
-    const secret = config.get('secret');
-    
-    var refreshToken = jwt.sign({
-      id: loginResult._id,
-      type: AuthTokenType.REFRESHKEY
-    }, secret);//KeysUtil.getPrivate()); // todo - create a public / private key
-
-    var token = jwt.sign({
-      id: loginResult._id,
-      type: AuthTokenType.ACCESSKEY,
-      accessKeyId,
-      accessKeySecret,
-      expiration: loginResult.expiration,
-      teamIds: [loginResult._teamId],
-      teamAccessRightIds: teamAccessRightIds,
-      refreshToken: refreshToken,
-      exp: Math.floor(jwtExpiration / 1000)
-    }, secret);//KeysUtil.getPrivate()); // todo - create a public / private key
-
-    const loginData = {
-      // Use generic config names - slightly safer from lower skilled hackers  - probably doesn't matter
-      config3: loginResult._id
-    };
-
-    await accessKeyService.updateAccessKey(new mongodb.ObjectId(loginResult._teamId), new mongodb.ObjectId(loginResult._id), {lastUsed: new Date()});
-
-    return [token, jwtExpiration, loginData];
-  }
-
-
 export { GetTaskRoutes };
 export { CheckWaitingForAgentTasks };
 export { CheckWaitingForLambdaRunnerTasks };
-export { authenticateApiAccess };
+export { convertTeamAccessRightsToBitset };
 export { GetAccessRightIdsForTeamUser };
 export { GetAccessRightIdsForTeamAdmin };

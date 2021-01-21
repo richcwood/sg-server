@@ -93,6 +93,15 @@ export default abstract class TestBase {
     }
 
     public async CreateTest() {
+        const agentAccessKeyId = config.get('agentAccessKeyId');
+        const agentAccessKeySecret = config.get('agentAccessKeySecret');
+
+        let res = await this.Login(agentAccessKeyId, agentAccessKeySecret);
+        let tmp = res[0].split(';');
+        let auth = tmp[0];
+        auth = auth.substring(5) + ';';
+        this.token = auth;
+
         // console.log('creating test user');
         await this.CreateTestUser();
         // await this.GetTestUser();
@@ -101,24 +110,15 @@ export default abstract class TestBase {
 
     public async GetTestUser() {
         try {
-            let auth = `${config.get('adminToken')};`;
-            this.token = auth;
+            // let auth = `${config.get('adminToken')};`;
+            // this.token = auth;
             // this.adminToken = auth;
-
-            const testUser = config.get('sgTestUser');
-            const testPassword = config.get('sgTestUserPassword');
 
             let resApiCall: any = await this.testSetup.RestAPICall('user', 'GET', config.get('sgTestTeam'), null, this.sgUser);
 
             this.sgUser = resApiCall.data.data[0];
 
             console.log(this.sgUser);
-
-            let res = await this.Login(testUser, testPassword);
-            let tmp = res[0].split(';');
-            auth = tmp[0];
-            auth = auth.substring(5) + ';';
-            this.token = auth;
         } catch (e) {
             this.logger.LogError('Error getting test user: ' + e.message, { 'Stack': e.stack });
         }
@@ -575,7 +575,7 @@ export default abstract class TestBase {
     //     });
     // }
 
-    protected async Login(email: string, password: string) {
+    protected async Login(agentAccessKeyId: string, agentAccessKeySecret: string) {
         let apiUrl = config.get('API_BASE_URL');
         const apiPort = config.get('API_PORT');
 
@@ -583,7 +583,7 @@ export default abstract class TestBase {
             apiUrl += `:${apiPort}`
         let url = `${apiUrl}/login/apiLogin`;
 
-        console.log('Login -> url ', url, ', email -> ', email, ', password -> ', password);
+        console.log('Login -> url ', url, ', agentAccessKeyId -> ', agentAccessKeyId, ', agentAccessKeySecret -> ', agentAccessKeySecret);
 
         const response = await axios({
             url,
@@ -593,8 +593,8 @@ export default abstract class TestBase {
                 'Content-Type': 'application/json'
             },
             data: {
-                'email': email,
-                'password': password
+                'accessKeyId': agentAccessKeyId,
+                'accessKeySecret': agentAccessKeySecret
             }
         });
 

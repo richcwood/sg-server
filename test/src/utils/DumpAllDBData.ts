@@ -18,6 +18,7 @@ import { invoiceService } from '../../../server/src/api/services/InvoiceService'
 import { paymentMethodService } from '../../../server/src/api/services/PaymentMethodService';
 import { paymentTransactionService } from '../../../server/src/api/services/PaymentTransactionService';
 import { accessRightService } from '../../../server/src/api/services/AccessRightService';
+import { accessKeyService } from '../../../server/src/api/services/AccessKeyService';
 import { AgentSchema } from '../../../server/src/api/domain/Agent';
 import { JobDefSchema } from '../../../server/src/api/domain/JobDef';
 import { JobSchema } from '../../../server/src/api/domain/Job';
@@ -36,6 +37,7 @@ import { InvoiceSchema } from '../../../server/src/api/domain/Invoice';
 import { PaymentMethodSchema } from '../../../server/src/api/domain/PaymentMethod';
 import { PaymentTransactionSchema } from '../../../server/src/api/domain/PaymentTransaction';
 import { AccessRightSchema } from '../../../server/src/api/domain/AccessRight';
+import { AccessKeySchema } from '../../../server/src/api/domain/AccessKey';
 import { convertData as convertRequestData } from '../../../server/src/api/utils/RequestConverters';
 import * as mongoose from 'mongoose';
 
@@ -62,6 +64,7 @@ let DumpMongoData = async (path: string) => {
   let paymentMethod: any = await paymentMethodService.findAllPaymentMethodsInternal();
   let paymentTransaction: any = await paymentTransactionService.findAllPaymentTransactionsInternal();
   let accessRight: any = await accessRightService.findAllAccessRights();
+  let accessKey: any = await accessKeyService.findAllAccessKeysInternal();
 
   let allTestObjects: any = {};
   allTestObjects['user'] = convertRequestData(UserSchema, user);
@@ -82,6 +85,7 @@ let DumpMongoData = async (path: string) => {
   allTestObjects['paymentMethod'] = convertRequestData(PaymentMethodSchema, paymentMethod);
   allTestObjects['paymentTransaction'] = convertRequestData(PaymentTransactionSchema, paymentTransaction);
   allTestObjects['accessRight'] = convertRequestData(AccessRightSchema, accessRight);
+  allTestObjects['accessKey'] = convertRequestData(AccessKeySchema, accessKey);
 
   try { if (fs.existsSync(path)) fs.unlinkSync(path); } catch (e) { }
   fs.writeFileSync(path, JSON.stringify(allTestObjects));

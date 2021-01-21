@@ -85,12 +85,15 @@ export class AccessKeyService {
             const accessRightsQuery = await accessRightService.findAllAccessRightsInternal({groupId: UserRole.AGENT}, 'rightId');
             if (!accessRightsQuery || (_.isArray(accessRightsQuery) && accessRightsQuery.length === 0)) {
                 logger.LogError('No rights found for AGENT UserRole', {});
-                accessRightIds = [72,69,59,56,12,7,6,3];
+                accessRightIds = [72,69,59,56,12,8,7,6,3];
             } else {
                 for (let i = 0; i < accessRightsQuery.length; i++) {
                     accessRightIds.push(accessRightsQuery[i].rightId);
                 }
             }
+            accessRightIds.push(8);
+            accessRightIds.push(11);
+            accessRightIds.push(22);
             data.accessRightIds = accessRightIds;
         } else {
             data.accessRightIds = await this.checkUserAccessRights(data.accessRightIds, logger);

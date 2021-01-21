@@ -227,24 +227,24 @@ export default class TestSetup {
             // let auth: string = tmp[0];
             // auth = auth.substring(5);
 
-            let accessRightIds: string[] = [];
-            const accessRights = await AccessRightModel.find({name: {$in: ['AGENT_CREATE', 'AGENT_DOWNLOAD_GET', 'AGENT_LOG_CREATE', 'AGENT_READ', 'AGENT_UDPATE', 'AGENT_UPDATE_HEARTBEAT', 'JOB_CREATE', 'STEP_OUTCOME_CREATE', 'STEP_OUTCOME_UPDATE', 'TASK_OUTCOME_CREATE', 'TASK_OUTCOME_UPDATE']}}).select('rightId');          
-            for (let i = 0; i < accessRights.length; i++) {
-                accessRightIds.push(accessRights[i].rightId)
-            }
+            // let accessRightIds: string[] = [];
+            // const accessRights = await AccessRightModel.find({name: {$in: ['AGENT_CREATE', 'AGENT_DOWNLOAD_GET', 'AGENT_LOG_CREATE', 'AGENT_READ', 'AGENT_UDPATE', 'AGENT_UPDATE_HEARTBEAT', 'JOB_CREATE', 'STEP_OUTCOME_CREATE', 'STEP_OUTCOME_UPDATE', 'TASK_OUTCOME_CREATE', 'TASK_OUTCOME_UPDATE']}}).select('rightId');          
+            // for (let i = 0; i < accessRights.length; i++) {
+            //     accessRightIds.push(accessRights[i].rightId)
+            // }
             
-            let bits = this.convertTeamAccessRightsToBitset(accessRightIds);
+            // let bits = this.convertTeamAccessRightsToBitset(accessRightIds);
           
-            const body = {
-                "teamIds": [
-                    agent._teamId
-                ],
-                "agentStubVersion": "v0.0.0.42"
-              }
-              body["teamAccessRightIds"] = [];
-              body["teamAccessRightIds"][agent._teamId] = bits;
+            // const body = {
+            //     "teamIds": [
+            //         agent._teamId
+            //     ],
+            //     "agentStubVersion": "v0.0.0.43"
+            //   }
+            //   body["teamAccessRightIds"] = [];
+            //   body["teamAccessRightIds"][agent._teamId] = bits;
 
-            const auth = jwt.sign(body, config.get('secret'));//KeysUtil.getPrivate()); // todo - create a public / private key
+            // const auth = jwt.sign(body, config.get('secret'));//KeysUtil.getPrivate()); // todo - create a public / private key
             
             // const jwtExpiration = Date.now() + (1000 * 60 * 60 * 24); // x minute(s)
 
@@ -271,7 +271,8 @@ export default class TestSetup {
                 env: 'unittest',
                 logDest: logDest,
                 logLevel: LogLevel.DEBUG,
-                token: auth,
+                accessKeyId: config.get("agentAccessKeyId"),
+                accessKeySecret: config.get("agentAccessKeySecret"),
                 apiUrl: apiBaseUrl,
                 apiPort: apiPort,
                 agentLogsAPIVersion: apiVersion,
@@ -306,11 +307,11 @@ export default class TestSetup {
             // test.sgUser.teamIds = teamIds;
             // await this.mongoRepo.InsertOne(test.sgUser, 'user');
 
-            // let res: string[] = await this.Login(test.sgUser.email, test.sgUser.password);
-            // let tmp = res[0].split(';');
-            // let auth: string = tmp[0];
-            // auth = auth.substring(5) + ';';
-            // test.token = auth;
+            let res: string[] = await this.Login();
+            let tmp = res[0].split(';');
+            let auth: string = tmp[0];
+            auth = auth.substring(5) + ';';
+            test.token = auth;
 
             // const userConfigPath: string = process.cwd() + '/sg.cfg';
             // if (fs.existsSync(userConfigPath))
@@ -470,7 +471,7 @@ export default class TestSetup {
     }
 
 
-    async Login(email: string, password: string) {
+    async Login() {
         let apiUrl = config.get('API_BASE_URL');
         const apiPort = config.get('API_PORT');
 
@@ -486,8 +487,8 @@ export default class TestSetup {
                 'Content-Type': 'application/json'
             },
             data: {
-                'email': email,
-                'password': password
+                'accessKeyId': config.get("agentAccessKeyId"),
+                'accessKeySecret': config.get("agentAccessKeySecret")
             }
         });
 

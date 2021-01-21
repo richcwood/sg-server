@@ -8,8 +8,10 @@ import { TeamSchema } from '../domain/Team';
 import { UserSchema } from '../domain/User';
 import { convertData as convertResponseData } from '../utils/ResponseConverters';
 import { AuthTokenType } from '../../shared/Enums';
-import { authenticateApiAccess } from '../../api/utils/Shared';
 import { BaseLogger } from '../../shared/SGLogger';
+import { accessKeyService } from '../services/AccessKeyService';
+import { convertTeamAccessRightsToBitset } from '../utils/Shared';
+
 
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
@@ -28,6 +30,7 @@ export default class LoginRouter {
   setRoutes() {
     this.router.post('/weblogin', this.webLogin.bind(this));
     this.router.post('/apiLogin', this.apiLogin.bind(this));
+    this.router.post('/refreshtoken', this.refreshToken.bind(this));
     // todo - an API login that will act a bit differently but still return a JWT
   }
 
@@ -75,16 +78,132 @@ export default class LoginRouter {
     }
   }
 
+
   async apiLogin(req: Request, res: Response, next: NextFunction) {
     const logger: BaseLogger = (<any>req).logger;
-    let [token, jwtExpiration, loginData] = await authenticateApiAccess(req.body.accessKeyId, req.body.accessKeySecret, logger);
+    try {
+      const loginResults: any = await accessKeyService.findAllAccessKeysInternal({ accessKeyId: req.body.accessKeyId, accessKeySecret: req.body.accessKeySecret }, '_teamId expiration revokeTime accessRightIds')
+      // console.log(`authenticating api access for client id ${req.body.accessKeyId}`);
 
-    if (!token) {
+      if (!loginResults || (_.isArray(loginResults) && loginResults.length < 1)) {
+        res.status(401).send('Authentication failed');
+        return;
+      }
+
+      const loginResult = loginResults[0];
+
+      if (loginResult.expiration < new Date() || loginResult.revokeTime < new Date()) {
+        res.status(401).send('Authentication failed');
+        return;
+      }
+
+      // Create a JWT
+      const jwtExpiration = Date.now() + (1000 * 120); // 10 minute(s)
+      // const jwtExpiration = Date.now() + (1000 * 60 * 10); // 10 minute(s)
+
+      let teamAccessRightIds = {}
+      teamAccessRightIds[loginResult._teamId] = convertTeamAccessRightsToBitset(loginResult.accessRightIds);
+
+      const secret = config.get('secret');
+
+      var refreshToken = jwt.sign({
+        id: loginResult._id,
+        type: AuthTokenType.REFRESHKEY,
+        accessKeyId: req.body.accessKeyId
+      }, secret);//KeysUtil.getPrivate()); // todo - create a public / private key
+
+      var token = jwt.sign({
+        id: loginResult._id,
+        type: AuthTokenType.ACCESSKEY,
+        accessKeyId: req.body.accessKeyId,
+        expiration: loginResult.expiration,
+        teamIds: [loginResult._teamId],
+        teamAccessRightIds: teamAccessRightIds,
+        exp: Math.floor(jwtExpiration / 1000)
+      }, secret);//KeysUtil.getPrivate()); // todo - create a public / private key
+
+      const loginData = {
+        // Use generic config names - slightly safer from lower skilled hackers  - probably doesn't matter
+        config1: loginResult._id,
+        config2: refreshToken
+      };
+
+      await accessKeyService.updateAccessKey(new mongodb.ObjectId(loginResult._teamId), new mongodb.ObjectId(loginResult._id), { lastUsed: new Date() });
+
+      res.cookie('Auth', token, { secure: false, expires: new Date(jwtExpiration) });
+      res.send(loginData);
+    } catch (err) {
+      logger.LogError(err.message, { Error: err, Url: req.url, Headers: req.headers, Body: req.body, Params: req.params });
+      // console.log(err);
+      res.status(401).send('Authentication failed');
+    }
+  }
+
+
+  async refreshToken(req: Request, res: Response, next: NextFunction) {
+    const logger: BaseLogger = (<any>req).logger;
+    const authToken = req.headers.auth ? req.headers.auth : req.cookies.Auth;
+    let jwtData;
+    try {
+      const secret = config.get('secret');
+      jwtData = jwt.verify(authToken, secret);
+
+      if (jwtData.type != AuthTokenType.REFRESHKEY) {
+        res.status(401).send('Authentication failed');
+        return;
+      }
+
+      const loginResults: any = await accessKeyService.findAllAccessKeysInternal({ accessKeyId: jwtData.accessKeyId }, '_teamId expiration revokeTime accessRightIds')
+      // console.log(`authenticating api access for client id ${req.body.accessKeyId}`);
+  
+      if (!loginResults || (_.isArray(loginResults) && loginResults.length < 1)) {
+        res.status(401).send('Authentication failed');
+        return;
+      }
+  
+      const loginResult = loginResults[0];
+  
+      if (loginResult.expiration < new Date() || loginResult.revokeTime < new Date()) {
+        res.status(401).send('Authentication failed');
+        return;
+      }
+  
+      // Create a JWT
+      const jwtExpiration = Date.now() + (1000 * 120); // 10 minute(s)
+      // const jwtExpiration = Date.now() + (1000 * 60 * 10); // 10 minute(s)
+  
+      let teamAccessRightIds = {}
+      teamAccessRightIds[loginResult._teamId] = convertTeamAccessRightsToBitset(loginResult.accessRightIds);
+  
+      var refreshToken = jwt.sign({
+        id: loginResult._id,
+        type: AuthTokenType.REFRESHKEY,
+        accessKeyId: req.body.accessKeyId
+      }, secret);//KeysUtil.getPrivate()); // todo - create a public / private key
+  
+      var token = jwt.sign({
+        id: loginResult._id,
+        type: AuthTokenType.ACCESSKEY,
+        accessKeyId: req.body.accessKeyId,
+        expiration: loginResult.expiration,
+        teamIds: [loginResult._teamId],
+        teamAccessRightIds: teamAccessRightIds,
+        exp: Math.floor(jwtExpiration / 1000)
+      }, secret);//KeysUtil.getPrivate()); // todo - create a public / private key
+  
+      const loginData = {
+        // Use generic config names - slightly safer from lower skilled hackers  - probably doesn't matter
+        config1: loginResult._id,
+        config2: refreshToken
+      };
+  
+      await accessKeyService.updateAccessKey(new mongodb.ObjectId(loginResult._teamId), new mongodb.ObjectId(loginResult._id), {lastUsed: new Date()});
+  
+      res.cookie('Auth', token, { secure: false, expires: new Date(jwtExpiration) });
+      res.send(loginData);
+    } catch (err) {
       res.status(401).send('Authentication failed');
       return;
     }
-
-    res.cookie('Auth', token, { secure: false, expires: new Date(jwtExpiration) });
-    res.send(loginData);
   }
 };
