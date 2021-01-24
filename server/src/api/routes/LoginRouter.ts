@@ -7,7 +7,7 @@ import { teamService } from '../services/TeamService';
 import { TeamSchema } from '../domain/Team';
 import { UserSchema } from '../domain/User';
 import { convertData as convertResponseData } from '../utils/ResponseConverters';
-import { AuthTokenType } from '../../shared/Enums';
+import { AccessKeyType, AuthTokenType } from '../../shared/Enums';
 import { BaseLogger } from '../../shared/SGLogger';
 import { accessKeyService } from '../services/AccessKeyService';
 import { convertTeamAccessRightsToBitset } from '../utils/Shared';
@@ -82,7 +82,7 @@ export default class LoginRouter {
   async apiLogin(req: Request, res: Response, next: NextFunction) {
     const logger: BaseLogger = (<any>req).logger;
     try {
-      const loginResults: any = await accessKeyService.findAllAccessKeysInternal({ accessKeyId: req.body.accessKeyId, accessKeySecret: req.body.accessKeySecret }, '_teamId expiration revokeTime accessRightIds')
+      const loginResults: any = await accessKeyService.findAllAccessKeysInternal({ accessKeyId: req.body.accessKeyId, accessKeySecret: req.body.accessKeySecret }, '_teamId expiration revokeTime accessRightIds accessKeyType')
       // console.log(`authenticating api access for client id ${req.body.accessKeyId}`);
 
       if (!loginResults || (_.isArray(loginResults) && loginResults.length < 1)) {
@@ -102,14 +102,19 @@ export default class LoginRouter {
 
       const secret = config.get('secret');
 
-      // Create a refresh JWT
-      const refreshJwtExpiration = Date.now() + (1000 * 60 * 60 * 24 * 7); // 1 week
-      var refreshToken = jwt.sign({
+      let tokenData: any = {
         id: loginResult._id,
         type: AuthTokenType.REFRESHKEY,
-        accessKeyId: req.body.accessKeyId,
-        exp: Math.floor(refreshJwtExpiration / 1000)
-      }, secret);//KeysUtil.getPrivate()); // todo - create a public / private key
+        accessKeyId: req.body.accessKeyId
+      }
+
+      // Create a refresh JWT
+      if (loginResults.accessKeyType == AccessKeyType.USER) {
+        const refreshJwtExpiration = Date.now() + (1000 * 60 * 60 * 24 * 7); // 1 week
+        tokenData['exp'] = Math.floor(refreshJwtExpiration / 1000);
+      }
+
+      var refreshToken = jwt.sign(tokenData, secret);//KeysUtil.getPrivate()); // todo - create a public / private key
   
       // Create an api JWT
       const jwtExpiration = Date.now() + (1000 * 60 * 10); // 10 minute(s)
@@ -172,14 +177,19 @@ export default class LoginRouter {
       let teamAccessRightIds = {}
       teamAccessRightIds[loginResult._teamId] = convertTeamAccessRightsToBitset(loginResult.accessRightIds);
   
-      // Create a refresh JWT
-      const refreshJwtExpiration = Date.now() + (1000 * 60 * 60 * 24 * 7); // 1 week
-      var refreshToken = jwt.sign({
+      let tokenData: any = {
         id: loginResult._id,
         type: AuthTokenType.REFRESHKEY,
-        accessKeyId: req.body.accessKeyId,
-        exp: Math.floor(refreshJwtExpiration / 1000)
-      }, secret);//KeysUtil.getPrivate()); // todo - create a public / private key
+        accessKeyId: req.body.accessKeyId
+      }
+
+      // Create a refresh JWT
+      if (loginResults.accessKeyType == AccessKeyType.USER) {
+        const refreshJwtExpiration = Date.now() + (1000 * 60 * 60 * 24 * 7); // 1 week
+        tokenData['exp'] = Math.floor(refreshJwtExpiration / 1000);
+      }
+
+      var refreshToken = jwt.sign(tokenData, secret);//KeysUtil.getPrivate()); // todo - create a public / private key
   
       // Create an api JWT
       const jwtExpiration = Date.now() + (1000 * 60 * 10); // 10 minute(s)

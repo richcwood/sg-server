@@ -35,10 +35,14 @@ export class AccessKeyService {
     }
 
 
-    public async createAccessKeyInternal(data: any): Promise<object> {
-        const model = new AccessKeyModel(data);
-        await model.save();
-        return { success: true };
+    public async createAccessKeyInternal(data): Promise<object> {
+        data.accessKeyId = SGUtils.makeid(20, false).toUpperCase();
+        data.accessKeySecret = crypto.randomBytes(20).toString('hex');
+
+        const accessKeyModel = new AccessKeyModel(data);
+        const newAccessKey = await accessKeyModel.save();
+
+        return newAccessKey; // fully populated model
     }
 
 
@@ -48,7 +52,7 @@ export class AccessKeyService {
         let accessRightIdsToExclude: number[] = [];
         if (!accessRightsQuery || (_.isArray(accessRightsQuery) && accessRightsQuery.length === 0)) {
             logger.LogError('No rights found for ADMINISTRATOR UserRole', {});
-            accessRightIdsToExclude = [82,81,80,79,75,74,70,68,63,61,57,55,50,41,37,35,32,27,19,17,10,7,6,5,4,3,2,1];
+            accessRightIdsToExclude = [132,130,129,128,82,81,80,79,75,74,70,68,63,61,57,55,50,41,37,35,32,27,19,17,10,7,6,5,4,3,2,1];
         } else {
             for (let i = 0; i < accessRightsQuery.length; i++) {
                 accessRightIdsToExclude.push(accessRightsQuery[i].rightId);

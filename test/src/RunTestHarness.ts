@@ -30,6 +30,7 @@ import { userService } from '../../server/src/api/services/UserService';
 import { invoiceService } from '../../server/src/api/services/InvoiceService';
 import { paymentMethodService } from '../../server/src/api/services/PaymentMethodService';
 import { paymentTransactionService } from '../../server/src/api/services/PaymentTransactionService';
+import { accessKeyService } from '../../server/src/api/services/AccessKeyService';
 import { AgentSchema } from '../../server/src/api/domain/Agent';
 import { JobDefSchema } from '../../server/src/api/domain/JobDef';
 import { JobSchema } from '../../server/src/api/domain/Job';
@@ -1017,6 +1018,24 @@ let CreateJob = async () => {
 }
 
 
+let CreateAccessKey = async() => {
+  mongoose.connect(config.get('mongoUrl'), { useNewUrlParser: true });
+
+  let data: any = {
+    accessKeyType: 1,
+    accessRightIds: [8,79,83,132],
+    description: 'agent build api access',
+    createdBy: new mongodb.ObjectId('5e1fac8a7e501cfd86cee31d'),
+    _teamId: new mongodb.ObjectId('5de95c0453162e8891f5a830')
+  };
+
+  let accessKey = await accessKeyService.createAccessKeyInternal(data);
+  console.log(accessKey);
+
+  let bs = await convertTeamAccessRightsToBitset(data.accessRightIds);
+  console.log(bs);
+}
+
 
 let CreateAccessRightIds = async () => {
   const mongoose = require("mongoose");
@@ -1541,6 +1560,12 @@ let BraintreeTesting = async () => {
   //   if (err) console.log('err -> ', err);
   //   console.log('transaction -> ', util.inspect(transaction, false, null));
   // });
+}
+
+
+let printTeamAccessRightsBitSet = async () => {
+  let bs = await convertTeamAccessRightsToBitset([8,79,83,132]);
+  console.log('bit set -> ', bs);
 }
 
 
@@ -2139,8 +2164,10 @@ let SendTestBrowserAlert = async() => {
 // DeleteJobDefs({"name": /Cron.*/});
 // RabbitMQTeamSetup(process.argv[2]);
 // CreateAccessRightIds();
-UpdateUserTeamAccessRights(process.argv[2], process.argv[3].split(','), process.argv[4].split(','));
+// UpdateUserTeamAccessRights(process.argv[2], process.argv[3].split(','), process.argv[4].split(','));
 // UpdateScheduleUserAccessRights();
+CreateAccessKey();
+// printTeamAccessRightsBitSet();
 
 
 // RabbitMQTeamSetup('5f57b2f14b5da00017df0d4f');

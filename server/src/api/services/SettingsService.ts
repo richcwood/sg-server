@@ -48,13 +48,23 @@ export class SettingsService {
   }
 
 
-  public async updateSettings(id: mongodb.ObjectId, data: any): Promise<object> {
-    const updatedSettings = await SettingsModel.findOneAndUpdate({ _id: id }, data, { new: true });
+  public async updateSettings(type: string, data: any): Promise<object> {
+    const updatedSettings = await SettingsModel.findOneAndUpdate({ Type: type }, data, { new: true });
 
-    if (!updatedSettings)
-      throw new MissingObjectError(`Settings with id '${id}' not found.`)
+    if (!updatedSettings) {
+      data.Type = type;
+      return this.createSettings(data);
+      // throw new MissingObjectError(`Settings with type '${type}' not found.`)
+    }
 
     return updatedSettings; // fully populated model
+  }
+
+
+  public async deleteSettings(type: string): Promise<object> {
+    const deleted = await SettingsModel.deleteOne({ Type: type });
+
+    return deleted;
   }
 }
 

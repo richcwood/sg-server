@@ -68,7 +68,7 @@
             "skipFiles": [
                 "<node_internals>/**"
             ],
-            "program": "${workspaceFolder}/test/dist/sg-server/test/src/RunUnitTestsHarness.js",
+            "program": "${workspaceFolder}/test/dist/sg-server/test/src/RunTestHarness.js",
             "args": [
                 "Test1.js"
             ],

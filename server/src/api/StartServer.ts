@@ -57,6 +57,7 @@ import { updateTeamStorageUsageRouter } from './routes/UpdateTeamStorageUsageRou
 import { userScriptShadowCopyRouter } from './routes/UserScriptShadowCopyRouter';
 import { paymentMethodRouter } from './routes/PaymentMethodRouter';
 import { accessKeyRouter } from './routes/AccessKeyRouter';
+import { settingsRouter } from './routes/SettingsRouter';
 const IPCIDR = require('ip-cidr');
 import { read } from 'fs';
 import { AuthTokenType } from '../shared/Enums';
@@ -253,6 +254,7 @@ class AppBuilder {
     this.app.use(`${apiURLBase}/updateteamstorageusage`, updateTeamStorageUsageRouter);
     this.app.use(`${apiURLBase}/scriptshadow`, userScriptShadowCopyRouter);
     this.app.use(`${apiURLBase}/accesskey`, accessKeyRouter);
+    this.app.use(`${apiURLBase}/settings`, settingsRouter);
   }
 
   private setUpJwtSecurity(): void {
