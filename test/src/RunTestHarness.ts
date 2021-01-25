@@ -1025,8 +1025,8 @@ let CreateAccessKey = async() => {
     accessKeyType: 1,
     accessRightIds: [8,79,83,132],
     description: 'agent build api access',
-    createdBy: new mongodb.ObjectId('5e1fac8a7e501cfd86cee31d'),
-    _teamId: new mongodb.ObjectId('5de95c0453162e8891f5a830')
+    createdBy: new mongodb.ObjectId('5f57aeaae5aa6d0017512a81'),
+    _teamId: new mongodb.ObjectId('5f57b2f14b5da00017df0d4f')
   };
 
   let accessKey = await accessKeyService.createAccessKeyInternal(data);

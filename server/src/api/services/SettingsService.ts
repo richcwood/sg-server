@@ -49,15 +49,16 @@ export class SettingsService {
 
 
   public async updateSettings(type: string, data: any): Promise<object> {
-    const updatedSettings = await SettingsModel.findOneAndUpdate({ Type: type }, data, { new: true });
-
-    if (!updatedSettings) {
-      data.Type = type;
-      return this.createSettings(data);
-      // throw new MissingObjectError(`Settings with type '${type}' not found.`)
+    let newSettings: any;
+    const existingSettings = await this.findAllSettingsInternal({Type: type}, '_id');
+    if (_.isArray(existingSettings) && existingSettings.length > 0) {
+        newSettings = await SettingsModel.findOneAndUpdate({ Type: type }, data, { new: true });
+    } else {
+        const settingsModel = new SettingsModel(data);
+        newSettings = await settingsModel.save();
     }
 
-    return updatedSettings; // fully populated model
+    return newSettings;
   }
 
 
