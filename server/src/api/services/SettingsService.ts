@@ -49,6 +49,7 @@ export class SettingsService {
 
 
   public async updateSettings(type: string, data: any): Promise<object> {
+    data.Type = type;
     let newSettings: any;
     const existingSettings = await this.findAllSettingsInternal({Type: type}, '_id');
     if (_.isArray(existingSettings) && existingSettings.length > 0) {
