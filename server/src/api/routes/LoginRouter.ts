@@ -131,7 +131,8 @@ export default class LoginRouter {
       const loginData = {
         // Use generic config names - slightly safer from lower skilled hackers  - probably doesn't matter
         config1: loginResult._id,
-        config2: refreshToken
+        config2: refreshToken,
+        config3: loginResult._teamId
       };
 
       await accessKeyService.updateAccessKey(new mongodb.ObjectId(loginResult._teamId), new mongodb.ObjectId(loginResult._id), { lastUsed: new Date() });
@@ -206,7 +207,8 @@ export default class LoginRouter {
       const loginData = {
         // Use generic config names - slightly safer from lower skilled hackers  - probably doesn't matter
         config1: loginResult._id,
-        config2: refreshToken
+        config2: refreshToken,
+        config3: loginResult._teamId
       };
   
       await accessKeyService.updateAccessKey(new mongodb.ObjectId(loginResult._teamId), new mongodb.ObjectId(loginResult._id), {lastUsed: new Date()});
