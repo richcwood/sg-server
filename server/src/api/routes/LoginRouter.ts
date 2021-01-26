@@ -29,7 +29,7 @@ export default class LoginRouter {
 
   setRoutes() {
     this.router.post('/weblogin', this.webLogin.bind(this));
-    this.router.post('/apiLogin', this.apiLogin.bind(this));
+    this.router.post('/apilogin', this.apiLogin.bind(this));
     this.router.post('/refreshtoken', this.refreshToken.bind(this));
     // todo - an API login that will act a bit differently but still return a JWT
   }

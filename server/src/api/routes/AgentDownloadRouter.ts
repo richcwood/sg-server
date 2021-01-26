@@ -139,7 +139,7 @@ export class AgentDownloadRouter {
     // Now check if the install exists in the specified s3 path
     if (stub_install_details != null) {
       try {
-        let stubS3Path = stub_install_details['Values.agent_stub_install'][`${platform}${arch}`]['location'];
+        let stubS3Path = stub_install_details['Values']['agent_stub_install'][`${platform}${arch}`]['location'];
         // if (platform == 'win')
         //   stubS3Path += '.exe';
         let stubInstallExists = await this.s3Access.objectExists(stubS3Path, config.get('S3_BUCKET_AGENT_BINARIES'));
@@ -708,7 +708,7 @@ export class AgentDownloadRouter {
     // Now check if the install exists in the specified s3 path
     if (agent_install_details != null) {
       try {
-        let agentS3Path = agent_install_details['Values.agent_install'][agentVersionMongo][`${platform}${arch}`]['location'];
+        let agentS3Path = agent_install_details['Values']['agent_install'][agentVersionMongo][`${platform}${arch}`]['location'];
         // if (platform == 'win')
         //   agentS3Path += '.exe';
         let agentInstallExists = await this.s3Access.objectExists(agentS3Path, config.get('S3_BUCKET_AGENT_BINARIES'));

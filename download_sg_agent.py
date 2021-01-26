@@ -10,12 +10,12 @@ import time
 token = ''
 
 if len(sys.argv) < 4:
-    print('Usage: python download_sg_agent.py [teamid] [email] "[password]" [platform] [architecture]')
+    print('Usage: python download_sg_agent.py [teamid] [accessKeyId] "[accessKeySecret]" [platform] [architecture]')
     sys.exit()
 
 teamId = sys.argv[1]
-email = sys.argv[2]
-password = sys.argv[3]
+accessKeyId = sys.argv[2]
+accessKeySecret = sys.argv[3]
 platform = sys.argv[4]
 arch = None
 if len(sys.argv) > 5:
@@ -27,15 +27,15 @@ def RestAPILogin():
     global email
     global password
 
-    url = 'http://console.saasglue.com/login/apiLogin'
+    url = 'https://console.saasglue.com/login/apilogin'
     
     headers = {
         'Content-Type': 'application/json'
     }
 
     data = {
-        'email': email,
-        'password': password
+        'accessKeyId': accessKeyId,
+        'accessKeySecret': accessKeySecret
     }
 
     res = requests.post(url=url, headers=headers, data=json.dumps(data))
@@ -96,12 +96,18 @@ def DownloadAgent():
 
     res = requests.get(s3url, allow_redirects=True)
 
+    compressedFile = ''
+    outFile = ''
     if platform.lower()[:3] == 'win':
-        open('sg-agent-launcher.zip', 'wb').write(res.content)        
+        compressedFile = './sg-agent-launcher.zip'
+        outFile = './sg-agent-launcher.exe'
+        open(compressedFile, 'wb').write(res.content)
     else:
-        open('sg-agent-launcher.gz', 'wb').write(res.content)
+        compressedFile = './sg-agent-launcher.gz'
+        outFile = './sg-agent-launcher'
+        open(compressedFile, 'wb').write(res.content)
 
-        with gzip.open('sg-agent-launcher.gz', 'rb') as f_in:
+        with gzip.open(compressedFile, 'rb') as f_in:
             with open(outFile, 'wb') as f_out:
                 shutil.copyfileobj(f_in, f_out)
 
