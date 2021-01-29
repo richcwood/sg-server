@@ -5,27 +5,29 @@ import json
 import gzip
 import shutil
 import time
+import json
 
 
 token = ''
 
 if len(sys.argv) < 4:
-    print('Usage: python download_sg_agent.py [teamid] [accessKeyId] "[accessKeySecret]" [platform] [architecture]')
+    print('Usage: python download_sg_agent.py [accessKeyId] "[accessKeySecret]" [platform] [architecture]')
     sys.exit()
 
-teamId = sys.argv[1]
-accessKeyId = sys.argv[2]
-accessKeySecret = sys.argv[3]
-platform = sys.argv[4]
+teamId = ''
+accessKeyId = sys.argv[1]
+accessKeySecret = sys.argv[2]
+platform = sys.argv[3]
 arch = None
-if len(sys.argv) > 5:
-    arch = sys.argv[5]
+if len(sys.argv) > 4:
+    arch = sys.argv[4]
 
 
 def RestAPILogin():
     global token
-    global email
-    global password
+    global teamId
+    global accessKeyId
+    global accessKeySecret
 
     url = 'https://console.saasglue.com/login/apilogin'
     
@@ -44,6 +46,7 @@ def RestAPILogin():
             'Call to {} returned {} - {}'.format(url, res.status_code, res.text))
 
     token = res.cookies.get_dict()['Auth']
+    teamId = json.loads(res.text)['config3']
 
 
 def GetDownloadUrl():
@@ -66,7 +69,7 @@ def GetDownloadUrl():
         url += ('/' + arch)
 
     headers = {
-	'Cookie': 'Auth={};'.format(token),
+    	'Cookie': 'Auth={};'.format(token),
         '_teamId': teamId
     }
 

@@ -97,6 +97,7 @@ export class AccessKeyService {
             }
             accessRightIds.push(8);
             accessRightIds.push(11);
+            accessRightIds.push(15);
             accessRightIds.push(22);
             data.accessRightIds = accessRightIds;
         } else {
