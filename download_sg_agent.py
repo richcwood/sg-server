@@ -45,7 +45,7 @@ def RestAPILogin():
         raise Exception(
             'Call to {} returned {} - {}'.format(url, res.status_code, res.text))
 
-    token = res.cookies.get_dict()['Auth']
+    token = json.loads(res.text)['config1']
     teamId = json.loads(res.text)['config3']
 
 

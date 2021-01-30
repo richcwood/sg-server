@@ -219,6 +219,53 @@ export class AgentController {
     }
 
 
+    public async updateTeamAgentsTargetVersion(req: Request, resp: Response, next: NextFunction): Promise<void> {
+        const _teamId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.params.teamId);
+        const version: string = req.params.targetVersion;
+        const response: ResponseWrapper = resp['body'];
+        try {
+            const res = await agentService.updateTeamAgentsTargetVersion(_teamId, { targetVersion: version });
+
+            response.data = res;
+            response.statusCode = ResponseCode.OK;
+            next();
+        }
+        catch (err) {
+            next(err);
+        }
+    }
+
+
+    public async updateAgentTargetVersion(req: Request, resp: Response, next: NextFunction): Promise<void> {
+        // console.log('updateAgentProperties -> ', JSON.stringify(req.body, null, 4));
+        const _teamId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.params.teamId);
+        const _agentId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.params.agentId);
+        const version: string = req.params.targetVersion;
+        const response: ResponseWrapper = resp['body'];
+        try {
+            let updatedAgent: any = await agentService.updateAgentTargetVersion(_teamId, _agentId, { targetVersion: version }, req.header('correlationId'), (<string>req.query.responseFields));
+
+            if (_.isArray(updatedAgent) && updatedAgent.length === 0) {
+                next(new MissingObjectError(`Agent ${req.params.agentId} not found.`));
+            }
+            else {
+                response.data = convertResponseData(AgentSchema, updatedAgent);
+                response.statusCode = ResponseCode.OK;
+                next();
+            }
+        }
+        catch (err) {
+            // If req.params.agentId wasn't a mongo id then we will get a CastError - basically same as if the id wasn't found
+            if (err instanceof CastError) {
+                next(new MissingObjectError(`Agent ${req.params.agentId} not found.`));
+            }
+            else {
+                next(err);
+            }
+        }
+    }
+
+
     public async updateAgentHeartbeat(req: Request, resp: Response, next: NextFunction): Promise<void> {
         // console.log('updateAgentHeartbeat -> ', JSON.stringify(req.body, null, 4));
         const logger: BaseLogger = (<any>req).logger;

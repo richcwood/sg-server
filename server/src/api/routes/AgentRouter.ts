@@ -15,6 +15,8 @@ export class AgentRouter {
         this.router.get('/tags/:tags', verifyAccessRights(['AGENT_READ', 'GLOBAL']), agentController.getAgentByTags);
         this.router.get('/disconnected/disconnected', verifyAccessRights(['AGENT_READ', 'GLOBAL']), agentController.getDisconnectedAgents);
         this.router.post('/', verifyAccessRights(['AGENT_CREATE', 'GLOBAL']), agentController.createAgent);
+        this.router.put('/targetversion/team/:teamId/:targetVersion', verifyAccessRights(['UPDATE_TEAM_AGENTS_VERSION', 'GLOBAL']), agentController.updateTeamAgentsTargetVersion);
+        this.router.put('/targetversion/:agentId/team/:teamId/:targetVersion', verifyAccessRights(['UPDATE_AGENT_VERSION', 'GLOBAL']), agentController.updateAgentTargetVersion);
         this.router.put('/heartbeat/:agentId', verifyAccessRights(['AGENT_UPDATE_HEARTBEAT', 'GLOBAL']), agentController.updateAgentHeartbeat);
         this.router.put('/tags/:agentId', verifyAccessRights(['AGENT_UDPATE', 'GLOBAL']), agentController.updateAgentTags);
         this.router.put('/properties/:agentId', verifyAccessRights(['AGENT_UDPATE', 'GLOBAL']), agentController.updateAgentProperties);

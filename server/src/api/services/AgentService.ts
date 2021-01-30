@@ -116,6 +116,25 @@ export class AgentService {
     }
 
 
+    public async updateTeamAgentsTargetVersion(_teamId: mongodb.ObjectId, data: any): Promise<object> {
+        const filter = { _teamId };
+        await AgentModel.updateMany(filter, data);
+
+        return {success: true};
+    }
+
+
+    public async updateAgentTargetVersion(_teamId: mongodb.ObjectId, id: mongodb.ObjectId, data: any, correlationId?: string, responseFields?: string): Promise<object> {
+        const filter = { _id: id, _teamId };
+        const updatedAgent = await AgentModel.findOneAndUpdate(filter, data, { new: true }).select(responseFields);
+
+        if (!updatedAgent)
+            throw new MissingObjectError(`Agent with id '${id}" not found with filter "${JSON.stringify(filter, null, 4)}'.`)
+
+        return updatedAgent; // fully populated model
+    }
+
+
     public async updateAgentHeartbeat(_teamId: mongodb.ObjectId, id: mongodb.ObjectId, data: any, correlationId?: string): Promise<object> {
         // for (let i = 0; i < Object.keys(data).length; i++) {
         //     const key = Object.keys(data)[i];
