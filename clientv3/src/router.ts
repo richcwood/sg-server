@@ -18,6 +18,7 @@ import InvoicesStripe from '@/views/InvoicesStripe.vue';
 import TeamAlerts from '@/views/TeamAlerts.vue';
 import Scripts from '@/views/Scripts.vue';
 import Settings from '@/views/Settings.vue';
+import AccessKeys from '@/views/AccessKeys.vue';
 import _ from 'lodash';
 import { SgAlert, AlertPlacement, AlertCategory } from "@/store/alert/types";
 
@@ -192,6 +193,12 @@ const router = new Router({
       name: 'settings',
       component: Settings
     },
+    {
+      path: '/accessKeys',
+      name: 'accessKeys',
+      component: AccessKeys
+    },
+    
   ]
 });
 
