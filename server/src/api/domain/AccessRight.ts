@@ -48,9 +48,9 @@ export class AccessRightSchema {
     },
 
     fromDB: {
-      // version: (data) => {
-      //   return undefined; // remove the version field - api users won't see it
-      // }
+      groupId: (data) => {
+        return undefined; // remove the version field - api users won't see it
+      }
     }
   }
 };
