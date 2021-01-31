@@ -69,9 +69,9 @@ export class AccessKeySchema {
     },
 
     fromDB: {
-      accessKeySecret: (data) => {
-        return undefined; // remove the version field - api users won't see it
-      }
+      // accessKeySecret: (data) => {
+      //   return undefined; // remove the version field - api users won't see it
+      // }
     }
   }
 };
