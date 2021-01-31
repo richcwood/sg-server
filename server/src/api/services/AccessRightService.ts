@@ -8,7 +8,7 @@ export class AccessRightService {
 
 
     public async findAllAccessRights(responseFields?: string) {
-        return AccessRightModel.find({groupId: { $in: [20,30,40]}}).select(responseFields);
+        return AccessRightModel.find({}).select(responseFields);
     }
 
 

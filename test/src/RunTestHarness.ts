@@ -2164,9 +2164,9 @@ let SendTestBrowserAlert = async() => {
 // DeleteJobDefs({"name": /Cron.*/});
 // RabbitMQTeamSetup(process.argv[2]);
 // CreateAccessRightIds();
-// UpdateUserTeamAccessRights(process.argv[2], process.argv[3].split(','), process.argv[4].split(','));
+UpdateUserTeamAccessRights(process.argv[2], process.argv[3].split(','), process.argv[4].split(','));
 // UpdateScheduleUserAccessRights();
-CreateAccessKey();
+// CreateAccessKey();
 // printTeamAccessRightsBitSet();
 
 
