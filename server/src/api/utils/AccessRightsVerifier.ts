@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { AccessRightSchema } from '../domain/AccessRight';
-import { accessRightService } from '../services/AccessRightService';
+import { AccessRightModel } from '../domain/AccessRight';
 import { ForbiddenError } from '../utils/Errors';
 import BitSet from 'bitset';
 
@@ -13,8 +13,9 @@ export const convertAccessRightNamesToIds = async (accessRightNames: string[]) =
     accessRightNameToIdMap = {};
     // load the access rights from the db
     // If new access right definitions are added (rarely) the app servers must be restarted to reload the rights
-    const accessRights = <AccessRightSchema[]> await accessRightService.findAllAccessRights();
-    for(let accessRight of accessRights){
+    const accessRights = <AccessRightSchema[]> await AccessRightModel.find();
+    for (let i = 0; i < accessRights.length; i++) {
+      let accessRight = accessRights[i];
       accessRightNameToIdMap[accessRight.name] = accessRight.rightId;
     }
   }
