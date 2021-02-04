@@ -1,6 +1,5 @@
 import { convertData } from '../utils/ResponseConverters';
 import { AccessKeySchema, AccessKeyModel } from '../domain/AccessKey';
-import { accessRightService } from '../services/AccessRightService';
 import { rabbitMQPublisher, PayloadOperation } from '../utils/RabbitMQPublisher';
 import { MissingObjectError, ValidationError } from '../utils/Errors';
 import { AccessKeyType, UserRole } from '../../shared/Enums';
@@ -9,6 +8,8 @@ import { BaseLogger } from '../../shared/SGLogger';
 import * as crypto from 'crypto';
 import * as _ from 'lodash';
 import { SGUtils } from '../../shared/SGUtils';
+import { GetAccessRightIdsForSGAgent, GetGlobalAccessRightId } from '../../api/utils/Shared';
+import BitSet from 'bitset';
 
 
 export class AccessKeyService {
@@ -36,8 +37,10 @@ export class AccessKeyService {
 
 
     public async createAccessKeyInternal(data): Promise<object> {
-        data.accessKeyId = SGUtils.makeid(20, false).toUpperCase();
-        data.accessKeySecret = crypto.randomBytes(20).toString('hex');
+        if (!data.accessKeyId)
+            data.accessKeyId = SGUtils.makeid(20, false).toUpperCase();
+        if (!data.accessKeySecret)
+            data.accessKeySecret = crypto.randomBytes(20).toString('hex');
 
         const accessKeyModel = new AccessKeyModel(data);
         const newAccessKey = await accessKeyModel.save();
@@ -46,62 +49,44 @@ export class AccessKeyService {
     }
 
 
-    private async checkUserAccessRights(requestedAccessRightIds: number[], logger: BaseLogger) {
-        const accessRightsQuery = await accessRightService.findAllAccessRightsInternal({groupId: UserRole.ADMINISTRATOR}, 'rightId');
-
-        let accessRightIdsToExclude: number[] = [];
-        if (!accessRightsQuery || (_.isArray(accessRightsQuery) && accessRightsQuery.length === 0)) {
-            logger.LogError('No rights found for ADMINISTRATOR UserRole', {});
-            accessRightIdsToExclude = [132,130,129,128,82,81,80,79,75,74,70,68,63,61,57,55,50,41,37,35,32,27,19,17,10,7,6,5,4,3,2,1];
-        } else {
-            for (let i = 0; i < accessRightsQuery.length; i++) {
-                accessRightIdsToExclude.push(accessRightsQuery[i].rightId);
-            }
-            accessRightIdsToExclude.push(1);
-            accessRightIdsToExclude.push(3);
-            accessRightIdsToExclude.push(6);
-            accessRightIdsToExclude.push(7);
-        }
-
-        let accessRightIds: number[] = [];
-        for (let i = 0; i < requestedAccessRightIds.length; i++) {
-            if (accessRightIdsToExclude.includes(requestedAccessRightIds[i]))
-                continue;
-            accessRightIds.push(requestedAccessRightIds[i]);
-        }
-
-        return accessRightIds;
-    }
-
-
-    public async createAccessKey(_teamId: mongodb.ObjectId, data: any, logger: BaseLogger, correlationId: string, responseFields?: string): Promise<object> {
+    public async createAccessKey(_teamId: mongodb.ObjectId, teamAccessRightIds: string[], data: any, correlationId: string, responseFields?: string): Promise<object> {
         if (!data.hasOwnProperty("accessKeyType"))
             throw new ValidationError(`Missing required field "accessKeyType"`);
-        if (!data.description)
+        if (!data.hasOwnProperty("description"))
             throw new ValidationError(`Missing required field "description"`);
         if (!data.accessRightIds && data.accessKeyType != AccessKeyType.AGENT)
             throw new ValidationError(`Missing required field "accessRightIds"`);
         if (data.accessRightIds && data.accessKeyType == AccessKeyType.AGENT)
             throw new ValidationError(`Cannot set "accessRightIds" for Agent access keys`);
 
-        let accessRightIds: number[] = [];
         if (data.accessKeyType == AccessKeyType.AGENT) {
-            const accessRightsQuery = await accessRightService.findAllAccessRightsInternal({groupId: UserRole.AGENT}, 'rightId');
-            if (!accessRightsQuery || (_.isArray(accessRightsQuery) && accessRightsQuery.length === 0)) {
-                logger.LogError('No rights found for AGENT UserRole', {});
-                accessRightIds = [72,69,59,56,12,8,7,6,3];
-            } else {
-                for (let i = 0; i < accessRightsQuery.length; i++) {
-                    accessRightIds.push(accessRightsQuery[i].rightId);
-                }
-            }
-            accessRightIds.push(8);
-            accessRightIds.push(11);
-            accessRightIds.push(15);
-            accessRightIds.push(22);
-            data.accessRightIds = accessRightIds;
+            data.accessRightIds = GetAccessRightIdsForSGAgent();
         } else {
-            data.accessRightIds = await this.checkUserAccessRights(data.accessRightIds, logger);
+            if (!_.isArray(data.accessRightIds) || data.accessRightIds.length < 1)
+                throw new ValidationError('Invalid access right ids parameter');
+            if (teamAccessRightIds && teamAccessRightIds[_teamId]) {
+                const allowedRightsBitset = BitSet.fromHexString(teamAccessRightIds[_teamId]);
+                if (allowedRightsBitset.get(GetGlobalAccessRightId()) !== 1) {
+                    const requestedRightsBitset = new BitSet();
+                    for (let i = 0; i < data.accessRightIds.length; i++)
+                        requestedRightsBitset.set(data.accessRightIds[i], 1);
+
+                    if (!allowedRightsBitset.or(requestedRightsBitset).equals(allowedRightsBitset))
+                        throw new ValidationError('Access to requested rights denied');
+                }
+            } else if (teamAccessRightIds && teamAccessRightIds['default']) {
+                const allowedRightsBitset = BitSet.fromHexString(teamAccessRightIds['default']);
+                if (allowedRightsBitset.get(GetGlobalAccessRightId()) !== 1) {
+                    const requestedRightsBitset = new BitSet();
+                    for (let i = 0; i < data.accessRightIds.length; i++)
+                        requestedRightsBitset.set(data.accessRightIds[i], 1);
+
+                    if (!allowedRightsBitset.or(requestedRightsBitset).equals(allowedRightsBitset))
+                        throw new ValidationError('Access to requested rights denied');
+                }
+            } else {
+                throw new ValidationError('No access rights for the requested team');
+            }
         }
 
         data.accessKeyId = SGUtils.makeid(20, false).toUpperCase();
@@ -123,7 +108,7 @@ export class AccessKeyService {
     }
 
 
-    public async updateAccessKey(_teamId: mongodb.ObjectId, id: mongodb.ObjectId, data: any, correlationId?: string, responseFields?: string): Promise<object> {
+    public async updateAccessKey(_teamId: string, id: mongodb.ObjectId, data: any, correlationId?: string, responseFields?: string): Promise<object> {
         const filter = { _id: id, _teamId };
 
         if (data.hasOwnProperty('createdBy'))
@@ -149,6 +134,7 @@ export class AccessKeyService {
         const deltas = Object.assign({ _id: id }, data);
         await rabbitMQPublisher.publish(_teamId, "AccessKey", correlationId, PayloadOperation.UPDATE, convertData(AccessKeySchema, deltas));
 
+        delete updatedAccessKey.accessKeySecret;
         return updatedAccessKey; // fully populated model
     }
 

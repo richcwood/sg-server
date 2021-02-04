@@ -11,8 +11,8 @@ export class PaymentTransactionRouter {
 
     this.router.get('/', verifyAccessRights(['PAYMENT_TRANSACTION_READ', 'GLOBAL']), paymentTransactionController.getManyPaymentTransactions);
     this.router.get('/:paymentTransactionId', verifyAccessRights(['PAYMENT_TRANSACTION_READ', 'GLOBAL']), paymentTransactionController.getPaymentTransaction);
-    this.router.post('/', verifyAccessRights(['PAYMENT_TRANSACTION_CREATE', 'GLOBAL']), paymentTransactionController.createPaymentTransaction);
-    this.router.put('/:paymentTransactionId', verifyAccessRights(['PAYMENT_TRANSACTION_UPDATE', 'GLOBAL']), paymentTransactionController.updatePaymentTransaction);
+    this.router.post('/', verifyAccessRights(['PAYMENT_TRANSACTION_WRITE', 'GLOBAL']), paymentTransactionController.createPaymentTransaction);
+    this.router.put('/:paymentTransactionId', verifyAccessRights(['PAYMENT_TRANSACTION_WRITE', 'GLOBAL']), paymentTransactionController.updatePaymentTransaction);
   }
 }
 

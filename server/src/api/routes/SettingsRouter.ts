@@ -11,9 +11,9 @@ export class SettingsRouter {
 
     this.router.get('/', verifyAccessRights(['SETTINGS_READ', 'GLOBAL']), settingsController.getManySettings);
     this.router.get('/:type', verifyAccessRights(['SETTINGS_READ', 'GLOBAL']), settingsController.getSettings);
-    this.router.post('/', verifyAccessRights(['SETTINGS_CREATE', 'GLOBAL']), settingsController.createSettings);
-    this.router.put('/:type', verifyAccessRights(['SETTINGS_UPDATE', 'GLOBAL']), settingsController.updateSettings);
-    this.router.delete('/:type', verifyAccessRights(['SETTINGS_DELETE', 'GLOBAL']), settingsController.deleteSettings);
+    this.router.post('/', verifyAccessRights(['SETTINGS_WRITE', 'GLOBAL']), settingsController.createSettings);
+    this.router.put('/:type', verifyAccessRights(['SETTINGS_WRITE', 'GLOBAL']), settingsController.updateSettings);
+    this.router.delete('/:type', verifyAccessRights(['SETTINGS_WRITE', 'GLOBAL']), settingsController.deleteSettings);
   }
 }
 

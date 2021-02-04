@@ -11,9 +11,9 @@ export class AccessKeyRouter {
 
     this.router.get('/', verifyAccessRights(['ACCESSKEY_READ', 'GLOBAL']), accessKeyController.getManyAccessKeys);
     this.router.get('/:accessKeyId', verifyAccessRights(['ACCESSKEY_READ', 'GLOBAL']), accessKeyController.getAccessKey);
-    this.router.post('/', verifyAccessRights(['ACCESSKEY_CREATE', 'GLOBAL']), accessKeyController.createAccessKey);
-    this.router.put('/:accessKeyId', verifyAccessRights(['ACCESSKEY_UPDATE', 'GLOBAL']), accessKeyController.updateAccessKey);
-    this.router.delete('/:accessKeyId', verifyAccessRights(['ACCESSKEY_DELETE', 'GLOBAL']), accessKeyController.deleteAccessKey);
+    this.router.post('/', verifyAccessRights(['ACCESSKEY_WRITE', 'GLOBAL']), accessKeyController.createAccessKey);
+    this.router.put('/:accessKeyId', verifyAccessRights(['ACCESSKEY_WRITE', 'GLOBAL']), accessKeyController.updateAccessKey);
+    this.router.delete('/:accessKeyId', verifyAccessRights(['ACCESSKEY_WRITE', 'GLOBAL']), accessKeyController.deleteAccessKey);
   }
 }
 

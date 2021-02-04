@@ -18,9 +18,6 @@ export class AccessRightSchema {
   @prop({ required: true })
   name?: string;
 
-  @prop({ required: true })
-  groupId?: number;
-
   // Define which filters are legal for which props (including nested props (not sure about nested arrays))
   public static readonly validFilters = {
     'rightId': [FilterOperator.EQUALS, FilterOperator.IN],
@@ -48,9 +45,6 @@ export class AccessRightSchema {
     },
 
     fromDB: {
-      groupId: (data) => {
-        return undefined; // remove the version field - api users won't see it
-      }
     }
   }
 };

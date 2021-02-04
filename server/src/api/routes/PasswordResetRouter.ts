@@ -9,7 +9,7 @@ export class PasswordResetRouter {
   constructor() {
     this.router = Router();
 
-    this.router.post('/', verifyAccessRights(['PASSWORD_RESET', 'GLOBAL']), passwordResetController.updatePassword);
+    this.router.post('/', passwordResetController.updatePassword);
   }
 }
 

@@ -38,8 +38,8 @@ export class TeamInviteService {
 
         if (userModel.teamIdsInactive.indexOf(_teamId) >= 0) {
             SGUtils.removeItemFromArray(userModel.teamIdsInactive, _teamId);
-            userModel.teamIds.push(_teamId);
-            await userModel.save();
+            // userModel.teamIds.push(_teamId.toHexString());
+            // await userModel.save();
         }
 
         if (userModel.teamIds.indexOf(_teamId) >= 0)

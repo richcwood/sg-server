@@ -9,11 +9,11 @@ export class StepOutcomeRouter {
   constructor() {
     this.router = Router();
 
-    this.router.get('/', verifyAccessRights(['STEP_OUTCOME_READ', 'GLOBAL']), stepOutcomeController.getManyStepOutcomes);
-    this.router.get('/:stepOutcomeId', verifyAccessRights(['STEP_OUTCOME_READ', 'GLOBAL']), stepOutcomeController.getStepOutcome);
-    this.router.post('/', verifyAccessRights(['STEP_OUTCOME_CREATE', 'GLOBAL']), stepOutcomeController.createStepOutcome);
-    this.router.put('/:stepOutcomeId', verifyAccessRights(['STEP_OUTCOME_UPDATE', 'GLOBAL']), stepOutcomeController.updateStepOutcome);
-    this.router.delete('/', verifyAccessRights(['STEP_OUTCOME_DELETE', 'GLOBAL']), stepOutcomeController.deleteStepOutcome);
+    this.router.get('/', verifyAccessRights(['JOB_READ', 'GLOBAL']), stepOutcomeController.getManyStepOutcomes);
+    this.router.get('/:stepOutcomeId', verifyAccessRights(['JOB_READ', 'GLOBAL']), stepOutcomeController.getStepOutcome);
+    this.router.post('/', verifyAccessRights(['STEP_OUTCOME_WRITE', 'GLOBAL']), stepOutcomeController.createStepOutcome);
+    this.router.put('/:stepOutcomeId', verifyAccessRights(['STEP_OUTCOME_WRITE', 'GLOBAL']), stepOutcomeController.updateStepOutcome);
+    this.router.delete('/', verifyAccessRights(['JOB_DELETE', 'GLOBAL']), stepOutcomeController.deleteStepOutcome);
   }
 }
 

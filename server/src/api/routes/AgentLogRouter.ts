@@ -37,7 +37,7 @@ export class AgentLogRouter {
   constructor() {
     this.router = Router();
 
-    this.router.post('/', verifyAccessRights(['AGENT_LOG_CREATE']), upload.single('logFile'), this.create.bind(this));
+    this.router.post('/', verifyAccessRights(['AGENT_LOG_WRITE']), upload.single('logFile'), this.create.bind(this));
   }
 
   async create(req: Request, res: Response, next: NextFunction) {
@@ -51,7 +51,7 @@ export class AgentLogRouter {
       }
 
       const uncompressedFilePath = file.path.substr(0, file.path.lastIndexOf(".")) + ".txt";
-      await new Promise((resolve, reject) => {
+      await new Promise<void>((resolve, reject) => {
         compressing.gzip.uncompress(file.path, uncompressedFilePath)
           .then(() => { resolve(); })
           .catch((err) => { reject(err); })

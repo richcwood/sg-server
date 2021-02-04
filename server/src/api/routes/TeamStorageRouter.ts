@@ -11,8 +11,8 @@ export class TeamStorageRouter {
 
     this.router.get('/', verifyAccessRights(['TEAM_STORAGE_READ', 'GLOBAL']), teamStorageController.getManyTeamStorages);
     this.router.get('/:teamStorageId', verifyAccessRights(['TEAM_STORAGE_READ', 'GLOBAL']), teamStorageController.getTeamStorage);
-    this.router.post('/', verifyAccessRights(['TEAM_STORAGE_CREATE', 'GLOBAL']), teamStorageController.createTeamStorage);
-    this.router.put('/:teamStorageId', verifyAccessRights(['TEAM_STORAGE_UPDATE', 'GLOBAL']), teamStorageController.updateTeamStorage);
+    this.router.post('/', verifyAccessRights(['TEAM_STORAGE_WRITE', 'GLOBAL']), teamStorageController.createTeamStorage);
+    this.router.put('/:teamStorageId', verifyAccessRights(['TEAM_STORAGE_WRITE', 'GLOBAL']), teamStorageController.updateTeamStorage);
   }
 }
 

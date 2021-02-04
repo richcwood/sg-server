@@ -6,7 +6,7 @@ import BitSet from 'bitset';
 
 let accessRightNameToIdMap: {[rightName: string]: number};
 
-const convertAccessRightNamesToIds = async (accessRightNames: string[]) => {
+export const convertAccessRightNamesToIds = async (accessRightNames: string[]) => {
   const accessRightIds: number[] = [];
 
   if(!accessRightNameToIdMap){

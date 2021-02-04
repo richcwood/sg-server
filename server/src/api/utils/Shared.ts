@@ -10,11 +10,7 @@ import { AMQPConnector } from '../../shared/AMQPLib';
 import { SGUtils } from '../../shared/SGUtils';
 import * as mongodb from 'mongodb';
 import * as _ from 'lodash';
-
-import { accessKeyService } from '../services/AccessKeyService';
-import { AccessRightModel } from '../domain/AccessRight';
-import { AuthTokenType } from '../../shared/Enums';
-import Bitset from 'bitset';
+import BitSet from 'bitset';
 const jwt = require('jsonwebtoken');
 
 
@@ -161,7 +157,7 @@ let GetTaskRoutes = async (_teamId: mongodb.ObjectId, task: TaskSchema, logger: 
         const agentQueue = SGStrings.GetAgentQueue(sgAdminTeam.toHexString(), agentCandidates[0]._id);
         routes.push({ route: agentQueue, type: 'queue', queueAssertArgs: agentQueueProperties, targetAgentId: agentCandidates[0]._id });
         updatedTask = await TaskModel.findOneAndUpdate({ _id: task._id, _teamId }, { $push: { attemptedRunAgentIds: agentCandidates[0]._id } }, { new: true });
-    } 
+    }
     /// For objecives not requiring particular tags, route the task to a single agent or all agents
     else {
         const agentsQuery = await agentService.findAllAgents(_teamId, { $or: [{ 'propertyOverrides.handleGeneralTasks': { $exists: false } }, { 'propertyOverrides.handleGeneralTasks': true }], 'offline': false, 'lastHeartbeatTime': { $gte: (new Date().getTime()) - parseInt(activeAgentTimeoutSeconds) * 1000 } }, 'lastHeartbeatTime tags propertyOverrides numActiveTasks attemptedRunAgentIds');
@@ -258,36 +254,38 @@ let CheckWaitingForLambdaRunnerTasks = async (_agentId: mongodb.ObjectId, logger
 }
 
 
-let GetAccessRightIdsForGroups = async (accessRightGroups) => {
-    let lstAccessRights: number[] = [];
-
-    const accessRights = await AccessRightModel.find({ groupId: { $in: accessRightGroups } }).select('rightId');
-
-    for (let i = 0; i < accessRights.length; i++) {
-        lstAccessRights.push(accessRights[i].rightId)
-    }
-
-    return lstAccessRights;
+let GetAccessRightIdsForTeamUser = () => {
+    return [3, 7, 8, 12, 16, 17, 18, 19, 21, 22, 27, 28, 30, 41, 42, 43, 44, 45, 48, 49, 50, 51, 52, 53];
 }
 
 
-let GetAccessRightIdsForTeamUser = async () => {
-    return await GetAccessRightIdsForGroups([40]);
+let GetAccessRightIdsForTeamAdmin = () => {
+    return [3, 4, 7, 8, 12, 16, 17, 18, 19, 21, 22, 27, 28, 29, 30, 31, 32, 33, 36, 37, 38, 40, 41, 42, 43, 44, 45, 48, 49, 50, 51, 52, 53, 56];
 }
 
 
-let GetAccessRightIdsForTeamAdmin = async () => {
-    return await GetAccessRightIdsForGroups([30, 40]);
+let GetAccessRightIdsForSGAdmin = () => {
+    return [1, 2, 5, 10, 13, 14, 23, 24, 34, 35, 39, 46, 47, 54, 55];
+}
+
+
+let GetAccessRightIdsForSGAgent = () => {
+    return [6, 8, 9, 11, 15, 22, 25, 26, 48];
+}
+
+
+let GetGlobalAccessRightId = () => {
+    return 57;
 }
 
 
 let convertTeamAccessRightsToBitset = (accessRightIds: number[]) => {
-    const bitset = new Bitset();
+    const bitset = new BitSet();
     for (let accessRightId of accessRightIds) {
-      bitset.set(accessRightId, 1);
+        bitset.set(accessRightId, 1);
     }
     return bitset.toString(16); // more efficient as hex
-  }
+}
 
 
 export { GetTaskRoutes };
@@ -296,3 +294,6 @@ export { CheckWaitingForLambdaRunnerTasks };
 export { convertTeamAccessRightsToBitset };
 export { GetAccessRightIdsForTeamUser };
 export { GetAccessRightIdsForTeamAdmin };
+export { GetAccessRightIdsForSGAdmin };
+export { GetAccessRightIdsForSGAgent };
+export { GetGlobalAccessRightId };

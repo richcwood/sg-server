@@ -9,7 +9,7 @@ export class UpdateTeamStorageUsageRouter {
   constructor() {
     this.router = Router();
 
-    this.router.post('/', verifyAccessRights(['TEAM_STORAGE_UPDATE', 'GLOBAL']), updateTeamStorageUsageController.updateTeamStorageUsage);
+    this.router.post('/', verifyAccessRights(['TEAM_STORAGE_WRITE', 'GLOBAL']), updateTeamStorageUsageController.updateTeamStorageUsage);
   }
 }
 

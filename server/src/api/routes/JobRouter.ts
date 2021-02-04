@@ -11,9 +11,9 @@ export class JobRouter {
 
         this.router.get('/', verifyAccessRights(['JOB_READ', 'GLOBAL']), jobController.getManyJobs);
         this.router.get('/:jobId', verifyAccessRights(['JOB_READ', 'GLOBAL']), jobController.getJob);
-        this.router.post('/ic/', verifyAccessRights(['JOB_CREATE_BY_IC', 'GLOBAL']), jobController.createInteractiveConsoleJob);
+        this.router.post('/ic/', verifyAccessRights(['JOB_CREATE', 'GLOBAL']), jobController.createInteractiveConsoleJob);
         this.router.post('/', verifyAccessRights(['JOB_CREATE', 'GLOBAL']), jobController.createJob);
-        this.router.put('/:jobId', verifyAccessRights(['JOB_UPDATE', 'GLOBAL']), jobController.updateJob);
+        this.router.put('/:jobId', verifyAccessRights(['JOB_WRITE', 'GLOBAL']), jobController.updateJob);
         this.router.delete('/', verifyAccessRights(['JOB_DELETE', 'GLOBAL']), jobController.deleteJobs);
         this.router.delete('/:jobId', verifyAccessRights(['JOB_DELETE', 'GLOBAL']), jobController.deleteJob);
     }
