@@ -2,7 +2,7 @@ import { convertData } from '../utils/ResponseConverters';
 import { AccessKeySchema, AccessKeyModel } from '../domain/AccessKey';
 import { rabbitMQPublisher, PayloadOperation } from '../utils/RabbitMQPublisher';
 import { MissingObjectError, ValidationError } from '../utils/Errors';
-import { AccessKeyType, UserRole } from '../../shared/Enums';
+import { AccessKeyType } from '../../shared/Enums';
 import * as mongodb from 'mongodb';
 import { BaseLogger } from '../../shared/SGLogger';
 import * as crypto from 'crypto';

@@ -24,10 +24,6 @@ import * as _ from 'lodash';
 import * as Enums from './Enums';
 import axios from 'axios';
 import { scriptService } from '../api/services/ScriptService';
-import { ScriptSchema } from '../api/domain/Script';
-import { MongoDbSettings } from 'aws-sdk/clients/dms';
-import { UserRole } from 'aws-sdk/clients/workmail';
-import { userRouterSingleton } from '../api/routes/UserRouter';
 
 
 const ascii2utf8: any = {
@@ -596,7 +592,7 @@ export class SGUtils {
         const sgMail = require('@sendgrid/mail');
         sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
-        await new Promise((resolve, reject) => {
+        await new Promise<void>((resolve, reject) => {
             fs.readFile(localInvoicePDFPath, (err, data) => {
                 try {
                     if (err) {
@@ -643,7 +639,7 @@ export class SGUtils {
 
     static GzipFile = async (filePath: string) => {
         const compressedFilePath = filePath + ".gz";
-        await new Promise((resolve, reject) => {
+        await new Promise<void>((resolve, reject) => {
             compressing.gzip.compressFile(filePath, compressedFilePath)
                 .then(() => { resolve(); })
                 .catch((err) => { reject(err); })
@@ -655,7 +651,7 @@ export class SGUtils {
 
     static GunzipFile = async (filePath: string) => {
         const uncompressedFilePath = SGUtils.ChangeFileExt(filePath, "");
-        await new Promise((resolve, reject) => {
+        await new Promise<void>((resolve, reject) => {
             compressing.gzip.uncompress(filePath, uncompressedFilePath)
                 .then(() => { resolve(); })
                 .catch((err) => { reject(err); })
@@ -1310,16 +1306,6 @@ export class SGUtils {
                 logger.LogError(`Error sending email: ${error}`, { recipientAddress: recipientAddress, subject: subject });
             }
         });
-    }
-
-
-    static GetAccessRightsForUserRole = async (role: Enums.UserRole) => {
-        let groupIds: number[] = [ Enums.UserRole.TEAM_USER ];
-        if (role == Enums.UserRole.TEAM_ADMINISTRATOR)
-            groupIds.push(Enums.UserRole.TEAM_ADMINISTRATOR);
-
-        const rightIds: number[] = await AccessRightModel.findMany({ groupId: { $in: groupIds } });
-        return rightIds;
     }
 }
 
