@@ -3,6 +3,7 @@ import { Model } from '@/store/types'
 export enum AccessKeyType { USER = 0, AGENT = 1 }
 
 export interface AccessKey extends Model {
+  id?: string;
   _teamId: string;
   accessKeyId?: string;
   description?: string;
@@ -22,11 +23,12 @@ export enum AccessKeyStatus { ACTIVE = 'Active', INACTIVE = 'Inactive', EXPIRED 
 
 export const calculateAccessKeyStatus = (accessKey: AccessKey): AccessKeyStatus => {
   const now = Date.now();
-  if(now < accessKey.expiration){
+  // expiration=2000, now=3000 is expired.  now > expired
+  if(accessKey.expiration && now > accessKey.expiration){
     return AccessKeyStatus.EXPIRED;
   }
   else {
-    if(now < accessKey.revokeTime){
+    if(accessKey.revokeTime && now > accessKey.revokeTime){
       return AccessKeyStatus.INACTIVE;
     }
     else {

@@ -2,55 +2,60 @@
   <div>
     <!-- Modals -->
     <modal name="create-user-access-key-modal" :classes="'round-popup'" :width="600" :height="820">
-      <table class="table" width="100%">
-        <tr class="tr">
-          <td class="td"></td>
-          <td class="td">
-            <strong>Create a User API Access Key</strong>
-          </td>
-        </tr>
-        <tr class="tr">
-          <td class="td">
-            Description
-          </td>
-          <td class="td">
-           <input class="input" type="text" v-model="newAccessKey.description"/>
-          </td>
-        </tr>
-        <tr class="tr">
-          <td class="td">
-            Access Rights
-          </td>
-          <td class="td">
-            <a @click="selectAllRights">Select All</a>
-            <a style="margin-left: 20px;" @click="unselectAllRights">Select None</a>
-            
-            <div style="margin-top: 12px; width: 100%; height: 400px; overflow: scroll;">
-              <div v-for="accessRight of accessRights" :key="accessRight.id">
-                <label class="checkbox">
-                  <input type="checkbox" v-model="accessRightSelections[accessRight.rightId]">
-                  <span style="margin-left: 12px;">{{accessRight.name}}</span>
-                </label>
+      <validation-observer ref="createUserAccessKeyValidationObserver">
+        <table class="table" width="100%">
+          <tr class="tr">
+            <td class="td"></td>
+            <td class="td">
+              <strong>Create a User API Access Key</strong>
+            </td>
+          </tr>
+          <tr class="tr">
+            <td class="td">
+              Description
+            </td>
+            <td class="td">
+              <validation-provider name="Key Description" rules="required|object-name" v-slot="{ errors }">
+                <input class="input" type="text" v-model="newAccessKey.description"/>
+                <div v-if="errors && errors.length > 0" class="message validation-error is-danger">{{ errors[0] }}</div>
+              </validation-provider>
+            </td>
+          </tr>
+          <tr class="tr">
+            <td class="td">
+              Access Rights
+            </td>
+            <td class="td">
+              <a @click="selectAllRights">Select All</a>
+              <a style="margin-left: 20px;" @click="unselectAllRights">Select None</a>
+              
+              <div style="margin-top: 12px; width: 100%; height: 400px; overflow: scroll;">
+                <div v-for="accessRight of accessRights" :key="accessRight.id">
+                  <label class="checkbox">
+                    <input type="checkbox" v-model="accessRightSelections[accessRight.rightId]">
+                    <span style="margin-left: 12px;">{{accessRight.name}}</span>
+                  </label>
+                </div>
               </div>
-            </div>
-          </td>
-        </tr>
-        <tr class="tr">
-          <td class="td">
-            Expiration
-          </td>
-          <td class="td">
-            <datepicker input-class="input" v-model="newAccessKey.expiration" name="filterDate"></datepicker>
-          </td>
-        </tr>
-        <tr class="tr">
-          <td class="td"></td>
-          <td class="td">
-            <button class="button" @click="onCancelCreateUserAccessKey">Cancel</button>
-            <button class="button button-spaced is-primary" @click="onCreateCreateUserAccessKey">Create Access Key</button>
-          </td>
-        </tr>
-      </table>
+            </td>
+          </tr>
+          <tr class="tr">
+            <td class="td">
+              Expiration
+            </td>
+            <td class="td">
+              <datepicker input-class="input" v-model="newAccessKey.expiration" name="filterDate"></datepicker>
+            </td>
+          </tr>
+          <tr class="tr">
+            <td class="td"></td>
+            <td class="td">
+              <button class="button" @click="onCancelCreateUserAccessKey">Cancel</button>
+              <button class="button button-spaced is-primary" @click="onCreateCreateUserAccessKey">Create Access Key</button>
+            </td>
+          </tr>
+        </table>
+      </validation-observer>
     </modal>
 
 
@@ -77,13 +82,10 @@
         <td class="td">
           <strong>Status</strong>
         </td>
-        <td class="td">
-          
-        </td>
       </tr>
 
       <tr v-if="accessKeys.length === 0" class="tr">
-        <td colspan="7" class="td">
+        <td colspan="6" class="td">
           No access keys yet. 
         </td>
       </tr>
@@ -108,11 +110,8 @@
           <span :class="calculatedAccessKeyStatusClass(accessKey)">
             {{calculateAccessKeyStatus(accessKey)}}
           </span>
-          <a class="button-spaced" v-if="calculateAccessKeyStatus(accessKey) === AccessKeyStatus.ACTIVE" @click="onMakeInactiveClicked">make inactive</a>
-          <a class="button-spaced" v-if="calculateAccessKeyStatus(accessKey) === AccessKeyStatus.INACTIVE" @click="onMakeActiveClicked">make active</a>
-        </td>
-        <td class="td">
-          <a  v-if="calculateAccessKeyStatus(accessKey) !== AccessKeyStatus.EXPIRED" @click="onMakeExpireClicked">expire</a>
+          <a class="button-spaced" v-if="calculateAccessKeyStatus(accessKey) === AccessKeyStatus.ACTIVE" @click="onMakeInactiveClicked(accessKey)">make inactive</a>
+          <a class="button-spaced" v-if="calculateAccessKeyStatus(accessKey) === AccessKeyStatus.INACTIVE" @click="onMakeActiveClicked(accessKey)">make active</a>
         </td>
       </tr>
       
@@ -190,16 +189,52 @@ export default class AccessKeysGrid extends Vue {
     }
   }
 
-  private onMakeInactiveClicked(){
+  private async onMakeInactiveClicked(accessKey: AccessKey){
+    try {
+      const updatedAccessKey = {
+        id: accessKey.id,
+        revokeTime: Date.now()
+      };
 
+      this.$store.dispatch(`${StoreType.AccessKeyStore}/save`, updatedAccessKey);
+      this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert('Inactivated access key', AlertPlacement.FOOTER, AlertCategory.INFO));
+    }
+    catch(err){
+      console.error(err);
+      showErrors('Error inactivating access key', err);
+    }
   }
 
-  private onMakeActiveClicked(){
+  private onMakeActiveClicked(accessKey: AccessKey){
+    try {
+      const updatedAccessKey = {
+        id: accessKey.id,
+        revokeTime: null
+      };
 
+      this.$store.dispatch(`${StoreType.AccessKeyStore}/save`, updatedAccessKey);
+      this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert('Activated access key', AlertPlacement.FOOTER, AlertCategory.INFO));
+    }
+    catch(err){
+      console.error(err);
+      showErrors('Error activating access key', err);
+    }
   }
 
-  private onMakeExpireClicked(){
+  private onMakeExpireClicked(accessKey: AccessKey){
+  try {
+      const updatedAccessKey = {
+        id: accessKey.id,
+        expiration: Date.now()
+      };
 
+      this.$store.dispatch(`${StoreType.AccessKeyStore}/save`, updatedAccessKey);
+      this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert('Expired access key', AlertPlacement.FOOTER, AlertCategory.INFO));
+    }
+    catch(err){
+      console.error(err);
+      showErrors('Error expiring access key', err);
+    }
   }
 
   private async openCreateAccessKeyModal(){
@@ -257,8 +292,28 @@ export default class AccessKeysGrid extends Vue {
   }
 
   private async onCreateCreateUserAccessKey(){
-    try {
+    if( ! await (<any>this.$refs.createUserAccessKeyValidationObserver).validate()){
+      return;
+    }
 
+    try {
+      const newAccessKey: any = {
+        description: this.newAccessKey.description,
+        accessKeyType: AccessKeyType.USER,
+      };
+
+      if(this.newAccessKey.expiration){
+        newAccessKey.expiration = (new Date(this.newAccessKey.expiration)).getTime();
+      }
+
+      newAccessKey.accessRightIds = Object.keys(this.accessRightSelections).reduce((accum: any, accessKey: string) => {
+        if(this.accessRightSelections[accessKey]){
+          accum.push(Number.parseInt(accessKey));
+        }
+        return accum;
+      }, []);
+
+      this.$store.dispatch(`${StoreType.AccessKeyStore}/save`, newAccessKey);
 
       this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert('Created new access key', AlertPlacement.FOOTER, AlertCategory.INFO));
     }
