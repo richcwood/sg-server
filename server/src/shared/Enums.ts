@@ -83,8 +83,6 @@ export { AccessRight }
 enum TaskDefTarget { SINGLE_AGENT = 1, ALL_AGENTS = 2, SINGLE_AGENT_WITH_TAGS = 4, ALL_AGENTS_WITH_TAGS = 8, SINGLE_SPECIFIC_AGENT = 16, AWS_LAMBDA = 32, GCP_FUNCTION = 64, AMAZON_AUTOMATION = 128 }
 export { TaskDefTarget }
 
-enum UserRole { ADMINISTRATOR = 10, AGENT = 20, TEAM_ADMINISTRATOR = 30, TEAM_USER = 40 }
-export { UserRole }
 
 enum AccessKeyType { USER = 0, AGENT = 1 }
 export { AccessKeyType }

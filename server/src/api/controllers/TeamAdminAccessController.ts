@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { ResponseWrapper, ResponseCode } from '../utils/Types';
-import { UserSchema } from '../domain/user';
+import { UserSchema } from '../domain/User';
 import { teamAdminAccessService } from '../services/TeamAdminAccessService';
 import { convertData as convertResponseData } from '../utils/ResponseConverters';
 import * as _ from 'lodash';
