@@ -11,8 +11,9 @@ export class UserRouter {
 
     this.router.get('/', verifyAccessRights(['USER_READ', 'GLOBAL']),  userController.getManyUsers);
     this.router.get('/:userId', verifyAccessRights(['USER_READ', 'GLOBAL']), userController.getUser);
-    this.router.put('/:userId', userController.updateUser);
+    // this.router.put('/:userId', userController.updateUser);
     this.router.put('/:userId/join/:teamId', userController.joinTeam);
+    this.router.put('/:userId/leave/:teamId', userController.leaveTeam);
   }
 }
 

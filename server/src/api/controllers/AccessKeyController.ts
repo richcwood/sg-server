@@ -9,7 +9,6 @@ import { convertData as convertResponseData } from '../utils/ResponseConverters'
 import { convertData as convertRequestData } from '../utils/RequestConverters';
 import * as _ from 'lodash';
 import * as mongodb from 'mongodb';
-import { FreeTierChecks } from '../../shared/FreeTierChecks';
 import { BaseLogger } from '../../shared/SGLogger';
 
 
@@ -48,13 +47,14 @@ export class AccessKeyController {
 
 
     public async createAccessKey(req: Request, resp: Response, next: NextFunction): Promise<void> {
-        const logger: BaseLogger = (<any>req).logger;
-        const _teamId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._teamid);
         const response: ResponseWrapper = resp['body'];
-        req.body.createdBy = new mongodb.ObjectId(<string>req.headers.userid);
         try {
-            const newAccessKey = await accessKeyService.createAccessKey(_teamId, convertRequestData(AccessKeySchema, req.body), logger, req.header('correlationId'), (<string>req.query.responseFields));
+            req.body.createdBy = new mongodb.ObjectId(<string>req.headers.userid);
+            const _teamId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._teamid);
+            const teamAccessRightIds: string[] = <string[]>req.headers.teamAccessRightIds;
+            const newAccessKey: AccessKeySchema = <AccessKeySchema>await accessKeyService.createAccessKey(_teamId, teamAccessRightIds, convertRequestData(AccessKeySchema, req.body), req.header('correlationId'), (<string>req.query.responseFields));
             response.data = convertResponseData(AccessKeySchema, newAccessKey);
+            response.data.accessKeySecret = newAccessKey.accessKeySecret;
             response.statusCode = ResponseCode.CREATED;
             next();
         }
@@ -65,10 +65,9 @@ export class AccessKeyController {
 
 
     public async updateAccessKey(req: Request, resp: Response, next: NextFunction): Promise<void> {
-        const logger: BaseLogger = (<any>req).logger;
-        const _teamId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._teamid);
         const response: ResponseWrapper = resp['body'];
         try {
+            const _teamId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._teamid);
             const updatedAccessKey: any = await accessKeyService.updateAccessKey(_teamId, new mongodb.ObjectId(req.params.accessKeyId), convertRequestData(AccessKeySchema, req.body), req.header('correlationId'), (<string>req.query.responseFields));
 
             if (_.isArray(updatedAccessKey) && updatedAccessKey.length === 0) {
@@ -87,9 +86,9 @@ export class AccessKeyController {
 
 
     public async deleteAccessKey(req: Request, resp: Response, next: NextFunction): Promise<void> {
-        const _teamId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._teamid);
         const response: ResponseWrapper = resp['body'];
         try {
+            const _teamId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._teamid);
             response.data = await accessKeyService.deleteAccessKey(_teamId, new mongodb.ObjectId(req.params.accessKeyId), req.header('correlationId'));
             response.statusCode = ResponseCode.OK;
             next();

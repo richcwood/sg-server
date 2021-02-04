@@ -9,7 +9,7 @@ export class CreateInvoiceRouter {
   constructor() {
     this.router = Router();
 
-    this.router.post('/', verifyAccessRights(['INVOICE_CREATE', 'GLOBAL']), createInvoiceController.createInvoice);
+    this.router.post('/', verifyAccessRights(['INVOICE_WRITE', 'GLOBAL']), createInvoiceController.createInvoice);
   }
 }
 

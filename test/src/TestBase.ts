@@ -598,7 +598,7 @@ export default abstract class TestBase {
             }
         });
 
-        return response.headers['set-cookie'];
+        return response.data.config1;
     }
 }
 
@@ -830,7 +830,7 @@ export abstract class WorkflowTestBase extends TestBase {
         let testStartTime = Date.now();
 
         let testComplete: boolean = false;
-        await new Promise(async (resolve, reject) => {
+        await new Promise<void>(async (resolve, reject) => {
             while (true) {
                 try {
                     for (let i = 0; i < wftInst.bpMessagesExpected.length; i++) {

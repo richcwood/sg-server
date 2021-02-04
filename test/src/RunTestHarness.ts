@@ -55,7 +55,7 @@ import { rabbitMQPublisher } from '../../server/src/api/utils/RabbitMQPublisher'
 import { braintreeClientTokenService } from '../../server/src/api/services/BraintreeClientTokenService';
 import { stripeClientTokenService } from '../../server/src/api/services/StripeClientTokenService';
 import { MissingObjectError, ValidationError, FreeTierLimitExceededError } from '../../server/src/api/utils/Errors';
-import { CheckWaitingForAgentTasks } from '../../server/src/api/utils/Shared';
+import { CheckWaitingForAgentTasks, GetAccessRightIdsForTeamAdmin, GetAccessRightIdsForTeamUser } from '../../server/src/api/utils/Shared';
 import * as path from 'path';
 import * as es from 'event-stream';
 import * as truncate from 'truncate-utf8-bytes';
@@ -70,6 +70,7 @@ import * as bson from 'bson';
 import { TaskStatus } from '../../server/dist/shared/Enums';
 import RedisLib from '../../server/src/shared/RedisLib';
 import Bitset from 'bitset';
+import { AccessKeyModel } from '../../server/src/api/domain/AccessKey';
 
 
 const waitForAgentCreateInterval = 15000;
@@ -1023,10 +1024,11 @@ let CreateAccessKey = async() => {
 
   let data: any = {
     accessKeyType: 1,
-    accessRightIds: [8,79,83,132],
-    description: 'agent build api access',
+    accessRightIds: [57],
+    description: 'sg admin',
     createdBy: new mongodb.ObjectId('5f57aeaae5aa6d0017512a81'),
-    _teamId: new mongodb.ObjectId('5f57b2f14b5da00017df0d4f')
+    // _teamId: new mongodb.ObjectId('5de95c0453162e8891f5a830')
+    _teamId: 'default'
   };
 
   let accessKey = await accessKeyService.createAccessKeyInternal(data);
@@ -1037,104 +1039,28 @@ let CreateAccessKey = async() => {
 }
 
 
+let LoadAccessRightIdsToProd = async () => {
+  const mongoose = require("mongoose");
+
+  const accessRights = [{"_id":"601aea57b0da974904990e6c","rightId":1,"name":"TEAM_READ_ALL"},{"_id":"601aea57b0da974904990e6d","rightId":2,"name":"TEAM_CREATE_UNASSIGNED"},{"_id":"601aea57b0da974904990e6e","rightId":3,"name":"TEAM_READ"},{"_id":"601aea57b0da974904990e6f","rightId":4,"name":"TEAM_WRITE"},{"_id":"601aea57b0da974904990e70","rightId":5,"name":"AGENT_DOWNLOAD_CREATE"},{"_id":"601aea57b0da974904990e71","rightId":6,"name":"AGENT_DOWNLOAD"},{"_id":"601aea57b0da974904990e72","rightId":7,"name":"AGENT_STUB_DOWNLOAD"},{"_id":"601aea57b0da974904990e73","rightId":8,"name":"AGENT_READ"},{"_id":"601aea57b0da974904990e74","rightId":9,"name":"AGENT_CREATE"},{"_id":"601aea57b0da974904990e75","rightId":10,"name":"AGENT_UPDATE_TARGET_VERSION"},{"_id":"601aea57b0da974904990e76","rightId":11,"name":"AGENT_UPDATE_HEARTBEAT"},{"_id":"601aea57b0da974904990e77","rightId":12,"name":"AGENT_WRITE"},{"_id":"601aea57b0da974904990e78","rightId":13,"name":"AGENT_CANCEL_ORPHANED_TASKS"},{"_id":"601aea57b0da974904990e79","rightId":14,"name":"AGENT_DELETE"},{"_id":"601aea57b0da974904990e7a","rightId":15,"name":"AGENT_LOG_WRITE"},{"_id":"601aea57b0da974904990e7b","rightId":16,"name":"SCRIPT_READ"},{"_id":"601aea57b0da974904990e7c","rightId":17,"name":"SCRIPT_WRITE"},{"_id":"601aea57b0da974904990e7d","rightId":18,"name":"SCHEDULE_READ"},{"_id":"601aea57b0da974904990e7e","rightId":19,"name":"SCHEDULE_WRITE"},{"_id":"601aea57b0da974904990e7f","rightId":20,"name":"SCHEDULE_UPDATE_BY_SCHEDULER"},{"_id":"601aea57b0da974904990e80","rightId":21,"name":"JOB_READ"},{"_id":"601aea57b0da974904990e81","rightId":22,"name":"JOB_CREATE"},{"_id":"601aea57b0da974904990e82","rightId":23,"name":"JOB_WRITE"},{"_id":"601aea57b0da974904990e83","rightId":24,"name":"JOB_DELETE"},{"_id":"601aea57b0da974904990e84","rightId":25,"name":"TASK_OUTCOME_WRITE"},{"_id":"601aea57b0da974904990e85","rightId":26,"name":"STEP_OUTCOME_WRITE"},{"_id":"601aea57b0da974904990e86","rightId":27,"name":"JOB_DEF_READ"},{"_id":"601aea57b0da974904990e87","rightId":28,"name":"JOB_DEF_WRITE"},{"_id":"601aea57b0da974904990e88","rightId":29,"name":"USER_READ"},{"_id":"601aea57b0da974904990e89","rightId":30,"name":"USER_WRITE"},{"_id":"601aea57b0da974904990e8a","rightId":31,"name":"PAYMENT_METHOD_READ"},{"_id":"601aea57b0da974904990e8b","rightId":32,"name":"PAYMENT_METHOD_WRITE"},{"_id":"601aea57b0da974904990e8c","rightId":33,"name":"PAYMENT_TRANSACTION_READ"},{"_id":"601aea57b0da974904990e8d","rightId":34,"name":"PAYMENT_TRANSACTION_WRITE"},{"_id":"601aea57b0da974904990e8e","rightId":35,"name":"PAY_INVOICE_AUTO"},{"_id":"601aea57b0da974904990e8f","rightId":36,"name":"PAY_INVOICE_MANUAL"},{"_id":"601aea57b0da974904990e90","rightId":37,"name":"PAYMENT_TOKEN_CREATE"},{"_id":"601aea57b0da974904990e91","rightId":38,"name":"INVOICE_READ"},{"_id":"601aea57b0da974904990e92","rightId":39,"name":"INVOICE_WRITE"},{"_id":"601aea57b0da974904990e93","rightId":40,"name":"TEAM_INVITE"},{"_id":"601aea57b0da974904990e94","rightId":41,"name":"TEAM_JOIN"},{"_id":"601aea57b0da974904990e95","rightId":42,"name":"TASK_ACTION"},{"_id":"601aea57b0da974904990e96","rightId":43,"name":"JOB_ACTION"},{"_id":"601aea57b0da974904990e97","rightId":44,"name":"TEAM_VAR_READ"},{"_id":"601aea57b0da974904990e98","rightId":45,"name":"TEAM_VAR_WRITE"},{"_id":"601aea57b0da974904990e99","rightId":46,"name":"TEAM_STORAGE_READ"},{"_id":"601aea57b0da974904990e9a","rightId":47,"name":"TEAM_STORAGE_WRITE"},{"_id":"601aea57b0da974904990e9b","rightId":48,"name":"ARTIFACT_READ"},{"_id":"601aea57b0da974904990e9c","rightId":49,"name":"ARTIFACT_WRITE"},{"_id":"601aea57b0da974904990e9d","rightId":50,"name":"SCRIPT_SHADOW_READ"},{"_id":"601aea57b0da974904990e9e","rightId":51,"name":"SCRIPT_SHADOW_WRITE"},{"_id":"601aea57b0da974904990e9f","rightId":52,"name":"ACCESSKEY_READ"},{"_id":"601aea57b0da974904990ea0","rightId":53,"name":"ACCESSKEY_WRITE"},{"_id":"601aea57b0da974904990ea1","rightId":54,"name":"SETTINGS_READ"},{"_id":"601aea57b0da974904990ea2","rightId":55,"name":"SETTINGS_WRITE"},{"_id":"601aea57b0da974904990ea3","rightId":56,"name":"TEAM_GLOBAL"},{"_id":"601aea57b0da974904990ea4","rightId":57,"name":"GLOBAL"}];
+
+  console.log('mongoUrl -> @sgg("mongoUrl")');
+  mongoose.connect(config.get("mongoUrl"), { useNewUrlParser: true });
+  await AccessRightModel.deleteMany();
+
+  for (let i = 0; i < accessRights.length; i++) {
+    const accessRightData = { rightId: accessRights[i].rightId, name: accessRights[i].name };
+    const accessRightsModel = new AccessRightModel(accessRightData);
+    const newAccessRight = await accessRightsModel.save();
+    console.log(`newAccessRight -> ${JSON.stringify(newAccessRight, null, 4)}`);
+  }
+}
+
+
 let CreateAccessRightIds = async () => {
   const mongoose = require("mongoose");
 
-  const accessRights = [
-    { name: "GLOBAL", groupId: "0" },
-    { name: "AGENT_CANCEL_ORPHANED_TASKS", groupId: "10" },
-    { name: "AGENT_CREATE", groupId: "20" },
-    { name: "AGENT_DELETE", groupId: "10" },
-    { name: "AGENT_DOWNLOAD_CREATE", groupId: "10" },
-    { name: "AGENT_DOWNLOAD_GET", groupId: "20" },
-    { name: "AGENT_LOG_CREATE", groupId: "20" },
-    { name: "AGENT_READ", groupId: "40" },
-    { name: "AGENT_STOP", groupId: "40" },
-    { name: "AGENT_STUB_DOWNLOAD_CREATE", groupId: "10" },
-    { name: "AGENT_UDPATE", groupId: "40" },
-    { name: "AGENT_UPDATE_HEARTBEAT", groupId: "20" },
-    { name: "ARTIFACT_CREATE", groupId: "40" },
-    { name: "ARTIFACT_DELETE", groupId: "40" },
-    { name: "ARTIFACT_READ", groupId: "40" },
-    { name: "ARTIFACT_UPDATE", groupId: "40" },
-    { name: "INVOICE_CREATE", groupId: "10" },
-    { name: "INVOICE_READ", groupId: "30" },
-    { name: "INVOICE_UPDATE", groupId: "10" },
-    { name: "JOB_ACTION", groupId: "40" },
-    { name: "JOB_CREATE_BY_IC", groupId: "40" },
-    { name: "JOB_CREATE", groupId: "40" },
-    { name: "JOB_DEF_CREATE", groupId: "40" },
-    { name: "JOB_DEF_DELETE", groupId: "40" },
-    { name: "JOB_DEF_READ", groupId: "40" },
-    { name: "JOB_DEF_UPDATE", groupId: "40" },
-    { name: "JOB_DELETE", groupId: "10" },
-    { name: "JOB_READ", groupId: "40" },
-    { name: "JOB_UPDATE", groupId: "40" },
-    { name: "PASSWORD_FORGOT", groupId: "40" },
-    { name: "PASSWORD_RESET", groupId: "40" },
-    { name: "PAY_INVOICE_AUTO", groupId: "10" },
-    { name: "PAY_INVOICE_MANUAL", groupId: "30" },
-    { name: "PAYMENT_TOKEN_CREATE", groupId: "30" },
-    { name: "PAYMENT_TRANSACTION_CREATE", groupId: "10" },
-    { name: "PAYMENT_TRANSACTION_READ", groupId: "30" },
-    { name: "PAYMENT_TRANSACTION_UPDATE", groupId: "10" },
-    { name: "SCHEDULE_CREATE", groupId: "40" },
-    { name: "SCHEDULE_DELETE", groupId: "40" },
-    { name: "SCHEDULE_READ", groupId: "40" },
-    { name: "SCHEDULE_UPDATE_BY_SCHEDULER", groupId: "10" },
-    { name: "SCHEDULE_UPDATE", groupId: "40" },
-    { name: "SCRIPT_CREATE", groupId: "40" },
-    { name: "SCRIPT_READ", groupId: "40" },
-    { name: "SCRIPT_SHADOW_CREATE", groupId: "40" },
-    { name: "SCRIPT_SHADOW_DELETE", groupId: "40" },
-    { name: "SCRIPT_SHADOW_READ", groupId: "40" },
-    { name: "SCRIPT_SHADOW_UPDATE", groupId: "40" },
-    { name: "SCRIPT_UPDATE", groupId: "40" },
-    { name: "STEP_CREATE", groupId: "10" },
-    { name: "STEP_DEF_CREATE", groupId: "40" },
-    { name: "STEP_DEF_DELETE", groupId: "40" },
-    { name: "STEP_DEF_READ", groupId: "40" },
-    { name: "STEP_DEF_UPDATE", groupId: "40" },
-    { name: "STEP_DELETE", groupId: "10" },
-    { name: "STEP_OUTCOME_CREATE", groupId: "20" },
-    { name: "STEP_OUTCOME_DELETE", groupId: "10" },
-    { name: "STEP_OUTCOME_READ", groupId: "40" },
-    { name: "STEP_OUTCOME_UPDATE", groupId: "20" },
-    { name: "STEP_READ", groupId: "40" },
-    { name: "STEP_UPDATE", groupId: "10" },
-    { name: "TASK_ACTION", groupId: "40" },
-    { name: "TASK_CREATE", groupId: "10" },
-    { name: "TASK_DEF_CREATE", groupId: "40" },
-    { name: "TASK_DEF_DELETE", groupId: "40" },
-    { name: "TASK_DEF_READ", groupId: "40" },
-    { name: "TASK_DEF_UPDATE", groupId: "40" },
-    { name: "TASK_DELETE", groupId: "10" },
-    { name: "TASK_OUTCOME_CREATE", groupId: "20" },
-    { name: "TASK_OUTCOME_DELETE", groupId: "10" },
-    { name: "TASK_OUTCOME_READ", groupId: "40" },
-    { name: "TASK_OUTCOME_UPDATE", groupId: "20" },
-    { name: "TASK_READ", groupId: "40" },
-    { name: "TASK_UPDATE", groupId: "10" },
-    { name: "TEAM_CREATE_UNASSIGNED", groupId: "10" },
-    { name: "TEAM_CREATE", groupId: "40" },
-    { name: "TEAM_INVITE", groupId: "30" },
-    { name: "TEAM_JOIN", groupId: "40" },
-    { name: "TEAM_READ", groupId: "10" },
-    { name: "TEAM_STORAGE_CREATE", groupId: "10" },
-    { name: "TEAM_STORAGE_READ", groupId: "10" },
-    { name: "TEAM_STORAGE_UPDATE", groupId: "10" },
-    { name: "TEAM_UPDATE", groupId: "10" },
-    { name: "TEAM_VAR_CREATE", groupId: "40" },
-    { name: "TEAM_VAR_DELETE", groupId: "40" },
-    { name: "TEAM_VAR_READ", groupId: "40" },
-    { name: "TEAM_VAR_UPDATE", groupId: "40" },
-    { name: "USER_READ", groupId: "30" },
-    { name: "USER_UPDATE", groupId: "40" },
-    { name: "ACCESSKEY_CREATE", groupId: "40" },
-    { name: "ACCESSKEY_DELETE", groupId: "40" },
-    { name: "ACCESSKEY_READ", groupId: "40" },
-    { name: "ACCESSKEY_UPDATE", groupId: "40" },
-  ];
+  const accessRights = [{'name': 'TEAM_READ_ALL'}, {'name': 'TEAM_CREATE_UNASSIGNED'}, {'name': 'TEAM_READ'}, {'name': 'TEAM_WRITE'}, {'name': 'AGENT_DOWNLOAD_CREATE'}, {'name': 'AGENT_DOWNLOAD'}, {'name': 'AGENT_STUB_DOWNLOAD'}, {'name': 'AGENT_READ'}, {'name': 'AGENT_CREATE'}, {'name': 'AGENT_UPDATE_TARGET_VERSION'}, {'name': 'AGENT_UPDATE_HEARTBEAT'}, {'name': 'AGENT_WRITE'}, {'name': 'AGENT_CANCEL_ORPHANED_TASKS'}, {'name': 'AGENT_DELETE'}, {'name': 'AGENT_LOG_WRITE'}, {'name': 'SCRIPT_READ'}, {'name': 'SCRIPT_WRITE'}, {'name': 'SCHEDULE_READ'}, {'name': 'SCHEDULE_WRITE'}, {'name': 'SCHEDULE_UPDATE_BY_SCHEDULER'}, {'name': 'JOB_READ'}, {'name': 'JOB_CREATE'}, {'name': 'JOB_WRITE'}, {'name': 'JOB_DELETE'}, {'name': 'TASK_OUTCOME_WRITE'}, {'name': 'STEP_OUTCOME_WRITE'}, {'name': 'JOB_DEF_READ'}, {'name': 'JOB_DEF_WRITE'}, {'name': 'USER_READ'}, {'name': 'USER_WRITE'}, {'name': 'PAYMENT_METHOD_READ'}, {'name': 'PAYMENT_METHOD_WRITE'}, {'name': 'PAYMENT_TRANSACTION_READ'}, {'name': 'PAYMENT_TRANSACTION_WRITE'}, {'name': 'PAY_INVOICE_AUTO'}, {'name': 'PAY_INVOICE_MANUAL'}, {'name': 'PAYMENT_TOKEN_CREATE'}, {'name': 'INVOICE_READ'}, {'name': 'INVOICE_WRITE'}, {'name': 'TEAM_INVITE'}, {'name': 'TEAM_JOIN'}, {'name': 'TASK_ACTION'}, {'name': 'JOB_ACTION'}, {'name': 'TEAM_VAR_READ'}, {'name': 'TEAM_VAR_WRITE'}, {'name': 'TEAM_STORAGE_READ'}, {'name': 'TEAM_STORAGE_WRITE'}, {'name': 'ARTIFACT_READ'}, {'name': 'ARTIFACT_WRITE'}, {'name': 'SCRIPT_SHADOW_READ'}, {'name': 'SCRIPT_SHADOW_WRITE'}, {'name': 'ACCESSKEY_READ'}, {'name': 'ACCESSKEY_WRITE'}, {'name': 'SETTINGS_READ'}, {'name': 'SETTINGS_WRITE'}, {'name': 'TEAM_GLOBAL'}, {'name': 'GLOBAL'}];
 
   console.log('mongoUrl -> @sgg("mongoUrl")');
   mongoose.connect(config.get("mongoUrl"), { useNewUrlParser: true });
@@ -1142,7 +1068,7 @@ let CreateAccessRightIds = async () => {
 
   let rightId = 1;
   for (let i = 0; i < accessRights.length; i++) {
-    const accessRightData = { rightId, name: accessRights[i].name, groupId: accessRights[i].groupId };
+    const accessRightData = { rightId, name: accessRights[i].name };
     const accessRightsModel = new AccessRightModel(accessRightData);
     const newAccessRight = await accessRightsModel.save();
     console.log(`newAccessRight -> ${JSON.stringify(newAccessRight, null, 4)}`);
@@ -1151,16 +1077,21 @@ let CreateAccessRightIds = async () => {
 }
 
 
-let GetAccessRightIdsForGroups = async (accessRightGroups) => {
+let GetAllAccessRights = async () => {
   let lstAccessRights: string[] = [];
 
-  const accessRights = await AccessRightModel.find({groupId: {$in: accessRightGroups}}).select('rightId');
+  console.log('mongoUrl -> @sgg("mongoUrl")');
+  mongoose.connect(config.get("mongoUrl"), { useNewUrlParser: true });
 
-  for (let i = 0; i < accessRights.length; i++) {
-    lstAccessRights.push(accessRights[i].rightId)
-  }
+  const accessRights = await AccessRightModel.find({}).select('name rightId');
 
-  return lstAccessRights;
+  console.log(JSON.stringify(accessRights));
+
+  // for (let i = 0; i < accessRights.length; i++) {
+  //   lstAccessRights.push(accessRights[i].rightId)
+  // }
+
+  // return lstAccessRights;
 }
 
 
@@ -1177,42 +1108,73 @@ let GetAccessRightIds = async (accessRightNames) => {
 }
 
 
-let UpdateUserTeamAccessRights = async (userId, teamIds, groupIds) => {
+let CreateProdAccessKeys = async () => {
+  const mongoose = require("mongoose");
+
+  console.log('mongoUrl -> @sgg("mongoUrl")');
+  mongoose.connect(config.get("mongoUrl"), { useNewUrlParser: true });
+  await AccessKeyModel.deleteMany({accessKeyType: Enums.AccessKeyType.AGENT});
+
+  let teams = await teamService.findAllTeamsInternal({}, 'ownerId');
+
+  for (let j = 0; j < teams.length; j++) {
+    let team = teams[j];
+    let newAccessKey = await accessKeyService.createAccessKey(team._id, null, {accessKeyType: Enums.AccessKeyType.AGENT, description: 'default agent access key', createdBy: new mongodb.ObjectId('team.ownerId')}, null, '');
+    console.log('newAccessKey -> ', JSON.stringify(newAccessKey));
+  }
+}
+
+
+let UpdateUserTeamAccessRights = async () => {
   const mongoose = require("mongoose");
 
   console.log('mongoUrl -> @sgg("mongoUrl")');
   mongoose.connect(config.get("mongoUrl"), { useNewUrlParser: true });
 
-  let teamAccessRightIds = {};
-  
-  let accessRightIds = await GetAccessRightIdsForGroups(groupIds);
-  // teamAccessRightIds['default'] = accessRightIds;
-  // teamAccessRightIds['5e99cbcb2317950015edb655'] = accessRightIds;
-  for (let i = 0; i < teamIds.length; i++)
-    teamAccessRightIds[teamIds[i]] = accessRightIds;
+  let teams = await teamService.findAllTeamsInternal({}, 'ownerId');
 
-  const user = await UserModel.updateOne({"_id" : new mongodb.ObjectId(userId)}, {teamAccessRightIds});
+  let users = await userService.findAllUsersInternal({}, 'teamIds');
 
-  console.log(`user -> ${JSON.stringify(user, null, 4)}`);
+  for (let i = 0; i < users.length; i++) {
+    let teamAccessRightIds = {};
+    let accessRightIds;
+    let user = users[i];
+    if (user.teamIds && user.teamIds.length > 0) {
+      for (let j = 0; j < user.teamIds.length; j++) {
+        let teamId = user.teamIds[j];
+        let ownedTeam = teams.filter(t => t._id.toHexString() == teamId && t.ownerId.toHexString() == user._id.toHexString());
+        if (ownedTeam.length > 0) {
+          accessRightIds = GetAccessRightIdsForTeamAdmin();
+        } else {
+          accessRightIds = GetAccessRightIdsForTeamUser();
+        }
+        teamAccessRightIds[teamId] = accessRightIds;
+      }
+
+      const userUpdated = await UserModel.updateOne({ "_id": new mongodb.ObjectId(user._id) }, { teamAccessRightIds });
+
+      console.log(`user -> ${JSON.stringify(userUpdated, null, 4)}`);
+    }
+  }
 }
 
 
-let UpdateScheduleUserAccessRights = async () => {
-  const mongoose = require("mongoose");
+// let UpdateScheduleUserAccessRights = async () => {
+//   const mongoose = require("mongoose");
 
-  console.log('mongoUrl -> @sgg("mongoUrl")');
-  mongoose.connect(config.get("mongoUrl"), { useNewUrlParser: true });
+//   console.log('mongoUrl -> @sgg("mongoUrl")');
+//   mongoose.connect(config.get("mongoUrl"), { useNewUrlParser: true });
 
-  let teamAccessRightIds = {};
+//   let teamAccessRightIds = {};
   
-  let accessRightIds = [40,21];
-  teamAccessRightIds['default'] = accessRightIds;
-  // teamAccessRightIds['5e99cbcb2317950015edb655'] = accessRightIds;
+//   let accessRightIds = [40,21];
+//   teamAccessRightIds['default'] = accessRightIds;
+//   // teamAccessRightIds['5e99cbcb2317950015edb655'] = accessRightIds;
 
-  const user = await UserModel.updateOne({"_id" : new mongodb.ObjectId('5ddea9c1f9ba5c1987c51e50')}, {teamAccessRightIds});
+//   const user = await UserModel.updateOne({"_id" : new mongodb.ObjectId('5ddea9c1f9ba5c1987c51e50')}, {teamAccessRightIds});
 
-  console.log(`user -> ${JSON.stringify(user, null, 4)}`);
-}
+//   console.log(`user -> ${JSON.stringify(user, null, 4)}`);
+// }
 
 
 let UploadFileToS3 = async (filePath: string) => {
@@ -1586,18 +1548,19 @@ let GenerateToken = async () => {
   console.log('mongoUrl -> @sgg("mongoUrl")');
   mongoose.connect(config.get("mongoUrl"), { useNewUrlParser: true });
 
-  let accessRightIds = await GetAccessRightIds(['AGENT_CREATE', 'AGENT_DOWNLOAD_GET', 'AGENT_LOG_CREATE', 'AGENT_READ', 'AGENT_UDPATE', 'AGENT_UPDATE_HEARTBEAT', 'JOB_CREATE', 'STEP_OUTCOME_CREATE', 'STEP_OUTCOME_UPDATE', 'TASK_OUTCOME_CREATE', 'TASK_OUTCOME_UPDATE']);
+  let accessRightIds = await GetAccessRightIds(['GLOBAL']);
+  // let accessRightIds = await GetAccessRightIds(['AGENT_CREATE', 'AGENT_DOWNLOAD_GET', 'AGENT_LOG_CREATE', 'AGENT_READ', 'AGENT_UDPATE', 'AGENT_UPDATE_HEARTBEAT', 'JOB_CREATE', 'STEP_OUTCOME_CREATE', 'STEP_OUTCOME_UPDATE', 'TASK_OUTCOME_CREATE', 'TASK_OUTCOME_UPDATE']);
   let bits = convertTeamAccessRightsToBitset(accessRightIds);
 
-  const body = {
-    "teamIds": [
-      "5de95c0453162e8891f5a830"
-    ],
-    "teamAccessRightIds": {
-      "5de95c0453162e8891f5a830": bits
-    },
-    "agentStubVersion": "v0.0.0.42"
-  }
+  // const body = {
+  //   "teamIds": [
+  //     "5de95c0453162e8891f5a830"
+  //   ],
+  //   "teamAccessRightIds": {
+  //     "5de95c0453162e8891f5a830": bits
+  //   },
+  //   "agentStubVersion": "v0.0.0.42"
+  // }
 
   // const body = {
   //   "teamIds": [
@@ -1606,12 +1569,12 @@ let GenerateToken = async () => {
   //   "agentStubVersion": "v0.0.0.37"
   // }
 
-  // const body = {
-  //   "id": "5de8810275ad92e5bb8de78a",
-  //   "email": "admin@saasglue.com",
-  //   "teamIds": [],
-  //   "teamAccessRightIds": {}
-  // }
+  const body = {
+    "id": "5de8810275ad92e5bb8de78a",
+    "email": "admin@saasglue.com",
+    "teamIds": [],
+    "teamAccessRightIds": {default: bits}
+  }
 
   // const body = {
   //   "id": "5de8810275ad92e5bb8de78a",
@@ -2164,10 +2127,13 @@ let SendTestBrowserAlert = async() => {
 // DeleteJobDefs({"name": /Cron.*/});
 // RabbitMQTeamSetup(process.argv[2]);
 // CreateAccessRightIds();
-UpdateUserTeamAccessRights(process.argv[2], process.argv[3].split(','), process.argv[4].split(','));
+// GetAllAccessRights();
+LoadAccessRightIdsToProd();
+// UpdateUserTeamAccessRights();
 // UpdateScheduleUserAccessRights();
 // CreateAccessKey();
 // printTeamAccessRightsBitSet();
+// CreateProdAccessKeys();
 
 
 // RabbitMQTeamSetup('5f57b2f14b5da00017df0d4f');

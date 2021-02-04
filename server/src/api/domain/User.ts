@@ -2,7 +2,6 @@ import { modelOptions, prop, arrayProp, getModelForClass } from '@typegoose/type
 import { FilterOperator } from '../utils/BulkGet';
 import Bitset from 'bitset';
 import * as mongodb from 'mongodb';
-import { UserRole } from '../../shared/Enums';
 
 
 // Example of a schema / domain in Mongoose

@@ -59,6 +59,7 @@ import { paymentMethodRouter } from './routes/PaymentMethodRouter';
 import { accessKeyRouter } from './routes/AccessKeyRouter';
 import { accessRightRouter } from './routes/AccessRightRouter';
 import { settingsRouter } from './routes/SettingsRouter';
+import { teamAdminAccessRouter } from './routes/TeamAdminAccessRouter';
 const IPCIDR = require('ip-cidr');
 import { read } from 'fs';
 import { AuthTokenType } from '../shared/Enums';
@@ -257,6 +258,7 @@ class AppBuilder {
     this.app.use(`${apiURLBase}/accesskey`, accessKeyRouter);
     this.app.use(`${apiURLBase}/accessright`, accessRightRouter);
     this.app.use(`${apiURLBase}/settings`, settingsRouter);
+    this.app.use(`${apiURLBase}/teamadminaccess`, teamAdminAccessRouter);
   }
 
   private setUpJwtSecurity(): void {

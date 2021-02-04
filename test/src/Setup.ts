@@ -107,7 +107,7 @@ export default class TestSetup {
 
 
     async StopScheduler() {
-        return new Promise((resolve, reject) => {
+        return new Promise<void>((resolve, reject) => {
             exec("kill $(ps aux | grep JobScheduler | grep -v grep | awk '{print $2}')", (err, stdout, stderr) => {
                 if (err) {
                     console.log('StopScheduler -> err -> ', err);
@@ -271,14 +271,20 @@ export default class TestSetup {
                 env: 'unittest',
                 logDest: logDest,
                 logLevel: LogLevel.DEBUG,
-                accessKeyId: config.get("agentAccessKeyId"),
-                accessKeySecret: config.get("agentAccessKeySecret"),
                 apiUrl: apiBaseUrl,
                 apiPort: apiPort,
                 agentLogsAPIVersion: apiVersion,
                 maxActiveTasks: 20,
                 trackSysInfo: false,
                 runStandAlone: true
+            }
+
+            if (agent._teamId == config.get('sgAdminTeam')) {
+                params.accessKeyId = config.get("adminTeamAgentAccessKeyId");
+                params.accessKeySecret = config.get("adminTeamAgentAccessKeySecret");
+            } else {
+                params.accessKeyId = config.get("agentAccessKeyId");
+                params.accessKeySecret = config.get("agentAccessKeySecret");
             }
 
             if ('inactivePeriodWaitTime' in agent)
@@ -492,7 +498,7 @@ export default class TestSetup {
             }
         });
 
-        return response.headers['set-cookie'];
+        return response.data.config1;
     }
 
 

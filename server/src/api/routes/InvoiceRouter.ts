@@ -12,8 +12,8 @@ export class InvoiceRouter {
     this.router.get('/', verifyAccessRights(['INVOICE_READ', 'GLOBAL']), invoiceController.getManyInvoices);
     this.router.get('/:invoiceId', verifyAccessRights(['INVOICE_READ', 'GLOBAL']), invoiceController.getInvoice);
     this.router.get('/pdf/:invoiceId', verifyAccessRights(['INVOICE_READ', 'GLOBAL']), invoiceController.getInvoicePDF);
-    this.router.post('/', verifyAccessRights(['INVOICE_CREATE', 'GLOBAL']), invoiceController.createInvoice);
-    this.router.put('/:invoiceId', verifyAccessRights(['INVOICE_UPDATE', 'GLOBAL']), invoiceController.updateInvoice);
+    this.router.post('/', verifyAccessRights(['INVOICE_WRITE', 'GLOBAL']), invoiceController.createInvoice);
+    this.router.put('/:invoiceId', verifyAccessRights(['INVOICE_WRITE', 'GLOBAL']), invoiceController.updateInvoice);
   }
 }
 

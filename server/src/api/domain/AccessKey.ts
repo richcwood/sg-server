@@ -14,7 +14,7 @@ export class AccessKeySchema {
   id?: mongodb.ObjectId;
   
   @prop({ required: true })
-  _teamId: mongodb.ObjectId;
+  _teamId: string;
 
   @prop({ required: true })
   createdBy: mongodb.ObjectId;
@@ -69,10 +69,10 @@ export class AccessKeySchema {
     },
 
     fromDB: {
-      // accessKeySecret: (data) => {
-      //   return undefined; // remove the version field - api users won't see it
-      // }
-    }
+      accessKeySecret: (data) => {
+        return undefined; // remove the version field - api users won't see it
+      }
+    } 
   }
 };
 

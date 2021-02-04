@@ -9,7 +9,7 @@ export class ForgotPasswordRouter {
   constructor() {
     this.router = Router();
 
-    this.router.post('/', verifyAccessRights(['PASSWORD_FORGOT', 'GLOBAL']), forgotPasswordController.requestReset);
+    this.router.post('/', forgotPasswordController.requestReset);
   }
 }
 

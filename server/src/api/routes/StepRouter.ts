@@ -9,11 +9,11 @@ export class StepRouter {
   constructor() {
     this.router = Router();
 
-    this.router.get('/', verifyAccessRights(['STEP_READ', 'GLOBAL']),  stepController.getManySteps);
-    this.router.get('/:stepId', verifyAccessRights(['STEP_READ', 'GLOBAL']), stepController.getStep);
-    this.router.post('/', verifyAccessRights(['STEP_CREATE', 'GLOBAL']), stepController.createStep);
-    this.router.put('/:stepId', verifyAccessRights(['STEP_UPDATE', 'GLOBAL']), stepController.updateStep);
-    this.router.delete('/', verifyAccessRights(['STEP_DELETE', 'GLOBAL']), stepController.deleteStep);
+    this.router.get('/', verifyAccessRights(['JOB_DEF_READ', 'GLOBAL']),  stepController.getManySteps);
+    this.router.get('/:stepId', verifyAccessRights(['JOB_DEF_READ', 'GLOBAL']), stepController.getStep);
+    this.router.post('/', verifyAccessRights(['JOB_DEF_WRITE', 'GLOBAL']), stepController.createStep);
+    this.router.put('/:stepId', verifyAccessRights(['JOB_DEF_WRITE', 'GLOBAL']), stepController.updateStep);
+    this.router.delete('/', verifyAccessRights(['JOB_DEF_WRITE', 'GLOBAL']), stepController.deleteStep);
   }
 }
 

@@ -11,10 +11,10 @@ export class ScheduleRouter {
 
     this.router.get('/', verifyAccessRights(['SCHEDULE_READ', 'GLOBAL']), scheduleController.getManySchedules);
     this.router.get('/:scheduleId', verifyAccessRights(['SCHEDULE_READ', 'GLOBAL']), scheduleController.getSchedule);
-    this.router.post('/', verifyAccessRights(['SCHEDULE_CREATE', 'GLOBAL']), scheduleController.createSchedule);
-    this.router.put('/:scheduleId', verifyAccessRights(['SCHEDULE_UPDATE', 'GLOBAL']), scheduleController.updateSchedule);
+    this.router.post('/', verifyAccessRights(['SCHEDULE_WRITE', 'GLOBAL']), scheduleController.createSchedule);
+    this.router.put('/:scheduleId', verifyAccessRights(['SCHEDULE_WRITE', 'GLOBAL']), scheduleController.updateSchedule);
     this.router.put('/fromscheduler/:scheduleId', verifyAccessRights(['SCHEDULE_UPDATE_BY_SCHEDULER']), scheduleController.updateFromScheduler);
-    this.router.delete('/:scheduleId', verifyAccessRights(['SCHEDULE_DELETE', 'GLOBAL']), scheduleController.deleteSchedule);
+    this.router.delete('/:scheduleId', verifyAccessRights(['SCHEDULE_WRITE', 'GLOBAL']), scheduleController.deleteSchedule);
   }
 }
 

@@ -6,6 +6,10 @@ import { SGUtils } from '../../shared/SGUtils';
 import { MissingObjectError, ValidationError } from '../utils/Errors';
 import * as moment from 'moment';
 import * as _ from 'lodash';
+import { BaseLogger } from '../../shared/SGLogger';
+import { rabbitMQPublisher, PayloadOperation } from '../utils/RabbitMQPublisher';
+import { GetAccessRightIdsForTeamUser } from '../../api/utils/Shared';
+
 
 
 export class UserService {
@@ -87,7 +91,7 @@ export class UserService {
   // }
 
 
-  public async updateUser(id: mongodb.ObjectId, data: any, responseFields?: string): Promise<object> {
+  public async updateUserInternal(id: mongodb.ObjectId, data: any, logger: BaseLogger, responseFields?: string): Promise<object> {
     const filter = { _id: id };
 
     let updatedUser: any;
@@ -99,21 +103,20 @@ export class UserService {
     if (!user.hasAcceptedTerms)
       throw new ValidationError('User has not accepted terms');
 
-    if (data.password) {
-      const salt = await bcrypt.genSalt(10);
-      const passwordHash = await bcrypt.hash(data.password, salt);
+    // if (data.password) {
+    //   const salt = await bcrypt.genSalt(10);
+    //   const passwordHash = await bcrypt.hash(data.password, salt);
 
-      updatedUser = await UserModel.findOneAndUpdate(filter, { passwordHash: passwordHash }, { new: true }).select(responseFields);
-    }
+    //   updatedUser = await UserModel.findOneAndUpdate(filter, { passwordHash: passwordHash }, { new: true }).select(responseFields);
+    // }
 
-    /// TODO: if team removed, make sure there is an team owner
     if (data.teamIds) {
       updatedUser = await UserModel.findOneAndUpdate(filter, { teamIds: data.teamIds }, { new: true }).select(responseFields);
     }
 
-    // if (data.teamIdsInvited) {
-    //   updatedUser = await UserModel.findOneAndUpdate(filter, { teamIdsInvited: data.teamIdsInvited }, { new: true }).select(responseFields);
-    // }
+    if (data.teamIdsInvited) {
+      updatedUser = await UserModel.findOneAndUpdate(filter, { teamIdsInvited: data.teamIdsInvited }, { new: true }).select(responseFields);
+    }
 
     if (data.teamAccessRightIds) {
       updatedUser = await UserModel.findOneAndUpdate(filter, { teamAccessRightIds: data.teamAccessRightIds }, { new: true }).select(responseFields);
@@ -130,6 +133,54 @@ export class UserService {
     else {
       return updatedUser; // fully populated model
     }
+  }
+
+
+  /// TODO: if team removed, make sure there is a team owner
+  public async leaveTeam(id: mongodb.ObjectId, removedById: mongodb.ObjectId, _teamId: string, logger: BaseLogger, correlationId?: string): Promise<object> {
+    const filter = { _id: id };
+
+    const userModel: any = await userService.findUser(id);
+    if (!userModel)
+      throw new MissingObjectError('User not found');
+
+    if (!_teamId)
+      throw new ValidationError('Missing header _teamId');
+
+    if (!userModel.teamIds)
+      return userModel;
+
+    /// Check if the user is in the team
+    if (userModel.teamIds.indexOf(_teamId) < 0) {
+      logger.LogError('User is not a member of the team', { Class: 'UserService', Method: 'leaveTeam', TeamId: _teamId, id: id.toHexString() });
+      throw new ValidationError('User is not a member of the team');
+    }
+
+    let newTeamIds = [];
+    let newTeamIdsInactive = [];
+    for (let i = 0; i < userModel.teamIds.length; i++) {
+      if (userModel.teamIds[i] != _teamId)
+        newTeamIds.push(userModel.teamIds[i]);
+      else
+        newTeamIdsInactive.push(userModel.teamIds[i]);
+    }
+
+    let newTeamAccessRightIds: {[_teamId: string] : number[]} = {};
+    for (let i = 0; i < Object.keys(userModel.teamAccessRightIds).length; i++) {
+      const key = Object.keys(userModel.teamAccessRightIds)[i];
+      if (key != _teamId) {
+        newTeamAccessRightIds[key] = userModel.teamAccessRightIds[key];
+      }
+    }
+
+    const updatedUser = await UserModel.findOneAndUpdate(filter, { teamIds: newTeamIds, teamIdsInactive: newTeamIdsInactive, teamAccessRightIds: newTeamAccessRightIds }, { new: true }).select('_id teamIds teamIdsInactive');
+
+    logger.LogWarning('User removed from team', { Class: 'UserService', Method: 'leaveTeam', TeamId: _teamId, id: id.toHexString(), RemovedBy: removedById.toHexString() });
+
+    const deltas = { _id: id, teamIds: updatedUser.teamIds, teamIdsInactive: updatedUser.teamIdsInactive };
+    await rabbitMQPublisher.publish(_teamId, "User", correlationId, PayloadOperation.UPDATE, convertData(UserSchema, deltas));
+
+    return updatedUser;
   }
 
 
@@ -179,6 +230,16 @@ export class UserService {
       }
     }
     userModel.teamIdsInvited = newTeamIdsInvited;
+
+    let newTeamAccessRightIds: {[_teamId: string] : number[]} = {};
+    newTeamAccessRightIds[_teamId] = GetAccessRightIdsForTeamUser();
+    for (let i = 0; i < Object.keys(userModel.teamAccessRightIds).length; i++) {
+      const key = Object.keys(userModel.teamAccessRightIds)[i];
+      if (key != _teamId) {
+        newTeamAccessRightIds[key] = userModel.teamAccessRightIds[key];
+      }
+    }
+    userModel.teamAccessRightIds = newTeamAccessRightIds;
 
     await userModel.save();
 

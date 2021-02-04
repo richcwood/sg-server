@@ -13,8 +13,10 @@ export function handleErrors(err: Error, req: Request, res: Response, next: Next
     }
     const transactionId: string = req['transactionId'];
 
-    if (logger)
-        logger.LogError(err.message, {Error: err, Headers: req.headers, Body: req.body, Params: req.params});
+    if (logger) {
+        if (err.message != "The access token expired")
+            logger.LogError(err.message, { Error: err, Headers: req.headers, Body: req.body, Params: req.params });
+    }
     //console.log(buildErrorMessage(err.name, err.message, transactionId, undefined), transactionId);
     //logger.debug(buildErrorMessage(err.name, err.message, transactionId, undefined), transactionId);
 

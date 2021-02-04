@@ -9,11 +9,11 @@ export class TaskRouter {
   constructor() {
     this.router = Router();
 
-    this.router.get('/', verifyAccessRights(['TASK_READ', 'GLOBAL']),  taskController.getManyTasks);
-    this.router.get('/:taskId', verifyAccessRights(['TASK_READ', 'GLOBAL']), taskController.getTask);
-    this.router.post('/', verifyAccessRights(['TASK_CREATE', 'GLOBAL']), taskController.createTask);
-    this.router.put('/:taskId', verifyAccessRights(['TASK_UPDATE', 'GLOBAL']), taskController.updateTask);
-    this.router.delete('/', verifyAccessRights(['TASK_DELETE', 'GLOBAL']), taskController.deleteTask);
+    this.router.get('/', verifyAccessRights(['JOB_READ', 'GLOBAL']),  taskController.getManyTasks);
+    this.router.get('/:taskId', verifyAccessRights(['JOB_READ', 'GLOBAL']), taskController.getTask);
+    this.router.post('/', verifyAccessRights(['JOB_WRITE', 'GLOBAL']), taskController.createTask);
+    this.router.put('/:taskId', verifyAccessRights(['JOB_WRITE', 'GLOBAL']), taskController.updateTask);
+    this.router.delete('/', verifyAccessRights(['JOB_DELETE', 'GLOBAL']), taskController.deleteTask);
   }
 }
 

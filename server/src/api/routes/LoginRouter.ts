@@ -135,7 +135,7 @@ export default class LoginRouter {
         config3: loginResult._teamId
       };
 
-      await accessKeyService.updateAccessKey(new mongodb.ObjectId(loginResult._teamId), new mongodb.ObjectId(loginResult._id), { lastUsed: new Date() });
+      await accessKeyService.updateAccessKey(loginResult._teamId, new mongodb.ObjectId(loginResult._id), { lastUsed: new Date() });
 
       // res.cookie('Auth', token, { secure: false, expires: new Date(jwtExpiration) });
       res.send(loginData);
@@ -211,7 +211,7 @@ export default class LoginRouter {
         config3: loginResult._teamId
       };
   
-      await accessKeyService.updateAccessKey(new mongodb.ObjectId(loginResult._teamId), new mongodb.ObjectId(loginResult._id), {lastUsed: new Date()});
+      await accessKeyService.updateAccessKey(loginResult._teamId, new mongodb.ObjectId(loginResult._id), {lastUsed: new Date()});
   
       res.send(loginData);
     } catch (err) {

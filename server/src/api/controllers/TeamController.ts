@@ -94,9 +94,9 @@ export class TeamController {
         user.teamIds = [];
       user.teamIds.push(newTeam._id.toHexString());
 
-      user.teamAccessRightIds[newTeam._id.toHexString()] = await GetAccessRightIdsForTeamAdmin();
+      user.teamAccessRightIds[newTeam._id.toHexString()] = GetAccessRightIdsForTeamAdmin();
 
-      const userUpdated: UserSchema = <UserSchema>await userService.updateUser(userId, { "teamIds": user.teamIds, "teamAccessRightIds": user.teamAccessRightIds });
+      const userUpdated: UserSchema = <UserSchema>await userService.updateUserInternal(userId, { "teamIds": user.teamIds, "teamAccessRightIds": user.teamAccessRightIds }, logger);
   
       const jwtExpiration = Date.now() + (1000 * 60 * 60 * 24); // 1 day
       const secret = config.get('secret');
