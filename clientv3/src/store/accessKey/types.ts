@@ -16,3 +16,21 @@ export interface AccessKey extends Model {
 
   accessKeySecret?: string; // only available for a brief time
 }
+
+// This is a convenience just for the front end
+export enum AccessKeyStatus { ACTIVE = 'Active', INACTIVE = 'Inactive', EXPIRED = 'Expired' };
+
+export const calculateAccessKeyStatus = (accessKey: AccessKey): AccessKeyStatus => {
+  const now = Date.now();
+  if(now < accessKey.expiration){
+    return AccessKeyStatus.EXPIRED;
+  }
+  else {
+    if(now < accessKey.revokeTime){
+      return AccessKeyStatus.INACTIVE;
+    }
+    else {
+      return AccessKeyStatus.ACTIVE;
+    }
+  }
+};

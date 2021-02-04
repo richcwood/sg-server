@@ -65,7 +65,8 @@ export enum StoreType {
   PaymentTransactionStore = 'paymentTransactionStore',
   UserStore = 'userStore',
   PaymentMethodStore = 'paymentMethodStore',
-  AccessKeyStore = 'accessKeyStore'
+  AccessKeyStore = 'accessKeyStore',
+  AccessRightStore = 'accessRightStore'
 }
 
 export enum ModelBaseUrlType {
@@ -88,5 +89,6 @@ export enum ModelBaseUrlType {
   paymentTransaction = 'paymenttransaction',
   user = 'user',
   paymentMethod = 'paymentMethod',
-  accessKey = 'accessKey'
+  accessKey = 'accessKey',
+  accessRight = 'accessRight'
 }

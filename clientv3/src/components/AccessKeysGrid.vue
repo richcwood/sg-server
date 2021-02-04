@@ -1,52 +1,275 @@
  <template>
-  <table class="table">
-    <tr class="tr">
-      <td class="td">
-        Access Key ID
-      </td>
-      <td class="td">
-        Description
-      </td>
-      <td class="td">
-        Created By
-      </td>
-      <td class="td">
-        Expires
-      </td>
-      <td class="td">
-        Last Used
-      </td>
-      <td class="td">
-        Status
-      </td>
-      <td class="td">
-        x
-      </td>
-    </tr>
-    <tr class="tr">
-      <td colspan="7">
-        <button class="button">Create Access Key</button>
-      </td>
-    </tr>
-  </table>
+  <div>
+    <!-- Modals -->
+    <modal name="create-user-access-key-modal" :classes="'round-popup'" :width="600" :height="820">
+      <table class="table" width="100%">
+        <tr class="tr">
+          <td class="td"></td>
+          <td class="td">
+            <strong>Create a User API Access Key</strong>
+          </td>
+        </tr>
+        <tr class="tr">
+          <td class="td">
+            Description
+          </td>
+          <td class="td">
+           <input class="input" type="text" v-model="newAccessKey.description"/>
+          </td>
+        </tr>
+        <tr class="tr">
+          <td class="td">
+            Access Rights
+          </td>
+          <td class="td">
+            <a @click="selectAllRights">Select All</a>
+            <a style="margin-left: 20px;" @click="unselectAllRights">Select None</a>
+            
+            <div style="margin-top: 12px; width: 100%; height: 400px; overflow: scroll;">
+              <div v-for="accessRight of accessRights" :key="accessRight.id">
+                <label class="checkbox">
+                  <input type="checkbox" v-model="accessRightSelections[accessRight.rightId]">
+                  <span style="margin-left: 12px;">{{accessRight.name}}</span>
+                </label>
+              </div>
+            </div>
+          </td>
+        </tr>
+        <tr class="tr">
+          <td class="td">
+            Expiration
+          </td>
+          <td class="td">
+            <datepicker input-class="input" v-model="newAccessKey.expiration" name="filterDate"></datepicker>
+          </td>
+        </tr>
+        <tr class="tr">
+          <td class="td"></td>
+          <td class="td">
+            <button class="button" @click="onCancelCreateUserAccessKey">Cancel</button>
+            <button class="button button-spaced is-primary" @click="onCreateCreateUserAccessKey">Create Access Key</button>
+          </td>
+        </tr>
+      </table>
+    </modal>
+
+
+
+
+
+    <table class="table">
+      <tr class="tr">
+        <td class="td">
+          <strong>Access Key ID</strong>
+        </td>
+        <td class="td">
+          <strong>Description</strong>
+        </td>
+        <td class="td">
+          <strong>Created By</strong>
+        </td>
+        <td class="td">
+          <strong>Expires</strong>
+        </td>
+        <td class="td">
+          <strong>Last Used</strong>
+        </td>
+        <td class="td">
+          <strong>Status</strong>
+        </td>
+        <td class="td">
+          
+        </td>
+      </tr>
+
+      <tr v-if="accessKeys.length === 0" class="tr">
+        <td colspan="7" class="td">
+          No access keys yet. 
+        </td>
+      </tr>
+
+      <tr v-for="accessKey of accessKeys" :key="accessKey.id" class="tr">
+        <td class="td">
+          {{accessKey.accessKeyId}}
+        </td>
+        <td class="td">
+          {{accessKey.description}}
+        </td>
+        <td class="td">
+          {{getUser(accessKey.createdBy).name}}
+        </td>
+        <td class="td">
+          {{momentToStringV1(accessKey.expiration)}}
+        </td>
+        <td class="td">
+        {{momentToStringV1(accessKey.lastUsed)}}
+        </td>
+        <td class="td">
+          <span :class="calculatedAccessKeyStatusClass(accessKey)">
+            {{calculateAccessKeyStatus(accessKey)}}
+          </span>
+          <a class="button-spaced" v-if="calculateAccessKeyStatus(accessKey) === AccessKeyStatus.ACTIVE" @click="onMakeInactiveClicked">make inactive</a>
+          <a class="button-spaced" v-if="calculateAccessKeyStatus(accessKey) === AccessKeyStatus.INACTIVE" @click="onMakeActiveClicked">make active</a>
+        </td>
+        <td class="td">
+          <a  v-if="calculateAccessKeyStatus(accessKey) !== AccessKeyStatus.EXPIRED" @click="onMakeExpireClicked">expire</a>
+        </td>
+      </tr>
+      
+      <tr class="tr">
+        <td colspan="7">
+          <button class="button" @click="openCreateAccessKeyModal">Create Access Key</button>
+        </td>
+      </tr>
+    </table>
+  </div>
 </template>
 
 <script lang="ts">
-import { Component, Vue } from 'vue-property-decorator';
-import { BindSelected, BindSelectedCopy } from '../decorator';
+import { Component, Vue, Prop } from 'vue-property-decorator';
+import { BindSelected, BindSelectedCopy, BindStoreModel } from '../decorator';
 import { StoreType } from '../store/types';
-import { Team } from '../store/team/types';
+import { AccessKey, AccessKeyType, AccessKeyStatus, calculateAccessKeyStatus } from '../store/accessKey/types';
+import { AccessRight } from '../store/accessRight/types';
+import { User } from '../store/user/types';
 import { SgAlert, AlertPlacement, AlertCategory } from '../store/alert/types';
 import { ValidationProvider, ValidationObserver } from 'vee-validate';
 import { showErrors } from '../utils/ErrorHandler';
+import { momentToStringV1 } from '../utils/DateTime';
+import Datepicker from 'vuejs-datepicker';
 import axios from 'axios';
 
 @Component({
-  components: { ValidationProvider, ValidationObserver }
+  components: { ValidationProvider, ValidationObserver, Datepicker }
 })
 export default class AccessKeysGrid extends Vue { 
   
+  // expose to template
+  private readonly momentToStringV1 = momentToStringV1;
+  private readonly calculateAccessKeyStatus = calculateAccessKeyStatus;
+  private readonly AccessKeyStatus = AccessKeyStatus;
+
+  @Prop()
+  private accessKeyType: AccessKeyType;
+
+  @Prop()
+  private accessKeys: AccessKey[];
+
+  @BindStoreModel({storeType: StoreType.AccessRightStore, selectedModelName: 'models'})
+  private accessRights!: AccessRight[];
   
+  // for reactivity in a template
+  private loadedUsers = {};
+  private getUser(userId: string): User {
+    try {
+      if(!this.loadedUsers[userId]){
+        Vue.set(this.loadedUsers, userId, {name: userId});
+
+        (async () => {
+          this.loadedUsers[userId] = await this.$store.dispatch(`${StoreType.UserStore}/fetchModel`, userId);
+        })();
+      }
+
+      return this.loadedUsers[userId];
+    }
+    catch(err){
+      console.log('Error in loading a user.  Maybe it was deleted?', userId);
+      return {
+        name: 'Error',
+        email: 'Error'
+      }
+    }
+  }
+
+  private calculatedAccessKeyStatusClass(accessKey: AccessKey): string {
+    if(calculateAccessKeyStatus(accessKey) === AccessKeyStatus.ACTIVE){
+      return 'has-text-success';
+    }
+    else {
+      return 'has-text-danger';
+    }
+  }
+
+  private onMakeInactiveClicked(){
+
+  }
+
+  private onMakeActiveClicked(){
+
+  }
+
+  private onMakeExpireClicked(){
+
+  }
+
+  private async openCreateAccessKeyModal(){
+    if(this.accessKeyType === AccessKeyType.USER){
+      this.newAccessKey = {
+        _teamId: '',
+        description: '',
+        accessRightIds: []
+      };
+
+      // Initially just select all rights
+      if(Object.keys(this.accessRightSelections).length === 0){
+        this.selectAllRights();
+      }
+
+      this.$modal.show('create-user-access-key-modal');
+    }
+    else {
+
+    }
+    const res = await axios.get('api/v0/accessright');
+    console.log(res.data.data);
+    (<any>window).a = res.data.data;
+  }
+
+  private newAccessKey: AccessKey = {
+    _teamId: '',
+    description: '',
+    accessRightIds: []
+  }
+
+  // key from accessRightId to boolean for checked state
+  private accessRightSelections: {[key: string]: boolean} = {};
+
+  private selectAllRights(){
+    const newSelections = {};
+    for(let right of this.accessRights){
+      newSelections[right.rightId] = true;
+    }
+
+    this.accessRightSelections = newSelections;
+  }
+
+  private unselectAllRights(){
+    this.accessRightSelections = {};
+  }
+
+  private onCancelCreateUserAccessKey(){
+    if(this.accessKeyType === AccessKeyType.USER){
+      this.$modal.hide('create-user-access-key-modal');
+    }
+    else {
+
+    }
+  }
+
+  private async onCreateCreateUserAccessKey(){
+    try {
+
+
+      this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert('Created new access key', AlertPlacement.FOOTER, AlertCategory.INFO));
+    }
+    catch(err) {
+      console.error(err);
+      showErrors('Error creating access key.', err);
+    }
+    finally {
+      this.$modal.hide('create-user-access-key-modal');
+    }
+  }
 }
 </script>
 
@@ -59,6 +282,10 @@ export default class AccessKeysGrid extends Vue {
 
   td {
     border-width: 0 !important;
+  }
+
+  .button-spaced {
+    margin-left: 12px;
   }
 
 </style>

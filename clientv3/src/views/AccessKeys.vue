@@ -8,10 +8,10 @@
 
     <tabs>
       <tab title="Agent Access Keys">
-        <access-keys-grid/>
+        <access-keys-grid :accessKeys="agentAccessKeys" :accessKeyType="AccessKeyType.AGENT"/>
       </tab>
       <tab title="User Access Keys">
-        <access-keys-grid/>
+        <access-keys-grid :accessKeys="userAccessKeys" :accessKeyType="AccessKeyType.USER"/>
       </tab>
     </tabs>
 
@@ -21,9 +21,9 @@
 <script lang="ts">
 import { Component, Vue } from 'vue-property-decorator';
 import { Tabs, Tab } from 'vue-slim-tabs';
-import { BindSelected, BindSelectedCopy } from '../decorator';
+import { BindSelected, BindSelectedCopy, BindStoreModel } from '../decorator';
 import { StoreType } from '../store/types';
-import { Team } from '../store/team/types';
+import { AccessKey, AccessKeyType } from '../store/accessKey/types';
 import { SgAlert, AlertPlacement, AlertCategory } from '../store/alert/types';
 import { ValidationProvider, ValidationObserver } from 'vee-validate';
 import { showErrors } from '../utils/ErrorHandler';
@@ -35,46 +35,25 @@ import axios from 'axios';
 })
 export default class AccessKeys extends Vue { 
 
+  // Expose to template
+  private readonly AccessKeyType = AccessKeyType;
+
   private mounted(){
     this.$store.dispatch(`${StoreType.AccessKeyStore}/fetchModelsByFilter`);
+    this.$store.dispatch(`${StoreType.AccessRightStore}/fetchModelsByFilter`);
   }
   
-  @BindSelected({storeType: StoreType.TeamStore})
-  private selectedTeam!: Team;
-  
-  @BindSelectedCopy({storeType: StoreType.TeamStore})
-  private selectedTeamCopy!: Team;
+  @BindStoreModel({storeType: StoreType.AccessKeyStore, selectedModelName: 'models'})
+  private accessKeys!: AccessKey[];
 
-  private get hasTeamChanged(){
-    return this.$store.state[StoreType.TeamStore].storeUtils.hasSelectedCopyChanged();
-  } 
-
-  private beforeDestroy(){
-    // If there are any unsaved changes, just undo them to the copy
-    if(this.hasTeamChanged){
-      this.onCancelClicked();
-    }
-  } 
-
-  private onCancelClicked(){
-    // Just reselect the original job def
-    this.$store.dispatch(`${StoreType.TeamStore}/select`, this.selectedTeam);
+  private get agentAccessKeys(){
+    return this.accessKeys.filter((accessKey: AccessKey) => accessKey.accessKeyType === AccessKeyType.AGENT);
   }
 
-  private async onSaveClicked(){
-    try {
-      if( ! await (<any>this.$refs.alertsValidationObserver).validate()){
-        return;
-      }
-
-      await this.$store.dispatch(`${StoreType.TeamStore}/save`);
-      this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Saved the team alerts`, AlertPlacement.FOOTER));
-    }
-    catch(err){
-      console.error(err);
-      showErrors(`Error saving the team alerts`, err);
-    }
+  private get userAccessKeys(){
+    return this.accessKeys.filter((accessKey: AccessKey) => accessKey.accessKeyType === AccessKeyType.USER);
   }
+
 }
 </script>
 
