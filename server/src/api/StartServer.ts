@@ -3,8 +3,8 @@ MetricsLogger.init();
 
 import express = require('express');
 import { NextFunction, Request, Response } from 'express';
-// const enforce = require('express-sslify');
-// const cors = require('cors');
+const enforce = require('express-sslify');
+const cors = require('cors');
 import path = require('path');
 import util = require('util');
 const bodyParser = require('body-parser');
@@ -107,23 +107,23 @@ class AppBuilder {
   private setUpMiddleware() {
     app.disable('etag');
 
-    // if (environment != 'debug') {
-    //   this.app.use(enforce.HTTPS({ trustProtoHeader: true }));
+    if (environment != 'debug') {
+      this.app.use(enforce.HTTPS({ trustProtoHeader: true }));
 
-    //   let origin = 'http://console.saasglue.com';
-    //   if (environment == 'stage')
-    //     origin = 'http://saasglue-stage.herokuapp.com';
+      let origin = 'http://console.saasglue.com';
+      if (environment == 'stage')
+        origin = 'http://saasglue-stage.herokuapp.com';
 
-    //   let corsOptions: any = {
-    //     origin: origin,
-    //     methods: 'GET, PUT, POST, DELETE, OPTIONS',
-    //     allowedHeaders: 'origin, x-requested-with, accept, content-type, x-csrf-token, correlationid, cookie, auth, host, referer, user-agent, _teamid',
-    //     exposedHeaders: 'origin, x-requested-with, accept, content-type, x-csrf-token, correlationid, cookie, auth, referer, user-agent, _teamid',
-    //     maxAge: 3628800,
-    //     credentials: true
-    //   };
-    //   app.use(cors(corsOptions));
-    // }
+      let corsOptions: any = {
+        origin: origin,
+        methods: 'GET, PUT, POST, DELETE, OPTIONS',
+        allowedHeaders: 'origin, x-requested-with, accept, content-type, x-csrf-token, correlationid, cookie, auth, host, referer, user-agent, _teamid',
+        exposedHeaders: 'origin, x-requested-with, accept, content-type, x-csrf-token, correlationid, cookie, auth, referer, user-agent, _teamid',
+        maxAge: 3628800,
+        credentials: true
+      };
+      app.use(cors(corsOptions));
+    }
 
 
     if(config.get('httpLogs.enabled')){
