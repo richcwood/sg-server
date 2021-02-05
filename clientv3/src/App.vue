@@ -55,7 +55,7 @@
 
         <div class="dropdown is-right" :class="{'is-active': showUserMenu}" v-click-outside="onClickedOutsideUserMenu">
           <div class="dropdown-trigger">
-            <a class="main-nav-link" :class="{'active-link': isLinkActive(['inviteTeammates', 'invitationsForMe', 'invoices', 'settings'])}"  @click.prevent="onClickedUserMenu">{{userName}} </a>
+            <a class="main-nav-link" :class="{'active-link': isLinkActive(['inviteTeammates', 'invitationsForMe', 'invoices', 'settings', 'accessKeys'])}"  @click.prevent="onClickedUserMenu">{{userName}} </a>
           </div>
           <div class="dropdown-menu" id="dropdown-menu" role="menu">
             <div class="dropdown-content" role="menu">
@@ -70,6 +70,9 @@
                 Invoices and Payments
               </a>
               <hr class="dropdown-divider">
+              <a class="dropdown-item" @click.prevent="onClickedAccessKeys">
+                Access Keys
+              </a>
               <a class="dropdown-item" @click.prevent="onClickedSettings">
                 Settings
               </a>
@@ -209,6 +212,14 @@ export default class App extends Vue {
 
   private onClickedOutsideTeamsMenu(){
     this.showTeamsMenu = false;
+  }
+
+  private onClickedAccessKeys(){
+    this.showUserMenu = false;
+
+    if(this.$router.currentRoute.name !== 'accessKeys'){
+      this.$router.push({name: 'accessKeys'});
+    }
   }
 
   private onClickedSettings(){
