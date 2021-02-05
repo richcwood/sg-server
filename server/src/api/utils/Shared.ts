@@ -270,7 +270,7 @@ let GetAccessRightIdsForSGAdmin = () => {
 
 
 let GetAccessRightIdsForSGAgent = () => {
-    return [6, 8, 9, 11, 15, 22, 25, 26, 48];
+    return [6, 8, 9, 11, 12, 15, 22, 25, 26, 48];
 }
 
 
