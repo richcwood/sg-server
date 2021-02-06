@@ -7,72 +7,179 @@
           <h1 class="title">
             Get started by downloading an agent
           </h1>
+          <br>
           <h2 class="subtitle" style="margin-left: 10px;">
-            To run scripts from saas glue first download and run the appropriate agent. <br>
-            You'll need to run the agent on every machine where you want to run scripts. <br>
-            You can monitor your running agents in the Agents tab. <br>
+            To run scripts from saas glue first download and run the appropriate agent. <br><br>
+            The agent will securely connect to saas glue once you create an <router-link to="/accessKeys">access key</router-link>. <br><br>
+            You'll need to run the agent on every machine where you want to run scripts. <br><br>
+            You can monitor your running agents in the <router-link to="/agentMonitor">agents monitor</router-link>. <br>
           </h2>
 
           <table class="table downloads">
-            <tr class="tr" v-for="platform in ExposedPlatforms" v-bind:key="platform">
-              <td class="td padded">
-                <select class="select" v-model="selectedArchitecture[platform]">
-                  <option class="option" v-for="architecture in ExposedArchitectures" v-bind:key="architecture" :value="architecture" >{{architecture}}</option>
-                </select>
-              </td>
+            <tr class="tr">
               <td clas="td padded">
-                <a class="link" @click.prevent="downloadAgent(platform)">{{Platform_inverted[platform]}}</a>
+                <a class="link" @click.prevent="downloadAgent('win')">Windows x64</a>
               </td>
-              <template v-if="isCreatingAgent(platform)">
+              <template v-if="isCreatingAgent('win')">
                 <td class="td animation" width="120px;" >
                   <div class="dots left-dot">{{waitAnimationLeft}}</div>
                 </td>
                 <td class="td animation">
-                  creating an agent
+                  creating an agent for Windows x64
                 </td>
                 <td class="td animation" width="120px;">
                   <span class="dots">{{waitAnimationRight}}</span>
                 </td>
               </template>
-              <template v-if="getDownload(platform).linkText">
+              <template v-if="getDownload('win').linkText">
                 <td class="td" colspan="3">
-                  <a @click="onClickedDownloadAgentLink(platform)">{{getDownload(platform).linkText}}</a>
+                  <a @click="onClickedDownloadAgentLink('win')">{{getDownload('win').linkText}}</a>
+                </td>
+              </template>
+            </tr>
+            <tr class="tr">
+              <td clas="td padded">
+                <a class="link" @click.prevent="downloadAgent('linux')">Linux</a>
+              </td>
+              <template v-if="isCreatingAgent('linux')">
+                <td class="td animation" width="120px;" >
+                  <div class="dots left-dot">{{waitAnimationLeft}}</div>
+                </td>
+                <td class="td animation">
+                  creating an agent for Linux
+                </td>
+                <td class="td animation" width="120px;">
+                  <span class="dots">{{waitAnimationRight}}</span>
+                </td>
+              </template>
+              <template v-if="getDownload('linux').linkText">
+                <td class="td" colspan="3">
+                  <a @click="onClickedDownloadAgentLink('linux')">{{getDownload('linux').linkText}}</a>
+                </td>
+              </template>
+            </tr>
+            <tr class="tr">
+              <td clas="td padded">
+                <a class="link" @click.prevent="downloadAgent('macos')">Mac</a>
+              </td>
+              <template v-if="isCreatingAgent('macos')">
+                <td class="td animation" width="120px;" >
+                  <div class="dots left-dot">{{waitAnimationLeft}}</div>
+                </td>
+                <td class="td animation">
+                  creating an agent for Mac
+                </td>
+                <td class="td animation" width="120px;">
+                  <span class="dots">{{waitAnimationRight}}</span>
+                </td>
+              </template>
+              <template v-if="getDownload('macos').linkText">
+                <td class="td" colspan="3">
+                  <a @click="onClickedDownloadAgentLink('macos')">{{getDownload('macos').linkText}}</a>
                 </td>
               </template>
             </tr>
           </table>
 
-          <table class="table">
-            <tr class="tr">
-              <td class="td" v-show="lastDownloadGenerated === Platform.Mac">
-                <b>{{Platform_inverted[Platform.Mac]}} instructions:</b> <br>
-                <ul>
-                  <li>Download the agent</li>
-                  <li>Unzip it - just double click it</li>
-                  <li>terminal: chmod 711 sg-agent-launcher</li>
-                  <li>terminal: sudo ./sg-agent-launcher</li>
-                </ul>
-              </td>
-              <td class="td" v-show="lastDownloadGenerated === Platform.Windows">
-                <b>{{Platform_inverted[Platform.Windows]}} instructions:</b> <br>
-                <ul>
-                  <li>Download the agent</li>
-                  <li>Unzip it</li>
-                  <li>Run sg-agent-launcher.exe by double clicking or run it from the command prompt</li>
-                  <li>To ensure the agent is always running it's recommended to install it as a Windows Service. There are many ways to do this but NSSM provides a relatively simple solution available at https://www.nssm.cc/download.</li>
-                </ul>
-              </td>
-              <td class="td" v-show="lastDownloadGenerated === Platform.Linux">
-                <b>{{Platform_inverted[Platform.Linux]}} instructions:</b> <br>
-                <ul>
-                  <li>Download the agent</li>
-                  <li>terminal: gunzip sg-agent-launcher.gz</li>
-                  <li>terminal: chmod 711 sg-agent-launcher</li>
-                  <li>terminal: sudo ./sg-agent-launcher</li>
-                </ul>
-              </td>
-            </tr>
-          </table>
+          <tabs>
+            <tab title="Windows Instructions">
+              <br><br>
+
+              <div style="font-weight: 700; font-size: 1.25rem;">
+                Get an agent access key
+              </div>
+              To run the agent you’ll need an agent access key. Click <router-link to="/accessKeys">here</router-link> if you don’t already have one. You can install the agent access key by:
+              <br><br>          
+              <ul>
+                <li>
+                  Setting environment variables SG_ACCESS_KEY_ID and SG_ACCESS_KEY_SECRET to the agent access key id and secret respectively.
+                </li>
+                or
+                <li>
+                  Setting values for SG_ACCESS_KEY_ID and SG_ACCESS_KEY_SECRET in the sg.cfg file, for example:
+                  {
+                      "ACCESS_KEY_ID": "********",
+                      "ACCESS_KEY_SECRET": "********"
+                  }
+                </li>
+              </ul>
+              <br>
+              <div style="font-weight: 700; font-size: 1.25rem;">
+                Download and run the agent
+              </div>
+              <ul>
+                <li>Download the agent using the link above</li>
+                <li>Unzip it</li>
+                <li>Run sg-agent-launcher.exe by double clicking or run it from the command prompt</li>
+                <li>To ensure the agent is always running it's recommended to install it as a Windows Service. There are many ways to do this but NSSM provides a relatively simple solution available at <a href="https://www.nssm.cc/download">https://www.nssm.cc/download</a>.</li>
+              </ul>
+            </tab>
+
+            <tab title="Linux Instructions">
+              <br><br>
+
+              <div style="font-weight: 700; font-size: 1.25rem;">
+                Get an agent access key
+              </div>
+              To run the agent you’ll need an agent access key. Click <router-link to="/accessKeys">here</router-link> if you don’t already have one. You can install the agent access key by:
+              <br><br>          
+              <ul>
+                <li>
+                  Setting environment variables SG_ACCESS_KEY_ID and SG_ACCESS_KEY_SECRET to the agent access key id and secret respectively.
+                </li>
+                or
+                <li>
+                  Setting values for SG_ACCESS_KEY_ID and SG_ACCESS_KEY_SECRET in the sg.cfg file, for example:
+                  {
+                      "ACCESS_KEY_ID": "********",
+                      "ACCESS_KEY_SECRET": "********"
+                  }
+                </li>
+              </ul>
+              <br>
+              <div style="font-weight: 700; font-size: 1.25rem;">
+                Download and run the agent
+              </div>
+              <ul>
+                <li>Download the agent using the link above</li>
+                <li>terminal: gunzip sg-agent-launcher.gz</li>
+                <li>terminal: chmod 711 sg-agent-launcher</li>
+                <li>terminal: sudo ./sg-agent-launcher</li>
+              </ul>
+            </tab>
+            <tab title="Mac Instructions">
+              <br><br>
+
+              <div style="font-weight: 700; font-size: 1.25rem;">
+                Get an agent access key
+              </div>
+              To run the agent you’ll need an agent access key. Click <router-link to="/accessKeys">here</router-link> if you don’t already have one. You can install the agent access key by:
+              <br><br>          
+              <ul>
+                <li>
+                  Setting environment variables SG_ACCESS_KEY_ID and SG_ACCESS_KEY_SECRET to the agent access key id and secret respectively.
+                </li>
+                or
+                <li>
+                  Setting values for SG_ACCESS_KEY_ID and SG_ACCESS_KEY_SECRET in the sg.cfg file, for example:
+                  {
+                      "ACCESS_KEY_ID": "********",
+                      "ACCESS_KEY_SECRET": "********"
+                  }
+                </li>
+              </ul>
+              <br>
+              <div style="font-weight: 700; font-size: 1.25rem;">
+                Download and run the agent
+              </div>
+              <ul>
+                <li>Download the agent using the link above</li>
+                <li>Unzip it - just double click it</li>
+                <li>terminal: chmod 711 sg-agent-launcher</li>
+                <li>terminal: sudo ./sg-agent-launcher</li>
+              </ul>
+            </tab>
+          </tabs>
         </div>
       </div>
     </section>
@@ -214,10 +321,25 @@ export default class DownloadAgent extends Vue {
 
       this.downloadLinks[platform].expireLinkTimer = expireLinkTimer;
       this.downloadLinks[platform].link = downloadUrl;
-      this.downloadLinks[platform].linkText = 'download the agent';
+      this.downloadLinks[platform].linkText = `download the ${this.Platform_inverted[platform]} agent`;
       this.lastDownloadGenerated = platform;
 
       this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`The download link is valid for 5 minutes.`, AlertPlacement.FOOTER, AlertCategory.INFO));
+    
+      // silly vue-slim-tabs has no easy way to programatically click a tab
+      try {
+        if(platform === Platform.Windows){
+          (<any>document.getElementsByClassName('vue-tab')[0]).click();
+        }
+        else if( platform === Platform.Linux){
+          (<any>document.getElementsByClassName('vue-tab')[1]).click();
+        }
+        else {
+          (<any>document.getElementsByClassName('vue-tab')[2]).click();
+        }
+      }
+      catch(err){ console.log('selecting slim tab failed.', err) } // who care if this fails
+      
     }
     catch(err){
       this.creatingAgentForPlatform = null;
@@ -282,5 +404,15 @@ export default class DownloadAgent extends Vue {
       -o-transform:rotateY(180deg);
       -ms-transform:rotateY(180deg);
     }
+  }
+
+  li {
+    margin-left: 8px;
+    margin-top: 7px;
+    margin-bottom: 7px;
+  }
+
+  li:first-letter {
+    font-weight: 700;
   }
 </style>
