@@ -32,11 +32,18 @@
               <div style="margin-top: 12px; width: 100%; height: 400px; overflow: scroll;">
                 <div v-for="accessRight of accessRights" :key="accessRight.id">
                   <label class="checkbox">
-                    <input type="checkbox" v-model="accessRightSelections[accessRight.rightId]">
+                    <input type="checkbox" v-model="accessRightSelections[accessRight.rightId]" :disabled="userAccessRightsBitset && !userAccessRightsBitset.get(accessRight.rightId)">
                     <span style="margin-left: 12px;">{{accessRight.name}}</span>
                   </label>
                 </div>
               </div>
+            </td>
+          </tr>
+          <tr class="tr">
+            <td class="td">
+            </td>
+            <td class="td">
+              (Rights are disabled if you don't have access yourself)
             </td>
           </tr>
           <tr class="tr">
@@ -58,6 +65,52 @@
       </validation-observer>
     </modal>
 
+    <modal name="create-agent-access-key-modal" :classes="'round-popup'" :width="600" :height="600">
+      <validation-observer ref="createAgentAccessKeyValidationObserver">
+        <table class="table" width="100%">
+          <tr class="tr">
+            <td class="td"></td>
+            <td class="td">
+              <strong>Create an Agent API Access Key</strong>
+            </td>
+          </tr>
+          <tr class="tr">
+            <td class="td">
+              Description
+            </td>
+            <td class="td">
+              <validation-provider name="Key Description" rules="required|object-name" v-slot="{ errors }">
+                <input class="input" type="text" v-model="newAccessKey.description"/>
+                <div v-if="errors && errors.length > 0" class="message validation-error is-danger">{{ errors[0] }}</div>
+              </validation-provider>
+            </td>
+          </tr>
+          <tr class="tr">
+            <td class="td"></td>
+            <td class="td">
+              <button class="button" @click="onCancelCreateAgentAccessKey">Cancel</button>
+              <button class="button button-spaced is-primary" @click="onCreateCreateAgentAccessKey">Create Access Key</button>
+            </td>
+          </tr>
+        </table>
+      </validation-observer>
+    </modal>
+
+    <modal name="create-access-key-success-modal" :classes="'round-popup'" :clickToClose="false" :width="700" :height="600">
+      <div style="width: 100%; background-color: white; padding: 40px;">
+        <div class="notification is-primary">
+          <span style="font-size: 24px; font-weight: 700;">
+            Secret: {{newAccessKeySecret}}
+          </span>
+        </div>
+        <div class="notification is-danger" style="font-size: 20px; font-weight: 700;">
+          ATTENTION!
+          <br>
+          This is your only chance to copy this secret.  Please copy it somewhere safely before closing this dialog.
+        </div>
+        <button class="button is-danger" @click="closeAccessKeySuccessModal">I Have Copied The Secret</button>
+      </div>
+    </modal>
 
 
 
@@ -101,7 +154,7 @@
           {{getUser(accessKey.createdBy).name}}
         </td>
         <td class="td">
-          {{momentToStringV1(accessKey.expiration)}}
+          {{momentToStringV3(accessKey.expiration)}}
         </td>
         <td class="td">
         {{momentToStringV1(accessKey.lastUsed)}}
@@ -130,13 +183,15 @@ import { BindSelected, BindSelectedCopy, BindStoreModel } from '../decorator';
 import { StoreType } from '../store/types';
 import { AccessKey, AccessKeyType, AccessKeyStatus, calculateAccessKeyStatus } from '../store/accessKey/types';
 import { AccessRight } from '../store/accessRight/types';
+import { getLoggedInUserRightsBitset } from '../store/security';
 import { User } from '../store/user/types';
 import { SgAlert, AlertPlacement, AlertCategory } from '../store/alert/types';
 import { ValidationProvider, ValidationObserver } from 'vee-validate';
 import { showErrors } from '../utils/ErrorHandler';
-import { momentToStringV1 } from '../utils/DateTime';
+import { momentToStringV1, momentToStringV3 } from '../utils/DateTime';
 import Datepicker from 'vuejs-datepicker';
 import axios from 'axios';
+import BitSet from 'bitset';
 
 @Component({
   components: { ValidationProvider, ValidationObserver, Datepicker }
@@ -145,8 +200,19 @@ export default class AccessKeysGrid extends Vue {
   
   // expose to template
   private readonly momentToStringV1 = momentToStringV1;
+  private readonly momentToStringV3 = momentToStringV3;
   private readonly calculateAccessKeyStatus = calculateAccessKeyStatus;
   private readonly AccessKeyStatus = AccessKeyStatus;
+  private userAccessRightsBitset: BitSet | null = null;
+
+  private mounted(){
+    try {
+      this.userAccessRightsBitset = getLoggedInUserRightsBitset();
+    }
+    catch(err){
+      showErrors('Unable to load logged in users access rights', err);
+    }
+  }
 
   @Prop()
   private accessKeyType: AccessKeyType;
@@ -242,6 +308,7 @@ export default class AccessKeysGrid extends Vue {
       this.newAccessKey = {
         _teamId: '',
         description: '',
+        accessKeyType: AccessKeyType.USER,
         accessRightIds: []
       };
 
@@ -253,11 +320,14 @@ export default class AccessKeysGrid extends Vue {
       this.$modal.show('create-user-access-key-modal');
     }
     else {
+      this.newAccessKey = {
+        _teamId: '',
+        description: '',
+        accessKeyType: AccessKeyType.AGENT
+      }
 
+      this.$modal.show('create-agent-access-key-modal');
     }
-    const res = await axios.get('api/v0/accessright');
-    console.log(res.data.data);
-    (<any>window).a = res.data.data;
   }
 
   private newAccessKey: AccessKey = {
@@ -266,13 +336,21 @@ export default class AccessKeysGrid extends Vue {
     accessRightIds: []
   }
 
+  private newAccessKeySecret: string|null = null;
+  private newAccessKeyId: string|null = null;
+
   // key from accessRightId to boolean for checked state
   private accessRightSelections: {[key: string]: boolean} = {};
 
   private selectAllRights(){
     const newSelections = {};
     for(let right of this.accessRights){
-      newSelections[right.rightId] = true;
+      if(this.userAccessRightsBitset.get(right.rightId)){
+        newSelections[right.rightId] = true;
+      }
+      else {
+        newSelections[right.rightId] = false;
+      }
     }
 
     this.accessRightSelections = newSelections;
@@ -283,12 +361,7 @@ export default class AccessKeysGrid extends Vue {
   }
 
   private onCancelCreateUserAccessKey(){
-    if(this.accessKeyType === AccessKeyType.USER){
-      this.$modal.hide('create-user-access-key-modal');
-    }
-    else {
-
-    }
+    this.$modal.hide('create-user-access-key-modal');
   }
 
   private async onCreateCreateUserAccessKey(){
@@ -299,7 +372,7 @@ export default class AccessKeysGrid extends Vue {
     try {
       const newAccessKey: any = {
         description: this.newAccessKey.description,
-        accessKeyType: AccessKeyType.USER,
+        accessKeyType: AccessKeyType.USER
       };
 
       if(this.newAccessKey.expiration){
@@ -313,9 +386,13 @@ export default class AccessKeysGrid extends Vue {
         return accum;
       }, []);
 
-      this.$store.dispatch(`${StoreType.AccessKeyStore}/save`, newAccessKey);
+      const newAccessKeyResult = await this.$store.dispatch(`${StoreType.AccessKeyStore}/save`, newAccessKey);
 
-      this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert('Created new access key', AlertPlacement.FOOTER, AlertCategory.INFO));
+      this.newAccessKeySecret = newAccessKeyResult.accessKeySecret;
+      this.$modal.show('create-access-key-success-modal');
+
+      this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert('Created new user access key', AlertPlacement.FOOTER, AlertCategory.INFO));
+      this.newAccessKeyId = newAccessKeyResult.id;
     }
     catch(err) {
       console.error(err);
@@ -323,6 +400,47 @@ export default class AccessKeysGrid extends Vue {
     }
     finally {
       this.$modal.hide('create-user-access-key-modal');
+    }
+  }
+
+  private onCancelCreateAgentAccessKey(){
+    this.$modal.hide('create-agent-access-key-modal');
+  }
+
+  private async onCreateCreateAgentAccessKey(){
+    if( ! await (<any>this.$refs.createAgentAccessKeyValidationObserver).validate()){
+      return;
+    }
+
+    try {
+      const newAccessKey: any = {
+        description: this.newAccessKey.description,
+        accessKeyType: AccessKeyType.AGENT
+      };
+
+      const newAccessKeyResult = await this.$store.dispatch(`${StoreType.AccessKeyStore}/save`, newAccessKey);
+
+      this.newAccessKeySecret = newAccessKeyResult.accessKeySecret;
+      this.$modal.show('create-access-key-success-modal');
+
+      this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert('Created new agent access key', AlertPlacement.FOOTER, AlertCategory.INFO));
+      this.newAccessKeyId = newAccessKeyResult.id;
+    }
+    catch(err) {
+      console.error(err);
+      showErrors('Error creating access key.', err);
+    }
+    finally {
+      this.$modal.hide('create-agent-access-key-modal');
+    }
+  }
+
+  private closeAccessKeySuccessModal(){
+    this.$modal.hide('create-access-key-success-modal');
+    this.newAccessKeySecret = null;
+
+    if(this.newAccessKeyId){
+      this.$store.commit(`${StoreType.AccessKeyStore}/update`, {id: this.newAccessKeyId, accessKeySecret: null});
     }
   }
 }

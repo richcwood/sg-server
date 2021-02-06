@@ -107,7 +107,7 @@ class AppBuilder {
   private setUpMiddleware() {
     app.disable('etag');
 
-    if (environment != 'debug') {
+    if (environment != 'debug' && environment !== 'bartdev') {
       this.app.use(enforce.HTTPS({ trustProtoHeader: true }));
 
       let origin = 'http://console.saasglue.com';
