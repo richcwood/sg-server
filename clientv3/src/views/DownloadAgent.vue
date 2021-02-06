@@ -9,9 +9,8 @@
           </h1>
           <br>
           <h2 class="subtitle" style="margin-left: 10px;">
-            To run scripts from saas glue first download and run the appropriate agent. <br><br>
-            The agent will securely connect to saas glue once you create an <router-link to="/accessKeys">access key</router-link>. <br><br>
-            You'll need to run the agent on every machine where you want to run scripts. <br><br>
+            Download and install agents to use saas glue <br><br>
+            The agent will securely connect to saas glue and run whatever scripts you'd like. <br><br>
             You can monitor your running agents in the <router-link to="/agentMonitor">agents monitor</router-link>. <br>
           </h2>
 
