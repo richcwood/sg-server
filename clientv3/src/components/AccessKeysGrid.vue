@@ -170,7 +170,7 @@
       
       <tr class="tr">
         <td colspan="7">
-          <button class="button" @click="openCreateAccessKeyModal">Create Access Key</button>
+          <button class="button" @click="openCreateAccessKeyModal">Create {{accessKeyType === AccessKeyType.AGENT ? 'Agent' : 'User'}} Access Key</button>
         </td>
       </tr>
     </table>
@@ -203,6 +203,7 @@ export default class AccessKeysGrid extends Vue {
   private readonly momentToStringV3 = momentToStringV3;
   private readonly calculateAccessKeyStatus = calculateAccessKeyStatus;
   private readonly AccessKeyStatus = AccessKeyStatus;
+  private readonly AccessKeyType = AccessKeyType;
   private userAccessRightsBitset: BitSet | null = null;
 
   private mounted(){
