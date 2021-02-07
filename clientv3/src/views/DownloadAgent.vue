@@ -79,6 +79,7 @@
               </template>
             </tr>
           </table>
+          <br><br>
 
           <tabs>
             <tab title="Windows Instructions">
