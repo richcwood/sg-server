@@ -49,12 +49,21 @@ export class AccessKeyController {
     public async createAccessKey(req: Request, resp: Response, next: NextFunction): Promise<void> {
         const response: ResponseWrapper = resp['body'];
         try {
+            let responseFields: string = (<string>req.query.responseFields);
+            if (!responseFields)
+                responseFields = '';
+            else
+                responseFields = responseFields.trim();
+            if (responseFields != '' && responseFields.indexOf('accessKeySecret') < 0)
+                responseFields += ' accessKeySecret';
+
             req.body.createdBy = new mongodb.ObjectId(<string>req.headers.userid);
             const _teamId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._teamid);
             const teamAccessRightIds: string[] = <string[]>req.headers.teamAccessRightIds;
-            const newAccessKey: AccessKeySchema = <AccessKeySchema>await accessKeyService.createAccessKey(_teamId, teamAccessRightIds, convertRequestData(AccessKeySchema, req.body), req.header('correlationId'), (<string>req.query.responseFields));
+            const newAccessKey: AccessKeySchema = <AccessKeySchema>await accessKeyService.createAccessKey(_teamId, teamAccessRightIds, convertRequestData(AccessKeySchema, req.body), req.header('correlationId'), responseFields);
             response.data = convertResponseData(AccessKeySchema, newAccessKey);
-            response.data.accessKeySecret = newAccessKey.accessKeySecret;
+            for (let i = 0; i < response.data.length; i++)
+                response.data[i].accessKeySecret = newAccessKey[i].accessKeySecret;
             response.statusCode = ResponseCode.CREATED;
             next();
         }
