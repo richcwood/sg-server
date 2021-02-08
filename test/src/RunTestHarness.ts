@@ -2128,8 +2128,8 @@ let SendTestBrowserAlert = async() => {
 // RabbitMQTeamSetup(process.argv[2]);
 // CreateAccessRightIds();
 // GetAllAccessRights();
-LoadAccessRightIdsToProd();
-// UpdateUserTeamAccessRights();
+// LoadAccessRightIdsToProd();
+UpdateUserTeamAccessRights();
 // UpdateScheduleUserAccessRights();
 // CreateAccessKey();
 // printTeamAccessRightsBitSet();

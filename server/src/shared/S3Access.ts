@@ -41,7 +41,7 @@ export class S3Access {
 
 
   async deleteFileFromS3(s3Path: string, bucket: string) {
-    return new Promise((resolve, reject) => {
+    return new Promise<void>((resolve, reject) => {
       if (!this.objectExists(s3Path, bucket)) {
         resolve();
         return;

@@ -255,7 +255,7 @@ let CheckWaitingForLambdaRunnerTasks = async (_agentId: mongodb.ObjectId, logger
 
 
 let GetAccessRightIdsForTeamUser = () => {
-    return [3, 7, 8, 12, 16, 17, 18, 19, 21, 22, 27, 28, 30, 41, 42, 43, 44, 45, 48, 49, 50, 51, 52, 53];
+    return [3, 7, 8, 12, 16, 17, 18, 19, 21, 22, 27, 28, 29, 30, 41, 42, 43, 44, 45, 48, 49, 50, 51, 52, 53];
 }
 
 
