@@ -1,158 +1,5 @@
 <template>
   <div class="main" style="margin-left: 12px; margin-right: 12px;">
-    <!-- modals -->
-    <modal name="pick-agents-modal" :classes="'round-popup'" :width="700" :height="700">
-      <div style="background-color: white;">
-        <validation-observer ref="runScriptValidationObserver">
-          <tabs ref="runSettingsTabs" style="margin-top: 15px;">
-           
-            <tab title="Run on Agent(s)">
-              <table class="table" width="100%" style="margin-top: 20px;">
-                <tr class="tr">
-                  <td class="td">
-                    <label class="label" style="width: 150px;">Target Agent(s)</label>
-                  </td>
-                  <td class="td">
-                    <select class="input" style="width: 350px;" v-model="runAgentTarget">
-                      <option v-for="(targetIndex, targetName) in TargetAgentChoices" :key="`target-choice-${targetIndex}`" :value="targetIndex">
-                        {{targetName}}
-                      </option>
-                    </select>
-                  </td>
-                </tr>  
-                <tr class="tr" v-if="runAgentTarget === TaskDefTarget.SINGLE_SPECIFIC_AGENT">
-                  <td class="td">
-                    <label class="label" style="width: 150px;">Target Agent</label>
-                  </td>
-                  <td class="td">
-                    <agent-search :width="'350px'" :agentId="runAgentTargetAgentId"  @agentPicked="onTargetAgentPicked" ></agent-search>
-                  </td>
-                </tr>
-                <tr class="tr" v-if="runAgentTarget === TaskDefTarget.ALL_AGENTS_WITH_TAGS || runAgentTarget === TaskDefTarget.SINGLE_AGENT_WITH_TAGS">
-                  <td class="td">
-                    <label class="label" style="width: 150px;">Target Agent Tags</label>
-                  </td>
-                  <td class="td">
-                    <validation-provider name="Target Tags" rules="variable-map" v-slot="{ errors }">
-                      <input type="text" style="width: 350px;" class="input" v-model="runAgentTargetTags_string"/> 
-                      <div v-if="errors && errors.length > 0" class="message validation-error is-danger">{{ errors[0] }}</div>
-                    </validation-provider>
-                  </td>
-                </tr>
-              </table>
-            </tab>
-
-            <tab title="Run on SGC (saas glue compute)">
-              <table class="table" width="100%" style="margin-top: 20px;">
-                <tr class="tr">
-                  <td class="td">
-                    <label class="label" style="width: 150px;">Lambda Runtime</label>
-                  </td>
-                  <td class="td">
-                    <div class="select">
-                      <validation-provider name="Lambda Runtime" rules="required" v-slot="{ errors }">
-                        <select v-model="lambdaConfig.lambdaRuntime" style="width: 350px;">
-                          <option v-for="runtime in LambaRuntimes" :key="runtime" :value="runtime">
-                            {{runtime}}
-                          </option>
-                        </select>
-                        <div v-if="errors && errors.length > 0" class="message validation-error is-danger">{{ errors[0] }}</div>
-                      </validation-provider>
-                    </div>
-                  </td>
-                </tr>
-                <tr class="tr">
-                  <td class="td">
-                    <label class="label" style="width: 150px;">Lambda Memory Size</label>
-                  </td>
-                  <td class="td">
-                    <div class="select" >
-                      <select v-model="lambdaConfig.lambdaMemorySize" style="width: 350px;">
-                        <option v-for="memSize in LambdaMemorySizes" :key="memSize" :value="memSize">
-                          {{memSize}} mb
-                        </option>
-                      </select>
-                    </div>
-                  </td>
-                </tr>
-                <tr class="tr">
-                  <td class="td">
-                    <label class="label" style="width: 150px;">Lambda Timeout (seconds)</label>
-                  </td>
-                  <td class="td">
-                    <validation-provider name="Lambda Timeout" rules="required|lambdaTimeout" v-slot="{ errors }">
-                      <input class="input" style="width: 350px;" v-model="lambdaConfig.lambdaTimeout">
-                      <div v-if="errors && errors.length > 0" class="message validation-error is-danger">{{ errors[0] }}</div>
-                    </validation-provider>
-                  </td>
-                </tr>
-                <tr class="tr">
-                  <td class="td">
-                    <label class="label" style="width: 150px;">Lambda Dependencies</label>
-                  </td>
-                  <td class="td">
-                    <input class="input" style="width: 350px;" v-model="lambdaConfig.lambdaDependencies" placeholder="compression;axios">
-                  </td>
-                </tr>
-              </table>
-            </tab>
-          </tabs>
-
-
-          <table class="table" width="100%" style="margin-top: 20px;">
-            <tr class="tr">
-              <td class="td">
-                <label class="label" style="width: 150px;">Command</label>
-              </td>
-              <td class="td">
-                <input class="input" style="width: 350px;" type="text" v-model="runScriptCommand"/>
-              </td>
-            </tr>
-            <tr class="tr">
-              <td class="td">
-                <label class="label" style="width: 150px;">Arguments</label>
-              </td>
-              <td class="td">
-                <input class="input" style="width: 350px;" type="text" v-model="runScriptArguments"/>
-              </td>
-            </tr>
-            <tr class="tr">
-              <td class="td">
-                <label class="label" style="width: 150px;">Env Variables</label>
-              </td>
-              <td class="td">
-                <validation-provider name="Env Vars" rules="variable-map" v-slot="{ errors }">
-                  <input class="input" style="width: 350px;" type="text" v-model="runScriptEnvVars"/>
-                  <div v-if="errors && errors.length > 0" class="message validation-error is-danger">{{ errors[0] }}</div>
-                </validation-provider>
-              </td>
-            </tr>
-            <tr class="tr">
-              <td class="td">
-                <label class="label" style="width: 150px;">Runtime Variables</label>
-              </td>
-              <td class="td">
-                <validation-provider name="Runtime Vars" rules="variable-map" v-slot="{ errors }">
-                  <input class="input" style="width: 350px;" type="text" v-model="runScriptRuntimeVars"/>
-                  <div v-if="errors && errors.length > 0" class="message validation-error is-danger">{{ errors[0] }}</div>
-                </validation-provider>
-              </td>
-            </tr>
-            <tr class="tr">
-              <td class="td"></td>
-              <td class="td">
-                <button class="button is-primary" @click="onRunScript">Run Script</button>
-                <button class="button button-spaced" @click="onCancelRunScript">Cancel</button>
-              </td>
-            </tr>
-          </table>
-
-        </validation-observer>
-      </div>
-    </modal>
-
-
-
 
     <table class="table" style="width: 100%;">
       <tr class="tr">
@@ -169,16 +16,12 @@
         <td class="td">
           <div v-if="script">{{getUser(script._originalAuthorUserId).name}}</div>
         </td>
-      </tr>
-      <tr class="tr">
         <td class="td">
           <label class="label">Last Edited By</label>
         </td>
         <td class="td">
           <div v-if="script">{{getUser(script._lastEditedUserId).name}} on {{momentToStringV1(script.lastEditedDate)}}</div>
         </td>
-      </tr>
-      <tr class="tr">
         <td class="td">
           <label class="label">Team Members Can Edit</label>
         </td>
@@ -192,13 +35,160 @@
       </tr>
     </table>
 
-    <script-editor :script="scriptCopy"></script-editor>
+    <div v-if="!expandScriptEditor"> 
+      <a @click="expandScriptEditor=true" style="margin-left: 10px; margin-bottom: 18px;"> >> Expand script editor</a> 
+    </div>
+    <script-editor v-else :script="scriptCopy"></script-editor>
 
     <table class="table" style="width: 100%;">
-      <tr class="tr">
+      <tr v-if="expandScriptEditor" class="tr">
         <td class="td">
-          <button class="button is-primary" @click="onRunScriptClicked" :disabled="!scriptCopy">Run Script</button>
-          <button class="button button-spaced" @click="onScheduleScriptClicked" :disabled="!scriptCopy">Schedule Script</button>
+          <div style="background-color: white;">
+            <validation-observer ref="runScriptValidationObserver">
+              <tabs ref="runSettingsTabs" style="margin-top: 15px;">
+              
+                <tab title="Run on Agent(s)">
+                  <table class="table" width="100%" style="margin-top: 20px;">
+                    <tr class="tr">
+                      <td class="td">
+                        <label class="label" style="width: 150px;">Target Agent(s)</label>
+                      </td>
+                      <td class="td">
+                        <select class="input" style="width: 350px;" v-model="runAgentTarget">
+                          <option v-for="(targetIndex, targetName) in TargetAgentChoices" :key="`target-choice-${targetIndex}`" :value="targetIndex">
+                            {{targetName}}
+                          </option>
+                        </select>
+                      </td>
+                    </tr>  
+                    <tr class="tr" v-if="runAgentTarget === TaskDefTarget.SINGLE_SPECIFIC_AGENT">
+                      <td class="td">
+                        <label class="label" style="width: 150px;">Target Agent</label>
+                      </td>
+                      <td class="td">
+                        <agent-search :width="'350px'" :agentId="runAgentTargetAgentId"  @agentPicked="onTargetAgentPicked" ></agent-search>
+                      </td>
+                    </tr>
+                    <tr class="tr" v-if="runAgentTarget === TaskDefTarget.ALL_AGENTS_WITH_TAGS || runAgentTarget === TaskDefTarget.SINGLE_AGENT_WITH_TAGS">
+                      <td class="td">
+                        <label class="label" style="width: 150px;">Target Agent Tags</label>
+                      </td>
+                      <td class="td">
+                        <validation-provider name="Target Tags" rules="variable-map" v-slot="{ errors }">
+                          <input type="text" style="width: 350px;" class="input" v-model="runAgentTargetTags_string"/> 
+                          <div v-if="errors && errors.length > 0" class="message validation-error is-danger">{{ errors[0] }}</div>
+                        </validation-provider>
+                      </td>
+                    </tr>
+                  </table>
+                </tab>
+
+                <tab title="Run on SGC (saas glue compute)">
+                  <table class="table" width="100%" style="margin-top: 20px;">
+                    <tr class="tr">
+                      <td class="td">
+                        <label class="label" style="width: 150px;">Lambda Runtime</label>
+                      </td>
+                      <td class="td">
+                        <div class="select">
+                          <validation-provider name="Lambda Runtime" rules="required" v-slot="{ errors }">
+                            <select v-model="lambdaConfig.lambdaRuntime" style="width: 350px;">
+                              <option v-for="runtime in LambaRuntimes" :key="runtime" :value="runtime">
+                                {{runtime}}
+                              </option>
+                            </select>
+                            <div v-if="errors && errors.length > 0" class="message validation-error is-danger">{{ errors[0] }}</div>
+                          </validation-provider>
+                        </div>
+                      </td>
+                    </tr>
+                    <tr class="tr">
+                      <td class="td">
+                        <label class="label" style="width: 150px;">Lambda Memory Size</label>
+                      </td>
+                      <td class="td">
+                        <div class="select" >
+                          <select v-model="lambdaConfig.lambdaMemorySize" style="width: 350px;">
+                            <option v-for="memSize in LambdaMemorySizes" :key="memSize" :value="memSize">
+                              {{memSize}} mb
+                            </option>
+                          </select>
+                        </div>
+                      </td>
+                    </tr>
+                    <tr class="tr">
+                      <td class="td">
+                        <label class="label" style="width: 150px;">Lambda Timeout (seconds)</label>
+                      </td>
+                      <td class="td">
+                        <validation-provider name="Lambda Timeout" rules="required|lambdaTimeout" v-slot="{ errors }">
+                          <input class="input" style="width: 350px;" v-model="lambdaConfig.lambdaTimeout">
+                          <div v-if="errors && errors.length > 0" class="message validation-error is-danger">{{ errors[0] }}</div>
+                        </validation-provider>
+                      </td>
+                    </tr>
+                    <tr class="tr">
+                      <td class="td">
+                        <label class="label" style="width: 150px;">Lambda Dependencies</label>
+                      </td>
+                      <td class="td">
+                        <input class="input" style="width: 350px;" v-model="lambdaConfig.lambdaDependencies" placeholder="compression;axios">
+                      </td>
+                    </tr>
+                  </table>
+                </tab>
+              </tabs>
+
+              <table class="table" width="100%" style="margin-top: 20px;">
+                <tr class="tr">
+                  <td class="td">
+                    <label class="label" style="width: 150px;">Command</label>
+                  </td>
+                  <td class="td">
+                    <input class="input" style="width: 350px;" type="text" v-model="runScriptCommand"/>
+                  </td>
+                </tr>
+                <tr class="tr">
+                  <td class="td">
+                    <label class="label" style="width: 150px;">Arguments</label>
+                  </td>
+                  <td class="td">
+                    <input class="input" style="width: 350px;" type="text" v-model="runScriptArguments"/>
+                  </td>
+                </tr>
+                <tr class="tr">
+                  <td class="td">
+                    <label class="label" style="width: 150px;">Env Variables</label>
+                  </td>
+                  <td class="td">
+                    <validation-provider name="Env Vars" rules="variable-map" v-slot="{ errors }">
+                      <input class="input" style="width: 350px;" type="text" v-model="runScriptEnvVars"/>
+                      <div v-if="errors && errors.length > 0" class="message validation-error is-danger">{{ errors[0] }}</div>
+                    </validation-provider>
+                  </td>
+                </tr>
+                <tr class="tr">
+                  <td class="td">
+                    <label class="label" style="width: 150px;">Runtime Variables</label>
+                  </td>
+                  <td class="td">
+                    <validation-provider name="Runtime Vars" rules="variable-map" v-slot="{ errors }">
+                      <input class="input" style="width: 350px;" type="text" v-model="runScriptRuntimeVars"/>
+                      <div v-if="errors && errors.length > 0" class="message validation-error is-danger">{{ errors[0] }}</div>
+                    </validation-provider>
+                  </td>
+                </tr>
+                <tr class="tr">
+                  <td class="td"></td>
+                  <td class="td">
+                    <button class="button is-primary" @click="onRunScript" :disabled="!scriptCopy">Run Script</button>
+                    <button class="button button-spaced" @click="onScheduleScriptClicked" :disabled="!scriptCopy">Schedule Script</button>
+                  </td>
+                </tr>
+              </table>
+
+            </validation-observer>
+          </div>
         </td>
       </tr>
       
@@ -216,7 +206,7 @@
             </template>
           </template>
           <div v-else>
-            No job have ran yet
+            No scripts have ran yet
           </div>
         </td>
       </tr>
@@ -300,6 +290,9 @@ export default class InteractiveConsole extends Vue {
   private runScriptArguments = '';
   private runScriptEnvVars = '';
   private runScriptRuntimeVars = '';
+
+  private expandScriptEditor = true;
+  private expand
 
   private lambdaConfig:any = {
     lambdaMemorySize: 128,
@@ -436,14 +429,6 @@ export default class InteractiveConsole extends Vue {
     }
   }
 
-  private async onRunScriptClicked() {
-    this.$modal.show('pick-agents-modal');
-  }
-
-  private onCancelRunScript(){
-    this.$modal.hide('pick-agents-modal');
-  }
-
   private get envVarsAsMap(): {[key: string]: string} {
     return stringToMap(this.runScriptEnvVars);
   }
@@ -506,18 +491,18 @@ export default class InteractiveConsole extends Vue {
         }
       };
 
-
-
       const {data: {data}} = await axios.post("/api/v0/job/ic/", newJob);
       // make sure to use the same object in the store or it won't be reactive to browser push events
       this.runningJobs.push(await this.$store.dispatch(`${StoreType.JobStore}/fetchModel`, data.id));
+
+      this.expandScriptEditor = false;
     } 
     catch (err) {
       console.error(err);
       showErrors('Error running the script', err);
     }
     finally {
-      this.$modal.hide('pick-agents-modal');
+      this.$modal.hide('run-script-options');
     }
   }
 

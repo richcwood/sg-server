@@ -334,6 +334,7 @@ export default class ScriptEditor extends Vue {
       this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Saving backup of script - ${this.script.name}`, AlertPlacement.FOOTER));
     
       try {
+        this.ignoreNextScriptShadowChange = true;
         await this.$store.dispatch(`${StoreType.ScriptShadowStore}/save`);
       }
       catch(err){
@@ -356,8 +357,15 @@ export default class ScriptEditor extends Vue {
   @BindSelectedCopy({storeType: StoreType.ScriptShadowStore})
   private scriptShadow!: ScriptShadow|null;
 
+  private ignoreNextScriptShadowChange = false;
+
   @Watch('scriptShadow')
   private onScriptShadowChanged() {
+    if(this.ignoreNextScriptShadowChange){
+      this.ignoreNextScriptShadowChange = false;
+      return;
+    }
+
     const scriptEditor = (<any>this.$refs).scriptEditor;
     if(scriptEditor){
       scriptEditor.innerHTML = ''; // clear old stuff out
