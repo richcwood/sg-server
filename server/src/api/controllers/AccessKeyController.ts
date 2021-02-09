@@ -62,8 +62,13 @@ export class AccessKeyController {
             const teamAccessRightIds: string[] = <string[]>req.headers.teamAccessRightIds;
             const newAccessKey: AccessKeySchema = <AccessKeySchema>await accessKeyService.createAccessKey(_teamId, teamAccessRightIds, convertRequestData(AccessKeySchema, req.body), req.header('correlationId'), responseFields);
             response.data = convertResponseData(AccessKeySchema, newAccessKey);
-            for (let i = 0; i < response.data.length; i++)
-                response.data[i].accessKeySecret = newAccessKey[i].accessKeySecret;
+            if (_.isArray(newAccessKey)) {
+                for (let i = 0; i < response.data.length; i++)
+                    response.data[i].accessKeySecret = newAccessKey[i].accessKeySecret;
+            } else {
+                response.data.accessKeySecret = newAccessKey.accessKeySecret;
+            }
+
             response.statusCode = ResponseCode.CREATED;
             next();
         }
