@@ -199,19 +199,14 @@ export default class Artifacts extends Vue {
         prefix: this.destinationFolder
       });
 
-      console.log('pre-aws-s3-save', artifact.url);
-      //await axios.put(artifact.url, file, {headers: {'Content-Type': 'multipart/form-data'}});
-
+      // Need a raw request here because axios won't allow me to override defaults.
       const s3Request = new XMLHttpRequest();
       s3Request.open('GET', artifact.url);
       s3Request.send();
 
       s3Request.onreadystatechange = (e) => {
-        console.log(s3Request.responseText);
         Vue.set(this.fileUploadStatus, file.name, 'completed uploading file');
       }
-
-      console.log('post-aws-s3-save');
     }
     catch(err){
       Vue.set(this.fileUploadStatus, file.name, 'Failed to upload file');
