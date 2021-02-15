@@ -312,6 +312,9 @@ export default class InteractiveConsole extends Vue {
   @BindSelected({storeType: StoreType.ScriptShadowStore})
   private scriptShadow!: ScriptShadow|null;
 
+  @BindSelectedCopy({storeType: StoreType.ScriptShadowStore})
+  private scriptShadowCopy!: ScriptShadow|null;
+
   @BindSelected({ storeType: StoreType.JobStore })
   private selectedJob!: Job | null;
 
@@ -451,10 +454,10 @@ export default class InteractiveConsole extends Vue {
 
     try {
       const newStep: any = {
-        name: 'Step1',
+        name: 'Console Step',
         script: {
           scriptType: ScriptType[this.scriptCopy.scriptType],
-          code: this.scriptShadow.shadowCopyCode
+          code: this.scriptShadowCopy.shadowCopyCode
         },
         order: 0,
         command: this.runScriptCommand,

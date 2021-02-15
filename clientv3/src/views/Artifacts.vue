@@ -17,7 +17,7 @@
               {{file.name}}
             </td>
             <td class="td">
-              <span v-if="getUploadStatus(file)">
+              <span v-if="getUploadStatus(file)" :class="{'has-text-success': getUploadStatus(file).includes('completed')}">
                 {{getUploadStatus(file)}}
               </span>
               <a v-else style="margin-left: 12px;" @click="onDeleteFileClicked(file)">delete</a>
@@ -190,7 +190,7 @@ export default class Artifacts extends Vue {
 
   private async uploadFile(file: any){
     // Vue object key's not reactive by default (Vue 2)
-    Vue.set(this.fileUploadStatus, file.name, 'upload file...');
+    Vue.set(this.fileUploadStatus, file.name, 'uploading file...');
     
     try {
       // I wonder what the API will do if the name + s3Path already exists
@@ -199,9 +199,14 @@ export default class Artifacts extends Vue {
         prefix: this.destinationFolder
       });
 
-      await axios.put(artifact.url, file, {headers: {'Content-Type': 'multipart/form-data'}})
-      Vue.set(this.fileUploadStatus, file.name, 'completed uploading file');
-      // this.getUploadStatus[file.name] = 'completed uploading file';
+      // Need a raw request here because axios won't allow me to override defaults.
+      const s3Request = new XMLHttpRequest();
+      s3Request.open('GET', artifact.url);
+      s3Request.send();
+
+      s3Request.onreadystatechange = (e) => {
+        Vue.set(this.fileUploadStatus, file.name, 'completed uploading file');
+      }
     }
     catch(err){
       Vue.set(this.fileUploadStatus, file.name, 'Failed to upload file');
