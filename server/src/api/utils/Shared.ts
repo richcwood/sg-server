@@ -205,15 +205,18 @@ let CheckWaitingForAgentTasks = async (_teamId: mongodb.ObjectId, _agentId: mong
     const noAgentTasks = await taskService.findAllTasksInternal(noAgentTasksFilter);
     if (_.isArray(noAgentTasks) && noAgentTasks.length > 0) {
         for (let i = 0; i < noAgentTasks.length; i++) {
+            logger.LogInfo('No agent task', {Task: noAgentTasks[i]});
             let updatedTask: any;
             if (_agentId)
                 updatedTask = await taskService.updateTask(_teamId, noAgentTasks[i]._id, { $pull: { attemptedRunAgentIds: _agentId } }, logger);
             else
                 updatedTask = await taskService.updateTask(_teamId, noAgentTasks[i]._id, { attemptedRunAgentIds: [] }, logger);
 
+            logger.LogInfo('No agent task udpated', {Task: updatedTask});
             const tasks = await taskService.findAllJobTasks(_teamId, updatedTask._jobId, 'toRoutes');
             const tasksToRoutes = SGUtils.flatMap(x => x, tasks.map((t) => SGUtils.flatMap(x => x[0], t.toRoutes)));
             if ((!updatedTask.up_dep || (Object.keys(updatedTask.up_dep).length < 1)) && (tasksToRoutes.indexOf(updatedTask.name) < 0)) {
+                logger.LogInfo('No agent task - no up_dep', {Task: updatedTask});
                 if (updatedTask.status == Enums.TaskStatus.WAITING_FOR_AGENT) {
                     updatedTask.status = Enums.TaskStatus.NOT_STARTED;
                     updatedTask = await taskService.updateTask(_teamId, updatedTask._id, { status: updatedTask.status }, logger, { status: Enums.TaskStatus.WAITING_FOR_AGENT }, null, null);

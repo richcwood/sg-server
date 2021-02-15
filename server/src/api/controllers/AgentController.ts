@@ -277,6 +277,7 @@ export class AgentController {
 
             let tasksToCancel: mongodb.ObjectId[] = [];
             if (agent.offline || agent.lastHeartbeatTime == null || (agent.lastHeartbeatTime < new Date().getTime() - (activeAgentTimeoutSeconds * 2 * 1000))) {
+                logger.LogInfo('Agent online', agent);
                 if (agent.offline || (agent.lastHeartbeatTime < new Date().getTime() - (activeAgentTimeoutSeconds * 1000))) {
                     rabbitMQPublisher.publishBrowserAlert(_teamId, `Agent ${agent.machineId} is back online`);
                     let orphanedTasksFilter = {};
