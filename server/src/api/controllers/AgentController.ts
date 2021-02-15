@@ -276,17 +276,19 @@ export class AgentController {
             let agent: any = await agentService.updateAgentHeartbeat(_teamId, _agentId, convertRequestData(AgentSchema, req.body), req.header('correlationId'));
 
             let tasksToCancel: mongodb.ObjectId[] = [];
-            if (agent.offline || agent.lastHeartbeatTime == null || (agent.lastHeartbeatTime < new Date().getTime() - activeAgentTimeoutSeconds * 1000)) {
-                rabbitMQPublisher.publishBrowserAlert(_teamId, `Agent ${agent.machineId} is back online`);
-                let orphanedTasksFilter = {};
-                orphanedTasksFilter['_teamId'] = _teamId;
-                orphanedTasksFilter['_agentId'] = new mongodb.ObjectId(agent._id);
-                orphanedTasksFilter['status'] = { $eq: TaskStatus.CANCELLED };
-                orphanedTasksFilter['failureCode'] = { $eq: TaskFailureCode.AGENT_CRASHED_OR_LOST_CONNECTIVITY };
-                const orphanedTasks = await taskOutcomeService.findAllTaskOutcomesInternal(orphanedTasksFilter, '_id');
-                if (_.isArray(orphanedTasks) && orphanedTasks.length > 0) {
-                    for (let i = 0; i < orphanedTasks.length; i++) {
-                        tasksToCancel.push(orphanedTasks[i]._id);
+            if (agent.offline || agent.lastHeartbeatTime == null || (agent.lastHeartbeatTime < new Date().getTime() - (activeAgentTimeoutSeconds * 2 * 1000))) {
+                if (agent.offline || (agent.lastHeartbeatTime < new Date().getTime() - (activeAgentTimeoutSeconds * 1000))) {
+                    rabbitMQPublisher.publishBrowserAlert(_teamId, `Agent ${agent.machineId} is back online`);
+                    let orphanedTasksFilter = {};
+                    orphanedTasksFilter['_teamId'] = _teamId;
+                    orphanedTasksFilter['_agentId'] = new mongodb.ObjectId(agent._id);
+                    orphanedTasksFilter['status'] = { $eq: TaskStatus.CANCELLED };
+                    orphanedTasksFilter['failureCode'] = { $eq: TaskFailureCode.AGENT_CRASHED_OR_LOST_CONNECTIVITY };
+                    const orphanedTasks = await taskOutcomeService.findAllTaskOutcomesInternal(orphanedTasksFilter, '_id');
+                    if (_.isArray(orphanedTasks) && orphanedTasks.length > 0) {
+                        for (let i = 0; i < orphanedTasks.length; i++) {
+                            tasksToCancel.push(orphanedTasks[i]._id);
+                        }
                     }
                 }
 

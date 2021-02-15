@@ -217,7 +217,8 @@ let CheckWaitingForAgentTasks = async (_teamId: mongodb.ObjectId, _agentId: mong
                 if (updatedTask.status == Enums.TaskStatus.WAITING_FOR_AGENT) {
                     updatedTask.status = Enums.TaskStatus.NOT_STARTED;
                     updatedTask = await taskService.updateTask(_teamId, updatedTask._id, { status: updatedTask.status }, logger, { status: Enums.TaskStatus.WAITING_FOR_AGENT }, null, null);
-                    await taskOutcomeService.PublishTask(_teamId, updatedTask, logger, amqp);
+                    if (updatedTask)
+                        await taskOutcomeService.PublishTask(_teamId, updatedTask, logger, amqp);
                 }
             }
         }

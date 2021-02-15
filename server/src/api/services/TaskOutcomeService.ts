@@ -387,6 +387,17 @@ export class TaskOutcomeService {
                 task.targetAgentId = targetAgentId;
             }
 
+            // const maxTries: number = 2;
+            // let tryCount: number = 1;
+            // let getTaskRoutesRes: any;
+            // while (tryCount < maxTries) {
+            //     getTaskRoutesRes = await GetTaskRoutes(_teamId, task, logger);
+            //     if (getTaskRoutesRes.routes)
+            //         break;
+            //     tryCount += 1;
+            //     await SGUtils.sleep(100);
+            // }
+
             let getTaskRoutesRes = await GetTaskRoutes(_teamId, task, logger);
             // console.log('PublishTask -> getTaskRoutesRes -> ', JSON.stringify(getTaskRoutesRes, null, 4));
             if (!getTaskRoutesRes.routes) {
