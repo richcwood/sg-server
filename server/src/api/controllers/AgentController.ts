@@ -211,6 +211,23 @@ export class AgentController {
             await configureAgentQueues(_teamId, newAgent._id, logger);
             response.data = await addServerPropertiesToAgent(convertResponseData(AgentSchema, newAgent));
             response.statusCode = ResponseCode.CREATED;
+
+            await CheckWaitingForAgentTasks(_teamId, newAgent._id, logger, amqp);
+
+            if (_teamId == adminTeamId && _.isArray(newAgent.tags) && newAgent.tags.length > 0) {
+                let isLambdaRunnerAgent: boolean = true;
+                for (let i = 0; i < Object.keys(awsLambdaRequiredTags).length; i++) {
+                    const key = Object.keys(awsLambdaRequiredTags)[i];
+                    if (newAgent.tags[key] != awsLambdaRequiredTags[key]) {
+                        isLambdaRunnerAgent = false;
+                        break;
+                    }
+                }
+
+                if (isLambdaRunnerAgent)
+                    await CheckWaitingForLambdaRunnerTasks(newAgent._id, logger, amqp);
+            }
+
             next();
         }
         catch (err) {
@@ -277,7 +294,6 @@ export class AgentController {
 
             let tasksToCancel: mongodb.ObjectId[] = [];
             if (agent.offline || agent.lastHeartbeatTime == null || (agent.lastHeartbeatTime < new Date().getTime() - (activeAgentTimeoutSeconds * 2 * 1000))) {
-                logger.LogInfo('Agent online', agent);
                 if (agent.offline || (agent.lastHeartbeatTime < new Date().getTime() - (activeAgentTimeoutSeconds * 1000))) {
                     rabbitMQPublisher.publishBrowserAlert(_teamId, `Agent ${agent.machineId} is back online`);
                     let orphanedTasksFilter = {};
