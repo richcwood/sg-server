@@ -1548,9 +1548,27 @@ let GenerateToken = async () => {
   console.log('mongoUrl -> @sgg("mongoUrl")');
   mongoose.connect(config.get("mongoUrl"), { useNewUrlParser: true });
 
-  let accessRightIds = await GetAccessRightIds(['GLOBAL']);
-  // let accessRightIds = await GetAccessRightIds(['AGENT_CREATE', 'AGENT_DOWNLOAD_GET', 'AGENT_LOG_CREATE', 'AGENT_READ', 'AGENT_UDPATE', 'AGENT_UPDATE_HEARTBEAT', 'JOB_CREATE', 'STEP_OUTCOME_CREATE', 'STEP_OUTCOME_UPDATE', 'TASK_OUTCOME_CREATE', 'TASK_OUTCOME_UPDATE']);
-  let bits = convertTeamAccessRightsToBitset(accessRightIds);
+
+  const jwtExpiration = Date.now() + (1000 * 60 * 60 * 24 * 180); // 180 days
+  let token = jwt.sign({
+    InvitedTeamId: new mongodb.ObjectId("5e99cbcb2317950015edb655"),
+    InvitedTeamName: 'saas glue demo',
+    exp: Math.floor(jwtExpiration / 1000)
+  }, secret);//KeysUtil.getPrivate()); // todo - create a public / private key
+
+  let url = config.get('WEB_CONSOLE_BASE_URL');
+  const port = config.get('WEB_CONSOLE_PORT');
+
+  if (port != '')
+    url += `:${port}`
+  let joinTeamLink = `${url}/?invitedTeamToken=${token}`;
+
+  console.log(JSON.stringify(joinTeamLink));
+
+
+  // let accessRightIds = await GetAccessRightIds(['GLOBAL']);
+  // // let accessRightIds = await GetAccessRightIds(['AGENT_CREATE', 'AGENT_DOWNLOAD_GET', 'AGENT_LOG_CREATE', 'AGENT_READ', 'AGENT_UDPATE', 'AGENT_UPDATE_HEARTBEAT', 'JOB_CREATE', 'STEP_OUTCOME_CREATE', 'STEP_OUTCOME_UPDATE', 'TASK_OUTCOME_CREATE', 'TASK_OUTCOME_UPDATE']);
+  // let bits = convertTeamAccessRightsToBitset(accessRightIds);
 
   // const body = {
   //   "teamIds": [
@@ -1569,12 +1587,12 @@ let GenerateToken = async () => {
   //   "agentStubVersion": "v0.0.0.37"
   // }
 
-  const body = {
-    "id": "5de8810275ad92e5bb8de78a",
-    "email": "admin@saasglue.com",
-    "teamIds": [],
-    "teamAccessRightIds": {default: bits}
-  }
+  // const body = {
+  //   "id": "5de8810275ad92e5bb8de78a",
+  //   "email": "admin@saasglue.com",
+  //   "teamIds": [],
+  //   "teamAccessRightIds": {default: bits}
+  // }
 
   // const body = {
   //   "id": "5de8810275ad92e5bb8de78a",
@@ -1584,9 +1602,9 @@ let GenerateToken = async () => {
   // }
 
 
-  var token = jwt.sign(body, secret);//KeysUtil.getPrivate()); // todo - create a public / private key
+  // var token = jwt.sign(body, secret);//KeysUtil.getPrivate()); // todo - create a public / private key
 
-  console.log(JSON.stringify(token));
+  // console.log(JSON.stringify(token));
 }
 
 
@@ -2121,7 +2139,7 @@ let SendTestBrowserAlert = async() => {
 // SubmitInvoicesForPayment();
 // TestBraintreeWebhook();
 // CreateInvoicePDF(0);
-// GenerateToken();
+GenerateToken();
 // AgentRestAPICall();
 // DeleteJobs({'_jobDefId': process.argv[2]});
 // DeleteJobDefs({"name": /Cron.*/});
@@ -2129,7 +2147,7 @@ let SendTestBrowserAlert = async() => {
 // CreateAccessRightIds();
 // GetAllAccessRights();
 // LoadAccessRightIdsToProd();
-UpdateUserTeamAccessRights();
+// UpdateUserTeamAccessRights();
 // UpdateScheduleUserAccessRights();
 // CreateAccessKey();
 // printTeamAccessRightsBitSet();

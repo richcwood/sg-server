@@ -99,7 +99,7 @@ export class TeamService {
 
       if (port != '')
         url += `:${port}`
-      let joinTeamLink = `${url}/?invitedTeamToken_shared=${token}`;
+      let joinTeamLink = `${url}/?invitedTeamToken=${token}`;
 
       dataUpdates.inviteLink = joinTeamLink;
       dataUpdates.isActive = true;

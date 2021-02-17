@@ -94,7 +94,7 @@ export class JoinTeamService {
 
     public async anonymousJoinTeam(_userId: mongodb.ObjectId, token: string): Promise<object> {
         /// Check if the invited user exists
-        const userModel: any = await userService.findUser(_userId, '_id email teamIds teamAccessRightIds teamIdsInvited teamIdsInactive');
+        const userModel: any = await userService.findUser(_userId, '_id email teamIds teamAccessRightIds teamIdsInvited teamIdsInactive passwordHash');
         if (!userModel)
             throw new ValidationError('Something went wrong. Please request a new invite from the team administrator.');
 
@@ -133,6 +133,8 @@ export class JoinTeamService {
 
         if (!tokenIsValid)
             throw new ValidationError('Something went wrong. Please request a new invite from the team administrator.');
+
+        userModel.teamIdsInvited.push({_teamId});
 
         /// If the user doesn't have a password yet, leave the team to which they are invited in the teamIdsInvited
         ///     array - this will get them routed to the page where they can enter their account details.

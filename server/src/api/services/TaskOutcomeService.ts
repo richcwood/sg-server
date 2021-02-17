@@ -536,7 +536,7 @@ export class TaskOutcomeService {
 
 
     async OnTaskSkipped(_teamId: mongodb.ObjectId, _jobId: mongodb.ObjectId, taskName: string, logger: BaseLogger) {
-        return new Promise(async (resolve, reject) => {
+        return new Promise<void>(async (resolve, reject) => {
             let resUpdate;
 
             try {
