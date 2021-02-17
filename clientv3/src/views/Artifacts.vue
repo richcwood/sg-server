@@ -201,7 +201,7 @@ export default class Artifacts extends Vue {
 
       // Need a raw request here because axios won't allow me to override defaults.
       const s3Request = new XMLHttpRequest();
-      s3Request.open('GET', artifact.url);
+      s3Request.open('PUT', artifact.url);
       s3Request.send();
 
       s3Request.onreadystatechange = (e) => {
