@@ -8,6 +8,8 @@ import * as _ from 'lodash';
 const script1 = `
 import requests
 import json
+import sys
+import time
 
 
 token = ''
@@ -22,8 +24,8 @@ def RestAPILogin():
     }
 
     data = {
-        'email': 'testuser@saasglue.com',
-        'password': 'mypassword'
+        'accessKeyId': '@sgg("sgAccessKeyId")',
+        'accessKeySecret': '@sgg("sgAccessKeySecret")'
     }
 
     res = requests.post(url=url, headers=headers, data=json.dumps(data))
@@ -31,7 +33,7 @@ def RestAPILogin():
         msg = 'Call to {} returned {} - {}'.format(url, res.status_code, res.text)
         raise Exception(msg)
 
-    token = res.cookies.get_dict()['Auth']
+    token = json.loads(res.text)['config1']
 
 
 while token == '':
@@ -44,7 +46,6 @@ while token == '':
         sys.stdout.flush
 
 print '@sgo{{"sgAuthToken": "{}"}}'.format(token)
-print a
 `;
 const script1_b64 = SGUtils.btoa(script1);
 
@@ -101,7 +102,11 @@ export default class Test59 extends TestBase.WorkflowTestBase {
                                 }
                             ]
                         }
-                    ]
+                    ],
+                    runtimeVars: {
+                        sgAccessKeyId: config.get('prodTestTeamAccessKeyId'),
+                        sgAccessKeySecret: config.get('prodTestTeamAccessKeySecret')
+                    }
                 }
             ]
         };

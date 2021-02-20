@@ -238,7 +238,7 @@ export default abstract class TestBase {
 
         let testComplete: boolean = false;
         let testCompleteTime: number;
-        await new Promise(async (resolve, reject) => {
+        await new Promise<void>(async (resolve, reject) => {
             while (true) {
                 try {
                     let numJobsCompleted = 0;
@@ -656,7 +656,7 @@ export abstract class AdhocTaskTestBase extends TestBase {
         let testComplete: boolean = false;
         const maxWaitTimeAfterJobComplete: number = 10000;
         let testCompleteTime: number;
-        await new Promise(async (resolve, reject) => {
+        await new Promise<void>(async (resolve, reject) => {
             while (true) {
                 try {
                     let numTasksCompleted = 0;

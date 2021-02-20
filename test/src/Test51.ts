@@ -38,7 +38,7 @@ export default class Test51 extends TestBase.WorkflowTestBase {
 
     public ProcessOrphanedTasks = async () => {
         try {
-            let res = await self.Login(config.get('sgTestUser'), config.get('sgTestUserPassword'));
+            let res = await self.Login(config.get('agentAccessKeyId'), config.get('agentAccessKeySecret'));
             let tmp = res[0].split(';');
             let auth = tmp[0];
             auth = auth.substring(5) + ';';
@@ -56,6 +56,8 @@ export default class Test51 extends TestBase.WorkflowTestBase {
                 let disconnectedAgentsQuery;
                 try {
                     disconnectedAgentsQuery = await self.testSetup.RestAPICall('agent/disconnected/disconnected?responseFields=id _teamId', 'GET', config.get('sgTestTeam'), { batchSize: 10 }, null, auth);
+                    if (disconnectedAgentsQuery.statusCode == 404)
+                        break;
                 } catch (err) {
                     if (err.message.indexOf('Request failed with status code 404') >= 0) {
                         break;

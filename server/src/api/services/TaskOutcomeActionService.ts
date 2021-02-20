@@ -5,6 +5,9 @@ import { rabbitMQPublisher, PayloadOperation } from '../utils/RabbitMQPublisher'
 import { MissingObjectError, ValidationError } from '../utils/Errors';
 import { TaskOutcomeSchema, TaskOutcomeModel } from '../domain/TaskOutcome';
 import { TaskStatus, TaskFailureCode } from '../../shared/Enums';
+import { stepService } from '../services/StepService';
+import { ScriptSchema } from '../domain/Script';
+import { scriptService } from '../services/ScriptService';
 import { TaskDefTarget } from '../../shared/Enums';
 import * as mongodb from 'mongodb';
 import * as _ from 'lodash';
@@ -69,6 +72,24 @@ export class TaskOutcomeActionService {
         if (task.target & (TaskDefTarget.ALL_AGENTS|TaskDefTarget.ALL_AGENTS_WITH_TAGS)) {
             task.target = TaskDefTarget.SINGLE_SPECIFIC_AGENT;
             task.targetAgentId = updatedTaskOutcome._agentId;
+        }
+
+        for (let step of await stepService.findAllTaskSteps(_teamId, task._id, "_id script")) {
+            const scripts: ScriptSchema[] = await scriptService.findScript(_teamId, step.script.id, '_id name scriptType code')
+            if (!scripts || scripts.length < 1) {
+                logger.LogError('Script not found for task step', {Task: task, Step: step});
+                continue;
+            }
+            const script = scripts[0];
+            let data: any = {};
+            data.script = {
+                id: script._id,
+                name: script.name,
+                scriptType: script.scriptType,
+                code: script.code,
+            }
+
+            await stepService.updateStep(_teamId, step._id, data, correlationId);
         }
 
         await taskOutcomeService.PublishTask(_teamId, task, logger, amqp);

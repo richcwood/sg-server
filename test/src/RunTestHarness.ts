@@ -2116,7 +2116,7 @@ let SendTestBrowserAlert = async() => {
 // LoadSettingsToMongo();
 // TestForEach();
 // UpdateAgentVersion();
-// RabbitMQSetup();
+RabbitMQSetup();
 // RabbitMQAdminTest();
 // AMQPTest();
 // StompTest();
@@ -2139,7 +2139,7 @@ let SendTestBrowserAlert = async() => {
 // SubmitInvoicesForPayment();
 // TestBraintreeWebhook();
 // CreateInvoicePDF(0);
-GenerateToken();
+// GenerateToken();
 // AgentRestAPICall();
 // DeleteJobs({'_jobDefId': process.argv[2]});
 // DeleteJobDefs({"name": /Cron.*/});

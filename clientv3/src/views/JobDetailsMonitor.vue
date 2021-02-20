@@ -163,7 +163,7 @@
             <template v-if="selectedJob.status == TaskStatus.RUNNING">
               <button class="button button-spaced" @click="onInterruptJobClicked(selectedJob)">Interrupt</button>
             </template>
-            <template v-if="selectedJob.status == TaskStatus.INTERRUPTED">
+            <template v-if="selectedJob.status == TaskStatus.INTERRUPTED || selectedJob.status == TaskStatus.FAILED">
               <button class="button button-spaced" @click="onRestartJobClicked(selectedJob)">Restart</button>
             </template>
           </td>

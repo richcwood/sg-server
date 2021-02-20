@@ -96,12 +96,12 @@
             <td class="td">{{enumKeyToPretty(TaskFailureCode, taskOutcome.failureCode)}}</td>
             <td class="td">
               <template v-if="taskOutcome.status < TaskStatus.CANCELING || taskOutcome.status === TaskStatus.FAILED">
-                <button class="button" @click="onCancelTaskOutcomeClicked(taskOutcome)">Cancel</button>
+                <button class="button button-spaced" @click="onCancelTaskOutcomeClicked(taskOutcome)">Cancel</button>
               </template>
-              <template v-else-if="taskOutcome.status == TaskStatus.RUNNING">
+              <template v-if="taskOutcome.status == TaskStatus.RUNNING">
                 <button class="button button-spaced" @click="onInterruptTaskOutcomeClicked(taskOutcome)">Interrupt</button>
               </template>
-              <template v-else-if="taskOutcome.status == TaskStatus.INTERRUPTED || (taskOutcome.status == TaskStatus.FAILED && (taskOutcome.failureCode == TaskFailureCode.AGENT_EXEC_ERROR || taskOutcome.failureCode == TaskFailureCode.LAUNCH_TASK_ERROR || taskOutcome.failureCode == TaskFailureCode.TASK_EXEC_ERROR ))">
+              <template v-if="taskOutcome.status == TaskStatus.INTERRUPTED || (taskOutcome.status == TaskStatus.FAILED && (taskOutcome.failureCode == TaskFailureCode.AGENT_EXEC_ERROR || taskOutcome.failureCode == TaskFailureCode.LAUNCH_TASK_ERROR || taskOutcome.failureCode == TaskFailureCode.TASK_EXEC_ERROR ))">
                 <button class="button button-spaced" @click="onRestartTaskOutcomeClicked(taskOutcome)">Restart</button>
               </template>
               <template v-else>
@@ -385,6 +385,10 @@ table {
 
 td {
   border-width: 0 !important;
+}
+
+.button-spaced {
+  margin-left: 12px;
 }
 
 .spaced {

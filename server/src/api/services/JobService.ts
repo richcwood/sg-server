@@ -11,8 +11,6 @@ import { taskService } from '../services/TaskService';
 import { taskOutcomeService } from '../services/TaskOutcomeService';
 import { stepService } from '../services/StepService';
 import { scriptService } from '../services/ScriptService';
-import { teamService } from './TeamService';
-import { TeamSchema } from '../domain/Team';
 import { BaseLogger } from '../../shared/SGLogger';
 import * as Enums from '../../shared/Enums';
 import { SGUtils } from '../../shared/SGUtils';

@@ -17,5 +17,7 @@
     },
     "secret": "shhh",
     "agentAccessKeyId": "KXJTSCQSB2JRBQZUSDKG",
-    "agentAccessKeySecret": "1ead277a279e651ee6997d9011047671947951d5"
+    "agentAccessKeySecret": "1ead277a279e651ee6997d9011047671947951d5",
+    "prodTestTeamAccessKeyId": "TLTTZX1A55FFMH76PN1E",
+    "prodTestTeamAccessKeySecret": "62b0687c63157d4645189a28db5bf617e7683944"
 }
