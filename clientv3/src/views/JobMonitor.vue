@@ -174,7 +174,7 @@ export default class JobMonitor extends Vue {
     });
 
     const statusToSortValue = (status: JobStatus) => {
-      if(status === JobStatus.COMPLETED){
+      if(status === JobStatus.COMPLETED || status === JobStatus.SKIPPED){
         return JobStatus.COMPLETED + 100;
       }
       else {
