@@ -10,4 +10,5 @@ export interface Job extends Model {
   status: JobStatus,
   runtimeVars: any,
   dateStarted?: Date
+  dateCompleted?: Date
 };

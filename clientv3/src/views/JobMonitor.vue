@@ -190,6 +190,9 @@ export default class JobMonitor extends Vue {
       else if(jobA.dateStarted && jobB.dateStarted){
         return (new Date(jobB.dateStarted)).getTime() - (new Date(jobA.dateStarted)).getTime();
       }
+      else if(jobA.dateCompleted && jobB.dateCompleted){
+        return (new Date(jobB.dateStarted)).getTime() - (new Date(jobA.dateStarted)).getTime();
+      }
       else {
         return 0;
       }
