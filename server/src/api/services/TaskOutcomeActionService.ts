@@ -8,6 +8,9 @@ import { TaskStatus, TaskFailureCode } from '../../shared/Enums';
 import { stepService } from '../services/StepService';
 import { ScriptSchema } from '../domain/Script';
 import { scriptService } from '../services/ScriptService';
+import { JobModel, JobSchema } from '../domain/Job';
+import { TaskDefModel, TaskDefSchema } from '../domain/TaskDef';
+import { taskDefService } from '../services/TaskDefService';
 import { TaskDefTarget } from '../../shared/Enums';
 import * as mongodb from 'mongodb';
 import * as _ from 'lodash';
@@ -91,6 +94,19 @@ export class TaskOutcomeActionService {
 
             await stepService.updateStep(_teamId, step._id, data, correlationId);
         }
+
+        const filterJob = { _id: task._jobId, _teamId };
+        const job: JobSchema = await JobModel.findOne(filterJob).select('_jobDefId');
+        if (job) {
+            const taskDefQuery = await taskDefService.findTaskDefByName(_teamId, job._jobDefId, task.name, "target targetAgentId");
+            if (_.isArray(taskDefQuery) && taskDefQuery.length > 0) {
+                const taskDef: TaskDefSchema = taskDefQuery[0];
+                if (task.target != taskDef.target || task.targetAgentId != taskDef.targetAgentId) {
+                    task = await TaskModel.findOneAndUpdate(taskFilter, {target: taskDef.target, targetAgentId: taskDef.targetAgentId}, { new: true });
+                }
+            }
+        }
+
 
         await taskOutcomeService.PublishTask(_teamId, task, logger, amqp);
         

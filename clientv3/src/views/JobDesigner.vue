@@ -1793,7 +1793,7 @@ export default class JobDesigner extends Vue {
         
         const scheduleToSave: any = _.clone(this.editSchedule);
         scheduleToSave['_jobDefId'] = this.jobDefForEdit.id;
-        scheduleToSave['FunctionKwargs'] = {_teamId: this.selectedTeamId, targetId: this.jobDefForEdit.id};
+        scheduleToSave['FunctionKwargs'] = {_teamId: this.selectedTeamId, targetId: this.jobDefForEdit.id, runtimeVars: {}};
 
         if(this.editSchedule.TriggerType === ScheduleTriggerType.date){
           scheduleToSave['RunDate'] = this.editSchedule.RunDate;

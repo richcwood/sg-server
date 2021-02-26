@@ -1,10 +1,8 @@
 import { Request, Response, NextFunction } from 'express';
 import { ResponseWrapper, ResponseCode } from '../utils/Types';
 import { updateTeamStorageUsageService } from '../services/UpdateTeamStorageUsageService';
-import { BaseLogger } from '../../shared/SGLogger';
 import * as _ from 'lodash';
 import * as mongodb from 'mongodb';
-import { MongoRepo } from '../../shared/MongoLib';
 
 
 export class UpdateTeamStorageUsageController {

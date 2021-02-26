@@ -84,7 +84,8 @@ export class ScheduleSchema {
     @prop({ required: true })
     FunctionKwargs: {
         _teamId: mongodb.ObjectId,
-        targetId: mongodb.ObjectId
+        targetId: mongodb.ObjectId,
+        runtimeVars: any
     };
 
     // Define which filters are legal for which props (including nested props (not sure about nested arrays))

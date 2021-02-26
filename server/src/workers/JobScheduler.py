@@ -196,9 +196,9 @@ def RestAPICall(url, method, _teamId, headers, data={}):
         logError({"msg": str(ex), "Method": "RestAPICall", "url": url, "method": method, "_teamId": _teamId, "headers": headers, "data": data})
 
 
-def on_launch_job(scheduled_time, job_id, _teamId, targetId):
+def on_launch_job(scheduled_time, job_id, _teamId, targetId, runtimeVars):
     logInfo({"msg": "Launching job", "_teamId": _teamId, "_jobDefId": targetId, "date": datetime.now(), "scheduled_time": scheduled_time})
-    RestAPICall('job', 'POST', _teamId, {'_jobDefId': targetId}, {'dateScheduled': scheduled_time})
+    RestAPICall('job', 'POST', _teamId, {'_jobDefId': targetId}, {'dateScheduled': scheduled_time, 'runtimeVars': runtimeVars})
 
     job = job_scheduler.get_job(job_id)
     if job:
@@ -315,6 +315,9 @@ def on_message(delivery_tag, body, async_consumer):
                 if 'Jitter' in msg['interval'] and msg['interval']['Jitter'] != '':
                     jitter = int(msg['interval']['Jitter'])
 
+            if 'runtimeVars' not in msg['FunctionKwargs'] or msg['FunctionKwargs']['runtimeVars'] == '':
+                msg['FunctionKwargs']['runtimeVars'] = {}
+                
             job = job_scheduler.get_job(msg['id'])
             if job:
                 changeTypes = []

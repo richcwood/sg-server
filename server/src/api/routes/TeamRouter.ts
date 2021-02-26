@@ -9,7 +9,7 @@ export class TeamRouter {
   constructor() {
     this.router = Router();
 
-    this.router.get('/', verifyAccessRights(['TEAM_READ', 'GLOBAL']),  teamController.getManyTeams);
+    this.router.get('/', verifyAccessRights(['TEAM_READ_ALL', 'GLOBAL']),  teamController.getManyTeams);
     this.router.get('/:teamId', verifyAccessRights(['TEAM_READ', 'GLOBAL']), teamController.getTeam);
     this.router.post('/', teamController.createTeam);
     this.router.post('/unassigned', verifyAccessRights(['TEAM_CREATE_UNASSIGNED', 'GLOBAL']), teamController.createUnassignedTeam);
