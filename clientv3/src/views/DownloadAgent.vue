@@ -96,12 +96,15 @@
                 </li>
                 or
                 <li>
-                  Setting values for SG_ACCESS_KEY_ID and SG_ACCESS_KEY_SECRET in the sg.cfg file, for example:
-                  {
-                      "ACCESS_KEY_ID": "********",
-                      "ACCESS_KEY_SECRET": "********"
-                  }
+                  Creating a config file named sg.cfg in the same directory where the saas glue agent is located.
                 </li>
+                <li>
+                  Setting values for SG_ACCESS_KEY_ID and SG_ACCESS_KEY_SECRET in the config file, for example:
+                </li>           
+<pre>{
+    "ACCESS_KEY_ID": "********",
+    "ACCESS_KEY_SECRET": "********"
+}</pre>
               </ul>
               <br>
               <div style="font-weight: 700; font-size: 1.25rem;">
@@ -129,12 +132,15 @@
                 </li>
                 or
                 <li>
-                  Setting values for SG_ACCESS_KEY_ID and SG_ACCESS_KEY_SECRET in the sg.cfg file, for example:
-                  {
-                      "ACCESS_KEY_ID": "********",
-                      "ACCESS_KEY_SECRET": "********"
-                  }
+                  Creating a config file named sg.cfg in the same directory where the saas glue agent is located.
                 </li>
+                <li>
+                  Setting values for SG_ACCESS_KEY_ID and SG_ACCESS_KEY_SECRET in the config file, for example:
+                </li>           
+<pre>{
+    "ACCESS_KEY_ID": "********",
+    "ACCESS_KEY_SECRET": "********"
+}</pre>
               </ul>
               <br>
               <div style="font-weight: 700; font-size: 1.25rem;">
@@ -161,12 +167,15 @@
                 </li>
                 or
                 <li>
-                  Setting values for SG_ACCESS_KEY_ID and SG_ACCESS_KEY_SECRET in the sg.cfg file, for example:
-                  {
-                      "ACCESS_KEY_ID": "********",
-                      "ACCESS_KEY_SECRET": "********"
-                  }
+                  Creating a config file named sg.cfg in the same directory where the saas glue agent is located.
                 </li>
+                <li>
+                  Setting values for SG_ACCESS_KEY_ID and SG_ACCESS_KEY_SECRET in the config file, for example:
+                </li>           
+<pre>{
+    "ACCESS_KEY_ID": "********",
+    "ACCESS_KEY_SECRET": "********"
+}</pre>
               </ul>
               <br>
               <div style="font-weight: 700; font-size: 1.25rem;">
