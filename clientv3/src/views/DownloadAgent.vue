@@ -102,8 +102,8 @@
                   Setting values for SG_ACCESS_KEY_ID and SG_ACCESS_KEY_SECRET in the config file, for example:
                 </li>           
 <pre>{
-    "ACCESS_KEY_ID": "********",
-    "ACCESS_KEY_SECRET": "********"
+    "SG_ACCESS_KEY_ID": "********",
+    "SG_ACCESS_KEY_SECRET": "********"
 }</pre>
               </ul>
               <br>
@@ -138,8 +138,8 @@
                   Setting values for SG_ACCESS_KEY_ID and SG_ACCESS_KEY_SECRET in the config file, for example:
                 </li>           
 <pre>{
-    "ACCESS_KEY_ID": "********",
-    "ACCESS_KEY_SECRET": "********"
+    "SG_ACCESS_KEY_ID": "********",
+    "SG_ACCESS_KEY_SECRET": "********"
 }</pre>
               </ul>
               <br>
@@ -173,8 +173,8 @@
                   Setting values for SG_ACCESS_KEY_ID and SG_ACCESS_KEY_SECRET in the config file, for example:
                 </li>           
 <pre>{
-    "ACCESS_KEY_ID": "********",
-    "ACCESS_KEY_SECRET": "********"
+    "SG_ACCESS_KEY_ID": "********",
+    "SG_ACCESS_KEY_SECRET": "********"
 }</pre>
               </ul>
               <br>
