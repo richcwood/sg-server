@@ -92,6 +92,20 @@ export class ScriptController {
       next(err);
     }
   }
+
+
+  public async deleteScript(req: Request, resp: Response, next: NextFunction): Promise<void> {
+    const _teamId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._teamid);
+    const response: ResponseWrapper = resp['body'];
+    try {
+      response.data = await scriptService.deleteScript(_teamId, new mongodb.ObjectId(req.params.scriptId), req.header('correlationId'));
+      response.statusCode = ResponseCode.OK;
+      next();
+    }
+    catch (err) {
+      next(err);
+    }
+  }
 }
 
 export const scriptController = new ScriptController();

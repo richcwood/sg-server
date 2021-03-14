@@ -14,6 +14,7 @@ export class ScriptRouter {
     this.router.get('/:scriptId', verifyAccessRights(['SCRIPT_READ', 'GLOBAL']), scriptController.getScript);
     this.router.post('/', verifyAccessRights(['SCRIPT_WRITE', 'GLOBAL']), scriptController.createScript);
     this.router.put('/:scriptId', verifyAccessRights(['SCRIPT_WRITE', 'GLOBAL']), scriptController.updateScript);
+    this.router.delete('/:scriptId', verifyAccessRights(['SCRIPT_WRITE', 'GLOBAL']), scriptController.deleteScript);
   }
 }
 

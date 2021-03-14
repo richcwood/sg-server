@@ -2,6 +2,7 @@ import { convertData } from '../utils/ResponseConverters';
 import { ScriptSchema, ScriptModel } from '../domain/Script';
 import { rabbitMQPublisher, PayloadOperation } from '../utils/RabbitMQPublisher';
 import { MissingObjectError, ValidationError } from '../utils/Errors';
+import { StepDefModel } from '../domain/StepDef';
 import * as mongodb from 'mongodb';
 import * as _ from 'lodash';
 import { SGUtils } from '../../shared/SGUtils';
@@ -143,6 +144,19 @@ export class ScriptService {
         await rabbitMQPublisher.publish(_teamId, "Script", correlationId, PayloadOperation.UPDATE, convertData(ScriptSchema, deltas));
 
         return updatedScript; // fully populated model
+    }
+
+
+    public async deleteScript(_teamId: mongodb.ObjectId, id: mongodb.ObjectId, correlationId?: string): Promise<object> {
+        let cntStepDefsTargetingThisAgent = await StepDefModel.count({_teamId, _scriptId: id.toHexString()});
+        if (cntStepDefsTargetingThisAgent > 0)
+            throw new ValidationError(`There are ${cntStepDefsTargetingThisAgent} job steps that are using this script`);
+
+        const deleted = await ScriptModel.deleteOne({ _id: id, _teamId });
+
+        await rabbitMQPublisher.publish(_teamId, "Script", correlationId, PayloadOperation.DELETE, { _id: id });
+
+        return deleted;
     }
 }
 
