@@ -255,7 +255,13 @@ export default class JobMonitor extends Vue {
   private getUser(userId: string, jobName: string): User {
     try {
       if(jobName.startsWith('Inactive agent job')) {
-        return { name: userId, email: '' };
+        return { 
+          name: 'Error',
+          email: 'Error',
+          teamIdsInvited: [],
+          teamIds: [],
+          companyName: '' 
+        };
       } else {
         if(!this.loadedUsers[userId]){
           Vue.set(this.loadedUsers, userId, {name: userId});
@@ -272,7 +278,10 @@ export default class JobMonitor extends Vue {
       console.log('Error in loading a user.  Maybe it was deleted?', userId);
       return {
         name: 'Error',
-        email: 'Error'
+        email: 'Error',
+        teamIdsInvited: [],
+        teamIds: [],
+        companyName: ''
       }
     }
   }

@@ -118,7 +118,7 @@
               </tr>
               <tr class="tr" v-for="invoice in unPaidInvoices" v-bind:key="invoice.id">
                 <td class="td">
-                  {{momentToStringV3(invoice.startDate)}}
+                  {{momentToStringV3(invoice.endDate)}}
                 </td>
                 <td class="td">
                   {{invoice.id}}
@@ -127,10 +127,10 @@
                   {{enumKeyToPretty(InvoiceStatus, invoice.status)}}
                 </td>
                 <td class="td">
-                  {{invoice.billAmount.toFixed(2)}} 
+                  {{(invoice.billAmount/100).toFixed(2)}} 
                 </td>
                 <td class="td">
-                  {{invoice.paidAmount.toFixed(2)}}
+                  {{(invoice.paidAmount/100).toFixed(2)}}
                 </td>
                 <td class="td">
                   <invoice-payment :invoice="invoice"></invoice-payment>

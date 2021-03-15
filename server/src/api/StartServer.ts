@@ -109,22 +109,25 @@ class AppBuilder {
 
     if (environment != 'debug' && environment !== 'bartdev') {
       this.app.use(enforce.HTTPS({ trustProtoHeader: true }));
-
-      let origin = 'http://console.saasglue.com';
-      if (environment == 'stage')
-        origin = 'http://saasglue-stage.herokuapp.com';
-
-      let corsOptions: any = {
-        origin: origin,
-        methods: 'GET, PUT, POST, DELETE, OPTIONS',
-        allowedHeaders: 'origin, x-requested-with, accept, content-type, x-csrf-token, correlationid, cookie, auth, host, referer, user-agent, _teamid',
-        exposedHeaders: 'origin, x-requested-with, accept, content-type, x-csrf-token, correlationid, cookie, auth, referer, user-agent, _teamid',
-        maxAge: 3628800,
-        credentials: true
-      };
-      app.use(cors(corsOptions));
     }
 
+    let origin = 'http://console.saasglue.com';
+    if (environment == 'stage'){
+      origin = 'http://saasglue-stage.herokuapp.com';
+    }
+    else if(environment === 'bartdev'){
+      origin = 'http://localhost';
+    }
+
+    const corsOptions: any = {
+      origin: origin,
+      methods: 'GET, PUT, POST, DELETE, OPTIONS',
+      allowedHeaders: 'origin, x-requested-with, accept, content-type, x-csrf-token, correlationid, cookie, auth, host, referer, user-agent, _teamid',
+      exposedHeaders: 'origin, x-requested-with, accept, content-type, x-csrf-token, correlationid, cookie, auth, referer, user-agent, _teamid',
+      maxAge: 3628800,
+      credentials: true
+    };
+    app.use(cors(corsOptions));
 
     if(config.get('httpLogs.enabled')){
       morgan.token('user_id', req => req.headers.userid);

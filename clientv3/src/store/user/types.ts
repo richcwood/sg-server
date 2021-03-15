@@ -5,5 +5,8 @@ export interface User extends Model {
   _teamId?: string,
   _jobDefId?: string,
   name: string,
-  email: string
+  email: string,
+  companyName: string,
+  teamIdsInvited: string[],
+  teamIds: string[]
 };

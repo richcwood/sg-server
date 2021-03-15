@@ -212,7 +212,10 @@ export default class Scripts extends Vue {
       console.log('Error in loading a user.  Maybe it was deleted?', userId);
       return {
         name: 'Error',
-        email: 'Error'
+        email: 'Error',
+        teamIdsInvited: [],
+        teamIds: [],
+        companyName: ''
       }
     }
   }

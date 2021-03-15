@@ -31,14 +31,14 @@
     </modal>
 
 
-
+    amount:
     <input class="input vertical-aligned-center" 
             type="text" 
             style="width: 75px;" 
             v-model="paymentAmount">
 
     <select class="input select button-spaced vertical-aligned-center" 
-            style="width: 150px;"
+            style="width: 200px;"
             v-model="paymentMethodId">
 
       <option v-for="paymentMethod in paymentMethods" :key="paymentMethod.id" :value="paymentMethod.id">

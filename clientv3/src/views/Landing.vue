@@ -364,7 +364,7 @@
           <button class="button is-primary" @click="onAddTeammatesClicked">Add Teammates</button>
         </div>
         <div style="margin-right:150px; margin-top:20px;">
-          <a @click.prevent="onSkipTeammatesClicked">Skip for now</a>
+          <a @click.prevent="onClickedStartUsingSaasGlue">Skip for now</a>
         </div>
       </div>
     </div>
@@ -583,14 +583,15 @@
 
 <script lang="ts">
   import { Component, Vue } from 'vue-property-decorator';
-  import { BindStoreModel } from '@/decorator';
-  import { StoreType } from '@/store/types';
-  import { SgAlert, AlertPlacement, AlertCategory } from '@/store/alert/types';
-  import { isUserReadyToUseApp, parseJwt } from '@/store/security';
+  import { BindStoreModel } from '../decorator';
+  import { StoreType } from '../store/types';
+  import { User } from '../store/user/types';
+  import { SgAlert, AlertPlacement, AlertCategory } from '../store/alert/types';
+  import { isUserReadyToUseApp, parseJwt, getAuthJwtCookie } from '../store/security';
   import axios from 'axios';
   import Cookies from 'js-cookie';
   import randomId from '../utils/RandomId';
-  import { showErrors } from '@/utils/ErrorHandler';
+  import { showErrors } from '../utils/ErrorHandler';
 
   @Component
   export default class Landing extends Vue { 
@@ -614,7 +615,7 @@
     private teammates = [{id: randomId(), email: ''}, {id: randomId(), email: ''}, {id: randomId(), email: ''}];
 
     @BindStoreModel({storeType: StoreType.SecurityStore, selectedModelName: 'user'})
-    private user: any;
+    private user: User;
 
     private mounted(){
       this.emailAddress = localStorage.getItem('sg_email');
@@ -661,7 +662,7 @@
           this.page = 'createAccount'; 
         }
         else {
-          this.page = 'joinTeam';
+          this.$router.push('/');
         }
       }
       else {
@@ -774,6 +775,7 @@
           this.page = 'joinTeam';
         }
         else {
+          this.teamName = this.companyName; // just default this
           this.page = 'createTeam';
           this.$nextTick(() => {
             (<any>this.$refs['teamName']).focus();
@@ -826,30 +828,32 @@
     private async onAddTeammatesClicked(){
       try {
         const teammateEmails: any = [];
-        this.teammates.map(teammate => teammateEmails.push(teammate.email));
+        this.teammates.map(teammate => { 
+          if(teammate.email && /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$/.test(teammate.email))
+          teammateEmails.push(teammate.email);
+        });
+
         const invitePromises = [];
 
         for(const email of teammateEmails){
-          if(email){ // todo - better validation
-            invitePromises.push(axios.post('api/v0/invite/direct', {
-              email,
-              _userId: this.user.id
-            }));
-          }
+          invitePromises.push(axios.post('api/v0/invite/direct', {
+            email,
+            _userId: this.user.id
+          }));
         }
 
-        await Promise.all(invitePromises);
-
-        this.page = 'addTeamMembersSuccess';
+        if(invitePromises.length > 0){
+          await Promise.all(invitePromises);
+          this.page = 'addTeamMembersSuccess';
+        }
+        else {
+          this.onClickedStartUsingSaasGlue();
+        }
       }
       catch(err){
         console.error(err);
         showErrors(`Error setting up the team.`, err);
       }
-    }
-
-    private onSkipTeammatesClicked(){
-      this.$store.dispatch('securityStore/startApp');
     }
 
     private async onAcceptInvitationClicked(teamId: string){
@@ -914,7 +918,14 @@
     }
 
     private onClickedStartUsingSaasGlue(){
-      this.$store.dispatch('securityStore/startApp');
+      // Manually set the user from the auth cookie
+      const authJwt: any = getAuthJwtCookie();
+      if(authJwt && authJwt.teamIds && authJwt.teamIds.length > 0 ){
+        this.$store.dispatch('securityStore/restartApp', {selectedTeamId: authJwt.teamIds[0], routeName: 'jobMonitor'});
+      }
+      else {
+        console.error('Cannot start the applicaton.  For some reason the Auth cookie was not avaiable', authJwt);
+      }
     }
 
     private get teamIdsInvitedMinusLocalStorage(){

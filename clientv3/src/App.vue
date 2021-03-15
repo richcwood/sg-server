@@ -15,7 +15,7 @@
     <div class="nav-bar" v-if="! isOnLandingPage()">
 
       <div class="left-nav">
-        <img src="/logo2_beta.png" class="logo">
+        <router-link class="logo-container" to="/"> <img src="/Logo_flat.png" class="logo"> </router-link>
         <router-link :class="{'active-link': isLinkActive(['downloadAgent'])}" class="main-nav-link" to="/downloadAgent">Download Agent</router-link><span class="nav-spacer">|</span>
         <router-link :class="{'active-link': isLinkActive(['jobList', 'jobDesigner'])}" class="main-nav-link" to="/jobList">Designer</router-link><span class="nav-spacer">|</span>
         <router-link :class="{'active-link': isLinkActive(['jobMonitor', 'jobDetailsMonitor'])}" class="main-nav-link" to="/">Monitor</router-link><span class="nav-spacer">|</span>
@@ -351,17 +351,17 @@ export default class App extends Vue {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  min-width: 1200px;
+  min-width: 1250px;
   padding-left: 10px;
   padding-right: 10px;
   padding-top: 10px;
   padding-bottom: 10px;
-  background-color: black;
+  background-color: white;
 
   .main-nav-link {
     font-weight: bold;
     //color: #2c3e50;
-    color: white;
+    color: black;
 
     &.active-link {
       color: #42b983;
@@ -393,9 +393,13 @@ export default class App extends Vue {
       margin-left: 5px;
     }
 
-  .logo {
-    height: 38px;
+  .logo-container {
     margin-right: 20px;
+    margin-bottom: -14px;
+  }
+
+  .logo {
+    height: 45px;
   }
 }
 
@@ -404,7 +408,7 @@ export default class App extends Vue {
   justify-content: space-between;
   position: fixed;
   height: 25px;
-  background-color: black;
+  background-color: white;
   border-top: 1px solid $grey-lighter;
   left: 0px;
   bottom: 0px;
@@ -425,7 +429,7 @@ export default class App extends Vue {
 }
 
 .footer-message {
-  color: white;
+  color: black;
   font-weight: 700;
   margin-left: 10px;
 }

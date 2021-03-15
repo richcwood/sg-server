@@ -35,6 +35,7 @@ export default class LoginRouter {
   }
 
   async webLogin(req: Request, res: Response, next: NextFunction) {
+    console.log('\nBART, web logging in');
     const loginResults: any = await userService.findAllUsersInternal({ email: req.body.email }, 'id passwordHash email teamIds teamIdsInvited name companyName teamAccessRightIds')
 
     if (!loginResults || (_.isArray(loginResults) && loginResults.length < 1)) {

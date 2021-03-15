@@ -4,7 +4,7 @@ import axios from 'axios';
 import lodash from 'lodash';
 
 // For pagination, what are the defaults for max models loaded, the default page size etc.
-const DEFAULT_MAX_PAGE_TOTAL = 3000;
+const DEFAULT_MAX_PAGE_TOTAL = 10000;
 const DEFAULT_MAX_PAGE_SIZE = 500;
 
 
@@ -48,9 +48,10 @@ const loadPaginatedModels = async function({state, commit, preCommit, filter}: {
     const paginationTotal = firstResponse.data.meta.count;
 
     if(paginationTotal > DEFAULT_MAX_PAGE_TOTAL){
-      console.error(`Oops, looks like you tried to bulk load a model type with more than the default limit of ${DEFAULT_MAX_PAGE_TOTAL}. url=${baseUrl}, totalModelCount=${paginationTotal}`);
+      console.warn(`Oops, looks like you tried to bulk load a model type with more than the default limit of ${DEFAULT_MAX_PAGE_TOTAL}. url=${baseUrl}, totalModelCount=${paginationTotal}`);
     }
-    else if(paginationTotal > DEFAULT_MAX_PAGE_SIZE) {
+    
+    if(paginationTotal > DEFAULT_MAX_PAGE_SIZE) {
 
       let lastId = firstResponse.data.data[firstResponse.data.data.length - 1].id;
       for(let pageIndex = 1; pageIndex * DEFAULT_MAX_PAGE_SIZE < paginationTotal; pageIndex++){
