@@ -57,7 +57,7 @@ export class RabbitMQAdmin {
     }
 
     async getQueueDetails(queue: string) {
-        return new Promise((resolve, reject) => {
+        return new Promise<void>((resolve, reject) => {
             this.instance.get(`queues/${this.vhost}/${queue}`)
                 .then((response) => {
                     resolve(response);

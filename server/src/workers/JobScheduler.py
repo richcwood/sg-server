@@ -137,12 +137,12 @@ job_scheduler.configure(jobstores=jobstores, executors=executors,
 
 def logDebug(msgData):
     global cml_adapter
-    cml_adapter.error(json.dumps(msgData, default=str))
+    cml_adapter.debug(json.dumps(msgData, default=str))
 
 
 def logInfo(msgData):
     global cml_adapter
-    cml_adapter.error(json.dumps(msgData, default=str))
+    cml_adapter.info(json.dumps(msgData, default=str))
 
 
 def logError(msgData):
@@ -171,6 +171,7 @@ def RestAPICall(url, method, _teamId, headers, data={}):
     global apiPort
     global apiVersion
 
+    httpResponseCode = ''
     try:
         apiUrl = apiBaseUrl
         if apiPort != '':
@@ -188,23 +189,37 @@ def RestAPICall(url, method, _teamId, headers, data={}):
             res = requests.post(url=url, headers=headers, data=data)
         elif method == 'PUT':
             res = requests.put(url=url, headers=headers, data=data)
+        elif method == 'DELETE':
+            res = requests.delete(url=url, headers=headers, data=data)
         else:
             raise Exception('{} method not supported'.format(method))
+        httpResponseCode = res.status_code
         if (str(res.status_code)[0] != '2'):
             raise Exception('Call to {} returned {} - {}'.format(url, res.status_code, res.text))
+        return [True, httpResponseCode]
     except Exception as ex:
         logError({"msg": str(ex), "Method": "RestAPICall", "url": url, "method": method, "_teamId": _teamId, "headers": headers, "data": data})
+        return [False, httpResponseCode]
 
 
 def on_launch_job(scheduled_time, job_id, _teamId, targetId, runtimeVars):
     logInfo({"msg": "Launching job", "_teamId": _teamId, "_jobDefId": targetId, "date": datetime.now(), "scheduled_time": scheduled_time})
-    RestAPICall('job', 'POST', _teamId, {'_jobDefId': targetId}, {'dateScheduled': scheduled_time, 'runtimeVars': runtimeVars})
+    res = RestAPICall('job', 'POST', _teamId, {'_jobDefId': targetId}, {'dateScheduled': scheduled_time, 'runtimeVars': runtimeVars})
 
-    job = job_scheduler.get_job(job_id)
-    if job:
-        url = 'schedule/fromscheduler/{}'.format(job_id)
-        RestAPICall(url, 'PUT', _teamId, {}, {'lastScheduledRunDate': scheduled_time, 'nextScheduledRunDate': job.next_run_time})
-        logInfo({"msg": "Updating job info 1", "url": url, "job_id": job_id, "lastScheduledRunDate": scheduled_time, "nextScheduledRunDate": job.next_run_time})
+    updateSchedule = True
+    if not res[0]:
+        if res[1] == 404:
+            updateSchedule = False
+            # job_scheduler.remove_job(job_id)
+            logInfo({"msg": "Job does not exist - deleting schedule", "_teamId": _teamId, "_jobDefId": targetId, "date": datetime.now(), "_scheduleId": job_id})
+            res = RestAPICall('schedule/{}'.format(job_id), 'DELETE', _teamId, {}, {})
+
+    if updateSchedule:
+        job = job_scheduler.get_job(job_id)
+        if job:
+            url = 'schedule/fromscheduler/{}'.format(job_id)
+            RestAPICall(url, 'PUT', _teamId, {}, {'lastScheduledRunDate': scheduled_time, 'nextScheduledRunDate': job.next_run_time})
+            logInfo({"msg": "Updating job info 1", "url": url, "job_id": job_id, "lastScheduledRunDate": scheduled_time, "nextScheduledRunDate": job.next_run_time})
 
 
 def on_message(delivery_tag, body, async_consumer):
