@@ -3,6 +3,7 @@ import Router, { Route } from 'vue-router';
 import { StoreType } from '@/store/types';
 import store from '@/store';
 import Landing from '@/views/Landing.vue';
+import Dashboard from '@/views/Dashboard.vue';
 import InviteTeammates from '@/views/InviteTeammates.vue';
 import InvitationsForMe from '@/views/InvitationsForMe.vue';
 import JobMonitor from '@/views/JobMonitor.vue';
@@ -48,6 +49,11 @@ const router = new Router({
   base: process.env.BASE_URL,
   routes: [
     {
+      path: '/',
+      name: 'dashboard',
+      component: Dashboard
+    },
+    {
       path: '/landing',
       name: 'landing',
       component: Landing
@@ -68,7 +74,7 @@ const router = new Router({
       component: InvitationsForMe
     },
     {
-      path: '/',
+      path: '/jobMonitor',
       name: 'jobMonitor',
       component: JobMonitor
     },

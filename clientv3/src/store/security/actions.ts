@@ -134,7 +134,7 @@ export const actions: ActionTree<SecurityStore, RootState> = {
       }
     }
     else {
-      // Just start from the job monitor
+      // Just start from the dashboard
       const localStorageStartRouteName = localStorage.getItem('sg_start_route_name');
       localStorage.removeItem('sg_start_route_name');
       if(localStorageStartRouteName){
@@ -147,7 +147,7 @@ export const actions: ActionTree<SecurityStore, RootState> = {
           sessionStorage.removeItem('deep_link_hash');
         }
         else if(router.currentRoute.name === 'landing'){
-          router.replace({name: 'jobMonitor'});
+          router.replace({name: 'dashboard'});
         }
       }
     }

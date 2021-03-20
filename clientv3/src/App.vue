@@ -18,7 +18,7 @@
         <router-link class="logo-container" to="/"> <img src="/Logo_flat.png" class="logo"> </router-link>
         <router-link :class="{'active-link': isLinkActive(['downloadAgent'])}" class="main-nav-link" to="/downloadAgent">Download Agent</router-link><span class="nav-spacer">|</span>
         <router-link :class="{'active-link': isLinkActive(['jobList', 'jobDesigner'])}" class="main-nav-link" to="/jobList">Designer</router-link><span class="nav-spacer">|</span>
-        <router-link :class="{'active-link': isLinkActive(['jobMonitor', 'jobDetailsMonitor'])}" class="main-nav-link" to="/">Monitor</router-link><span class="nav-spacer">|</span>
+        <router-link :class="{'active-link': isLinkActive(['jobMonitor', 'jobDetailsMonitor'])}" class="main-nav-link" to="/jobMonitor">Monitor</router-link><span class="nav-spacer">|</span>
         <router-link :class="{'active-link': isLinkActive(['agentMonitor'])}" class="main-nav-link" to="/agentMonitor">Agents</router-link> <span class="nav-spacer">|</span> 
         <router-link :class="{'active-link': isLinkActive(['interactiveConsole'])}" class="main-nav-link" to="/interactiveConsole">Console</router-link><span class="nav-spacer">|</span>
         <router-link :class="{'active-link': isLinkActive(['artifacts'])}" class="main-nav-link" to="/artifacts">Artifacts</router-link><span class="nav-spacer">|</span>
