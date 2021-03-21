@@ -91,6 +91,29 @@ const momentToStringV3 = function(input: moment.Moment | string | number | Date)
   }
 }
 
+const isToday = function(input: moment.Moment | string | number | Date) {
+  if(input){
+    let momentInput: moment.Moment;
+
+    if(_.isFinite(input) || _.isString(input)){
+      momentInput = moment(input);
+    }
+    else if(input instanceof Date){
+      momentInput = moment(input);
+    }
+    else {
+      momentInput = <moment.Moment> input;
+    }
+
+    const now = moment();
+    
+    return now.isSame(input, 'day');
+  }
+  else {
+    return false;
+  }
+};
+
 export const timeZones = [
   {"label":"(GMT-12:00) International Date Line West","value":"Etc/GMT+12"},
   {"label":"(GMT-11:00) Midway Island, Samoa","value":"Pacific/Midway"},
@@ -175,4 +198,4 @@ export const timeZones = [
 ];
 
 
-export { momentToStringV1, momentToStringV2, momentToStringV3 };
+export { momentToStringV1, momentToStringV2, momentToStringV3, isToday };
