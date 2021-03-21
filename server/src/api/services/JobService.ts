@@ -232,7 +232,7 @@ export class JobService {
 
 
                     if (taskModel.target == Enums.TaskDefTarget.AWS_LAMBDA) {
-                        step.s3Bucket = config.get('S3_BUCKET_TEAM_ARTIFACTS');
+                        step.s3Bucket = config.get('S3_BUCKET_CUSTOMER_FUNCTIONS');
                         step.lambdaAWSRegion = config.get('AWS_REGION');
                     }
 
@@ -343,7 +343,7 @@ export class JobService {
                     });
 
                     if (task.target == Enums.TaskDefTarget.AWS_LAMBDA) {
-                        step.s3Bucket = config.get('S3_BUCKET_TEAM_ARTIFACTS');
+                        step.s3Bucket = config.get('S3_BUCKET_CUSTOMER_FUNCTIONS');
                         step.lambdaAWSRegion = config.get('AWS_REGION');
                     }
 

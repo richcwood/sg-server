@@ -43,6 +43,7 @@
   "S3_BUCKET_AGENT_BINARIES": "sg-agent-binaries",
   "S3_URL_EXPIRATION_SECONDS": 600,
   "S3_BUCKET_TEAM_ARTIFACTS": "sg-team-artifacts",
+  "S3_BUCKET_CUSTOMER_FUNCTIONS": "sg-customer-functions",
   "BillingReplyEmailAddress": "do-not-reply@saasglue.com",
   "old_secret": "shhh",
   "old_secret_expiration": "2020-10-15",
