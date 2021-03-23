@@ -43,6 +43,7 @@
   "S3_BUCKET_AGENT_BINARIES": "sg-agent-binaries",
   "S3_URL_EXPIRATION_SECONDS": 600,
   "S3_BUCKET_TEAM_ARTIFACTS": "sg-team-artifacts",
+  "S3_BUCKET_CUSTOMER_FUNCTIONS": "sg-customer-functions",
   "BillingReplyEmailAddress": "do-not-reply@saasglue.com",
   "old_secret": "shhh",
   "old_secret_expiration": "2020-10-15",
@@ -74,7 +75,7 @@
   "buildAgentWinx64JobDefId": "5f57ef968f0baa0ece87df6e",
   "buildAgentStubWinx64JobDefId": "5f57ef978f0baa0ece87df72",
   "rmqDLQRoute": "dlq",
-  "lambda-admin-iam-role": "arn:aws:iam::948032566234:role/lambda-admin",
+  "lambda-admin-iam-role": "arn:aws:iam::539332921778:role/lambda-admin",
   "awsLambdaRequiredTags": {
     "cloud_platform": "aws",
     "lambda_runner": "true"
