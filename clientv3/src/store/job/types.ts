@@ -1,5 +1,6 @@
-import { Model, LinkedModel } from '@/store/types'
+import { Model } from '@/store/types'
 import { JobStatus } from '@/utils/Enums';
+import moment from 'moment';
 
 export interface Job extends Model {    
   dateCreated: string;
@@ -12,3 +13,71 @@ export interface Job extends Model {
   dateStarted?: Date
   dateCompleted?: Date
 };
+
+// Some names/filters for some standard load options
+export enum JobFetchType {
+  TODAY,
+  LAST_SEVEN_DAYS,
+  LAST_MONTH,
+  LAST_TWO_MONTHS
+};
+
+export const getJobFetchTypeDescription = function(jobFetchType: JobFetchType): string {
+  const today = moment();
+
+  if(jobFetchType == JobFetchType.TODAY){
+    return 'Today';
+  }
+  else if(jobFetchType == JobFetchType.LAST_SEVEN_DAYS){
+    today.add(-7, 'days');
+    return `Last 7 Days (${today.format('MMM-DD')} to Today)`;
+  }
+  else if(jobFetchType == JobFetchType.LAST_MONTH){
+    today.add(-1, 'months');
+    return `Last Month (${today.format('MMM-DD')} to Today)`;
+  }
+  else if(jobFetchType == JobFetchType.LAST_TWO_MONTHS){
+    today.add(-2, 'months');
+    return `Last 2 Months (${today.format('MMM-DD')} to Today)`;
+  }
+  else {
+    return 'unknown job fetch type ' + jobFetchType;
+  }
+}
+
+// This splits up filters in unique segments that don't overlap.
+// So, LAST_TWO_MONTHS actually means from -2 months to -1 month
+// So, if you want LAST_TWO_MONTHS you better load TODAY+LAST_SEVEN_DAYS+LAST_MONTH too
+export const getJobFetchTypeFilter = function(jobFetchType: JobFetchType): string {
+  const today = moment();
+
+  if(jobFetchType == JobFetchType.TODAY){
+    today.startOf('day');
+    return `dateStarted>${today.valueOf()}`;
+  }
+  else if(jobFetchType == JobFetchType.LAST_SEVEN_DAYS){
+    // from -7 days to midnight today 
+    today.startOf('day');
+    const dateEnd = today.valueOf();
+    today.add(-7, 'days');
+    return `dateStarted<${dateEnd},dateStarted>${today.valueOf()}`;
+  }
+  else if(jobFetchType == JobFetchType.LAST_MONTH){
+    // from midnight -1 month to midnight -7 days  
+    today.startOf('day');
+    const dateEnd = (moment(today)).add(-7, 'days').valueOf();
+    today.add(-1, 'month');
+    return `dateStarted<${dateEnd},dateStarted>${today.valueOf()}`;
+  }
+  else if(jobFetchType == JobFetchType.LAST_TWO_MONTHS){
+    // from midnight -2 month to midnight -1 month  
+    today.startOf('day');
+    today.add(-1, 'month');
+    const dateEnd = today.valueOf();
+    today.add(-1, 'month');
+    return `dateStarted<${dateEnd},dateStarted>${today.valueOf()}`;
+  }
+  else {
+    return 'unknown job fetch type ' + jobFetchType;
+  }
+}

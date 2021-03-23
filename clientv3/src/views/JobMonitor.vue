@@ -5,14 +5,14 @@
       <tbody class="tbody">
         <tr class="tr">
           <td class="td">
+            <select class="input" style="margin-bottom: 12px;" v-model="selectedJobFetchType">
+              <option v-for="jobFetchType in enumKeys(JobFetchType)" :key="jobFetchType" :value="jobFetchType">{{getJobFetchTypeDescription(jobFetchType)}}</option>
+            </select>
             <span style="position: relative;">
               <input class="input" style="padding-left: 30px;" type="text" v-model="filterString" placeholder="Filter by Job Name and Created By">
               <font-awesome-icon icon="search" style="position: absolute; left: 10px; top: 10px; color: #dbdbdb;" />
             </span>
           </td>
-        </tr>
-        <tr class="tr">
-          <td class="td"><datepicker input-class="input" v-model="filterDate" name="filterDate" :highlighted="{dates:[todaysDate]}"></datepicker></td>
         </tr>
         <tr class="tr">
           <td ref="statusPopupContainer" class="td" style="width:400px">
@@ -39,9 +39,7 @@
         </tr>
       </tbody>
     </table>
-
     
-
     <!-- List of jobs -->
     <table class="table is-striped">
       <thead class="thead">
@@ -61,8 +59,8 @@
                 No results
               </p>
               <p style="margin-left: 10px;">
-                Filter date: <span style="font-weight: 700;">{{momentToStringV3(filterDate)}}</span>
-                (only jobs after this date will be shown here)
+                Filter date: <span style="font-weight: 700;">{{getJobFetchTypeDescription(jobFetchType)}}</span>
+                (only jobs in the date range will be shown)
                 <br><br>
                 <span v-if="filterString">
                   Filter job name and created by: <span style="font-weight: 700;">{{filterString}}</span>
@@ -96,13 +94,12 @@
 import { Component, Vue } from 'vue-property-decorator';
 import Datepicker from 'vuejs-datepicker';
 import { StoreType } from '../store/types';
-import { Job } from '../store/job/types';
+import { Job, JobFetchType, getJobFetchTypeDescription } from '../store/job/types';
 import { BindStoreModel } from '../decorator';
-import { momentToStringV1, momentToStringV3 } from '../utils/DateTime';
+import { momentToStringV1, momentToStringV3, getMoment } from '../utils/DateTime';
 import moment from 'moment';
-import axios from 'axios';
 import _ from 'lodash';
-import { JobStatus, TaskStatus, enumKeyToPretty, enumKeys } from '../utils/Enums';
+import { JobStatus, enumKeyToPretty, enumKeys } from '../utils/Enums';
 import { User } from '../store/user/types';
 
 @Component({
@@ -118,11 +115,12 @@ export default class JobMonitor extends Vue {
   private readonly JobStatus = JobStatus;
   private readonly enumKeyToPretty = enumKeyToPretty;
   private readonly enumKeys = enumKeys;
+  private readonly JobFetchType = JobFetchType;
+  private readonly getJobFetchTypeDescription = getJobFetchTypeDescription;
 
   private readonly todaysDate = new Date();
 
   // Filter inputs
-  private filterDate = (moment().startOf('day').subtract('day', 3)).toString();
   private filterString = '';
   private filterStatus = enumKeys(JobStatus); // All status included by default
 
@@ -136,21 +134,49 @@ export default class JobMonitor extends Vue {
   @BindStoreModel()
   selected!: Job;
 
-  private get filteredJobs(): Job[] {
-    const filterMoment = this.filterDate ? moment(this.filterDate) : null;
+  private selectedJobFetchType = JobFetchType.LAST_SEVEN_DAYS;
 
+  private get filteredJobsByFetchType(): Job[] {
+    const today = moment();
+    today.startOf('day');
+
+    let daysDiff;
+
+    if(this.selectedJobFetchType == JobFetchType.TODAY){
+      daysDiff = 1;
+    }
+    else if(this.selectedJobFetchType == JobFetchType.LAST_SEVEN_DAYS){
+      daysDiff = 7;
+    }
+    else if(this.selectedJobFetchType == JobFetchType.LAST_MONTH){
+      const monthAgo = moment(today);
+      monthAgo.add(-1, 'month');
+      daysDiff = today.diff(monthAgo, 'day');
+    }
+    else if(this.selectedJobFetchType == JobFetchType.LAST_TWO_MONTHS){
+      const twoMonthsAgo = moment(today);
+      twoMonthsAgo.add(-2, 'month');
+      daysDiff = today.diff(twoMonthsAgo, 'day');
+    }
+    else {
+      throw 'Unknown JobFetchType in JobMonitor' + this.selectedJobFetchType;
+    }
+    
+    console.log('yo, date diff is ', daysDiff);
+
+    return this.jobs.filter((job: Job) => {
+      const jobDate = getMoment(job.dateStarted);
+      jobDate.startOf('day');
+      console.log('date diff is', jobDate.diff(today, 'day'));
+      return today.diff(jobDate, 'day') <= daysDiff;
+    });
+  }
+
+  private get filteredJobs(): Job[] {
     const filterUCase = this.filterString.toUpperCase();
     // split by whitespace and remove empty entries
     const filterUCaseItems = filterUCase.split(' ').map(item => item.trim()).filter(item => item);
-    const filteredJobs: Job[] = this.jobs.filter((job: Job) => {
-      if(filterMoment){
-        const momentStarted = moment(job.dateStarted);
-
-        if(momentStarted < filterMoment){
-          return false;
-        }
-      }
-
+    const filteredJobs: Job[] = this.filteredJobsByFetchType.filter((job: Job) => {
       if(this.filterStatus.indexOf(''+job.status) === -1){
         return false;
       }
@@ -220,8 +246,8 @@ export default class JobMonitor extends Vue {
     document.addEventListener('touchstart', this.onGlobalClicked);
 
     // restore last filters if possible
-    if(localStorage.getItem('jobMonitor_filterDate')){
-      this.filterDate = localStorage.getItem('jobMonitor_filterDate');
+    if(localStorage.getItem('jobMonitor_jobFetchType')){
+      this.selectedJobFetchType = Number.parseInt(localStorage.getItem('jobMonitor_jobFetchType'));
     }
 
     if(localStorage.getItem('jobMonitor_filterString')){
@@ -238,7 +264,7 @@ export default class JobMonitor extends Vue {
     document.removeEventListener('touchstart', this.onGlobalClicked);
 
     // save current filters
-    localStorage.setItem('jobMonitor_filterDate', this.filterDate);
+    localStorage.setItem('jobMonitor_jobFetchType', ''+this.selectedJobFetchType);
     localStorage.setItem('jobMonitor_filterString', this.filterString);
     localStorage.setItem('jobMonitor_filterStatus', JSON.stringify(this.filterStatus));
   }
