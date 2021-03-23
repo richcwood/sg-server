@@ -91,26 +91,24 @@ const momentToStringV3 = function(input: moment.Moment | string | number | Date)
   }
 }
 
-const isToday = function(input: moment.Moment | string | number | Date) {
+const getMoment = function(input: moment.Moment | string | number | Date) {
   if(input){
-    let momentInput: moment.Moment;
+    let returnVal: moment.Moment;
 
     if(_.isFinite(input) || _.isString(input)){
-      momentInput = moment(input);
+      returnVal = moment(input);
     }
     else if(input instanceof Date){
-      momentInput = moment(input);
+      returnVal = moment(input);
     }
     else {
-      momentInput = <moment.Moment> input;
+      returnVal = <moment.Moment> input;
     }
 
-    const now = moment();
-    
-    return now.isSame(input, 'day');
+    return returnVal;
   }
   else {
-    return false;
+    return moment();
   }
 };
 
@@ -198,4 +196,4 @@ export const timeZones = [
 ];
 
 
-export { momentToStringV1, momentToStringV2, momentToStringV3, isToday };
+export { momentToStringV1, momentToStringV2, momentToStringV3, getMoment };

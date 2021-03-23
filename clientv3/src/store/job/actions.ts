@@ -1,11 +1,27 @@
 import { ActionTree } from 'vuex';
 import { actions as coreActions } from '@/store/core/actions';
 import { CoreState, RootState, Model, StoreType } from '@/store/types';
-import { Job } from './types';
+import { Job, JobFetchType, getJobFetchTypeFilter } from './types';
 import { Task } from '@/store/task/types';
 import { Step } from '@/store/step/types';
-export const actions: ActionTree<CoreState, RootState> = {  
+export const actions: ActionTree<CoreState, RootState> = {
   
+  fetchModelByType({commit, state}, {jobFetchType}: {jobFetchType: JobFetchType} = {jobFetchType: JobFetchType.TODAY}): Promise<Model[]>{
+    const allPromises : Promise<Model>[] = [];
+    
+    // When you fetch something like JobFetchType.LAST_TWO_MONTHS you need to make sure you also fetch the
+    // smaller ranges up until JobFetchType.TODAY
+    // Refetching the same filters has no effect on repeat fetches.  The core won't refetch filters it's seen before
+    for(let fetchType = jobFetchType; fetchType >= 0; fetchType--){
+      allPromises.push(coreActions.fetchModelsByFilter({commit, state}, {filter: getJobFetchTypeFilter(fetchType)}));
+    }
+
+    // todo - for the dashboard, you need to remove the concept of ALL runs and start just showing today
+    // if you want to show for like the last 7 days you'll need to make that the default for loading I think
+
+    return Promise.all(allPromises);
+  },
+
   save({commit, state, dispatch}, model?: Job) : Promise<Model> {
     return coreActions.save({commit, state, dispatch}, model);
   },

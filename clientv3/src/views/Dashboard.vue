@@ -3,11 +3,11 @@
     <div class="dashboard">
 
       <div class="dashboard-row">
-        <div class="dashboard-item">
+        <div class="dashboard-item dashboard-item-small">
           <div class="dashboard-item-title">
             Agents
           </div>
-          <div class="dashboard-item-text dashboard-item-small">
+          <div class="dashboard-item-text ">
             <router-link to="/agentMonitor">
               {{agents ? agents.length : 0}} Total
             </router-link>
@@ -41,44 +41,59 @@
       </div>
 
       <div class="dashboard-row">
-        <div class="dashboard-item dashboard-item-full">
+        <div class="dashboard-item dashboard-item-small">
           <div class="dashboard-item-title">
-            Job Runs
+            Job Runs <span class="smaller-text">(Last 7 Days)</span>
           </div>
           <div class="dashboard-item-text">
             <router-link to="/jobMonitor">
-              {{jobs ? jobs.length : 0}} Total
+              {{filteredJobs.length}} Total
             </router-link>
           </div>
-          <div class="dashboard-item-text">
-            &nbsp;
-          </div>
-          <div class="dashboard-item-text">
-            {{jobsToday.length}} Runs Today
-          </div>
           <div class="dashboard-item-text dashboard-item-text-indented">
-            {{jobsTodayStatusCounts[JobStatus.NOT_STARTED]}} Not Started
+            {{filteredJobsStatusCounts[JobStatus.NOT_STARTED]}} Not Started
           </div>
           <div class="dashboard-item-text dashboard-hightlight-item dashboard-item-text-indented">
-            {{jobsTodayStatusCounts[JobStatus.RUNNING]}} Running
+            {{filteredJobsStatusCounts[JobStatus.RUNNING]}} Running
           </div>
           <div class="dashboard-item-text dashboard-warning-item dashboard-item-text-indented">
-            {{jobsTodayStatusCounts[JobStatus.INTERRUPTING]}} Interupting
+            {{filteredJobsStatusCounts[JobStatus.INTERRUPTING]}} Interupting
           </div>
           <div class="dashboard-item-text dashboard-warning-item dashboard-item-text-indented">
-            {{jobsTodayStatusCounts[JobStatus.INTERRUPTED]}} Interupted
+            {{filteredJobsStatusCounts[JobStatus.INTERRUPTED]}} Interupted
           </div>
           <div class="dashboard-item-text dashboard-warning-item dashboard-item-text-indented">
-            {{jobsTodayStatusCounts[JobStatus.CANCELING]}} Cancelling
+            {{filteredJobsStatusCounts[JobStatus.CANCELING]}} Cancelling
           </div>
           <div class="dashboard-item-text dashboard-hightlight-item dashboard-item-text-indented">
-            {{jobsTodayStatusCounts[JobStatus.COMPLETED]}} Completed
+            {{filteredJobsStatusCounts[JobStatus.COMPLETED]}} Completed
           </div>
           <div class="dashboard-item-text dashboard-error-item dashboard-item-text-indented">
-            {{jobsTodayStatusCounts[JobStatus.FAILED]}} Failed
+            {{filteredJobsStatusCounts[JobStatus.FAILED]}} Failed
           </div>
           <div class="dashboard-item-text dashboard-item-text-indented">
-            {{jobsTodayStatusCounts[JobStatus.SKIPPED]}} Skipped
+            {{filteredJobsStatusCounts[JobStatus.SKIPPED]}} Skipped
+          </div>
+        </div>
+        <div class="dashboard-item dashboard-item-medium">
+          <div class="dashboard-item-title">
+            Next Scheduled Jobs <span class="smaller-text">(Next 24 Hours)</span>
+          </div>
+          <div class="dashboard-item-text">
+            <table class="table">
+              <tr class="tr" v-for="schedule in schedulesNext24Hours" :key="schedule.id">
+                <td class="td thin-td">
+                  <a class="smallest-text" href="" @click.prevent="onClickedSchedule(schedule)">
+                    {{momentToStringV1(schedule.nextScheduledRunDate)}}
+                  </a>
+                </td>
+                <td class="td thin-td">
+                  <span class="smallest-text">
+                    {{getJobName(schedule)}}
+                  </span>
+                </td>
+              </tr>
+            </table>
           </div>
         </div>
       </div>
@@ -93,25 +108,37 @@ import { isAgentActive } from '../store/agent/agentUtils';
 import { Agent } from '../store/agent/types';
 import { Script } from '../store/script/types';
 import { JobDef } from '../store/jobDef/types';
-import { Job } from '../store/job/types';
+import { Schedule } from '../store/schedule/types';
 import { JobStatus } from '../utils/Enums'
 import { StoreType } from '../store/types';
-import { isToday } from '../utils/DateTime';
-import { AccessKey, AccessKeyType } from '../store/accessKey/types';
-import { showErrors } from '../utils/ErrorHandler';
-import axios from 'axios';
+import { getMoment, momentToStringV1 } from '../utils/DateTime';
+import moment from 'moment';
+import { Job, JobFetchType } from '../store/job/types';
 
 @Component({
   components: { }
 })
 export default class Dashboard extends Vue { 
 
+  // expose to template
   private readonly JobStatus = JobStatus;
+  private readonly momentToStringV1 = momentToStringV1;
 
   private async mounted(){
     // load all scripts,, maybe someday it will be problematic / too slow 
     this.$store.dispatch(`${StoreType.ScriptStore}/fetchModelsByFilter`);
-    this.onJobsTodayChanged();
+
+    // Load the job runs for the dashboard
+    this.$store.dispatch(`${StoreType.JobStore}/fetchModelByType`, {jobFetchType: JobFetchType.LAST_SEVEN_DAYS});
+
+    // Load schedules for the next 24 hours
+    const now = moment();
+    let scheduleFilter = `nextScheduledRunDate>${now.valueOf()}`;
+    now.add(24, 'hours');
+    scheduleFilter += `,nextScheduledRunDate<${now.valueOf()}`;
+    this.$store.dispatch(`${StoreType.ScheduleStore}/fetchModelsByFilter`, {filter: scheduleFilter});
+
+    this.onFilteredJobsChanged();
   }
 
   private createTodayEmptyStatusCounts(){
@@ -145,24 +172,66 @@ export default class Dashboard extends Vue {
   @BindStoreModel({storeType: StoreType.JobStore, selectedModelName: 'models'})
   private jobs!: Job[];
 
-  private get jobsToday(){
+  private get filteredJobs(){
+    if(!this.jobs){
+      return [];
+    }
+
+    const today = moment();
+    today.startOf('day');
+
     return this.jobs.filter((job: Job) => {
-      return isToday(job.dateStarted);
+      const jobDate = getMoment(job.dateStarted);
+      jobDate.startOf('day');
+      return jobDate.diff(today, 'day') <= 7;
     });
   }
 
-  private jobsTodayStatusCounts : {[key: number]: number} = {}; // JobStatus > count
+  private filteredJobsStatusCounts : {[key: number]: number} = {}; // JobStatus > count
 
-  @Watch('jobsToday')
-  private onJobsTodayChanged(){
+  @Watch('filteredJobs')
+  private onFilteredJobsChanged(){
     const todayStatusCount = this.createTodayEmptyStatusCounts();
 
-    for(let job of this.jobsToday){
+    for(let job of this.filteredJobs){
       todayStatusCount[job.status]++;
     }
 
-    console.log('now set to ', todayStatusCount);
-    Vue.set(this, 'jobsTodayStatusCounts', todayStatusCount)
+    Vue.set(this, 'filteredJobsStatusCounts', todayStatusCount);
+  }
+
+  @BindStoreModel({storeType: StoreType.ScheduleStore, selectedModelName: 'models'})
+  private schedules!: Schedule[]; 
+
+  private get schedulesNext24Hours(): Schedule[] {
+    const now = moment();
+    const nowPlus24Hours = moment(now);
+    nowPlus24Hours.add(24, 'hours');
+
+    if(this.schedules){
+      return this.schedules.filter((schedule: Schedule) => {
+        const nextScheduledRunDate = getMoment(schedule.nextScheduledRunDate);
+        return nextScheduledRunDate.isBetween(now, nowPlus24Hours);
+      });
+    }
+    else {
+      return [];
+    }
+  }
+
+  private getJobName(schedule: Schedule): string {
+    const jobDef = this.$store.state[StoreType.JobDefStore].storeUtils.findById(schedule._jobDefId);
+
+    if(jobDef){
+      return jobDef.name;
+    }
+    else {
+      return 'Job Not Loaded';
+    }
+  }
+
+  private onClickedSchedule(schedule: Schedule){
+    this.$router.push(`/jobDesigner/${schedule._jobDefId}/schedule`);
   }
 }
 </script>
@@ -178,6 +247,11 @@ export default class Dashboard extends Vue {
     border-width: 0 !important;
   }
 
+  .thin-td {
+    padding-top: 2px !important;
+    padding-bottom: 2px !important;
+  }
+
   .dashboard {
 
     margin-right: 20px;
@@ -189,11 +263,11 @@ export default class Dashboard extends Vue {
       margin-top: 20px;
 
       .dashboard-item-small {
-        width: 300px;
+        width: 350px;
       }
 
-      .dashboard-item-full {
-        width: 980px;
+      .dashboard-item-medium {
+        width: 720px;
       }
 
       .dashboard-item {
@@ -208,6 +282,14 @@ export default class Dashboard extends Vue {
         .dashboard-item-title {
           font-weight: 700;
           font-size: 36px;
+
+          .smaller-text {
+            font-size: 18px;
+          }
+        }
+
+        .smallest-text {
+          font-size: 18px;
         }
 
         .dashboard-item-text {

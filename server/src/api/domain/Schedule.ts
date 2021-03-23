@@ -91,7 +91,8 @@ export class ScheduleSchema {
     // Define which filters are legal for which props (including nested props (not sure about nested arrays))
     public static readonly validFilters = {
         'name': [FilterOperator.LIKE, FilterOperator.EQUALS],
-        '_jobDefId': [FilterOperator.EQUALS]
+        '_jobDefId': [FilterOperator.EQUALS],
+        'nextScheduledRunDate': [FilterOperator.GREATER_THAN, FilterOperator.LESS_THAN]
     };
 
     // 2 way map between field values the API client sees and what is stored in the database.  Allows client to use 'id' and database to use '_id'
