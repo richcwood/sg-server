@@ -1115,7 +1115,7 @@ import { Route } from 'vue-router';
 import { showErrors } from '@/utils/ErrorHandler'; 
 import ScriptSearchWithCreate from '@/components/ScriptSearchWithCreate.vue';
 import TaskDefEditor from '@/components/TaskDefEditor.vue';
-import AWSLambdaTaskDefEditor from '@/components/AWSLambdaTaskDefEditor.vue';
+import SGCTaskDefEditor from '@/components/SGCTaskDefEditor.vue';
 
 @Component({
   components: {
@@ -1126,7 +1126,7 @@ import AWSLambdaTaskDefEditor from '@/components/AWSLambdaTaskDefEditor.vue';
     ScriptSearchWithCreate, 
     ScriptEditor, 
     TaskDefEditor, 
-    AWSLambdaTaskDefEditor,
+    SGCTaskDefEditor,
     ValidationProvider, 
     ValidationObserver, 
     ArtifactSearch
