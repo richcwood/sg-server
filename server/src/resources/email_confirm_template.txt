@@ -1,12 +1,12 @@
 Confirm your email address
 
-Thank you for signing up for saas glue. We’re happy you’re here!
+Thank you for signing up for SaasGlue. We’re happy you’re here!
 
 Enter the following code in the window where you began creating your new
 Slack workspace:
 
 {confirmation_code}
 
-This email contains private information for your saas glue account —
-please don’t forward it. Questions about setting up saas glue? Email us at
+This email contains private information for your SaasGlue account —
+please don’t forward it. Questions about setting up SaasGlue? Email us at
 feedback@saasglue.com.

@@ -21,7 +21,7 @@ export function showPaidTierPopup(){
   const alertHtml = `<br>To enable this feature, please upgrade to the paid tier by entering 
                       your credit card information <a onclick="showInvoicePage()">here</a>.
                     <br><br>
-                    Click <a href="http://saasglue.com/saas-glue-pricing/">here</a> for more information about saas glue pricing.
+                    Click <a href="http://saasglue.com/saas-glue-pricing/">here</a> for more information about SaasGlue pricing.
                     <br><br>&nbsp;`;
   store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(alertHtml, AlertPlacement.WINDOW, AlertCategory.INFO));
 } 

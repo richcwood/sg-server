@@ -169,7 +169,7 @@ export class CreateInvoiceService {
         awsLambdaRequestsFilter['_teamId'] = data._teamId;
         awsLambdaRequestsFilter['dateStarted'] = { $gte: data.startDate, $lte: data.endDate };
         awsLambdaRequestsFilter['_invoiceId'] = { $exists: false };
-        awsLambdaRequestsFilter['sgcBilledDuration'] = { $exists: true };
+        awsLambdaRequestsFilter['lambdaBilledDuration'] = { $exists: true };
 
         let awsLambdaRequestsQuery = await StepOutcomeModel.aggregate([
             { $match: awsLambdaRequestsFilter },
@@ -183,7 +183,7 @@ export class CreateInvoiceService {
         data.awsLambdaComputeGbSeconds = 0;
         let awsLambdaComputeGbSecondsQuery = await StepOutcomeModel.aggregate([
             { $match: awsLambdaRequestsFilter },
-            { $group: { _id: null, sumAwsLambdaComputeGbSeconds: { $sum: { $multiply: [ "$sgcMemSize", "$sgcBilledDuration", 1/1000.0, 1/1024.0 ] } } } }
+            { $group: { _id: null, sumAwsLambdaComputeGbSeconds: { $sum: { $multiply: [ "$lambdaMemSize", "$lambdaBilledDuration", 1/1000.0, 1/1024.0 ] } } } }
         ]);
         if (_.isArray(awsLambdaComputeGbSecondsQuery) && awsLambdaComputeGbSecondsQuery.length > 0) {
             data.awsLambdaComputeGbSeconds = awsLambdaComputeGbSecondsQuery[0].sumAwsLambdaComputeGbSeconds;

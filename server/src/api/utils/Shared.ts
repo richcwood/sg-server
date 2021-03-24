@@ -109,7 +109,7 @@ let GetTaskRoutes = async (_teamId: mongodb.ObjectId, task: TaskSchema, logger: 
             return { routes: null, error: errMsg, failureCode: Enums.TaskFailureCode.MISSING_TARGET_TAGS };
         }
     }
-    /// For aws lambda objectives, route the task to a saas glue aws lambda agent
+    /// For aws lambda objectives, route the task to a SaasGlue aws lambda agent
     else if (task.target == Enums.TaskDefTarget.AWS_LAMBDA) {
         // let agentsWithRequiredTags = [];
         const sgAdminTeam = new mongodb.ObjectId(config.get('sgAdminTeam'));

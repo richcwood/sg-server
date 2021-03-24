@@ -1635,7 +1635,7 @@ let CreateAgentInstall = async (_teamId: string, agentVersion: string, nodeRange
   let pkg_json = {
     "name": "sg-agent",
     "version": "1.0.0",
-    "description": "Saas glue agent",
+    "description": "SaasGlue agent",
     "keywords": [],
     "author": "",
     "license": "ISC",
@@ -1825,7 +1825,7 @@ let ProcessOrphanedTasks = async () => {
 
     const batchSize: number = 10;
 
-    /// To prevent a run away process - if we have tons of orphaned tasks it may be an indicator of a problem with saas glue itself
+    /// To prevent a run away process - if we have tons of orphaned tasks it may be an indicator of a problem with SaasGlue itself
     const maxOfflineAgentsToProcess = 10;
     let cntOfflineAgentsProcessed = 0;
 

@@ -38,12 +38,12 @@ Quantity: {artifacts_storage_qty}
 Rate: ${artifacts_storage_rate}
 Total: ${artifacts_storage_total}
             
-SGC (saas glue compute) Requests
+AWS Lambda Requests
 Quantity: {aws_lambda_requests}
 Rate: ${aws_lambda_requests_rate}
 Total: ${aws_lambda_requests_total}
             
-SGC (saas glue compute) Duration in GB-seconds
+AWS Lambda Duration in GB-seconds
 Quantity: {aws_lambda_compute_gb_seconds}
 Rate: ${aws_lambda_compute_gb_seconds_rate}
 Total: ${aws_lambda_compute_gb_seconds_total}

@@ -13,7 +13,7 @@ vee_validate_extend('required', {
 });
 
 const initValidation = function(){
-  // custom validation rules for saas glue
+  // custom validation rules for SaasGlue
   const objectNameRegex = /^[\.a-zA-Z0-9 _-]{3,}$/;
 
   vee_validate_extend('object-name', value => {

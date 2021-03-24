@@ -601,7 +601,7 @@ export class SGUtils {
                         sgMail.send({
                             to: team.billing_email,
                             from: config.get('BillingReplyEmailAddress'),
-                            subject: `saas glue invoice for period ending ${moment(invoiceModel.endDate).format('MMMM d, YYYY')}`,
+                            subject: `SaasGlue invoice for period ending ${moment(invoiceModel.endDate).format('MMMM d, YYYY')}`,
                             attachments: [{
                                 filename: invoicePDFFileName,
                                 content: Buffer.from(data).toString('base64'),
@@ -767,7 +767,7 @@ export class SGUtils {
 
 
     static SendConfirmEmailAlreadyExistsEmail = async (userName: string, recipientAddress: string, logger: BaseLogger) => {
-        let subject = 'Your account on saas glue';
+        let subject = 'Your account on SaasGlue';
 
         let rawMsg = base64EncodedEmailTemplate;
 
@@ -904,7 +904,7 @@ export class SGUtils {
 
 
     static SendTeamSharedInviteEmail = async (team: TeamSchema, recipientAddress: string, acceptInviteLink: string, logger: BaseLogger) => {
-        let subject = 'You are invited to join a saas glue team';
+        let subject = 'You are invited to join a SaasGlue team';
 
         let rawMsg = base64EncodedEmailTemplate;
 
@@ -937,7 +937,7 @@ export class SGUtils {
 
 
     static SendTeamInviteEmail = async (team: TeamSchema, inviter: any, recipientAddress: string, acceptInviteLink: string, logger: BaseLogger) => {
-        let subject = `${inviter.name} has invited you to join a saas glue team`;
+        let subject = `${inviter.name} has invited you to join a SaasGlue team`;
 
         let rawMsg = base64EncodedEmailTemplate;
 
@@ -974,7 +974,7 @@ export class SGUtils {
 
 
     static SendTaskErrorAlertEmail = async (task_name: string, error: string, exit_code, signal, job_url: string, job_name: string, recipientAddress: string, logger: BaseLogger) => {
-        let subject = 'Saas glue alert notification';
+        let subject = 'SaasGlue alert notification';
 
         let rawMsg = base64EncodedEmailTemplate;
 
@@ -1003,7 +1003,7 @@ export class SGUtils {
 
 
     static SendTaskInterruptedAlertEmail = async (task_name: string, job_url: string, job_name: string, recipientAddress: string, logger: BaseLogger) => {
-        let subject = 'Saas glue alert notification';
+        let subject = 'SaasGlue alert notification';
 
         let rawMsg = base64EncodedEmailTemplate;
 
@@ -1026,7 +1026,7 @@ export class SGUtils {
 
 
     static SendJobCompleteAlertEmail = async (job_status: string, job_url: string, job_name: string, recipientAddress: string, logger: BaseLogger) => {
-        let subject = 'Saas glue alert notification';
+        let subject = 'SaasGlue alert notification';
 
         let rawMsg = base64EncodedEmailTemplate;
 
