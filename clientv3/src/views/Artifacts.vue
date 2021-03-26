@@ -202,7 +202,11 @@ export default class Artifacts extends Vue {
       // Need a raw request here because axios won't allow me to override defaults.
       const s3Request = new XMLHttpRequest();
       s3Request.open('PUT', artifact.url);
-      s3Request.send();
+      const fileReader = new FileReader();
+      fileReader.onload = function(event){
+        s3Request.send(event.target.result);
+      };
+      fileReader.readAsDataURL(file);
 
       s3Request.onreadystatechange = (e) => {
         Vue.set(this.fileUploadStatus, file.name, 'completed uploading file');

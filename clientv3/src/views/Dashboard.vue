@@ -226,7 +226,7 @@ export default class Dashboard extends Vue {
       return jobDef.name;
     }
     else {
-      return 'Job Not Loaded';
+      return 'Job Not Loaded'; // this shouldn't happen coz all job defs are loaded at startup
     }
   }
 
