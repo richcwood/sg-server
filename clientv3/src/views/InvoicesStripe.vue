@@ -4,7 +4,7 @@
     <modal name="add-payment-modal" :classes="'round-popup'" :width="650" :height="325">
       <validation-observer ref="addPaymentValidationObserver">
         <div style="background-color: white; width: 100%; height: 100%; padding: 20px;">
-          <div>Enter your credit card information for saas glue billing.</div>
+          <div>Enter your credit card information for SaasGlue billing.</div>
           <div>Your credit card information is protected by Stripe Payments Service 
             <a href="https://stripe.com/" target="_blank">
               <img src="StripeLogo.png" width="60px" height="auto" style="margin-bottom: -5px;">

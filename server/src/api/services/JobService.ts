@@ -101,7 +101,7 @@ export class JobService {
 
     public async createJobFromJobDefId(_teamId: mongodb.ObjectId, _jobDefId: mongodb.ObjectId, data: any, correlationId?: string, responseFields?: string): Promise<object> {
         const filterJobDef = { _id: _jobDefId, _teamId };
-        const jobDef = await JobDefModel.findOneAndUpdate(filterJobDef, { $inc: { 'lastRunId': 1 } }).select('lastRunId name createdBy runtimeVars');
+        const jobDef = await JobDefModel.findOneAndUpdate(filterJobDef, { $inc: { 'lastRunId': 1 } }).select('lastRunId name createdBy runtimeVars onJobTaskFailAlertEmail onJobCompleteAlertEmail onJobTaskInterruptedAlertEmail onJobTaskFailAlertSlackURL onJobCompleteAlertSlackURL onJobTaskInterruptedAlertSlackURL');
         if (!jobDef)
             throw new MissingObjectError(`Job template '${_jobDefId}" not found`);
         await rabbitMQPublisher.publish(_teamId, "JobDef", correlationId, PayloadOperation.UPDATE, { id: jobDef._id, lastRunId: jobDef.lastRunId });
@@ -112,7 +112,7 @@ export class JobService {
 
     public async createJobFromJobDefName(_teamId: mongodb.ObjectId, jobDefName: string, data: any, correlationId?: string, responseFields?: string): Promise<object> {
         const filterJobDef = { name: jobDefName, _teamId };
-        const jobDef = await JobDefModel.findOneAndUpdate(filterJobDef, { $inc: { 'lastRunId': 1 } }).select('lastRunId name createdBy runtimeVars');
+        const jobDef = await JobDefModel.findOneAndUpdate(filterJobDef, { $inc: { 'lastRunId': 1 } }).select('lastRunId name createdBy runtimeVars onJobTaskFailAlertEmail onJobCompleteAlertEmail onJobTaskInterruptedAlertEmail onJobTaskFailAlertSlackURL onJobCompleteAlertSlackURL onJobTaskInterruptedAlertSlackURL');
         if (!jobDef)
             throw new MissingObjectError(`Job template '${jobDefName}" not found`);
         await rabbitMQPublisher.publish(_teamId, "JobDef", correlationId, PayloadOperation.UPDATE, { id: jobDef._id, lastRunId: jobDef.lastRunId });
