@@ -206,7 +206,7 @@ export default class Artifacts extends Vue {
       fileReader.onload = function(event){
         s3Request.send(event.target.result);
       };
-      fileReader.readAsDataURL(file);
+      fileReader.readAsArrayBuffer(file);
 
       s3Request.onreadystatechange = (e) => {
         Vue.set(this.fileUploadStatus, file.name, 'completed uploading file');
