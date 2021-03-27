@@ -8,7 +8,7 @@
         <div class="hero-body">
           <div class="container">
             <h1 class="title">
-              Let's get started with Saas Glue
+              Let's get started with SaasGlue
             </h1>
           </div>
         </div>
@@ -49,7 +49,7 @@
         <div class="hero-body">
           <div class="container">
             <h1 class="title">
-              Find your Saas Glue team
+              Find your SaasGlue team
             </h1>
           </div>
         </div>
@@ -74,7 +74,7 @@
         <div class="hero-body">
           <div class="container">
             <h1 class="title">
-              Get started with Saas Glue. 
+              Get started with SaasGlue. 
               <br>First enter your email
             </h1>
           </div>
@@ -146,7 +146,7 @@
         <div class="hero-body">
           <div class="container">
             <h1 class="title">
-              Create your Saas Glue account
+              Create your SaasGlue account
             </h1>
           </div>
         </div>
@@ -214,7 +214,7 @@
         <div class="hero-body">
           <div class="container">
             <h1 class="title">
-              You are invited to these Saas Glue teams
+              You are invited to these SaasGlue teams
             </h1>
           </div>
         </div>
@@ -251,14 +251,14 @@
         <div class="hero-body">
           <div class="container">
             <h1 class="title">
-              Welcome to Saas Glue.  You've succefully joined your team.
+              Welcome to SaasGlue.  You've succefully joined your team.
             </h1>
           </div>
         </div>
       </section>
       <div style="display: flex; flex-direction: column; align-items: center;">
         <div style="margin-right:150px; margin-top:20px;">
-          <a @click.prevent="onClickedStartUsingSaasGlue">Start using Saas Glue</a>
+          <a @click.prevent="onClickedStartUsingSaasGlue">Start using SaasGlue</a>
         </div>
       </div>
     </div>
@@ -270,7 +270,7 @@
         <div class="hero-body">
           <div class="container">
             <h1 class="title">
-              Join a Saas Glue team
+              Join a SaasGlue team
             </h1>
           </div>
         </div>
@@ -280,7 +280,7 @@
         <table>
           <tr>
             <td style="padding-top: 30px;">
-              To use Saas Glue you need to be part of a team
+              To use SaasGlue you need to be part of a team
             </td>
           </tr>
           <tr>
@@ -382,7 +382,7 @@
         </div>
       </section>
       <div>
-        <a @click.prevent="onClickedStartUsingSaasGlue">Start using Saas Glue</a>
+        <a @click.prevent="onClickedStartUsingSaasGlue">Start using SaasGlue</a>
       </div>
     </div>
 
@@ -393,7 +393,7 @@
         <div class="hero-body">
           <div class="container">
             <h1 class="title">
-              Log in to your saas glue account
+              Log in to your SaasGlue account
             </h1>
           </div>
         </div>
@@ -571,7 +571,7 @@
         </div>
       </section>
       <div style="margin-right:150px; margin-top:20px;">
-        <a @click.prevent="onClickedStartUsingSaasGlue">Start using Saas Glue.</a>
+        <a @click.prevent="onClickedStartUsingSaasGlue">Start using SaasGlue.</a>
       </div>
       
     </div>

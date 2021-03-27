@@ -6,7 +6,7 @@
       <div class="round-popup" style="margin: 12px; width: 100%; height: 100%">
         <div>
           These cron entries were extracted from your agent's machine.
-          <br> You can import them into Saas Glue as Jobs.
+          <br> You can import them into SaasGlue as Jobs.
         </div>
 
         <table class="table" style="margin-top: 12px; margin-left: 8px;">
@@ -763,7 +763,7 @@ export default class AgentMonitor extends Vue {
 
       window.open(`${window.location.origin}/#/jobDesigner/${jobDef.id}`);
 
-      const alertMessage = `Cron Job imported to a new Saas Glue Job "${jobDef.name}".<br><br>Remember to remove this cron job from the Agent machine "${this.selectedAgentForCronImport.name}"<br>`;
+      const alertMessage = `Cron Job imported to a new SaasGlue Job "${jobDef.name}".<br><br>Remember to remove this cron job from the Agent machine "${this.selectedAgentForCronImport.name}"<br>`;
       this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(alertMessage, AlertPlacement.WINDOW, AlertCategory.INFO));      
     }
     catch(err) {

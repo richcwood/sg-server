@@ -83,7 +83,7 @@
                   </table>
                 </tab>
 
-                <tab title="Run on SGC (saas glue compute)">
+                <tab title="Run on AWS Lambda">
                   <table class="table" width="100%" style="margin-top: 20px;">
                     <tr class="tr">
                       <td class="td">

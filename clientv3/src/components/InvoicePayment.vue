@@ -6,7 +6,7 @@
         <tbody class="tbody">
           <tr class="tr">
             <td class="td"></td>
-            <td class="td">Submit payment to saas glue for invoice?</td>
+            <td class="td">Submit payment to SaasGlue for invoice?</td>
           </tr>
           <tr class="tr">
             <td class="td">Amount</td>

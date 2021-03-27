@@ -335,7 +335,7 @@ export class AgentDownloadRouter {
     let pkg_json = {
       "name": "sg-agent-launcher",
       "version": "1.0.0",
-      "description": "Saas glue agent launcher",
+      "description": "SaasGlue agent launcher",
       "keywords": [],
       "author": "",
       "license": "ISC",
@@ -406,7 +406,7 @@ export class AgentDownloadRouter {
     let pkg_json = {
       "name": "sg-agent",
       "version": "1.0.0",
-      "description": "Saas glue agent",
+      "description": "SaasGlue agent",
       "keywords": [],
       "author": "",
       "license": "ISC",

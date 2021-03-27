@@ -119,17 +119,21 @@ export class TaskOutcomeActionService {
     }
 
     public async cancelTaskOutcome(_teamId: mongodb.ObjectId, _taskOutcomeId: mongodb.ObjectId, correlationId?: string, responseFields?: string): Promise<object> {
-        const filter = { _id: _taskOutcomeId, _teamId, $or: [{ status: { $lt: TaskStatus.CANCELING } }, { status: TaskStatus.FAILED }] };
-        const updatedTaskOutcome = await TaskOutcomeModel.findOneAndUpdate(filter, { status: TaskStatus.CANCELING }, { new: true }).select(responseFields);
+        let filter = { _id: _taskOutcomeId, _teamId, $or: [{ status: { $lt: TaskStatus.CANCELING } }, { status: TaskStatus.FAILED }] };
+        let updatedTaskOutcome = await TaskOutcomeModel.findOneAndUpdate(filter, { status: TaskStatus.CANCELING }, { new: true }).select(responseFields);
 
         // TODO: if the task was already interrupted sending the cancel message to the agent won't do anything (i.e. the agent won't kill the process and send the 
         //      updates to the api) - how to handle both cases, i.e. where the task is currently running and where it needs to be interrupted? race conditions?
         if (!updatedTaskOutcome)
             throw new ValidationError(`Task outcome ${_taskOutcomeId} not found with filter ${JSON.stringify(filter)}`);
 
-        await rabbitMQPublisher.publish(_teamId, "TaskOutcome", correlationId, PayloadOperation.UPDATE, convertData(TaskOutcomeSchema, updatedTaskOutcome));
+        if (updatedTaskOutcome._agentId) {
+            await rabbitMQPublisher.publishToAgent(_teamId, updatedTaskOutcome._agentId, { interruptTask: convertData(TaskOutcomeSchema, updatedTaskOutcome) });
+        } else {
+            updatedTaskOutcome = await TaskOutcomeModel.findOneAndUpdate({ _id: _taskOutcomeId, _teamId, status: TaskStatus.CANCELING }, { status: TaskStatus.CANCELLED }, { new: true }).select(responseFields);
+        }
 
-        await rabbitMQPublisher.publishToAgent(_teamId, updatedTaskOutcome._agentId, { interruptTask: convertData(TaskOutcomeSchema, updatedTaskOutcome) });
+        await rabbitMQPublisher.publish(_teamId, "TaskOutcome", correlationId, PayloadOperation.UPDATE, convertData(TaskOutcomeSchema, updatedTaskOutcome));
 
         if (responseFields) {
             return taskOutcomeService.findTaskOutcome(_teamId, _taskOutcomeId, responseFields);

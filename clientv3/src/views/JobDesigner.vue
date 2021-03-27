@@ -55,7 +55,7 @@
           <td class="td">
             What type of task do you want?
             <br><br>
-            A <b>s</b>aas <b>g</b>lue compute task (SGC) runs in the saas glue cloud rather than on one of your agents.
+            An AWS Lambda task runs in a SaasGlue managed AWS account rather than on one of your agents.
             <br>
             <br>
           </td>
@@ -67,7 +67,7 @@
         </tr>
         <tr class="tr">
           <td class="td">
-            <button class="button" @click="createNewSGCTaskDef">Create SGC Task</button>
+            <button class="button" @click="createNewAWSLambdaTaskDef">Create AWS Lambda Task</button>
           </td>
         </tr>
         <tr class="tr">
@@ -85,10 +85,10 @@
             <tr class="tr">
               <td class="td"></td>
               <td class="td">
-                Create a new <span v-if="isSGCTaskDefType(newTaskTarget)">SGC</span> task
-                <template v-if="isSGCTaskDefType(newTaskTarget)">
+                Create a new <span v-if="isAWSLambdaTaskDefType(newTaskTarget)">AWS Lambda</span> task
+                <template v-if="isAWSLambdaTaskDefType(newTaskTarget)">
                   <br><br>
-                  A <b>S</b>aas <b>G</b>lue <b>C</b>ompute task runs on AWS lambda instead of running on your own agent environments.
+                  An AWS Lambda task runs in a SaasGlue managed AWS account rather than on one of your agents.
                 </template>
               </td>
             </tr>
@@ -560,8 +560,8 @@
             <a class="dropdown-item" @click.prevent="onNavMenuCreateTaskClicked" >
               Create Task
             </a>
-            <a class="dropdown-item" @click.prevent="onNavMenuCreateSGComputeTaskClicked">
-              Create SGC Task
+            <a class="dropdown-item" @click.prevent="onNavMenuCreateAWSLambdaTaskClicked">
+              Create AWS Lambda Task
             </a>
             <template v-if="selectedTaskDefForEdit === null">
               <span class="dropdown-item" style="color: lightgray;">Create Step</span>
@@ -584,13 +584,13 @@
       
       <div class="nav-job-item" :class="{selected: jobDefForEdit === selectedItemForNav}" @click="selectItemForNav(jobDefForEdit)"> {{calcNavPanelJobName(jobDefForEdit)}}</div>
       <div class="nav-task" :class="{selected: taskDef === selectedItemForNav}" @click="selectItemForNav(taskDef)" v-for="taskDef in taskDefs" v-bind:key="taskDef.id">
-        <span v-if="!isSGCTaskDefType(taskDef.target) && stepDefsForTaskDef(taskDef).length > 0">
+        <span v-if="!isAWSLambdaTaskDefType(taskDef.target) && stepDefsForTaskDef(taskDef).length > 0">
           <span class="nav-expander" @click.stop="onNavTaskDefClicked(taskDef)">{{isNavTaskDefCollapsed(taskDef) ? '+' : '-'}}</span>
         </span>
         <span v-else class="nav-spacer">
         </span>
-        {{calcNavPanelTaskName(taskDef)}} <span v-if="isSGCTaskDefType(taskDef.target)">(sgc)</span>
-        <span v-if="!isNavTaskDefCollapsed(taskDef) && !isSGCTaskDefType(taskDef.target)">
+        {{calcNavPanelTaskName(taskDef)}} <span v-if="isAWSLambdaTaskDefType(taskDef.target)">(lambda)</span>
+        <span v-if="!isNavTaskDefCollapsed(taskDef) && !isAWSLambdaTaskDefType(taskDef.target)">
           <div class="nav-step" :class="{selected: stepDef === selectedItemForNav}" @click.stop="selectItemForNav(stepDef)" v-for="stepDef in stepDefsForTaskDef(taskDef)" v-bind:key="stepDef.id">
             {{calcNavPanelStepName(stepDef)}}
           </div>
@@ -1191,7 +1191,7 @@ export default class JobDesigner extends Vue {
     }
   }
 
-  private isSGCTaskDefType(target: TaskDefTarget){
+  private isAWSLambdaTaskDefType(target: TaskDefTarget){
     return target === TaskDefTarget.AWS_LAMBDA;
   }
 
@@ -1424,7 +1424,7 @@ export default class JobDesigner extends Vue {
     }
   }
 
-  private createNewSGCTaskDef(){
+  private createNewAWSLambdaTaskDef(){
     this.cancelCreateNewTaskDef_chooseTarget();
     this.newTaskName = ''; // reset
     this.newTaskTarget = TaskDefTarget.AWS_LAMBDA;
@@ -1486,7 +1486,7 @@ export default class JobDesigner extends Vue {
 
       const createdTask = await this.$store.dispatch(`${StoreType.TaskDefStore}/save`, newTask);
 
-      if(this.isSGCTaskDefType(this.newTaskTarget)){
+      if(this.isAWSLambdaTaskDefType(this.newTaskTarget)){
         // Load the step def immediately and wait on this - if anyone views the steps, they are supposed to be in the store right away
         await this.$store.dispatch(`${StoreType.StepDefStore}/fetchModelsByFilter`, {filter: `_taskDefId==${createdTask.id}`});
       }
@@ -2015,9 +2015,9 @@ export default class JobDesigner extends Vue {
     this.createNewTaskDef(); 
   }
 
-  private onNavMenuCreateSGComputeTaskClicked(){
+  private onNavMenuCreateAWSLambdaTaskClicked(){
     this.showCreateItemMenu = false;
-    this.createNewSGCTaskDef();
+    this.createNewAWSLambdaTaskDef();
   }
 
   private onNavMenuCreateStepClicked(){

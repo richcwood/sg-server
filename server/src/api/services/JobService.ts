@@ -167,7 +167,7 @@ export class JobService {
 
             for (let taskDef of taskDefs) {
                 if (taskDef.target == Enums.TaskDefTarget.AWS_LAMBDA) {
-                    FreeTierChecks.PaidTierRequired(_teamId, 'Please upgrade to the paid tier to run saas glue compute tasks');
+                    FreeTierChecks.PaidTierRequired(_teamId, 'Please upgrade to the paid tier to run AWS Lambda tasks');
                 }
             }
             // console.log('JobService -> createJobFromJobDef -> taskDefs -> ', JSON.stringify(taskDefs, null, 4));
