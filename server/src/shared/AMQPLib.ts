@@ -161,6 +161,8 @@ export class AMQPConnector {
             this.LogDebug('Publisher channel closed', { 'StoppedByUser': this.stoppedByUser });
         });
         this.pubChannel.on('return', (val) => {
+            if (val.fields && val.fields.routingKey && (val.fields.routingKey == 'bp' || val.fields.routingKey == 'ba') && val.fields.replyCode && val.fields.replyCode == 312)
+                return;
             this.LogDebug('Publisher channel message returned', { 'fields': val.fields, 'properties': val.properties, 'content': val.content.toString('utf8') });
         });
 
