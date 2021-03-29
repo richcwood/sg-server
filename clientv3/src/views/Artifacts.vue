@@ -2,27 +2,31 @@
   <div class="main" style="margin-left: 36px; margin-right: 12px;">
 
     <!-- Modals -->
-    <modal name="upload-modal" :width="600" :height="900">
-      <div class="round-popup" style="margin: 8px; width: 100%; height: 100%">
+    <modal name="upload-modal" :width="800" :height="900">
+      <div class="round-popup" style="margin: 8px; width: 100%; height: 100%;">
         <div>
           Artifacts to upload 
         </div>
         <div>
-          <input class="input" type="file" multiple @change="onInputFilesChanged">
+          <input class="input" type="file" multiple webkitdirectory @change="onInputFilesChanged">
         </div>
 
+        <div style="overflow: scroll; height: 650px;">
+          <table class="table" style="margin-top: 12px; margin-left: 8px;">
+            <tr class="tr" v-for="file in filesToUpload" v-bind:key="file.name">
+              <td class="td">
+                {{file.name}}
+              </td>
+              <td class="td">
+                <span v-if="getUploadStatus(file)" :class="{'has-text-success': getUploadStatus(file).includes('completed')}">
+                  {{getUploadStatus(file)}}
+                </span>
+                <a v-else style="margin-left: 12px;" @click="onDeleteFileClicked(file)">delete</a>
+              </td>
+            </tr>
+          </table>
+        </div>
         <table class="table" style="margin-top: 12px; margin-left: 8px;">
-          <tr class="tr" v-for="file in filesToUpload" v-bind:key="file.name">
-            <td class="td">
-              {{file.name}}
-            </td>
-            <td class="td">
-              <span v-if="getUploadStatus(file)" :class="{'has-text-success': getUploadStatus(file).includes('completed')}">
-                {{getUploadStatus(file)}}
-              </span>
-              <a v-else style="margin-left: 12px;" @click="onDeleteFileClicked(file)">delete</a>
-            </td>
-          </tr>
           <tr class="tr">
             <td class="td">
               Destination Folder<br>
