@@ -93,7 +93,7 @@ export default class LoginRouter {
 
       const loginResult = loginResults[0];
 
-      if (loginResult.expiration < new Date() || loginResult.revokeTime < new Date()) {
+      if (loginResult.expiration < new Date() || (loginResult.revokeTime && loginResult.revokeTime < new Date())) {
         res.status(401).send('Authentication failed');
         return;
       }
@@ -171,7 +171,7 @@ export default class LoginRouter {
   
       const loginResult = loginResults[0];
   
-      if (loginResult.expiration < new Date() || loginResult.revokeTime < new Date()) {
+      if (loginResult.expiration < new Date() || (loginResult.revokeTime && loginResult.revokeTime < new Date())) {
         res.status(401).send('Authentication failed');
         return;
       }
