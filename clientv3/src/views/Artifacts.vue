@@ -2,27 +2,47 @@
   <div class="main" style="margin-left: 36px; margin-right: 12px;">
 
     <!-- Modals -->
-    <modal name="upload-modal" :width="600" :height="900">
-      <div class="round-popup" style="margin: 8px; width: 100%; height: 100%">
+    <modal name="upload-modal" :width="1200" :height="900">
+      <div class="round-popup" style="margin: 8px; width: 100%; height: 100%;">
         <div>
           Artifacts to upload 
         </div>
         <div>
-          <input class="input" type="file" multiple @change="onInputFilesChanged">
+          <label class="button" style="margin-top: 14px;" for="file_upload">Choose Files</label>
+          <input id="file_upload" class="input inputfile" type="file" multiple @change="onInputFilesChanged">
+        </div>
+        <div>
+          <label class="button" style="margin-top: 14px;" for="directory_upload">Choose Directory (all files recursively added)</label>
+          <input id="directory_upload" class="input inputfile" type="file" multiple webkitdirectory @change="onInputFilesChanged">
         </div>
 
+        <div style="overflow: scroll; height: 600px;">
+          <table class="table" style="margin-top: 12px; margin-left: 8px;">
+            <tr class="tr">
+              <td class="td">
+                Folder
+              </td>
+              <td class="td">
+                File
+              </td>
+            </tr>
+            <tr class="tr" v-for="file in filesToUpload" v-bind:key="file.name">
+              <td class="td">
+                {{getFolderPath(file)}}
+              </td>
+              <td class="td">
+                {{file.name}}
+              </td>
+              <td class="td">
+                <span v-if="getUploadStatus(file)" :class="{'has-text-success': getUploadStatus(file).includes('completed')}">
+                  {{getUploadStatus(file)}}
+                </span>
+                <a v-else style="margin-left: 12px;" @click="onDeleteFileClicked(file)">delete</a>
+              </td>
+            </tr>
+          </table>
+        </div>
         <table class="table" style="margin-top: 12px; margin-left: 8px;">
-          <tr class="tr" v-for="file in filesToUpload" v-bind:key="file.name">
-            <td class="td">
-              {{file.name}}
-            </td>
-            <td class="td">
-              <span v-if="getUploadStatus(file)" :class="{'has-text-success': getUploadStatus(file).includes('completed')}">
-                {{getUploadStatus(file)}}
-              </span>
-              <a v-else style="margin-left: 12px;" @click="onDeleteFileClicked(file)">delete</a>
-            </td>
-          </tr>
           <tr class="tr">
             <td class="td">
               Destination Folder<br>
@@ -196,7 +216,7 @@ export default class Artifacts extends Vue {
       // I wonder what the API will do if the name + s3Path already exists
       const artifact = await this.$store.dispatch(`${StoreType.ArtifactStore}/save`, {
         name: file.name,
-        prefix: this.destinationFolder
+        prefix: this.getFolderPath(file)
       });
 
       // Need a raw request here because axios won't allow me to override defaults.
@@ -290,6 +310,20 @@ export default class Artifacts extends Vue {
       showErrors('Error downloading the artifact.', err);
     }
   }
+
+  private getFolderPath(file): string {
+    let path = '';
+
+    if(this.destinationFolder){
+      path += this.destinationFolder;
+    }
+
+    if(file.webkitRelativePath){
+      path += '/' + file.webkitRelativePath.replace('/'+file.name, '');
+    }
+
+    return path;
+  }
 }
 </script>
 
@@ -314,6 +348,24 @@ export default class Artifacts extends Vue {
     padding-left: 3px;
     padding-right: 3px;
     color: $danger;
+  }
+
+  .inputfile {
+    /* visibility: hidden etc. wont work */
+    width: 0.1px;
+    height: 0.1px;
+    opacity: 0;
+    overflow: hidden;
+    position: absolute;
+    z-index: -1;
+  }
+  .inputfile:focus + label {
+    /* keyboard navigation */
+    outline: 1px dotted #000;
+    outline: -webkit-focus-ring-color auto 5px;
+  }
+  .inputfile + label * {
+    pointer-events: none;
   }
 
 </style>
