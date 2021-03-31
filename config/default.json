@@ -61,8 +61,8 @@
   "SG_GIT_USERNAME": "saasglue",
   "SG_GIT_PASSWORD": "cozga5-wamveq-kEtvyt",
   "SG_GIT_URL": "github.com/saasglue/sg-agent.git",
-  "AWS_ACCESS_KEY_ID": "AKIA5ZOZE6PNDQ4LSZLC",
-  "AWS_SECRET_ACCESS_KEY": "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",
+  "AWS_ACCESS_KEY_ID": "AKIA5ZOZE6PNCYJUST7K",
+  "AWS_SECRET_ACCESS_KEY": "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",
   "AWS_REGION": "us-east-2",
   "logsFolder": "../logs",
   "httpLogs": {
