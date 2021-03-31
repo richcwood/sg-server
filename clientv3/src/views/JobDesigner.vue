@@ -219,269 +219,271 @@
       </validation-observer>
     </modal>
 
-    <modal name="edit-schedule-modal" :classes="'round-popup'" :width="700" :height="800">
-      <table class="table">
-        <tbody class="tbody">
-          <tr class="tr">
-            <td class="td">
-              <span v-if="editSchedule.id">
-                Edit the schedule {{editSchedule.name}}
-              </span>
-              <span v-else>
-                Create a new schedule {{editSchedule.name}}
-              </span>
-            </td>
-            <td class="td"></td>
-          </tr>
-          <tr class="tr">
-            <td class="td">
-              <validation-observer ref="editScheduleValidationObserver">
-                <table class="table">
-                  <tr class="tr">
-                    <td class="td">
-                      Name
-                    </td>
-                    <td class="td">
-                      <validation-provider name="Schedule Name" rules="required|object-name" v-slot="{ errors }">
-                        <input class="input" type="text" v-model="editSchedule.name">
-                        <div v-if="errors && errors.length > 0" class="message validation-error is-danger">{{ errors[0] }}</div>
-                      </validation-provider>
-                    </td>
-                  </tr>
-                  <tr class="tr">
-                    <td class="td">
-                      Type
-                    </td>
-                    <td class="td">
-                      <validation-provider name="Trigger Type" rules="required" v-slot="{ errors }">
-                        <select class="input select" style="width: 250px; margin-top: 10px;" v-model="editSchedule.TriggerType">
-                          <option v-for="(value, key) in ScheduleTriggerType" v-bind:key="`triggerType${key}-${value}`" :value="key"> {{value}} </option>
+    <modal name="edit-schedule-modal" :classes="'round-popup'" :width="700" :height="700">
+      <div style="overflow: scroll;">
+        <table class="table" width="100%" height="100%">
+          <tbody class="tbody">
+            <tr class="tr">
+              <td class="td">
+                <span v-if="editSchedule.id">
+                  Edit the schedule {{editSchedule.name}}
+                </span>
+                <span v-else>
+                  Create a new schedule {{editSchedule.name}}
+                </span>
+              </td>
+              <td class="td"></td>
+            </tr>
+            <tr class="tr">
+              <td class="td">
+                <validation-observer ref="editScheduleValidationObserver">
+                  <table class="table">
+                    <tr class="tr">
+                      <td class="td">
+                        Name
+                      </td>
+                      <td class="td">
+                        <validation-provider name="Schedule Name" rules="required|object-name" v-slot="{ errors }">
+                          <input class="input" type="text" v-model="editSchedule.name">
+                          <div v-if="errors && errors.length > 0" class="message validation-error is-danger">{{ errors[0] }}</div>
+                        </validation-provider>
+                      </td>
+                    </tr>
+                    <tr class="tr">
+                      <td class="td">
+                        Type
+                      </td>
+                      <td class="td">
+                        <validation-provider name="Trigger Type" rules="required" v-slot="{ errors }">
+                          <select class="input select" style="width: 250px; margin-top: 10px;" v-model="editSchedule.TriggerType">
+                            <option v-for="(value, key) in ScheduleTriggerType" v-bind:key="`triggerType${key}-${value}`" :value="key"> {{value}} </option>
+                          </select>
+                          <div v-if="errors && errors.length > 0" class="message validation-error is-danger">{{ errors[0] }}</div>
+                        </validation-provider>
+                      </td>
+                    </tr>
+
+                    <tr class="tr">
+                      <td class="td">
+                        Is Active
+                      </td>
+                      <td class="td">
+                        <input type="checkbox" v-model="editSchedule.isActive">
+                      </td>
+                    </tr>
+
+                  </table>
+                </validation-observer>
+              </td>
+              <td class="td"></td>
+            </tr>
+            <tr class="tr" v-if="editSchedule.TriggerType === ScheduleTriggerType.date">
+              <td class="td" colspan="2">
+                <validation-observer ref="editSchedule_RunDate_ValidationObserver">
+                  <table class="table">
+                    <tr class="tr">
+                      <td class="td">
+                        Run Date
+                      </td>
+                      <td class="td">
+                        <validation-provider name="Run Date" rules="required|datetime" v-slot="{ errors }">
+                          <input class="input" type="text" style="width: 250px;" v-model="editSchedule.RunDate" placeholder="yyyy-MM-dd HH:mm:ss">
+                          <div v-if="errors && errors.length > 0" class="message validation-error is-danger">{{ errors[0] }}</div>
+                        </validation-provider>
+                      </td>
+                    </tr>
+                  </table>
+                </validation-observer>
+              </td>
+            </tr>
+            <tr class="tr" v-if="editSchedule.TriggerType === ScheduleTriggerType.cron">
+              <td class="td" colspan="2">
+                <validation-observer ref="editSchedule_cron_ValidationObserver">
+                  <table class="table cron-options-table">
+                    <tr class="tr">
+                      <td class="td">
+                        Year
+                      </td>
+                      <td class="td">
+                        <input class="input" type="text" v-model="editSchedule_cron.Year">
+                      </td>
+                    </tr>
+                    <tr class="tr">
+                      <td class="td">
+                        Month
+                      </td>
+                      <td class="td">
+                        <input class="input" type="text" v-model="editSchedule_cron.Month">
+                      </td>
+                    </tr>
+                    <tr class="tr">
+                      <td class="td">
+                        Day
+                      </td>
+                      <td class="td">
+                        <input class="input" type="text" v-model="editSchedule_cron.Day">
+                      </td>
+                    </tr>
+                    <tr class="tr">
+                      <td class="td">
+                        Week
+                      </td>
+                      <td class="td">
+                        <input class="input" type="text" v-model="editSchedule_cron.Week">
+                      </td>
+                    </tr>
+                    <tr class="tr">
+                      <td class="td">
+                        Day of Week
+                      </td>
+                      <td class="td">
+                        <input class="input" type="text" v-model="editSchedule_cron.Day_Of_Week">
+                      </td>
+                    </tr>
+                    <tr class="tr">
+                      <td class="td">
+                        Hour
+                      </td>
+                      <td class="td">
+                        <input class="input" type="text" v-model="editSchedule_cron.Hour">
+                      </td>
+                    </tr>
+                    <tr class="tr">
+                      <td class="td">
+                        Minute
+                      </td>
+                      <td class="td">
+                        <input class="input" type="text" v-model="editSchedule_cron.Minute">
+                      </td>
+                    </tr>
+                    <tr class="tr">
+                      <td class="td">
+                        Second
+                      </td>
+                      <td class="td">
+                        <input class="input" type="text" v-model="editSchedule_cron.Second">
+                      </td>
+                    </tr>
+                    <tr class="tr">
+                      <td class="td">
+                        Start Date
+                      </td>
+                      <td class="td">
+                        <input class="input" type="text" v-model="editSchedule_cron.Start_Date">
+                      </td>
+                    </tr>
+                    <tr class="tr">
+                      <td class="td">
+                        End Date
+                      </td>
+                      <td class="td">
+                        <input class="input" type="text" v-model="editSchedule_cron.End_Date">
+                      </td>
+                    </tr>
+                    <tr class="tr">
+                      <td class="td">
+                        Timezone
+                      </td>
+                      <td class="td">
+                        <select class="select" style="width: 300px;" v-model="editSchedule_cron.Timezone">
+                          <option class="option" v-for="zone in timeZones" v-bind:key="zone.value" :value="zone.value">{{zone.label}}</option>
                         </select>
-                        <div v-if="errors && errors.length > 0" class="message validation-error is-danger">{{ errors[0] }}</div>
-                      </validation-provider>
-                    </td>
-                  </tr>
-
-                  <tr class="tr">
-                    <td class="td">
-                      Is Active
-                    </td>
-                    <td class="td">
-                      <input type="checkbox" v-model="editSchedule.isActive">
-                    </td>
-                  </tr>
-
-                </table>
-              </validation-observer>
-            </td>
-            <td class="td"></td>
-          </tr>
-          <tr class="tr" v-if="editSchedule.TriggerType === ScheduleTriggerType.date">
-            <td class="td" colspan="2">
-              <validation-observer ref="editSchedule_RunDate_ValidationObserver">
-                <table class="table">
-                  <tr class="tr">
-                    <td class="td">
-                      Run Date
-                    </td>
-                    <td class="td">
-                      <validation-provider name="Run Date" rules="required|datetime" v-slot="{ errors }">
-                        <input class="input" type="text" style="width: 250px;" v-model="editSchedule.RunDate" placeholder="yyyy-MM-dd HH:mm:ss">
-                        <div v-if="errors && errors.length > 0" class="message validation-error is-danger">{{ errors[0] }}</div>
-                      </validation-provider>
-                    </td>
-                  </tr>
-                </table>
-              </validation-observer>
-            </td>
-          </tr>
-          <tr class="tr" v-if="editSchedule.TriggerType === ScheduleTriggerType.cron">
-            <td class="td" colspan="2">
-              <validation-observer ref="editSchedule_cron_ValidationObserver">
-                <table class="table cron-options-table">
-                  <tr class="tr">
-                    <td class="td">
-                      Year
-                    </td>
-                    <td class="td">
-                      <input class="input" type="text" v-model="editSchedule_cron.Year">
-                    </td>
-                  </tr>
-                  <tr class="tr">
-                    <td class="td">
-                      Month
-                    </td>
-                    <td class="td">
-                      <input class="input" type="text" v-model="editSchedule_cron.Month">
-                    </td>
-                  </tr>
-                  <tr class="tr">
-                    <td class="td">
-                      Day
-                    </td>
-                    <td class="td">
-                      <input class="input" type="text" v-model="editSchedule_cron.Day">
-                    </td>
-                  </tr>
-                  <tr class="tr">
-                    <td class="td">
-                      Week
-                    </td>
-                    <td class="td">
-                      <input class="input" type="text" v-model="editSchedule_cron.Week">
-                    </td>
-                  </tr>
-                  <tr class="tr">
-                    <td class="td">
-                      Day of Week
-                    </td>
-                    <td class="td">
-                      <input class="input" type="text" v-model="editSchedule_cron.Day_Of_Week">
-                    </td>
-                  </tr>
-                  <tr class="tr">
-                    <td class="td">
-                      Hour
-                    </td>
-                    <td class="td">
-                      <input class="input" type="text" v-model="editSchedule_cron.Hour">
-                    </td>
-                  </tr>
-                  <tr class="tr">
-                    <td class="td">
-                      Minute
-                    </td>
-                    <td class="td">
-                      <input class="input" type="text" v-model="editSchedule_cron.Minute">
-                    </td>
-                  </tr>
-                  <tr class="tr">
-                    <td class="td">
-                      Second
-                    </td>
-                    <td class="td">
-                      <input class="input" type="text" v-model="editSchedule_cron.Second">
-                    </td>
-                  </tr>
-                  <tr class="tr">
-                    <td class="td">
-                      Start Date
-                    </td>
-                    <td class="td">
-                      <input class="input" type="text" v-model="editSchedule_cron.Start_Date">
-                    </td>
-                  </tr>
-                  <tr class="tr">
-                    <td class="td">
-                      End Date
-                    </td>
-                    <td class="td">
-                      <input class="input" type="text" v-model="editSchedule_cron.End_Date">
-                    </td>
-                  </tr>
-                  <tr class="tr">
-                    <td class="td">
-                      Timezone
-                    </td>
-                    <td class="td">
-                      <select class="select" style="width: 300px;" v-model="editSchedule_cron.Timezone">
-                        <option class="option" v-for="zone in timeZones" v-bind:key="zone.value" :value="zone.value">{{zone.label}}</option>
-                      </select>
-                    </td>
-                  </tr>
-                  <tr class="tr">
-                    <td class="td">
-                      Jitter
-                    </td>
-                    <td class="td">
-                      <input class="input" type="text" v-model="editSchedule_cron.Jitter">
-                    </td>
-                  </tr>
-                </table>
-              </validation-observer>
-            </td>
-          </tr>
-          <tr class="tr" v-if="editSchedule.TriggerType === ScheduleTriggerType.interval">
-            <td class="td" colspan="2">
-              <validation-observer ref="editSchedule_interval_ValidationObserver">
-                <table class="table">
-                  <tr class="tr">
-                    <td class="td">
-                      Weeks
-                    </td>
-                    <td class="td">
-                      <input class="input" type="text" v-model="editSchedule_interval.Weeks">
-                    </td>
-                  </tr>
-                  <tr class="tr">
-                    <td class="td">
-                      Days
-                    </td>
-                    <td class="td">
-                      <input class="input" type="text" v-model="editSchedule_interval.Days">
-                    </td>
-                  </tr>
-                  <tr class="tr">
-                    <td class="td">
-                      Hours
-                    </td>
-                    <td class="td">
-                      <input class="input" type="text" v-model="editSchedule_interval.Hours">
-                    </td>
-                  </tr>
-                  <tr class="tr">
-                    <td class="td">
-                      Minutes
-                    </td>
-                    <td class="td">
-                      <input class="input" type="text" v-model="editSchedule_interval.Minutes">
-                    </td>
-                  </tr>
-                  <tr class="tr">
-                    <td class="td">
-                      Start Date
-                    </td>
-                    <td class="td">
-                      <input class="input" type="text" v-model="editSchedule_interval.Start_Date">
-                    </td>
-                  </tr>
-                  <tr class="tr">
-                    <td class="td">
-                      End Date
-                    </td>
-                    <td class="td">
-                      <input class="input" type="text" v-model="editSchedule_interval.End_Date">
-                    </td>
-                  </tr>
-                  <tr class="tr">
-                    <td class="td">
-                      Jitter
-                    </td>
-                    <td class="td">
-                      <input class="input" type="text" v-model="editSchedule_interval.Jitter">
-                    </td>
-                  </tr>
-                </table>
-              </validation-observer>
-            </td>
-          </tr>
-          <tr class="tr">
-            <td class="td">
-              <button class="button is-primary" @click="onCreateSchedule">
-                <template v-if="editSchedule.id">
-                  Save schedule
-                </template>
-                <template v-else>
-                  Create new schedule
-                </template>
-              </button> 
-              <button class="button button-spaced" @click="onCancelCreateSchedule">Cancel</button>
-            </td>
-            <td class="td"></td>
-            <td class="td"></td>
-          </tr>
-        </tbody> 
-      </table>
+                      </td>
+                    </tr>
+                    <tr class="tr">
+                      <td class="td">
+                        Jitter
+                      </td>
+                      <td class="td">
+                        <input class="input" type="text" v-model="editSchedule_cron.Jitter">
+                      </td>
+                    </tr>
+                  </table>
+                </validation-observer>
+              </td>
+            </tr>
+            <tr class="tr" v-if="editSchedule.TriggerType === ScheduleTriggerType.interval">
+              <td class="td" colspan="2">
+                <validation-observer ref="editSchedule_interval_ValidationObserver">
+                  <table class="table">
+                    <tr class="tr">
+                      <td class="td">
+                        Weeks
+                      </td>
+                      <td class="td">
+                        <input class="input" type="text" v-model="editSchedule_interval.Weeks">
+                      </td>
+                    </tr>
+                    <tr class="tr">
+                      <td class="td">
+                        Days
+                      </td>
+                      <td class="td">
+                        <input class="input" type="text" v-model="editSchedule_interval.Days">
+                      </td>
+                    </tr>
+                    <tr class="tr">
+                      <td class="td">
+                        Hours
+                      </td>
+                      <td class="td">
+                        <input class="input" type="text" v-model="editSchedule_interval.Hours">
+                      </td>
+                    </tr>
+                    <tr class="tr">
+                      <td class="td">
+                        Minutes
+                      </td>
+                      <td class="td">
+                        <input class="input" type="text" v-model="editSchedule_interval.Minutes">
+                      </td>
+                    </tr>
+                    <tr class="tr">
+                      <td class="td">
+                        Start Date
+                      </td>
+                      <td class="td">
+                        <input class="input" type="text" v-model="editSchedule_interval.Start_Date">
+                      </td>
+                    </tr>
+                    <tr class="tr">
+                      <td class="td">
+                        End Date
+                      </td>
+                      <td class="td">
+                        <input class="input" type="text" v-model="editSchedule_interval.End_Date">
+                      </td>
+                    </tr>
+                    <tr class="tr">
+                      <td class="td">
+                        Jitter
+                      </td>
+                      <td class="td">
+                        <input class="input" type="text" v-model="editSchedule_interval.Jitter">
+                      </td>
+                    </tr>
+                  </table>
+                </validation-observer>
+              </td>
+            </tr>
+            <tr class="tr">
+              <td class="td">
+                <button class="button is-primary" @click="onCreateSchedule">
+                  <template v-if="editSchedule.id">
+                    Save schedule
+                  </template>
+                  <template v-else>
+                    Create new schedule
+                  </template>
+                </button> 
+                <button class="button button-spaced" @click="onCancelCreateSchedule">Cancel</button>
+              </td>
+              <td class="td"></td>
+              <td class="td"></td>
+            </tr>
+          </tbody> 
+        </table>
+      </div>
     </modal>
 
 
