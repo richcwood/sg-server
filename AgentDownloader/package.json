@@ -1,0 +1,15 @@
+{
+  "name": "sg-agent-downloader",
+  "version": "1.0.0",
+  "description": "SaasGlue agent downloader",
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "pkg": {
+    "assets": []
+  },
+  "dependencies": {
+    "axios": "^0.18.0",
+    "compressing": "^1.5.0"
+  }
+}
