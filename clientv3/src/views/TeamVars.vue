@@ -24,7 +24,7 @@
       </div>
     </validation-observer>
 
-    <table class="table is-striped" width="800px" style="margin-top: 12px;">
+    <table class="table is-striped" width="900px" style="margin-top: 12px;">
       <tr class="tr" v-if="teamVars.length === 0">
         <td class="td" colspan="4">
           There are no variables for your team yet.
@@ -41,7 +41,15 @@
           </span>
         </td>
         <td class="td">
-          {{teamVar.value}}
+          <template v-if="isVarMasked(teamVar)">
+            &lt;masked&gt;
+          </template>
+          <template v-else>
+            {{teamVar.value}}
+          </template>
+        </td>
+        <td class="td">
+          <a v-if="isVarMasked(teamVar)" class="button-spaced" @click.prevent="onUnmaskClicked(teamVar)">unmask</a>
         </td>
         <td class="td">
           <a class="button-spaced" @click.prevent="onDeleteVarClicked(teamVar)">delete</a>
@@ -54,12 +62,12 @@
 
 <script lang="ts">
 import { Component, Vue } from 'vue-property-decorator';
-import { BindStoreModel, BindSelected, BindSelectedCopy } from '@/decorator';
-import { StoreType } from '@/store/types';
-import { TeamVar } from '@/store/teamVar/types';
-import { SgAlert, AlertPlacement, AlertCategory } from '@/store/alert/types';
+import { BindStoreModel, BindSelected, BindSelectedCopy } from '../decorator';
+import { StoreType } from '../store/types';
+import { TeamVar } from '../store/teamVar/types';
+import { SgAlert, AlertPlacement } from '../store/alert/types';
 import { ValidationProvider, ValidationObserver } from 'vee-validate';
-import { showErrors } from '@/utils/ErrorHandler';
+import { showErrors } from '../utils/ErrorHandler';
 
 @Component({
   components: { ValidationProvider, ValidationObserver },
@@ -118,7 +126,17 @@ export default class TeamVars extends Vue {
     }
   }
   
-  
+  private unMaskedVars = {};
+
+  private isVarMasked(teamVar: TeamVar): boolean {
+    return ! this.unMaskedVars[teamVar.name];
+  }
+
+  private onUnmaskClicked(teamVar: TeamVar){
+    
+    //this.unMaskedVars[teamVar.name] = true;
+    Vue.set(this.unMaskedVars, teamVar.name, true);
+  }
 }
 </script>
 
