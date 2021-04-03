@@ -83,14 +83,6 @@ export class AgentDownloadRouter {
     const logger: BaseLogger = (<any>req).logger;
     const response: ResponseWrapper = (res as any).body;
 
-    const existingTeam = await teamService.findTeam(_teamId, 'id');
-    if (!existingTeam) {
-      response.data = '';
-      response.statusCode = ResponseCode.NOT_FOUND;
-      next(new ValidationError(`Invalid team`));
-      return;
-    }
-
     const platform: string = <string>req.params.platform;
     if (validPlatforms.indexOf(platform) < 0) {
       next(new ValidationError('Missing or invalid platform param'));
