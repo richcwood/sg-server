@@ -4,9 +4,19 @@ const os = require("os");
 const fs = require("fs");
 const path = require("path");
 const axios_1 = require("axios");
-const compressing = require("compressing");
+const unzipper = require('unzipper');
+const child_process_1 = require("child_process");
+
+// console.log(`__filename => ${__filename}`);
+// console.log(`__dirname => ${__dirname}`);
+// console.log(`process.execPath => ${process.execPath}`);
+// console.log(`process.cwd => ${process.cwd()}`);
+// console.log(`process.argv[0] => ${process.argv[0]}`);
+// console.log(`process.argv[1] => ${process.argv[1]}`);
+// console.log(`require.main.filename => ${require.main.filename}`);
 
 // const machineId = os.hostname();
+let serviceName;
 const waitForAgentCreateInterval = 15000;
 const waitForAgentCreateMaxRetries = 12;
 
@@ -36,10 +46,6 @@ let rootPath = process.cwd() + path.sep;
 rootPath = rootPath.replace('//', '/');
 rootPath = rootPath.replace('\\\\', '\\');
 
-let agentStubPath = rootPath + 'sg-agent-launcher';
-if (process.platform.startsWith('win'))
-    agentStubPath += '.exe';
-
 let sleep = async (ms) => {
     return new Promise(resolve => {
         setTimeout(resolve, ms);
@@ -60,11 +66,14 @@ let ChangeFileExt = async (filePath, ext) => {
 };
 
 let GunzipFile = async (filePath) => {
-    const uncompressedFilePath = await ChangeFileExt(filePath, "");
-    await new Promise((resolve, reject) => {
-        compressing.gzip.uncompress(filePath, uncompressedFilePath)
-            .then(() => { resolve(); })
-            .catch((err) => { reject(err); });
+    const uncompressedFilePath = await ChangeFileExt(filePath, "exe");
+    await new Promise( async (resolve, reject) => {
+		const zip = await unzipper.Open.file(filePath);
+		zip.files[0]
+		  .stream()
+		  .pipe(fs.createWriteStream('sg-agent-launcher.exe'))
+		  .on('error',reject)
+		  .on('finish',resolve)		
     });
     return uncompressedFilePath;
 };
@@ -89,6 +98,7 @@ let RestAPILogin = async () => {
     });
     token = response.data.config1;
     _teamId = response.data.config3;
+	serviceName = `SGAgent-${_teamId}`;
 };
 
 
@@ -193,19 +203,8 @@ let DownloadAgent = async () => {
     return new Promise((resolve, reject) => {
         writer.on('finish', async () => {
             await GunzipFile(agentPathCompressed);
-            await new Promise(async (resolve, reject) => {
-                fs.chmod(agentPathUncompressed, 0o0755, ((err) => {
-                    if (err) {
-                        reject(err);
-                        return;
-                    }
-                    resolve();
-                    return;
-                }));
-            });
             if (fs.existsSync(agentPathCompressed))
                 fs.unlinkSync(agentPathCompressed);
-            fs.renameSync(agentPathUncompressed, agentStubPath);
             resolve();
             return;
         });
@@ -214,11 +213,42 @@ let DownloadAgent = async () => {
 }
 
 
+let RunCommand = async (commandString, args) => {
+    return new Promise((resolve, reject) => {
+        try {
+            // this.logger.LogDebug('AgentLauncher running command', { commandString, args });
+            let cmd = child_process_1.spawn(commandString, args, { stdio: 'inherit', shell: true });
+            cmd.on('exit', (code) => {
+                try {
+                    resolve({ 'code': code });
+                }
+                catch (e) {
+                    console.log(`Error running command "${commandString}": ${e.toString()}`);
+                }
+            });
+        }
+        catch (e) {
+            console.log(`Error running command "${commandString}": ${e.toString()}`);
+        }
+    });
+}
+
+
+let InstallAsWindowsService = async () => {
+  await RunCommand('nssm.exe', ['install', `SGAgentLauncher-${_teamId}`, `${rootPath}sg-agent-launcher.exe`]);
+  await RunCommand('nssm.exe', ['start', `SGAgentLauncher-${_teamId}`]);
+};
+
+
 (async () => {
     try {
         console.log('Downloading and installing SaasGlue agent');
         await DownloadAgent();
-        console.log('complete');
+        console.log('Download Complete');
+
+        console.log(`Installing SaasGlue agent windows service for team "${_teamId}" - "SGAgentLauncher-${_teamId}"`);
+        await InstallAsWindowsService();
+        console.log('Install Complete');
     } catch (err) {
         console.log('Error downloading SaasGlue agent: ', err);
     }

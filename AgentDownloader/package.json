@@ -9,7 +9,7 @@
     "assets": []
   },
   "dependencies": {
-    "axios": "^0.18.0",
-    "compressing": "^1.5.0"
+    "axios": "0.18.1",
+    "unzipper": "0.10.11"
   }
 }
