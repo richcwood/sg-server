@@ -16,7 +16,6 @@ const child_process_1 = require("child_process");
 // console.log(`require.main.filename => ${require.main.filename}`);
 
 // const machineId = os.hostname();
-let serviceName;
 const waitForAgentCreateInterval = 15000;
 const waitForAgentCreateMaxRetries = 12;
 
@@ -24,22 +23,9 @@ const apiUrl = 'https://console.saasglue.com';
 const apiVersion = 'v0';
 const apiPort = '';
 
-const accessKeyId = process.argv[2];
-const accessKeySecret = process.argv[3];
-let agentPlatform = process.argv[4];
+let agentPlatform = 'win';
+let arch = 'x64';
 
-if (agentPlatform != 'macos' && agentPlatform != 'linux' && agentPlatform != 'winx64') {
-    console.log(`Invalid platform "${agentPlatform}" - valid platforms include "macos", "linux" and "winx64"`);
-    process.exit(-1);
-}
-
-let arch = '';
-if (agentPlatform == 'winx64') {
-    agentPlatform = 'win';
-    arch = 'x64';
-}
-
-let token;
 let _teamId;
 
 let rootPath = process.cwd() + path.sep;
@@ -79,50 +65,19 @@ let GunzipFile = async (filePath) => {
 };
 
 
-let RestAPILogin = async () => {
-    let localApiUrl = apiUrl;
-    if (apiPort != '')
-        localApiUrl += `:${apiPort}`;
-    const url = `${apiUrl}/login/apiLogin`;
-    const response = await axios_1.default({
-        url,
-        method: 'POST',
-        responseType: 'text',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        data: {
-            'accessKeyId': accessKeyId,
-            'accessKeySecret': accessKeySecret
-        }
-    });
-    token = response.data.config1;
-    _teamId = response.data.config3;
-	serviceName = `SGAgent-${_teamId}`;
-};
-
-
 let RestAPICall = async (url, method, headers = {}, data = {}) => {
     return new Promise(async (resolve, reject) => {
         try {
-            if (!token)
-                await RestAPILogin();
-
             let localApiUrl = apiUrl;
             if (apiPort != '')
                 localApiUrl += `:${apiPort}`;
             localApiUrl += `/api/${apiVersion}/${url}`;
-            const combinedHeaders = Object.assign({
-                Cookie: `Auth=${token};`,
-                _teamId: _teamId
-            }, headers);
-            // console.log('RestAPICall -> url ', localApiUrl, ', method -> ', method, ', headers -> ', JSON.stringify(combinedHeaders, null, 4), ', data -> ', JSON.stringify(data, null, 4), ', token -> ', token);
-            // this.logger.LogDebug(`RestAPICall`, { url, method, combinedHeaders, data, token: this.params.token });
+
             const response = await axios_1.default({
                 url: localApiUrl,
                 method: method,
                 responseType: 'text',
-                headers: combinedHeaders,
+                headers,
                 data: data
             });
             resolve({success: true, data: response.data.data});
