@@ -45,11 +45,11 @@ export class AgentDownloadRouter {
   }
 
   setRoutes() {
-    this.router.post('/agent/:version/:platform/:arch?', verifyAccessRights(['AGENT_DOWNLOAD_CREATE', 'GLOBAL']), this.createAgent.bind(this)); // by the browser
-    this.router.post('/agentstub/:platform/:arch?', verifyAccessRights(['AGENT_DOWNLOAD_CREATE', 'GLOBAL']), this.createAgentStub.bind(this)); // by the browser
-    this.router.get('/agent/:machineId/:platform/:arch?', verifyAccessRights(['AGENT_DOWNLOAD', 'GLOBAL']), this.downloadAgent.bind(this)); // by the browser
-    this.router.get('/agentstub/:platform/:arch?', verifyAccessRights(['AGENT_STUB_DOWNLOAD', 'GLOBAL']), this.downloadAgentStub.bind(this)); // by the browser
-    this.router.get('/agentdownloadscript', this.downloadAgentDownloaderScript.bind(this)); // by the browser
+    this.router.post('/agent/:version/:platform/:arch?', verifyAccessRights(['AGENT_DOWNLOAD_CREATE', 'GLOBAL']), this.createAgent.bind(this));
+    this.router.post('/agentstub/:platform/:arch?', verifyAccessRights(['AGENT_DOWNLOAD_CREATE', 'GLOBAL']), this.createAgentStub.bind(this));
+    this.router.get('/agent/:machineId/:platform/:arch?', verifyAccessRights(['AGENT_DOWNLOAD', 'GLOBAL']), this.downloadAgent.bind(this));
+    this.router.get('/agentstub/:platform/:arch?', this.downloadAgentStub.bind(this));
+    this.router.get('/agentdownloadscript', this.downloadAgentDownloaderScript.bind(this));
   }
 
 
@@ -82,14 +82,6 @@ export class AgentDownloadRouter {
     const _teamId: string = <string>req.headers._teamid;
     const logger: BaseLogger = (<any>req).logger;
     const response: ResponseWrapper = (res as any).body;
-
-    const existingTeam = await teamService.findTeam(_teamId, 'id');
-    if (!existingTeam) {
-      response.data = '';
-      response.statusCode = ResponseCode.NOT_FOUND;
-      next(new ValidationError(`Invalid team`));
-      return;
-    }
 
     const platform: string = <string>req.params.platform;
     if (validPlatforms.indexOf(platform) < 0) {
@@ -335,7 +327,7 @@ export class AgentDownloadRouter {
     let pkg_json = {
       "name": "sg-agent-launcher",
       "version": "1.0.0",
-      "description": "SaasGlue agent launcher",
+      "description": "Saas glue agent launcher",
       "keywords": [],
       "author": "",
       "license": "ISC",
@@ -406,7 +398,7 @@ export class AgentDownloadRouter {
     let pkg_json = {
       "name": "sg-agent",
       "version": "1.0.0",
-      "description": "SaasGlue agent",
+      "description": "Saas glue agent",
       "keywords": [],
       "author": "",
       "license": "ISC",

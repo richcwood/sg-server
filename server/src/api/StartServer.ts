@@ -309,6 +309,9 @@ class AppBuilder {
       } else if (req.method === 'POST' && req.path.match('/api/v[0-9]+/invite/shared')) {
         next();
         return;
+      } else if (req.method === 'GET' && req.path.match('/api/v[0-9]+/agentDownload/agentstub/')) {
+        next();
+        return;
       } else if (req.method === 'PUT' && req.path.match('/api/v[0-9]+/user')) {
         if (!req.headers.auth && !req.cookies.Auth) {
           res.status(403).send('Redirect to login - no Auth cookie');
