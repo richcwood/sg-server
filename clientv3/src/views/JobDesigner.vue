@@ -885,7 +885,17 @@
                 <tr class="tr" v-for="(tagValue, tagKey) in jobDefForEdit.runtimeVars" v-bind:key="tagKey">
                   <td class="td">{{tagKey}}</td>
                   <td class="td"><span style="font-weight: 700; size: 20px;"> = </span></td>
-                  <td class="td">{{tagValue}}</td>
+                  <td class="td">
+                    <template v-if="isVarMasked(tagKey)">
+                      &lt;masked&gt;
+                    </template>
+                    <template v-else>
+                      {{tagValue}}
+                    </template>
+                  </td>
+                  <td class="td">
+                    <a v-if="isVarMasked(tagKey)" class="button-spaced" @click.prevent="onUnmaskClicked(tagKey)">unmask</a>
+                  </td>
                   <td class="td"><a @click.prevent="onDeleteRuntimeVarClicked(tagKey)">Delete</a></td>
                 </tr>
               </template>
@@ -2191,6 +2201,16 @@ export default class JobDesigner extends Vue {
 
   private onCloseSelectScriptVarsClicked(){
     this.$modal.hide('select-script-vars-modal');
+  }
+
+  private unMaskedVars = {};
+
+  private isVarMasked(varName: string): boolean {
+    return ! this.unMaskedVars[varName];
+  }
+
+  private onUnmaskClicked(varName: string){
+    Vue.set(this.unMaskedVars, varName, true);
   }
 }
 </script>

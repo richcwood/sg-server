@@ -133,8 +133,6 @@ export default class TeamVars extends Vue {
   }
 
   private onUnmaskClicked(teamVar: TeamVar){
-    
-    //this.unMaskedVars[teamVar.name] = true;
     Vue.set(this.unMaskedVars, teamVar.name, true);
   }
 }
