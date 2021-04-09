@@ -50,6 +50,7 @@ export class AgentDownloadRouter {
     this.router.get('/agent/:machineId/:platform/:arch?', verifyAccessRights(['AGENT_DOWNLOAD', 'GLOBAL']), this.downloadAgent.bind(this));
     this.router.get('/agentstub/:platform/:arch?', this.downloadAgentStub.bind(this));
     this.router.get('/agentdownloadscript', this.downloadAgentDownloaderScript.bind(this));
+    this.router.get('/nssm/:arch', this.downloadNSSM.bind(this));
   }
 
 
@@ -59,13 +60,32 @@ export class AgentDownloadRouter {
   }
 
 
-  // Returns 303 if agent stub install does not exist - otherwise returns 200 plus a signed url for direct s3 download
   async downloadAgentDownloaderScript(req: Request, res: Response, next: NextFunction) {
     const response: ResponseWrapper = (res as any).body;
 
     try {
       const agentDownloaderS3Path = 'agent-stub/download_sg_agent.py';
       const signedUrl = await this.s3Access.getSignedS3URL(agentDownloaderS3Path, config.get('S3_BUCKET_AGENT_BINARIES'));
+      response.data = signedUrl;
+      response.statusCode = ResponseCode.OK;
+      next();
+      return;
+    } catch (e) {
+      next(e);
+      return;
+    }
+  }
+
+
+  async downloadNSSM(req: Request, res: Response, next: NextFunction) {
+    const response: ResponseWrapper = (res as any).body;
+
+    try {
+      let arch: string = <string>req.params.arch;
+      if (arch != 'x64' && arch != 'x86')
+        throw new Error(`Invalid arch param - must be "x64" or "x86"`);
+      const nssmPath = `nssm/${arch}/nssm.exe`;
+      const signedUrl = await this.s3Access.getSignedS3URL(nssmPath, config.get('S3_BUCKET_SHARED_FILES'));
       response.data = signedUrl;
       response.statusCode = ResponseCode.OK;
       next();

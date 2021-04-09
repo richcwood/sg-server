@@ -41,6 +41,7 @@
   "stripeWebhookSecret": "whsec_Q7Op16WxvWbJwoynEjPnpr2uKxdBj8MP",
   "S3_BUCKET_INVOICES": "sg-invoices",
   "S3_BUCKET_AGENT_BINARIES": "sg-agent-binaries",
+  "S3_BUCKET_SHARED_FILES": "sg-files-share",
   "S3_URL_EXPIRATION_SECONDS": 600,
   "S3_BUCKET_TEAM_ARTIFACTS": "sg-team-artifacts",
   "S3_BUCKET_CUSTOMER_FUNCTIONS": "sg-customer-functions",
