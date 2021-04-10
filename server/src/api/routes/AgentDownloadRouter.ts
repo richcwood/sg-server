@@ -84,7 +84,7 @@ export class AgentDownloadRouter {
       let arch: string = <string>req.params.arch;
       if (arch != 'x64' && arch != 'x86')
         throw new Error(`Invalid arch param - must be "x64" or "x86"`);
-      const nssmPath = `nssm/${arch}/nssm.exe`;
+      const nssmPath = `nssm/${arch}/nssm.zip`;
       const signedUrl = await this.s3Access.getSignedS3URL(nssmPath, config.get('S3_BUCKET_SHARED_FILES'));
       response.data = signedUrl;
       response.statusCode = ResponseCode.OK;
