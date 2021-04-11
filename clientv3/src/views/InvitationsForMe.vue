@@ -130,7 +130,7 @@ export default class InvitationsForMe extends Vue {
     try {
       if(invitedTeamToken.id){
         // this is a direct invite (id is the user id for a direct invitation)
-        const acceptedInviteResult = await axios.get(`/invite/${invitedTeamToken.id}/${invitedTeamToken.InvitedTeamId}/${teamIdInviteToken}`);
+        const acceptedInviteResult = await axios.get(`api/v0/join/invite/${invitedTeamToken.id}/${invitedTeamToken.InvitedTeamId}/${teamIdInviteToken}`);
         user = acceptedInviteResult.data.data; // this is the new user account with updated info  
       }
       else {

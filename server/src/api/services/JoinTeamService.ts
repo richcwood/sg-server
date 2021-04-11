@@ -11,7 +11,7 @@ import * as mongodb from 'mongodb';
 export class JoinTeamService {
     public async userJoinTeam(_userId: mongodb.ObjectId, _teamId: string, token: string): Promise<object> {
         /// Check if the invited user exists
-        const userModel: any = await userService.findUser(_userId, '_id email teamIds teamAccessRightIds teamIdsInvited teamIdsInactive');
+        const userModel: any = await userService.findUser(_userId, '_id email teamIds teamAccessRightIds teamIdsInvited teamIdsInactive passwordHash');
         if (!userModel)
             throw new ValidationError('Something went wrong. Please request a new invite from the team administrator.');
 
@@ -41,7 +41,7 @@ export class JoinTeamService {
             if (tokenIsValid) {
                 if (_userId.toHexString() != jwtData.id)
                     tokenIsValid = false;
-                else if (_teamId != jwtData._teamId)
+                else if (_teamId != jwtData.InvitedTeamId)
                     tokenIsValid = false;
             }
         }

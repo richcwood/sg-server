@@ -45,11 +45,11 @@ export class TeamInviteService {
         if (userModel.teamIds.indexOf(_teamId) >= 0)
             return { result: 'success' };
 
-        const teamIdsInvited = userModel.teamIdsInvited.map(invite => invite._teamId);
-        if (teamIdsInvited.indexOf(_teamId) >= 0) {
+        const teamIdsInvited = userModel.teamIdsInvited.map(invite => invite._teamId.toHexString());
+        if (teamIdsInvited.indexOf(_teamId.toHexString()) >= 0) {
             let newTeamIdsInvited: any[] = [];
             for (let i = 0; i < userModel.teamIdsInvited.length; i++) {
-                if (userModel.teamIdsInvited[i]._teamId != _teamId) {
+                if (userModel.teamIdsInvited[i]._teamId.toHexString() != _teamId.toHexString()) {
                     newTeamIdsInvited.push(userModel.teamIdsInvited[i]);
                 }
             }

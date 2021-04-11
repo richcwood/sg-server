@@ -1009,7 +1009,7 @@
 
         if(teamIdInviteJwt.id){
           // this is a direct invite (id is the user id for a direct invitation)
-          const acceptedInviteResult = await axios.get(`/invite/${teamIdInviteJwt.id}/${teamIdInviteJwt.InvitedTeamId}/${teamIdInviteToken}`);
+          const acceptedInviteResult = await axios.get(`api/v0/join/invite/${teamIdInviteJwt.id}/${teamIdInviteJwt.InvitedTeamId}/${teamIdInviteToken}`);
           user = acceptedInviteResult.data.data; // this is the new user account with updated info
         }
         else {
