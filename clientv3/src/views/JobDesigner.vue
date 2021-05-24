@@ -1280,7 +1280,6 @@ export default class JobDesigner extends Vue {
   }
 
   private onTabSelected(){
-    console.log('onTabSelected!');
     // Change the stupid styling of the stupid vue-slim-tabs crap
     let stylingCheckCount = 0;
     const stylingCheckInterval = setInterval(() => {

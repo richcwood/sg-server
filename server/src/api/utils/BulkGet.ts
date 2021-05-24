@@ -63,7 +63,7 @@ export const parseFilter = function(inputFilter: string){
           params = JSON.parse(params);
         }
         catch(e){
-          throw new ValidationError(`The input filter '${inputFilter}" had a -> filter didn't appear to be well formed "${filterPart}'`);
+          throw new ValidationError(`The input filter '${inputFilter}" had a -> filter didn't appear to be well formed "${filterPart}" params="${params}"`);
         }
         break;
 

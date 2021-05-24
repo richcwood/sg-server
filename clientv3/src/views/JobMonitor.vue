@@ -161,13 +161,10 @@ export default class JobMonitor extends Vue {
     else {
       throw 'Unknown JobFetchType in JobMonitor' + this.selectedJobFetchType;
     }
-    
-    console.log('yo, date diff is ', daysDiff);
 
     return this.jobs.filter((job: Job) => {
       const jobDate = getMoment(job.dateStarted);
       jobDate.startOf('day');
-      console.log('date diff is', jobDate.diff(today, 'day'));
       return today.diff(jobDate, 'day') <= daysDiff;
     });
   }

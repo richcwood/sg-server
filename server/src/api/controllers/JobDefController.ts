@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { ResponseWrapper, ResponseCode } from '../utils/Types';
+import { createQuery } from '../utils/BulkGet';
 import { JobDefSchema, JobDefModel } from '../domain/JobDef';
 import { defaultBulkGet } from '../utils/BulkGet';
 import { jobDefService } from '../services/JobDefService';
@@ -12,7 +13,8 @@ import { convertData as convertResponseData } from '../utils/ResponseConverters'
 import { convertData as convertRequestData } from '../utils/RequestConverters';
 import * as mongodb from 'mongodb';
 import * as _ from 'lodash';
-
+import { Stream } from 'stream';
+import { readFileSync } from 'fs';
 
 export class JobDefController {
 
@@ -175,6 +177,63 @@ export class JobDefController {
       else {
         next(err);
       }
+    }
+  }
+
+  public async getJobDefsExport(req: Request, resp: Response, next: NextFunction): Promise<void> {
+    try {
+      const _teamId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._teamid);
+      const query = createQuery(JobDefSchema, JobDefModel, req.query).find({_teamId});
+      const jobDefs = await query.exec();
+
+      const exportedJobs = await jobDefService.serializeExportedJobDefs(_teamId, jobDefs);
+
+      // For debugging, how to stream the file normally / not as a download
+      // const response: ResponseWrapper = resp['body'];
+      // response.data = exportedJobs;
+      // next();
+
+      // How to save file as a download
+      const jobBuffer = Buffer.from(JSON.stringify(exportedJobs));
+      const readStream = new Stream.PassThrough();
+      readStream.end(jobBuffer);
+
+      resp.set('Content-disposition', 'attachment; filename=exportedJobs.sgj');
+      resp.set('Content-Type', 'text/plain');
+      readStream.pipe(resp);
+    }
+    catch (err) {
+      // If req.params.jobDefId wasn't a mongo id then we will get a CastError - basically same as if the id wasn't found
+      if (err instanceof CastError) {
+        next(new MissingObjectError(`JobDef ${req.params.jobDefId} not found.`));
+      }
+      else {
+        next(err);
+      }
+    }
+  }
+
+  public async importJobDefs(req: Request, resp: Response, next: NextFunction): Promise<void> {
+    const _teamId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._teamid);
+    const userId = new mongodb.ObjectId(<string>req.headers.userid);
+
+    const response: ResponseWrapper = resp['body'];
+    try {
+      const inputFile = (<any>req).file;
+      if(!inputFile){
+        throw 'Input file was not found.';
+      }
+
+      const dataJSON = JSON.parse(readFileSync(inputFile.path, 'utf8'));
+
+      const importReport = await jobDefService.importJobDefs(_teamId, userId, req.header('correlationId'), dataJSON);
+      response.statusCode = ResponseCode.CREATED;
+      response.data = importReport;
+      next();
+    }
+    catch (err) {
+      console.log('\nOoooh crap', err);
+      next(err);
     }
   }
 }

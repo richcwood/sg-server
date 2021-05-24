@@ -30,7 +30,7 @@
       <table class="table">
         <tr class="tr">
           <td class="td">
-            <label class="label">SGC Task Name</label>
+            <label class="label">Lambda Task Name</label>
           </td>
           <td class="td">
             <validation-provider name="Task Name" rules="required|object-name" v-slot="{ errors }">
