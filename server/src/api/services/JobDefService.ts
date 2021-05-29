@@ -274,9 +274,9 @@ export class JobDefService {
 
   public async updateJobDef(_teamId: mongodb.ObjectId, id: mongodb.ObjectId, data: any, filter?: any, correlationId?: string, userEmail?: string, responseFields?: string): Promise<object> {
     if (data.name) {
-      const exitingJobDefQuery: any = await this.findAllJobDefsInternal({ _teamId, name: data.name });
-      if (_.isArray(exitingJobDefQuery) && exitingJobDefQuery.length > 0)
-        if (exitingJobDefQuery[0]._id.toHexString() != id.toHexString())
+      const existingJobDefQuery: any = await this.findAllJobDefsInternal({ _teamId, name: data.name });
+      if (_.isArray(existingJobDefQuery) && existingJobDefQuery.length > 0)
+        if (existingJobDefQuery[0]._id.toHexString() != id.toHexString())
           throw new ValidationError(`Job definition with name "${data.name}" already exists`);
     }
 
