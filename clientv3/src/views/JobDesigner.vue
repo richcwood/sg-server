@@ -882,22 +882,27 @@
                 </td>
               </tr>
               <template v-else>
-                <tr class="tr" v-for="(tagValue, tagKey) in jobDefForEdit.runtimeVars" v-bind:key="tagKey">
-                  <td class="td">{{tagKey}}</td>
-                  <td class="td"><span style="font-weight: 700; size: 20px;"> = </span></td>
-                  <td class="td">
-                    <template v-if="isVarMasked(tagKey)">
-                      &lt;masked&gt;
-                    </template>
-                    <template v-else>
-                      {{tagValue}}
-                    </template>
-                  </td>
-                  <td class="td">
-                    <a v-if="isVarMasked(tagKey)" class="button-spaced" @click.prevent="onUnmaskClicked(tagKey)">unmask</a>
-                  </td>
-                  <td class="td"><a @click.prevent="onDeleteRuntimeVarClicked(tagKey)">Delete</a></td>
-                </tr>
+                <validation-observer ref="editRuntimeVarValidationObserver">
+                  <tr class="tr" v-for="(tagValue, tagKey) in jobDefForEdit.runtimeVars" v-bind:key="tagKey">
+                    <td class="td">{{tagKey}}</td>
+                    <td class="td"><span style="font-weight: 700; size: 20px;"> = </span></td>
+                    <td class="td">
+                      <template v-if="isVarMasked(tagKey)">
+                        &lt;masked&gt;
+                      </template>
+                      <template v-else>
+                        <validation-provider name="Variable Value" rules="required" v-slot="{ errors }"> 
+                          <input class="input" type="text" v-model.lazy="jobDefForEdit.runtimeVars[tagKey]" @change="onJobDefRuntimeVarsChanged">
+                          <span v-if="errors && errors.length > 0" class="message validation-error is-danger">{{ errors[0] }}</span>
+                        </validation-provider>
+                      </template>
+                    </td>
+                    <td class="td">
+                      <a v-if="isVarMasked(tagKey)" class="button-spaced" @click.prevent="onUnmaskClicked(tagKey)">unmask</a>
+                    </td>
+                    <td class="td"><a @click.prevent="onDeleteRuntimeVarClicked(tagKey)">Delete</a></td>
+                  </tr>
+                </validation-observer>
               </template>
               <tr class="tr"><td class="td" colspan="2"></td></tr>
             </table>
@@ -1280,7 +1285,6 @@ export default class JobDesigner extends Vue {
   }
 
   private onTabSelected(){
-    console.log('onTabSelected!');
     // Change the stupid styling of the stupid vue-slim-tabs crap
     let stylingCheckCount = 0;
     const stylingCheckInterval = setInterval(() => {
@@ -1693,6 +1697,28 @@ export default class JobDesigner extends Vue {
 
     // Changing the ._scriptId property isn't reactive but just trigger it manually
     this.onSelectedStepDefForEditChanged();
+  }
+
+  private async onJobDefRuntimeVarsChanged(){
+    console.log('changgeed', this.jobDefForEdit.runtimeVars);
+
+    try {
+      if( ! await (<any>this.$refs.editRuntimeVarValidationObserver).validate()){
+        return;
+      }
+
+      await this.$store.dispatch(`${StoreType.JobDefStore}/save`, {
+        id: this.jobDefForEdit.id,
+        runtimeVars: this.jobDefForEdit.runtimeVars
+      });
+
+      this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Saved job`, AlertPlacement.FOOTER));
+      (<any>this).$refs.addRuntimeVarValidationObserver.reset();
+    }
+    catch(err){
+      console.error(err);
+      showErrors('Error saving the job runtime variables', err);
+    }
   }
 
   private newRuntimeVarKey = '';

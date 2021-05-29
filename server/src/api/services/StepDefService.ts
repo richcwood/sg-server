@@ -59,11 +59,8 @@ export class StepDefService {
             throw new ValidationError(`Task def "${data._taskDefId}" already contains a step with name "${data.name}"`)
 
         data._teamId = _teamId;
-        console.log('create step def with ', data);
         const stepDefModel = new StepDefModel(data);
-        console.log('new step def model is ', stepDefModel);
         const newStepDef = await stepDefModel.save();
-        console.log('newww stepdef', newStepDef);
 
         await rabbitMQPublisher.publish(_teamId, "StepDef", correlationId, PayloadOperation.CREATE, convertData(StepDefSchema, newStepDef));
 

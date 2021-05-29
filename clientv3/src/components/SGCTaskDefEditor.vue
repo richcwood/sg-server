@@ -30,7 +30,7 @@
       <table class="table">
         <tr class="tr">
           <td class="td">
-            <label class="label">SGC Task Name</label>
+            <label class="label">Lambda Task Name</label>
           </td>
           <td class="td">
             <validation-provider name="Task Name" rules="required|object-name" v-slot="{ errors }">
@@ -44,33 +44,7 @@
 
         <!-- AWS Lambda -->
         <template v-if="stepDefCopy && taskDef.target === TaskDefTarget.AWS_LAMBDA">
-          <tr class="tr">
-            <td class="td" colspan="2">
-              <input type="radio" class="radio" v-model="stepDefCopy.lambdaCodeSource" :value="'script'"/> Script
-              &nbsp;&nbsp;&nbsp;&nbsp;
-              <input type="radio" class="radio" v-model="stepDefCopy.lambdaCodeSource" :value="'zipFile'"/> Script Lambda Zip File
-            </td>
-          </tr>
-
-          <template v-if="stepDefCopy.lambdaCodeSource === 'script'">
-            <tr class="tr">
-              <td class="td" colspan="2">
-                <script-search-with-create :scriptId="stepDefCopy._scriptId" @scriptPicked="onScriptPicked"></script-search-with-create>
-              </td>
-            </tr>
-          </template>
-
-          <template v-else>
-            <tr class="tr">
-              <td class="td" colspan="2">
-                <button class="button" @click="onSelectArtifactClicked" style="margin-bottom: 10px;">Select Artifact</button> 
-                <input class="input" readonly type="text" v-model="selectedArtifactName">
-              </td>
-            </tr>
-          </template>
-
-          <tr class="tr"><td class="td" colspan="2">&nbsp;</td></tr>
-
+          
           <tr class="tr">
             <td class="td">
               <label class="label">Lamba Runtime</label>
@@ -83,9 +57,14 @@
                       {{runtime}}
                     </option>
                   </select>
+                  
                   <div v-if="errors && errors.length > 0" class="message validation-error is-danger">{{ errors[0] }}</div>
                 </validation-provider>
               </div>
+              <span style="margin-left: 10px; margin-top: 10px; color: red;" 
+                    v-if="stepDefCopy.lambdaCodeSource === 'script' && selectedScript && ! doesLambdaRuntimeMatchScriptType()">
+                Runtime doesn't match script type "{{selectedScript && scriptTypesForMonaco[selectedScript.scriptType]}}"
+              </span>
             </td>
           </tr>
           <tr class="tr">
@@ -139,7 +118,34 @@
             <td class="td">
             </td>
           </tr>
+
+          <tr class="tr"><td class="td" colspan="2">&nbsp;</td></tr>
+
+          <tr class="tr">
+            <td class="td" colspan="2">
+              <input type="radio" class="radio" v-model="stepDefCopy.lambdaCodeSource" :value="'script'"/> Script
+              &nbsp;&nbsp;&nbsp;&nbsp;
+              <input type="radio" class="radio" v-model="stepDefCopy.lambdaCodeSource" :value="'zipFile'"/> Script Lambda Zip File
+            </td>
+          </tr>
           
+          <template v-if="stepDefCopy.lambdaCodeSource === 'script'">
+            <tr class="tr">
+              <td class="td" colspan="2">
+                <script-search-with-create :scriptId="stepDefCopy._scriptId" @scriptPicked="onScriptPicked"></script-search-with-create>
+              </td>
+            </tr>
+          </template>
+
+          <template v-else>
+            <tr class="tr">
+              <td class="td" colspan="2">
+                <button class="button" @click="onSelectArtifactClicked" style="margin-bottom: 10px;">Select Artifact</button> 
+                <input class="input" readonly type="text" v-model="selectedArtifactName">
+              </td>
+            </tr>
+          </template>
+
         </template>
 
         <tr class="tr">
@@ -149,6 +155,11 @@
           </td>
         </tr>
       </table>
+
+      <div v-if="stepDefCopy && stepDefCopy.lambdaCodeSource === 'script' && selectedScript && selectedJobDef">
+        <script-editor :script="selectedScript" :jobDef="selectedJobDef"></script-editor>
+      </div>
+
     </validation-observer>
 
   </div>
@@ -156,23 +167,24 @@
 
 <script lang="ts">
 import _ from 'lodash';
-import { Component, Prop, Vue, Watch } from 'vue-property-decorator';
-import { StoreType } from '@/store/types';
-import { SgAlert, AlertPlacement, AlertCategory } from '@/store/alert/types';
-import { showErrors } from '@/utils/ErrorHandler'; 
+import { Component, Vue, Watch } from 'vue-property-decorator';
+import { StoreType } from '../store/types';
+import { SgAlert, AlertPlacement, AlertCategory } from '../store/alert/types';
+import { showErrors } from '../utils/ErrorHandler'; 
 import { TaskDef, TaskDefTarget } from '../store/taskDef/types';
-import { StepDef, LambaRuntimes, LambdaMemorySizes } from '../store/stepDef/types';
-import { Script } from '../store/script/types';
+import { StepDef, LambaRuntimes, LambdaMemorySizes, getLambdaRuntimesForScriptType } from '../store/stepDef/types';
+import { Script, scriptTypesForMonaco } from '../store/script/types';
 import { Artifact } from '../store/artifact/types';
-import { BindStoreModel, BindSelected, BindSelectedCopy, BindProp } from '@/decorator';
-import axios from 'axios';
-import ScriptSearchWithCreate from '@/components/ScriptSearchWithCreate.vue';
-import ArtifactSearch from '@/components/ArtifactSearch.vue';
+import { BindSelected, BindSelectedCopy } from '../decorator';
+import ScriptSearchWithCreate from '../components/ScriptSearchWithCreate.vue';
+import ArtifactSearch from '../components/ArtifactSearch.vue';
 import { ValidationProvider, ValidationObserver } from 'vee-validate';
+import { JobDef } from '../store/jobDef/types';
+import ScriptEditor from '../components/ScriptEditor.vue';
 
 @Component({
   components: {
-    ScriptSearchWithCreate, ArtifactSearch, ValidationProvider, ValidationObserver
+    ScriptSearchWithCreate, ScriptEditor, ArtifactSearch, ValidationProvider, ValidationObserver
   }
 })
 export default class SGCTaskDef extends Vue {
@@ -181,6 +193,7 @@ export default class SGCTaskDef extends Vue {
   private readonly TaskDefTarget = TaskDefTarget;
   private readonly LambaRuntimes = LambaRuntimes;
   private readonly LambdaMemorySizes = LambdaMemorySizes;
+  private readonly scriptTypesForMonaco = scriptTypesForMonaco;
 
   private mounted(){
     this.onTaskDefChanged();
@@ -189,16 +202,20 @@ export default class SGCTaskDef extends Vue {
   @BindSelectedCopy({storeType: StoreType.TaskDefStore})
   private taskDef!: null|TaskDef;
 
+  private selectedJobDef: JobDef|null = null;
+
   @Watch('taskDef')
-  private onTaskDefChanged(){
+  private async onTaskDefChanged(){
     const stepDefs = this.$store.getters[`${StoreType.StepDefStore}/getByTaskDefId`](this.taskDef.id);
 
     if(stepDefs.length === 1){
       this.stepDef = stepDefs[0];
+    
+      this.selectedJobDef = await this.$store.dispatch(`${StoreType.TaskDefStore}/fetchModel`, this.stepDef._taskDefId);
     }
     else {
       console.warn('For some reason, your sgc task did not have a default step or it had more than 1');
-      return null;
+      this.stepDef = null;
     }
   }
 
@@ -246,13 +263,14 @@ export default class SGCTaskDef extends Vue {
   }
 
   private onScriptPicked(script: Script){
-    console.log('onScriptPicked', script);
     if(script){
       this.stepDefCopy._scriptId = script.id;
     }
     else {
       this.stepDefCopy._scriptId = null;
     }
+
+    this.onStepDefCopyChanged();
   }
 
   private onSelectArtifactClicked(){
@@ -309,7 +327,28 @@ export default class SGCTaskDef extends Vue {
     }
   }
 
- 
+  @BindSelected({storeType: StoreType.ScriptStore})
+  private selectedScript!: null|Script;
+  
+  @Watch('stepDefCopy')
+  private async onStepDefCopyChanged(){
+    if(this.stepDefCopy && this.stepDefCopy._scriptId){
+      this.selectedScript = await this.$store.dispatch(`${StoreType.ScriptStore}/fetchModel`, this.stepDefCopy._scriptId);
+    }
+    else {
+      this.selectedScript = null;
+    }
+  }
+
+  private doesLambdaRuntimeMatchScriptType(){
+    if(this.selectedScript && this.stepDefCopy && this.stepDefCopy.lambdaCodeSource === 'script' && this.stepDefCopy.lambdaRuntime){
+      const runtimes = getLambdaRuntimesForScriptType(this.selectedScript.scriptType);
+      return runtimes.indexOf(this.stepDefCopy.lambdaRuntime) !== -1;
+    }
+    else {
+      return false;
+    }
+  }
 }
 
 

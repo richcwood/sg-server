@@ -28,7 +28,8 @@ var storage = multer.diskStorage({
   }
 });
 
-var upload = multer({ storage: storage })
+// todo - Rich,,, I think we need to put multer in a single reusable file
+export const upload = multer({ storage: storage }); 
 
 export class AgentLogRouter {
 
