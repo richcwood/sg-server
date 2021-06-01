@@ -67,6 +67,7 @@ export class TeamService {
         throw new ValidationError(`Team with name "${data.name}" already exists`);
     } else {
       data.userAssigned = true;
+      data.activationDate = new Date().getTime();
       // const unassignedTeamQuery: any = await this.findAllTeamsInternal({ userAssigned: false });
       newTeam = await TeamModel.findOneAndUpdate({ userAssigned: false }, data, { new: true });
       // const unassignedTeamQuery: any = await TeamModel.find({ userAssigned: false }).limit(1)

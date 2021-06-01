@@ -119,6 +119,12 @@ export class TeamSchema {
   @prop({ default: false })
   userAssigned: boolean;
 
+  @prop()
+  activationDate?: Date;
+
+  @prop({ default: 30 })
+  freeTierMaxDays?: number;
+
   // Define which filters are legal for which props (including nested props (not sure about nested arrays))
   public static readonly validFilters = {
     'name': [FilterOperator.LIKE],

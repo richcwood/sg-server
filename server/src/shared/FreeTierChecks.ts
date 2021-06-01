@@ -15,12 +15,20 @@ import { MongoDbSettings } from 'aws-sdk/clients/dms';
 
 export class FreeTierChecks {
     static PaidTierRequired = async (_teamId: mongodb.ObjectId, errMsg: string) => {
-        const team = await teamService.findTeam(_teamId, 'pricingTier');
+        const team = await teamService.findTeam(_teamId, 'pricingTier activationDate freeTierMaxDays');
         if (!team)
             throw new MissingObjectError(`Team '${_teamId.toHexString()} not found`);
         if (team.pricingTier == TeamPricingTier.FREE) {
-            rabbitMQPublisher.publishBrowserAlert(_teamId, errMsg);
-            throw new FreeTierLimitExceededError(errMsg);
+            let activationDate: number = new Date().getTime();
+            if (team.activationDate)
+                activationDate = new Date(team.activationDate).getTime();
+            let freeTierMaxDays: number = 30;
+            if (team.freeTierMaxDays)
+                freeTierMaxDays = team.freeTierMaxDays;
+            if ((new Date().getTime() - activationDate) > (freeTierMaxDays*24*60*60*1000)) {
+                rabbitMQPublisher.publishBrowserAlert(_teamId, errMsg);
+                throw new FreeTierLimitExceededError(errMsg);
+            }
         }
     }
 
