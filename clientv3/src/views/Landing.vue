@@ -186,7 +186,7 @@
           <div class="field-body">
             <div class="field">
               <p class="control">
-                <input class="input" type="text" style="width: 250px;" v-model="password" v-on:keyup.enter="onCreateAccountClicked">
+                <input class="input" type="password" style="width: 250px;" v-model="password" v-on:keyup.enter="onCreateAccountClicked">
               </p>
             </div>
           </div>
