@@ -70,6 +70,12 @@ export class JobDefSchema {
   @prop({ default: false })
   launchingJobs?: boolean;
 
+  @prop({ default: "# Job Description" })
+  description?: string;
+
+  @prop({ default: "IyBKb2IgZGVzY3JpcHRpb24=" })
+  descriptionb64?: string;
+
   // https://hooks.slack.com/services/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
 
   // Define which filters are legal for which props (including nested props (not sure about nested arrays))

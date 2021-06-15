@@ -14,5 +14,6 @@ export interface JobDef extends Model {
   misfireGraceTime?: number,
   runtimeVars?: {[key: string]: string},
   status?: JobDefStatus,
-  pauseOnFailedJob?: boolean
+  pauseOnFailedJob?: boolean,
+  description?: string
 };

@@ -127,7 +127,12 @@ export class AgentController {
             const _teamId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._teamid);
             const machineId: string = <string>req.params.machineId;
             const response: ResponseWrapper = (resp as any).body;
-            let agent = await agentService.findAgentByMachineName(_teamId, machineId, (<string>req.query.responseFields));
+
+            let responseFields: string = <string>req.query.responseFields;
+            if (responseFields.indexOf('_teamId"') < 0)
+                responseFields += ' _teamId';
+
+            let agent = await agentService.findAgentByMachineName(_teamId, machineId, responseFields);
 
             if (_.isArray(agent) && agent.length === 0) {
                 response.data = '';
