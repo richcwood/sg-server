@@ -129,7 +129,7 @@ export class AgentController {
             const response: ResponseWrapper = (resp as any).body;
 
             let responseFields: string = <string>req.query.responseFields;
-            if (responseFields.indexOf('_teamId"') < 0)
+            if (responseFields && responseFields.indexOf('_teamId"') < 0)
                 responseFields += ' _teamId';
 
             let agent = await agentService.findAgentByMachineName(_teamId, machineId, responseFields);
