@@ -54,6 +54,7 @@ import { convertData as convertRequestData } from '../../server/src/api/utils/Re
 import { rabbitMQPublisher } from '../../server/src/api/utils/RabbitMQPublisher';
 import { braintreeClientTokenService } from '../../server/src/api/services/BraintreeClientTokenService';
 import { stripeClientTokenService } from '../../server/src/api/services/StripeClientTokenService';
+import { createInvoiceService } from '../../server/src/api/services/CreateInvoiceService';
 import { MissingObjectError, ValidationError, FreeTierLimitExceededError } from '../../server/src/api/utils/Errors';
 import { CheckWaitingForAgentTasks, GetAccessRightIdsForTeamAdmin, GetAccessRightIdsForTeamUser } from '../../server/src/api/utils/Shared';
 import * as path from 'path';
@@ -891,6 +892,35 @@ let TestBraintreeWebhook = async () => {
 }
 
 
+let CreateInvoiceReports = async () => {
+  mongoose.connect(config.get('mongoUrl'), { useNewUrlParser: true });
+
+  let teams = await teamService.findAllTeamsInternal({userAssigned: true}, 'id scriptRate jobStoragePerMBRate');
+  console.log('teams -> ', teams);
+
+  let reports: any[] = [];
+  for (let i = 0; i < teams.length; i++) {
+    const team: any = teams[i];
+    const invoice: any = await createInvoiceService.createInvoiceReport({_teamId: team._id, month: 5, year: 2021});
+    let report: any = {};
+    report._teamId = team._id;
+    report.owner = invoice.owner;
+    report.startDate = invoice.startDate;
+    report.endDate = invoice.endDate;
+    report.numScripts = invoice.numScripts;
+    report.numICScripts = invoice.numICScripts;
+    report.awsLambdaRequests = invoice.awsLambdaRequests;
+
+    reports.push(report);
+  }
+
+  reports.sort((a,b) => b.numScripts - a.numScripts);
+  
+  for (let i = 0; i < reports.length; ++i)
+    console.log(`invoice for ${reports[i]._teamId}\n${JSON.stringify(reports[i], null, 4)}\n\n`);
+}
+
+
 let CreateInvoices = async () => {
   const auth = `${config.get('adminToken')};`;
 
@@ -1333,7 +1363,9 @@ let SendTestSlack = async () => {
   let logger = new BaseLogger('SendTestEmailSMTP');
   logger.Start();
 
-  SGUtils.SendCustomerSlack('https://hooks.slack.com/services/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', 'hello from sg', logger);
+  console.log('before send');
+  SGUtils.SendCustomerSlack('https://hooks.slack.com/services/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', 'hello from sg', logger);
+  console.log('sent');
 }
 
 
@@ -2116,7 +2148,7 @@ let SendTestBrowserAlert = async() => {
 // LoadSettingsToMongo();
 // TestForEach();
 // UpdateAgentVersion();
-RabbitMQSetup();
+// RabbitMQSetup();
 // RabbitMQAdminTest();
 // AMQPTest();
 // StompTest();
@@ -2136,6 +2168,7 @@ RabbitMQSetup();
 // CreateAgentInstall('5de9691f53162e8891f5aa99', 'v0.0.0.156', 'node10', 'macos', '');
 // BraintreeTesting();
 // CreateInvoices();
+CreateInvoiceReports();
 // SubmitInvoicesForPayment();
 // TestBraintreeWebhook();
 // CreateInvoicePDF(0);
