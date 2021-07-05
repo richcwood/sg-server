@@ -133,9 +133,29 @@
     <modal name="script-editor-fullscreen" :clickToClose="false" :classes="'round-popup'" :adaptive="true" width="100%" height="100%" background="white">
       <div style="margin: 6px;">
         <button class="button" @click="onClickedExitFullScreen">Exit full screen</button>
+
+
         <span class="variables">
           Static variables: 
-          <a @click="onSggVariablesClicked">@sgg</a> | 
+          <a @click="onSggVariablesClicked">@sgg</a>
+            &nbsp;
+            <v-popover class="help-popover">
+              <font-awesome-icon icon="question-circle" class="popup-help-question"/>
+              <span slot="popover">
+                <div>
+                  <b>S</b>aas <b>G</b>lue <b>G</b>lobal
+                  <br>
+                  @SGG variables can be defined with 
+                  <ul>
+                    <li>Team Vars via the  <router-link :to="{name: 'teamVars'}"> team var tab </router-link></li>
+                    <li>Job runtime variables via a Job's Runtime Variables settings<li>
+                    <li>Scripts that dyanmically output @SGG variables in your script's standard output</li>
+                  </ul>
+                </div>
+              </span>
+            </v-popover>
+
+           | 
           <a @click="onSgsVariablesClicked">@sgs</a> |
           <a>@sgo</a>
         </span>
@@ -257,16 +277,19 @@ import { ScriptName } from '../store/scriptName/types';
 import { Script, ScriptType, scriptTypesForMonaco } from '../store/script/types';
 import { ScriptShadow } from '../store/scriptShadow/types';
 import { StoreType } from '../store/types';
-import { SgAlert, AlertPlacement, AlertCategory } from '@/store/alert/types';
-import { showErrors } from '@/utils/ErrorHandler'; 
+import { SgAlert, AlertPlacement, AlertCategory } from '../store/alert/types';
+import { showErrors } from '../utils/ErrorHandler'; 
 import { JobDef } from '../store/jobDef/types';
 import { TeamVar } from '../store/teamVar/types';
-import { BindStoreModel, BindSelected, BindSelectedCopy, BindProp } from '../decorator';
-import { User } from '@/store/user/types';
+import { BindStoreModel, BindSelectedCopy, BindProp } from '../decorator';
+import { User } from '../store/user/types';
 import axios from 'axios';
 import * as monaco from 'monaco-editor';
+import { VPopover } from 'v-tooltip';
 
-@Component
+@Component({
+  components: { VPopover }
+})
 export default class ScriptEditor extends Vue {
 
   // Expose to templates

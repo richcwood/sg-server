@@ -9,19 +9,29 @@ import { StoreType } from './store/types';
 import { isUserReadyToUseApp } from '@/store/security';
 import VModal from 'vue-js-modal';
 import { library } from '@fortawesome/fontawesome-svg-core';
-import { faSearch } from '@fortawesome/free-solid-svg-icons';
+import { faSearch, faSpinner, faEllipsisH, faQuestionCircle } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 import { initValidation } from './utils/Validation';
 import VueSplit from 'vue-split-panel';
 import bitset from 'bitset';
+import VTooltip from 'v-tooltip';
 
 library.add(faSearch);
+library.add(faSpinner);
+library.add(faEllipsisH);
+library.add(faQuestionCircle);
 Vue.component('font-awesome-icon', FontAwesomeIcon);
 
 initValidation();
 
 Vue.use(VModal);
 Vue.use(VueSplit);
+Vue.use(VTooltip, {
+  defaultTemplate: '<span eat="shit" class="tooltip" role="tooltip"><div class="tooltip-arrow"></div><div class="tooltip-inner"></div></span>',
+  popover: {
+    defaultPlacement: 'bottom'
+  }
+});
 
 Vue.config.productionTip = false;
 
