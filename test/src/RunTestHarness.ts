@@ -901,7 +901,7 @@ let CreateInvoiceReports = async () => {
   let reports: any[] = [];
   for (let i = 0; i < teams.length; i++) {
     const team: any = teams[i];
-    const invoice: any = await createInvoiceService.createInvoiceReport({_teamId: team._id, month: 5, year: 2021});
+    const invoice: any = await createInvoiceService.createInvoiceReport({_teamId: team._id, month: 6, year: 2021});
     let report: any = {};
     report._teamId = team._id;
     report.owner = invoice.owner;
