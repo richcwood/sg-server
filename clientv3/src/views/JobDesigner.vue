@@ -55,7 +55,7 @@
           <td class="td">
             What type of task do you want?
             <br><br>
-            An AWS Lambda task runs in a SaasGlue managed AWS account rather than on one of your agents.
+            An AWS Lambda task runs in a SaaSGlue managed AWS account rather than on one of your agents.
             <br>
             <br>
           </td>
@@ -88,7 +88,7 @@
                 Create a new <span v-if="isAWSLambdaTaskDefType(newTaskTarget)">AWS Lambda</span> task
                 <template v-if="isAWSLambdaTaskDefType(newTaskTarget)">
                   <br><br>
-                  An AWS Lambda task runs in a SaasGlue managed AWS account rather than on one of your agents.
+                  An AWS Lambda task runs in a SaaSGlue managed AWS account rather than on one of your agents.
                 </template>
               </td>
             </tr>

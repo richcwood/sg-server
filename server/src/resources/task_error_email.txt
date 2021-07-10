@@ -1,6 +1,6 @@
-SaasGlue alert notification
+SaaSGlue alert notification
 
-A SaasGlue Task failed
+A SaaSGlue Task failed
 
 Job: {job_name} - {job_url}
 Task Name: {task_name}
@@ -9,4 +9,4 @@ Exit code: {exit_code}
 Signal: {signal}
 
 Best,
-The team at SaasGlue
+The team at SaaSGlue

@@ -8,7 +8,7 @@
             <td class="td">
               sgs: <strong>s</strong>aas <strong>g</strong>lue <strong>s</Strong>cript
               <br>
-              Insert a SaasGlue script into this script
+              Insert a SaaSGlue script into this script
               <br>
               You can also type "sgs" in the editor for auto complete
               <br>
@@ -37,7 +37,7 @@
             <td class="td" colspan="2">
               sgg: <strong>s</strong>aas <strong>g</strong>lue <strong>g</Strong>lobal
               <br>
-              Insert SaasGlue variables into your script
+              Insert SaaSGlue variables into your script
               <br>
               You can also type "sgg" in the editor for auto complete
               <br>

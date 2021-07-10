@@ -74,7 +74,7 @@ import { stripeClientTokenRouter } from './routes/StripClientTokenRouter';
 // Create a new express application instance
 const app: express.Application = express();
 
-const appName = 'SaasGlueAPI';
+const appName = 'SaaSGlueAPI';
 
 const environment = process.env.NODE_ENV || 'development';
 

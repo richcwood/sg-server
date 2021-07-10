@@ -9,8 +9,8 @@
           </h1>
           <br>
           <h2 class="subtitle" style="margin-left: 10px;">
-            Download and install agents to use SaasGlue <br><br>
-            The agent will securely connect to SaasGlue and run whatever scripts you'd like. <br><br>
+            Download and install agents to use SaaSGlue <br><br>
+            The agent will securely connect to SaaSGlue and run whatever scripts you'd like. <br><br>
             You can monitor your running agents in the <router-link to="/agentMonitor">agents monitor</router-link>. <br>
           </h2>
 
@@ -96,7 +96,7 @@
                 </li>
                 or
                 <li>
-                  Creating a config file named sg.cfg in the same directory where the SaasGlue agent is located.
+                  Creating a config file named sg.cfg in the same directory where the SaaSGlue agent is located.
                 </li>
                 <li>
                   Setting values for SG_ACCESS_KEY_ID and SG_ACCESS_KEY_SECRET in the config file, for example:
@@ -132,7 +132,7 @@
                 </li>
                 or
                 <li>
-                  Creating a config file named sg.cfg in the same directory where the SaasGlue agent is located.
+                  Creating a config file named sg.cfg in the same directory where the SaaSGlue agent is located.
                 </li>
                 <li>
                   Setting values for SG_ACCESS_KEY_ID and SG_ACCESS_KEY_SECRET in the config file, for example:
@@ -167,7 +167,7 @@
                 </li>
                 or
                 <li>
-                  Creating a config file named sg.cfg in the same directory where the SaasGlue agent is located.
+                  Creating a config file named sg.cfg in the same directory where the SaaSGlue agent is located.
                 </li>
                 <li>
                   Setting values for SG_ACCESS_KEY_ID and SG_ACCESS_KEY_SECRET in the config file, for example:

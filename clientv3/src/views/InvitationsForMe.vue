@@ -4,7 +4,7 @@
       <div class="hero-body">
         <div class="container">
           <h1 class="title">
-            You are invited to these SaasGlue teams
+            You are invited to these SaaSGlue teams
           </h1>
         </div>
       </div>

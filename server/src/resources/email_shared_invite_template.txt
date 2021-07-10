@@ -1,15 +1,15 @@
-Join {team_name} on SaasGlue
+Join {team_name} on SaaSGlue
 
-You are invited to join the SaasGlue team {team_name}. You can use the link
+You are invited to join the SaaSGlue team {team_name}. You can use the link
 below to join this team — it only takes a minute to create an
 account!
 
 Use this link to get started:
 
 {accept_invite_link}
-What is SaasGlue? [https://saasglue.com/is]
+What is SaaSGlue? [https://saasglue.com/is]
 
-SaasGlue makes it easy to run any script, on any device, anywhere.
-See SaasGlue in action. [https://saasglue.com/is]
+SaaSGlue makes it easy to run any script, on any device, anywhere.
+See SaaSGlue in action. [https://saasglue.com/is]
 
 https://saasglue.com/is

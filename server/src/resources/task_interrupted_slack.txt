@@ -1,9 +1,9 @@
-SaasGlue alert notification
+SaaSGlue alert notification
 
-A SaasGlue Task was interrupted
+A SaaSGlue Task was interrupted
 
 Task: {task_name}
 Job: {job_name} - {job_url}
 
 Best,
-The team at SaasGlue
+The team at SaaSGlue

@@ -373,7 +373,7 @@ export default class PaymentMethods extends Vue {
     }
     catch(err){
       console.error(err);
-      showErrors(`Error updating your account information in SaasGlue`, err);
+      showErrors(`Error updating your account information in SaaSGlue`, err);
     }
   }
 

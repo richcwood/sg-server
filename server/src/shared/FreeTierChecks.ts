@@ -22,7 +22,7 @@ export class FreeTierChecks {
             let activationDate: number = new Date().getTime();
             if (team.activationDate)
                 activationDate = new Date(team.activationDate).getTime();
-            let freeTierMaxDays: number = 30;
+            let freeTierMaxDays: number = 90;
             if (team.freeTierMaxDays)
                 freeTierMaxDays = team.freeTierMaxDays;
             if ((new Date().getTime() - activationDate) > (freeTierMaxDays*24*60*60*1000)) {

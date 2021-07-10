@@ -205,6 +205,7 @@ def RestAPICall(url, method, _teamId, headers, data={}):
 def on_launch_job(scheduled_time, job_id, _teamId, targetId, runtimeVars):
     logInfo({"msg": "Launching job", "_teamId": _teamId, "_jobDefId": targetId, "date": datetime.now(), "scheduled_time": scheduled_time})
     res = RestAPICall('job', 'POST', _teamId, {'_jobDefId': targetId}, {'dateScheduled': scheduled_time, 'runtimeVars': runtimeVars})
+    print('res -> ', res)
 
     updateSchedule = True
     if not res[0]:
@@ -216,10 +217,16 @@ def on_launch_job(scheduled_time, job_id, _teamId, targetId, runtimeVars):
 
     if updateSchedule:
         job = job_scheduler.get_job(job_id)
+
         if job:
             url = 'schedule/fromscheduler/{}'.format(job_id)
             RestAPICall(url, 'PUT', _teamId, {}, {'lastScheduledRunDate': scheduled_time, 'nextScheduledRunDate': job.next_run_time})
             logInfo({"msg": "Updating job info 1", "url": url, "job_id": job_id, "lastScheduledRunDate": scheduled_time, "nextScheduledRunDate": job.next_run_time})
+        else:
+            # If a schedule is no longer valid, e.g. the next calculated run date would be less than the end date, the internal schedule is automatically 
+            #   deleted - if that happens, also delete the schedule from the SaaSGlue job
+            logInfo({"msg": "Schedule no longer valid - deleting", "_teamId": _teamId, "_jobDefId": targetId, "date": datetime.now(), "_scheduleId": job_id})
+            res = RestAPICall('schedule/{}'.format(job_id), 'DELETE', _teamId, {}, {})
 
 
 def on_message(delivery_tag, body, async_consumer):

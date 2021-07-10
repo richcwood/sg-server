@@ -59,7 +59,7 @@
     <modal name="import-jobdefs-modal" :width="900" :height="450">
       <div class="round-popup" style="margin: 20px; width: 100%; height: 100%;">
         <div>
-          Import jobs from a .sgj file that was generated via SaasGlue.
+          Import jobs from a .sgj file that was generated via SaaSGlue.
         </div>
         <div>&nbsp;</div>
         <div>
