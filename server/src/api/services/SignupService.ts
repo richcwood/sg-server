@@ -11,7 +11,7 @@ import * as bcrypt from 'bcrypt';
 
 
 export class SignupService {
-    public async signupNewUserGoogleAuth(data: any, logger: BaseLogger): Promise<object> {
+    public async signupNewUserOAuth(data: any, logger: BaseLogger): Promise<object> {
         if (!data.email)
             throw new ValidationError(`Request body missing "email" parameter`);
 
@@ -23,6 +23,13 @@ export class SignupService {
         userModel.hasAcceptedTerms = true;
         userModel.emailConfirmed = true;
         userModel = await userModel.save();
+
+        try {
+            let newEmailNotificationMessage = JSON.stringify(userModel, null, 4);
+            await SGUtils.SendInternalEmail('rich@saasglue.com', 'jack@saasglue.com,jay@saasglue.com,rich@saasglue.com', 'New user signed up', newEmailNotificationMessage, logger);
+        } catch (e) {
+            logger.LogError(`Error sending new user notification message: ${e.message}`, userModel);
+        }
 
         return userModel;
     }
@@ -111,12 +118,12 @@ export class SignupService {
 
         updatedUser = await UserModel.findOneAndUpdate(userFilter, { emailConfirmed: true, $unset: { emailConfirmCodeExpiration: '', emailConfirmCode: '' }, }, { new: true });
 
-        // try {
-        //     let newEmailNotificationMessage = JSON.stringify(updatedUser, null, 4);
-        //     await SGUtils.SendInternalEmail('rich@saasglue.com', 'jack@saasglue.com,jay@saasglue.com,rich@saasglue.com', 'New user signed up', newEmailNotificationMessage, logger);
-        // } catch (e) {
-        //     logger.LogError(`Error sending new user notification message: ${e.message}`, updatedUser);
-        // }
+        try {
+            let newEmailNotificationMessage = JSON.stringify(updatedUser, null, 4);
+            await SGUtils.SendInternalEmail('rich@saasglue.com', 'jack@saasglue.com,jay@saasglue.com,rich@saasglue.com', 'New user signed up', newEmailNotificationMessage, logger);
+        } catch (e) {
+            logger.LogError(`Error sending new user notification message: ${e.message}`, updatedUser);
+        }
 
         return updatedUser; // fully populated model
     }

@@ -181,7 +181,7 @@ export default class LoginRouter {
 
         // User doesn't exist, create new user
         if (!loginResults || (_.isArray(loginResults) && loginResults.length < 1)) {
-          const newUser: any = await signupService.signupNewUserGoogleAuth({email: googleUser.email, name: googleUser.name, lastLogin: new Date().toISOString()}, logger);
+          const newUser: any = await signupService.signupNewUserOAuth({email: googleUser.email, name: googleUser.name, lastLogin: new Date().toISOString()}, logger);
           await this.redis.SetHashValue('oauth_cache', hashKey, newUser._id.toHexString());
           reRoutUrl = `${baseUrl}/#/oauthCallback/signup/go/${hashKey}`;
           // reRoutUrl = `${baseUrl}/#/oauthCallback/signup/go/123`;
@@ -291,7 +291,7 @@ export default class LoginRouter {
 
       // User doesn't exist, create new user
       if (!loginResults || (_.isArray(loginResults) && loginResults.length < 1)) {
-        const newUser: any = await signupService.signupNewUserGoogleAuth({email: ghUser.email, name: ghUser.name, lastLogin: new Date().toISOString()}, logger);
+        const newUser: any = await signupService.signupNewUserOAuth({email: ghUser.email, name: ghUser.name, lastLogin: new Date().toISOString()}, logger);
         await this.redis.SetHashValue('oauth_cache', hashKey, newUser._id.toHexString());
         reRoutUrl = `${baseUrl}/#/oauthCallback/signup/go/${hashKey}`;
         // reRoutUrl = `${baseUrl}/#/oauthCallback/signup/go/123`;
