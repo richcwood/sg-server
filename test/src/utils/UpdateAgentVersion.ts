@@ -7,9 +7,6 @@ import * as _ from 'lodash';
 let UpdateAgentVersion = async () => {
   const mongoUrl = config.get('mongoUrl');
   const mongoDbname = config.get('mongoDbName');
-  const redisHost = config.get('redisHost');
-  const redisPort = config.get('redisPort');
-  const redisPassword = config.get('redisPassword');
 
   let logger = new BaseLogger('RunTestHarness');
   logger.Start();

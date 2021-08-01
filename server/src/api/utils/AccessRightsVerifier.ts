@@ -9,7 +9,7 @@ let accessRightNameToIdMap: {[rightName: string]: number};
 export const convertAccessRightNamesToIds = async (accessRightNames: string[]) => {
   const accessRightIds: number[] = [];
 
-  if(!accessRightNameToIdMap){
+  if(!accessRightNameToIdMap || Object.keys(accessRightNameToIdMap).length < 1){
     accessRightNameToIdMap = {};
     // load the access rights from the db
     // If new access right definitions are added (rarely) the app servers must be restarted to reload the rights

@@ -42,7 +42,7 @@ export class ScriptService {
     public extractInjectionElems(data: any) {
         const code: string = SGUtils.atob(data.code);
         data.sggElems = [];
-        let arrSgg: string[] = code.match(/@sgg?(\([^)]*\))/g);
+        let arrSgg: string[] = code.match(/@sgg?(\([^)]*\))/gi);
         if (arrSgg) {
             for (let i = 0; i < arrSgg.length; i++) {
                 let varKey = arrSgg[i].substr(5, arrSgg[i].length - 6);
@@ -53,7 +53,7 @@ export class ScriptService {
         }
 
         data.sgoElems = [];
-        let arrSgo: string[] = code.match(/@sgo?(\{[^}]*\})/g);
+        let arrSgo: string[] = code.match(/@sgo?(\{[^}]*\})/gi);
         if (arrSgo) {
             for (let i = 0; i < arrSgo.length; i++) {
                 try {
@@ -78,7 +78,7 @@ export class ScriptService {
         }
 
         data.sgsElems = [];
-        let arrSgs: string[] = code.match(/@sgs?(\([^)]*\))/g);
+        let arrSgs: string[] = code.match(/@sgs?(\([^)]*\))/gi);
         if (arrSgs) {
             for (let i = 0; i < arrSgs.length; i++) {
                 let varKey = arrSgs[i].substr(5, arrSgs[i].length - 6);

@@ -131,7 +131,7 @@ let ParseScriptStdout = async (filePath: string, saveOutput: boolean) => {
             }
           }
 
-          let arrParams: string[] = line.match(/@sgo?(\{[^}]*\})/g);
+          let arrParams: string[] = line.match(/@sgo?(\{[^}]*\})/gi);
           if (arrParams) {
             for (let i = 0; i < arrParams.length; i++) {
               try {
@@ -263,9 +263,6 @@ const script1_json = JSON.stringify(script1);
 let ScheduleScript = async () => {
   const mongoUrl = config.get('mongoUrl');
   const mongoDbname = config.get('mongoDbName');
-  const redisHost = config.get('redisHost');
-  const redisPort = config.get('redisPort');
-  const redisPassword = config.get('redisPassword');
   const rmqScheduleUpdatesQueue = config.get('rmqScheduleUpdatesQueue');
 
   let logger = new BaseLogger('RunTestHarness');
@@ -304,9 +301,6 @@ let ScheduleScript = async () => {
 
 
 let StompTest = async () => {
-  const redisHost = config.get('redisHost');
-  const redisPort = config.get('redisPort');
-  const redisPassword = config.get('redisPassword');
   const rmqUsername = config.get('rmqUsername');
   const rmqPassword = config.get('rmqPassword');
 
@@ -343,9 +337,6 @@ let StompTest = async () => {
 let AMQPTest = async () => {
   const mongoUrl = config.get('mongoUrl');
   const mongoDbname = config.get('mongoDbName');
-  const redisHost = config.get('redisHost');
-  const redisPort = config.get('redisPort');
-  const redisPassword = config.get('redisPassword');
   const rmqScheduleUpdatesQueue = config.get('rmqScheduleUpdatesQueue');
 
   let logger = new BaseLogger('RunTestHarness');
@@ -448,9 +439,6 @@ let UpdateAgentVersion = async () => {
   console.log('hi');
   const mongoUrl = config.get('mongoUrl');
   const mongoDbname = config.get('mongoDbName');
-  const redisHost = config.get('redisHost');
-  const redisPort = config.get('redisPort');
-  const redisPassword = config.get('redisPassword');
 
   const version = process.argv[2];
 
@@ -482,9 +470,6 @@ let UpdateAgentVersion = async () => {
 //   let _teamId = config.get('_teamId');
 //   let mongoUrl = config.get('mongoUrl');
 //   let mongoDbName = config.get('mongoDbName');
-//   let redisHost = config.get('redisHost');
-//   let redisPort = config.get('redisPort');
-//   let redisPassword = config.get('redisPassword');
 //   const useSSL = (config.get('useSSL') === 'true');
 
 //   const appName = 'AdHocScriptSubmitter';
@@ -520,9 +505,6 @@ let UpdateAgentVersion = async () => {
 let DeleteMongoData = async () => {
   const mongoUrl = config.get('mongoUrl');
   const mongoDbname = config.get('mongoDbName');
-  const redisHost = config.get('redisHost');
-  const redisPort = config.get('redisPort');
-  const redisPassword = config.get('redisPassword');
 
   let logger = new BaseLogger('RunTestHarness');
   logger.Start();
@@ -1751,9 +1733,6 @@ steps.push({ 'script': script2_json, 'arguments': 'there', 'variables': script_e
 // (async () => {
 //   const mongoUrl = config.get('mongoUrl');
 //   const mongoDbname = config.get('mongoDbName');
-//   const redisHost = config.get('redisHost');
-//   const redisPort = config.get('redisPort');
-//   const redisPassword = config.get('redisPassword');
 
 //   let logger = new BaseLogger('GenerateInvoices');
 //   let mongoRepo = new MongoRepo('GenerateInvoices', mongoUrl, mongoDbname, logger);
@@ -2210,15 +2189,6 @@ CreateInvoiceReports();
 
 
 // (async () => {
-    // const redisHost = config.get('redisHost');
-  // const redisPort = config.get('redisPort');
-  // const redisPassword = config.get('redisPassword');
-
-  // const rl = new RedisLib(redisHost, redisPort, redisPassword);
-  // rl.SetKey('key', 'val');
-
-
-
   // mongoose.connect(config.get('mongoUrl'), { useNewUrlParser: true });
 
   // const activeAgentTimeoutSeconds = config.get('activeAgentTimeoutSeconds');

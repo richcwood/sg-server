@@ -55,9 +55,6 @@ export default abstract class TestBase {
     protected rmqDLQRoute = config.get('rmqDLQRoute');
     protected mongoUrl = config.get('mongoUrl');
     protected mongoDbname = config.get('mongoDbName');
-    protected redisHost = config.get('redisHost');
-    protected redisPort = config.get('redisPort');
-    protected redisPassword = config.get('redisPassword');
 
     protected mongoRepo: MongoRepo;
     protected amqp: AMQPConnector;

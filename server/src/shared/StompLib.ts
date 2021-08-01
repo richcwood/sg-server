@@ -56,7 +56,7 @@ export class StompConnector {
 
     Start() {
         this.stoppedByUser = false;
-        return new Promise(async (resolve, reject) => {
+        return new Promise<void>(async (resolve, reject) => {
             try {
                 this.stompClient = new Client({
                     brokerURL: this.url,
@@ -100,7 +100,7 @@ export class StompConnector {
 
     async Stop(stoppedByUser: boolean = true) {
         this.stoppedByUser = stoppedByUser;
-        return new Promise((resolve, reject) => {
+        return new Promise<void>((resolve, reject) => {
             this.LogDebug('Received request to stop Stomp connection to RabbitMQ', {});
             try {
                 if (this.stompClient) {

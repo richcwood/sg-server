@@ -117,7 +117,7 @@ export class SGUtils {
     }
 
     static async sleep(ms: number) {
-        return new Promise(resolve => {
+        return new Promise(resolve => { 
             setTimeout(resolve, ms);
         })
     }
@@ -258,7 +258,7 @@ export class SGUtils {
 
     static async getRuntimeVarsForScript(_teamId: mongodb.ObjectId, script_code: string, job: JobSchema) {
         let runtimeVars: any = {};
-        let arrFindVarsScript: string[] = script_code.match(/@sgg?(\([^)]*\))/g);
+        let arrFindVarsScript: string[] = script_code.match(/@sgg?(\([^)]*\))/gi);
         if (arrFindVarsScript) {
             // replace runtime variables in script
             for (let i = 0; i < arrFindVarsScript.length; i++) {
@@ -287,7 +287,7 @@ export class SGUtils {
 
     static async getInjectedScripts(_teamId: mongodb.ObjectId, script_code: string) {
         // find dynamically injected scripts
-        let arrFindScriptsToInject: string[] = script_code.match(/@sgs?(\([^)]*\))/g);
+        let arrFindScriptsToInject: string[] = script_code.match(/@sgs?(\([^)]*\))/gi);
         let scriptsToInject: any = {};
         if (arrFindScriptsToInject) {
             for (let i = 0; i < arrFindScriptsToInject.length; i++) {

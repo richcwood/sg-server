@@ -133,7 +133,7 @@ class BaseLogger {
     }
 
     async PruneLogFiles() {
-        return new Promise((resolve, reject) => {
+        return new Promise<void>((resolve, reject) => {
             try {
                 fs.readdir(this.logsPath, async (err, files) => {
                     if (err) {
@@ -205,7 +205,7 @@ class BaseLogger {
 
 
     async UploadLogFiles(files: any) {
-        return new Promise(async (resolve, reject) => {
+        return new Promise<void>(async (resolve, reject) => {
             try {
                 for (let i = 0; i < files.length; i++) {
                     if (files[i].size < 1) {

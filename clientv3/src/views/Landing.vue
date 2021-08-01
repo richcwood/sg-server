@@ -1,26 +1,51 @@
 <template>
-  <div style="text-align: center;">
+  <div style="text-align: left;">
 
+
+    <div>
+      <div style="margin-left: 100px;">
+        <router-link class="logo-container" to="/"> <img src="/logo4.png" class="logo" style="height: 35px; margin-top: 12px;"> </router-link>
+      </div>
+      <div class="is-divider" style="margin-left: 100px; margin-top: 15px; max-width: 1200px;"></div>
+    </div>
 
 
     <div v-if="page === 'getStarted'">
-      <section class="hero">
-        <div class="hero-body">
-          <div class="container">
-            <h1 class="title">
-              Let's get started with SaaSGlue
-            </h1>
+      <div class="left-flex">
+        <div style="font-weight: 700; font-size: 32px; margin-top: 20px;">
+          Create your free account
+        </div>
+        <div v-if="hasLocalStorageInvitedTeamToken" style="margin-left: 30px; margin-top: 30px;">
+          Create account to accept your invitation to join team <b>{{localStorageInvitedTeamName}}</b>.
+        </div>
+        <div style="margin-left: 30px;">
+          <div id="login" style="margin-top: 30px;">
+            <!-- <button id="login-css" @click="onLoginClicked" /> -->
+            <button class="button is-rounded social-auth-google-button" style="width: 300px;" @click="onGoogleAuthClicked">
+              Continue with Google
+            </button>            
           </div>
-        </div>
-      </section>
-
-      <div class="centered-flex">
-        <div style="font-weight: 700; font-size: 32px;">
-          <a @click="onGetStartedLoginClicked">Existing Users Login Here</a>
-        </div>
-        <br>
-        <div style="font-weight: 700; font-size: 32px;">
-          <a @click="onGetStartedEnterEmailClicked">New Users Start Here</a>
+          <div id="login" style="margin-top: 20px;">
+            <!-- <button id="login-css" @click="onLoginClicked" /> -->
+            <button class="button is-rounded social-auth-github-button" style="width: 300px;" @click="onGithubAuthClicked">
+              Continue with GitHub
+            </button>            
+          </div>
+          <div class="is-divider" data-content="Or" style="line-height: 24px; width: 300px;"></div>
+          <div class="field">
+            <input class="input is-rounded" ref="emailAddress" style="width: 300px;" type="text" placeholder="Your email address" v-model="emailAddress">
+          </div>
+          <div class="field">
+            <vue-recaptcha ref="recaptcha" @verify="onConfirmEmailCaptchaVerify" sitekey="6LdX0a0bAAAAAJGoWHoP8bdoC8UB5RkiQEpCfzpG" :loadRecaptchaScript="true">
+              <button class="button is-primary is-rounded" style="width: 300px; margin-top: 20px;"><b>Continue with Email</b></button>
+            </vue-recaptcha>
+          </div>
+          <div style="margin-left: 3px; margin-top: 20px">
+            By registering, you agree to our <b>Terms of Service</b> and <b>Privacy Policy</b>.
+          </div>
+          <div style="margin-top: 25px">
+            Already have an account? <a @click="onGetStartedLoginClicked"><b>Log in</b></a>
+          </div>
         </div>
       </div>
     </div>
@@ -28,65 +53,16 @@
 
 
     <div v-if="page === 'warnUserAlreadyExists'">
-      <section class="hero">
-        <div class="hero-body">
-          <div class="container">
-            <h1 class="title">
-              The email {{emailAddress}} is in use.<br> Please login
-            </h1>
-          </div>
+      <div class="left-flex">
+        <div style="font-weight: 700; font-size: 32px; margin-top: 20px;">
+          The email {{emailAddress}} is in use.
         </div>
-      </section>
-      <div>
-        <a @click.prevent="onTryLoginAgainClicked">Go to login</a>
-      </div>
-    </div>
-
-
-
-    <div v-if="page === 'findTeam'">
-      <section class="hero">
-        <div class="hero-body">
-          <div class="container">
-            <h1 class="title">
-              Find your SaaSGlue team
-            </h1>
+        <div style="margin-left: 30px;">
+          <div style="display: flex; flex-direction: column; align-items: left;">
+            <div style="margin-right:150px; margin-top:20px;">
+              <a @click.prevent="onTryLoginAgainClicked">Go to login</a>
+            </div>
           </div>
-        </div>
-      </section>
-      <div>
-        We'll send you an email to confirm your address and find existing teams you can join.
-      </div>
-      <div class="centered-flex">
-          <div class="field">
-            <input class="input" ref="emailAddress" style="width: 300px;" type="text" placeholder="Your email address" v-model="emailAddress" v-on:keyup.enter="onConfirmEmailClicked">
-          </div>
-          <div class="field">
-            <button class="button is-primary" style="margin-left: -210px;" @click="onConfirmFindTeamEmailClicked">Confirm</button>
-          </div>
-        </div>
-    </div>
-
-
-
-    <div v-if="page === 'enterEmail'">
-      <section class="hero">
-        <div class="hero-body">
-          <div class="container">
-            <h1 class="title">
-              Get started with SaaSGlue. 
-              <br>First enter your email
-            </h1>
-          </div>
-        </div>
-      </section>
-
-      <div class="centered-flex">
-        <div class="field">
-          <input class="input" ref="emailAddress" style="width: 300px;" type="text" placeholder="Your email address" v-model="emailAddress" v-on:keyup.enter="onConfirmEmailClicked">
-        </div>
-        <div class="field">
-          <button class="button is-primary" style="margin-left: -210px;" @click="onConfirmEmailClicked">Confirm</button>
         </div>
       </div>
     </div>
@@ -125,37 +101,31 @@
 
 
     <div v-if="page === 'emailConfirmFailed'">
-      <section class="hero">
-        <div class="hero-body">
-          <div class="container">
-            <h1 class="title">
-              Email confirmation failed
-            </h1>
+      <div class="left-flex">
+        <div style="font-weight: 700; font-size: 32px; margin-top: 20px;">
+          Email confirmation failed
+        </div>
+        <div style="margin-left: 30px;">
+          <div style="display: flex; flex-direction: column; align-items: left;">
+            <div style="margin-right:150px; margin-top:20px;">
+              <a @click.prevent="onBackToGetStartedPageClicked">Back to the signup page</a>
+            </div>
           </div>
         </div>
-      </section>
-      <div>
-        <a @click.prevent="onBackToEmailConfirmPageClicked">Back to the email confirmation page</a>
       </div>
     </div>
 
 
 
     <div v-if="page === 'createAccount'">
-      <section class="hero">
-        <div class="hero-body">
-          <div class="container">
-            <h1 class="title">
-              Create your SaaSGlue account
-            </h1>
-          </div>
+      <div class="left-flex">
+        <div style="font-weight: 700; font-size: 32px; margin-top: 20px; margin-bottom: 20px;">
+            Create your free account
         </div>
-      </section>
 
-      <div class="centered-flex">
-        <div class="field is-horizontal">
+        <div class="field is-horizontal" style="margin-left: -100px;">
           <div class="field-label is-normal">
-            <label class="label" style="width: 200px;">Full Name</label>
+            <label class="label">Full Name</label>
           </div>
           <div class="field-body">
             <div class="field">
@@ -166,9 +136,9 @@
           </div>
         </div>
 
-        <div class="field is-horizontal">
+        <div class="field is-horizontal" style="margin-left: -100px;">
           <div class="field-label is-normal">
-            <label class="label" style="width: 200px;">Company Name</label>
+            <label class="label">Business Name</label>
           </div>
           <div class="field-body">
             <div class="field">
@@ -179,9 +149,9 @@
           </div>
         </div>
 
-        <div class="field is-horizontal">
+        <div v-if="! oauthLogin" class="field is-horizontal" style="margin-left: -100px;">
           <div class="field-label is-normal">
-            <label class="label" style="width: 200px;">Password</label>
+            <label class="label">Password</label>
           </div>
           <div class="field-body">
             <div class="field">
@@ -193,16 +163,9 @@
         </div>
 
         <div class="field is-horizontal">
-          <div class="field-label is-normal">
-            <label class="label" style="width: 200px;"></label>
-          </div>
-          <div class="field-body">
-            <div class="field">
-              <p class="control">
-                <button class="button is-primary" style="margin-left: -110px;" @click="onCreateAccountClicked">Create Account</button>
-              </p>
-            </div>
-          </div>
+          <p class="control">
+            <button class="button is-primary" style="margin-top: 20px; margin-left: 30px;" @click="onCreateAccountClicked">Create Account</button>
+          </p>
         </div>
       </div>
     </div>
@@ -210,55 +173,51 @@
 
 
     <div v-if="page === 'joinTeam' && invitedTeamsCount > 0">
-      <section class="hero">
-        <div class="hero-body">
-          <div class="container">
-            <h1 class="title">
-              You are invited to these SaaSGlue teams
-            </h1>
+      <div class="left-flex">
+        <div style="font-weight: 700; font-size: 32px; margin-top: 20px;">
+          You are invited to these SaaSGlue teams
+        </div>
+        <div style="margin-left: 30px;">
+          <div class="invitations" style="margin-top: 20px;">
+            <table>
+              <tr v-if="hasLocalStorageInvitedTeamToken">
+                <td class="invitation-td" style="font-weight: 700; width: 10%;">{{localStorageInvitedTeamName}}</td>
+                <td class="invitation-td"><button class="button is-primary" @click="onAcceptGenericInviteClicked">Accept Invitation</button></td>
+              </tr>
+
+              <tr v-for="teamIdInvited of teamIdsInvitedMinusLocalStorage" v-bind:key="teamIdInvited._teamId">
+                <td class="invitation-td">{{getTeam(teamIdInvited._teamId).name}}</td>
+                <td class="invitation-td"><button class="button" @click="onAcceptInvitationClicked(teamIdInvited._teamId)">Accept Invitation</button></td>
+              </tr>
+              <tr>
+                <td colspan="2" style="padding-top: 50px; font-weight: 700;">
+                  Not seeing your team?  Contact the team leader to request an invite.
+                </td>
+              </tr>
+              <tr>
+                <td colspan="2" style="padding-top: 30px;">
+                  Or, <a @click.prevent="onCreateTeamLinkClicked">create a new team</a>
+                </td>
+              </tr>
+            </table>
           </div>
         </div>
-      </section>
-      <div class="invitations">
-        <table>
-          <tr v-if="hasLocalStorageInvitedTeamToken">
-            <td class="invitation-td" style="font-weight: 700;">{{localStorageInvitedTeamName}}</td>
-            <td class="invitation-td"><button class="button is-primary" @click="onAcceptGenericInviteClicked">Accept Invitation</button></td>
-          </tr>
-
-          <tr v-for="teamIdInvited of teamIdsInvitedMinusLocalStorage" v-bind:key="teamIdInvited._teamId">
-            <td class="invitation-td">{{getTeam(teamIdInvited._teamId).name}}</td>
-            <td class="invitation-td"><button class="button" @click="onAcceptInvitationClicked(teamIdInvited._teamId)">Accept Invitation</button></td>
-          </tr>
-          <tr>
-            <td colspan="2" style="padding-top: 50px; font-weight: 700;">
-              Not seeing your team?  Contact the team leader to request an invite.
-            </td>
-          </tr>
-          <tr>
-            <td colspan="2" style="padding-top: 30px;">
-              Or, <a @click.prevent="onCreateTeamLinkClicked">create a new team</a>
-            </td>
-          </tr>
-        </table>
       </div>
     </div>
 
 
 
     <div v-if="page === 'acceptedInvitationSuccess'">
-      <section class="hero">
-        <div class="hero-body">
-          <div class="container">
-            <h1 class="title">
-              Welcome to SaaSGlue.  You've succefully joined your team.
-            </h1>
-          </div>
+      <div class="left-flex">
+        <div style="font-weight: 700; font-size: 32px; margin-top: 20px;">
+          Welcome to SaaSGlue. You've succefully joined your team.
         </div>
-      </section>
-      <div style="display: flex; flex-direction: column; align-items: center;">
-        <div style="margin-right:150px; margin-top:20px;">
-          <a @click.prevent="onClickedStartUsingSaasGlue">Start using SaaSGlue</a>
+        <div style="margin-left: 30px;">
+          <div style="display: flex; flex-direction: column; align-items: left;">
+            <div style="margin-right:150px; margin-top:20px;">
+              <a @click.prevent="onClickedStartUsingSaasGlue">Start using SaaSGlue</a>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -266,74 +225,52 @@
 
 
     <div v-if="page === 'joinTeam' && invitedTeamsCount === 0">
-      <section class="hero">
-        <div class="hero-body">
-          <div class="container">
-            <h1 class="title">
-              Join a SaaSGlue team
-            </h1>
+      <div class="left-flex">
+        <div style="font-weight: 700; font-size: 32px; margin-top: 20px;">
+          Join a SaaSGlue team
+        </div>
+        <div style="margin-left: 30px;">
+          <div class="invitations" style="margin-top: 20px;">
+            <table>
+              <tr>
+                <td style="padding-top: 30px;">
+                  To use SaaSGlue you need to be part of a team
+                </td>
+              </tr>
+              <tr>
+                <td style="padding-top: 30px;">
+                  <a @click.prevent="onCreateTeamLinkClicked">Create a new team</a>
+                </td>
+              </tr>
+              <tr>
+                <td style="padding-top: 50px;">
+                  Not seeing your existing team? Contact the team leader to request an invite and refresh this page.
+                </td>
+              </tr>
+            </table>
           </div>
         </div>
-      </section>
-    
-      <div class="invitations">
-        <table>
-          <tr>
-            <td style="padding-top: 30px;">
-              To use SaaSGlue you need to be part of a team
-            </td>
-          </tr>
-          <tr>
-            <td style="padding-top: 30px;">
-              <a @click.prevent="onCreateTeamLinkClicked">Create a new team</a>
-            </td>
-          </tr>
-          <tr>
-            <td style="padding-top: 50px;">
-              Not seeing your existing team? <br> Contact the team leader to request an invite and refresh this page.
-            </td>
-          </tr>
-        </table>
       </div>
     </div>
 
 
 
     <div v-if="page === 'createTeam'">
-      <section class="hero">
-        <div class="hero-body">
-          <div class="container">
-            <h1 class="title">
-              Create a new team
-            </h1>
-          </div>
+      <div class="left-flex">
+        <div style="font-weight: 700; font-size: 32px; margin-top: 20px; margin-bottom: 20px;">
+            What is the name of your team?
         </div>
-      </section>
-      <div class="centered-flex">
-        <div class="field is-horizontal">
-          <div class="field-label is-normal">
-            <label class="label" style="width: 250px;">What is the name of your team?</label>
-          </div>
+
+        <div class="field">
+          <p class="control">
+            <input class="input" ref="teamName" type="text" style="margin-left: 30px; width: 250px;" v-model="teamName" v-on:keyup.enter="onCreateTeamClicked">
+          </p>
         </div>
 
         <div class="field is-horizontal">
-          <div class="field-body">
-            <div class="field">
-              <p class="control">
-                <input class="input" ref="teamName" type="text" style="width: 250px;" v-model="teamName" v-on:keyup.enter="onCreateTeamClicked">
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <div class="field is-horizontal">
-          <div class="field-body">
-            <div class="field">
-              <p class="control">
-                <button class="button is-primary" style="margin-left: -125px;" @click="onCreateTeamClicked">Create Team</button>
-              </p>
-            </div>
-          </div>
+          <p class="control">
+            <button class="button is-primary" style="margin-left: 30px; margin-top: 20px;" @click="onCreateTeamClicked">Create Team</button>
+          </p>
         </div>
       </div>
     </div>
@@ -341,16 +278,10 @@
 
 
     <div v-if="page === 'addTeamMembers'">
-      <section class="hero">
-        <div class="hero-body">
-          <div class="container">
-            <h1 class="title">
-              Set up your team
-            </h1>
-          </div>
-        </div>
-      </section>
-      <div style="display: flex; flex-direction: column; align-items: center;">
+      <div style="font-weight: 700; font-size: 32px; margin-top: 20px; margin-bottom: 20px; margin-left: 100px;">
+          Set up your team
+      </div>
+      <div style="display: flex; flex-direction: column; align-items: left; margin-left: 130px;">
         <div style="font-weight: 700;">
           Who else is on your team?
         </div>
@@ -360,10 +291,10 @@
         <div style="margin-left:80px; margin-top:10px;">
           <a @click.prevent="onAddMoreTeammatesClicked">+ add more teammates</a>
         </div>
-        <div style="margin-right:100px; margin-top:20px;">
+        <div style="margin-top:20px;">
           <button class="button is-primary" @click="onAddTeammatesClicked">Add Teammates</button>
         </div>
-        <div style="margin-right:150px; margin-top:20px;">
+        <div style="margin-top:20px;">
           <a @click.prevent="onClickedStartUsingSaasGlue">Skip for now</a>
         </div>
       </div>
@@ -389,67 +320,73 @@
 
     
     <div v-if="page === 'login'">
-      <section class="hero">
-        <div class="hero-body">
-          <div class="container">
-            <h1 class="title">
-              Log in to your SaaSGlue account
-            </h1>
-          </div>
+      <div class="left-flex">
+        <div style="font-weight: 700; font-size: 32px; margin-top: 20px;">
+          Log in to your SaaSGlue account
         </div>
-      </section>
-
-      <div class="centered-flex">
-        <div class="field is-horizontal">
-          <div class="field-label is-normal">
-            <label class="label" style="width: 200px;">Email</label>
+          <!-- <button id="login-css" @click="onLoginClicked" /> -->
+        <div style="margin-left: 30px;">
+          <div id="login" style="margin-top: 30px;">
+            <!-- <button id="login-css" @click="onLoginClicked" /> -->
+            <button class="button is-rounded social-auth-google-button" style="width: 300px;" @click="onGoogleAuthClicked">
+              Continue with Google
+            </button>            
           </div>
-          <div class="field-body">
-            <div class="field">
+          <div id="login" style="margin-top: 20px;">
+            <!-- <button id="login-css" @click="onLoginClicked" /> -->
+            <button class="button is-rounded social-auth-github-button" style="width: 300px;" @click="onGithubAuthClicked">
+              Continue with GitHub
+            </button>            
+          </div>
+          <div class="is-divider" data-content="Or" style="line-height: 24px; width: 300px;"></div>
+
+          <div class="field is-horizontal">
+            <div class="field-body">
+              <div class="field">
+                <p class="control">
+                  <input class="input" ref="emailAddress" placeholder="Email address" type="text" style="width: 250px;" v-model="emailAddress">
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div class="field is-horizontal">
+            <div class="field-body">
+              <div class="field">
+                <p class="control">
+                  <input class="input" type="password" placeholder="Password" style="width: 250px;" v-model="password" v-on:keyup.enter="onLoginClicked">
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- <div class="is-horizontal">
+            <input type="checkbox" id="cboxRememberMe" v-model="rememberMe">
+            <label for="cboxRememberMe" style="margin-left: 10px;">Remember me</label>
+          </div> -->
+
+          <div class="is-horizontal">
+            <div class="field-label is-normal">
+              <label class="label" style="width: 200px;"></label>
+            </div>
+            <div class="field" style="margin-top: 12px;">
               <p class="control">
-                <input class="input" ref="emailAddress" type="text" style="width: 250px;" v-model="emailAddress">
+                <button class="button is-primary" @click="onLoginClicked">Login</button>
               </p>
             </div>
           </div>
-        </div>
 
-        <div class="field is-horizontal">
-          <div class="field-label is-normal">
-            <label class="label" style="width: 200px;">Password</label>
-          </div>
-          <div class="field-body">
-            <div class="field">
-              <p class="control">
-                <input class="input" type="password" style="width: 250px;" v-model="password" v-on:keyup.enter="onLoginClicked">
-              </p>
+          <div class="is-horizontal">
+            <div class="field-label is-normal">
+              <label class="label" style="width: 200px;"></label>
             </div>
-          </div>
-        </div>
-
-        <div class="field is-horizontal">
-          <div class="field-label is-normal">
-            <label class="label" style="width: 200px;"></label>
-          </div>
-          <div class="field-body">
             <div class="field">
-              <p class="control">
-                <button class="button is-primary" style="margin-left: -175px;" @click="onLoginClicked">Login</button>
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <div class="field is-horizontal">
-          <div class="field-label is-normal">
-            <label class="label" style="width: 200px;"></label>
-          </div>
-          <div class="field-body">
-            <div class="field">
-              <p class="control">
-                <a style="margin-left: -125px;" @click.prevent="onForgotPasswordClicked">Forgot password?</a>     
+              <p class="control" style="margin-top: 12px;">
+                <a @click.prevent="onForgotPasswordClicked">Forgot password?</a>     
               </p>
               <p class="control" style="margin-top: 12px;">
-                <a style="margin-left: -185px;" @click="page = 'getStarted'">Start over</a>
+                Don't have an account? 
+                <a @click="page = 'getStarted'"><b>Sign up</b></a>
               </p>
             </div>
           </div>
@@ -460,40 +397,41 @@
 
 
     <div v-if="page === 'loginFailed'">
-      <section class="hero">
-        <div class="hero-body">
-          <div class="container">
-            <h1 class="title">
-              Sorry but the login failed.
-            </h1>
-          </div>
+      <div style="font-weight: 700; font-size: 32px; margin-top: 20px; margin-bottom: 20px; margin-left: 100px;">
+        Sorry but the login failed.
+      </div>
+      <div style="display: flex; flex-direction: column; align-items: left; margin-left: 130px;">
+        <div class="field">
+          <p class="control" style="margin-top: 12px;">
+            <a @click.prevent="onTryLoginAgainClicked">Try again</a>
+          </p>
         </div>
-      </section>
-      <div>
-        <a @click.prevent="onTryLoginAgainClicked">Try again</a>
       </div>
     </div>
 
 
 
     <div v-if="page === 'passwordReset'">
-      <section class="hero">
-        <div class="hero-body">
-          <div class="container">
-            <h1 class="title">
-              Password reset
-              <br>We'll send you an email
-            </h1>
+      <div class="left-flex">
+        <div style="font-weight: 700; font-size: 32px; margin-top: 20px;">
+          Reset your password
+        </div>
+        <div style="margin-left: 30px;">
+          <div style="margin-top: 30px;">
+            Enter your email address and we will send you a password reset link.
           </div>
-        </div>
-      </section>
-
-      <div class="centered-flex">
-        <div class="field">
-          <input class="input" ref="emailAddress" style="width: 300px;" type="text" placeholder="Your email address" v-model="emailAddress" v-on:keyup.enter="onConfirmEmailClicked">
-        </div>
-        <div class="field">
-          <button class="button is-primary" style="margin-left: -235px;" @click="onResetPasswordClicked">Reset</button>
+          <div class="field">
+            <input class="input" ref="emailAddress" style="width: 300px; margin-top: 20px;" type="text" placeholder="Your email address" v-model="emailAddress" v-on:keyup.enter="onConfirmEmailClicked">
+          </div>
+          <div class="field">
+            <button class="button is-primary" style="margin-top: 20px;" @click="onResetPasswordClicked">Send password reset email</button>
+          </div>
+          <div class="field" style="margin-top: 20px;">
+            <p class="control">
+              Back to
+              <a @click="page = 'login'"><b>login</b></a>
+            </p>
+          </div>
         </div>
       </div>
     </div>
@@ -501,57 +439,49 @@
 
 
     <div v-if="page === 'passwordResetSent'">
-      <section class="hero">
-        <div class="hero-body">
-          <div class="container">
-            <h1 class="title">
-              Email sent to reset your password. 
-              <br><br>  Please check your email and follow the instructions.
-              <br><br> Don't forget to check your spam folders for the email.
-            </h1>
-            
-          </div>
-        </div>
-      </section>
+      <div style="font-weight: 700; font-size: 32px; margin-top: 20px; margin-left: 100px;">
+        Password reset link sent to your email
+      </div>
+      <div style="margin-left:100px; margin-top:20px; margin-left: 130px; font-weight: 700;">
+        Please check your email and follow the instructions. Don't forget to check your spam folder.
+      </div>
     </div>
 
 
 
     <div v-if="page === 'passwordResetUpdatePassword'">
-      <section class="hero">
-        <div class="hero-body">
-          <div class="container">
-            <h1 class="title">
-              Password Reset
-              <br> Enter your new password.
-            </h1>
-          </div>
+      <div class="left-flex">
+        <div style="font-weight: 700; font-size: 32px; margin-top: 20px;">
+            Password Reset
         </div>
-      </section>
-
-      <div class="centered-flex">
-        <div class="field is-horizontal">
-          <div class="field-label is-normal">
-            <label class="label" style="width: 200px;">Password</label>
+        <div style="margin-left: 30px;">
+          <div style="margin-top: 30px;">
+            Enter your new password.
           </div>
-          <div class="field-body">
-            <div class="field">
-              <p class="control">
-                <input class="input" type="text" style="width: 250px;" v-model="password" v-on:keyup.enter="onCreateAccountClicked" placeholder="Your new password">
-              </p>
+
+          <div class="field is-horizontal" style="margin-left: -130px; margin-top: 30px;">
+            <div class="field-label is-normal">
+              <label class="label">Password</label>
+            </div>
+            <div class="field-body">
+              <div class="field">
+                <p class="control">
+                  <input class="input" type="password" style="width: 250px;" v-model="password" v-on:keyup.enter="onCreateAccountClicked" placeholder="Your new password">
+                </p>
+              </div>
             </div>
           </div>
-        </div>
 
-        <div class="field is-horizontal">
-          <div class="field-label is-normal">
-            <label class="label" style="width: 200px;"></label>
-          </div>
-          <div class="field-body">
-            <div class="field">
-              <p class="control">
-                <button class="button is-primary" style="margin-left: -100px;" @click="onChangePasswordClicked">Change Password</button>
-              </p>
+          <div class="field is-horizontal" style="margin-left: -130px; margin-top: 30px;">
+            <div class="field-label is-normal">
+              <label class="label"></label>
+            </div>
+            <div class="field-body">
+              <div class="field">
+                <p class="control">
+                  <button class="button is-primary" style="margin-left: -100px;" @click="onChangePasswordClicked">Change Password</button>
+                </p>
+              </div>
             </div>
           </div>
         </div>
@@ -561,19 +491,18 @@
 
 
     <div v-if="page === 'passwordUpdateSuccess'">
-      <section class="hero">
-        <div class="hero-body">
-          <div class="container">
-            <h1 class="title">
-              Password Updated <br> Your password has been updated.
-            </h1>
+      <div class="left-flex">
+        <div style="font-weight: 700; font-size: 32px; margin-top: 20px;">
+          Your password has been updated.
+        </div>
+        <div style="margin-left: 30px;">
+          <div style="display: flex; flex-direction: column; align-items: left;">
+            <div style="margin-right:150px; margin-top:20px;">
+              <a @click.prevent="onClickedStartUsingSaasGlue">Start using SaaSGlue</a>
+            </div>
           </div>
         </div>
-      </section>
-      <div style="margin-right:150px; margin-top:20px;">
-        <a @click.prevent="onClickedStartUsingSaasGlue">Start using SaaSGlue.</a>
       </div>
-      
     </div>
 
 
@@ -592,13 +521,19 @@
   import Cookies from 'js-cookie';
   import randomId from '../utils/RandomId';
   import { showErrors } from '../utils/ErrorHandler';
+  import VueRecaptcha from 'vue-recaptcha';
 
-  @Component
+  @Component({
+    components: {
+      VueRecaptcha
+    }
+  })
   export default class Landing extends Vue { 
 
     private page = 'getStarted';
     private emailAddress: string|null = '';
     private hasLoggedIn = false;
+    private oauthLogin = false;
     private hasCreatedSGTeam = localStorage.getItem('sg_has_created_team');
     private confirmLetter1: string|null = null;
     private confirmLetter2: string|null = null;
@@ -613,6 +548,8 @@
     private password: string|null = null;
     private teamName = null;
     private teammates = [{id: randomId(), email: ''}, {id: randomId(), email: ''}, {id: randomId(), email: ''}];
+    private robot: boolean = true;
+    private rememberMe: boolean = true;
 
     @BindStoreModel({storeType: StoreType.SecurityStore, selectedModelName: 'user'})
     private user: User;
@@ -621,33 +558,54 @@
       this.emailAddress = localStorage.getItem('sg_email');
       this.hasLoggedIn = !!localStorage.getItem('sg_has_logged_in');
 
-      if(this.user){
-        this.redirectToUserLoggedInPage();
+      if(localStorage.getItem('oauth_cb')){
+        this.oauthLogin = true;
+        const oauthResult = JSON.parse(localStorage.getItem('oauth_cb'));
+        console.log('Landing -> mounted -> 1 -> ', oauthResult);
+        console.log('Landing -> mounted -> user -> ', this.user);
+        localStorage.removeItem('oauth_cb');
+        this.name = this.user.name;
+        if (oauthResult.login_result == 'success') {
+          if (oauthResult.method == 'signup') {
+            this.page = 'createAccount';
+          }
+          else {
+            console.log('Landing -> mounted -> redirecting to login page');
+            this.redirectToUserLoggedInPage();
+          }
+        }
+        else
+          this.page = 'loginFailed';
       }
       else {
-        if( sessionStorage.getItem('sg_reset_password_token') && 
-            sessionStorage.getItem('sg_reset_password_user_id')){
-          this.page = 'passwordResetUpdatePassword';
+        if(this.user){
+          this.redirectToUserLoggedInPage();
         }
-        else if(this.emailAddress){
-          if(this.hasLoggedIn){
-            this.page = 'login';
+        else {
+          if( sessionStorage.getItem('sg_reset_password_token') && 
+              sessionStorage.getItem('sg_reset_password_user_id')){
+            this.page = 'passwordResetUpdatePassword';
+          }
+          else if(this.emailAddress){
+            if(this.hasLoggedIn){
+              this.page = 'login';
 
-            this.$nextTick(() => {
-              (<any>this.$refs['emailAddress']).focus();
-            });
+              this.$nextTick(() => {
+                (<any>this.$refs['emailAddress']).focus();
+              });
 
-            if(sessionStorage.getItem('sg_logged_out_403') === 'true'){
-              sessionStorage.removeItem('sg_logged_out_403');
-              this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert('Looks like your session expired.  Please log back in.', AlertPlacement.WINDOW, AlertCategory.INFO));
+              if(sessionStorage.getItem('sg_logged_out_403') === 'true'){
+                sessionStorage.removeItem('sg_logged_out_403');
+                this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert('Looks like your session expired.  Please log back in.', AlertPlacement.WINDOW, AlertCategory.INFO));
+              }
+            }
+            else {
+              this.page = 'getStarted';
             }
           }
           else {
             this.page = 'getStarted';
           }
-        }
-        else {
-          this.page = 'getStarted';
         }
       }
 
@@ -670,31 +628,43 @@
       }
     }
 
-    private onGetStartedLoginClicked(){
-      this.page = 'login';
+    private async onGoogleAuthClicked(){
+      try {
+        const authStateValue = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+        const exp = (Date.now() + 10000).toString();
+        localStorage.setItem('oauth_cb', JSON.stringify({authStateValue, exp}));
+        const authResult = await axios.get('/login/goauth/init', {headers: {authStateValue}});
+        console.log('signupResult -> ', authResult);
 
-      this.$nextTick(() => {
-        (<any>this.$refs['emailAddress']).focus();
-      });
+        window.location.href = authResult.data;
+      }
+      catch(err) {
+        console.error(err);
+        showErrors(`Error authenticating with google`, err);
+      }      
     }
 
-    private onGetStartedEnterEmailClicked(){
-      const localStorageInvitedTeamToken = localStorage.getItem('sg_invited_team_token');
+    private async onGithubAuthClicked(){
+      try {
+        const authStateValue = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+        const exp = (Date.now() + 10000).toString();
+        localStorage.setItem('oauth_cb', JSON.stringify({authStateValue, exp}));
+        const authResult = await axios.get('/login/ghauth/init', {headers: {authStateValue}});
+        console.log('signupResult -> ', authResult);
 
-      if( localStorageInvitedTeamToken &&
-          this.localStorageInvitedTeam_EmailConfirmed && 
-          this.localStorageInvitedTeam_Email ){
-        Cookies.set('Auth', 'Bearer ' + localStorageInvitedTeamToken);
-        const rawUser = parseJwt(localStorageInvitedTeamToken);
-        this.$store.commit('securityStore/setUser', rawUser);
-        this.page = 'createAccount';
+        window.location.href = authResult.data;
       }
-      else {
-        this.page = 'enterEmail';
-      }
+      catch(err) {
+        console.error(err);
+        showErrors(`Error authenticating with github`, err);
+      }      
     }
 
-    private async onConfirmEmailClicked(){
+    private async confirmEmailAddress(){
+      if (this.robot){
+        console.error('Not verified')
+        return;
+      }
       if(this.emailAddress){
         // cache the email they entered
         localStorage.setItem('sg_email', this.emailAddress);
@@ -718,6 +688,25 @@
           showErrors(`Error sending a confirmation email`, err);
         }
       }
+    }
+
+    private async onConfirmEmailCaptchaVerify (response){
+      if (response) {
+        this.robot = false;
+        await this.confirmEmailAddress();
+      }
+    }
+
+    private onGetStartedLoginClicked(){
+      this.page = 'login';
+
+      this.$nextTick(() => {
+        (<any>this.$refs['emailAddress']).focus();
+      });
+    }
+
+    private async onConfirmEmailClicked(){
+      await this.confirmEmailAddress();
     }
 
     private async onConfirmLetterKeyUp(index: number){
@@ -750,8 +739,8 @@
       }
     }
 
-    private onBackToEmailConfirmPageClicked(){
-      this.page = 'enterEmail';
+    private onBackToGetStartedPageClicked(){
+      this.page = 'getStarted';
 
       this.$nextTick(() => {
         (<any>this.$refs['emailAddress']).focus();
@@ -760,12 +749,20 @@
 
     private async onCreateAccountClicked(){
       try {
-        const detailsResult = await axios.put(`api/v0/signup/details/${this.user.id}`, {
-          password: this.password,
-          name: this.name,
-          companyName: this.companyName
-        });
-        this.password = ''; // clear this out
+        let detailsResult;
+        if (this.oauthLogin) {
+          detailsResult = await axios.put(`api/v0/signup/oauth/${this.user.id}`, {
+            name: this.name,
+            companyName: this.companyName
+          });
+        } else {
+          detailsResult = await axios.put(`api/v0/signup/details/${this.user.id}`, {
+            password: this.password,
+            name: this.name,
+            companyName: this.companyName
+          });
+          this.password = ''; // clear this out
+        }
 
         const user = detailsResult.data.data; // this is the new user account with updated info  
         this.$store.commit('securityStore/setUser', user);
@@ -926,6 +923,8 @@
       else {
         console.error('Cannot start the applicaton.  For some reason the Auth cookie was not avaiable', authJwt);
       }
+
+      window.location.href = `${window.location.origin}/#/landing`;
     }
 
     private get teamIdsInvitedMinusLocalStorage(){
@@ -1059,11 +1058,15 @@
       const user = changedPasswordResult.data.data; // this is the new user account with updated info  
       this.$store.commit('securityStore/setUser', user);
 
-      this.page = 'passwordUpdateSuccess';
+      this.page = "passwordUpdateSuccess";
     }
     catch(err){
       console.error(err);
       showErrors(`Error resetting your password.`, err);
+
+      setTimeout(() => {
+        window.location.href = `${window.location.origin}/#/landing`;
+      }, 2000);
     }
     finally {
       sessionStorage.removeItem('sg_reset_password_token');
@@ -1081,6 +1084,13 @@
     flex-direction: column; 
   }
 
+  .left-flex {
+    display: flex; 
+    align-items: left; 
+    flex-direction: column; 
+    margin-left: 100px;
+  }
+
   .confirm-letter {
     width: 55px; 
     font-size: 24px;
@@ -1090,7 +1100,7 @@
   .invitations {
     display: flex;
     flex-direction: column;
-    align-items: center;
+    align-items: left;
   }
 
   .invitation-td {
@@ -1099,4 +1109,13 @@
     vertical-align: middle;
   }
 
+  .social-auth-github-button {
+    background: url(https://upload.wikimedia.org/wikipedia/commons/9/91/Octicons-mark-github.svg) no-repeat 10px !important;
+    background-size: 18px 18px !important;
+  }
+
+  .social-auth-google-button {
+    background: url(https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg) no-repeat 10px !important;
+    background-size: 18px 18px !important;
+  }  
 </style>

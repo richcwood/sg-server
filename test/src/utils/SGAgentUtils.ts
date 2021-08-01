@@ -51,7 +51,7 @@ export class SGAgentUtils {
 
     static async injectScripts(_teamId: string, script_code: string, scriptsToInject: any, fnLogError: any) {
         let newScript: string = script_code;
-        let arrScriptsToInject: string[] = newScript.match(/@sgs?(\([^)]*\))/g);
+        let arrScriptsToInject: string[] = newScript.match(/@sgs?(\([^)]*\))/gi);
         if (arrScriptsToInject) {
             // replace runtime variables in script
             for (let i = 0; i < arrScriptsToInject.length; i++) {

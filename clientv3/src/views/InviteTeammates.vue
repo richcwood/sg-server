@@ -1,18 +1,12 @@
 <template>
   <div>
-    <section class="hero" style="text-align: center;">
-      <div class="hero-body">
-        <div class="container">
-          <h1 class="title">
-            Invite Teammates
-          </h1>
-        </div>
-      </div>
-    </section>
-    <div v-if="showSuccessMessage" style="text-align: center;">
+    <div style="font-weight: 700; font-size: 32px; margin-top: 20px; margin-bottom: 20px; margin-left: 100px;">
+        Invite Teammates
+    </div>
+    <div v-if="showSuccessMessage" style="margin-left: 130px;">
       Invitations have been sent to your team members.
     </div>
-    <div v-else style="display: flex; flex-direction: column; align-items: center;">
+    <div v-else style="display: flex; flex-direction: column; margin-left: 130px;">
       <div style="margin-bottom: 40px;">
         Team invite link: <a @click.prevent="onCopyInviteLinkClicked">Copy to clipboard</a>
         <input id="inviteLinkInput" :hidden="!isCopyingTeamInviteLink" style="opacity: .01;" type="text" v-model="selectedTeamInviteLink">

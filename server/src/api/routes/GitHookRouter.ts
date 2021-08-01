@@ -10,9 +10,6 @@ import * as config from 'config';
 
 const mongoUrl = config.get('mongoUrl');
 const mongoDbName = config.get('mongoDbName');
-const redisHost = config.get('redisHost');
-const redisPort = config.get('redisPort');
-const redisPassword = config.get('redisPassword');
 const env = config.get('environment');
 
 // Your registered app must have a secret set. The secret is used to verify that webhooks are sent by GitHub.

@@ -19,9 +19,7 @@
   "agentCrashRestartInterval": 30000,
   "mongoUrl": "mongodb+srv://sgApp:qBVgdcOa5V0L4cPL@cluster0.hbuyr.mongodb.net/sg_prod?retryWrites=true&w=majority",
   "mongoDbName": "sg_prod",
-  "redisHost": "redis-17504.c73.us-east-1-2.ec2.cloud.redislabs.com",
-  "redisPort": "17504",
-  "redisPassword": "EnnqDTjhnOcnSc9qMZZc5PwLMgAOe69L",
+  "redisUrl": "redis://default:WdvbdAkBT8RfjLlW8009HsiDrEQp8flE@redis-19478.c240.us-east-1-3.ec2.cloud.redislabs.com:19478",
   "useSSL": "true",
   "logDest": "file",
   "adminToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjVkZTg4MTAyNzVhZDkyZTViYjhkZTc4YSIsImVtYWlsIjoiYWRtaW5Ac2Fhc2dsdWUuY29tIiwidGVhbUlkcyI6W10sInRlYW1BY2Nlc3NSaWdodElkcyI6e30sImlhdCI6MTYwNDE5NzIxMn0.0sbKDMOnmCRnfUTZ1Zzx59Vm6NBo1qZmaDzduAhsOpw",
@@ -37,5 +35,6 @@
   "stripeApiVersion": "2020-08-27",
   "stripePublicKey": "pk_live_51Hq1pkE7OqlLKVtkvf6LzpCtYuWTuUrgdqO06OdL21pzBbJe25YsaHeYtMuwhvJ1R6F2X7QX8C4VvUzTHShEulJm00VNLAP2AW",
   "stripePrivateKey": "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",
-  "stripeWebhookSecret": "whsec_kgxRlp3dZ0kO9ERPsMOMpILwPWM96qzf"
+  "stripeWebhookSecret": "whsec_kgxRlp3dZ0kO9ERPsMOMpILwPWM96qzf",
+  "sessionSecret": "E8aOMjriElNJB1yzAqp4lkU9SwucJhHX"
 }

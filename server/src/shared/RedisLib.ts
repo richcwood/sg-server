@@ -1,14 +1,16 @@
 import * as redisAsync from 'async-redis';
 import * as redis from 'redis';
+import * as config from 'config';
 
 let num_connections: number = 0;
 
-export default class RedisLib {
+export class RedisLib {
     private redisAsyncClient: any;
     private redisClient: any;
-    constructor(private redisHost: string, private redisPort: string, private redisPassword: string) {
-        this.redisAsyncClient = redisAsync.createClient({host: this.redisHost, port: this.redisPort, password: this.redisPassword});
-        this.redisClient = redis.createClient({host: redisHost, port: redisPort, password: redisPassword});
+    constructor() {
+        const loginUrl = config.get("redisUrl");
+        this.redisAsyncClient = redisAsync.createClient(loginUrl);
+        this.redisClient = redis.createClient(loginUrl);
 
         num_connections++;
         console.log(`${num_connections} redis connections`);

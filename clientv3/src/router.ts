@@ -20,6 +20,7 @@ import TeamAlerts from '@/views/TeamAlerts.vue';
 import Scripts from '@/views/Scripts.vue';
 import Settings from '@/views/Settings.vue';
 import AccessKeys from '@/views/AccessKeys.vue';
+import AuthCallback from '@/views/AuthCallback.vue';
 import _ from 'lodash';
 import { SgAlert, AlertPlacement, AlertCategory } from "@/store/alert/types";
 
@@ -57,6 +58,11 @@ const router = new Router({
       path: '/landing',
       name: 'landing',
       component: Landing
+    },
+    {
+      path: '/oauthCallback/:method/:oauthProvider/:authHashKey',
+      name: 'oauthCallback',
+      component: AuthCallback
     },
     {
       path: '/downloadAgent',
@@ -212,11 +218,13 @@ router.beforeEach(async (to: Route, from: Route, next: (options?: any) => void) 
   let shouldCancel = false;
 
   if(!store.state[StoreType.SecurityStore].appStarted){
+    console.log('router.beforeEach -> to -> ', to);
+    console.log('router.beforeEach -> from -> ', from);
     // in a single page app, users can get into weird situations with the back button or when 
     // deep linking back somewhere into the application.
     // If the app hasn't started and users are trying to go somewhere else besides the landing page
     // then redirect them back to the landing page
-    if(to.name !== 'landing'){
+    if(to.name !== 'landing' && to.name !== 'oauthCallback'){
       console.log('redirecting back to landing.  User not logged in and app has not started yet.');
       shouldCancel = true;
     }

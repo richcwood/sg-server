@@ -363,7 +363,7 @@ export class TaskOutcomeService {
                 if (task.runtimeVars)
                     runtimeVarsTask = Object.assign(runtimeVarsTask, task.runtimeVars);
 
-                let arrFound: string[] = task.targetAgentId.match(/@sgg?(\([^)]*\))/g);
+                let arrFound: string[] = task.targetAgentId.match(/@sgg?(\([^)]*\))/gi);
                 if (arrFound) {
                     // replace runtime variable in target agent id
                     try {
@@ -450,7 +450,7 @@ export class TaskOutcomeService {
                         }
                     }
 
-                    let arrFindVarsArgs: string[] = step.arguments.match(/@sgg?(\([^)]*\))/g);
+                    let arrFindVarsArgs: string[] = step.arguments.match(/@sgg?(\([^)]*\))/gi);
                     if (arrFindVarsArgs) {
                         // replace runtime variables in arguments
                         for (let i = 0; i < arrFindVarsArgs.length; i++) {

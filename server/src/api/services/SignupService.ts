@@ -11,6 +11,23 @@ import * as bcrypt from 'bcrypt';
 
 
 export class SignupService {
+    public async signupNewUserGoogleAuth(data: any, logger: BaseLogger): Promise<object> {
+        if (!data.email)
+            throw new ValidationError(`Request body missing "email" parameter`);
+
+        const queryRes: any = await userService.findAllUsersInternal({ email: data.email })
+        if (_.isArray(queryRes) && queryRes.length > 0) 
+            throw new ValidationError(`User already exists`);
+
+        let userModel: any = new UserModel(data);
+        userModel.hasAcceptedTerms = true;
+        userModel.emailConfirmed = true;
+        userModel = await userModel.save();
+
+        return userModel;
+    }
+
+
     public async signupNewUser(data: any, logger: BaseLogger): Promise<object> {
         if (!data.email)
             throw new ValidationError(`Request body missing "email" parameter`);
@@ -94,14 +111,37 @@ export class SignupService {
 
         updatedUser = await UserModel.findOneAndUpdate(userFilter, { emailConfirmed: true, $unset: { emailConfirmCodeExpiration: '', emailConfirmCode: '' }, }, { new: true });
 
-        try {
-            let newEmailNotificationMessage = JSON.stringify(updatedUser, null, 4);
-            await SGUtils.SendInternalEmail('rich@saasglue.com', 'jack@saasglue.com,jay@saasglue.com,rich@saasglue.com', 'New user signed up', newEmailNotificationMessage, logger);
-        } catch (e) {
-            logger.LogError(`Error sending new user notification message: ${e.message}`, updatedUser);
-        }
+        // try {
+        //     let newEmailNotificationMessage = JSON.stringify(updatedUser, null, 4);
+        //     await SGUtils.SendInternalEmail('rich@saasglue.com', 'jack@saasglue.com,jay@saasglue.com,rich@saasglue.com', 'New user signed up', newEmailNotificationMessage, logger);
+        // } catch (e) {
+        //     logger.LogError(`Error sending new user notification message: ${e.message}`, updatedUser);
+        // }
 
         return updatedUser; // fully populated model
+    }
+
+
+    public async oauthSetup(id: mongodb.ObjectId, data: any, responseFields?: string): Promise<object> {
+        const filter = { _id: id };
+
+        let updatedUser: any;
+        // const user: UserSchema = await userService.findUser(id);
+
+        // if (!user.emailConfirmed)
+        //     throw new ValidationError('Email address not verified');
+
+        let update: any = Object.assign({ hasAcceptedTerms: true, emailConfirmed: true }, data);
+
+        updatedUser = await UserModel.findOneAndUpdate(filter, update, { new: true }).select(responseFields);
+
+        if (responseFields) {
+            // It's is a bit wasteful to do another query but I can't chain a save with a select
+            return userService.findUser(updatedUser._id, responseFields);
+        }
+        else {
+            return updatedUser; // fully populated model
+        }
     }
 
 

@@ -78,6 +78,8 @@ export class TeamInviteService {
             url += `:${port}`
         let acceptInviteLink = `${url}/?invitedTeamToken=${token}`;
 
+        console.log(acceptInviteLink);
+
         await SGUtils.SendTeamInviteEmail(team, inviter, userModel.email, acceptInviteLink, logger);
 
         return { result: 'success' };

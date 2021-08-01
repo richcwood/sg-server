@@ -7,6 +7,7 @@ export const mutations: MutationTree<SecurityStore> = {
   },
 
   setAppStarted( state, appStarted: boolean){
+    console.log('setAppStarted -> ', appStarted);
     state.appStarted = appStarted;
   }
 };

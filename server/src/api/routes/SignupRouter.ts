@@ -11,6 +11,7 @@ export class SignupRouter {
     this.router.post('/', signupController.signupNewUser);
     this.router.put('/confirm', signupController.confirmNewUser);
     this.router.put('/details/:userId', signupController.setInitialPassword);
+    this.router.put('/oauth/:userId', signupController.oauthSetup);
   }
 }
 

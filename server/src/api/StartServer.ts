@@ -3,8 +3,8 @@ MetricsLogger.init();
 
 import express = require('express');
 import { NextFunction, Request, Response } from 'express';
-const enforce = require('express-sslify');
-const cors = require('cors');
+// const enforce = require('express-sslify');
+// const cors = require('cors');
 import path = require('path');
 import util = require('util');
 const bodyParser = require('body-parser');
@@ -69,6 +69,9 @@ import { ValidationError } from './utils/Errors';
 import * as morgan from 'morgan';
 import * as fs from 'fs';
 import { stripeClientTokenRouter } from './routes/StripClientTokenRouter';
+const redis = require('redis');
+const session = require('express-session');
+const RedisStore = require('connect-redis')(session);
 
 
 // Create a new express application instance
@@ -89,6 +92,19 @@ var options = {
 };
 mongoose.connect(config.get('mongoUrl'), options);
 
+const redisClient = redis.createClient(config.get('redisUrl'), {no_ready_check: true});
+const expressSessionOptions: any = {
+  store: new RedisStore({client: redisClient}),
+  saveUninitialized: false,
+  secret: config.get('sessionSecret'),
+  resave: false,
+  cookie: {}
+}
+if (environment === 'production') {
+  expressSessionOptions.cookie.secure = true;
+}
+app.use(session(expressSessionOptions));
+
 app.use(`/api/v0/stripewebhook`, bodyParser.raw({type: "*/*"}), new StripeWebhookRouter().router);
 
 app.use(bodyParser.json());
@@ -107,27 +123,30 @@ class AppBuilder {
   private setUpMiddleware() {
     app.disable('etag');
 
-    if (environment != 'debug' && environment !== 'bartdev') {
-      this.app.use(enforce.HTTPS({ trustProtoHeader: true }));
-    }
+    // if (environment != 'debug' && environment !== 'bartdev') {
+    //   this.app.use(enforce.HTTPS({ trustProtoHeader: true }));
+    // }
 
-    let origin = 'http://console.saasglue.com';
-    if (environment == 'stage'){
-      origin = 'http://saasglue-stage.herokuapp.com';
-    }
-    else if(environment === 'bartdev'){
-      origin = 'http://localhost';
-    }
+    // let origin = 'http://console.saasglue.com';
+    // if (environment == 'stage'){
+    //   origin = 'http://saasglue-stage.herokuapp.com';
+    // }
+    // else if(environment === 'bartdev'){
+    //   origin = 'http://localhost';
+    // }
+    // else if(environment === 'debug'){
+    //   origin = 'http://localhost';
+    // }
 
-    const corsOptions: any = {
-      origin: origin,
-      methods: 'GET, PUT, POST, DELETE, OPTIONS',
-      allowedHeaders: 'origin, x-requested-with, accept, content-type, x-csrf-token, correlationid, cookie, auth, host, referer, user-agent, _teamid',
-      exposedHeaders: 'origin, x-requested-with, accept, content-type, x-csrf-token, correlationid, cookie, auth, referer, user-agent, _teamid',
-      maxAge: 3628800,
-      credentials: true
-    };
-    app.use(cors(corsOptions));
+    // const corsOptions: any = {
+    //   origin: origin,
+    //   methods: 'GET, PUT, POST, DELETE, OPTIONS',
+    //   allowedHeaders: 'origin, x-requested-with, accept, content-type, x-csrf-token, correlationid, cookie, auth, host, referer, user-agent, _teamid',
+    //   exposedHeaders: 'origin, x-requested-with, accept, content-type, x-csrf-token, correlationid, cookie, auth, referer, user-agent, _teamid',
+    //   maxAge: 3628800,
+    //   credentials: true
+    // };
+    // app.use(cors(corsOptions));
 
     if(config.get('httpLogs.enabled')){
       morgan.token('user_id', req => req.headers.userid);
@@ -196,7 +215,6 @@ class AppBuilder {
     this.app.use(`/login`, new LoginRouter().router);
 
     this.app.use(`${apiURLBase}/githook`, new GitHookRouter().router);
-    this.app.use(`${apiURLBase}/signup`, signupRouter);
 
     this.setUpJwtSecurity();
 
@@ -224,6 +242,7 @@ class AppBuilder {
       res.send('OK');
     });
 
+    this.app.use(`${apiURLBase}/signup`, signupRouter);
     this.app.use(`${apiURLBase}/team`, teamRouter);
     this.app.use(`${apiURLBase}/agentDownload`, agentDownloadRouter);
     this.app.use(`${apiURLBase}/agent`, agentRouter);
@@ -281,7 +300,7 @@ class AppBuilder {
       //   return next();
       // }
 
-      if (req.method === 'POST' && req.path.match('/api/v[0-9]+/signup')) {
+      if (req.method === 'POST' && req.path.match('/api/v[0-9]+/signup[/]?$')) {
         next();
         return;
       }
@@ -289,10 +308,10 @@ class AppBuilder {
         next();
         return;
       }
-      else if (req.method === 'PUT' && req.path.match('/api/v[0-9]+/signup/details')) {
-        next();
-        return;
-      }
+      // else if (req.method === 'PUT' && req.path.match('/api/v[0-9]+/signup/details')) {
+      //   next();
+      //   return;
+      // }
       else if (req.method === 'PUT' && req.path.match('/api/v[0-9]+/signup/confirm')) {
         next();
         return;
@@ -403,6 +422,10 @@ class AppBuilder {
             }
             else if (req.method === 'GET' && req.path.match('/securecheck')) {
               teamAccess = true;
+            }
+            else if (req.method === 'PUT' && req.path.match(/api\/v[0-9]+\/signup\/(details|oauth)\/[a-f\d]{24}$/i)) {
+              next();
+              return;
             }
             else if ((req.method === 'POST' || req.method === 'GET') && req.path.match('/api/v[0-9]+/team')) {
               teamAccess = true;

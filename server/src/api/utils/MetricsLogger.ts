@@ -6,7 +6,7 @@ import { LogLevel } from '../../shared/Enums';
 const environment = config.get('environment');
 
 let Log = (values: any, logLevel: LogLevel) => {
-  values = Object.assign({ _logLevel: logLevel, _appName: 'MetricsLogger', _sourceHost: this.machineId = os.hostname(), _timeStamp: new Date().toISOString() }, values);
+  values = Object.assign({ _logLevel: logLevel, _appName: 'MetricsLogger', _sourceHost: os.hostname(), _timeStamp: new Date().toISOString() }, values);
   if (environment == 'production' || environment == 'stage')
       console.log(JSON.stringify(values));
   else
