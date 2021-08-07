@@ -46,6 +46,7 @@ while token == '':
         sys.stdout.flush
 
 print '@sgo{{"sgAuthToken": "{}"}}'.format(token)
+print a
 `;
 const script1_b64 = SGUtils.btoa(script1);
 

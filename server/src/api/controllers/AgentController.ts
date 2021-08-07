@@ -137,7 +137,7 @@ export class AgentController {
             if (_.isArray(agent) && agent.length === 0) {
                 response.data = '';
                 response.statusCode = ResponseCode.NOT_FOUND;
-                next();            
+                next();
                 // next(new MissingObjectError(`Agent '${machineId}" in team "${_teamId.toHexString()}' not found.`));
             }
             else {
@@ -265,7 +265,7 @@ export class AgentController {
         const version: string = req.params.targetVersion;
         const response: ResponseWrapper = resp['body'];
         try {
-            let updatedAgent: any = await agentService.updateAgentTargetVersion(_teamId, _agentId, { targetVersion: version }, req.header('correlationId'), (<string>req.query.responseFields));
+            let updatedAgent: any = await agentService.updateAgentTargetVersion(_teamId, _agentId, version, req.header('correlationId'), (<string>req.query.responseFields));
 
             if (_.isArray(updatedAgent) && updatedAgent.length === 0) {
                 next(new MissingObjectError(`Agent ${req.params.agentId} not found.`));

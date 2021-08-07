@@ -32,13 +32,13 @@ export class AgentService {
         return AgentModel.find(filter).select(responseFields).limit(limit);
     }
 
-    public async findAllAgents(_teamId: mongodb.ObjectId, filter?: any, responseFields?: string) {
+    public async findAllAgents(_teamId: mongodb.ObjectId, filter?: any, responseFields?: string, limit: number = 1000) {
         const defaultFilter = { _teamId };
         if (filter)
             filter = Object.assign(defaultFilter, filter);
         else
             filter = defaultFilter;
-        return AgentModel.find(filter).select(responseFields);
+        return AgentModel.find(filter).select(responseFields).limit(limit);
     }
 
     public async findAgent(_teamId: mongodb.ObjectId, agentId: mongodb.ObjectId, responseFields?: string) {
@@ -124,9 +124,20 @@ export class AgentService {
     }
 
 
-    public async updateAgentTargetVersion(_teamId: mongodb.ObjectId, id: mongodb.ObjectId, data: any, correlationId?: string, responseFields?: string): Promise<object> {
+    public async updateAgentTargetVersion(_teamId: mongodb.ObjectId, id: mongodb.ObjectId, version: string, correlationId?: string, responseFields?: string): Promise<object> {
         const filter = { _id: id, _teamId };
-        const updatedAgent = await AgentModel.findOneAndUpdate(filter, data, { new: true }).select(responseFields);
+        const updatedAgent = await AgentModel.findOneAndUpdate(filter, { targetVersion: version }, { new: true }).select(responseFields);
+
+        if (!updatedAgent)
+            throw new MissingObjectError(`Agent with id '${id}" not found with filter "${JSON.stringify(filter, null, 4)}'.`)
+
+        return updatedAgent; // fully populated model
+    }
+
+
+    public async updateAgentLastTaskAssignedTime(_teamId: mongodb.ObjectId, id: mongodb.ObjectId, lastTaskAssignedTime: number, correlationId?: string, responseFields?: string): Promise<object> {
+        const filter = { _id: id, _teamId };
+        const updatedAgent = await AgentModel.findOneAndUpdate(filter, { lastTaskAssignedTime }, { new: true }).select(responseFields);
 
         if (!updatedAgent)
             throw new MissingObjectError(`Agent with id '${id}" not found with filter "${JSON.stringify(filter, null, 4)}'.`)

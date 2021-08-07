@@ -43,6 +43,7 @@ let GetTaskRoutes = async (_teamId: mongodb.ObjectId, task: TaskSchema, logger: 
         }
 
         routes.push({ route: SGStrings.GetAgentQueue(_teamId.toHexString(), task.targetAgentId), type: 'queue', queueAssertArgs: agentQueueProperties, targetAgentId: task.targetAgentId });
+        await agentService.updateAgentLastTaskAssignedTime(_teamId, task.targetAgentId, Date.now(), null, '_id');
     }
     /// For tasks requiring agents with designated tags, get a list of all active agents with all required tags. If no agents exist with all
     ///     required tags, log an error and return.
@@ -60,7 +61,7 @@ let GetTaskRoutes = async (_teamId: mongodb.ObjectId, task: TaskSchema, logger: 
                 tagFilter[tagFilterKey] = task.requiredTags[tagKey];
                 filter['$and'].push(tagFilter);
             }
-            const agentsWithRequiredTags = await agentService.findAllAgents(_teamId, filter, 'lastHeartbeatTime propertyOverrides numActiveTasks attemptedRunAgentIds');
+            const agentsWithRequiredTags = await agentService.findAllAgents(_teamId, filter, 'lastHeartbeatTime propertyOverrides numActiveTasks attemptedRunAgentIds lastTaskAssignedTime');
             // for (let i = 0; i < Object.keys(agents).length; i++) {
             //     if (!Object.keys(task.requiredTags).some(tagKey => !(tagKey in agents[i].tags) || (task.requiredTags[tagKey] != agents[i].tags[tagKey])))
             //         agentsWithRequiredTags.push(agents[i]);
@@ -76,7 +77,8 @@ let GetTaskRoutes = async (_teamId: mongodb.ObjectId, task: TaskSchema, logger: 
             if (task.target & (Enums.TaskDefTarget.ALL_AGENTS | (Enums.TaskDefTarget.ALL_AGENTS_WITH_TAGS))) {
                 for (let i = 0; i < agentsWithRequiredTags.length; i++) {
                     const agentQueue = SGStrings.GetAgentQueue(_teamId.toHexString(), agentsWithRequiredTags[i]._id);
-                    routes.push({ route: agentQueue, type: 'queue', queueAssertArgs: agentQueueProperties, targetAgentId: agentsWithRequiredTags[0]._id });
+                    routes.push({ route: agentQueue, type: 'queue', queueAssertArgs: agentQueueProperties, targetAgentId: agentsWithRequiredTags[i]._id });
+                    await agentService.updateAgentLastTaskAssignedTime(_teamId, agentsWithRequiredTags[i]._id, Date.now(), null, '_id');
                 }
             }
             else {
@@ -92,12 +94,15 @@ let GetTaskRoutes = async (_teamId: mongodb.ObjectId, task: TaskSchema, logger: 
                 agentCandidates.sort((a, b) => {
                     const a_unusedCapacity = a.propertyOverrides.maxActiveTasks - a.numActiveTasks;
                     const b_unusedCapacity = b.propertyOverrides.maxActiveTasks - b.numActiveTasks;
-                    return (b_unusedCapacity > a_unusedCapacity) ? 1 : ((a_unusedCapacity > b_unusedCapacity) ? -1 : (b.lastHeartbeatTime > a.lastHeartbeatTime ? 1 : ((a.lastHeartbeatTime > b.lastHeartbeatTime) ? -1 : 0)));
+                    const a_lastTaskAssignedTime = a.lastTaskAssignedTime ? a.lastTaskAssignedTime : 0;
+                    const b_lastTaskAssignedTime = b.lastTaskAssignedTime ? b.lastTaskAssignedTime : 0;
+                    return (b_unusedCapacity > a_unusedCapacity) ? 1 : ((a_unusedCapacity > b_unusedCapacity) ? -1 : (a_lastTaskAssignedTime > b_lastTaskAssignedTime ? 1 : ((b_lastTaskAssignedTime > a_lastTaskAssignedTime) ? -1 : 0)));
                 });
-                // console.log(`GetTaskRoutes -> after sort -> ${JSON.stringify(agentCandidates, null, 4)}`);
+                console.log(`GetTaskRoutes -> after sort -> ${JSON.stringify(agentCandidates, null, 4)}`);
                 const agentQueue = SGStrings.GetAgentQueue(_teamId.toHexString(), agentCandidates[0]._id);
                 routes.push({ route: agentQueue, type: 'queue', queueAssertArgs: agentQueueProperties, targetAgentId: agentCandidates[0]._id });
                 updatedTask = await TaskModel.findOneAndUpdate({ _id: task._id, _teamId }, { $push: { attemptedRunAgentIds: agentCandidates[0]._id } }, { new: true });
+                await agentService.updateAgentLastTaskAssignedTime(_teamId, agentCandidates[0]._id, Date.now(), null, '_id');
             }
         } else {
             let errMsg = '';
@@ -170,7 +175,8 @@ let GetTaskRoutes = async (_teamId: mongodb.ObjectId, task: TaskSchema, logger: 
         if (task.target & Enums.TaskDefTarget.ALL_AGENTS) {
             for (let i = 0; i < Object.keys(agentsQuery).length; i++) {
                 const agentQueue = SGStrings.GetAgentQueue(_teamId.toHexString(), agentsQuery[i]._id);
-                routes.push({ route: agentQueue, type: 'queue', queueAssertArgs: agentQueueProperties, targetAgentId: agentsQuery[0]._id });
+                routes.push({ route: agentQueue, type: 'queue', queueAssertArgs: agentQueueProperties, targetAgentId: agentsQuery[i]._id });
+                await agentService.updateAgentLastTaskAssignedTime(_teamId, agentsQuery[i]._id, Date.now(), null, '_id');
             }
         } else {
             const agentCandidates = _.filter(agentsQuery, a => task.attemptedRunAgentIds.indexOf(a._id) < 0);
@@ -184,12 +190,15 @@ let GetTaskRoutes = async (_teamId: mongodb.ObjectId, task: TaskSchema, logger: 
             agentCandidates.sort((a, b) => {
                 const a_unusedCapacity = a.propertyOverrides.maxActiveTasks - a.numActiveTasks;
                 const b_unusedCapacity = b.propertyOverrides.maxActiveTasks - b.numActiveTasks;
-                return (b_unusedCapacity > a_unusedCapacity) ? 1 : ((a_unusedCapacity > b_unusedCapacity) ? -1 : (b.lastHeartbeatTime > a.lastHeartbeatTime ? 1 : ((a.lastHeartbeatTime > b.lastHeartbeatTime) ? -1 : 0)));
+                const a_lastTaskAssignedTime = a.lastTaskAssignedTime ? a.lastTaskAssignedTime : 0;
+                const b_lastTaskAssignedTime = b.lastTaskAssignedTime ? b.lastTaskAssignedTime : 0;
+                return (b_unusedCapacity > a_unusedCapacity) ? 1 : ((a_unusedCapacity > b_unusedCapacity) ? -1 : (b_lastTaskAssignedTime > a_lastTaskAssignedTime ? 1 : ((a_lastTaskAssignedTime > b_lastTaskAssignedTime) ? -1 : 0)));
             });
-            // console.log(`GetTaskRoutes -> after sort -> ${JSON.stringify(agentCandidates, null, 4)}`);
+            console.log(`GetTaskRoutes -> after sort -> ${JSON.stringify(agentCandidates, null, 4)}`);
             const agentQueue = SGStrings.GetAgentQueue(_teamId.toHexString(), agentCandidates[0]._id);
             routes.push({ route: agentQueue, type: 'queue', queueAssertArgs: agentQueueProperties, targetAgentId: agentCandidates[0]._id });
             updatedTask = await TaskModel.findOneAndUpdate({ _id: task._id, _teamId }, { $push: { attemptedRunAgentIds: agentCandidates[0]._id } }, { new: true });
+            await agentService.updateAgentLastTaskAssignedTime(_teamId, agentsQuery[0]._id, Date.now(), null, '_id');
         }
     }
 

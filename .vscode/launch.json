@@ -70,14 +70,17 @@
             ],
             "program": "${workspaceFolder}/test/dist/sg-server/test/src/RunUnitTestsHarness.js",
             "args": [
-                "Test1.js"
+                "Test64.js"
             ],
             "outFiles": [
                 "${workspaceFolder}//test/dist/sg-server/test/**/*.js"
             ],
             "env": {
                 "NODE_ENV": "debug",
-                "SENDGRID_API_KEY": "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"
+                "SENDGRID_API_KEY": "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",
+                "AWS_ACCESS_KEY_ID": "AKIAX3EV7JGZPNRECXBG",
+                "AWS_SECRET_ACCESS_KEY": "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"
+                
             }
         }
     ]

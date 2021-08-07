@@ -78,6 +78,9 @@ export class AgentSchema {
     @prop()
     timezone?: string;
 
+    @prop()
+    lastTaskAssignedTime?: number;
+
     // Define which filters are legal for which props (including nested props (not sure about nested arrays))
     public static readonly validFilters = {
         'name': [FilterOperator.EQUALS, FilterOperator.NOT_EQUALS, FilterOperator.LIKE],

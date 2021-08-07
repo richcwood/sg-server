@@ -274,7 +274,7 @@ export default class TestSetup {
                 apiUrl: apiBaseUrl,
                 apiPort: apiPort,
                 agentLogsAPIVersion: apiVersion,
-                maxActiveTasks: 20,
+                    maxActiveTasks: 20,
                 trackSysInfo: false,
                 runStandAlone: true
             }

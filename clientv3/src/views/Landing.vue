@@ -41,7 +41,7 @@
             </vue-recaptcha>
           </div>
           <div style="margin-left: 3px; margin-top: 20px">
-            By registering, you agree to our <b>Terms of Service</b> and <b>Privacy Policy</b>.
+            By registering, you agree to our <a href="https://www.saasglue.com/terms-of-service.html" target="_blank"><b>Terms of Service</b></a> and <a href="https://www.saasglue.com/privacy-policy.html" target="_blank"><b>Privacy Policy</b></a>.
           </div>
           <div style="margin-top: 25px">
             Already have an account? <a @click="onGetStartedLoginClicked"><b>Log in</b></a>

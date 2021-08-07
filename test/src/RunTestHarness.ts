@@ -69,7 +69,6 @@ import * as _ from 'lodash';
 import * as pdf from 'html-pdf';
 import * as bson from 'bson';
 import { TaskStatus } from '../../server/dist/shared/Enums';
-import RedisLib from '../../server/src/shared/RedisLib';
 import Bitset from 'bitset';
 import { AccessKeyModel } from '../../server/src/api/domain/AccessKey';
 
@@ -2127,7 +2126,7 @@ let SendTestBrowserAlert = async() => {
 // LoadSettingsToMongo();
 // TestForEach();
 // UpdateAgentVersion();
-// RabbitMQSetup();
+RabbitMQSetup();
 // RabbitMQAdminTest();
 // AMQPTest();
 // StompTest();
@@ -2147,7 +2146,7 @@ let SendTestBrowserAlert = async() => {
 // CreateAgentInstall('5de9691f53162e8891f5aa99', 'v0.0.0.156', 'node10', 'macos', '');
 // BraintreeTesting();
 // CreateInvoices();
-CreateInvoiceReports();
+// CreateInvoiceReports();
 // SubmitInvoicesForPayment();
 // TestBraintreeWebhook();
 // CreateInvoicePDF(0);

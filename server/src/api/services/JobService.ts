@@ -232,7 +232,10 @@ export class JobService {
 
 
                     if (taskModel.target == Enums.TaskDefTarget.AWS_LAMBDA) {
-                        step.s3Bucket = config.get('S3_BUCKET_CUSTOMER_FUNCTIONS');
+                        if (!step.lambdaZipfile)
+                            step.s3Bucket = config.get('S3_BUCKET_CUSTOMER_FUNCTIONS');
+                        else
+                            step.s3Bucket = config.get('S3_BUCKET_TEAM_ARTIFACTS');
                         step.lambdaAWSRegion = config.get('AWS_REGION');
                     }
 
