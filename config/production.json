@@ -36,5 +36,11 @@
   "stripePublicKey": "pk_live_51Hq1pkE7OqlLKVtkvf6LzpCtYuWTuUrgdqO06OdL21pzBbJe25YsaHeYtMuwhvJ1R6F2X7QX8C4VvUzTHShEulJm00VNLAP2AW",
   "stripePrivateKey": "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",
   "stripeWebhookSecret": "whsec_kgxRlp3dZ0kO9ERPsMOMpILwPWM96qzf",
+  "googleAuthClientId": "642301105471-8e8hg49pu2a2pudgh3847insps675rfk.apps.googleusercontent.com",
+  "googleAuthClientSecret": "RyORXgVVL6rgpC1fTMiQzQq1",
+  "googleAuthCallBackUrl": "https://console.saasglue.com/login/goauth_callback",
+  "githubAuthClientId": "5faccadb62ecaf995e3e",
+  "githubAuthClientSecret": "7e102cf39103b550623cb52a864b27a7da079c2c",
+  "githubAuthCallBackUrl": "https://console.saasglue.com/login/ghauth_callback",
   "sessionSecret": "E8aOMjriElNJB1yzAqp4lkU9SwucJhHX"
 }
