@@ -66,7 +66,9 @@ export default class LoginRouter {
         ]
       });
 
-      console.log('loginLink -> [', goAuthUrl, ']');
+      // console.log('loginLink -> [', goAuthUrl, ']');
+
+      console.log('goAuthInit -> session -> ', sess);
 
       const authStateValue: any = req.headers.authstatevalue;
       sess.stateValue = authStateValue;
@@ -87,6 +89,8 @@ export default class LoginRouter {
     const authStateValue: any = req.headers.authstatevalue;
     const authHashKey: any = req.headers.authhashkey;
     const sess: any = (<any>req).session;
+
+    console.log('goAuthInit -> session -> ', sess);
 
     if (authStateValue !== sess.stateValue) {
       logger.LogError('Error in goAuthComplete', { Reason: "authStateValue !=== sess.stateValue", authStateValue, stateValue: sess.stateValue, authHashKey });
