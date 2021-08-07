@@ -18,6 +18,7 @@ import { RedisLib } from '../../shared/RedisLib'
 import * as _ from 'lodash';
 import * as config from 'config';
 import { ValidationError } from '../utils/Errors';
+import { logger } from '@typegoose/typegoose/lib/logSettings';
 
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
@@ -82,17 +83,20 @@ export default class LoginRouter {
 
 
   async goAuthComplete(req: Request, res: Response, next: NextFunction) {
+    const logger: BaseLogger = (<any>req).logger;
     const authStateValue: any = req.headers.authstatevalue;
     const authHashKey: any = req.headers.authhashkey;
     const sess: any = (<any>req).session;
 
     if (authStateValue !== sess.stateValue) {
+      logger.LogError('Error in goAuthComplete', { Reason: "authStateValue !=== sess.stateValue", authStateValue, stateValue: sess.stateValue, authHashKey });
       res.status(401).send('Authentication failed');
       return;
     }
 
     const userId: string = await this.redis.GetHashValue('oauth_cache', authHashKey);
     if (!userId) {
+      logger.LogError('Error in goAuthComplete', { Reason: "Missing authHashKey in redis oauth_cache hash", authHashKey });
       res.status(401).send('Authentication failed');
       return;
     }
@@ -102,6 +106,7 @@ export default class LoginRouter {
     const loginResult: any = await userService.findUser(new mongodb.ObjectId(userId), 'id passwordHash email teamIds teamIdsInvited name companyName teamAccessRightIds')
 
     if (!loginResult) {
+      logger.LogError('Error in goAuthComplete', { Reason: "User not found", userId });
       res.status(401).send('Authentication failed');
       return;
     }
