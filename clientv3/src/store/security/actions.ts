@@ -83,17 +83,14 @@ export const actions: ActionTree<SecurityStore, RootState> = {
   },
 
   async startApp({commit, state}){
-    console.log('startApp -> 1');
     if(! state.user){
       throw 'Error, the user was not set yet.  Call login first and make sure it worked.';
     }
 
-    console.log('startApp -> 2');
     if(! state.user.teamIds || state.user.teamIds.length === 0){
       throw 'Error, the user was not associated with any teams.  You should not have started the app.  Go to the landing instead.';
     }
 
-    console.log('startApp -> 3 -> ', state);
     if(state.appStarted){
       throw 'Error, the app has already been started.  On logout, you should have refreshed the app.'
     }
@@ -101,19 +98,14 @@ export const actions: ActionTree<SecurityStore, RootState> = {
     store.commit(`${StoreType.TeamStore}/setUserEmail`, state.user.email);
     const teamIdsAsStrings = state.user.teamIds.map(teamId => `"${teamId}"`)
     const teams = await store.dispatch(`${StoreType.TeamStore}/fetchModelsByFilter`, {filter: `id->[${teamIdsAsStrings}]`});
-    console.log('startApp -> teams -> ', teams);
     const localStorageStartTeamId = localStorage.getItem('sg_start_team_id');
-    console.log('startApp -> localStorageStartTeamId', localStorageStartTeamId);
     let selectedTeam: Team|null = null;
     if(localStorageStartTeamId){
       const startingTeam = teams.find((team: any) => team.id === localStorageStartTeamId);
-      console.log('startApp -> 4');
       if(startingTeam){
-        console.log('startApp -> 5');
         selectedTeam = await store.dispatch(`${StoreType.TeamStore}/select`, startingTeam);
       }
       else {
-        console.log('startApp -> 6');
         console.warn(`Did not find the local storage starting teamId ${localStorageStartTeamId}.`);
       }
     }
@@ -143,7 +135,6 @@ export const actions: ActionTree<SecurityStore, RootState> = {
       store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert('Could not connect to browser push.', AlertPlacement.FOOTER, AlertCategory.ERROR));
       console.error('Error, could not connect to browser push.', err);
     }
-    console.log('startApp -> 7');
 
     // Fetch all of the job defs, jobs, agents, users and script names for the entire team
     store.dispatch(`${StoreType.JobDefStore}/fetchModelsByFilter`);

@@ -117,13 +117,6 @@ import Cookies from 'js-cookie';
 })
 export default class App extends Vue {
 
-  private created(){
-    console.log('App.vue created');
-  }
-  private mounted(){
-    console.log('App.vue mounted');
-  }
-
   // Make available to template
   private readonly AlertCategory = AlertCategory;
   private readonly enumKeyToPretty = enumKeyToPretty;
@@ -176,7 +169,7 @@ export default class App extends Vue {
   }
 
   private isOnLandingPage(){
-    console.log('isOnLandingPage -> ', (router.currentRoute.name === 'landing' || router.currentRoute.name === 'oauthCallback'));
+    // console.log('isOnLandingPage -> ', (router.currentRoute.name === 'landing' || router.currentRoute.name === 'oauthCallback'));
     return (router.currentRoute.name === 'landing' || router.currentRoute.name === 'oauthCallback');
   }
 

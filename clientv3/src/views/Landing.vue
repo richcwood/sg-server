@@ -561,8 +561,8 @@
       if(localStorage.getItem('oauth_cb')){
         this.oauthLogin = true;
         const oauthResult = JSON.parse(localStorage.getItem('oauth_cb'));
-        console.log('Landing -> mounted -> 1 -> ', oauthResult);
-        console.log('Landing -> mounted -> user -> ', this.user);
+        // console.log('Landing -> mounted -> 1 -> ', oauthResult);
+        // console.log('Landing -> mounted -> user -> ', this.user);
         localStorage.removeItem('oauth_cb');
         this.name = this.user.name;
         if (oauthResult.login_result == 'success') {
@@ -570,7 +570,7 @@
             this.page = 'createAccount';
           }
           else {
-            console.log('Landing -> mounted -> redirecting to login page');
+            // console.log('Landing -> mounted -> redirecting to login page');
             this.redirectToUserLoggedInPage();
           }
         }
@@ -634,7 +634,7 @@
         const exp = (Date.now() + 10000).toString();
         localStorage.setItem('oauth_cb', JSON.stringify({authStateValue, exp}));
         const authResult = await axios.get('/login/goauth/init', {headers: {authStateValue}});
-        console.log('signupResult -> ', authResult);
+        // console.log('signupResult -> ', authResult);
 
         window.location.href = authResult.data;
       }
@@ -650,7 +650,7 @@
         const exp = (Date.now() + 10000).toString();
         localStorage.setItem('oauth_cb', JSON.stringify({authStateValue, exp}));
         const authResult = await axios.get('/login/ghauth/init', {headers: {authStateValue}});
-        console.log('signupResult -> ', authResult);
+        // console.log('signupResult -> ', authResult);
 
         window.location.href = authResult.data;
       }

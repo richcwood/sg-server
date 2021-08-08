@@ -78,9 +78,9 @@ if(invitedTeamToken){ // direct or generic
 
 // login and load data via the api
 (async () => {
-  console.log('main entry -> 1 -> ', window.location);
-  console.log('main entry -> 2 -> ', window.location.hash);
-  console.log('main entry -> 3 -> ', window.location.href);
+  // console.log('main entry -> 1 -> ', window.location);
+  // console.log('main entry -> 2 -> ', window.location.hash);
+  // console.log('main entry -> 3 -> ', window.location.href);
   try {
     // store what deep link the user was trying to get to for a redirect after login if necessary
     sessionStorage.setItem('deep_link_hash', window.location.hash);
@@ -91,11 +91,9 @@ if(invitedTeamToken){ // direct or generic
   }
 
   if(isUserReadyToUseApp()) {
-    console.log('hi 1 -> ');
     await store.dispatch('securityStore/startApp');
   }
   else {
-    console.log('hi 2 -> ', router.currentRoute);
     // make sure we hit the landing page (might have been redirected via a 403)
     if(router.currentRoute.name !== 'landing' && !(window.location.hash.startsWith('#/oauthCallback/'))){
       router.push({name: 'landing'});

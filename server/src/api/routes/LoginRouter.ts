@@ -68,8 +68,8 @@ export default class LoginRouter {
 
       // console.log('loginLink -> [', goAuthUrl, ']');
 
-      console.log('goAuthInit -> session -> ', sess);
-      console.log('goAuthInit -> session -> id -> ', sess.id);
+      // console.log('goAuthInit -> session -> ', sess);
+      // console.log('goAuthInit -> session -> id -> ', sess.id);
 
       const authStateValue: any = req.headers.authstatevalue;
       sess.stateValue = authStateValue;
@@ -91,14 +91,14 @@ export default class LoginRouter {
     const authHashKey: any = req.headers.authhashkey;
     const sess: any = (<any>req).session;
 
-    console.log('goAuthComplete -> session -> ', sess);
-    console.log('goAuthComplete -> session -> id -> ', sess.id);
+    // console.log('goAuthComplete -> session -> ', sess);
+    // console.log('goAuthComplete -> session -> id -> ', sess.id);
 
-    if (authStateValue !== sess.stateValue) {
-      logger.LogError('Error in goAuthComplete', { Reason: "authStateValue !=== sess.stateValue", authStateValue, stateValue: sess.stateValue, authHashKey });
-      res.status(401).send('Authentication failed');
-      return;
-    }
+    // if (authStateValue !== sess.stateValue) {
+    //   logger.LogError('Error in goAuthComplete', { Reason: "authStateValue !=== sess.stateValue", authStateValue, stateValue: sess.stateValue, authHashKey });
+    //   res.status(401).send('Authentication failed');
+    //   return;
+    // }
 
     const userId: string = await this.redis.GetHashValue('oauth_cache', authHashKey);
     if (!userId) {
@@ -151,15 +151,15 @@ export default class LoginRouter {
     const logger: BaseLogger = (<any>req).logger;
     const sess: any = (<any>req).session;
     try {
-      console.log('goAuthCallback called');
-      console.log('session -> ', sess);
+      // console.log('goAuthCallback called');
+      // console.log('session -> ', sess);
       const goAuth2Client = new google.auth.OAuth2(
         config.get('googleAuthClientId'),
         config.get('googleAuthClientSecret'),
         config.get('googleAuthCallBackUrl')
       );
 
-      console.log('goAuthCallback -> req -> ', req.query)
+      // console.log('goAuthCallback -> req -> ', req.query)
 
       if (req.query.error) {
         res.redirect(`http://localhost:8080/#/oauthCallbackError/${JSON.stringify(req.query.error)}`);
@@ -178,7 +178,7 @@ export default class LoginRouter {
         if (!googleUser.verified_email)
           throw new ValidationError('Authentication failed');
 
-        console.log('googleUser -> ', googleUser);
+        // console.log('googleUser -> ', googleUser);
 
         const loginResults: any = await userService.findAllUsersInternal({ email: googleUser.email }, 'id email teamIds teamIdsInvited name companyName teamAccessRightIds')
 
@@ -196,19 +196,19 @@ export default class LoginRouter {
           await this.redis.SetHashValue('oauth_cache', hashKey, newUser._id.toHexString());
           reRoutUrl = `${baseUrl}/#/oauthCallback/signup/go/${hashKey}`;
           // reRoutUrl = `${baseUrl}/#/oauthCallback/signup/go/123`;
-          console.log('redirect route -> ', reRoutUrl); 
+          // console.log('redirect route -> ', reRoutUrl); 
           res.redirect(reRoutUrl);
           return;
         }
 
         const loginResult = loginResults[0];
 
-        console.log('loginResult -> ', loginResult);
+        // console.log('loginResult -> ', loginResult);
 
         await this.redis.SetHashValue('oauth_cache', hashKey, loginResult._id.toHexString());
         reRoutUrl = `${baseUrl}/#/oauthCallback/login/go/${hashKey}`;
         // reRoutUrl = `${baseUrl}/#/oauthCallback/signup/go/123`;
-        console.log('redirect route -> ', reRoutUrl); 
+        // console.log('redirect route -> ', reRoutUrl); 
         res.redirect(reRoutUrl);
       }
     } catch (err) {
@@ -243,7 +243,7 @@ export default class LoginRouter {
 
       const ghAuthUrl = `https://github.com/login/oauth/authorize?client_id=${config.get('githubAuthClientId')}&state=${authStateValue}&scope=user&redirect_uri=${config.get('githubAuthCallBackUrl')}`;
 
-      console.log('loginLink -> [', ghAuthUrl, ']');
+      // console.log('loginLink -> [', ghAuthUrl, ']');
           
       // res.render('index', { loginLink: goAuthUrl});
       res.send(ghAuthUrl);
@@ -262,12 +262,12 @@ export default class LoginRouter {
     const logger: BaseLogger = (<any>req).logger;
     const sess: any = (<any>req).session;
     try {
-      console.log('ghAuthCallback called');
-      console.log('session -> ', sess);
-      console.log('query -> ', req.query);
+      // console.log('ghAuthCallback called');
+      // console.log('session -> ', sess);
+      // console.log('query -> ', req.query);
 
       const getTokenUrl = `https://github.com/login/oauth/access_token?client_id=${config.get('githubAuthClientId')}&client_secret=${config.get('githubAuthClientSecret')}&code=${(<any>req.query).code}`;
-      console.log('getTokenurl -> ', getTokenUrl);
+      // console.log('getTokenurl -> ', getTokenUrl);
 
       const getTokenResponse = await axios({
         url: getTokenUrl,
@@ -288,7 +288,7 @@ export default class LoginRouter {
       //   if (!googleUser.verified_email)
       //     throw new ValidationError('Authentication failed');
 
-      console.log('ghUser -> ', ghUser);
+      // console.log('ghUser -> ', ghUser);
 
       const loginResults: any = await userService.findAllUsersInternal({ email: ghUser.email }, 'id email teamIds teamIdsInvited name companyName teamAccessRightIds')
 
@@ -306,19 +306,19 @@ export default class LoginRouter {
         await this.redis.SetHashValue('oauth_cache', hashKey, newUser._id.toHexString());
         reRoutUrl = `${baseUrl}/#/oauthCallback/signup/go/${hashKey}`;
         // reRoutUrl = `${baseUrl}/#/oauthCallback/signup/go/123`;
-        console.log('redirect route -> ', reRoutUrl); 
+        // console.log('redirect route -> ', reRoutUrl); 
         res.redirect(reRoutUrl);
         return;
       }
 
       const loginResult = loginResults[0];
 
-      console.log('loginResult -> ', loginResult);
+      // console.log('loginResult -> ', loginResult);
 
       await this.redis.SetHashValue('oauth_cache', hashKey, loginResult._id.toHexString());
       reRoutUrl = `${baseUrl}/#/oauthCallback/login/go/${hashKey}`;
       // reRoutUrl = `${baseUrl}/#/oauthCallback/signup/go/123`;
-      console.log('redirect route -> ', reRoutUrl); 
+      // console.log('redirect route -> ', reRoutUrl); 
       res.redirect(reRoutUrl);
     } catch (err) {
       logger.LogError(err.message, { Error: err, Url: req.url, Headers: req.headers, Body: req.body, Params: req.params });

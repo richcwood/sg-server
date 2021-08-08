@@ -16,14 +16,14 @@ export default class AuthCallback extends Vue {
       const oauthProvider = this.$router.currentRoute.params.oauthProvider;
       const authHashKey = this.$router.currentRoute.params.authHashKey;
 
-      console.log('AuthCallback -> mounted -> start');
+      // console.log('AuthCallback -> mounted -> start');
       if (method === 'signup') {
         if (oauthProvider === 'go') {
           if (!localStorage.getItem('oauth_cb'))
             throw `invalid state`;
           const authState: any = JSON.parse(localStorage.getItem('oauth_cb'));
           localStorage.removeItem('oauth_cb');
-          console.log('AuthCallback -> signup -> removeItem -> oauth_cb');
+          // console.log('AuthCallback -> signup -> removeItem -> oauth_cb');
           const exp = new Date(authState).getTime();
           if (Date.now() - exp > 0)
             throw 'auth timeout';
@@ -42,26 +42,26 @@ export default class AuthCallback extends Vue {
         }
       }
       else if (method === 'login') {
-        console.log('AuthCallback -> mounted -> 1');
+        // console.log('AuthCallback -> mounted -> 1');
         if (!localStorage.getItem('oauth_cb'))
           throw `invalid state`;
         const authState: any = JSON.parse(localStorage.getItem('oauth_cb'));
-        console.log('AuthCallback -> mounted -> authState -> ', authState);
+        // console.log('AuthCallback -> mounted -> authState -> ', authState);
         localStorage.removeItem('oauth_cb');
-          console.log('AuthCallback -> login -> removeItem -> oauth_cb');
+        // console.log('AuthCallback -> login -> removeItem -> oauth_cb');
         const exp = new Date(authState).getTime();
         if (Date.now() - exp > 0)
           throw 'auth timeout';
         const authStateValue = authState.authStateValue;
         if (oauthProvider === 'go') {
           if(await this.$store.dispatch('securityStore/goLogin', {authStateValue, authHashKey})){
-            console.log('AuthCallback -> mounted -> 2');
+            // console.log('AuthCallback -> mounted -> 2');
             if(isUserReadyToUseApp()){
-              console.log('AuthCallback -> mounted -> 3');
+              // console.log('AuthCallback -> mounted -> 3');
               await this.$store.dispatch('securityStore/startApp');
             }
             else {
-              console.log('AuthCallback -> mounted -> 4');
+              // console.log('AuthCallback -> mounted -> 4');
               localStorage.setItem('oauth_cb', JSON.stringify({'login_result': 'success', 'method': 'login'}));
             }
           }
@@ -71,7 +71,7 @@ export default class AuthCallback extends Vue {
         }
       }
     } catch (err) {
-      console.log('Error in AuthCallback: ', err);
+      // console.log('Error in AuthCallback: ', err);
       localStorage.setItem('oauth_cb', JSON.stringify({'login_result': 'failed'}));
     }
     this.$router.push({name: 'landing'});
