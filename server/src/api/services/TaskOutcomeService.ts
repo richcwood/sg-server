@@ -387,15 +387,17 @@ export class TaskOutcomeService {
                 task.targetAgentId = targetAgentId;
             }
 
-            // const maxTries: number = 2;
+            // const maxTries: number = 3;
             // let tryCount: number = 1;
             // let getTaskRoutesRes: any;
             // while (tryCount < maxTries) {
             //     getTaskRoutesRes = await GetTaskRoutes(_teamId, task, logger);
             //     if (getTaskRoutesRes.routes)
             //         break;
+            //     else if (getTaskRoutesRes.failureCode !== Enums.TaskFailureCode.NO_AGENT_AVAILABLE)
+            //         break;
             //     tryCount += 1;
-            //     await SGUtils.sleep(100);
+            //     await SGUtils.sleep(500);
             // }
 
             let getTaskRoutesRes = await GetTaskRoutes(_teamId, task, logger);

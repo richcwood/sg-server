@@ -21,7 +21,8 @@ import { TaskFailureCode } from '../../shared/Enums';
 import { taskService } from '../services/TaskService';
 import { AMQPConnector } from '../../shared/AMQPLib';
 import { rabbitMQPublisher } from '../utils/RabbitMQPublisher';
-import { CheckWaitingForAgentTasks, CheckWaitingForLambdaRunnerTasks } from '../utils/Shared';
+import { CheckWaitingForAgentTasks, CheckWaitingForLambdaRunnerTasks, NumNotStartedTasks } from '../utils/Shared';
+import { SGUtils } from '../../shared/SGUtils';
 
 
 const stompUrl = config.get('stompUrl');
@@ -218,6 +219,11 @@ export class AgentController {
             response.statusCode = ResponseCode.CREATED;
 
             await CheckWaitingForAgentTasks(_teamId, newAgent._id, logger, amqp);
+            const numNotStartedTasks = await NumNotStartedTasks(_teamId);
+            if (numNotStartedTasks > 0) {
+                await SGUtils.sleep(1000);
+                await CheckWaitingForAgentTasks(_teamId, newAgent, logger, amqp);
+            }
 
             if (_teamId == adminTeamId && _.isArray(newAgent.tags) && newAgent.tags.length > 0) {
                 let isLambdaRunnerAgent: boolean = true;
@@ -315,6 +321,11 @@ export class AgentController {
                 }
 
                 await CheckWaitingForAgentTasks(_teamId, _agentId, logger, amqp);
+                const numNotStartedTasks = await NumNotStartedTasks(_teamId);
+                if (numNotStartedTasks > 0) {
+                    await SGUtils.sleep(1000);
+                    await CheckWaitingForAgentTasks(_teamId, _agentId, logger, amqp);
+                }
 
                 if (_teamId == adminTeamId) {
                     let isLambdaRunnerAgent: boolean = true;
@@ -374,6 +385,11 @@ export class AgentController {
             let updatedAgent: any = await agentService.updateAgentTags(_teamId, _agentId, convertRequestData(AgentSchema, req.body), req.header('correlationId'), responseFields);
 
             await CheckWaitingForAgentTasks(_teamId, _agentId, logger, amqp);
+            const numNotStartedTasks = await NumNotStartedTasks(_teamId);
+            if (numNotStartedTasks > 0) {
+                await SGUtils.sleep(1000);
+                await CheckWaitingForAgentTasks(_teamId, _agentId, logger, amqp);
+            }
 
             if (_teamId == adminTeamId) {
                 let isLambdaRunnerAgent: boolean = true;
@@ -438,7 +454,12 @@ export class AgentController {
                 if (req.body.maxActiveTasks && ('numActiveTasks' in updatedAgent) && ('propertyOverrides' in updatedAgent) && ('maxActiveTasks' in updatedAgent.propertyOverrides)) {
                     if (parseInt(updatedAgent.propertyOverrides.maxActiveTasks) > updatedAgent.numActiveTasks) {
                         await CheckWaitingForAgentTasks(_teamId, _agentId, logger, amqp);
-
+                        const numNotStartedTasks = await NumNotStartedTasks(_teamId);
+                        if (numNotStartedTasks > 0) {
+                            await SGUtils.sleep(1000);
+                            await CheckWaitingForAgentTasks(_teamId, _agentId, logger, amqp);
+                        }
+            
                         if (_teamId == adminTeamId) {
                             let isLambdaRunnerAgent: boolean = true;
                             for (let i = 0; i < Object.keys(awsLambdaRequiredTags).length; i++) {
