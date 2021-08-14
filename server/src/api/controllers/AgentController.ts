@@ -133,7 +133,36 @@ export class AgentController {
             if (responseFields && responseFields.indexOf('_teamId"') < 0)
                 responseFields += ' _teamId';
 
-            let agent = await agentService.findAgentByMachineName(_teamId, machineId, responseFields);
+            let agent = await agentService.findAgentByMachineId(_teamId, machineId, responseFields);
+
+            if (_.isArray(agent) && agent.length === 0) {
+                response.data = '';
+                response.statusCode = ResponseCode.NOT_FOUND;
+                next();
+                // next(new MissingObjectError(`Agent '${machineId}" in team "${_teamId.toHexString()}' not found.`));
+            }
+            else {
+                response.data = await addServerPropertiesToAgent(convertResponseData(AgentSchema, agent[0]));
+                next();
+            }
+        }
+        catch (err) {
+            next(err);
+        }
+    }
+
+
+    public async getAgentFromName(req: Request, resp: Response, next: NextFunction): Promise<void> {
+        try {
+            const _teamId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._teamid);
+            const machineId: string = <string>req.params.machineId;
+            const response: ResponseWrapper = (resp as any).body;
+
+            let responseFields: string = <string>req.query.responseFields;
+            if (responseFields && responseFields.indexOf('_teamId"') < 0)
+                responseFields += ' _teamId';
+
+            let agent = await agentService.findAgentByName(_teamId, machineId, responseFields);
 
             if (_.isArray(agent) && agent.length === 0) {
                 response.data = '';

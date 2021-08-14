@@ -46,7 +46,12 @@ export class AgentService {
     }
 
 
-    public async findAgentByMachineName(_teamId: mongodb.ObjectId, machineId: string, responseFields?: string) {
+    public async findAgentByMachineId(_teamId: mongodb.ObjectId, machineId: string, responseFields?: string) {
+        return await AgentModel.find({ _teamId, machineId }).select(responseFields);
+    }
+
+
+    public async findAgentByName(_teamId: mongodb.ObjectId, machineId: string, responseFields?: string) {
         return await AgentModel.find({ _teamId, machineId }).select(responseFields);
     }
 
