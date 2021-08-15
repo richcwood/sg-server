@@ -12,7 +12,7 @@ export class AgentRouter {
         this.router.get('/', verifyAccessRights(['AGENT_READ', 'GLOBAL']), agentController.getManyAgents);
         this.router.get('/:agentId', verifyAccessRights(['AGENT_READ', 'GLOBAL']), agentController.getAgent);
         this.router.get('/machineid/:machineId', verifyAccessRights(['AGENT_READ', 'GLOBAL']), agentController.getAgentFromMachineId);
-        this.router.get('/name/:name', verifyAccessRights(['AGENT_READ', 'GLOBAL']), agentController.getAgentFromMachineId);
+        this.router.get('/name/:name', verifyAccessRights(['AGENT_READ', 'GLOBAL']), agentController.getAgentFromName);
         this.router.get('/tags/:tags', verifyAccessRights(['AGENT_READ', 'GLOBAL']), agentController.getAgentByTags);
         this.router.get('/disconnected/disconnected', verifyAccessRights(['AGENT_READ', 'GLOBAL']), agentController.getDisconnectedAgents);
         this.router.post('/', verifyAccessRights(['AGENT_CREATE', 'GLOBAL']), agentController.createAgent);
