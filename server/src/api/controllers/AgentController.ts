@@ -155,14 +155,14 @@ export class AgentController {
     public async getAgentFromName(req: Request, resp: Response, next: NextFunction): Promise<void> {
         try {
             const _teamId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._teamid);
-            const machineId: string = <string>req.params.machineId;
+            const name: string = <string>req.params.name;
             const response: ResponseWrapper = (resp as any).body;
 
             let responseFields: string = <string>req.query.responseFields;
             if (responseFields && responseFields.indexOf('_teamId"') < 0)
                 responseFields += ' _teamId';
 
-            let agent = await agentService.findAgentByName(_teamId, machineId, responseFields);
+            let agent = await agentService.findAgentByName(_teamId, name, responseFields);
 
             if (_.isArray(agent) && agent.length === 0) {
                 response.data = '';
