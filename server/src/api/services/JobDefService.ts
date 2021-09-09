@@ -293,6 +293,12 @@ export class JobDefService {
 
     if (data.status == JobDefStatus.RUNNING && jobDef.status == JobDefStatus.PAUSED)
       await jobService.LaunchReadyJobs(_teamId, id);
+    
+    if (data.maxInstances) {
+      const maxInstancesNew = parseInt(data.maxInstances);
+      if (maxInstancesNew > jobDef.maxInstances)
+        await jobService.LaunchReadyJobs(_teamId, id);
+    }
 
     let deltas = Object.assign({ _id: id }, data);
     let convertedDeltas = convertData(JobDefSchema, deltas);
