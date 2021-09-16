@@ -17,6 +17,7 @@ let setEmailHubspot = async (email) => {
   _hsq.push(["identify", {
     email
   }]);
+  _hsq.push(['trackPageView']);
 }
 
 
