@@ -11,6 +11,15 @@ import { initStompHandler, InitStompOptions } from '@/utils/StompHandler';
 import { SgAlert, AlertPlacement, AlertCategory } from '@/store/alert/types';
 import Cookies from 'js-cookie';
 
+
+let setEmailHubspot = async (email) => {
+  var _hsq = (<any>window)._hsq = (<any>window)._hsq || [];
+  _hsq.push(["identify", {
+    email
+  }]);
+}
+
+
 export const actions: ActionTree<SecurityStore, RootState> = {  
   
   async checkSecurity({commit}) {
@@ -19,7 +28,7 @@ export const actions: ActionTree<SecurityStore, RootState> = {
 
     if(secureCheckResult){
       // pull login from the auth cookie and set the session
-      const authJwt = getAuthJwtCookie();
+      const authJwt: any = getAuthJwtCookie();
       if(authJwt){
         commit('setUser', authJwt);
       }
@@ -30,9 +39,11 @@ export const actions: ActionTree<SecurityStore, RootState> = {
     try {
       await axios.post('/login/webLogin', {email, password});
       localStorage.setItem('sg_has_logged_in', 'true');
-      const authJwt = getAuthJwtCookie();
+      const authJwt: any = getAuthJwtCookie();
       if(authJwt){
         commit('setUser', authJwt);
+        if (authJwt.email)
+          await setEmailHubspot(authJwt.email);
         return true;
       }
       else {
@@ -49,9 +60,11 @@ export const actions: ActionTree<SecurityStore, RootState> = {
     try {
       await axios.post('/login/goauth/complete', {}, {headers: {authStateValue, authHashKey}});
       localStorage.setItem('sg_has_logged_in', 'true');
-      const authJwt = getAuthJwtCookie();
+      const authJwt: any = getAuthJwtCookie();
       if(authJwt){
         commit('setUser', authJwt);
+        if (authJwt.email)
+          await setEmailHubspot(authJwt.email);
         return true;
       }
       else {
