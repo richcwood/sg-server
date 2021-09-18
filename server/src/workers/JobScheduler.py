@@ -2,7 +2,7 @@ import sys
 import os
 import traceback
 import time
-from datetime import datetime
+from datetime import datetime, date
 import socket
 import logging
 from logging.handlers import TimedRotatingFileHandler
@@ -164,6 +164,14 @@ def sendEmail(from_mail, to_email, subject, body):
     #     logDebug({"msg": "successfully sent email"})
 
 
+def json_serial(obj):
+    """JSON serializer for objects not serializable by default json code"""
+
+    if isinstance(obj, (datetime, date)):
+        return obj.isoformat()
+    raise TypeError ("Type %s not serializable" % type(obj))
+
+
 def RestAPICall(url, method, _teamId, headers, data={}):
     global cml_adapter
     global token
@@ -186,11 +194,11 @@ def RestAPICall(url, method, _teamId, headers, data={}):
         headers.update(default_headers)
 
         if method == 'POST':
-            res = requests.post(url=url, headers=headers, data=data)
+            res = requests.post(url=url, headers=headers, data=json.dumps(data, default=json_serial))
         elif method == 'PUT':
-            res = requests.put(url=url, headers=headers, data=data)
+            res = requests.put(url=url, headers=headers, data=json.dumps(data, default=json_serial))
         elif method == 'DELETE':
-            res = requests.delete(url=url, headers=headers, data=data)
+            res = requests.delete(url=url, headers=headers, data=json.dumps(data, default=json_serial))
         else:
             raise Exception('{} method not supported'.format(method))
         httpResponseCode = res.status_code
