@@ -67,7 +67,6 @@ export class ScheduleService {
 
         /// Delete _jobDefId and FunctionKwargs from data - can't modify those properties for an existing schedule
         delete data._jobDefId;
-        delete data.FunctionKwargs;
 
         const updatedSchedule = await ScheduleModel.findOneAndUpdate(filter, data, { new: true }).select(responseFields);
 

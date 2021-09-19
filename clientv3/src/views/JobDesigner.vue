@@ -219,7 +219,7 @@
       </validation-observer>
     </modal>
 
-    <modal name="edit-schedule-modal" :classes="'round-popup'" :width="700" :height="700">
+    <modal name="edit-schedule-modal" :classes="'round-popup'" :width="700" :height="900">
       <div style="overflow: scroll;">
         <table class="table" width="100%" height="100%">
           <tbody class="tbody">
@@ -258,6 +258,18 @@
                           <select class="input select" style="width: 250px; margin-top: 10px;" v-model="editSchedule.TriggerType">
                             <option v-for="(value, key) in ScheduleTriggerType" v-bind:key="`triggerType${key}-${value}`" :value="key"> {{value}} </option>
                           </select>
+                          <div v-if="errors && errors.length > 0" class="message validation-error is-danger">{{ errors[0] }}</div>
+                        </validation-provider>
+                      </td>
+                    </tr>
+
+                    <tr class="tr">
+                      <td class="td">
+                        Runtime Variables
+                      </td>
+                      <td class="td">
+                        <validation-provider name="Runtime Vars" rules="variable-map" v-slot="{ errors }">
+                          <input class="input" style="width: 350px;" type="text" v-model="editSchedule.runtimeVars"/>
                           <div v-if="errors && errors.length > 0" class="message validation-error is-danger">{{ errors[0] }}</div>
                         </validation-provider>
                       </td>
@@ -1133,6 +1145,7 @@ import { showErrors } from '@/utils/ErrorHandler';
 import ScriptSearchWithCreate from '@/components/ScriptSearchWithCreate.vue';
 import TaskDefEditor from '@/components/TaskDefEditor.vue';
 import SGCTaskDefEditor from '@/components/SGCTaskDefEditor.vue';
+import { stringToMap, mapToString } from '@/utils/Shared';
 
 @Component({
   components: {
@@ -1812,7 +1825,10 @@ export default class JobDesigner extends Vue {
   }
 
   private onEditScheduleClicked(schedule: Schedule){
-    this.editSchedule = <any>{id: schedule.id, TriggerType: schedule.TriggerType, name: schedule.name, RunDate: schedule.RunDate, isActive: schedule.isActive};
+    let runtimeVars: any|undefined = undefined;
+    if (schedule.FunctionKwargs.runtimeVars)
+      runtimeVars = mapToString(schedule.FunctionKwargs.runtimeVars);
+    this.editSchedule = <any>{id: schedule.id, runtimeVars, TriggerType: schedule.TriggerType, name: schedule.name, RunDate: schedule.RunDate, isActive: schedule.isActive};
     this.editSchedule_cron = _.clone(schedule.cron);
     this.editSchedule_interval = _.clone(schedule.interval);
 
@@ -1831,7 +1847,7 @@ export default class JobDesigner extends Vue {
         
         const scheduleToSave: any = _.clone(this.editSchedule);
         scheduleToSave['_jobDefId'] = this.jobDefForEdit.id;
-        scheduleToSave['FunctionKwargs'] = {_teamId: this.selectedTeamId, targetId: this.jobDefForEdit.id, runtimeVars: {}};
+        scheduleToSave['FunctionKwargs'] = {_teamId: this.selectedTeamId, targetId: this.jobDefForEdit.id, runtimeVars: stringToMap(this.editSchedule.runtimeVars)};
 
         if(this.editSchedule.TriggerType === ScheduleTriggerType.date){
           scheduleToSave['RunDate'] = this.editSchedule.RunDate;

@@ -16,6 +16,7 @@ import * as Enums from '../../server/src/shared/Enums';
 import { agentService } from '../../server/src/api/services/AgentService';
 import { jobDefService } from '../../server/src/api/services/JobDefService';
 import { jobService } from '../../server/src/api/services/JobService';
+import { jobActionService } from '../../server/src/api/services/JobActionService';
 import { teamService } from '../../server/src/api/services/TeamService';
 import { scheduleService } from '../../server/src/api/services/ScheduleService';
 import { scriptService } from '../../server/src/api/services/ScriptService';
@@ -164,33 +165,6 @@ let ParseScriptStdout = async (filePath: string, saveOutput: boolean) => {
       reject(e);
     }
   });
-}
-
-
-let Login = async (email: string, password: string) => {
-  let apiUrl = config.get('API_BASE_URL');
-  const apiPort = config.get('API_PORT');
-
-  if (apiPort != '')
-    apiUrl += `:${apiPort}`
-  let url = `${apiUrl}/login/apiLogin`;
-
-  console.log('Login -> url ', url, ', email -> ', email, ', password -> ', password);
-
-  const response = await axios({
-    url,
-    method: 'POST',
-    responseType: 'text',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    data: {
-      'email': email,
-      'password': password
-    }
-  });
-
-  return response.headers['set-cookie'];
 }
 
 
@@ -569,6 +543,60 @@ let FixTeamDBRecords = async () => {
 
     const updatedTeam = await TeamModel.findOneAndUpdate(filter, data, { new: true });
     console.log(updatedTeam);
+  }
+
+  process.exit();
+}
+
+
+let CancelFailedJobs = async () => {
+  let logger = new BaseLogger('RunTestHarness');
+  logger.Start();
+  mongoose.connect(config.get('mongoUrl'), { useNewUrlParser: true });
+
+  const _teamId = '5f57b2f14b5da00017df0d4f';
+  const teamId: any = new mongodb.ObjectId(_teamId);
+
+  let jobs: any = await jobService.findAllJobsInternal({_teamId: teamId, "_jobDefId" : new mongodb.ObjectId("60feeaa678f59d0017329619"), 'status': 22 });
+
+  for (let i = 0; i < jobs.length; i++) {
+    let job: any = jobs[i];
+    console.log('canceling job -> ', job);
+
+    const auth = await GetAPIAdminAuth();
+
+    let res: any = await RestAPICall(`jobaction/cancel/${job._id}`, 'POST', _teamId, null, null, auth);
+
+    console.log('canceled job -> ', job._id, ', res -> ', res.data);
+    // console.log('canceled job -> ', job);
+    // process.exit();
+  }
+
+  process.exit();
+}
+
+
+let DeleteNotStartedJobs = async () => {
+  let logger = new BaseLogger('RunTestHarness');
+  logger.Start();
+  mongoose.connect(config.get('mongoUrl'), { useNewUrlParser: true });
+
+  const _teamId = '5f57b2f14b5da00017df0d4f';
+  const teamId: any = new mongodb.ObjectId(_teamId);
+
+  let jobs: any = await jobService.findAllJobsInternal({_teamId: teamId, "_jobDefId" : new mongodb.ObjectId("60feeaa678f59d0017329619"), 'status': 0 });
+
+  for (let i = 0; i < jobs.length; i++) {
+    let job: any = jobs[i];
+    console.log('deleting job -> ', job.name);
+
+    const auth = await GetAPIAdminAuth();
+
+    let res: any = await RestAPICall(`job/${job._id}`, 'DELETE', _teamId, null, null, auth);
+
+    console.log('deleted job -> ', job.name, ', res -> ', res.data);
+    // console.log('canceled job -> ', job);
+    // process.exit();
   }
 
   process.exit();
@@ -1358,36 +1386,68 @@ let SendTestEmailSMTP = async () => {
 }
 
 
-let RestAPICall = async (url: string, method: string, _teamId: mongodb.ObjectId, headers: any = {}, data: any = {}, token) => {
-  return new Promise(async (resolve, reject) => {
-    try {
-      let apiUrl = config.get('API_BASE_URL');
-      const apiVersion = config.get('API_VERSION');
-      const apiPort = config.get('API_PORT');
+let GetAPIAdminAuth = async () => {
+  let apiUrl = config.get('API_BASE_URL');
+  const apiPort = config.get('API_PORT');
 
-      if (apiPort != '')
-        apiUrl += `:${apiPort}`
-      url = `${apiUrl}/api/${apiVersion}/${url}`;
+  const agentAccessKeyId = 'D5TN51TNTD83IGT0XLU2';
+  const agentAccessKeySecret = 'ac088f37b77f2e6f6134e764d31734e981136754';
 
-      const combinedHeaders: any = Object.assign({
-        Cookie: `Auth=${token};`,
-        _teamId: _teamId
-      }, headers);
+  if (apiPort != '')
+    apiUrl += `:${apiPort}`
+  let url = `${apiUrl}/login/apiLogin`;
 
-      console.log('RestAPICall -> url ', url, ', method -> ', method, ', headers -> ', combinedHeaders, ', data -> ', data, ', token -> ', token);
+  // console.log('Login -> url ', url, ', agentAccessKeyId -> ', agentAccessKeyId, ', agentAccessKeySecret -> ', agentAccessKeySecret);
 
-      const response = await axios({
-        url,
-        method: method,
-        responseType: 'text',
-        headers: combinedHeaders,
-        data: data
-      });
-      resolve(response);
-    } catch (e) {
-      e.message = `RestAPICall error occurred calling ${method} on '${url}': ${e.message}`;
-      reject(e);
+  const response = await axios({
+    url,
+    method: 'POST',
+    responseType: 'text',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    data: {
+      'accessKeyId': agentAccessKeyId,
+      'accessKeySecret': agentAccessKeySecret
     }
+  });
+
+  // console.log('api login -> ', response.data);
+
+  return response.data.config1;
+}
+
+
+let RestAPICall = async (url: string, method: string, _teamId: string, headers: any = {}, data: any = {}, token: string) => {
+  return new Promise(async (resolve, reject) => {
+      try {
+          let apiUrl = config.get('API_BASE_URL');
+          const apiVersion = config.get('API_VERSION');
+          const apiPort = config.get('API_PORT');
+
+          if (apiPort != '')
+              apiUrl += `:${apiPort}`
+          url = `${apiUrl}/api/${apiVersion}/${url}`;
+
+          const combinedHeaders: any = Object.assign({
+              Cookie: `Auth=${token};`,
+              _teamId: _teamId
+          }, headers);
+
+          // console.log('RestAPICall -> url ', url, ', method -> ', method, ', headers -> ', combinedHeaders, ', data -> ', data, ', token -> ', token);
+
+          const response = await axios({
+              url,
+              method: method,
+              responseType: 'text',
+              headers: combinedHeaders,
+              data: data
+          });
+          resolve(response);
+      } catch (e) {
+          console.log(`RestAPICall error occurred calling ${method} on '${url}': ${e.message} - ${e.response.data.errors[0].title} - ${e.response.data.errors[0].description}`);
+          resolve(e.response);
+      }
   });
 }
 
@@ -2111,6 +2171,8 @@ let SendTestBrowserAlert = async() => {
 // CreateBrainTreeCompanyForTeams();
 // CreateStripeCompanyForTeams();
 // FixTeamDBRecords();
+// CancelFailedJobs();
+DeleteNotStartedJobs();
 // FixScriptDBRecords();
 // SendTestBrowserAlert();
 // ConfigNewRabbitMQServer();
@@ -2126,7 +2188,7 @@ let SendTestBrowserAlert = async() => {
 // LoadSettingsToMongo();
 // TestForEach();
 // UpdateAgentVersion();
-RabbitMQSetup();
+// RabbitMQSetup();
 // RabbitMQAdminTest();
 // AMQPTest();
 // StompTest();

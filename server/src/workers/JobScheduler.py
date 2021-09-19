@@ -20,6 +20,9 @@ from apscheduler.schedulers.blocking import BlockingScheduler
 from apscheduler.jobstores.mongodb import MongoDBJobStore
 from apscheduler.executors.pool import ThreadPoolExecutor
 from apscheduler.executors.pool import ProcessPoolExecutor
+from apscheduler.triggers.date import DateTrigger
+from apscheduler.triggers.interval import IntervalTrigger
+from apscheduler.triggers.cron import CronTrigger
 
 logging.basicConfig()
 
@@ -135,6 +138,13 @@ job_scheduler.configure(jobstores=jobstores, executors=executors,
                         job_defaults=job_defaults, timezone=utc)
 
 
+scheduleTriggerType2String = {
+    IntervalTrigger: 'interval',
+    DateTrigger: 'date',
+    CronTrigger: 'cron'
+}
+
+
 def logDebug(msgData):
     global cml_adapter
     cml_adapter.debug(json.dumps(msgData, default=str))
@@ -188,17 +198,20 @@ def RestAPICall(url, method, _teamId, headers, data={}):
 
         default_headers = {
             'Cookie': token,
-            '_teamId': _teamId
+            '_teamId': _teamId,
+            'Content-type': 'application/json'
         }
 
         headers.update(default_headers)
 
+        json_data = json.dumps(data, default=json_serial)
+
         if method == 'POST':
-            res = requests.post(url=url, headers=headers, data=json.dumps(data, default=json_serial))
+            res = requests.post(url=url, headers=headers, data=json_data)
         elif method == 'PUT':
-            res = requests.put(url=url, headers=headers, data=json.dumps(data, default=json_serial))
+            res = requests.put(url=url, headers=headers, data=json_data)
         elif method == 'DELETE':
-            res = requests.delete(url=url, headers=headers, data=json.dumps(data, default=json_serial))
+            res = requests.delete(url=url, headers=headers, data=json_data)
         else:
             raise Exception('{} method not supported'.format(method))
         httpResponseCode = res.status_code
@@ -211,9 +224,9 @@ def RestAPICall(url, method, _teamId, headers, data={}):
 
 
 def on_launch_job(scheduled_time, job_id, _teamId, targetId, runtimeVars):
-    logInfo({"msg": "Launching job", "_teamId": _teamId, "_jobDefId": targetId, "date": datetime.now(), "scheduled_time": scheduled_time})
-    res = RestAPICall('job', 'POST', _teamId, {'_jobDefId': targetId}, {'dateScheduled': scheduled_time, 'runtimeVars': runtimeVars})
-    print('res -> ', res)
+    data = {'dateScheduled': scheduled_time, 'runtimeVars': runtimeVars}
+    logInfo({"msg": "Launching job", "_teamId": _teamId, "_jobDefId": targetId, "date": datetime.now(), "scheduled_time": scheduled_time, "data": data})
+    res = RestAPICall('job', 'POST', _teamId, {'_jobDefId': targetId}, data)
 
     updateSchedule = True
     if not res[0]:
@@ -351,11 +364,11 @@ def on_message(delivery_tag, body, async_consumer):
             job = job_scheduler.get_job(msg['id'])
             if job:
                 changeTypes = []
-                if job.trigger != msg['TriggerType']:
+                if scheduleTriggerType2String[type(job.trigger)] != msg['TriggerType']:
                     changeTypes.append('schedule')
                 if job.misfire_grace_time != misfire_grace_time or (not useNextRunTime and hasattr(job, 'next_run_time')) or job.next_run_time != next_run_time:
                     changeTypes.append('job')
-                if 'schedule' in changeTypes:
+                if not useNextRunTime and 'schedule' in changeTypes:
                     # print('schedule change')
                     if msg['TriggerType'] == 'cron':
                         job_scheduler.reschedule_job(msg['id'], trigger='cron', year=year, month=month, day=day, week=week, day_of_week=day_of_week, hour=hour,
