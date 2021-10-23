@@ -47,9 +47,7 @@
     "vue-split-panel": "1.0.4",
     "vue-template-compiler": "2.6.10",
     "vuejs-datepicker": "1.6.2",
-    "vuex": "3.0.1"
-  },
-  "devDependencies": {
+    "vuex": "3.0.1",
     "node-sass": "^4.12.0",
     "sass-loader": "^8.0.2"
   }
