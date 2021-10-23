@@ -36,8 +36,8 @@
                 "${workspaceFolder}/server/dist/**/*.js"
             ],
             "env": {
-                "environment": "debug",
-                "NODE_ENV": "debug",
+                "environment": "production",
+                "NODE_ENV": "production",
                 "SENDGRID_API_KEY": "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"
             }
         },

@@ -149,6 +149,12 @@ export default class LoginRouter {
 
   async goAuthCallback(req: Request, res: Response, next: NextFunction) {
     const logger: BaseLogger = (<any>req).logger;
+
+    let baseUrl = config.get('WEB_CONSOLE_BASE_URL');
+    const port = config.get('WEB_CONSOLE_PORT');
+    if (port != '')
+      baseUrl += `:${port}`
+
     const sess: any = (<any>req).session;
     try {
       // console.log('goAuthCallback called');
@@ -162,7 +168,7 @@ export default class LoginRouter {
       // console.log('goAuthCallback -> req -> ', req.query)
 
       if (req.query.error) {
-        res.redirect(`http://localhost:8080/#/oauthCallbackError/${JSON.stringify(req.query.error)}`);
+        res.redirect(`${baseUrl}/#/oauthCallbackError/${JSON.stringify(req.query.error)}`);
         return
       } else {
         const { tokens } = await goAuth2Client.getToken((<any>req.query).code);
@@ -184,10 +190,6 @@ export default class LoginRouter {
 
         const hashKey = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
 
-        let baseUrl = config.get('WEB_CONSOLE_BASE_URL');
-        const port = config.get('WEB_CONSOLE_PORT');
-        if (port != '')
-          baseUrl += `:${port}`
         let reRoutUrl;
 
         // User doesn't exist, create new user
@@ -214,7 +216,7 @@ export default class LoginRouter {
     } catch (err) {
       logger.LogError(err.message, { Error: err, Url: req.url, Headers: req.headers, Body: req.body, Params: req.params });
       // console.log(err);
-      res.redirect(`http://localhost:8080/#/oauthCallbackError/${JSON.stringify(err.message)}`);
+      res.redirect(`${baseUrl}/#/oauthCallbackError/${JSON.stringify(err.message)}`);
     }
   }
 
