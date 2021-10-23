@@ -620,7 +620,64 @@
     <!-- Edit job, including task routes designer -->
     <div class="edit-job" v-if="jobDefForEdit && selectedItemForNav && selectedItemForNav.id === jobDefForEdit.id" :style="{'margin-left': editPanelMarginLeft+'px'}">
 
-      <tabs :defaultIndex="3" :onSelect="onTabSelected">
+      <tabs :defaultIndex="4" :onSelect="onTabSelected">
+
+        <tab title="Schedules">
+          <table class="table">
+            <tr class="tr"><td class="td"></td></tr>
+            <tr class="tr">
+              <td class="td">
+                Schedule Name
+              </td>
+              <td class="td">
+                Is Active
+              </td>
+              <td class="td">
+                Trigger Type
+              </td>
+              <td class="td">
+                Last Run
+              </td>
+              <td class="td">
+                Next Run
+              </td>
+              <td class="td">
+                Error
+              </td>
+              <td class="td">
+              </td>
+            </tr>
+            <tr class="tr" v-for="schedule in jobDefForEdit_schedules" v-bind:key="schedule.id">
+              <td class="td">
+                {{schedule.name}}
+              </td>
+              <td class="td">
+                <input type="checkbox" v-model="schedule.isActive" @change="onScheduleIsActiveChanged(schedule)"/>
+              </td>
+              <td class="td">
+                {{schedule.TriggerType}}
+              </td>
+              <td class="td">
+                {{momentToStringV2(schedule.lastScheduledRunDate)}}
+              </td>
+              <td class="td">
+                {{momentToStringV2(schedule.nextScheduledRunDate)}}
+              </td>
+              <td class="td">
+                {{schedule.scheduleError}}
+              <td class="td">
+                <a @click.prevent="onEditScheduleClicked(schedule)">edit</a>
+                <a @click.prevent="onDeleteScheduleClicked(schedule)" style="margin-left: 10px;">delete</a>
+              </td>
+            </tr>
+            <tr class="tr">
+              <td class="td">
+                <button class="button" @click="onCreateScheduleClicked">Create Schedule</button>
+              </td>
+              <td colspan="5"></td>
+            </tr>
+          </table>
+        </tab>
 
         <tab :title="runTabTitle">
           <table class="table">
@@ -973,62 +1030,7 @@
           </div>
         </tab>
         
-        <tab title="Schedules">
-          <table class="table">
-            <tr class="tr"><td class="td"></td></tr>
-            <tr class="tr">
-              <td class="td">
-                Schedule Name
-              </td>
-              <td class="td">
-                Is Active
-              </td>
-              <td class="td">
-                Trigger Type
-              </td>
-              <td class="td">
-                Last Run
-              </td>
-              <td class="td">
-                Next Run
-              </td>
-              <td class="td">
-                Error
-              </td>
-              <td class="td">
-              </td>
-            </tr>
-            <tr class="tr" v-for="schedule in jobDefForEdit_schedules" v-bind:key="schedule.id">
-              <td class="td">
-                {{schedule.name}}
-              </td>
-              <td class="td">
-                <input type="checkbox" v-model="schedule.isActive" @change="onScheduleIsActiveChanged(schedule)"/>
-              </td>
-              <td class="td">
-                {{schedule.TriggerType}}
-              </td>
-              <td class="td">
-                {{momentToStringV2(schedule.lastScheduledRunDate)}}
-              </td>
-              <td class="td">
-                {{momentToStringV2(schedule.nextScheduledRunDate)}}
-              </td>
-              <td class="td">
-                {{schedule.scheduleError}}
-              <td class="td">
-                <a @click.prevent="onEditScheduleClicked(schedule)">edit</a>
-                <a @click.prevent="onDeleteScheduleClicked(schedule)" style="margin-left: 10px;">delete</a>
-              </td>
-            </tr>
-            <tr class="tr">
-              <td class="td">
-                <button class="button" @click="onCreateScheduleClicked">Create Schedule</button>
-              </td>
-              <td colspan="5"></td>
-            </tr>
-          </table>
-        </tab>
+        
       </tabs>
     </div>
 
@@ -1112,40 +1114,35 @@
 
 <script lang="ts">
 import { Component, Vue, Watch } from 'vue-property-decorator';
-import { momentToStringV1, momentToStringV2, timeZones } from '@/utils/DateTime';
-import moment from 'moment';
+import { momentToStringV1, momentToStringV2, timeZones } from '../utils/DateTime';
 import axios from 'axios';
 import _ from 'lodash';
-import DesignerTask from '@/components/DesignerTask.vue';
-import { StoreType } from '@/store/types';
+import DesignerTask from '../components/DesignerTask.vue';
+import { StoreType } from '../store/types';
 import { JobDef, JobDefStatus } from '../store/jobDef/types';
 import { TaskDef, TaskDefTarget } from '../store/taskDef/types';
-import { LambaRuntimes, StepDef } from '../store/stepDef/types';
+import { StepDef } from '../store/stepDef/types';
 import { Script, ScriptType, scriptTypesForMonaco } from '../store/script/types';
-import { BindStoreModel, BindSelected, BindSelectedCopy, BindProp } from '@/decorator';
-import { JobStatus, TaskStatus, enumKeyToPretty, enumKeys } from '@/utils/Enums';
-import { SgAlert, AlertPlacement, AlertCategory } from '@/store/alert/types';
+import { BindStoreModel, BindSelected, BindSelectedCopy, BindProp } from '../decorator';
+import { JobStatus, enumKeyToPretty, enumKeys } from '../utils/Enums';
+import { SgAlert, AlertPlacement, AlertCategory } from '../store/alert/types';
 import { ValidationProvider, ValidationObserver } from 'vee-validate';
-import { focusElement, truncateString } from '@/utils/Shared';
-import AgentSearch from '@/components/AgentSearch.vue';
-import { Agent } from "@/store/agent/types";
+import { focusElement, truncateString } from '../utils/Shared';
+import AgentSearch from '../components/AgentSearch.vue';
 import { Tabs, Tab } from 'vue-slim-tabs';
-import { Schedule, ScheduleTriggerType } from "@/store/schedule/types";
-import ArtifactSearch from '@/components/ArtifactSearch.vue';
-import { Artifact } from '@/store/artifact/types';
-import Artifacts from './Artifacts.vue';
-import ScriptEditor from '@/components/ScriptEditor.vue';
+import { Schedule, ScheduleTriggerType } from "../store/schedule/types";
+import ArtifactSearch from '../components/ArtifactSearch.vue';
+import ScriptEditor from '../components/ScriptEditor.vue';
 import { computeDownstreamTasks_inbound, 
          computeUpstreamTasks_outbound,
          InboundPaths,
          computeInboundPaths  } from '../utils/TaskRoutes';
-import { ClickOutside } from '@/directive';
-import { Route } from 'vue-router';
-import { showErrors } from '@/utils/ErrorHandler'; 
-import ScriptSearchWithCreate from '@/components/ScriptSearchWithCreate.vue';
-import TaskDefEditor from '@/components/TaskDefEditor.vue';
-import SGCTaskDefEditor from '@/components/SGCTaskDefEditor.vue';
-import { stringToMap, mapToString } from '@/utils/Shared';
+import { ClickOutside } from '../directive';
+import { showErrors } from '../utils/ErrorHandler'; 
+import ScriptSearchWithCreate from '../components/ScriptSearchWithCreate.vue';
+import TaskDefEditor from '../components/TaskDefEditor.vue';
+import SGCTaskDefEditor from '../components/SGCTaskDefEditor.vue';
+import { stringToMap, mapToString } from '../utils/Shared';
 
 @Component({
   components: {

@@ -217,35 +217,29 @@
 </template>
 
 <script lang="ts">
-import { Component, Prop, Vue, Watch } from "vue-property-decorator";
-import { BindStoreModel, BindProp } from "@/decorator";
-import { StoreType } from "@/store/types";
+import { Component, Vue, Watch } from "vue-property-decorator";
+import { StoreType } from "../store/types";
 import { Agent } from "../store/agent/types";
-import { User } from "@/store/user/types";
-import VueSplit from "vue-split-panel";
+import { User } from "../store/user/types";
 import axios from "axios";
-import { SgAlert, AlertPlacement, AlertCategory } from "@/store/alert/types";
-import { focusElement } from "@/utils/Shared";
-import { Script, ScriptType, scriptTypesForMonaco } from "@/store/script/types";
-import { ScriptShadow } from '@/store/scriptShadow/types';
-import { TaskDefTarget } from "@/store/taskDef/types";
-import { BindSelected, BindSelectedCopy } from "@/decorator";
+import { SgAlert, AlertPlacement } from "../store/alert/types";
+import { Script, ScriptType, scriptTypesForMonaco } from "../store/script/types";
+import { ScriptShadow } from '../store/scriptShadow/types';
+import { TaskDefTarget } from "../store/taskDef/types";
+import { BindSelected, BindProp, BindSelectedCopy } from "../decorator";
 import { ValidationProvider, ValidationObserver } from "vee-validate";
 import _ from "lodash";
-import { momentToStringV1 } from "@/utils/DateTime";
-import { Job } from '@/store/job/types';
-import { getStompHandler } from '@/utils/StompHandler';
-import { Task } from '@/store/task/types';
-import { TaskOutcome } from '@/store/taskOutcome/types';
-import { StepOutcome } from '@/store/stepOutcome/types';
-import { StepDef, LambaRuntimes, LambdaMemorySizes } from '../store/stepDef/types';
-import { JobStatus, TaskStatus, StepStatus, TaskFailureCode, enumKeyToPretty } from '@/utils/Enums.ts';
-import { stringToMap } from '@/utils/Shared';
-import AgentSearch from '@/components/AgentSearch.vue';
-import ScriptEditor from '@/components/ScriptEditor.vue';
-import { showErrors } from '@/utils/ErrorHandler';
-import TaskMonitorDetails from "@/components/TaskMonitorDetails.vue";
-import ScriptSearchWithCreate from '@/components/ScriptSearchWithCreate.vue';
+import { momentToStringV1 } from "../utils/DateTime";
+import { Job } from '../store/job/types';
+import { TaskOutcome } from '../store/taskOutcome/types';
+import { LambaRuntimes, LambdaMemorySizes } from '../store/stepDef/types';
+import { JobStatus, TaskStatus, StepStatus, TaskFailureCode, enumKeyToPretty } from '../utils/Enums';
+import { stringToMap } from '../utils/Shared';
+import AgentSearch from '../components/AgentSearch.vue';
+import ScriptEditor from '../components/ScriptEditor.vue';
+import { showErrors } from '../utils/ErrorHandler';
+import TaskMonitorDetails from "../components/TaskMonitorDetails.vue";
+import ScriptSearchWithCreate from '../components/ScriptSearchWithCreate.vue';
 import moment from 'moment';
 import { Tabs, Tab } from 'vue-slim-tabs';
 

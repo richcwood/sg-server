@@ -85,10 +85,10 @@
 import _ from 'lodash';
 import { Component, Prop, Vue, Watch } from 'vue-property-decorator';
 import { ValidationProvider, ValidationObserver } from 'vee-validate';
-import { TaskDef } from '@/store/taskDef/types';
-import { StoreType } from '@/store/types';
-import { SgAlert, AlertPlacement, AlertCategory } from '@/store/alert/types';
-import { truncateString } from '@/utils/Shared';
+import { TaskDef } from '../store/taskDef/types';
+import { StoreType } from '../store/types';
+import { SgAlert, AlertPlacement, AlertCategory } from '../store/alert/types';
+import { truncateString } from '../utils/Shared';
 
 @Component({
   components: {

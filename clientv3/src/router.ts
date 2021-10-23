@@ -121,7 +121,7 @@ const router = new Router({
               if(to.params.tabName === 'schedule'){
                 setTimeout(() => {
                   // silly vue-slim-tabs has no easy way to programatically click a tab
-                  (<any>document.getElementsByClassName('vue-tab')[4]).click();
+                  (<any>document.getElementsByClassName('vue-tab')[0]).click();
                 }, 50);
               }
             }
