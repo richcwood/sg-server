@@ -33,7 +33,7 @@
     "moment-timezone": "0.5.26",
     "monaco-editor": "0.19.3",
     "monaco-editor-webpack-plugin": "1.8.2",
-    "node-sass": "4.9.0",
+    "node-sass": "4.14.1",
     "open": "^8.2.1",
     "sass-loader": "7.1.0",
     "typescript": "3.7.5",
