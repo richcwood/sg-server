@@ -73,6 +73,7 @@ const redis = require('redis');
 const session = require('express-session');
 const RedisStore = require('connect-redis')(session);
 
+console.log(`\n\n *** Bart starting the server *** \n`);
 
 // Create a new express application instance
 const app: express.Application = express();
@@ -141,6 +142,7 @@ class AppBuilder {
 
     const corsOptions: any = {
       origin: (origin, callback) => {
+        console.log(`\n\n *** Bart *** \n origin=>${origin}\n\n`);
         if(validOrigins.indexOf(origin) !== -1 || !origin){
           callback(null, true);
         }
