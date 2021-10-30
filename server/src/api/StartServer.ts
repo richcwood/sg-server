@@ -127,19 +127,27 @@ class AppBuilder {
       this.app.use(enforce.HTTPS({ trustProtoHeader: true }));
     }
 
-    let origin = 'http://console.saasglue.com';
+    const validOrigins = ['http://console.saasglue.com', 
+                          'https://console.saasglue.com', 
+                          'http://saasglue.com',
+                          'https://saasglue.com'];
+
     if (environment == 'stage'){
-      origin = 'http://saasglue-stage.herokuapp.com';
+      validOrigins.push('http://saasglue-stage.herokuapp.com');
     }
-    else if(environment === 'bartdev'){
-      origin = 'http://localhost';
-    }
-    else if(environment === 'debug'){
-      origin = 'http://localhost';
+    else if(environment === 'bartdev' || environment === 'debug'){
+      validOrigins.push('http://localhost');
     }
 
     const corsOptions: any = {
-      origin: origin,
+      origin: (origin, callback) => {
+        if(validOrigins.indexOf(origin) !== -1 || !origin){
+          callback(null, true);
+        }
+        else {
+          callback(new Error(`Hey silly! ${origin} is just not allowed!`));
+        }
+      },
       methods: 'GET, PUT, POST, DELETE, OPTIONS',
       allowedHeaders: 'origin, x-requested-with, accept, content-type, x-csrf-token, correlationid, cookie, auth, host, referer, user-agent, _teamid',
       exposedHeaders: 'origin, x-requested-with, accept, content-type, x-csrf-token, correlationid, cookie, auth, referer, user-agent, _teamid',
