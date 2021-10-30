@@ -133,6 +133,18 @@ class AppBuilder {
                           'http://saasglue.com',
                           'https://saasglue.com'];
 
+    const stripPortRegex = /(?<baseUrl>http[s]?:\/\/[^:]+)/;
+
+    const isValidOrigin = (origin) => {
+      try {
+        const baseUrl = origin.match(stripPortRegex).groups['baseUrl'];
+        return validOrigins.indexOf(baseUrl) !== -1;
+      }
+      catch(err){
+        return false; // something weird we don't recognize, just fail it
+      }
+    }
+
     if (environment == 'stage'){
       validOrigins.push('http://saasglue-stage.herokuapp.com');
     }
@@ -143,7 +155,7 @@ class AppBuilder {
     const corsOptions: any = {
       origin: (origin, callback) => {
         console.log(`\n\n *** Bart *** \n origin=>${origin}\n\n`);
-        if(validOrigins.indexOf(origin) !== -1 || !origin){
+        if(!origin || isValidOrigin(origin)){
           callback(null, true);
         }
         else {
