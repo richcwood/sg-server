@@ -156,6 +156,7 @@ class AppBuilder {
       origin: (origin, callback) => {
         console.log(`\n\n *** Bart *** \n origin=>${origin}\n\n`);
         if(!origin || isValidOrigin(origin)){
+          console.log(`Origin ${origin} was VALID`);
           callback(null, true);
         }
         else {
