@@ -338,7 +338,7 @@ export class JobDefService {
 
       if(jobDef.runtimeVars){
         for(let runtimeVar of Object.keys(jobDef.runtimeVars)){
-          jobDefJson.runtimeVars[runtimeVar] = '*';
+          jobDefJson.runtimeVars[runtimeVar] = {'value': '*', 'sensitive': false};
         }
       }
 

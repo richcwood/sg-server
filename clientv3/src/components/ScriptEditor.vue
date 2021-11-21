@@ -697,7 +697,7 @@ const appendJobDefAutoCompleteItems = function(range, items){
 
     for(let [varKey, varValue] of Object.entries(jobDefForAutoComplete.runtimeVars)){
       items.push({
-        label: `sgg ${varKey} [${varValue}] (Job)`, 
+        label: `sgg ${varKey} [${varValue['value']}] (Job)`, 
         kind: monaco.languages.CompletionItemKind.Function,
         insertText: `@sgg("${varKey}")`, 
         range: range

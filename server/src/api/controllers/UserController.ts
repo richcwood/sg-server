@@ -31,6 +31,7 @@ export class UserController {
   public async getUser(req: Request, resp: Response, next: NextFunction): Promise<void> {
     try {
       const response: ResponseWrapper = (resp as any).body;
+      console.log('getUser -> ', req.params.userId);
       const user = await userService.findUser(new mongodb.ObjectId(req.params.userId), (<string>req.query.responseFields));
 
       if (!user) {

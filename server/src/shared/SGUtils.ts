@@ -271,8 +271,11 @@ export class SGUtils {
                             runtimeVars[varKey] = job.runtimeVars[varKey];
                         } else {
                             const teamVar = await teamVariableService.findTeamVariableByName(_teamId, varKey, 'value');
-                            if (_.isArray(teamVar) && teamVar.length > 0)
-                                runtimeVars[varKey] = teamVar[0].value;
+                            if (_.isArray(teamVar) && teamVar.length > 0) {
+                                runtimeVars[varKey] = {};
+                                runtimeVars[varKey]['value'] = teamVar[0].value;
+                                runtimeVars[varKey]['sensitive'] = teamVar[0].sensitive;
+                            }
                         }
                     }
                 } catch (e) {

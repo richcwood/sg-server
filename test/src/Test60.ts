@@ -33,10 +33,10 @@ export default class Test60 extends TestBase.WorkflowTestBase {
 
         const _teamId: string = config.get('sgTestTeam');
 
-        const sgAdminTeam: string = config.get('sgAdminTeam');
-        const awsLambdaRequiredTags: string = config.get('awsLambdaRequiredTags');
-        const newAgentProperties = { '_teamId': sgAdminTeam, 'machineId': 'AdminAgent', 'ipAddress': '10.10.0.104', 'tags': awsLambdaRequiredTags, 'numActiveTasks': 0, 'lastHeartbeatTime': null, 'rmqPassword': 'lpUs8Cnsju' };
-        const newAgent = await self.testSetup.InitAgent(newAgentProperties);
+        // const sgAdminTeam: string = config.get('sgAdminTeam');
+        // const awsLambdaRequiredTags: string = config.get('awsLambdaRequiredTags');
+        // const newAgentProperties = { '_teamId': sgAdminTeam, 'machineId': 'AdminAgent', 'ipAddress': '10.10.0.104', 'tags': awsLambdaRequiredTags, 'numActiveTasks': 0, 'lastHeartbeatTime': null, 'rmqPassword': 'lpUs8Cnsju' };
+        // const newAgent = await self.testSetup.InitAgent(newAgentProperties);
 
         const properties: any = {
             scripts: [
@@ -58,7 +58,7 @@ export default class Test60 extends TestBase.WorkflowTestBase {
                                 {
                                     name: 'Step 1',
                                     scriptName: 'Script 60',
-                                    lambdaRuntime: 'ruby2.5',
+                                    lambdaRuntime: 'ruby2.7',
                                     lambdaRole: config.get('lambda-admin-iam-role'),
                                     lambdaAWSRegion: config.get('AWS_REGION'),
                                     lambdaTimeout: 10
@@ -112,9 +112,9 @@ export default class Test60 extends TestBase.WorkflowTestBase {
         if (!result)
             return result;
 
-        newAgent.offline = true;
-        await newAgent.SendHeartbeat(false, true);
-        await newAgent.Stop();
+        // newAgent.offline = true;
+        // await newAgent.SendHeartbeat(false, true);
+        // await newAgent.Stop();
     
         return true;
     }

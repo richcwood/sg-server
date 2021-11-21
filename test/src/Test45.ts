@@ -66,7 +66,7 @@ export default class Test45 extends TestBase.WorkflowTestBase {
                 name: firstJob.job.tasks[0].name,
                 source: 1,
                 target: TaskDefTarget.SINGLE_SPECIFIC_AGENT,
-                targetAgentId: agent.InstanceId(),
+                targetAgentId: agent.InstanceId().toHexString(),
                 _jobId: firstJob.job.id,
                 type: 'Task'
             }

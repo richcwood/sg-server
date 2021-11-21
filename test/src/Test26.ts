@@ -81,7 +81,7 @@ export default class Test26 extends TestBase.AdhocTaskTestBase {
             'matchCount': 8,
             'tagsMatch': true,
             'values': { [SGStrings.status]: Enums.TaskStatus.SUCCEEDED, 'correlationId': correlationId, 'source': TaskSource.JOB },
-            'runtimeVars': { [SGStrings.route]: 'ok', 'globalParam1': 'globalParam1_val' },
+            'runtimeVars': { [SGStrings.route]: { 'value': 'ok' }, 'globalParam1': { 'sensitive': false, 'value': 'globalParam1_val' } },
             'step': [
                 { 'name': 'Step1', 'values': { 'status': Enums.TaskStatus.SUCCEEDED, 'stderr': '', 'exitCode': 0 } }
             ],
@@ -103,7 +103,7 @@ export default class Test26 extends TestBase.AdhocTaskTestBase {
                     name: 'AdHocJob',
                     dateCreated: new Date(),
                     tasks: [ task ],
-                    runtimeVars: {globalParam1: 'globalParam1_val'}
+                    runtimeVars: { globalParam1: { 'sensitive': false, 'value': 'globalParam1_val' } }
                 }
             }
     

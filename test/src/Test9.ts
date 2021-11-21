@@ -114,7 +114,7 @@ export default class Test9 extends TestBase.FailedTestBase {
             'step': [
                 {'name': 'step1', 'values': {'status': Enums.TaskStatus.SUCCEEDED, 'stderr': '', 'exitCode': 0}}
             ], 
-            'runtimeVars': {'outVal': 'val'}, 
+            'runtimeVars': {'outVal': { 'sensitive': false, 'value': 'val' }}, 
             'cntPartialMatch': 0, 
             'cntFullMatch': 0
         };
@@ -227,7 +227,7 @@ export default class Test9 extends TestBase.FailedTestBase {
             'matchCount': 5, 
             'tagsMatch': true, 
             'values': {[SGStrings.status]: Enums.TaskStatus.SUCCEEDED}, 
-            'runtimeVars': {[SGStrings.route]: 'ok'}, 
+            'runtimeVars': {[SGStrings.route]: { 'value': 'ok' } }, 
             'step': [
                 {'name': step1.name, 'values': {'status': Enums.TaskStatus.SUCCEEDED, 'stderr': '', 'exitCode': 0}}
             ], 
@@ -257,7 +257,7 @@ export default class Test9 extends TestBase.FailedTestBase {
             'step': [
                 {'name': step3.name, 'values': {'status': Enums.TaskStatus.SUCCEEDED, 'stderr': '', 'exitCode': 0}}
             ], 
-            'runtimeVars': {'outVal': 'val'}, 
+            'runtimeVars': {'outVal': { 'sensitive': false, 'value': 'val' } }, 
             'cntPartialMatch': 0, 
             'cntFullMatch': 0
         };
@@ -271,7 +271,7 @@ export default class Test9 extends TestBase.FailedTestBase {
             'step': [
                 {'name': step4.name, 'values': {'status': Enums.TaskStatus.FAILED, 'stderr': '', 'exitCode': 1}}
             ], 
-            'runtimeVars': {[SGStrings.route]: 'fail'}, 
+            'runtimeVars': {[SGStrings.route]: { 'value': 'fail' } }, 
             'cntPartialMatch': 0, 
             'cntFullMatch': 0
         };

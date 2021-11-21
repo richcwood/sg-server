@@ -98,7 +98,7 @@ export default class Test25 extends TestBase.default {
             'step': [
                 {'name': step1.name, 'values': {'status': Enums.TaskStatus.SUCCEEDED, 'stderr': '', 'exitCode': 0}}
             ], 
-            'runtimeVars': {[SGStrings.route]: 'ok'}, 
+            'runtimeVars': { [SGStrings.route]: { 'value': 'ok' } },
             'cntPartialMatch': 0, 
             'cntFullMatch': 0
         };    
@@ -110,7 +110,7 @@ export default class Test25 extends TestBase.default {
             'matchCount': 5, 
             'tagsMatch': true, 
             'values': {[SGStrings.status]: Enums.TaskStatus.SUCCEEDED},
-            'runtimeVars': {'globalParam1': 'globalParam1_val'}, 
+            'runtimeVars': { 'globalParam1': { 'sensitive': false, 'value': 'globalParam1_val' } },
             'step': [
                 {'name': step2.name, 'values': {'status': Enums.TaskStatus.SUCCEEDED, 'stderr': '', 'exitCode': 0}}
             ], 
@@ -130,7 +130,7 @@ export default class Test25 extends TestBase.default {
         let job: JobSchema;
         for (let i = 0; i < self.jobDefs.length; i++) {
             const jobDef = self.jobDefs[i];
-            const restAPICallRes: any = await this.testSetup.RestAPICall('job', 'POST', jobDef._teamId, {_jobDefId: jobDef.id}, {runtimeVars: {globalParam1: 'globalParam1_val'}});
+            const restAPICallRes: any = await this.testSetup.RestAPICall('job', 'POST', jobDef._teamId, { _jobDefId: jobDef.id }, { runtimeVars: { globalParam1: { 'sensitive': false, 'value': 'globalParam1_val' } } });
             job = restAPICallRes.data.data;
 
             // self.jobs.push(job);

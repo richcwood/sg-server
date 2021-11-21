@@ -19,8 +19,8 @@ export const focusElement = function(elementName: string){
   tryToFocus();
 };
 
-// try to convert a string in form key1=val1, key2=val2 etc. to a map
-export const stringToMap = (input: string): {[key: string]: string} =>  {
+// try to convert a string in form key1=val1, key2=val2, <<key3>>=sensitive_val etc. to a map
+export const stringToMap = (input: string): {[key: string]: {}} =>  {
   const map = {};
 
   if( _.isString(input) && input.trim()){
@@ -30,7 +30,18 @@ export const stringToMap = (input: string): {[key: string]: string} =>  {
       items.map((item: string) => {
         const itemSplit = item.split('=');
         if(itemSplit.length === 2 && itemSplit[0].trim() && itemSplit[1].trim()){
-          map[itemSplit[0].trim()] = itemSplit[1].trim();
+          let key = itemSplit[0].trim();
+          const val = itemSplit[1].trim();
+          if (key.startsWith('<<') && key.endsWith('>>')) {
+            key = key.substring(2, key.length - 2);
+            map[key] = {};
+            map[key]['value'] = val;
+            map[key]['sensitive'] = true;
+          } else {
+            map[key] = {};
+            map[key]['value'] = val;
+            map[key]['sensitive'] = false;
+          }
         }
         else {
           throw `Item entry not correct: ${item}`;
@@ -45,9 +56,9 @@ export const stringToMap = (input: string): {[key: string]: string} =>  {
   return map;
 }
 
-// converts a simple string map {aa: 'bb'} into a string of the form "aa=bb,etc"
+// converts a string map {aa: {'value': 'bb', 'sensitive': false}} into a string of the form "aa=bb,<<dd>>=ff,etc"
 // optional breakCount = 3 means add a <br> after every 3rd entry
-export const mapToString = (input: {[key: string]: string}, breakCount?: number): string => {
+export const mapToString = (input: {[key: string]: {}}, breakCount?: number): string => {
   if(!input){
     return '';
   }
@@ -65,7 +76,13 @@ export const mapToString = (input: {[key: string]: string}, breakCount?: number)
         }
       }
 
-      theString += `${keys[keyCount]}=${input[keys[keyCount]]}`;
+      let key = keys[keyCount];
+      const sensitive = input[key]['sensitive'];
+      let val = input[keys[keyCount]]['value'];
+      if (sensitive)
+        key = `<<${key}>>`;
+
+      theString += `${key}=${val}`;
     }
 
     return theString;

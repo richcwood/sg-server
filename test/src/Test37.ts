@@ -82,7 +82,7 @@ export default class Test37 extends TestBase.default {
             'matchCount': 20, 
             'tagsMatch': true,
             'values': {[SGStrings.status]: Enums.TaskStatus.SUCCEEDED}, 
-            'runtimeVars': {[SGStrings.route]: 'ok'}, 
+            'runtimeVars': { [SGStrings.route]: { 'value': 'ok' } },
             'step': [
                 {'name': step.name, 'values': {'status': Enums.TaskStatus.SUCCEEDED, 'stderr': '', 'exitCode': 0}}
             ], 
@@ -97,7 +97,7 @@ export default class Test37 extends TestBase.default {
             'matchCount': 20, 
             'tagsMatch': true, 
             'values': {[SGStrings.status]: Enums.TaskStatus.SUCCEEDED}, 
-            'runtimeVars': {'outVal': 'val'}, 
+            'runtimeVars': {'outVal': {'sensitive': false, 'value': 'val'}}, 
             'step': [
                 {'name': step3.name, 'values': {'status': Enums.TaskStatus.SUCCEEDED, 'stderr': '', 'exitCode': 0}}
             ], 

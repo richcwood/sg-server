@@ -305,7 +305,7 @@ export default class JobDetailsMonitor extends Vue {
   private formatRuntimeVars(task: Task): string {
     if(task.runtimeVars){
       const runtimeVarKeys = Object.keys(task.runtimeVars);
-      const summary = runtimeVarKeys.map(k => `${k}=${task.runtimeVars[k]}`).join(', ');
+      const summary = runtimeVarKeys.map(k => `${k}=${task.runtimeVars[k]['value']}`).join(', ');
       return truncateString(summary, 24);
     }
     else {

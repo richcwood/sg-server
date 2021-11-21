@@ -146,7 +146,7 @@ export default class Test12 extends TestBase.default {
             'step': [
                 {'name': step1.name, 'values': {'status': Enums.TaskStatus.SUCCEEDED, 'stderr': '', 'exitCode': 0}}
             ], 
-            'runtimeVars': {[SGStrings.route]: 'ok'}, 
+            'runtimeVars': { [SGStrings.route]: { value: 'ok' } },
             'cntPartialMatch': 0, 
             'cntFullMatch': 0
         };
@@ -173,7 +173,7 @@ export default class Test12 extends TestBase.default {
             'step': [
                 {'name': step3.name, 'values': {'status': Enums.TaskStatus.SUCCEEDED, 'stderr': '', 'exitCode': 0}}
             ], 
-            'runtimeVars': {'outVal': 'val'}, 
+            'runtimeVars': {'outVal': {'sensitive': false, 'value': 'val'}}, 
             'cntPartialMatch': 0, 
             'cntFullMatch': 0
         };

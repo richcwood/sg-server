@@ -134,7 +134,7 @@ export class TaskOutcomeService {
                 filter = defaultFilter;
 
             if (data.runtimeVars && data.runtimeVars.route)
-                data.route = data.runtimeVars.route;
+                data.route = data.runtimeVars.route.value;
             let updatedTaskOutcome: TaskOutcomeSchema = await TaskOutcomeModel.findOneAndUpdate(filter, data, { new: true });
             if (!updatedTaskOutcome)
                 throw new MissingObjectError(`TaskOutcome not found with filter "${JSON.stringify(filter, null, 4)}"`)
@@ -145,9 +145,11 @@ export class TaskOutcomeService {
                         for (let i = 0; i < Object.keys(updatedTaskOutcome.runtimeVars).length; i++) {
                             let key = Object.keys(updatedTaskOutcome.runtimeVars)[i];
                             if (key != SGStrings.route) {
-                                const val = updatedTaskOutcome.runtimeVars[key];
+                                const val = updatedTaskOutcome.runtimeVars[key].value;
+                                const sensitive = updatedTaskOutcome.runtimeVars[key].sensitive;
                                 const qryUpdate: any = {};
-                                qryUpdate[`runtimeVars.${key}`] = val;
+                                qryUpdate[`runtimeVars.${key}.value`] = val;
+                                qryUpdate[`runtimeVars.${key}.sensitive`] = sensitive;
 
                                 const resJobQuery = await jobService.updateJob(_teamId, updatedTaskOutcome._jobId, qryUpdate);
                                 if (!resJobQuery)
@@ -169,7 +171,7 @@ export class TaskOutcomeService {
                             const stepOutcome: any = taskStepOutcomesQuery[i];
                             let stepOutcomeUpdate: any = {};
                             stepOutcomeUpdate['status'] = StepStatus.INTERRUPTED;
-                            stepOutcomeUpdate['runtimeVars'] = { 'route': 'interrupt' };
+                            stepOutcomeUpdate['runtimeVars'] = {'route': {'value': 'interrupt'}};
                             await StepOutcomeModel.findOneAndUpdate({ _id: stepOutcome._id, _teamId, status: { $lt: StepStatus.INTERRUPTED } }, stepOutcomeUpdate);
                             // await stepOutcomeService.updateStepOutcome(_teamId, stepOutcome._id, stepOutcomeUpdate, null, { status: { $lt: StepStatus.INTERRUPTED } }, null, '_id');
                         }
@@ -371,9 +373,9 @@ export class TaskOutcomeService {
                         if (varKey.substr(0, 1) === '"' && varKey.substr(varKey.length - 1, 1) === '"')
                             varKey = varKey.slice(1, -1);
                         if (runtimeVarsTask[varKey]) {
-                            targetAgentId = runtimeVarsTask[varKey];
+                            targetAgentId = runtimeVarsTask[varKey]['value'];
                         } else if (job.runtimeVars[varKey]) {
-                            targetAgentId = job.runtimeVars[varKey];
+                            targetAgentId = job.runtimeVars[varKey]['value'];
                         } else {
                             const teamVar = await teamVariableService.findTeamVariableByName(_teamId, varKey, 'value');
                             if (_.isArray(teamVar) && teamVar.length > 0)
@@ -465,8 +467,10 @@ export class TaskOutcomeService {
                                         runtimeVarsTask[varKey] = job.runtimeVars[varKey];
                                     } else {
                                         const teamVar = await teamVariableService.findTeamVariableByName(_teamId, varKey, 'value');
-                                        if (_.isArray(teamVar) && teamVar.length > 0)
-                                            runtimeVarsTask[varKey] = teamVar[0].value;
+                                        if (_.isArray(teamVar) && teamVar.length > 0) {
+                                            runtimeVarsTask[varKey]['value'] = teamVar[0].value;
+                                            runtimeVarsTask[varKey]['sensitive'] = teamVar[0].sensitive;
+                                        }
                                     }
                                 }
                             } catch (e) {

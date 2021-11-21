@@ -104,6 +104,7 @@ export class TaskOutcomeController {
       _teamId = mongodb.ObjectId(req.body._teamId);
     const response: ResponseWrapper = resp['body'];
     try {
+      console.log('task outcome -> ', convertRequestData(TaskOutcomeSchema, req.body));
       const updatedTaskOutcome: any = await taskOutcomeService.updateTaskOutcome(_teamId, new mongodb.ObjectId(req.params.taskOutcomeId), convertRequestData(TaskOutcomeSchema, req.body), logger, null, req.header('correlationId'), (<string>req.query.responseFields));
 
       if (_.isArray(updatedTaskOutcome) && updatedTaskOutcome.length === 0) {

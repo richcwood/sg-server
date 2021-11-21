@@ -33,18 +33,18 @@ import { paymentMethodService } from '../../server/src/api/services/PaymentMetho
 import { paymentTransactionService } from '../../server/src/api/services/PaymentTransactionService';
 import { accessKeyService } from '../../server/src/api/services/AccessKeyService';
 import { AgentSchema } from '../../server/src/api/domain/Agent';
-import { JobDefSchema } from '../../server/src/api/domain/JobDef';
-import { JobSchema } from '../../server/src/api/domain/Job';
+import { JobDefSchema, JobDefModel } from '../../server/src/api/domain/JobDef';
+import { JobSchema, JobModel } from '../../server/src/api/domain/Job';
 import { TeamSchema, TeamModel } from '../../server/src/api/domain/Team';
 import { ScheduleSchema } from '../../server/src/api/domain/Schedule';
 import { ScriptSchema, ScriptModel } from '../../server/src/api/domain/Script';
 import { SettingsSchema } from '../../server/src/api/domain/Settings';
 import { StepDefSchema } from '../../server/src/api/domain/StepDef';
-import { StepOutcomeSchema } from '../../server/src/api/domain/StepOutcome';
+import { StepOutcomeSchema, StepOutcomeModel } from '../../server/src/api/domain/StepOutcome';
 import { StepSchema } from '../../server/src/api/domain/Step';
 import { TaskDefSchema } from '../../server/src/api/domain/TaskDef';
-import { TaskOutcomeSchema } from '../../server/src/api/domain/TaskOutcome';
-import { TaskSchema } from '../../server/src/api/domain/Task';
+import { TaskOutcomeSchema, TaskOutcomeModel } from '../../server/src/api/domain/TaskOutcome';
+import { TaskSchema, TaskModel } from '../../server/src/api/domain/Task';
 import { UserSchema } from '../../server/src/api/domain/User';
 import { InvoiceSchema } from '../../server/src/api/domain/Invoice';
 import { PaymentMethodSchema } from '../../server/src/api/domain/PaymentMethod';
@@ -72,6 +72,8 @@ import * as bson from 'bson';
 import { TaskStatus } from '../../server/dist/shared/Enums';
 import Bitset from 'bitset';
 import { AccessKeyModel } from '../../server/src/api/domain/AccessKey';
+import { teamVariableService } from '../../server/src/api/services/TeamVariableService';
+import { TeamVariableModel } from '../../server/src/api/domain/TeamVariable';
 
 
 const waitForAgentCreateInterval = 15000;
@@ -619,6 +621,138 @@ let FixScriptDBRecords = async () => {
 
     const updatedScript = await ScriptModel.findOneAndUpdate(filter, data, { new: true });
     console.log(updatedScript);
+  }
+
+  process.exit();
+}
+
+
+let FixRuntimeVarsDBRecords = async () => {
+  mongoose.connect(config.get('mongoUrl'), { useNewUrlParser: true });
+
+  // Update team variables
+  let teamVars: any = await teamVariableService.findAllTeamVariablesInternal();
+  for (let i = 0; i < teamVars.length; i++) {
+    let teamVar: any = teamVars[i];
+
+    let data: any = {};
+    data.sensitive = false;
+
+    const filter = { _id: teamVar._id };
+
+    const updatedTeamVar = await TeamVariableModel.findOneAndUpdate(filter, data, { new: true });
+    console.log(updatedTeamVar);
+  }
+
+  // Update jobdefs
+  let jobDefs: any = await jobDefService.findAllJobDefsInternal();
+  for (let i = 0; i < jobDefs.length; i++) {
+    let jobDef: any = jobDefs[i];
+
+    let rtVars: any = {};
+    for (let j = 0; j < Object.keys(jobDef.runtimeVars).length; j++) {
+      const key = Object.keys(jobDef.runtimeVars)[j];
+      rtVars[key] = {};
+      rtVars[key]['value'] = jobDef.runtimeVars[key];
+      rtVars[key]['sensitive'] = false;
+    }
+
+    let data: any = {};
+    data['runtimeVars'] = rtVars;
+
+    const filter = { _id: jobDef._id };
+
+    const updatedJobDef = await JobDefModel.findOneAndUpdate(filter, data, { new: true });
+    console.log(updatedJobDef);
+  }
+
+  // Update jobs
+  let jobs: any = await jobService.findAllJobsInternal();
+  for (let i = 0; i < jobs.length; i++) {
+    let job: any = jobs[i];
+
+    let rtVars: any = {};
+    for (let j = 0; j < Object.keys(job.runtimeVars).length; j++) {
+      const key = Object.keys(job.runtimeVars)[j];
+      rtVars[key] = {};
+      rtVars[key]['value'] = job.runtimeVars[key];
+      rtVars[key]['sensitive'] = false;
+    }
+
+    let data: any = {};
+    data['runtimeVars'] = rtVars;
+
+    const filter = { _id: job._id };
+
+    const udpatedJob = await JobModel.findOneAndUpdate(filter, data, { new: true });
+    console.log(udpatedJob);
+  }
+
+  // Update step outcomes
+  let stepOutcomes: any = await stepOutcomeService.findAllStepOutcomesInternal();
+  for (let i = 0; i < stepOutcomes.length; i++) {
+    let stepOutcome: any = stepOutcomes[i];
+
+    let rtVars: any = {};
+    for (let j = 0; j < Object.keys(stepOutcome.runtimeVars).length; j++) {
+      const key = Object.keys(stepOutcome.runtimeVars)[j];
+      rtVars[key] = {};
+      rtVars[key]['value'] = stepOutcome.runtimeVars[key];
+      rtVars[key]['sensitive'] = false;
+    }
+
+    let data: any = {};
+    data['runtimeVars'] = rtVars;
+
+    const filter = { _id: stepOutcome._id };
+
+    const udpatedStepOutcome = await StepOutcomeModel.findOneAndUpdate(filter, data, { new: true });
+    console.log(udpatedStepOutcome);
+  }
+
+  // Update tasks
+  let tasks: any = await taskService.findAllTasksInternal();
+  for (let i = 0; i < tasks.length; i++) {
+    let task: any = tasks[i];
+
+    let rtVars: any = {};
+    for (let j = 0; j < Object.keys(task.runtimeVars).length; j++) {
+      const key = Object.keys(task.runtimeVars)[j];
+      rtVars[key] = {};
+      rtVars[key]['value'] = task.runtimeVars[key];
+      rtVars[key]['sensitive'] = false;
+    }
+
+    let data: any = {};
+    data['runtimeVars'] = rtVars;
+
+    const filter = { _id: task._id };
+
+    const udpatedTask = await TaskModel.findOneAndUpdate(filter, data, { new: true });
+    console.log(udpatedTask);
+  }
+
+
+  // Update step outcomes
+  let taskOutcomes: any = await taskOutcomeService.findAllTaskOutcomesInternal();
+  for (let i = 0; i < taskOutcomes.length; i++) {
+    let taskOutcome: any = taskOutcomes[i];
+
+    let rtVars: any = {};
+    for (let j = 0; j < Object.keys(taskOutcome.runtimeVars).length; j++) {
+      const key = Object.keys(taskOutcome.runtimeVars)[j];
+      rtVars[key] = {};
+      rtVars[key]['value'] = taskOutcome.runtimeVars[key];
+      rtVars[key]['sensitive'] = false;
+    }
+
+    let data: any = {};
+    data['runtimeVars'] = rtVars;
+
+    const filter = { _id: taskOutcome._id };
+
+    const udpatedTaskOutcome = await TaskOutcomeModel.findOneAndUpdate(filter, data, { new: true });
+    console.log(udpatedTaskOutcome);
   }
 
   process.exit();
@@ -1681,6 +1815,13 @@ let GenerateToken = async () => {
 }
 
 
+let VerifyToken = async (token: string) => {
+  const secret = config.get('secret');
+  const res = jwt.verify(token, secret);
+  console.log('res -> ', res)
+}
+
+
 let CreateAgentInstall = async (_teamId: string, agentVersion: string, nodeRange: string, platform: string, arch) => {
   const secret = config.get('secret');
   var token = jwt.sign({
@@ -2172,8 +2313,9 @@ let SendTestBrowserAlert = async() => {
 // CreateStripeCompanyForTeams();
 // FixTeamDBRecords();
 // CancelFailedJobs();
-DeleteNotStartedJobs();
+// DeleteNotStartedJobs();
 // FixScriptDBRecords();
+FixRuntimeVarsDBRecords();
 // SendTestBrowserAlert();
 // ConfigNewRabbitMQServer();
 // ProcessOrphanedTasks();
@@ -2225,7 +2367,7 @@ DeleteNotStartedJobs();
 // CreateAccessKey();
 // printTeamAccessRightsBitSet();
 // CreateProdAccessKeys();
-
+// (async () => { VerifyToken(process.argv[2]); })();
 
 // RabbitMQTeamSetup('5f57b2f14b5da00017df0d4f');
 // RabbitMQTeamSetup('5e99cbcb2317950015edb655');

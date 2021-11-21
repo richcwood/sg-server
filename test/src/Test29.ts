@@ -54,7 +54,7 @@ export default class Test29 extends TestBase.default {
             createdBy: this.sgUser.id,
             lastRunId: 0,
             dateCreated: new Date(),
-            runtimeVars: { globalParam1: 'globalParam1_val'},
+            runtimeVars: { globalParam1: { 'sensitive': false, 'value': 'globalParam1_val' } },
             expectedValues: { 'type': 'job', 'matchCount': 1, 'cntPartialMatch': 0, 'cntFullMatch': 0, 'values': { [SGStrings.status]: Enums.JobStatus.COMPLETED } }
         }
         jobDef = await self.CreateJobDef(jobDef, _teamId);
@@ -76,7 +76,7 @@ export default class Test29 extends TestBase.default {
             'matchCount': 5, 
             'tagsMatch': true, 
             'values': {[SGStrings.status]: Enums.TaskStatus.SUCCEEDED},
-            'runtimeVars': {'globalParam1': 'globalParam1_val'}, 
+            'runtimeVars': { 'globalParam1': { 'sensitive': false, 'value': 'globalParam1_val' } },
             'step': [
                 {'name': step2.name, 'values': {'status': Enums.TaskStatus.SUCCEEDED, 'stderr': '', 'exitCode': 0}}
             ], 

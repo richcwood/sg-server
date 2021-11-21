@@ -3,8 +3,8 @@ MetricsLogger.init();
 
 import express = require('express');
 import { NextFunction, Request, Response } from 'express';
-const enforce = require('express-sslify');
-const cors = require('cors');
+// const enforce = require('express-sslify');
+// const cors = require('cors');
 import path = require('path');
 import util = require('util');
 const bodyParser = require('body-parser');
@@ -124,9 +124,9 @@ class AppBuilder {
   private setUpMiddleware() {
     app.disable('etag');
 
-    if (environment != 'debug' && environment !== 'bartdev') {
-      this.app.use(enforce.HTTPS({ trustProtoHeader: true }));
-    }
+    // if (environment != 'debug' && environment !== 'bartdev') {
+    //   this.app.use(enforce.HTTPS({ trustProtoHeader: true }));
+    // }
 
     const validOrigins = ['http://console.saasglue.com', 
                           'https://console.saasglue.com', 
@@ -152,24 +152,24 @@ class AppBuilder {
       validOrigins.push('http://localhost');
     }
 
-    const corsOptions: any = {
-      origin: (origin, callback) => {
-        console.log(`\n\n *** Bart *** \n origin=>${origin}\n\n`);
-        if(!origin || isValidOrigin(origin)){
-          console.log(`Origin ${origin} was VALID`);
-          callback(null, true);
-        }
-        else {
-          callback(new Error(`Hey silly! ${origin} is just not allowed!`));
-        }
-      },
-      methods: 'GET, PUT, POST, DELETE, OPTIONS',
-      allowedHeaders: 'origin, x-requested-with, accept, content-type, x-csrf-token, correlationid, cookie, auth, host, referer, user-agent, _teamid',
-      exposedHeaders: 'origin, x-requested-with, accept, content-type, x-csrf-token, correlationid, cookie, auth, referer, user-agent, _teamid',
-      maxAge: 3628800,
-      credentials: true
-    };
-    app.use(cors(corsOptions));
+    // const corsOptions: any = {
+    //   origin: (origin, callback) => {
+    //     console.log(`\n\n *** Bart *** \n origin=>${origin}\n\n`);
+    //     if(!origin || isValidOrigin(origin)){
+    //       console.log(`Origin ${origin} was VALID`);
+    //       callback(null, true);
+    //     }
+    //     else {
+    //       callback(new Error(`Hey silly! ${origin} is just not allowed!`));
+    //     }
+    //   },
+    //   methods: 'GET, PUT, POST, DELETE, OPTIONS',
+    //   allowedHeaders: 'origin, x-requested-with, accept, content-type, x-csrf-token, correlationid, cookie, auth, host, referer, user-agent, _teamid',
+    //   exposedHeaders: 'origin, x-requested-with, accept, content-type, x-csrf-token, correlationid, cookie, auth, referer, user-agent, _teamid',
+    //   maxAge: 3628800,
+    //   credentials: true
+    // };
+    // app.use(cors(corsOptions));
 
     if(config.get('httpLogs.enabled')){
       morgan.token('user_id', req => req.headers.userid);

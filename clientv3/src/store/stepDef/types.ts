@@ -9,13 +9,12 @@ export const LambaRuntimes: string[] = [
   'java8',
   'java8.al2',
   'nodejs12.x',
-  'nodejs10.x',
-  'python2.7',
+  'nodejs14.x',
   'python3.6',
   'python3.7',
   'python3.8',
-  'ruby2.7',
-  'ruby2.5'
+  'python3.9',
+  'ruby2.7'
 ];
 
 
@@ -27,13 +26,13 @@ for(let mem = 128; mem <= 3008; mem+= 64){
 
 export const getLambdaRuntimesForScriptType = (scriptType: ScriptType) => {
   if(scriptType == ScriptType.NODE || scriptType == ScriptType.JAVASCRIPT){
-    return ['nodejs12.x', 'nodejs10.x'];
+    return ['nodejs14.x', 'nodejs12.x'];
   }
   else if(scriptType == ScriptType.RUBY){
-    return ['ruby2.7', 'ruby2.5'];
+    return ['ruby2.7'];
   }
   else if(scriptType == ScriptType.PYTHON){
-    return ['python2.7', 'python3.6', 'python3.7', 'python3.8'];
+    return ['python3.6', 'python3.7', 'python3.8', 'python3.9'];
   }
   else {
     return []; // no other script types have runtimes

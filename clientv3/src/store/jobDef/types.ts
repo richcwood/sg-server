@@ -12,7 +12,7 @@ export interface JobDef extends Model {
   maxInstances?: number,
   coalesce?: boolean,
   misfireGraceTime?: number,
-  runtimeVars?: {[key: string]: string},
+  runtimeVars?: {[key: string]: {}},
   status?: JobDefStatus,
   pauseOnFailedJob?: boolean,
   description?: string

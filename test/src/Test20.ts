@@ -107,7 +107,7 @@ export default class Test20 extends TestBase.WorkflowTestBase {
         agentId = resApiCall.data.data[0].id;
         let inactiveJobName: string = `Inactive agent job - ${agentMachineId}`;
 
-        resApiCall = await self.testSetup.RestAPICall(`agent/properties/${agentId}`, 'PUT', _teamId, null, { inactiveAgentJob: { id: jobDefs['Inactive Agent Job'].id, runtimeVars: { rtKey: 'rtVal' } }, inactivePeriodWaitTime: 15000 });
+        resApiCall = await self.testSetup.RestAPICall(`agent/properties/${agentId}`, 'PUT', _teamId, null, { inactiveAgentJob: { id: jobDefs['Inactive Agent Job'].id, runtimeVars: { rtKey: { 'sensitive': false, 'value': 'rtVal' } } }, inactivePeriodWaitTime: 15000 });
         if (resApiCall.data.statusCode != 200) {
             self.logger.LogError('Failed', { Message: `agent/properties/${agentId} PUT returned ${resApiCall.data.statusCode}` });
             return false;
@@ -196,9 +196,9 @@ export default class Test20 extends TestBase.WorkflowTestBase {
                 status: StepStatus.SUCCEEDED,
                 runtimeVars:
                 {
-                    rtKey: 'rtVal',
-                    agentId: agentId,
-                    outVal: 'val'
+                    rtKey: {'sensitive': false, 'value': 'rtVal'},
+                    agentId: {'sensitive': false, 'value': agentId},
+                    outVal: {'sensitive': false, 'value': 'val'}
                 },
                 stdout: `start\ndone\n@sgo{"rtKey": "rtVal"}\n@sgo{"agentId": "${agentId}"}\n@sgo{"outVal": "val"}\n`,
                 stderr: '',

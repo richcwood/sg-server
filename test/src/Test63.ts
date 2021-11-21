@@ -43,7 +43,7 @@ export default class Test63 extends TestBase.WorkflowTestBase {
         firstJob.job.tasks[0].target = TaskDefTarget.SINGLE_SPECIFIC_AGENT;
         firstJob.job.tasks[0].targetAgentId = '@sgg("_agentId")';
         firstJob.job.tasks[0].steps[0].script.code = script1_b64;
-        firstJob.job.runtimeVars = { _agentId: agent.InstanceId() };
+        firstJob.job.runtimeVars = { _agentId: {'sensitive': false, 'value': agent.InstanceId()} };
 
         resApiCall = await this.testSetup.RestAPICall('job', 'POST', _teamId, null, firstJob);
         if (resApiCall.data.statusCode != 201) {

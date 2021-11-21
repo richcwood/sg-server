@@ -15,7 +15,7 @@ export function handleErrors(err: Error, req: Request, res: Response, next: Next
 
     if (logger) {
         if (err.message != "The access token expired")
-            logger.LogError(err.message, { Error: err, Headers: req.headers, Body: req.body, Params: req.params });
+            logger.LogError(err.message, { Error: err, Path: req.path, Headers: req.headers, Body: req.body, Params: req.params });
     }
     //console.log(buildErrorMessage(err.name, err.message, transactionId, undefined), transactionId);
     //logger.debug(buildErrorMessage(err.name, err.message, transactionId, undefined), transactionId);

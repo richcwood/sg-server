@@ -63,7 +63,8 @@ export default class Test35 extends TestBase.default {
         let teamVar: TeamVariableSchema = {
             _teamId,
             name: 'globalParam1',
-            value: 'globalParam1_val'
+            value: 'globalParam1_val',
+            sensitive: false
         }
         teamVar = await self.CreateTeamVariable(teamVar, _teamId);
     
@@ -83,7 +84,7 @@ export default class Test35 extends TestBase.default {
             'matchCount': 5, 
             'tagsMatch': true, 
             'values': {[SGStrings.status]: Enums.TaskStatus.SUCCEEDED},
-            'runtimeVars': {'globalParam1': 'globalParam1_val'}, 
+            'runtimeVars': { 'globalParam1': { 'sensitive': false, 'value': 'globalParam1_val' } },
             'step': [
                 {'name': step1.name, 'values': {'status': Enums.TaskStatus.SUCCEEDED, 'stderr': '', 'exitCode': 0}}
             ], 

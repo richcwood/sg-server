@@ -99,7 +99,7 @@ export default class Test11 extends TestBase.default {
             'step': [
                 {'name': step3.name, 'values': {'status': Enums.TaskStatus.SUCCEEDED, 'stderr': '', 'exitCode': 0}}
             ], 
-            'runtimeVars': {[SGStrings.route]: 'ok'}, 
+            'runtimeVars': { [SGStrings.route]: { 'value': 'ok' } },
             'cntPartialMatch': 0, 
             'cntFullMatch': 0
         };

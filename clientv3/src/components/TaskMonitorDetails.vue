@@ -344,7 +344,7 @@ export default class TaskMonitorDetails extends Vue {
 
   private formatStdString(std: string|undefined): string {
     if(std){
-      return std.split('\n').reverse().join('<br>');
+      return std.replace(/</g, "&#60;").replace(/>/g, "&#62;").split('\n').reverse().join('<br>');
     }
     else {
       return '';

@@ -426,11 +426,11 @@ export default class InteractiveConsole extends Vue {
     }
   }
 
-  private get envVarsAsMap(): {[key: string]: string} {
+  private get envVarsAsMap(): {[key: string]: {}} {
     return stringToMap(this.runScriptEnvVars);
   }
 
-  private get runtimeVarsAsMap(): {[key: string]: string} {
+  private get runtimeVarsAsMap(): {[key: string]: {}} {
     return stringToMap(this.runScriptRuntimeVars);
   }
 

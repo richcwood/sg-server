@@ -47,7 +47,7 @@ export default class Test48 extends TestBase.WorkflowTestBase {
         firstJob.job.name = 'IC - Test48';
         firstJob.job.tasks[0].target = TaskDefTarget.SINGLE_AGENT;
         firstJob.job.tasks[0].steps[0].script.code = script1_b64;
-        firstJob.job.runtimeVars = { linenum: 0 };
+        firstJob.job.runtimeVars = { linenum: {'sensitive': false, 'value': 0} };
 
         resApiCall = await this.testSetup.RestAPICall('job', 'POST', _teamId, null, firstJob);
         if (resApiCall.data.statusCode != 201) {
@@ -87,7 +87,7 @@ export default class Test48 extends TestBase.WorkflowTestBase {
             {
                 status: TaskStatus.FAILED,
                 failureCode: TaskFailureCode.TASK_EXEC_ERROR,
-                runtimeVars: { linenum: 26, route: 'fail' },
+                runtimeVars: { linenum: {'sensitive': false, 'value': 26}, route: {'value': 'fail'} },
                 route: 'fail',
                 id: taskOutcome[0].model.id,
                 type: 'TaskOutcome'
@@ -130,7 +130,7 @@ export default class Test48 extends TestBase.WorkflowTestBase {
                 status: 10,
                 target: TaskDefTarget.SINGLE_AGENT,
                 autoRestart: false,
-                runtimeVars: { linenum: 26 },
+                runtimeVars: { linenum: {'sensitive': false, 'value': 26} },
                 type: 'TaskOutcome'
             }
         };
@@ -150,7 +150,7 @@ export default class Test48 extends TestBase.WorkflowTestBase {
             model:
             {
                 status: TaskStatus.SUCCEEDED,
-                runtimeVars: { linenum: 49, route: 'ok' },
+                runtimeVars: { linenum: {'sensitive': false, 'value': 49}, route: {'value': 'ok'} },
                 route: 'ok',
                 id: taskOutcomeRestarted[0].model.id,
                 type: 'TaskOutcome'

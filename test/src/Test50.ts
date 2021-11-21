@@ -177,7 +177,7 @@ export default class Test50 extends TestBase.WorkflowTestBase {
             {
                 status: TaskStatus.INTERRUPTED,
                 signal: 'SIGTERM',
-                runtimeVars: { route: 'interrupt' },
+                runtimeVars: { route: {'value': 'interrupt'} },
                 stdout: '',
                 stderr: '',
                 exitCode: null,
@@ -191,7 +191,7 @@ export default class Test50 extends TestBase.WorkflowTestBase {
             operation: 2,
             model:
             {
-                runtimeVars: { route: 'interrupt' },
+                runtimeVars: { route: {'value': 'interrupt'} },
                 id: task[0].model.id,
                 type: 'Task'
             }
@@ -217,7 +217,7 @@ export default class Test50 extends TestBase.WorkflowTestBase {
             model:
             {
                 status: TaskStatus.CANCELLED,
-                runtimeVars: { route: 'interrupt' },
+                runtimeVars: { route: {'value': 'interrupt'} },
                 route: 'interrupt',
                 id: taskOutcome[0].model.id,
                 type: 'TaskOutcome'

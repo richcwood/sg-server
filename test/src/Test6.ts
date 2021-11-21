@@ -80,7 +80,7 @@ export default class Test6 extends TestBase.AdhocTaskTestBase {
             'matchCount': 7,
             'tagsMatch': true,
             'values': { [SGStrings.status]: Enums.TaskStatus.SUCCEEDED, 'correlationId': correlationId, source: TaskSource.JOB },
-            'runtimeVars': { [SGStrings.route]: 'ok' },
+            'runtimeVars': { [SGStrings.route]: { 'value': 'ok' } },
             'step': [
                 { 'name': 'Step1', 'values': { 'status': Enums.TaskStatus.SUCCEEDED, 'stderr': '', 'exitCode': 0 } }
             ],

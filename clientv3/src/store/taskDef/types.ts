@@ -13,7 +13,7 @@ export interface TaskDef extends Model {
   _jobDefId?: string,
   target: TaskDefTarget,
   name: string,
-  requiredTags: {[key: string]: string},
+  requiredTags: {[key: string]: {}},
   fromRoutes: string[][], // routes that need to run before I do (in-bound)
   toRoutes: string[][], // routes that will run after this is done (out-bound)
   targetAgentId?: string,

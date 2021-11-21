@@ -81,7 +81,7 @@ export default class Test15 extends TestBase.ScheduledJobTestBase {
             'step': [
                 {'name': step1.name, 'values': {'status': Enums.TaskStatus.SUCCEEDED, 'stderr': '', 'exitCode': 0}}
             ], 
-            'runtimeVars': {[SGStrings.route]: 'ok'}, 
+            'runtimeVars': { [SGStrings.route]: { 'value': 'ok' } },
             'cntPartialMatch': 0, 
             'cntFullMatch': 0
         };
@@ -137,7 +137,7 @@ export default class Test15 extends TestBase.ScheduledJobTestBase {
             'step': [
                 {'name': step2.name, 'values': {'status': Enums.TaskStatus.SUCCEEDED, 'stderr': '', 'exitCode': 0}}
             ], 
-            'runtimeVars': {[SGStrings.route]: 'ok'}, 
+            'runtimeVars': { [SGStrings.route]: { 'value': 'ok' } },
             'cntPartialMatch': 0, 
             'cntFullMatch': 0
         };

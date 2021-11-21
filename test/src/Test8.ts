@@ -78,7 +78,7 @@ export default class Test8 extends TestBase.FailedTestBase {
             'matchCount': 5, 
             'tagsMatch': true,
             'values': {[SGStrings.status]: Enums.TaskStatus.SUCCEEDED},
-            'runtimeVars': {[SGStrings.route]: 'ok'}, 
+            'runtimeVars': { [SGStrings.route]: { 'value': 'ok' } },
             'step': [
                 {'name': 'step1', 'values': {'status': Enums.TaskStatus.SUCCEEDED, 'stderr': '', 'exitCode': 0}}
             ], 
@@ -133,7 +133,7 @@ export default class Test8 extends TestBase.FailedTestBase {
             'matchCount': 5, 
             'tagsMatch': true, 
             'values': {[SGStrings.status]: Enums.TaskStatus.FAILED},
-            'runtimeVars': {[SGStrings.route]: 'fail'}, 
+            'runtimeVars': {[SGStrings.route]: { 'value': 'fail' } }, 
             'step': [
                 {'name': step.name, 'values': {'status': Enums.TaskStatus.FAILED, 'stderr': '', 'exitCode': 1}}
             ], 

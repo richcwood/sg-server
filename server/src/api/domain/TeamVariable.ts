@@ -21,6 +21,9 @@ export class TeamVariableSchema {
   @prop({ required: true })
   value: string;
 
+  @prop({ default: false })
+  sensitive?: boolean;
+
 
   // Define which filters are legal for which props (including nested props (not sure about nested arrays))
   public static readonly validFilters = {

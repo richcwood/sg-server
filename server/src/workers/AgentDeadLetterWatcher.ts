@@ -92,7 +92,7 @@ export default class AgentDeadLetterWatcher {
 
       const res: any = await localRestAccess.RestAPICall(`taskoutcome`, 'POST', _teamId, null, taskOutcome);
       // console.log('OnNoAgentMessage -> res -> ', JSON.stringify(res.data, null, 4));
-      await localRestAccess.RestAPICall(`taskoutcome/${res.data.data.id}`, 'PUT', _teamId, null, { status: TaskStatus.FAILED, failureCode: TaskFailureCode.LAUNCH_TASK_ERROR, runtimeVars: { 'route': 'fail' } });
+      await localRestAccess.RestAPICall(`taskoutcome/${res.data.data.id}`, 'PUT', _teamId, null, { status: TaskStatus.FAILED, failureCode: TaskFailureCode.LAUNCH_TASK_ERROR, runtimeVars: {'route': {'value': 'fail', 'sensitive': false}} });
     } catch (e) {
       logger.LogError('Error in OnLaunchTaskErrorMessage: ' + e.message, { '_teamId': params._teamId, 'Params': params, 'MsgKey': msgKey, 'Stack': e.stack });
     }
@@ -117,7 +117,7 @@ export default class AgentDeadLetterWatcher {
       if (params.interruptTask) {
         _teamId = params.interruptTask._teamId;
 
-        const runtimeVars: any = { 'route': 'interrupt' };
+        const runtimeVars: any = {'route': {'value': 'interrupt', 'sensitive': false}};
         let taskOutcomeUpdate: any = {
           status: TaskStatus.INTERRUPTED,
           runtimeVars: runtimeVars

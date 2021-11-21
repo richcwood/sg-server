@@ -398,7 +398,7 @@ export default abstract class TestBase {
                 const keyVal = Object.keys(ev.runtimeVars)[i];
                 if (!(keyVal in taskOutcome.runtimeVars)) {
                     self.logger.LogError('Task failed', { 'Task': taskOutcome.name, 'Error': 'Missing task user value', 'Description': self.description, 'Key': keyVal, 'Expected': ev.runtimeVars[keyVal] });
-                } else if (ev.runtimeVars[keyVal] != taskOutcome.runtimeVars[keyVal]) {
+                } else if (!_.isEqual(ev.runtimeVars[keyVal], taskOutcome.runtimeVars[keyVal])) {
                     self.logger.LogError('Task failed', { 'Task': taskOutcome.name, 'Error': 'Unexpected task user value', 'Description': self.description, 'Key': keyVal, 'Expected': ev.runtimeVars[keyVal], 'Actual': taskOutcome.runtimeVars[keyVal] });
                 } else {
                     cntMatchedValues += 1;
@@ -835,9 +835,10 @@ export abstract class WorkflowTestBase extends TestBase {
                         if (ev.success)
                             continue;
                         let matches: any[] = _.filter(wftInst.bpMessages, x => !x.matched && x.operation == ev.operation && x.domainType == ev.domainType);
-                        // if (matches.length > 0)
-                        //     console.log(`Potential matches:\n ${JSON.stringify(matches, null, 4)}`);
-                        //     console.log(`Looking for matches for ${JSON.stringify(ev, null, 4)}`);
+                        if (matches.length > 0) {
+                            // console.log(`Potential matches:\n ${JSON.stringify(matches, null, 4)}`);
+                            // console.log(`Looking for matches for ${JSON.stringify(ev, null, 4)}`);
+                        }
                         for (let j = 0; j < matches.length; j++) {
                             let matched: boolean = true;
                             let match = matches[j];
@@ -856,8 +857,8 @@ export abstract class WorkflowTestBase extends TestBase {
                                                 matched = false;
                                                 break;
                                             }
-                                        } else if (match.model[key][skey] != ev.model[key][skey]) {
-                                            // console.log(`No match on ${key}`);
+                                        } else if (!_.isEqual(match.model[key][skey], ev.model[key][skey])) {
+                                            // console.log(`No match on ${key} 1`);
                                             matched = false;
                                             break;
                                         }
@@ -865,7 +866,7 @@ export abstract class WorkflowTestBase extends TestBase {
                                 } else {
                                     const valExpected = ev.model[key];
                                     if (!(key in match.model)) {
-                                        // console.log(`No match on ${key}`);
+                                        // console.log(`No match on ${key} 2`);
                                         matched = false;
                                         break;
                                     } else if (valExpected && valExpected.toString().startsWith("~|")) {
@@ -873,7 +874,7 @@ export abstract class WorkflowTestBase extends TestBase {
                                             matched = false;
                                             break;
                                         }
-                                    } else if (match.model[key] != ev.model[key]) {
+                                    } else if (!_.isEqual(match.model[key], ev.model[key])) {
                                         matched = false;
                                         break;
                                     }

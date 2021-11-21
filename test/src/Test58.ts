@@ -39,13 +39,13 @@ def RestAPILogin():
 while token == '':
     RestAPILogin()
     if token == '':
-        print 'API login failed'
+        print('API login failed')
         sys.stdout.flush
         time.sleep(5)
-        print 'Retrying api login'
+        print('Retrying api login')
         sys.stdout.flush
 
-print '@sgo{{"sgAuthToken": "{}"}}'.format(token)
+print('@sgo{{"sgAuthToken": "{}"}}'.format(token))
 `;
 const script1_b64 = SGUtils.btoa(script1);
 
@@ -69,10 +69,10 @@ export default class Test58 extends TestBase.WorkflowTestBase {
 
         const _teamId: string = config.get('sgTestTeam');
 
-        const sgAdminTeam: string = config.get('sgAdminTeam');
-        const awsLambdaRequiredTags: string = config.get('awsLambdaRequiredTags');
-        const newAgentProperties = { '_teamId': sgAdminTeam, 'machineId': 'AdminAgent', 'ipAddress': '10.10.0.104', 'tags': awsLambdaRequiredTags, 'numActiveTasks': 0, 'lastHeartbeatTime': null, 'rmqPassword': 'lpUs8Cnsju' };
-        const newAgent = await self.testSetup.InitAgent(newAgentProperties);
+        // const sgAdminTeam: string = config.get('sgAdminTeam');
+        // const awsLambdaRequiredTags: string = config.get('awsLambdaRequiredTags');
+        // const newAgentProperties = { '_teamId': sgAdminTeam, 'machineId': 'AdminAgent', 'ipAddress': '10.10.0.104', 'tags': awsLambdaRequiredTags, 'numActiveTasks': 0, 'lastHeartbeatTime': null, 'rmqPassword': 'lpUs8Cnsju' };
+        // const newAgent = await self.testSetup.InitAgent(newAgentProperties);
 
         const properties: any = {
             scripts: [
@@ -94,7 +94,7 @@ export default class Test58 extends TestBase.WorkflowTestBase {
                                 {
                                     name: 'Step 1',
                                     scriptName: 'Script 58',
-                                    lambdaRuntime: 'python2.7',
+                                    lambdaRuntime: 'python3.7',
                                     lambdaRole: config.get('lambda-admin-iam-role'),
                                     lambdaAWSRegion: config.get('AWS_REGION'),
                                     lambdaDependencies: 'requests',
@@ -104,8 +104,8 @@ export default class Test58 extends TestBase.WorkflowTestBase {
                         }
                     ],
                     runtimeVars: {
-                        sgAccessKeyId: config.get('prodTestTeamAccessKeyId'),
-                        sgAccessKeySecret: config.get('prodTestTeamAccessKeySecret')
+                        sgAccessKeyId: {'value': config.get('prodTestTeamAccessKeyId'), 'sensitive': false},
+                        sgAccessKeySecret: {'value': config.get('prodTestTeamAccessKeySecret'), 'sensitive': false}
                     }
                 }
             ]
@@ -153,9 +153,9 @@ export default class Test58 extends TestBase.WorkflowTestBase {
         if (!result)
             return result;
 
-        newAgent.offline = true;
-        await newAgent.SendHeartbeat(false, true);
-        await newAgent.Stop();
+        // newAgent.offline = true;
+        // await newAgent.SendHeartbeat(false, true);
+        // await newAgent.Stop();
     
         return true;
     }

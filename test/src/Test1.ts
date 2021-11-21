@@ -75,7 +75,7 @@ export default class Test1 extends TestBase.default {
             'matchCount': 5,
             'tagsMatch': true,
             'values': { [SGStrings.status]: Enums.TaskStatus.SUCCEEDED },
-            'runtimeVars': { [SGStrings.route]: 'ok' },
+            'runtimeVars': { [SGStrings.route]: { 'value': 'ok' } },
             'step': [
                 { 'name': step.name, 'values': { 'status': Enums.TaskStatus.SUCCEEDED, 'stderr': '', 'exitCode': 0 } }
             ],

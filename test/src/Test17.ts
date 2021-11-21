@@ -25,7 +25,7 @@ export default class Test17 extends TestBase.default {
 
     constructor(testSetup) {
         super('Test17', testSetup);
-        this.description = 'Twenty parallel jobs, one agent';
+        this.description = 'Ten parallel jobs, one agent';
         self = this;
     }
 
@@ -52,7 +52,7 @@ export default class Test17 extends TestBase.default {
         let step: StepDefSchema = { '_teamId': _teamId, '_taskDefId': '', 'name': 'step1', '_scriptId': script_obj1['id'], 'order': 0, 'arguments': '' };
 
         /// Create job defs
-        for (let i = 0; i < 20; i++) {
+        for (let i = 0; i < 10; i++) {
             let jobDef: JobDefSchema = {
                 _teamId: _teamId,
                 name: `Job 17-${i.toString()}`,
@@ -77,7 +77,7 @@ export default class Test17 extends TestBase.default {
                 'step': [
                     { 'name': step.name, 'values': { 'status': Enums.TaskStatus.SUCCEEDED, 'stderr': '', 'exitCode': 0 } }
                 ],
-                'runtimeVars': { [SGStrings.route]: 'ok' },
+                'runtimeVars': { [SGStrings.route]: { 'value': 'ok' } },
                 'cntPartialMatch': 0,
                 'cntFullMatch': 0
             };

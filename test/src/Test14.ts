@@ -81,7 +81,7 @@ export default class Test14 extends TestBase.ScheduledJobTestBase {
             'step': [
                 { 'name': step.name, 'values': { 'status': Enums.TaskStatus.SUCCEEDED, 'stderr': '', 'exitCode': 0 } }
             ],
-            'runtimeVars': { [SGStrings.route]: 'ok' },
+            'runtimeVars': { [SGStrings.route]: { 'value': 'ok' } },
             'cntPartialMatch': 0,
             'cntFullMatch': 0
         };

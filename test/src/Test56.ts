@@ -30,11 +30,6 @@ export default class Test56 extends TestBase.WorkflowTestBase {
 
         const _teamId: string = config.get('sgTestTeam');
 
-        const sgAdminTeam: string = config.get('sgAdminTeam');
-        const awsLambdaRequiredTags: string = config.get('awsLambdaRequiredTags');
-        const newAgentProperties = { '_teamId': sgAdminTeam, 'machineId': 'AdminAgent', 'ipAddress': '10.10.0.104', 'tags': awsLambdaRequiredTags, 'numActiveTasks': 0, 'lastHeartbeatTime': null, 'rmqPassword': 'lpUs8Cnsju' };
-        const newAgent = await self.testSetup.InitAgent(newAgentProperties);
-
         const properties: any = {
             scripts: [
                 {
@@ -55,7 +50,7 @@ export default class Test56 extends TestBase.WorkflowTestBase {
                                 {
                                     name: 'Step 1',
                                     scriptName: 'Script 56',
-                                    lambdaRuntime: 'nodejs10.x',
+                                    lambdaRuntime: 'nodejs12.x',
                                     lambdaRole: config.get('lambda-admin-iam-role'),
                                     lambdaAWSRegion: config.get('AWS_REGION')
                                 }
@@ -107,10 +102,6 @@ export default class Test56 extends TestBase.WorkflowTestBase {
         result = await self.WaitForTestToComplete();
         if (!result)
             return result;
-
-        newAgent.offline = true;
-        await newAgent.SendHeartbeat(false, true);
-        await newAgent.Stop();
     
         return true;
     }
