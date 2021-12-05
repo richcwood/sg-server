@@ -43,7 +43,8 @@
       <div class="dashboard-row">
         <div class="dashboard-item dashboard-item-small">
           <div class="dashboard-item-title">
-            Job Runs <span class="smaller-text">(Last 7 Days)</span>
+            Job Runs 
+            <br><span class="smaller-text">({{getJobFetchTypeDescription(selectedJobFetchType)}})</span>
           </div>
           <div class="dashboard-item-text">
             <router-link to="/jobMonitor">
@@ -113,7 +114,7 @@ import { JobStatus } from '../utils/Enums'
 import { StoreType } from '../store/types';
 import { getMoment, momentToStringV1 } from '../utils/DateTime';
 import moment from 'moment';
-import { Job, JobFetchType } from '../store/job/types';
+import { Job, JobFetchType, getJobFetchTypeDescription } from '../store/job/types';
 
 @Component({
   components: { }
@@ -123,13 +124,11 @@ export default class Dashboard extends Vue {
   // expose to template
   private readonly JobStatus = JobStatus;
   private readonly momentToStringV1 = momentToStringV1;
+  private readonly getJobFetchTypeDescription = getJobFetchTypeDescription;
 
   private async mounted(){
     // load all scripts,, maybe someday it will be problematic / too slow 
     this.$store.dispatch(`${StoreType.ScriptStore}/fetchModelsByFilter`);
-
-    // Load the job runs for the dashboard
-    this.$store.dispatch(`${StoreType.JobStore}/fetchModelByType`, {jobFetchType: JobFetchType.LAST_SEVEN_DAYS});
 
     // Load schedules for the next 24 hours
     const now = moment();
@@ -138,6 +137,8 @@ export default class Dashboard extends Vue {
     scheduleFilter += `,nextScheduledRunDate<${now.valueOf()}`;
     this.$store.dispatch(`${StoreType.ScheduleStore}/fetchModelsByFilter`, {filter: scheduleFilter});
 
+    this.$store.dispatch(`${StoreType.JobStore}/triggerFetchByType`);
+    
     this.onFilteredJobsChanged();
   }
 
@@ -169,22 +170,14 @@ export default class Dashboard extends Vue {
   @BindStoreModel({storeType: StoreType.JobDefStore, selectedModelName: 'models'})
   private jobDefs!: JobDef[]; 
 
+  @BindStoreModel({storeType: StoreType.JobStore, selectedModelName: 'selectedJobFetchType'})
+  private selectedJobFetchType?: JobFetchType;
+
   @BindStoreModel({storeType: StoreType.JobStore, selectedModelName: 'models'})
   private jobs!: Job[];
 
-  private get filteredJobs(){
-    if(!this.jobs){
-      return [];
-    }
-
-    const today = moment();
-    today.startOf('day');
-
-    return this.jobs.filter((job: Job) => {
-      const jobDate = getMoment(job.dateStarted);
-      jobDate.startOf('day');
-      return jobDate.diff(today, 'day') <= 7;
-    });
+  private get filteredJobs(): Job[]{
+    return this.$store.getters[`${StoreType.JobStore}/getBySelectedJobFetchType`]();
   }
 
   private filteredJobsStatusCounts : {[key: number]: number} = {}; // JobStatus > count

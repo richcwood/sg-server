@@ -104,6 +104,7 @@
           </tr>
           <tr class="tr">
             <td class="td">
+              <button class="button" @click="runTest">Test</button>
               <button class="button is-primary" @click="createNewJobDef">Create new job</button>
 
               <button class="button button-spaced" :disabled="selectedJobDefIds.length === 0" @click="onExportJobDefsClicked">
@@ -115,13 +116,13 @@
 
           <tr class="tr">
             <td class="td">
-              <table class="table">
+              <table class="table is-striped">
                 <thead class="thead">
                   <tr class="tr">
-                    <td class="td">Job Definition Name</td>
-                    <td class="td">Created By</td>
-                    <td class="td">Date Created</td>
-                    <td class="td">Schedule</td>
+                    <td class="td col-header">Job Definition Name</td>
+                    <td class="td col-header">Created By</td>
+                    <td class="td col-header">Date Created</td>
+                    <td class="td col-header">Schedule</td>
                   </tr>
                 </thead>
                 <tbody>
@@ -185,11 +186,11 @@ export default class JobList extends Vue {
   @BindStoreModel({storeType: StoreType.JobDefStore, selectedModelName: 'models'})
   private jobDefs!: JobDef[];
   
-  private get filteredJobDefs(): object[]{
+  private get filteredJobDefs(): JobDef[]{
     const filterUCase = this.filterString.toUpperCase();
     // split by whitespace and remove empty entries
     const filterUCaseItems = filterUCase.split(' ').map(item => item.trim()).filter(item => item);
-    return this.jobDefs.filter((jobDef: JobDef) => {
+    const filteredJobDefs = this.jobDefs.filter((jobDef: JobDef) => {
       if(filterUCaseItems.length === 0){
         return true;
       }
@@ -207,6 +208,30 @@ export default class JobList extends Vue {
         });
       }
     });
+
+    filteredJobDefs.sort((jobDefA: JobDef, jobDefB: JobDef) => {
+      if(jobDefA.dateCreated && jobDefB.dateCreated){
+        return (new Date(jobDefB.dateCreated)).getTime() - (new Date(jobDefA.dateCreated)).getTime();
+      }
+      else {
+        return 0;
+      }
+    });
+
+    return filteredJobDefs;
+  }
+
+  private async runTest(){
+    const jobDef: JobDef = this.filteredJobDefs[1];
+    console.log(jobDef);
+
+    const jobRuns = await this.$store.dispatch(`${StoreType.JobStore}/fetchModelsByFilter`, {filter: `_jobDefId==${jobDef.id}`});
+
+    console.log('jobRuns', jobRuns);
+
+    // for(let jobDef of this.filteredJobDefs){
+    //   console.log(jobDef);
+    // }
   }
 
   private newJobName = '';
@@ -404,8 +429,12 @@ export default class JobList extends Vue {
     border-width: 0;
   }
 
-  td {
-    border-width: 0 !important;
+  // td {
+  //   border-width: 0 !important;
+  // }
+
+  .col-header {
+    font-weight: 700;
   }
 
   .button-spaced {

@@ -1,6 +1,10 @@
-import { Model } from '@/store/types'
+import { Model, CoreState } from '@/store/types'
 import { JobStatus } from '@/utils/Enums';
 import moment from 'moment';
+
+export interface JobCoreState extends CoreState {
+  selectedJobFetchType: JobFetchType
+}
 
 export interface Job extends Model {    
   dateCreated: string;
@@ -19,7 +23,8 @@ export enum JobFetchType {
   TODAY,
   LAST_SEVEN_DAYS,
   LAST_MONTH,
-  LAST_TWO_MONTHS
+  LAST_TWO_MONTHS,
+  //LAST_YEAR
 };
 
 export const getJobFetchTypeDescription = function(jobFetchType: JobFetchType): string {
@@ -40,6 +45,10 @@ export const getJobFetchTypeDescription = function(jobFetchType: JobFetchType): 
     today.add(-2, 'months');
     return `Last 2 Months (${today.format('MMM-DD')} to Today)`;
   }
+  // else if(jobFetchType == JobFetchType.LAST_YEAR){
+  //   today.add(-12, 'months');
+  //   return `Last Year (${today.format('MMM-DD-YYYY')} to Today)`;
+  // }
   else {
     return 'unknown job fetch type ' + jobFetchType;
   }
@@ -77,6 +86,14 @@ export const getJobFetchTypeFilter = function(jobFetchType: JobFetchType): strin
     today.add(-1, 'month');
     return `dateStarted<${dateEnd},dateStarted>${today.valueOf()}`;
   }
+  // else if(jobFetchType == JobFetchType.LAST_YEAR){
+  //   // from midnight -2 month to midnight -1 month  
+  //   today.startOf('day');
+  //   today.add(-2, 'month');
+  //   const dateEnd = today.valueOf();
+  //   today.add(-10, 'month');
+  //   return `dateStarted<${dateEnd},dateStarted>${today.valueOf()}`;
+  // }
   else {
     return 'unknown job fetch type ' + jobFetchType;
   }
