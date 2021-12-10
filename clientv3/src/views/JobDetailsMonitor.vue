@@ -6,7 +6,17 @@
       <table class="table" width="100%" height="100%" v-if="taskToShowRuntimeVars">
         <tr class="tr">
           <td class="td">
-            <strong>Runtime vars for task: {{taskToShowRuntimeVars.name}}</strong>
+            <div class="container ml-3 my-3">
+              <div class="columns is-desktop is-vcentered">
+                <strong>Runtime vars for task: {{taskToShowRuntimeVars.name}}</strong>
+                <div v-if="hideSensitiveRuntimeVars" style="display: inline">
+                  <button class="button ml-4" @click="toggleHideSensitiveRuntimeVars">Show Sensitive Values</button>
+                </div>
+                <div v-else style="display: inline">
+                  <button class="button ml-4" @click="toggleHideSensitiveRuntimeVars">Hide Sensitive Values</button>
+                </div>
+              </div>
+            </div>
           </td>
         </tr>
         <tr class="tr">
@@ -17,7 +27,8 @@
                 <tr class="tr" v-for="runtimeVarKey in Object.keys(taskToShowRuntimeVars.runtimeVars)" v-bind:key="runtimeVarKey">
                   <td class="td">{{runtimeVarKey}}</td>
                   <td class="td"> = </td>
-                  <td class="td">{{taskToShowRuntimeVars.runtimeVars[runtimeVarKey]}}</td>
+                  <td class="td" v-if="hideSensitiveRuntimeVars && taskToShowRuntimeVars.runtimeVars[runtimeVarKey]['sensitive']">[{{runtimeVarKey}}]</td>
+                  <td class="td" v-else>{{taskToShowRuntimeVars.runtimeVars[runtimeVarKey]['value']}}</td>
                 </tr>
               </table>     
             </div>
@@ -275,7 +286,7 @@ export default class JobDetailsMonitor extends Vue {
   private readonly mapToString = mapToString;
   private readonly TaskDefTarget = TaskDefTarget;
   private readonly truncateString = truncateString;
-
+  
   private get defaultStoreType(){return StoreType.JobStore};
 
   private mounted(){
@@ -305,7 +316,7 @@ export default class JobDetailsMonitor extends Vue {
   private formatRuntimeVars(task: Task): string {
     if(task.runtimeVars){
       const runtimeVarKeys = Object.keys(task.runtimeVars);
-      const summary = runtimeVarKeys.map(k => `${k}=${task.runtimeVars[k]['value']}`).join(', ');
+      const summary = runtimeVarKeys.map(k => (task.runtimeVars[k]['sensitive'] ? `${k}=[${k}]` : `${k}=${task.runtimeVars[k]['value']}`)).join(', ');
       return truncateString(summary, 24);
     }
     else {
@@ -592,6 +603,7 @@ export default class JobDetailsMonitor extends Vue {
   private onCloseRuntimeVarsModalClicked(){
     this.$modal.hide('runtime-vars-modal');
     this.taskToShowRuntimeVars = null;
+    this.hideSensitiveRuntimeVars = true;
   }
 
   private taskToShowInboundRoutes: Task | null = null;
@@ -625,6 +637,11 @@ export default class JobDetailsMonitor extends Vue {
   private onCloseArtifactsModalClicked(){
     this.$modal.hide('artifacts-modal');
     this.taskToShowArtifacts = null;
+  }
+
+  private hideSensitiveRuntimeVars: boolean = true;
+  private toggleHideSensitiveRuntimeVars(){
+    this.hideSensitiveRuntimeVars = !this.hideSensitiveRuntimeVars;
   }
 
   private getArtifactNames(task: Task): string[] {

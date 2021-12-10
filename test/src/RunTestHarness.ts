@@ -1579,8 +1579,9 @@ let RestAPICall = async (url: string, method: string, _teamId: string, headers: 
           });
           resolve(response);
       } catch (e) {
-          console.log(`RestAPICall error occurred calling ${method} on '${url}': ${e.message} - ${e.response.data.errors[0].title} - ${e.response.data.errors[0].description}`);
-          resolve(e.response);
+        console.log(`RestAPICall error occurred calling ${method} on '${url}': ${e.message} - ${e.response.data}`);
+        // console.log(`RestAPICall error occurred calling ${method} on '${url}': ${e.message} - ${e.response.data.errors[0].title} - ${e.response.data.errors[0].description}`);
+        resolve(e.response);
       }
   });
 }
@@ -2126,7 +2127,7 @@ let DeleteJobDefs = async (filter: any) => {
 ///   if there are a small number of long running prune jobs, we'll be paying for idle workers
 ///   until all are done. Maybe better to do it with ec2 instances and a custom scaling solution
 ///   where idle agents automatically shut themselves down with an "inactive" script.
-let PruneJobs = async (_teamId: mongodb.ObjectId) => {
+let PruneJobs = async (teamId: string) => {
   const auth = `${config.get('adminToken')};`;
 
   mongoose.connect(config.get('mongoUrl'), { useNewUrlParser: true });
@@ -2134,11 +2135,15 @@ let PruneJobs = async (_teamId: mongodb.ObjectId) => {
   const mongoUrl = config.get('mongoUrl');
   const mongoDbname = config.get('mongoDbName');
 
+  console.log('mongoUrl -> ', mongoUrl);
+  console.log('mongoDbname -> ', mongoDbname);
+
   let logger = new BaseLogger('RunTestHarness');
   logger.Start();
 
   let mongoRepo = new MongoRepo('RunTestHarness', mongoUrl, mongoDbname, logger);
 
+  const _teamId = mongoRepo.ObjectIdFromString(teamId);
   let team: TeamSchema = (<TeamSchema>await teamService.findTeam(_teamId, 'paidStorageMB jobIdHighWatermark jobStorageSpaceHighWatermark'));
 
   const freeTierSettings = await settingsService.findSettings('FreeTierLimits');
@@ -2147,32 +2152,34 @@ let PruneJobs = async (_teamId: mongodb.ObjectId) => {
   let totalSpaceUsed = 0;
   let jobIdHighWatermark = undefined;
   let paidStorageBytes = team.paidStorageMB * 1024 * 1024;
+  // let url = `job?filter=dateCreated>${Number(dateCutoff)}&limit=1`;
+  let url = `job`;
 
-  // Get the most recent completed job past the free tier cutoff date
-  let url = `job?filter=dateStarted>${Number(dateCutoff)}&limit=1`;
-  let jobsQuery: any = await RestAPICall(url, 'GET', null, null, null, auth);
-  if (jobsQuery.data.data.length < 1)
-    return;
-  const oldestJobBeforeCutoff = jobsQuery.data.data[0];
+  console.log(`dateCutoff -> ${dateCutoff}`)
 
   // If this team is not paying for additional storage, prune data for all completed jobs older than the free job data cutoff date
   if (paidStorageBytes == 0) {
-    let jobs: any = await RestAPICall(url, 'GET', null, null, null, auth);
+    let jobs: any = await RestAPICall(url, 'GET', teamId, null, null, auth);
     while (true) {
       let lastJob: JobSchema = undefined;
 
       for (let i = 0; i < jobs.data.data.length; i++) {
         lastJob = jobs.data.data[i];
 
-        if (lastJob.status >= Enums.JobStatus.COMPLETED) {
-          await mongoRepo.UpdateMany('stepOutcome', { _jobId: lastJob.id }, { $set: { runCode: '', stderr: '', stdout: '', archived: true } });
-          await mongoRepo.DeleteByQuery({ _jobId: lastJob.id }, 'taskOutcome');
-          await mongoRepo.DeleteByQuery({ _jobId: lastJob.id }, 'step');
-          await mongoRepo.DeleteByQuery({ _jobId: lastJob.id }, 'task');
-          await mongoRepo.DeleteByQuery({ _jobId: lastJob.id }, 'job');
+        // console.log(`i -> ${i}, lastJob -> ${JSON.stringify(lastJob)}`);
+
+        if (lastJob.status != Enums.JobStatus.RUNNING) {
+          console.log(`deleting job -> ${JSON.stringify(lastJob)}`);
+          const jobId = mongoRepo.ObjectIdFromString(lastJob.id);
+          await mongoRepo.UpdateMany('stepOutcome', { _jobId: jobId }, { $set: { runCode: '', stderr: '', stdout: '', archived: true } });
+          await mongoRepo.DeleteByQuery({ _jobId: jobId }, 'taskOutcome');
+          await mongoRepo.DeleteByQuery({ _jobId: jobId }, 'step');
+          await mongoRepo.DeleteByQuery({ _jobId: jobId }, 'task');
+          await mongoRepo.DeleteByQuery({ _id: jobId }, 'job');
         }
 
         if (lastJob.dateStarted > dateCutoff) {
+          console.log('breaking');
           lastJob = undefined;
           break;
         }
@@ -2180,14 +2187,23 @@ let PruneJobs = async (_teamId: mongodb.ObjectId) => {
 
       if (lastJob) {
         url = `job?lastId=${lastJob.id}`;
-        jobs = await RestAPICall(url, 'GET', null, null, null, auth);
+        jobs = await RestAPICall(url, 'GET', teamId, null, null, auth);
       } else {
         break;
       }
     }
+
+    process.exit(0);
     // Otherwise prune data older than the job data cutoff date until the total amount of psot cutoff date job storage is less than 
     //    the amount the user is paying for
   } else {
+    // Get the most recent completed job past the free tier cutoff date
+    url = `job?filter=dateStarted>${Number(dateCutoff)}&limit=1`;
+    let jobsQuery: any = await RestAPICall(url, 'GET', teamId, null, null, auth);
+    if (jobsQuery.data.data.length < 1)
+      return;
+    const oldestJobBeforeCutoff = jobsQuery.data.data[0];
+
     jobIdHighWatermark = team.jobIdHighWatermark;
     let newSpaceUsed: number = 0;
     let previousSpaceUsed: number = 0;
@@ -2223,7 +2239,7 @@ let PruneJobs = async (_teamId: mongodb.ObjectId) => {
       let spaceToDelete = totalSpaceUsed - paidStorageBytes;
 
       let url = `job`;
-      let jobs: any = await RestAPICall(url, 'GET', null, null, null, auth);
+      let jobs: any = await RestAPICall(url, 'GET', teamId, null, null, auth);
       while (true) {
         let lastJob: JobSchema = undefined;
         for (let i = 0; i < jobs.data.data.length; i++) {
@@ -2243,11 +2259,12 @@ let PruneJobs = async (_teamId: mongodb.ObjectId) => {
           let jobTasks = _.filter(tasks, x => x._jobId == lastJob.id)
           jobTotalSpaceUsed += bson.calculateObjectSize(jobTasks);
 
-          await mongoRepo.UpdateMany('stepOutcome', { _jobId: lastJob.id }, { $set: { runCode: '', stderr: '', stdout: '', archived: true } });
-          await mongoRepo.DeleteByQuery({ _jobId: lastJob.id }, 'taskOutcome');
-          await mongoRepo.DeleteByQuery({ _jobId: lastJob.id }, 'step');
-          await mongoRepo.DeleteByQuery({ _jobId: lastJob.id }, 'task');
-          await mongoRepo.DeleteByQuery({ _jobId: lastJob.id }, 'job');
+          const jobId = mongoRepo.ObjectIdFromString(lastJob.id);
+          await mongoRepo.UpdateMany('stepOutcome', { _jobId: jobId }, { $set: { runCode: '', stderr: '', stdout: '', archived: true } });
+          await mongoRepo.DeleteByQuery({ _jobId: jobId }, 'taskOutcome');
+          await mongoRepo.DeleteByQuery({ _jobId: jobId }, 'step');
+          await mongoRepo.DeleteByQuery({ _jobId: jobId }, 'task');
+          await mongoRepo.DeleteByQuery({ _id: jobId }, 'job');
 
           totalSpaceUsed -= jobTotalSpaceUsed;
           spaceToDelete -= jobTotalSpaceUsed;
@@ -2259,7 +2276,7 @@ let PruneJobs = async (_teamId: mongodb.ObjectId) => {
 
         if (lastJob) {
           url = `job?lastId=${lastJob.id}`;
-          jobs = await RestAPICall(url, 'GET', null, null, null, auth);
+          jobs = await RestAPICall(url, 'GET', teamId, null, null, auth);
         } else {
           break;
         }
@@ -2320,7 +2337,7 @@ FixRuntimeVarsDBRecords();
 // ConfigNewRabbitMQServer();
 // ProcessOrphanedTasks();
 // PublishJobTask();
-// PruneJobs(mongodb.ObjectId('5e33a89f9fb5d6880217da2c'));
+// PruneJobs('605366d1d26030001713b1cc');
 // UploadFileToS3(process.argv[2]);
 // GetS3PrefixSize('production/5de95c0453162e8891f5a830/');
 // CreateTeam("saas glue admin", "5ef125b4fb07e500150507ca");

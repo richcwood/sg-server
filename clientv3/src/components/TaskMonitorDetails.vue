@@ -368,7 +368,7 @@ export default class TaskMonitorDetails extends Vue {
 
   private get stepOutcomeRunCodeBase64Decoded(){
     if(this.stepOutcomeForPopup && this.stepOutcomeForPopup.runCode){
-      return atob(this.stepOutcomeForPopup.runCode);
+      return atob(this.stepOutcomeForPopup.runCode).replace(/</g, "&#60;").replace(/>/g, "&#62;");
     }
     else {
       return '';

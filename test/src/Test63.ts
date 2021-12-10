@@ -3,7 +3,7 @@ import * as config from 'config';
 import * as TestBase from './TestBase';
 import { InteractiveConsoleJob } from './TestArtifacts';
 import { SGUtils } from '../../server/src/shared/SGUtils';
-import { TaskDefTarget, TaskStatus, JobStatus, TaskFailureCode } from '../../server/src/shared/Enums';
+import { TaskDefTarget, TaskStatus, JobStatus } from '../../server/src/shared/Enums';
 import * as _ from 'lodash';
 
 

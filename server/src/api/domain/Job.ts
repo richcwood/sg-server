@@ -70,6 +70,7 @@ export class JobSchema {
     // Define which filters are legal for which props (including nested props (not sure about nested arrays))
     public static readonly validFilters = {
         'name': [FilterOperator.LIKE],
+        'dateCreated': [FilterOperator.LESS_THAN,FilterOperator.LESS_THAN_EQUAL_TO,FilterOperator.GREATER_THAN,FilterOperator.GREATER_THAN_EQUAL_TO],
         'dateCompleted': [FilterOperator.LESS_THAN,FilterOperator.LESS_THAN_EQUAL_TO,FilterOperator.GREATER_THAN,FilterOperator.GREATER_THAN_EQUAL_TO],
         'dateStarted': [FilterOperator.LESS_THAN,FilterOperator.LESS_THAN_EQUAL_TO,FilterOperator.GREATER_THAN,FilterOperator.GREATER_THAN_EQUAL_TO],
         '_jobDefId': [FilterOperator.EQUALS],
