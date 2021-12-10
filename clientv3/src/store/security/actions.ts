@@ -152,7 +152,6 @@ export const actions: ActionTree<SecurityStore, RootState> = {
 
     // Fetch all of the job defs, jobs, agents, users and script names for the entire team
     store.dispatch(`${StoreType.JobDefStore}/fetchModelsByFilter`);
-    store.dispatch(`${StoreType.JobStore}/fetchModelsByFilter`);
     store.dispatch(`${StoreType.AgentStore}/fetchModelsByFilter`);
     store.dispatch(`${StoreType.UserStore}/fetchModelsByFilter`);
     store.dispatch(`${StoreType.ScriptNameStore}/fetchModelsByFilter`);

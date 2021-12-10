@@ -131,7 +131,9 @@ class AppBuilder {
     const validOrigins = ['http://console.saasglue.com', 
                           'https://console.saasglue.com', 
                           'http://saasglue.com',
-                          'https://saasglue.com'];
+                          'https://saasglue.com',
+                          'http://www.saasglue.com',
+                          'https://www.saasglue.com'];
 
     const stripPortRegex = /(?<baseUrl>http[s]?:\/\/[^:]+)/;
 

@@ -59,7 +59,7 @@
                 No results
               </p>
               <p style="margin-left: 10px;">
-                Filter date: <span style="font-weight: 700;">{{getJobFetchTypeDescription(jobFetchType)}}</span>
+                Filter date: <span style="font-weight: 700;">{{getJobFetchTypeDescription(selectedJobFetchType)}}</span>
                 (only jobs in the date range will be shown)
                 <br><br>
                 <span v-if="filterString">
@@ -134,39 +134,11 @@ export default class JobMonitor extends Vue {
   @BindStoreModel()
   selected!: Job;
 
-  private selectedJobFetchType = JobFetchType.LAST_SEVEN_DAYS;
+  @BindStoreModel({storeType: StoreType.JobStore, selectedModelName: 'selectedJobFetchType', updateActionName: 'updateJobFetchType'})
+  private selectedJobFetchType?: JobFetchType;
 
   private get filteredJobsByFetchType(): Job[] {
-    const today = moment();
-    today.startOf('day');
-
-    let daysDiff;
-
-    if(this.selectedJobFetchType == JobFetchType.TODAY){
-      daysDiff = 1;
-    }
-    else if(this.selectedJobFetchType == JobFetchType.LAST_SEVEN_DAYS){
-      daysDiff = 7;
-    }
-    else if(this.selectedJobFetchType == JobFetchType.LAST_MONTH){
-      const monthAgo = moment(today);
-      monthAgo.add(-1, 'month');
-      daysDiff = today.diff(monthAgo, 'day');
-    }
-    else if(this.selectedJobFetchType == JobFetchType.LAST_TWO_MONTHS){
-      const twoMonthsAgo = moment(today);
-      twoMonthsAgo.add(-2, 'month');
-      daysDiff = today.diff(twoMonthsAgo, 'day');
-    }
-    else {
-      throw 'Unknown JobFetchType in JobMonitor' + this.selectedJobFetchType;
-    }
-
-    return this.jobs.filter((job: Job) => {
-      const jobDate = getMoment(job.dateStarted);
-      jobDate.startOf('day');
-      return today.diff(jobDate, 'day') <= daysDiff;
-    });
+    return this.$store.getters[`${StoreType.JobStore}/getBySelectedJobFetchType`]();
   }
 
   private get filteredJobs(): Job[] {
@@ -242,11 +214,6 @@ export default class JobMonitor extends Vue {
     document.addEventListener('click', this.onGlobalClicked);
     document.addEventListener('touchstart', this.onGlobalClicked);
 
-    // restore last filters if possible
-    if(localStorage.getItem('jobMonitor_jobFetchType')){
-      this.selectedJobFetchType = Number.parseInt(localStorage.getItem('jobMonitor_jobFetchType'));
-    }
-
     if(localStorage.getItem('jobMonitor_filterString')){
       this.filterString = localStorage.getItem('jobMonitor_filterString');
     }
@@ -254,6 +221,8 @@ export default class JobMonitor extends Vue {
     if(localStorage.getItem('jobMonitor_filterStatus')){
       this.filterStatus = JSON.parse(localStorage.getItem('jobMonitor_filterStatus'));
     }
+
+    this.$store.dispatch(`${StoreType.JobStore}/triggerFetchByType`);
   }
 
   private beforeDestroy(){
@@ -261,7 +230,6 @@ export default class JobMonitor extends Vue {
     document.removeEventListener('touchstart', this.onGlobalClicked);
 
     // save current filters
-    localStorage.setItem('jobMonitor_jobFetchType', ''+this.selectedJobFetchType);
     localStorage.setItem('jobMonitor_filterString', this.filterString);
     localStorage.setItem('jobMonitor_filterStatus', JSON.stringify(this.filterStatus));
   }

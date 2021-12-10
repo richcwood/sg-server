@@ -5,7 +5,7 @@ import lodash from 'lodash';
 
 // For pagination, what are the defaults for max models loaded, the default page size etc.
 const DEFAULT_MAX_PAGE_TOTAL = 10000;
-const DEFAULT_MAX_PAGE_SIZE = 500;
+const DEFAULT_MAX_PAGE_SIZE = 1000;
 
 
 // Helper functions
