@@ -79,7 +79,7 @@
               <span v-else>Inactive</span>
             </td>
             <td class="td">{{agent.ipAddress}}</td>
-            <td class="td"><span v-html="mapToString(agent.tags, 2)"></span></td>
+            <td class="td"><span v-html="tagsMapToString(agent.tags, 2)"></span></td>
             <td class="td" style="text-align: center; padding: 10px">
               <input type="checkbox" v-bind:value="isChecked(agent.propertyOverrides.trackSysInfo)" @change="ontrackSysInfoChanged(agent)" :checked="isChecked(agent.propertyOverrides.trackSysInfo)">
             </td>
@@ -223,7 +223,7 @@ import { SgAlert, AlertPlacement, AlertCategory } from '@/store/alert/types';
 import { momentToStringV1 } from '@/utils/DateTime';
 import _ from 'lodash';
 import moment from 'moment';
-import { focusElement, stringToMap, mapToString } from '@/utils/Shared';
+import { focusElement, tagsStringToMap, tagsMapToString } from '@/utils/Shared';
 import { JobDef } from '@/store/jobDef/types';
 import { showErrors } from '@/utils/ErrorHandler';
 import { Script } from "@/store/script/types";
@@ -249,7 +249,7 @@ interface InactiveAgentTask {
 export default class AgentMonitor extends Vue {
   // Expose to template
   private readonly momentToStringV1 = momentToStringV1;
-  private readonly mapToString = mapToString;
+  private readonly tagsMapToString = tagsMapToString;
   private readonly isAgentActive = isAgentActive;
 
   @BindStoreModel({storeType: StoreType.TeamStore})
@@ -570,7 +570,7 @@ export default class AgentMonitor extends Vue {
     }
 
     if(firstRuntimeVars){
-      this.selectedInactiveAgentJobDefRuntimeVars = mapToString(firstRuntimeVars);
+      this.selectedInactiveAgentJobDefRuntimeVars = tagsMapToString(firstRuntimeVars);
     }
     else {
       this.selectedInactiveAgentJobDefRuntimeVars = '<>';
@@ -580,7 +580,7 @@ export default class AgentMonitor extends Vue {
   private selectedInactiveAgentJobDefRuntimeVarsChanged(){
     let newVariablesMap;
     try {
-      newVariablesMap = stringToMap(this.selectedInactiveAgentJobDefRuntimeVars);
+      newVariablesMap = tagsStringToMap(this.selectedInactiveAgentJobDefRuntimeVars);
     }
     catch(err){
       console.log('variables not well formed', err);

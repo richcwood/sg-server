@@ -163,7 +163,7 @@ import { StepDef } from '../store/stepDef/types';
 import { Artifact } from '../store/artifact/types';
 import { BindStoreModel, BindSelected, BindSelectedCopy, BindProp } from '../decorator';
 import axios from 'axios';
-import { focusElement, stringToMap, mapToString } from '../utils/Shared';
+import { focusElement, tagsStringToMap, tagsMapToString } from '../utils/Shared';
 import { ValidationProvider, ValidationObserver } from 'vee-validate';
 import AgentSearch from './AgentSearch.vue';
 import ArtifactSearch from '../components/ArtifactSearch.vue';
@@ -206,7 +206,7 @@ export default class TaskDefEditor extends Vue {
   @Watch('taskDef', {immediate: true})
   private onTaskDefChanged(){
     if(this.taskDef){
-      this.taskDef_requiredTags_string = mapToString(this.taskDef.requiredTags);
+      this.taskDef_requiredTags_string = tagsMapToString(this.taskDef.requiredTags);
     }
     else {
       this.taskDef_requiredTags_string = '';
@@ -216,7 +216,7 @@ export default class TaskDefEditor extends Vue {
   @Watch('taskDef_requiredTags_string')
   private onTaskDef_requiredTags_stringChanged(){
     try {
-      this.taskDef.requiredTags = stringToMap(this.taskDef_requiredTags_string);
+      this.taskDef.requiredTags = tagsStringToMap(this.taskDef_requiredTags_string);
     }
     catch(err){ } // eat it - validator already gave warning
   }
