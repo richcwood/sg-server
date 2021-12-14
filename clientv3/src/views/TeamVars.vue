@@ -6,6 +6,9 @@
 
     <validation-observer ref="createTeamVarValidationObserver">
       <div>
+        <input style="margin-left: 10px; margin-top: 10px;" type="checkbox" v-model="newValue.sensitive" :checked=false>
+        <span style="margin-left: 10px; margin-right: 20px;">Sensitive</span>
+
         <validation-provider name="Key" rules="required" v-slot="{ errors }">     
           <input class="input" style="width: 250px;" type="text" v-model="newKey" placeholder="key"/>
           <span v-if="errors && errors.length > 0" class="message validation-error is-danger">{{ errors[0] }}</span>
@@ -16,7 +19,7 @@
         </span>
 
         <validation-provider name="Value" rules="required" v-slot="{ errors }">     
-          <input class="input" style="width: 250px;" type="text" v-model="newValue" placeholder="value"/>
+          <input class="input" style="width: 250px;" type="text" v-model="newValue.value" placeholder="value"/>
           <span v-if="errors && errors.length > 0" class="message validation-error is-danger">{{ errors[0] }}</span>
         </validation-provider>
         
@@ -50,6 +53,10 @@
         </td>
         <td class="td">
           <a v-if="isVarMasked(teamVar)" class="button-spaced" @click.prevent="onUnmaskClicked(teamVar)">unmask</a>
+        </td>
+        <td class="td" style="text-align: center; padding: 10px">
+          <input type="checkbox" v-model="teamVar.sensitive" :checked="isChecked(teamVar.sensitive)" disabled="disabled" onClick="return false;">
+          <label style="margin-left: 10px;">(sensitive)</label>
         </td>
         <td class="td">
           <a class="button-spaced" @click.prevent="onDeleteVarClicked(teamVar)">delete</a>
@@ -89,7 +96,7 @@ export default class TeamVars extends Vue {
   private selectedTeamVarCopy!: TeamVar;
 
   private newKey = '';
-  private newValue = '';
+  private newValue = {value: '', sensitive: false};
 
   private mounted(){
     // load all teams when the component is mounted - they are small objects
@@ -104,7 +111,7 @@ export default class TeamVars extends Vue {
 
       this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Creating team variable`, AlertPlacement.FOOTER));
       
-      await this.$store.dispatch(`${StoreType.TeamVariableStore}/save`, {name: this.newKey, value: this.newValue });
+      await this.$store.dispatch(`${StoreType.TeamVariableStore}/save`, {name: this.newKey, value: this.newValue.value, sensitive: this.newValue.sensitive });
 
       this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Team variable created`, AlertPlacement.FOOTER));
     }
@@ -134,6 +141,10 @@ export default class TeamVars extends Vue {
 
   private onUnmaskClicked(teamVar: TeamVar){
     Vue.set(this.unMaskedVars, teamVar.name, true);
+  }
+
+  private isChecked(val: any) {
+    return val == true;
   }
 }
 </script>
