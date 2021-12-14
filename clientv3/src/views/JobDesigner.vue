@@ -710,7 +710,7 @@
                   <tr class="tr" v-for="(value, key) in runJobVars" v-bind:key="'runJobVar_' + key">
                     <td class="td">{{key}}</td>
                     <td class="td"><span style="font-weight: 700; size: 20px;"> = </span></td>
-                    <td class="td">{{value}}</td>
+                    <td class="td">{{value.value}}</td>
                     <td class="td"><a @click.prevent="onDeleteRunJobVarClicked(key)">Delete</a></td>
                   </tr>
                 </table>
@@ -718,6 +718,9 @@
             </tr>
             <tr class="tr">
               <td class="td">
+                <input style="margin-left: 10px; margin-top: 10px;" type="checkbox" v-model="newRunJobVarValue.sensitive" :checked=false>
+                <span style="margin-left: 10px; margin-right: 20px;">Sensitive</span>
+
                 <validation-observer ref="addRunJobVarsValidationObserver">
                   <validation-provider name="Variable Key" rules="required" v-slot="{ errors }"> 
                     <input class="input" ref="newRunJobVarKeyInput" type="text" style="width: 250px;" v-model="newRunJobVarKey" placeholder="key"/>
@@ -727,7 +730,7 @@
                   <span style="font-weight: 700; margin-left: 4px; margin-right: 4px;">=</span>
                   
                   <validation-provider name="Variable Value" rules="required" v-slot="{ errors }"> 
-                    <input class="input" type="text" style="width: 250px;" v-model="newRunJobVarValue" placeholder="value"/>
+                    <input class="input" type="text" style="width: 250px;" v-model="newRunJobVarValue.value" placeholder="value"/>
                     <span v-if="errors && errors.length > 0" class="message validation-error is-danger">{{ errors[0] }}</span>
                   </validation-provider>
                 </validation-observer>
@@ -961,13 +964,16 @@
                       </template>
                       <template v-else>
                         <validation-provider name="Variable Value" rules="required" v-slot="{ errors }"> 
-                          <input class="input" type="text" v-model.lazy="jobDefForEdit.runtimeVars[tagKey]" @change="onJobDefRuntimeVarsChanged">
+                          <input class="input" type="text" v-model.lazy="jobDefForEdit.runtimeVars[tagKey].value" @change="onJobDefRuntimeVarsChanged">
                           <span v-if="errors && errors.length > 0" class="message validation-error is-danger">{{ errors[0] }}</span>
                         </validation-provider>
                       </template>
                     </td>
                     <td class="td">
                       <a v-if="isVarMasked(tagKey)" class="button-spaced" @click.prevent="onUnmaskClicked(tagKey)">unmask</a>
+                    </td>
+                    <td class="td" style="text-align: center; padding: 10px">
+                      <input type="checkbox" v-model.lazy="tagValue.sensitive" @change="onJobDefRuntimeVarsChanged" :checked="isChecked(tagValue.sensitive)">
                     </td>
                     <td class="td"><a @click.prevent="onDeleteRuntimeVarClicked(tagKey)">Delete</a></td>
                   </tr>
@@ -977,6 +983,9 @@
             </table>
           </div>
           <div>
+            <input style="margin-left: 10px; margin-top: 10px;" type="checkbox" v-model="newRuntimeVarValue.sensitive" :checked=false>
+            <span style="margin-left: 10px; margin-right: 20px;">Sensitive</span>
+
             <validation-observer ref="addRuntimeVarValidationObserver">
               <validation-provider name="Variable Key" rules="required" v-slot="{ errors }"> 
                 <input class="input" ref="newRuntimeVarKeyInput" type="text" style="width: 250px;" v-model="newRuntimeVarKey" placeholder="key"/>
@@ -986,7 +995,7 @@
               <span style="font-weight: 700; margin-left: 4px; margin-right: 4px;">=</span>
               
               <validation-provider name="Variable Value" rules="required" v-slot="{ errors }"> 
-                <input class="input" type="text" style="width: 250px;" v-model="newRuntimeVarValue" placeholder="value"/>
+                <input class="input" type="text" style="width: 250px;" v-model="newRuntimeVarValue.value" placeholder="value"/>
                 <span v-if="errors && errors.length > 0" class="message validation-error is-danger">{{ errors[0] }}</span>
               </validation-provider>
             </validation-observer>
@@ -1732,7 +1741,7 @@ export default class JobDesigner extends Vue {
   }
 
   private newRuntimeVarKey = '';
-  private newRuntimeVarValue = '';
+  private newRuntimeVarValue = {value: '', sensitive: false};
   private async onAddRuntimeVarClicked(){
     if(this.jobDefForEdit){
       try {
@@ -1742,20 +1751,24 @@ export default class JobDesigner extends Vue {
 
         await this.$store.dispatch(`${StoreType.JobDefStore}/save`, {
           id: this.jobDefForEdit.id,
-          runtimeVars: _.extend({[this.newRuntimeVarKey]: this.newRuntimeVarValue}, this.jobDefForEdit.runtimeVars)
+          runtimeVars: _.extend({[this.newRuntimeVarKey]: {value: this.newRuntimeVarValue.value, sensitive: this.newRuntimeVarValue.sensitive}}, this.jobDefForEdit.runtimeVars)
         });
         this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Saved job`, AlertPlacement.FOOTER));
 
         (<any>this).$refs.addRuntimeVarValidationObserver.reset();
         
         this.newRuntimeVarKey = '';
-        this.newRuntimeVarValue = '';
+        this.newRuntimeVarValue = {value: '', sensitive: false};
       }
       catch(err){
         console.error(err);
         showErrors('Error saving the job', err);
       }
     }
+  }
+
+  private isChecked(val: any) {
+    return val == true;
   }
 
   private async onDeleteRuntimeVarClicked(tagKey: string){
@@ -1988,9 +2001,9 @@ export default class JobDesigner extends Vue {
     this.$modal.hide('route-all-to-taskdef-modal');
   }
 
-  private runJobVars: {[key: string]: string} = {};
+  private runJobVars: {[key: string]: {}} = {};
   private newRunJobVarKey = '';
-  private newRunJobVarValue = '';
+  private newRunJobVarValue = {value: '', sensitive: false};
   private runJobId = null;
 
   @Watch('jobDefForEdit')
@@ -2023,7 +2036,7 @@ export default class JobDesigner extends Vue {
       runJobVarsClone[this.newRunJobVarKey] = this.newRunJobVarValue;
       this.runJobVars = runJobVarsClone;
       this.newRunJobVarKey = '';
-      this.newRunJobVarValue = '';
+      this.newRunJobVarValue = {value: '', sensitive: false};
       (<any>this).$refs.addRunJobVarsValidationObserver.reset();
     }
   }
@@ -2042,15 +2055,15 @@ export default class JobDesigner extends Vue {
       let keys = Object.keys(this.runJobVars);
       for (let i = 0; i < keys.length; ++i) {
         let key = keys[i];
-        const val = this.runJobVars[key];
+        const val: any = this.runJobVars[key];
         if (key.startsWith('<<') && key.endsWith('>>')) {
           key = key.substring(2, key.length - 2);
           rtVars[key] = {};
-          rtVars[key]['value'] = val;
+          rtVars[key]['value'] = val.value;
           rtVars[key]['sensitive'] = true;
         } else {
           rtVars[key] = {};
-          rtVars[key]['value'] = val;
+          rtVars[key]['value'] = val.value;
           rtVars[key]['sensitive'] = false;
         }
       }

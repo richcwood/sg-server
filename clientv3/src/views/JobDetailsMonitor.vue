@@ -2,7 +2,7 @@
   <div class="home">
 
     <!-- Modals -->
-    <modal name="runtime-vars-modal" :classes="'round-popup'" :width="800" :height="650">
+    <modal name="runtime-vars-modal" :classes="'round-popup'" :width="800" :height="750">
       <table class="table" width="100%" height="100%" v-if="taskToShowRuntimeVars">
         <tr class="tr">
           <td class="td">
@@ -27,7 +27,7 @@
                 <tr class="tr" v-for="runtimeVarKey in Object.keys(taskToShowRuntimeVars.runtimeVars)" v-bind:key="runtimeVarKey">
                   <td class="td">{{runtimeVarKey}}</td>
                   <td class="td"> = </td>
-                  <td class="td" v-if="hideSensitiveRuntimeVars && taskToShowRuntimeVars.runtimeVars[runtimeVarKey]['sensitive']">[{{runtimeVarKey}}]</td>
+                  <td class="td" v-if="hideSensitiveRuntimeVars && taskToShowRuntimeVars.runtimeVars[runtimeVarKey]['sensitive']">**{{runtimeVarKey}}**</td>
                   <td class="td" v-else>{{taskToShowRuntimeVars.runtimeVars[runtimeVarKey]['value']}}</td>
                 </tr>
               </table>     
@@ -316,7 +316,7 @@ export default class JobDetailsMonitor extends Vue {
   private formatRuntimeVars(task: Task): string {
     if(task.runtimeVars){
       const runtimeVarKeys = Object.keys(task.runtimeVars);
-      const summary = runtimeVarKeys.map(k => (task.runtimeVars[k]['sensitive'] ? `${k}=[${k}]` : `${k}=${task.runtimeVars[k]['value']}`)).join(', ');
+      const summary = runtimeVarKeys.map(k => (task.runtimeVars[k]['sensitive'] ? `${k}=**${k}**` : `${k}=${task.runtimeVars[k]['value']}`)).join(', ');
       return truncateString(summary, 24);
     }
     else {
