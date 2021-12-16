@@ -234,7 +234,7 @@ import { Job } from '../store/job/types';
 import { TaskOutcome } from '../store/taskOutcome/types';
 import { LambaRuntimes, LambdaMemorySizes } from '../store/stepDef/types';
 import { JobStatus, TaskStatus, StepStatus, TaskFailureCode, enumKeyToPretty } from '../utils/Enums';
-import { stringToMap } from '../utils/Shared';
+import { tagsStringToMap, stringToMap } from '../utils/Shared';
 import AgentSearch from '../components/AgentSearch.vue';
 import ScriptEditor from '../components/ScriptEditor.vue';
 import { showErrors } from '../utils/ErrorHandler';
@@ -477,7 +477,7 @@ export default class InteractiveConsole extends Vue {
               _teamId: currentTeamId,
               name: `Task1`,
               source: 0,
-              requiredTags: stringToMap(this.runAgentTargetTags_string),
+              requiredTags: tagsStringToMap(this.runAgentTargetTags_string),
               target: this.runAgentTarget,
               targetAgentId: this.runAgentTargetAgentId,
               fromRoutes: [],
