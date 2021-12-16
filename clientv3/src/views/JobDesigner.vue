@@ -974,6 +974,7 @@
                     </td>
                     <td class="td" style="text-align: center; padding: 10px">
                       <input type="checkbox" v-model.lazy="tagValue.sensitive" @change="onJobDefRuntimeVarsChanged" :checked="isChecked(tagValue.sensitive)">
+                      <label style="margin-left: 10px;">sensitive</label>
                     </td>
                     <td class="td"><a @click.prevent="onDeleteRuntimeVarClicked(tagKey)">Delete</a></td>
                   </tr>

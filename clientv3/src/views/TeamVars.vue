@@ -56,7 +56,7 @@
         </td>
         <td class="td" style="text-align: center; padding: 10px">
           <input type="checkbox" v-model="teamVar.sensitive" :checked="isChecked(teamVar.sensitive)" disabled="disabled" onClick="return false;">
-          <label style="margin-left: 10px;">(sensitive)</label>
+          <label style="margin-left: 10px;">sensitive</label>
         </td>
         <td class="td">
           <a class="button-spaced" @click.prevent="onDeleteVarClicked(teamVar)">delete</a>
