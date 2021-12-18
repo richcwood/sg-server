@@ -137,7 +137,7 @@ $ chmod 711 sg-agent-installer-mac
               </ul>
             </div>
             <code class="p-5 ml-5 has-text-black code-snippet">
-> sg-agent-win-installer.exe install [agent access key id] [agent access secret] [tags]
+> sg-agent-win-installer.exe -c install -i [agent access key id] -s [agent access secret] -t [tags]
             </code>
             <p class="subtitle has-text-weight-normal ml-5 mt-5">The agent uses an access key id/secret pair to make a secure connection to the SaaSGlue API. The credentials are saved in a <a href="#config_file">config</a> file. The config file is saved in the same folder as the installer.<br><br>The command line parameters are optional. If you include them, the config file will be created automatically. Otherwise you will be prompted for your credentials by the agent installer.</p>
           </div>
@@ -150,7 +150,7 @@ $ chmod 711 sg-agent-installer-mac
               </ul>
             </div>
             <code class="p-5 ml-5 has-text-black code-snippet">
-$ sudo sg-agent-installer-linux install [agent access key id] [agent access secret] [tags]
+$ ./sudo sg-agent-installer-linux -c install -i [agent access key id] -s [agent access secret] -t [tags]
             </code>
             <p class="subtitle has-text-weight-normal ml-5 mt-5">The agent uses an access key id/secret pair to make a secure connection to the SaaSGlue API. The credentials are saved in a <a href="#config_file">config</a> file. When installed with systemd the config file is saved in /etc/saasglue.<br><br>The command line parameters are optional. If you include them, the config file will be created automatically. Otherwise you will be prompted for your credentials by the agent installer.</p>
           </div>
@@ -163,7 +163,7 @@ $ sudo sg-agent-installer-linux install [agent access key id] [agent access secr
               </ul>
             </div>
             <code class="p-5 ml-5 has-text-black code-snippet">
-$ sudo sg-agent-installer-mac install [agent access key id] [agent access secret] [tags]
+$ ./sudo sg-agent-installer-mac -c install -i [agent access key id] -s [agent access secret] -t [tags]
             </code>
             <p class="subtitle has-text-weight-normal ml-5 mt-5">The agent uses an access key id/secret pair to make a secure connection to the SaaSGlue API. The credentials are saved in a <a href="#config_file">config</a> file. When installed with launchd the config file is saved in a folder named .saasglue in your home folder.<br><br>The command line parameters are optional. If you include them, the config file will be created automatically. Otherwise you will be prompted for your credentials by the agent installer.</p>
           </div>
@@ -185,7 +185,7 @@ $ sudo sg-agent-installer-mac install [agent access key id] [agent access secret
               <ol>
                 <li>Download the SaaSGlue Agent launcher</li>
                   <code class="p-5 ml-5 my-5 has-text-black code-snippet">
-> sg-agent-win-installer.exe download [agent access key id] [agent access secret] [tags]
+> sg-agent-win-installer.exe -c download -i [agent access key id] -s [agent access secret] -t [tags]
                   </code>
                 <li>Run the SaaSGlue Agent launcher</li>
                   <code class="p-5 ml-5 my-5 has-text-black code-snippet">
@@ -201,7 +201,7 @@ $ sudo sg-agent-installer-mac install [agent access key id] [agent access secret
               <ol>
                 <li>Download the SaaSGlue Agent launcher</li>
                   <code class="p-5 ml-5 my-5 has-text-black code-snippet">
-$ sudo sg-agent-installer-linux install [agent access key id] [agent access secret] [tags]
+$ sudo ./sg-agent-installer-linux -c install -i [agent access key id] -s [agent access secret] -t [tags]
                   </code>
                 <li>Run the SaaSGlue Agent launcher</li>
                   <code class="p-5 ml-5 my-5 has-text-black code-snippet">
@@ -217,7 +217,7 @@ $ sudo sg-agent-installer-linux install [agent access key id] [agent access secr
               <ol>
                 <li>Download the SaaSGlue Agent launcher</li>
                   <code class="p-5 ml-5 my-5 has-text-black code-snippet">
-$ sg-agent-installer-mac install [agent access key id] [agent access secret] [tags]
+$ sudo ./sg-agent-installer-mac -c install -i [agent access key id] -s [agent access secret] -t [tags]
                   </code>
                 <li>Run the SaaSGlue Agent launcher</li>
                   <code class="p-5 ml-5 my-5 has-text-black code-snippet">
@@ -242,19 +242,19 @@ $ sg-agent-installer-mac install [agent access key id] [agent access secret] [ta
           <div v-show="tabSelInstallAsService == 'WinInstallAsService'">
             <h2 class="has-text-weight-normal">To stop the agent service:</h2>
             <code class="p-5 ml-5 my-5 has-text-black code-snippet">
-> sg-agent-win-installer.exe stop
+> sg-agent-win-installer.exe -c stop
             </code>
           </div>
           <div v-show="tabSelInstallAsService == 'LinuxInstallAsService'">
             <h2 class="has-text-weight-normal">To stop the agent service:</h2>
             <code class="p-5 ml-5 my-5 has-text-black code-snippet">
-$ sudo sg-agent-installer-linux stop
+$ sudo sg-agent-installer-linux -c stop
             </code>
           </div>
           <div v-show="tabSelInstallAsService == 'MacInstallAsService'">
             <h2 class="has-text-weight-normal">To stop the agent service:</h2>
             <code class="p-5 ml-5 my-5 has-text-black code-snippet">
-$ sg-agent-installer-mac stop
+$ sg-agent-installer-mac -c stop
             </code>
           </div>
         </div>
@@ -272,19 +272,19 @@ $ sg-agent-installer-mac stop
           <div v-show="tabSelInstallAsService == 'WinInstallAsService'">
             <h2 class="has-text-weight-normal">To start the agent service:</h2>
             <code class="p-5 ml-5 my-5 has-text-black code-snippet">
-> sg-agent-win-installer.exe start
+> sg-agent-win-installer.exe -c start
             </code>
           </div>
           <div v-show="tabSelInstallAsService == 'LinuxInstallAsService'">
             <h2 class="has-text-weight-normal">To start the agent service:</h2>
             <code class="p-5 ml-5 my-5 has-text-black code-snippet">
-$ sudo sg-agent-installer-linux start
+$ sudo sg-agent-installer-linux -c start
             </code>
           </div>
           <div v-show="tabSelInstallAsService == 'MacInstallAsService'">
             <h2 class="has-text-weight-normal">To start the agent service:</h2>
             <code class="p-5 ml-5 my-5 has-text-black code-snippet">
-$ sg-agent-installer-mac start
+$ sg-agent-installer-mac -c start
             </code>
           </div>
         </div>
@@ -302,19 +302,19 @@ $ sg-agent-installer-mac start
           <div v-show="tabSelInstallAsService == 'WinInstallAsService'">
             <h2 class="has-text-weight-normal">To uninstall the agent service:</h2>
             <code class="p-5 ml-5 my-5 has-text-black code-snippet">
-> sg-agent-win-installer.exe uninstall
+> sg-agent-win-installer.exe -c uninstall
             </code>
           </div>
           <div v-show="tabSelInstallAsService == 'LinuxInstallAsService'">
             <h2 class="has-text-weight-normal">To uninstall the agent service:</h2>
             <code class="p-5 ml-5 my-5 has-text-black code-snippet">
-$ sudo sg-agent-installer-linux uninstall
+$ sudo sg-agent-installer-linux -c uninstall
             </code>
           </div>
           <div v-show="tabSelInstallAsService == 'MacInstallAsService'">
             <h2 class="has-text-weight-normal">To uninstall the agent service:</h2>
             <code class="p-5 ml-5 my-5 has-text-black code-snippet">
-$ sg-agent-installer-mac uninstall
+$ sg-agent-installer-mac -c uninstall
             </code>
           </div>
         </div>
@@ -488,7 +488,7 @@ export default class DownloadAgent extends Vue {
 
   .code-snippet {
     display:inline-block;
-    width: 1000px;
+    width: 1150px;
     border-style: solid;
     border-width: 1px;
     border-color: lightgray;
