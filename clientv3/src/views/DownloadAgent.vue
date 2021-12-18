@@ -17,7 +17,7 @@
       <div class="container">
         <div class="columns is-size-5-desktop is-size-6-touch has-text-left-tablet has-text-centered-mobile">
           <div class="column">
-            <a class="button has-action-shadow has-text-weight-bold agent-download-button has-text-white" href="https://www.saasglue.com/agent-installer/sg-agent-installer-winx64.zip">
+            <a class="button has-action-shadow has-text-weight-bold agent-download-button has-text-white" href="https://sg-agent-installer.s3.us-east-2.amazonaws.com/sg-agent-installer-win-x64.zip">
               <div class="columns has-text-weight-semibold is-flex is-align-items-center is-justify-content-left">
                 <figure class="image is-24x24 mr-4">
                   <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/3/34/Windows_logo_-_2012_derivative.svg/25px-Windows_logo_-_2012_derivative.svg.png">
@@ -27,7 +27,7 @@
             </a>
           </div>
           <div class="column">
-            <a class="button has-action-shadow has-text-weight-bold agent-download-button has-text-white" href="https://www.saasglue.com/agent-installer/sg-agent-installer-linux.gz">
+            <a class="button has-action-shadow has-text-weight-bold agent-download-button has-text-white" href="https://sg-agent-installer.s3.us-east-2.amazonaws.com/sg-agent-installer-linux.gz">
               <div class="columns has-text-weight-semibold is-flex is-align-items-center is-justify-content-left">
                 <figure class="image is-24x24 mr-4">
                   <img src="https://upload.wikimedia.org/wikipedia/commons/a/ab/Linux_Logo_in_Linux_Libertine_Font.svg">
@@ -37,7 +37,7 @@
             </a>
           </div>
           <div class="column">
-            <a class="button has-action-shadow has-text-weight-bold agent-download-button has-text-white" href="https://www.saasglue.com/agent-installer/sg-agent-installer-mac.gz">
+            <a class="button has-action-shadow has-text-weight-bold agent-download-button has-text-white" href="https://sg-agent-installer.s3.us-east-2.amazonaws.com/sg-agent-installer-mac.gz">
               <div class="columns has-text-weight-semibold is-flex is-align-items-center is-justify-content-left">
                 <figure class="image is-24x24 mr-4 mb-2">
                   <img src="https://upload.wikimedia.org/wikipedia/commons/f/fa/Apple_logo_black.svg">
@@ -163,9 +163,9 @@ $ ./sudo sg-agent-installer-linux -c install -i [agent access key id] -s [agent 
               </ul>
             </div>
             <code class="p-5 ml-5 has-text-black code-snippet">
-$ ./sudo sg-agent-installer-mac -c install -i [agent access key id] -s [agent access secret] -t [tags]
+$ ./sudo sg-agent-installer-mac -c install -i [agent access key id] -s [agent access secret] -t [tags] -p [path]
             </code>
-            <p class="subtitle has-text-weight-normal ml-5 mt-5">The agent uses an access key id/secret pair to make a secure connection to the SaaSGlue API. The credentials are saved in a <a href="#config_file">config</a> file. When installed with launchd the config file is saved in a folder named .saasglue in your home folder.<br><br>The command line parameters are optional. If you include them, the config file will be created automatically. Otherwise you will be prompted for your credentials by the agent installer.</p>
+            <p class="subtitle has-text-weight-normal ml-5 mt-5">The agent uses an access key id/secret pair to make a secure connection to the SaaSGlue API. The credentials are saved in a <a href="#config_file">config</a> file. When installed with launchd the config file is saved in a folder named .saasglue in your home folder.<br><br>The command line parameters are optional. If you include them, the config file will be created automatically. Otherwise you will be prompted for your credentials by the agent installer.<br><br>You can use the "-p" parameter to specify the PATH variable for the agent runtime environment. If not specified, the installer will use the PATH variable of the environment in which the installer runs.</p>
           </div>
         </div>
 
@@ -488,7 +488,7 @@ export default class DownloadAgent extends Vue {
 
   .code-snippet {
     display:inline-block;
-    width: 1150px;
+    width: 1250px;
     border-style: solid;
     border-width: 1px;
     border-color: lightgray;
