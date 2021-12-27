@@ -96,7 +96,7 @@
       </validation-observer>
     </modal>
 
-    <modal name="create-access-key-success-modal" :classes="'round-popup'" :clickToClose="false" :width="700" :height="600">
+    <modal name="create-access-key-success-modal" :classes="'round-popup'" :clickToClose="false" :width="700" :height="800">
       <div style="width: 100%; background-color: white; padding: 40px;">
         <div class="notification is-primary">
           <span style="font-size: 24px; font-weight: 700;">
@@ -108,6 +108,18 @@
           <br>
           This is your only chance to copy this secret.  Please copy it somewhere safely before closing this dialog.
         </div>
+        <div>
+          Create a file named sg.cfg in the directory where your agent lives (sg-agent-launcher) and paste the contents below into the file cfg file.
+          <br>
+          <br>
+          <div>
+            { 
+              "SG_ACCESS_KEY_ID": "{{newAccessKeyId}}",
+              "SG_ACCESS_KEY_SECRET": "{{newAccessKeySecret}}"
+            }
+          </div>
+        </div>
+        <br><br>
         <button class="button is-danger" @click="closeAccessKeySuccessModal">I Have Copied The Secret</button>
       </div>
     </modal>
@@ -396,7 +408,7 @@ export default class AccessKeysGrid extends Vue {
       this.$modal.show('create-access-key-success-modal');
 
       this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert('Created new user access key', AlertPlacement.FOOTER, AlertCategory.INFO));
-      this.newAccessKeyId = newAccessKeyResult.id;
+      this.newAccessKeyId = newAccessKeyResult.accessKeyId;
     }
     catch(err) {
       console.error(err);
@@ -428,7 +440,7 @@ export default class AccessKeysGrid extends Vue {
       this.$modal.show('create-access-key-success-modal');
 
       this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert('Created new agent access key', AlertPlacement.FOOTER, AlertCategory.INFO));
-      this.newAccessKeyId = newAccessKeyResult.id;
+      this.newAccessKeyId = newAccessKeyResult.accessKeyId;
     }
     catch(err) {
       console.error(err);
