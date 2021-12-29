@@ -9,83 +9,86 @@
       </div>
     </modal>
 
-
-
-
-    <div class="nav-bar" v-if="! isOnLandingPage()">
-
-      <div class="left-nav">
-        <router-link class="logo-container" to="/"> <img src="/logo4.png" class="logo"> </router-link>
-        <router-link :class="{'active-link': isLinkActive(['downloadAgent'])}" class="main-nav-link" to="/downloadAgent">Download Agent</router-link><span class="nav-spacer">|</span>
-        <router-link :class="{'active-link': isLinkActive(['jobList', 'jobDesigner'])}" class="main-nav-link" to="/jobList">Designer</router-link><span class="nav-spacer">|</span>
-        <router-link :class="{'active-link': isLinkActive(['jobMonitor', 'jobDetailsMonitor'])}" class="main-nav-link" to="/jobMonitor">Monitor</router-link><span class="nav-spacer">|</span>
-        <router-link :class="{'active-link': isLinkActive(['agentMonitor'])}" class="main-nav-link" to="/agentMonitor">Agents</router-link> <span class="nav-spacer">|</span> 
-        <router-link :class="{'active-link': isLinkActive(['interactiveConsole'])}" class="main-nav-link" to="/interactiveConsole">Console</router-link><span class="nav-spacer">|</span>
-        <router-link :class="{'active-link': isLinkActive(['artifacts'])}" class="main-nav-link" to="/artifacts">Artifacts</router-link><span class="nav-spacer">|</span>
-        <router-link :class="{'active-link': isLinkActive(['teamVars'])}" class="main-nav-link" to="/teamVars">Vars</router-link><span class="nav-spacer">|</span>
-        <router-link :class="{'active-link': isLinkActive(['teamAlerts'])}" class="main-nav-link" to="/teamAlerts">Alerts</router-link><span class="nav-spacer">|</span>
-        <router-link :class="{'active-link': isLinkActive(['scripts'])}" class="main-nav-link" to="/scripts">Scripts</router-link>
-      </div>
-
-      <div class="right-nav">
-        <div v-if="userTeamIds.length > 1" class="dropdown is-right" :class="{'is-active': showTeamsMenu}" v-click-outside="onClickedOutsideTeamsMenu">
-          <div class="dropdown-trigger">
-            <a class="main-nav-link" @click.prevent="onClickedTeamsMenu">{{selectedTeamName}}</a><span class="nav-spacer">|</span>
+    <nav class="navbar is-transparent" v-if="!isOnLandingPage()">
+      <div class="container">
+        <div class="navbar-brand">
+            <router-link activeClass="" to="/" class="navbar-item navbar-logo">
+                <img src="/logo4.png" alt="SaaSGlue logo" width="180" height="30">
+            </router-link>
+        </div>
+        <div class="navbar-menu is-active">
+          <div class="navbar-start">
+            <router-link class="navbar-item" to="/downloadAgent">Download Agent</router-link>
+            <router-link activeClass="" :class="{'router-link-active': isLinkActive(['jobList', 'jobDesigner'])}" class="navbar-item" to="/jobList">Designer</router-link>
+            <router-link activeClass="" :class="{'router-link-active': isLinkActive(['jobMonitor', 'jobDetailsMonitor'])}" class="navbar-item" to="/jobMonitor">Monitor</router-link>
+            <router-link class="navbar-item" to="/agentMonitor">Agents</router-link>  
+            <router-link class="navbar-item" to="/interactiveConsole">Console</router-link>
+            <router-link class="navbar-item" to="/artifacts">Artifacts</router-link>
+            <router-link class="navbar-item" to="/teamVars">Vars</router-link>
+            <router-link class="navbar-item" to="/teamAlerts">Alerts</router-link>
+            <router-link class="navbar-item" to="/scripts">Scripts</router-link>
           </div>
-          <div class="dropdown-menu" id="dropdown-menu" role="menu">
-            <div class="dropdown-content" role="menu">
-              <span class="dropdown-item">
-                Switch Teams
-              </span>
-              <hr class="dropdown-divider">
-
-              <a class="dropdown-item" 
-                 v-for="teamId of Object.values(userTeamIds)" 
-                 v-bind:key="teamId"
-                 @click.prevent="onClickedTeamId(teamId)"
-                 :class="{'is-active': selectedTeam && selectedTeam.id === teamId}">
-                {{getTeam(teamId).name}}
-              </a>
+          <div class="navbar-end is-flex-direction-column is-align-items-end">
+            <div class="dropdown is-right" :class="{'is-active': showUserMenu}" v-click-outside="onClickedOutsideUserMenu">
+              <div class="dropdown-trigger">
+                <a class="main-nav-link" @click.prevent="onClickedUserMenu">
+                  Hello, {{ userName }}
+                  <font-awesome-icon class="is-vertical-aligned" icon="angle-down" />
+                </a>
+              </div>
+              <div class="dropdown-menu" role="menu">
+                <div class="dropdown-content" role="menu">
+                  <a class="dropdown-item" @click.prevent="onClickedInviteTeammates">
+                    Invite Teammates
+                  </a>
+                  <a class="dropdown-item" @click.prevent="onClickedAcceptInvitations">
+                    Accept Invitations {{invitationsCountString}}
+                  </a>
+                  <hr class="dropdown-divider">
+                  <a class="dropdown-item" @click.prevent="onClickedInvoices">
+                    Invoices and Payments
+                  </a>
+                  <hr class="dropdown-divider">
+                  <a class="dropdown-item" @click.prevent="onClickedAccessKeys">
+                    Access Keys
+                  </a>
+                  <a class="dropdown-item" @click.prevent="onClickedSettings">
+                    Settings
+                  </a>
+                  <hr class="dropdown-divider">
+                  <a class="dropdown-item" @click.prevent="onClickedSignOut">
+                    Sign Out
+                  </a>
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
-        <div v-else>
-          <span class="main-nav-link" style="margin-right: 5px;">{{selectedTeamName}}</span><span class="nav-spacer">|</span>
-        </div>
 
-        <div class="dropdown is-right" :class="{'is-active': showUserMenu}" v-click-outside="onClickedOutsideUserMenu">
-          <div class="dropdown-trigger">
-            <a class="main-nav-link" :class="{'active-link': isLinkActive(['inviteTeammates', 'invitationsForMe', 'invoices', 'settings', 'accessKeys'])}"  @click.prevent="onClickedUserMenu">{{userName}} </a>
-          </div>
-          <div class="dropdown-menu" id="dropdown-menu" role="menu">
-            <div class="dropdown-content" role="menu">
-              <a class="dropdown-item" @click.prevent="onClickedInviteTeammates">
-                Invite Teammates
+            <div v-if="userTeamIds.length > 1" class="dropdown is-right" :class="{'is-active': showTeamsMenu}" v-click-outside="onClickedOutsideTeamsMenu">
+              <a class="dropdown-trigger main-nav-link is-size-7" @click.prevent="onClickedTeamsMenu">
+                Team: {{ selectedTeamName }}
+                <font-awesome-icon class="is-vertical-aligned" icon="angle-down" />
               </a>
-              <a class="dropdown-item" @click.prevent="onClickedAcceptInvitations">
-                Accept Invitations {{invitationsCountString}}
-              </a>
-              <hr class="dropdown-divider">
-              <a class="dropdown-item" @click.prevent="onClickedInvoices">
-                Invoices and Payments
-              </a>
-              <hr class="dropdown-divider">
-              <a class="dropdown-item" @click.prevent="onClickedAccessKeys">
-                Access Keys
-              </a>
-              <a class="dropdown-item" @click.prevent="onClickedSettings">
-                Settings
-              </a>
-              <hr class="dropdown-divider">
-              <a class="dropdown-item" @click.prevent="onClickedSignOut">
-                Sign Out
-              </a>
+              <div class="dropdown-menu" role="menu">
+                <div class="dropdown-content" role="menu">
+                  <span class="dropdown-item has-text-centered has-text-grey has-background-light">Switch Teams</span>
+                  <hr class="dropdown-divider">
+
+                  <a class="dropdown-item" 
+                    v-for="teamId of Object.values(userTeamIds)" 
+                    @click.prevent="onClickedTeamId(teamId)"
+                    :key="teamId"
+                    :class="{'is-active': selectedTeam && selectedTeam.id === teamId}">
+                    {{ getTeam(teamId).name }}
+                  </a>
+                </div>
+              </div>
             </div>
+            <span v-else class="main-nav-link has-text-grey is-size-7">Team: {{ selectedTeamName }}</span>
           </div>
         </div>
       </div>
-    </div>
-    
+    </nav>
+
     <div class="nav-main">
       <router-view/>
     </div>
@@ -316,7 +319,7 @@ export default class App extends Vue {
     }
 
     private isLinkActive(routeNames: string[]): boolean {
-      return routeNames.indexOf(this.$router.currentRoute.name) !== -1;
+      return routeNames.includes(this.$router.currentRoute.name);
     }
 
     private lastMovedNow: number = Date.now();
@@ -337,7 +340,7 @@ export default class App extends Vue {
 </script>
 
 
-<style lang="scss">
+<style lang="scss" scoped>
 // I prefer Avenir but Nunito Sans is a decent backup font if Avenir isn't available on client machine
 @import url('https://fonts.googleapis.com/css?family=Nunito+Sans:300,400');
 
@@ -348,60 +351,29 @@ export default class App extends Vue {
   color: #2c3e50;
 }
 
-.nav-bar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  min-width: 1250px;
-  padding-left: 10px;
-  padding-right: 10px;
-  padding-top: 10px;
-  padding-bottom: 10px;
-  background-color: white;
+.navbar {
+  border-bottom: 1px solid #d3d3d3;
 
-  .main-nav-link {
+  .navbar-item:not(.navbar-logo) {
+    font-variant-caps: all-small-caps;
     font-weight: bold;
-    //color: #2c3e50;
-    color: black;
+    color: grey;
 
-    &.active-link {
-      color: #42b983;
-      font-size: 1.2em;
-      margin-bottom: -2px;
-    }
-  }
-
-  .nav-spacer {
-    color: white;
-    font-size: 1em;
-    margin-left: 5px;
-    margin-right: 5px;
-  }
-
-  .left-nav {
-    display: flex;
-    align-items: flex-end;
-  }
-
-  .right-nav {
-    display: flex;
-    align-items: flex-end;
-    margin-bottom: -10px;
-  }
-
-  a {
-      margin-right: 5px;
-      margin-left: 5px;
+    &.router-link-active,
+    &:hover {
+      border-bottom: 3px solid deepskyblue;
+      margin-top: 2px;
+      margin-bottom: -1px;
     }
 
-  .logo-container {
-    margin-right: 20px;
-    margin-bottom: -5px;
+    &.router-link-active {
+      color: black;
+    }
   }
+}
 
-  .logo {
-    height: 30px;
-  }
+.is-vertical-aligned {
+  vertical-align: middle;
 }
 
 .nav-footer {
