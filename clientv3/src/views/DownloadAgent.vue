@@ -150,7 +150,7 @@ $ chmod 711 sg-agent-installer-mac
               </ul>
             </div>
             <code class="p-5 ml-5 has-text-black code-snippet">
-$ ./sudo sg-agent-installer-linux -c install -i [agent access key id] -s [agent access secret] -t [tags]
+$ sudo ./sg-agent-installer-linux -c install -i [agent access key id] -s [agent access secret] -t [tags]
             </code>
             <p class="subtitle has-text-weight-normal ml-5 mt-5">The agent uses an access key id/secret pair to make a secure connection to the SaaSGlue API. The credentials are saved in a <a href="#config_file">config</a> file. When installed with systemd the config file is saved in /etc/saasglue.<br><br>The command line parameters are optional. If you include them, the config file will be created automatically. Otherwise you will be prompted for your credentials by the agent installer.</p>
           </div>
@@ -163,7 +163,7 @@ $ ./sudo sg-agent-installer-linux -c install -i [agent access key id] -s [agent 
               </ul>
             </div>
             <code class="p-5 ml-5 has-text-black code-snippet">
-$ ./sudo sg-agent-installer-mac -c install -i [agent access key id] -s [agent access secret] -t [tags] -p [path]
+$ sudo ./sg-agent-installer-mac -c install -i [agent access key id] -s [agent access secret] -t [tags] -p [path]
             </code>
             <p class="subtitle has-text-weight-normal ml-5 mt-5">The agent uses an access key id/secret pair to make a secure connection to the SaaSGlue API. The credentials are saved in a <a href="#config_file">config</a> file. When installed with launchd the config file is saved in a folder named .saasglue in your home folder.<br><br>The command line parameters are optional. If you include them, the config file will be created automatically. Otherwise you will be prompted for your credentials by the agent installer.<br><br>You can use the "-p" parameter to specify the PATH variable for the agent runtime environment. If not specified, the installer will use the PATH variable of the environment in which the installer runs.</p>
           </div>
