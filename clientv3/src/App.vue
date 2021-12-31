@@ -10,25 +10,25 @@
     </modal>
 
     <nav class="navbar is-transparent" v-if="!isOnLandingPage()">
-      <div class="container">
-        <div class="navbar-brand">
-            <router-link activeClass="" to="/" class="navbar-item navbar-logo">
-                <img src="/logo4.png" alt="SaaSGlue logo" width="180" height="30">
-            </router-link>
+      <div class="navbar-brand">
+          <router-link activeClass="" to="/" class="navbar-item navbar-logo">
+              <img src="/logo4.png" alt="SaaSGlue logo" width="132" height="22">
+          </router-link>
+      </div>
+      <div class="navbar-menu is-active">
+        <div class="navbar-start">
+          <router-link class="navbar-item" to="/downloadAgent">Download Agent</router-link>
+          <router-link activeClass="" :class="{'router-link-active': isLinkActive(['jobList', 'jobDesigner'])}" class="navbar-item" to="/jobList">Designer</router-link>
+          <router-link activeClass="" :class="{'router-link-active': isLinkActive(['jobMonitor', 'jobDetailsMonitor'])}" class="navbar-item" to="/jobMonitor">Monitor</router-link>
+          <router-link class="navbar-item" to="/agentMonitor">Agents</router-link>  
+          <router-link class="navbar-item" to="/interactiveConsole">Console</router-link>
+          <router-link class="navbar-item" to="/artifacts">Artifacts</router-link>
+          <router-link class="navbar-item" to="/teamVars">Vars</router-link>
+          <router-link class="navbar-item" to="/teamAlerts">Alerts</router-link>
+          <router-link class="navbar-item" to="/scripts">Scripts</router-link>
         </div>
-        <div class="navbar-menu is-active">
-          <div class="navbar-start">
-            <router-link class="navbar-item" to="/downloadAgent">Download Agent</router-link>
-            <router-link activeClass="" :class="{'router-link-active': isLinkActive(['jobList', 'jobDesigner'])}" class="navbar-item" to="/jobList">Designer</router-link>
-            <router-link activeClass="" :class="{'router-link-active': isLinkActive(['jobMonitor', 'jobDetailsMonitor'])}" class="navbar-item" to="/jobMonitor">Monitor</router-link>
-            <router-link class="navbar-item" to="/agentMonitor">Agents</router-link>  
-            <router-link class="navbar-item" to="/interactiveConsole">Console</router-link>
-            <router-link class="navbar-item" to="/artifacts">Artifacts</router-link>
-            <router-link class="navbar-item" to="/teamVars">Vars</router-link>
-            <router-link class="navbar-item" to="/teamAlerts">Alerts</router-link>
-            <router-link class="navbar-item" to="/scripts">Scripts</router-link>
-          </div>
-          <div class="navbar-end is-flex-direction-column is-align-items-end">
+        <div class="navbar-end is-flex-direction-column is-align-items-end">
+          <div class="navbar-item">
             <div class="dropdown is-right" :class="{'is-active': showUserMenu}" v-click-outside="onClickedOutsideUserMenu">
               <div class="dropdown-trigger">
                 <a class="main-nav-link" @click.prevent="onClickedUserMenu">
@@ -62,7 +62,8 @@
                 </div>
               </div>
             </div>
-
+          </div>
+          <div class="mx-3">
             <div v-if="userTeamIds.length > 1" class="dropdown is-right" :class="{'is-active': showTeamsMenu}" v-click-outside="onClickedOutsideTeamsMenu">
               <a class="dropdown-trigger main-nav-link is-size-7" @click.prevent="onClickedTeamsMenu">
                 Team: {{ selectedTeamName }}
@@ -353,10 +354,12 @@ export default class App extends Vue {
 
 .navbar {
   border-bottom: 1px solid #d3d3d3;
+  background-color: rgb(238, 237, 237);
 
   .navbar-item:not(.navbar-logo) {
     font-variant-caps: all-small-caps;
     font-weight: bold;
+    font-size: 1.175em;
     color: grey;
 
     &.router-link-active,
@@ -370,6 +373,10 @@ export default class App extends Vue {
       color: black;
     }
   }
+}
+
+.dropdown-item {
+    font-size: 0.89em;
 }
 
 .is-vertical-aligned {
