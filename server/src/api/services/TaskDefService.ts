@@ -109,20 +109,28 @@ export class TaskDefService {
 
 
   public async updateTaskDef(_teamId: mongodb.ObjectId, id: mongodb.ObjectId, data: any, correlationId?: string, responseFields?: string): Promise<object> {
-    if ('fromRoutes' in data || 'toRoutes' in data) {
-      const taskDefQuery = await TaskDefModel.findById(id).find({ _teamId }).select('_jobDefId');
+    if ('fromRoutes' in data || 'toRoutes' in data || 'name' in data) {
+      let toRoutes_updated = [];
+      if (data.toRoutes && _.isArray(data.toRoutes))
+        toRoutes_updated = data.toRoutes;
+      let fromRoutes_updated = [];
+      if (data.fromRoutes && _.isArray(data.fromRoutes))
+        fromRoutes_updated = data.fromRoutes;
+
+      const taskDefQuery = await TaskDefModel.findById(id).find({ _teamId }).select('_jobDefId name');
       if (!taskDefQuery || (_.isArray(taskDefQuery) && taskDefQuery.length === 0))
         throw new MissingObjectError(`No TaskDef with id "${id.toHexString()}"`);
       const taskDef: TaskDefSchema = taskDefQuery[0];
 
-      let taskDefs: TaskDefSchema[] = await TaskDefModel.find({ _jobDefId: taskDef._jobDefId, _teamId }).select(responseFields).lean();
+      let taskDefs: TaskDefSchema[] = await TaskDefModel.find({ _jobDefId: taskDef._jobDefId, _teamId }).select('toRoutes fromRoutes name').lean();
       for (let i = 0; i < taskDefs.length; i++) {
         if (taskDefs[i]._id.toHexString() == id.toHexString()) {
-          taskDefs[i].toRoutes = data.toRoutes;
-          taskDefs[i].fromRoutes = data.fromRoutes;
+          taskDefs[i].toRoutes = toRoutes_updated;
+          taskDefs[i].fromRoutes = fromRoutes_updated;
         }
       }
 
+      const taskName_original = taskDef.name;
       Object.assign(taskDef, data);
       if (taskDef.target & (Enums.TaskDefTarget.SINGLE_AGENT_WITH_TAGS | Enums.TaskDefTarget.ALL_AGENTS_WITH_TAGS)) {
         if (!(_.isPlainObject(taskDef.requiredTags)) || (Object.keys(taskDef.requiredTags).length === 0)) {
@@ -135,6 +143,46 @@ export class TaskDefService {
 
       if (taskDef.autoRestart && (taskDef.target & (Enums.TaskDefTarget.ALL_AGENTS | Enums.TaskDefTarget.ALL_AGENTS_WITH_TAGS))) {
         throw new ValidationError(`Task "${taskDef.name}" has autoRestart=true but target is "ALL_AGENTS" or "ALL_AGENTS_WITH_TAGS" - autoRestart tasks must target any single agent, a specific agent or a single agent with required tags`);
+      }
+
+      // Update routes for all tasks in the job that reference this task (by name)
+      let name_updated = taskName_original;
+      if (data.name)
+        name_updated = data.name;
+      if (name_updated != taskName_original) {
+        for (let i = 0; i < taskDefs.length; i++) {
+          let needToUpdate = false;
+          let fromRoutes_updated = [];
+          let toRoutes_updated = [];
+          for (let j = 0; j < taskDefs[i].fromRoutes.length; ++j) {
+            const route = taskDefs[i].fromRoutes[j];
+            if (route[0] == taskName_original) {
+              needToUpdate = true;
+              fromRoutes_updated.push([name_updated, route[1]]);
+            } else {
+              fromRoutes_updated.push(route);
+            }
+          }
+          for (let j = 0; j < taskDefs[i].toRoutes.length; ++j) {
+            const route = taskDefs[i].toRoutes[j];
+            if (route[0] == taskName_original) {
+              needToUpdate = true;
+              toRoutes_updated.push([name_updated, route[1]]);
+            } else {
+              toRoutes_updated.push(route);
+            }
+          }
+          if (needToUpdate) {
+            const taskRoutesUpdate = { fromRoutes: fromRoutes_updated, toRoutes: toRoutes_updated };
+            await TaskDefModel.findOneAndUpdate(
+              { _id: taskDefs[i]._id },
+              taskRoutesUpdate,
+              { new: true })
+              .select(responseFields);
+              const taskRoutesDeltas = Object.assign({ _id: taskDefs[i]._id }, taskRoutesUpdate);
+              await rabbitMQPublisher.publish(_teamId, "TaskDef", correlationId, PayloadOperation.UPDATE, convertData(TaskDefSchema, taskRoutesDeltas));          
+          }
+        }
       }
 
       let cd = SGUtils.isJobDefCyclical(taskDefs);
