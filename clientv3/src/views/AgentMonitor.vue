@@ -57,7 +57,7 @@
             </td>
           </tr>
           <tr class="tr">
-            <td class="td">
+            <td class="td" colspan="3">
               <input type="checkbox" v-model="includeInactiveAgents"/> Include inactive agents
             </td>
           </tr>
