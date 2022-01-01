@@ -107,25 +107,27 @@ export class JobDefService {
       }
 
       const taskDefReq: any = await taskDefService.createTaskDef(_teamId, taskDef_data, correlationId, '_id');
-      const newTaskDef = taskDefReq[0];
 
+      if (taskDefSource.target != TaskDefTarget.AWS_LAMBDA) {
+        const newTaskDef = taskDefReq[0];
 
-      let stepDefsSourceQuery: StepDefSchema[] = await stepDefService.findTaskDefStepDefs(_teamId, taskDefSource._id);
-      for (let i = 0; i < stepDefsSourceQuery.length; i++) {
-        let stepDefSource: StepDefSchema = stepDefsSourceQuery[i];
+        let stepDefsSourceQuery: StepDefSchema[] = await stepDefService.findTaskDefStepDefs(_teamId, taskDefSource._id);
+        for (let i = 0; i < stepDefsSourceQuery.length; i++) {
+          let stepDefSource: StepDefSchema = stepDefsSourceQuery[i];
 
-        const stepDef_data = {
-          _teamId: stepDefSource._teamId,
-          _taskDefId: newTaskDef._id,
-          name: stepDefSource.name,
-          _scriptId: stepDefSource._scriptId,
-          order: stepDefSource.order,
-          command: stepDefSource.command,
-          arguments: stepDefSource.arguments,
-          variables: stepDefSource.variables,
+          const stepDef_data = {
+            _teamId: stepDefSource._teamId,
+            _taskDefId: newTaskDef._id,
+            name: stepDefSource.name,
+            _scriptId: stepDefSource._scriptId,
+            order: stepDefSource.order,
+            command: stepDefSource.command,
+            arguments: stepDefSource.arguments,
+            variables: stepDefSource.variables,
+          }
+
+          const stepDefReq: any = await stepDefService.createStepDef(_teamId, stepDef_data, correlationId, '_id');
         }
-
-        const stepDefReq: any = await stepDefService.createStepDef(_teamId, stepDef_data, correlationId, '_id');
       }
     }
 
