@@ -9,7 +9,7 @@
       </div>
     </modal>
 
-    <nav class="navbar is-transparent" v-if="!isOnLandingPage()">
+    <nav class="navbar" v-if="!isOnLandingPage()">
       <div class="navbar-brand">
           <router-link activeClass="" to="/" class="navbar-item navbar-logo">
               <img src="/logo4.png" alt="SaaSGlue logo" width="132" height="22">
@@ -89,6 +89,8 @@
         </div>
       </div>
     </nav>
+
+    <hr class="navbar-divider">
 
     <div class="nav-main">
       <router-view/>
@@ -352,6 +354,12 @@ export default class App extends Vue {
   color: #2c3e50;
 }
 
+.navbar-divider {
+  background: linear-gradient(to right, #80e8ff, #00b0d6);
+  height: 2px;
+  margin: 0px;
+}
+
 .navbar {
   border-bottom: 1px solid #d3d3d3;
   background-color: rgb(238, 237, 237);
@@ -364,15 +372,21 @@ export default class App extends Vue {
 
     &.router-link-active,
     &:hover {
-      border-bottom: 3px solid deepskyblue;
+      background-color: white;
       margin-top: 2px;
       margin-bottom: -1px;
     }
 
     &.router-link-active {
-      color: black;
+      background-color: white;
+      color: #5caaed;
+      font-weight: bold;
     }
   }
+}
+
+.test-item:hover {
+  background-color: red;
 }
 
 .dropdown-item {
@@ -423,7 +437,7 @@ export default class App extends Vue {
 }
 
 .nav-main {
-  margin-top: 10px;
+  margin-top: 0px;
   margin-bottom: 25px;
 }
 
