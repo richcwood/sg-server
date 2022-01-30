@@ -646,6 +646,7 @@
 
     <!-- For resizing the nav panel -->
     <div class="nav-job-resizer" @mousedown="onResizerMouseDown">
+      <img class="col-resizer-icon" src="@/assets/images/col-resize-icon.svg" />
     </div>
 
     <!-- Edit job, including task routes designer -->
@@ -2159,7 +2160,7 @@ export default class JobDesigner extends Vue {
   private navPanelWidth = 300;
 
   private get editPanelMarginLeft(): number {
-    return this.navPanelWidth + 66;
+    return this.navPanelWidth + 42;
   }
 
   private get maxNavPanelJobNameLength(): number {
@@ -2309,31 +2310,35 @@ export default class JobDesigner extends Vue {
     background-color: #f2f2f2;
     font-size: 18px;
     margin-left: 30px;
-    margin-right: 30px;
-    border-style: none;
-    border-style: solid;
-    border-width: .5px;
-    border-color: lightgray;
+    border-style: 1px solid lightgray;
     width: 200px;
     height: 100vh;
     overflow-y: auto;
     float: left;
-    border-top-width: 0px;
+    border-top: none;
   }
 
   // for resizing the nav-job panel
   .nav-job-resizer {
     float: left;
     height: 100vh;
-    width: 6px;
-    border-style: solid;
-    border-width: .5px;
-    border-top-width: 0px;
-    border-color: lightgray;
+    width: 12px;
+    border: 1px solid lightgray;
+    border-top: none;
+    border-bottom: none;
+    cursor: col-resize;
+    position: relative;
   }
 
-  .nav-job-resizer:hover {
-    cursor: pointer;
+  .col-resizer-icon {
+    width: 16px;
+    max-width: initial;
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: -3px;
+    margin: auto;
+    z-index: 1;
   }
 
   .nav-job-item {
@@ -2341,7 +2346,7 @@ export default class JobDesigner extends Vue {
     cursor: pointer;
   }
 
-  .selected {
+  .selected > .icon-text {
     font-weight: bold;
     cursor: pointer;
   }
