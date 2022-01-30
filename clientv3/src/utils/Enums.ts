@@ -24,6 +24,8 @@ enum PaymentTransactionStatus {APPROVED = 0, REJECTED = 1, SETTLED = 2, DISPUTED
 
 enum TeamPricingTier { FREE = 0, PAID = 1 }
 
+enum UserTeamRoles { ADMIN = 56 }
+
 const enumKeyToPretty = function(theEnum: any, enumKey: any): string {
   if(enumKey === undefined || enumKey === null){
     return '';
@@ -51,4 +53,4 @@ const enumKeys = function(theEnum: any): string[] {
   return output;
 }
 
-export { StepStatus, TaskStatus, TaskFailureCode, JobStatus, LogLevel, TaskSource, TeamPaymentStatus, InvoiceStatus, PaymentMethodType, PaymentTransactionSource, PaymentTransactionType, PaymentTransactionStatus, TeamPricingTier, enumKeyToPretty, enumKeys };
+export { StepStatus, TaskStatus, TaskFailureCode, JobStatus, LogLevel, TaskSource, TeamPaymentStatus, InvoiceStatus, PaymentMethodType, PaymentTransactionSource, PaymentTransactionType, PaymentTransactionStatus, TeamPricingTier, UserTeamRoles, enumKeyToPretty, enumKeys };

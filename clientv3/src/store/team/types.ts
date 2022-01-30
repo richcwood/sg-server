@@ -14,4 +14,5 @@ export interface Team extends Model {
   billing_zip?: string;
   billing_country?: string;
   billing_email?: string;
+  ownerId: string;
 };

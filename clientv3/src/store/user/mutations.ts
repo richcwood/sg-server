@@ -10,6 +10,10 @@ export const mutations: MutationTree<CoreState> = {
     coreMutations.addModels(state, models);
   },
 
+  update(state: CoreState, model: User){
+    coreMutations.update(state, model);
+  },
+
   select(state: CoreState, model: User){
     coreMutations.select(state, model);
   }

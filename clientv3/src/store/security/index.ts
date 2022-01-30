@@ -29,9 +29,7 @@ export const getAuthJwtCookie = (): object|undefined => {
 
 // Does the user exist, have an team?
 export const isUserReadyToUseApp = (): boolean => {
-  console.log('isUserReadyToUseApp -> state.user -> ', state.user);
   if(state.user && state.user.teamIds){
-    console.log('yes user is ready');
     return state.user.teamIds.length > 0;
   }
   else {

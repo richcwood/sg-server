@@ -95,7 +95,7 @@
                 Email
               </td>
               <td class="td">
-                Email Confirmed
+                Is Admin
               </td>
             </tr>
             <tr class="tr" v-for="user in users" v-bind:key="user.id">
@@ -105,8 +105,8 @@
               <td class="td">
                 {{user.email}}
               </td>
-              <td class="td">
-                {{user.emailConfirmed}}
+              <td class="td has-text-centered">
+                <input type="checkbox" @click="onIsAdminClicked(user)" :checked="isTeamAdmin(user)" :disabled="isTeamAdminFlagDisabled(user)">
               </td>
             </tr>
           </table>
@@ -125,14 +125,55 @@ import { BindStoreModel, BindSelected, BindSelectedCopy } from '../decorator';
 import { StoreType } from '../store/types';
 import { Team } from '../store/team/types';
 import { User } from '../store/user/types';
+import { getLoggedInUserRightsBitset } from '../store/security';
 import { showErrors } from '../utils/ErrorHandler';
+import { UserTeamRoles } from '../utils/Enums';
 import { SgAlert, AlertPlacement, AlertCategory } from '../store/alert/types';
+import BitSet from 'bitset';
+import axios from 'axios';
 
 @Component({
   components: { },
   props: { },
 })
 export default class Settings extends Vue { 
+
+  @BindStoreModel({storeType: StoreType.SecurityStore, selectedModelName: 'user'})
+  private user: any;
+
+  private isTeamAdmin(user): boolean{
+    let userAccessRightsBitset: BitSet | null = BitSet.fromHexString(user.teamAccessRightIds[this.selectedTeamCopy.id]);
+    if(userAccessRightsBitset.get(UserTeamRoles.ADMIN)){
+      return true;
+    }
+    else {
+      return false;
+    }
+  }
+
+  private isTeamOwner(user): boolean{
+    return this.selectedTeamCopy.ownerId === user.id;
+  }
+
+  private getTeamOwner(): User{
+    for (let u of this.users)
+      if (u.id === this.selectedTeamCopy.ownerId)
+        return u;
+    return null;
+  }
+
+  private isTeamAdminFlagDisabled(user): boolean{
+    if (!this.user || !this.isTeamAdmin(this.user))
+      return true;
+    const teamOwner = this.getTeamOwner();
+    const currentUserIsTeamOwner = teamOwner.id === this.user.id;
+    if (this.isTeamAdmin(user) && !currentUserIsTeamOwner)
+      return true;
+    if (user.id === teamOwner.id)
+      return true;
+    return false;
+  }
+
   @BindSelectedCopy({storeType: StoreType.TeamStore})
   private selectedTeamCopy: Team;
 
@@ -146,6 +187,25 @@ export default class Settings extends Vue {
   private onCancelClicked(){
     // Just reselect the original team
     this.$store.dispatch(`${StoreType.TeamStore}/select`, this.$store.state[StoreType.TeamStore].selected);
+  }
+
+  private async onIsAdminClicked(user){
+    const target = event.target as HTMLInputElement;
+
+    try {
+      let newRole = 'User';
+      if (target.checked){
+        await axios.post(`api/v0/teamadminaccess/grant/${user.id}`, {});
+        newRole = 'Admin';
+      } else
+        await axios.post(`api/v0/teamadminaccess/revoke/${user.id}`, {});
+
+      this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`User ${user.name} role set to "${newRole}"`, AlertPlacement.WINDOW));
+    }
+    catch(err){
+      console.error('Unable to change user role', err);
+      showErrors('Unable to change user role', err);
+    }
   }
 
   private async onSaveClicked(){

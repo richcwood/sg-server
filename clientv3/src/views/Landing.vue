@@ -582,6 +582,12 @@
           this.redirectToUserLoggedInPage();
         }
         else {
+          const localStorageInvitedTeamToken = localStorage.getItem('sg_invited_team_token');
+          if(localStorageInvitedTeamToken){
+            const invitedTeamToken: any = parseJwt(localStorageInvitedTeamToken);
+            this.emailAddress = invitedTeamToken.email;
+          }
+
           if( sessionStorage.getItem('sg_reset_password_token') && 
               sessionStorage.getItem('sg_reset_password_user_id')){
             this.page = 'passwordResetUpdatePassword';
@@ -693,7 +699,15 @@
     private async onConfirmEmailCaptchaVerify (response){
       if (response) {
         this.robot = false;
-        await this.confirmEmailAddress();
+        const localStorageInvitedTeamToken = localStorage.getItem('sg_invited_team_token');
+        if(localStorageInvitedTeamToken){
+          const invitedTeamToken: any = parseJwt(localStorageInvitedTeamToken);
+          this.emailAddress = invitedTeamToken.email;
+          const invitedTeamId = invitedTeamToken.InvitedTeamId;
+          await this.confirmInvitedUserEmailAddress(this.emailAddress, invitedTeamId, localStorageInvitedTeamToken);
+        } else {
+          await this.confirmEmailAddress();
+        }
       }
     }
 
@@ -707,6 +721,25 @@
 
     private async onConfirmEmailClicked(){
       await this.confirmEmailAddress();
+    }
+
+    private async confirmInvitedUserEmailAddress(emailAddress: string, teamId: string, token: string){
+      try {
+
+        const confirmResult = await axios.put(`/api/v0/signup/confirminvite/${emailAddress}/${teamId}/${token}`, {});
+        const user = confirmResult.data.data; // this is the new user account
+        
+        this.$store.commit('securityStore/setUser', user);
+
+        this.page = 'createAccount';
+        this.$nextTick(() => {
+          (<any>this.$refs['name']).focus();
+        });
+      }
+      catch(err) {
+        console.error(err);
+        this.page = 'emailConfirmFailed';
+      }
     }
 
     private async onConfirmLetterKeyUp(index: number){

@@ -8,7 +8,9 @@ import { BaseLogger } from '../../shared/SGLogger';
 import * as moment from 'moment';
 import * as _ from 'lodash';
 import * as bcrypt from 'bcrypt';
+const jwt = require('jsonwebtoken');
 
+const environment = process.env.NODE_ENV || 'development';
 
 export class SignupService {
     public async signupNewUserOAuth(data: any, logger: BaseLogger): Promise<object> {
@@ -83,6 +85,66 @@ export class SignupService {
     }
 
 
+    public async confirmNewInvitedUser(userEmail: string, _teamId: string, token: string, logger: BaseLogger): Promise<object> {
+        let updatedUser: any;
+        const queryRes: any = await userService.findUserByEmail(userEmail, '_id email teamIds teamAccessRightIds teamIdsInvited teamIdsInactive passwordHash');
+        if (!queryRes || (_.isArray(queryRes) && queryRes.length < 1)) {
+            throw new ValidationError('Something went wrong. Please request a new invite from the team administrator.');
+        }
+        const userModel: UserSchema = queryRes[0];
+
+        if (userModel.emailConfirmed)
+            return userModel;
+
+        /// Check if the user is already in the team
+        let userAlreadyInTeam: boolean = true;
+        if (userModel.teamIds.indexOf(_teamId) < 0)
+            userAlreadyInTeam = false;
+
+        /// Verify the token - the secret comes from the user document - if no secret we can't verify the token
+        let tokenIsValid: boolean = false;
+        const filterRes = _.filter(userModel.teamIdsInvited, o => o._teamId == _teamId);
+        let teamIdInviteSecret: string = undefined;
+        if (_.isArray(filterRes) && filterRes.length > 0)
+            teamIdInviteSecret = filterRes[0].inviteKey;
+        if (!teamIdInviteSecret) {
+            if (!userAlreadyInTeam)
+                throw new ValidationError('Something went wrong. Please request a new invite from the team administrator.');
+        } else {
+            /// We have the secret, use it to verify the token and then check the embedded data against the url params
+            tokenIsValid = true;
+            let jwtData;
+            try {
+                jwtData = jwt.verify(token, teamIdInviteSecret);
+            } catch (err) {
+                tokenIsValid = false;
+            }
+            if (tokenIsValid) {
+                if (userModel._id.toHexString() != jwtData.id)
+                    tokenIsValid = false;
+                else if (_teamId != jwtData.InvitedTeamId)
+                    tokenIsValid = false;
+            }
+        }
+
+        if (!tokenIsValid)
+            throw new ValidationError('Something went wrong. Please request a new invite from the team administrator.');
+
+        updatedUser = await UserModel.findOneAndUpdate({_id: userModel._id}, { emailConfirmed: true }, { new: true });
+
+        if (environment != 'debug') {
+            try {
+                let newEmailNotificationMessage = JSON.stringify(updatedUser, null, 4);
+                await SGUtils.SendInternalEmail('rich@saasglue.com', 'jack@saasglue.com,jay@saasglue.com,rich@saasglue.com', 'New user signed up', newEmailNotificationMessage, logger);
+            } catch (e) {
+                logger.LogError(`Error sending new user notification message: ${e.message}`, updatedUser);
+            }
+        }
+
+        return updatedUser; // fully populated model
+    }
+
+
     public async confirmNewUser(data: any, logger: BaseLogger): Promise<object> {
         if (!data.emailConfirmCode)
             throw new ValidationError(`Request body missing "emailConfirmCode" parameter`);
@@ -118,11 +180,13 @@ export class SignupService {
 
         updatedUser = await UserModel.findOneAndUpdate(userFilter, { emailConfirmed: true, $unset: { emailConfirmCodeExpiration: '', emailConfirmCode: '' }, }, { new: true });
 
-        try {
-            let newEmailNotificationMessage = JSON.stringify(updatedUser, null, 4);
-            await SGUtils.SendInternalEmail('rich@saasglue.com', 'jack@saasglue.com,jay@saasglue.com,rich@saasglue.com', 'New user signed up', newEmailNotificationMessage, logger);
-        } catch (e) {
-            logger.LogError(`Error sending new user notification message: ${e.message}`, updatedUser);
+        if (environment != 'debug') {
+            try {
+                let newEmailNotificationMessage = JSON.stringify(updatedUser, null, 4);
+                await SGUtils.SendInternalEmail('rich@saasglue.com', 'jack@saasglue.com,jay@saasglue.com,rich@saasglue.com', 'New user signed up', newEmailNotificationMessage, logger);
+            } catch (e) {
+                logger.LogError(`Error sending new user notification message: ${e.message}`, updatedUser);
+            }
         }
 
         return updatedUser; // fully populated model
