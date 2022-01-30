@@ -2310,7 +2310,7 @@ export default class JobDesigner extends Vue {
     background-color: #f2f2f2;
     font-size: 18px;
     margin-left: 30px;
-    border-style: 1px solid lightgray;
+    border: 1px solid lightgray;
     width: 200px;
     height: 100vh;
     overflow-y: auto;
