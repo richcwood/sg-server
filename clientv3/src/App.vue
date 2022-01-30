@@ -16,24 +16,24 @@
           </router-link>
       </div>
       <div class="navbar-menu is-active">
-        <div class="navbar-start">
+        <div class="navbar-start has-text-weight-bold">
           <router-link class="navbar-item" to="/downloadAgent">Download Agent</router-link>
           <router-link activeClass="" :class="{'router-link-active': isLinkActive(['jobList', 'jobDesigner'])}" class="navbar-item" to="/jobList">Designer</router-link>
           <router-link activeClass="" :class="{'router-link-active': isLinkActive(['jobMonitor', 'jobDetailsMonitor'])}" class="navbar-item" to="/jobMonitor">Monitor</router-link>
-          <router-link class="navbar-item" to="/agentMonitor">Agents</router-link>  
+          <router-link class="navbar-item" to="/agentMonitor">Agents</router-link>
           <router-link class="navbar-item" to="/interactiveConsole">Console</router-link>
           <router-link class="navbar-item" to="/artifacts">Artifacts</router-link>
           <router-link class="navbar-item" to="/teamVars">Vars</router-link>
           <router-link class="navbar-item" to="/teamAlerts">Alerts</router-link>
           <router-link class="navbar-item" to="/scripts">Scripts</router-link>
         </div>
-        <div class="navbar-end is-flex-direction-column is-align-items-end">
-          <div class="navbar-item">
+        <div class="navbar-end is-flex-direction-column is-align-items-end mr-3">
+          <div>
             <div class="dropdown is-right" :class="{'is-active': showUserMenu}" v-click-outside="onClickedOutsideUserMenu">
               <div class="dropdown-trigger">
-                <a class="main-nav-link" @click.prevent="onClickedUserMenu">
+                <a class="dropdown-link" @click.prevent="onClickedUserMenu">
                   Hello, {{ userName }}
-                  <font-awesome-icon class="is-vertical-aligned" icon="angle-down" />
+                  <font-awesome-icon class="dropdown-link-caret" icon="angle-down" />
                 </a>
               </div>
               <div class="dropdown-menu" role="menu">
@@ -63,11 +63,11 @@
               </div>
             </div>
           </div>
-          <div class="mx-3">
+          <div>
             <div v-if="userTeamIds.length > 1" class="dropdown is-right" :class="{'is-active': showTeamsMenu}" v-click-outside="onClickedOutsideTeamsMenu">
-              <a class="dropdown-trigger main-nav-link is-size-7" @click.prevent="onClickedTeamsMenu">
+              <a class="dropdown-trigger dropdown-link is-size-7" @click.prevent="onClickedTeamsMenu">
                 Team: {{ selectedTeamName }}
-                <font-awesome-icon class="is-vertical-aligned" icon="angle-down" />
+                <font-awesome-icon class="dropdown-link-caret" icon="angle-down" />
               </a>
               <div class="dropdown-menu" role="menu">
                 <div class="dropdown-content" role="menu">
@@ -84,7 +84,7 @@
                 </div>
               </div>
             </div>
-            <span v-else class="main-nav-link has-text-grey is-size-7">Team: {{ selectedTeamName }}</span>
+            <span v-else class="has-text-grey is-size-7">Team: {{ selectedTeamName }}</span>
           </div>
         </div>
       </div>
@@ -361,20 +361,16 @@ export default class App extends Vue {
 }
 
 .navbar {
-  border-bottom: 1px solid #d3d3d3;
-  background-color: rgb(238, 237, 237);
+  background-color: #f0f0f0;
 
   .navbar-item:not(.navbar-logo) {
     font-variant-caps: all-small-caps;
-    font-weight: bold;
-    font-size: 1.175em;
-    color: grey;
+    font-size: 1.175rem;
+    color: #5a5959;
 
     &.router-link-active,
     &:hover {
       background-color: white;
-      margin-top: 2px;
-      margin-bottom: -1px;
     }
 
     &.router-link-active {
@@ -382,6 +378,20 @@ export default class App extends Vue {
       color: #5caaed;
       font-weight: bold;
     }
+  }
+
+  .dropdown-link {
+    position: relative;
+    padding-right: 15px;
+    color: #5caaed;
+  }
+
+  .dropdown-link-caret {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    margin: auto;
+    right: 0;
   }
 }
 
@@ -391,10 +401,6 @@ export default class App extends Vue {
 
 .dropdown-item {
     font-size: 0.89em;
-}
-
-.is-vertical-aligned {
-  vertical-align: middle;
 }
 
 .nav-footer {
