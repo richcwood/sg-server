@@ -654,7 +654,7 @@
 
       <!-- <tabs :defaultIndex="4" :onSelect="onTabSelected" :style="{'background': 'lightskyblue'}"> -->
 
-    <div class="container tabs-container" :style="{'margin-left': editPanelMarginLeft+'px'}">
+    <div class="tabs-container" :style="{'margin-left': editPanelMarginLeft+'px'}">
       <div v-if="activeTab === JobTab.SCHEDULES">
         <table class="table">
           <tr class="tr"><td class="td"></td></tr>
@@ -2311,11 +2311,11 @@ export default class JobDesigner extends Vue {
     font-size: 18px;
     margin-left: 30px;
     border: 1px solid lightgray;
+    border-right: none;
     width: 200px;
     height: 100vh;
     overflow-y: auto;
     float: left;
-    border-top: none;
   }
 
   // for resizing the nav-job panel
@@ -2354,6 +2354,7 @@ export default class JobDesigner extends Vue {
   .tabs-container {
     padding-top: 0px;
     padding-left: 0px;
+    border-top: 1px solid lightgrey;
   }
 
   .edit-job {
@@ -2371,12 +2372,9 @@ export default class JobDesigner extends Vue {
   }
 
   .task-designer {
-    border-style: solid;
-    border-width: 1px;
-    border-left-width: 0px;
-    border-top-width: 0px;
-    border-color: lightgray;
-    
+    border: 1px solid lightgray;
+    border-left: none;
+    border-top: none;
   }
 
   .task-designer-nav {
