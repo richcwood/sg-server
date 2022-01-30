@@ -10,6 +10,12 @@
     background: rgb(172,158,158);
 }
 
+.text-ellipsis {
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
+}
+
 :root {
     --grey-bg-color: #f0f0f0;
 }

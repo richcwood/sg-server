@@ -554,7 +554,7 @@
 
     <div class="container">
       <header class="is-flex my-2">
-          <h2 class="is-size-2">{{ calcNavPanelJobName(jobDefForEdit) }} Job</h2>
+          <h2 class="is-size-2">{{ jobDefForEdit.name }} Job</h2>
           <ul class="job-menu is-flex is-align-items-center has-text-weight-bold is-size-5 ml-6">
               <li>
                 <a @click.prevent="activeTab = JobTab.SCHEDULES"
@@ -591,16 +591,16 @@
     </div>
 
     <!-- Job tasks / steps navigation / selection -->
-    <div ref="navPanel" class="nav-job" v-if="jobDefForEdit" :style="{width: navPanelWidth+'px'}">
+    <div ref="navPanel" class="nav-job px-2" v-if="jobDefForEdit" :style="{width: navPanelWidth+'px'}">
       <div class="is-size-5 has-text-weight-bold mt-3 has-text-centered">Tasks</div>
       <div class="mt-3">
         <div class="dropdown"
             v-click-outside="onClickedOutsideNavCreateMenu" 
             :class="{'is-active': showCreateItemMenu}">
           <div class="dropdown-trigger">
-            <button class="button ml-2" 
+            <button class="button"
                     @click="onClickedCreateItemFromNav"
-                    aria-haspopup="true" 
+                    aria-haspopup="true"
                     aria-controls="dropdown-menu">
               Create
             </button>
@@ -615,23 +615,32 @@
           </div>
         </div>
       
-        <button class="button ml-2" 
+        <button class="button ml-2"
                 :disabled="!selectedTaskDefForEdit && !selectedStepDefForEdit"
                 @click="onNavMenuDeleteClicked">
                 Delete
         </button>
       </div>
 
-      <div class="is-divider mx-2 my-3"></div>
+      <div class="is-divider my-3"></div>
 
-      <div class="nav-task" :class="{selected: taskDef === selectedItemForNav}" @click="selectItemForNav(taskDef)" v-for="taskDef in taskDefs" v-bind:key="taskDef.id">
-        {{calcNavPanelTaskName(taskDef)}}
-        <span v-if="isAWSLambdaTaskDefType(taskDef.target)">(lambda)</span>
-        <span v-else>
-          <div class="nav-step" :class="{selected: stepDef === selectedItemForNav}" @click.stop="selectItemForNav(stepDef)" v-for="stepDef in stepDefsForTaskDef(taskDef)" v-bind:key="stepDef.id">
-            {{calcNavPanelStepName(stepDef)}}
-          </div>
+      <div class="is-clickable" :class="{selected: taskDef === selectedItemForNav}" @click="selectItemForNav(taskDef)" v-for="taskDef in taskDefs" v-bind:key="taskDef.id">
+        <span class="icon-text has-max-width is-flex-wrap-nowrap">
+          <img class="icon" src="@/assets/images/network-icon-world.svg" />
+          <span class="text-ellipsis" :title="taskDef.name">
+            {{ taskDef.name }}
+            <span v-if="isAWSLambdaTaskDefType(taskDef.target)">(lambda)</span>
+          </span>
         </span>
+
+        <template v-if="!isAWSLambdaTaskDefType(taskDef.target)">
+          <div class="ml-6 is-clickable" :class="{selected: stepDef === selectedItemForNav}" @click.stop="selectItemForNav(stepDef)" v-for="stepDef in stepDefsForTaskDef(taskDef)" v-bind:key="stepDef.id">
+            <span class="icon-text has-max-width is-flex-wrap-nowrap">
+              <img class="icon" src="@/assets/images/network-icon-world.svg" />
+              <span class="text-ellipsis" :title="stepDef.name">{{ stepDef.name }}</span>
+            </span>
+          </div>
+        </template>
       </div>
     </div>
 
@@ -2165,33 +2174,6 @@ export default class JobDesigner extends Vue {
     return Math.floor(this.navPanelWidth / 9.5);
   }
 
-  private calcNavPanelJobName(jobDef: JobDef): string {
-    if(jobDef){
-      return truncateString(jobDef.name, this.maxNavPanelJobNameLength);
-    }
-    else {
-      return '';
-    }
-  }
-
-  private calcNavPanelTaskName(taskDef: TaskDef): string {
-    if(taskDef){
-      return truncateString(taskDef.name, this.maxNavPanelTaskNameLength);
-    }
-    else {
-      return '';
-    }
-  }
-
-  private calcNavPanelStepName(stepDef: StepDef): string {
-    if(stepDef){
-      return truncateString(stepDef.name, this.maxNavPanelStepNameLength);
-    }
-    else {
-      return '';
-    }
-  }
-
   private onMouseMove(event: MouseEvent){
     if(this.navResizing){
       const navPanel = <HTMLElement>this.$refs.navPanel;
@@ -2359,18 +2341,6 @@ export default class JobDesigner extends Vue {
     cursor: pointer;
   }
 
-  .nav-task {
-    font-weight: normal;
-    margin-left: 8px;
-    cursor: pointer;
-  }
-
-  .nav-step {
-    font-weight: normal;
-    margin-left: 32px;
-    cursor: pointer;
-  }
-
   .selected {
     font-weight: bold;
     cursor: pointer;
@@ -2450,5 +2420,9 @@ export default class JobDesigner extends Vue {
   .job-menu .is-active {
       background: deepskyblue;
       color: white;
+  }
+
+  .has-max-width {
+    max-width: 100%;
   }
 </style>
