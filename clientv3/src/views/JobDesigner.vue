@@ -552,30 +552,43 @@
       </table>
     </modal>
 
-
-    <section class="hero has-background-deepskyblue is-small">
-      <div class="hero-body">
-        <div class="is-size-3 has-text-weight-bold ml-5">{{calcNavPanelJobName(jobDefForEdit)}}</div>        
-      </div>
-      <div class="hero-foot">
-        <div class="container ml-0" style="position: relative; width: 100%; height: 41px;">
-          <!-- <div class="is-size-5 has-text-white has-text-weight-bold" style="position: absolute; top: 6px; left: 120px;">Tasks</div> -->
-          <nav class="tabs is-boxed" :style="{'margin-left': editPanelMarginLeft+'px'}">
-            <div class="container">
-              <ul>
-                <li class="tab" @click="openTab($event, 'Schedules')"><a class="tab-item">Schedules</a></li>
-                <li class="tab" @click="openTab($event, 'Run')"><a class="tab-item">{{runTabTitle}}</a></li>
-                <li class="tab" @click="openTab($event, 'Settings')"><a class="tab-item">Settings</a></li>
-                <li class="tab" @click="openTab($event, 'RuntimeVariables')"><a class="tab-item">Runtime Variables</a></li>
-                <li class="tab is-active" id="workflowDesignerTab" @click="openTab($event, 'WorkflowDesigner')"><a class="tab-item">Workflow Designer</a></li>
-              </ul>
-            </div>
-          </nav>
-        </div>
-      </div>
-    </section>    
-
-    <!-- <hr class="content-divider"> -->
+    <div class="container">
+      <header class="is-flex my-2">
+          <h2 class="is-size-2">{{ calcNavPanelJobName(jobDefForEdit) }} Job</h2>
+          <ul class="job-menu is-flex is-align-items-center has-text-weight-bold is-size-5 ml-6">
+              <li>
+                <a @click.prevent="activeTab = JobTab.SCHEDULES"
+                  :class="{'is-active': activeTab === JobTab.SCHEDULES}"
+                  class="px-1"
+                  href="#">Schedules</a>
+              </li>
+              <li>
+                <a @click.prevent="activeTab = JobTab.RUN"
+                  :class="{'is-active': activeTab === JobTab.RUN}"
+                  class="px-1"
+                  href="#">{{ runTabTitle }}</a>
+              </li>
+              <li>
+                <a @click.prevent="activeTab = JobTab.SETTINGS"
+                  :class="{'is-active': activeTab === JobTab.SETTINGS}"
+                  class="px-1"
+                  href="#">Settings</a>
+              </li>
+              <li>
+                <a @click.prevent="activeTab = JobTab.VARIABLES"
+                  :class="{'is-active': activeTab === JobTab.VARIABLES}"
+                  class="px-1"
+                  href="#">Runtime Variables</a>
+              </li>
+              <li>
+                <a @click.prevent="activeTab = JobTab.DESIGNER"
+                  :class="{'is-active': activeTab === JobTab.DESIGNER}"
+                  class="px-1"
+                  href="#">Workflow Designer</a>
+              </li>
+          </ul>
+      </header>
+    </div>
 
     <!-- Job tasks / steps navigation / selection -->
     <div ref="navPanel" class="nav-job" v-if="jobDefForEdit" :style="{width: navPanelWidth+'px'}">
@@ -647,7 +660,7 @@
       <!-- <tabs :defaultIndex="4" :onSelect="onTabSelected" :style="{'background': 'lightskyblue'}"> -->
 
     <div class="container tabs-container" :style="{'margin-left': editPanelMarginLeft+'px'}">
-      <div id="Schedules" class="content-tab" style="display: none;">
+      <div v-if="activeTab === JobTab.SCHEDULES">
         <table class="table">
           <tr class="tr"><td class="td"></td></tr>
           <tr class="tr">
@@ -704,7 +717,7 @@
         </table>
       </div>
 
-      <div id="Run" class="content-tab" style="display: none;">
+      <div v-else-if="activeTab === JobTab.RUN">
         <table class="table">
           <tr class="tr"><td class="td"></td></tr>
           <tr class="tr">
@@ -779,7 +792,7 @@
         </table>
       </div>
 
-      <div id="Settings" class="content-tab" style="display: none;">
+      <div v-else-if="activeTab === JobTab.SETTINGS">
         <validation-observer ref="editJobValidationObserver">
           <table class="table">
             <tr class="tr"><td class="td"></td></tr>
@@ -963,7 +976,7 @@
         </validation-observer>
       </div>
 
-      <div id="RuntimeVariables" class="content-tab" style="display: none;">
+      <div v-else-if="activeTab === JobTab.VARIABLES">
         <div style="margin-top: 20px;">
           <table class="table" style="width: 800px;">
             <tr class="tr">
@@ -1031,7 +1044,7 @@
         </div>              
       </div>
       
-      <div id="WorkflowDesigner" class="content-tab">
+      <div v-else-if="activeTab === JobTab.DESIGNER">
         <div class="task-designer">
           <div class="task-designer-nav">
             <button class="button" :disabled="selectedTaskDefTarget" @click="createNewTaskDef_chooseTarget">New Task</button>
@@ -1066,7 +1079,7 @@
       </div>
 
       <!-- Edit task -->
-      <div id="EditTask" class="content-tab mt-3" style="display: none;">
+      <div v-else-if="activeTab === JobTab.TASK">
         <task-def-editor v-if="selectedTaskDefForEdit && selectedTaskDefForEdit.target !== TaskDefTarget.AWS_LAMBDA" 
                         @editStepDef="onEditStepDefClicked"
                         @createNewStepDef="onCreateStepDefClicked"
@@ -1076,7 +1089,7 @@
         </s-g-c-task-def-editor>
       </div>
 
-      <div id="EditStep" class="content-tab mt-3" style="display: none;">
+      <div v-else-if="activeTab === JobTab.STEP">
         <!-- Edit step -->
         <div class="edit-step" v-if="selectedStepDefForEdit">
           <validation-observer ref="editStepDefValidationObserver">
@@ -1175,6 +1188,16 @@ import TaskDefEditor from '../components/TaskDefEditor.vue';
 import SGCTaskDefEditor from '../components/SGCTaskDefEditor.vue';
 import { stringToMap, mapToString } from '../utils/Shared';
 
+enum JobTab {
+  VARIABLES = 'RuntimeVariables',
+  DESIGNER = 'WorkflowDesigner',
+  SCHEDULES = 'Schedules',
+  SETTINGS = 'Settings',
+  STEP = 'Step',
+  TASK = 'Task',
+  RUN = 'Run',
+}
+
 @Component({
   components: {
     Tabs, 
@@ -1204,39 +1227,18 @@ export default class JobDesigner extends Vue {
   private readonly ScheduleTriggerType = ScheduleTriggerType;
   private readonly JobDefStatus = JobDefStatus;
   private readonly timeZones = timeZones;
+  private readonly JobTab = JobTab;
 
   @BindProp({storeType: StoreType.TeamStore, selectedModelName: 'selected', propName: 'id'})
-  private selectedTeamId!: string;
-  
+  private selectedTeamId: string;
+
   private newTaskName = '';
   private newTaskTarget = TaskDefTarget.SINGLE_AGENT;
 
   private newStepName = '';
- 
   private collapsedTaskDefIds: string[] = [];
 
-  private openTab(evt, tabName) {
-    let i, x, tablinks;
-    x = document.getElementsByClassName("content-tab");
-    for (i = 0; i < x.length; i++) {
-      x[i].style.display = "none";
-    }
-
-    tablinks = document.getElementsByClassName("tab");
-    for (i = 0; i < x.length; i++) {
-      if (tablinks[i]) {
-        tablinks[i].className = tablinks[i].className.replace(" is-active", "");
-      }
-    }
-    document.getElementById(tabName).style.display = "block";
-
-    if (evt) {
-      evt.currentTarget.className += " is-active";
-    } else if (tabName === "WorkflowDesigner") {
-      let elem = document.getElementById("workflowDesignerTab");
-      elem.className += " is-active";
-    }
-  }
+  private activeTab: JobTab = JobTab.DESIGNER;
 
   private onNavTaskDefClicked(taskDef: TaskDef){
     if(taskDef.id){
@@ -1396,7 +1398,7 @@ export default class JobDesigner extends Vue {
         case 'JobDef':
           this.selectedTaskDef = null;
           this.selectedStepDef = null;
-          this.openTab(null, "WorkflowDesigner");
+          this.activeTab = JobTab.DESIGNER;
           break;
 
         case 'TaskDef':
@@ -1406,13 +1408,13 @@ export default class JobDesigner extends Vue {
           }
 
           this.selectedTaskDef = <TaskDef>selectedItem;
-          this.openTab(null, "EditTask");
+          this.activeTab = JobTab.TASK;
           break;
 
         case 'StepDef':
           this.selectedTaskDef = null;
           this.selectedStepDef = <StepDef>selectedItem;
-          this.openTab(null, "EditStep");
+          this.activeTab = JobTab.STEP;
           break;
       }
     }
@@ -2355,14 +2357,12 @@ export default class JobDesigner extends Vue {
   }
 
   .content-divider {
-    // background: linear-gradient(to right, #80e8ff, #00b0d6);
     background: red !important;
     height: 2px;
     margin: 0px !important;
     position:relative;
     left: 0px;
     top: -2px;
-    // z-index: -1 !important;
   }
 
   .nav-job {
@@ -2373,7 +2373,6 @@ export default class JobDesigner extends Vue {
     border-style: none;
     border-style: solid;
     border-width: .5px;
-    // border-radius: 5px;
     border-color: lightgray;
     width: 200px;
     height: 100vh;
@@ -2422,7 +2421,6 @@ export default class JobDesigner extends Vue {
   .nav-expander:hover {
     border-style: solid;
     border-width: 1px;
-    // border-radius: 4px;
     border-color: #dbdbdb;
   }
 
@@ -2442,25 +2440,6 @@ export default class JobDesigner extends Vue {
     padding-left: 0px;
   }
 
-  .tab-item {
-    color: white !important;
-    font-weight: 800 !important;
-
-    &:hover {
-      background-color: #81dffc !important;
-    }
-  }
-
-  .tab {
-    &.is-active {
-      a {
-        color: #2e64cc !important;
-        font-weight: 800 !important;
-        background-color: white !important;
-      }
-    }
-  }
-
   .edit-job {
     margin-left: 245px;
     margin-right: 10px;
@@ -2468,7 +2447,6 @@ export default class JobDesigner extends Vue {
 
   .edit-step {
     background: lightgray;
-    // margin-left: 245px;
     margin-right: 10px;
   }
 
@@ -2481,7 +2459,6 @@ export default class JobDesigner extends Vue {
     border-width: 1px;
     border-left-width: 0px;
     border-top-width: 0px;
-    // border-radius: 5px;
     border-color: lightgray;
     
   }
@@ -2490,17 +2467,15 @@ export default class JobDesigner extends Vue {
     background-color: $white-ter;
     padding: 8px;
     border-bottom: 1px solid lightgray;
-    // border-radius: inherit;
   }
 
   .task-designer-body {
-    background-color: #ebf6fa;
+    background-color: var(--grey-bg-color);
     padding-top: 20px;
     padding-left: 10px;
     padding-right: 10px;
     padding-bottom: 10px;
     height: 81vh;
-    // border-radius: inherit;
   }
 
   .cron-options-table {
@@ -2522,13 +2497,17 @@ export default class JobDesigner extends Vue {
 
   .has-background-deepskyblue {
       background: linear-gradient(to right, #00d2ff, #3a7bd5);
-      // padding-bottom: 4rem;
-      // padding-top: 4rem;
-      // transform: skewY(-7deg);
-
-      // .container {
-      //     transform: skewY(7deg);
-      // }
   }
 
+  .job-menu a {
+      font-variant-caps: all-small-caps;
+      letter-spacing: 2px;
+      margin-right: 1rem;
+      color: #5caaed;
+  }
+
+  .job-menu .is-active {
+      background: deepskyblue;
+      color: white;
+  }
 </style>
