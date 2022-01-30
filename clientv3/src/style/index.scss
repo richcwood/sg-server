@@ -22,4 +22,19 @@
 
 :root {
     --grey-bg-color: #f0f0f0;
+    --link-color: #5CAAED;
+    --link-color-hover: #1570C0;
+    --link-color-visited: #A3CFF5;
+}
+
+a {
+    color: var(--link-color);
+}
+
+a:hover {
+    color: var(--link-color-hover);
+}
+
+a:visited {
+    color: var(--link-color-visited);
 }

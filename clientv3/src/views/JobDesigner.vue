@@ -2419,7 +2419,6 @@ export default class JobDesigner extends Vue {
       font-variant-caps: all-small-caps;
       letter-spacing: 2px;
       margin-right: 1rem;
-      color: #5caaed;
   }
 
   .job-menu .is-active {
