@@ -554,7 +554,7 @@
 
     <div class="container">
       <header class="is-flex my-2">
-          <h2 class="is-size-2">{{ jobDefForEdit.name }} Job</h2>
+          <h2 class="is-size-2 text-ellipsis" :title="jobDefForEdit.name">{{ jobDefForEdit.name }} Job</h2>
           <ul class="job-menu is-flex is-align-items-center has-text-weight-bold is-size-5 ml-6">
               <li>
                 <a @click.prevent="activeTab = JobTab.SCHEDULES"
@@ -577,13 +577,13 @@
               <li>
                 <a @click.prevent="activeTab = JobTab.VARIABLES"
                   :class="{'is-active': activeTab === JobTab.VARIABLES}"
-                  class="px-1"
+                  class="px-1 text-nowrap"
                   href="#">Runtime Variables</a>
               </li>
               <li>
                 <a @click.prevent="activeTab = JobTab.DESIGNER"
                   :class="{'is-active': activeTab === JobTab.DESIGNER}"
-                  class="px-1"
+                  class="px-1 text-nowrap"
                   href="#">Workflow Designer</a>
               </li>
           </ul>
