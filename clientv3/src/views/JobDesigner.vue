@@ -607,20 +607,10 @@
           </div>
           <div class="dropdown-menu" id="dropdown-menu" role="menu">
             <div class="dropdown-content">
-              <a class="dropdown-item" @click.prevent="onNavMenuCreateTaskClicked" >
-                Create Task
-              </a>
-              <a class="dropdown-item" @click.prevent="onNavMenuCreateAWSLambdaTaskClicked">
-                Create AWS Lambda Task
-              </a>
-              <template v-if="selectedTaskDefForEdit === null">
-                <span class="dropdown-item" style="color: lightgray;">Create Step</span>
-              </template>
-              <template v-else>
-                <a class="dropdown-item" @click.prevent="onNavMenuCreateStepClicked">
-                  Create Step
-                </a>
-              </template>
+              <a class="dropdown-item" @click.prevent="onNavMenuCreateTaskClicked">Create Task</a>
+              <a class="dropdown-item" @click.prevent="onNavMenuCreateAWSLambdaTaskClicked">Create AWS Lambda Task</a>
+              <span v-if="selectedTaskDefForEdit === null" class="dropdown-item" style="color: lightgray;">Create Step</span>
+              <a v-else class="dropdown-item" @click.prevent="onNavMenuCreateStepClicked">Create Step</a>
             </div>
           </div>
         </div>
@@ -631,18 +621,13 @@
                 Delete
         </button>
       </div>
-      
+
       <div class="is-divider mx-2 my-3"></div>
 
-      <!-- <div class="nav-job-item" :class="{selected: jobDefForEdit === selectedItemForNav}" @click="selectItemForNav(jobDefForEdit)"> {{calcNavPanelJobName(jobDefForEdit)}}</div> -->
       <div class="nav-task" :class="{selected: taskDef === selectedItemForNav}" @click="selectItemForNav(taskDef)" v-for="taskDef in taskDefs" v-bind:key="taskDef.id">
-        <span v-if="!isAWSLambdaTaskDefType(taskDef.target) && stepDefsForTaskDef(taskDef).length > 0">
-          <span class="nav-expander" @click.stop="onNavTaskDefClicked(taskDef)">{{isNavTaskDefCollapsed(taskDef) ? '+' : '-'}}</span>
-        </span>
-        <span v-else class="nav-spacer">
-        </span>
-        {{calcNavPanelTaskName(taskDef)}} <span v-if="isAWSLambdaTaskDefType(taskDef.target)">(lambda)</span>
-        <span v-if="!isNavTaskDefCollapsed(taskDef) && !isAWSLambdaTaskDefType(taskDef.target)">
+        {{calcNavPanelTaskName(taskDef)}}
+        <span v-if="isAWSLambdaTaskDefType(taskDef.target)">(lambda)</span>
+        <span v-else>
           <div class="nav-step" :class="{selected: stepDef === selectedItemForNav}" @click.stop="selectItemForNav(stepDef)" v-for="stepDef in stepDefsForTaskDef(taskDef)" v-bind:key="stepDef.id">
             {{calcNavPanelStepName(stepDef)}}
           </div>
@@ -1236,25 +1221,7 @@ export default class JobDesigner extends Vue {
   private newTaskTarget = TaskDefTarget.SINGLE_AGENT;
 
   private newStepName = '';
-  private collapsedTaskDefIds: string[] = [];
-
   private activeTab: JobTab = JobTab.DESIGNER;
-
-  private onNavTaskDefClicked(taskDef: TaskDef){
-    if(taskDef.id){
-      const collapsedTaskDefIdIndex = this.collapsedTaskDefIds.indexOf(taskDef.id);
-
-      if(collapsedTaskDefIdIndex === -1){
-        this.collapsedTaskDefIds.push(taskDef.id);
-      }
-      else {
-        // Vue is not reactive on array internals
-        const newIds = _.clone(this.collapsedTaskDefIds);
-        newIds.splice(newIds.indexOf(taskDef.id), 1);
-        this.collapsedTaskDefIds = newIds;
-      }
-    }
-  }
 
   private get runTabTitle(){
     if(this.jobDef.status === JobDefStatus.PAUSED){
@@ -1262,15 +1229,6 @@ export default class JobDesigner extends Vue {
     }
     else {
       return 'Run';
-    }
-  }
-
-  private isNavTaskDefCollapsed(taskDef: TaskDef){
-    if(taskDef.id){
-      return this.collapsedTaskDefIds.indexOf(taskDef.id) !== -1;
-    }
-    else {
-      return false;
     }
   }
 
@@ -2405,23 +2363,6 @@ export default class JobDesigner extends Vue {
     font-weight: normal;
     margin-left: 8px;
     cursor: pointer;
-  }
-
-  .nav-spacer {
-    margin-left: 20px;
-  }
-
-  .nav-expander {
-    font-size: 20px;
-    padding-left: 5px;
-    padding-right: 5px;
-    font-weight: bold;
-  }
-
-  .nav-expander:hover {
-    border-style: solid;
-    border-width: 1px;
-    border-color: #dbdbdb;
   }
 
   .nav-step {
