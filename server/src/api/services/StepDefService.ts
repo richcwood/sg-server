@@ -104,9 +104,27 @@ export class StepDefService {
 
 
     public async deleteStepDef(_teamId: mongodb.ObjectId, id: mongodb.ObjectId, correlationId?: string): Promise<void> {
-        const deleted = await StepDefModel.deleteOne({ _id: id });
+        const filter = { _id: id, _teamId };
+        const origStepDef = await StepDefModel.findOne(filter);
+        if (!origStepDef)
+            throw new MissingObjectError(`StepDef '${id}" not found with filter "${JSON.stringify(filter, null, 4)}'.`)
 
+        const deleted = await StepDefModel.deleteOne({ _id: id });
         await rabbitMQPublisher.publish(_teamId, "StepDef", correlationId, PayloadOperation.DELETE, { id, correlationId });
+
+        const steps = await this.findAllStepDefs(_teamId, origStepDef._taskDefId, "order");
+        if (_.isArray(steps) && steps.length > 0) {
+            steps.sort((a, b) => a.order - b.order);
+            for (let i = 0; i < steps.length; ++i) {
+                const step = steps[i];
+                if (step.order != (i + 1)) {
+                    step.order = i + 1;
+                    const updatedStepDef = await StepDefModel.findOneAndUpdate({ _id: step._id, _teamId }, step, { new: true }).select("order");
+                    await rabbitMQPublisher.publish(_teamId, "StepDef", correlationId, PayloadOperation.UPDATE, convertData(StepDefSchema, updatedStepDef));
+                }
+            }
+        }
+
 
         return deleted;
     }
