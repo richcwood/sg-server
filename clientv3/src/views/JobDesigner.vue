@@ -592,7 +592,12 @@
 
     <!-- Job tasks / steps navigation / selection -->
     <div ref="navPanel" class="nav-job px-2" v-if="jobDefForEdit" :style="{width: navPanelWidth+'px'}">
-      <div class="is-size-5 has-text-weight-bold mt-3 has-text-centered">Tasks</div>
+      <div class="mt-3">
+        <input placeholder="Search Tasks"
+          v-model.trim="taskSearchTerm"
+          type="text"
+          class="input" />
+      </div>
       <div class="mt-3">
         <div class="dropdown"
             v-click-outside="onClickedOutsideNavCreateMenu" 
@@ -624,17 +629,23 @@
 
       <div class="is-divider my-3"></div>
 
-      <div class="is-clickable" :class="{selected: taskDef === selectedItemForNav}" @click="selectItemForNav(taskDef)" v-for="taskDef in taskDefs" v-bind:key="taskDef.id">
+      <div class="is-clickable" v-for="taskDef in filteredTaskDefs"
+          :class="{selected: taskDef === selectedItemForNav}"
+          :key="taskDef.id"
+          @click="selectItemForNav(taskDef)">
         <span class="icon-text has-max-width is-flex-wrap-nowrap">
           <img class="icon" src="@/assets/images/network-icon-world.svg" />
           <span class="text-ellipsis" :title="taskDef.name">
-            {{ taskDef.name }}
+            <span v-html="highlightTaskName(taskDef.name)"></span>
             <span v-if="isAWSLambdaTaskDefType(taskDef.target)">(lambda)</span>
           </span>
         </span>
 
         <template v-if="!isAWSLambdaTaskDefType(taskDef.target)">
-          <div class="ml-6 is-clickable" :class="{selected: stepDef === selectedItemForNav}" @click.stop="selectItemForNav(stepDef)" v-for="stepDef in stepDefsForTaskDef(taskDef)" v-bind:key="stepDef.id">
+          <div class="ml-6 is-clickable" v-for="stepDef in stepDefsCache[taskDef.id]"
+              :class="{selected: stepDef === selectedItemForNav}"
+              :key="stepDef.id"
+              @click.stop="selectItemForNav(stepDef)">
             <span class="icon-text has-max-width is-flex-wrap-nowrap">
               <img class="icon" src="@/assets/images/network-icon-world.svg" />
               <span class="text-ellipsis" :title="stepDef.name">{{ stepDef.name }}</span>
@@ -1232,6 +1243,7 @@ export default class JobDesigner extends Vue {
 
   private newStepName = '';
   private activeTab: JobTab = JobTab.DESIGNER;
+  private taskSearchTerm: string = '';
 
   private get runTabTitle(){
     if(this.jobDef.status === JobDefStatus.PAUSED){
@@ -1349,12 +1361,26 @@ export default class JobDesigner extends Vue {
     localStorage.setItem('jobDesigner_navPanelWidth', ''+this.navPanelWidth);
   }
 
+  private get filteredTaskDefs(): TaskDef[] {
+    return this.taskDefs.filter(task => task.name.toLowerCase().includes(this.taskSearchTerm.toLowerCase()));
+  }
+
   private get taskDefs(): TaskDef[] {
     return this.$store.getters[`${StoreType.TaskDefStore}/getByJobDefId`](this.jobDefForEdit.id);
   }
 
-  private stepDefsForTaskDef(taskDef: TaskDef): StepDef[] {
-    return this.$store.getters[`${StoreType.StepDefStore}/getByTaskDefId`](taskDef.id);
+  private get stepDefsCache (): Record<string, StepDef[]> {
+    const steps: Record<string, StepDef[]> = {};
+
+    this.taskDefs.forEach(task => {
+      steps[task.id] = this.$store.getters[`${StoreType.StepDefStore}/getByTaskDefId`](task.id);
+    });
+
+    return steps;
+  }
+
+  private highlightTaskName (name: string): string {
+    return name.replaceAll(new RegExp(this.taskSearchTerm, 'ig'), '<b>$&</b>');
   }
 
   private selectItemForNav(selectedItem: null|TaskDef|StepDef){
@@ -1573,7 +1599,7 @@ export default class JobDesigner extends Vue {
     }
 
     try {
-      const stepDefs = this.stepDefsForTaskDef(this.selectedTaskDef);
+      const stepDefs = this.stepDefsCache[this.selectedTaskDef.id];
 
       this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Creating step - ${this.newStepName}`, AlertPlacement.FOOTER));
       const newStep: StepDef = {
@@ -2201,7 +2227,7 @@ export default class JobDesigner extends Vue {
       const fetchScriptPromises = [];
 
       for(let taskDef of this.taskDefs){
-        for(let stepDef of this.stepDefsForTaskDef(taskDef)){
+        for(let stepDef of this.stepDefsCache[taskDef.id]){
           fetchScriptPromises.push(this.$store.dispatch(`${StoreType.ScriptStore}/fetchModel`, stepDef._scriptId));
         }
       }
