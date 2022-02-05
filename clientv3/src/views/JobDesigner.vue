@@ -634,7 +634,7 @@
           :key="taskDef.id"
           @click="selectItemForNav(taskDef)">
         <span class="icon-text has-max-width is-flex-wrap-nowrap">
-          <img class="icon" src="@/assets/images/network-icon-world.svg" />
+          <img class="icon" src="@/assets/images/task-icon.svg" />
           <span class="text-ellipsis" :title="taskDef.name">
             <span v-html="highlightTaskName(taskDef.name)"></span>
             <span v-if="isAWSLambdaTaskDefType(taskDef.target)">(lambda)</span>
@@ -647,7 +647,7 @@
               :key="stepDef.id"
               @click.stop="selectItemForNav(stepDef)">
             <span class="icon-text has-max-width is-flex-wrap-nowrap">
-              <img class="icon" src="@/assets/images/network-icon-world.svg" />
+              <img class="icon" src="@/assets/images/step-icon.svg" />
               <span class="text-ellipsis" :title="stepDef.name">{{ stepDef.name }}</span>
             </span>
           </div>
