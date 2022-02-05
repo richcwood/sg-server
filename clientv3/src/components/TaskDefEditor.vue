@@ -26,9 +26,9 @@
 
 
 
-    <div v-if="taskDef">
+    <div class="tabs-container-item" v-if="taskDef">
       <validation-observer ref="editTaskDefValidationObserver">
-        <table class="table">
+        <table class="table mt-4" style="background-color: inherit;">
           <tr class="tr">
             <td class="td">
               <label class="label">Task Name</label>
@@ -452,6 +452,13 @@ td {
 
 .button-spaced {
   margin-left: 10px;
+}
+
+.tabs-container-item {
+  border: 1px solid lightgray;
+  border-bottom: none;
+  background-color: var(--grey-bg-color);
+  height: 100vh;
 }
 
 </style>

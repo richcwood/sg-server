@@ -557,31 +557,31 @@
           <h2 class="is-size-2 text-ellipsis" :title="jobDefForEdit.name">{{ jobDefForEdit.name }} Job</h2>
           <ul class="job-menu is-flex is-align-items-center has-text-weight-bold is-size-5 ml-6">
               <li>
-                <a @click.prevent="activeTab = JobTab.SCHEDULES"
+                <a @click.prevent="activeTab = JobTab.SCHEDULES; selectedItemForNav = null;"
                   :class="{'is-active': activeTab === JobTab.SCHEDULES}"
                   class="px-1"
                   href="#">Schedules</a>
               </li>
               <li>
-                <a @click.prevent="activeTab = JobTab.RUN"
+                <a @click.prevent="activeTab = JobTab.RUN; selectedItemForNav = null;"
                   :class="{'is-active': activeTab === JobTab.RUN}"
                   class="px-1"
                   href="#">{{ runTabTitle }}</a>
               </li>
               <li>
-                <a @click.prevent="activeTab = JobTab.SETTINGS"
+                <a @click.prevent="activeTab = JobTab.SETTINGS; selectedItemForNav = null;"
                   :class="{'is-active': activeTab === JobTab.SETTINGS}"
                   class="px-1"
                   href="#">Settings</a>
               </li>
               <li>
-                <a @click.prevent="activeTab = JobTab.VARIABLES"
+                <a @click.prevent="activeTab = JobTab.VARIABLES; selectedItemForNav = null;"
                   :class="{'is-active': activeTab === JobTab.VARIABLES}"
                   class="px-1 text-nowrap"
                   href="#">Runtime Variables</a>
               </li>
               <li>
-                <a @click.prevent="activeTab = JobTab.DESIGNER"
+                <a @click.prevent="activeTab = JobTab.DESIGNER; selectedItemForNav = null;"
                   :class="{'is-active': activeTab === JobTab.DESIGNER}"
                   class="px-1 text-nowrap"
                   href="#">Workflow Designer</a>
@@ -635,8 +635,8 @@
           :class="{selected: taskDef === selectedItemForNav}"
           :key="taskDef.id"
           @click="selectItemForNav(taskDef)">
-        <span class="icon-text has-max-width is-flex-wrap-nowrap">
-          <img class="icon" src="@/assets/images/task-icon.svg" />
+        <span class="icon-text has-max-width is-flex-wrap-nowrap is-inline-block icon-text-helper">
+          <img class="icon task-step-icon" src="@/assets/images/task-icon.svg" />
           <span class="text-ellipsis" :title="taskDef.name">
             <span v-html="highlightTaskName(taskDef.name)"></span>
             <span v-if="isAWSLambdaTaskDefType(taskDef.target)">(lambda)</span>
@@ -644,12 +644,12 @@
         </span>
 
         <template v-if="!isAWSLambdaTaskDefType(taskDef.target)">
-          <div class="ml-6 is-clickable" v-for="stepDef in stepDefsCache[taskDef.id]"
+          <div class="ml-5 is-clickable" v-for="stepDef in stepDefsCache[taskDef.id]"
               :class="{selected: stepDef === selectedItemForNav}"
               :key="stepDef.id"
               @click.stop="selectItemForNav(stepDef)">
-            <span class="icon-text has-max-width is-flex-wrap-nowrap">
-              <img class="icon" src="@/assets/images/step-icon.svg" />
+            <span class="icon-text has-max-width is-flex-wrap-nowrap is-inline-block icon-text-helper">
+              <img class="icon task-step-icon" src="@/assets/images/step-icon.svg" />
               <span class="text-ellipsis" :title="stepDef.name">{{ stepDef.name }}</span>
             </span>
           </div>
@@ -1097,11 +1097,11 @@
         </s-g-c-task-def-editor>
       </div>
 
-      <div v-else-if="activeTab === JobTab.STEP">
+      <div class="tabs-container-item" v-else-if="activeTab === JobTab.STEP">
         <!-- Edit step -->
-        <div class="edit-step" v-if="selectedStepDefForEdit">
+        <div class="edit-step" style="background-color: inherit;" v-if="selectedStepDefForEdit">
           <validation-observer ref="editStepDefValidationObserver">
-            <table class="table" style="width: 100%;">
+            <table class="table mt-4" style="width: 100%; background-color: inherit;">
               <tr class="tr">
                 <td class="td" style="width: 120px;">
                   <label class="label">Step Name</label>
@@ -2378,6 +2378,10 @@ export default class JobDesigner extends Vue {
     cursor: pointer;
   }
 
+  .icon-text-helper {
+    vertical-align: middle !important;
+  }
+
   .selected > .icon-text {
     font-weight: bold;
     cursor: pointer;
@@ -2428,6 +2432,12 @@ export default class JobDesigner extends Vue {
     padding-right: 10px;
     padding-bottom: 10px;
     height: 81vh;
+  }
+
+  .task-step-icon {
+    height: 15px !important;
+    width: auto !important;
+    vertical-align: middle !important;
   }
 
   .cron-options-table {
