@@ -590,15 +590,17 @@
       </header>
     </div>
 
+    <!-- <hr class="navbar-divider"> -->
+
     <!-- Job tasks / steps navigation / selection -->
-    <div ref="navPanel" class="nav-job px-2" v-if="jobDefForEdit" :style="{width: navPanelWidth+'px'}">
-      <div class="mt-3">
+    <div ref="navPanel" class="nav-job" v-if="jobDefForEdit" :style="{width: navPanelWidth+'px'}">
+      <div class="ml-4 pr-3">
         <input placeholder="Search Tasks"
           v-model.trim="taskSearchTerm"
           type="text"
           class="input" />
       </div>
-      <div class="mt-3">
+      <div class="mt-4 ml-4">
         <div class="dropdown"
             v-click-outside="onClickedOutsideNavCreateMenu" 
             :class="{'is-active': showCreateItemMenu}">
@@ -627,9 +629,9 @@
         </button>
       </div>
 
-      <div class="is-divider my-3"></div>
+      <div class="is-divider my-4"></div>
 
-      <div class="is-clickable" v-for="taskDef in filteredTaskDefs"
+      <div class="is-clickable ml-4" v-for="taskDef in filteredTaskDefs"
           :class="{selected: taskDef === selectedItemForNav}"
           :key="taskDef.id"
           @click="selectItemForNav(taskDef)">
@@ -666,8 +668,8 @@
       <!-- <tabs :defaultIndex="4" :onSelect="onTabSelected" :style="{'background': 'lightskyblue'}"> -->
 
     <div class="tabs-container" :style="{'margin-left': editPanelMarginLeft+'px'}">
-      <div v-if="activeTab === JobTab.SCHEDULES">
-        <table class="table">
+      <div class="tabs-container-item" v-if="activeTab === JobTab.SCHEDULES">
+        <table class="table" style="background-color: inherit;">
           <tr class="tr"><td class="td"></td></tr>
           <tr class="tr">
             <td class="td">
@@ -723,8 +725,8 @@
         </table>
       </div>
 
-      <div v-else-if="activeTab === JobTab.RUN">
-        <table class="table">
+      <div class="tabs-container-item" v-else-if="activeTab === JobTab.RUN">
+        <table class="table" style="background-color: inherit;">
           <tr class="tr"><td class="td"></td></tr>
           <tr class="tr">
             <td class="td">
@@ -798,9 +800,9 @@
         </table>
       </div>
 
-      <div v-else-if="activeTab === JobTab.SETTINGS">
+      <div class="tabs-container-item" v-else-if="activeTab === JobTab.SETTINGS">
         <validation-observer ref="editJobValidationObserver">
-          <table class="table">
+          <table class="table" style="background-color: inherit;">
             <tr class="tr"><td class="td"></td></tr>
             
             <tr class="tr">
@@ -982,9 +984,9 @@
         </validation-observer>
       </div>
 
-      <div v-else-if="activeTab === JobTab.VARIABLES">
-        <div style="margin-top: 20px;">
-          <table class="table" style="width: 800px;">
+      <div class="tabs-container-item" v-else-if="activeTab === JobTab.VARIABLES">
+        <div>
+          <table class="table mt-4" style="width: 800px; background-color: inherit;">
             <tr class="tr">
               <td class="td" colspan="4">
                 <button class="button" @click="onSelectScriptVarsClicked">Add Script Vars (@sgg)</button>
@@ -1050,7 +1052,7 @@
         </div>              
       </div>
       
-      <div v-else-if="activeTab === JobTab.DESIGNER">
+      <div class="tabs-container-item" v-else-if="activeTab === JobTab.DESIGNER">
         <div class="task-designer">
           <div class="task-designer-nav">
             <button class="button" :disabled="selectedTaskDefTarget" @click="createNewTaskDef_chooseTarget">New Task</button>
@@ -2186,7 +2188,7 @@ export default class JobDesigner extends Vue {
   private navPanelWidth = 300;
 
   private get editPanelMarginLeft(): number {
-    return this.navPanelWidth + 42;
+    return this.navPanelWidth + 1;
   }
 
   private get maxNavPanelJobNameLength(): number {
@@ -2332,12 +2334,15 @@ export default class JobDesigner extends Vue {
     top: -2px;
   }
 
+  .navbar-divider {
+    background-color: lightgray !important;
+    height: 0.1rem !important;
+    margin: 0px;
+  }
+
   .nav-job {
-    background-color: #f2f2f2;
     font-size: 18px;
-    margin-left: 30px;
-    border: 1px solid lightgray;
-    border-right: none;
+    border: 0px solid lightgray;
     width: 200px;
     height: 100vh;
     overflow-y: auto;
@@ -2348,10 +2353,11 @@ export default class JobDesigner extends Vue {
   .nav-job-resizer {
     float: left;
     height: 100vh;
-    width: 12px;
+    width: 1px;
     border: 1px solid lightgray;
     border-top: none;
     border-bottom: none;
+    border-left: none;
     cursor: col-resize;
     position: relative;
   }
@@ -2362,7 +2368,7 @@ export default class JobDesigner extends Vue {
     position: absolute;
     top: 0;
     bottom: 0;
-    left: -3px;
+    left: -7px;
     margin: auto;
     z-index: 1;
   }
@@ -2380,7 +2386,13 @@ export default class JobDesigner extends Vue {
   .tabs-container {
     padding-top: 0px;
     padding-left: 0px;
-    border-top: 1px solid lightgrey;
+  }
+
+  .tabs-container-item {
+    border: 1px solid lightgray;
+    border-bottom: none;
+    background-color: var(--grey-bg-color);
+    height: 100vh;
   }
 
   .edit-job {
