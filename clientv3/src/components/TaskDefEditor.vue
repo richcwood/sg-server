@@ -23,9 +23,6 @@
       </table>
     </modal>
 
-
-
-
     <div class="tabs-container-item" v-if="taskDef">
       <validation-observer ref="editTaskDefValidationObserver">
         <table class="table mt-4" style="background-color: inherit;">

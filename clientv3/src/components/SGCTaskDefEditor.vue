@@ -23,145 +23,143 @@
       </table>
     </modal>
 
-
-
-
-    <validation-observer ref="editTaskDefValidationObserver">
-      <table class="table">
-        <tr class="tr">
-          <td class="td">
-            <label class="label">Lambda Task Name</label>
-          </td>
-          <td class="td">
-            <validation-provider name="Task Name" rules="required|object-name" v-slot="{ errors }">
-              <input class="input" v-model="taskDef.name">
-              <div v-if="errors && errors.length > 0" class="message validation-error is-danger">{{ errors[0] }}</div>
-            </validation-provider>
-          </td>
-          <td class="td">
-          </td>
-        </tr>
-
-        <!-- AWS Lambda -->
-        <template v-if="stepDefCopy && taskDef.target === TaskDefTarget.AWS_LAMBDA">
-          
+    <div class="tabs-container-item">
+      <validation-observer ref="editTaskDefValidationObserver">
+        <table class="table mt-4" style="background-color: inherit;">
           <tr class="tr">
             <td class="td">
-              <label class="label">Lamba Runtime</label>
+              <label class="label">Lambda Task Name</label>
             </td>
             <td class="td">
-              <div class="select">
-                <validation-provider name="Lambda Runtime" rules="required" v-slot="{ errors }">
-                  <select v-model="stepDefCopy.lambdaRuntime" style="width: 250px;">
-                    <option v-for="runtime in LambaRuntimes" :key="runtime" :value="runtime">
-                      {{runtime}}
+              <validation-provider name="Task Name" rules="required|object-name" v-slot="{ errors }">
+                <input class="input" v-model="taskDef.name">
+                <div v-if="errors && errors.length > 0" class="message validation-error is-danger">{{ errors[0] }}</div>
+              </validation-provider>
+            </td>
+            <td class="td">
+            </td>
+          </tr>
+
+          <!-- AWS Lambda -->
+          <template v-if="stepDefCopy && taskDef.target === TaskDefTarget.AWS_LAMBDA">
+            
+            <tr class="tr">
+              <td class="td">
+                <label class="label">Lamba Runtime</label>
+              </td>
+              <td class="td">
+                <div class="select">
+                  <validation-provider name="Lambda Runtime" rules="required" v-slot="{ errors }">
+                    <select v-model="stepDefCopy.lambdaRuntime" style="width: 250px;">
+                      <option v-for="runtime in LambaRuntimes" :key="runtime" :value="runtime">
+                        {{runtime}}
+                      </option>
+                    </select>
+                    
+                    <div v-if="errors && errors.length > 0" class="message validation-error is-danger">{{ errors[0] }}</div>
+                  </validation-provider>
+                </div>
+                <span style="margin-left: 10px; margin-top: 10px; color: red;" 
+                      v-if="stepDefCopy.lambdaCodeSource === 'script' && selectedScript && ! doesLambdaRuntimeMatchScriptType()">
+                  Runtime doesn't match script type "{{selectedScript && scriptTypesForMonaco[selectedScript.scriptType]}}"
+                </span>
+              </td>
+            </tr>
+            <tr class="tr">
+              <td class="td">
+                <label class="label">Lamba Memory Size</label>
+              </td>
+              <td class="td">
+                <div class="select">
+                  <select v-model="stepDefCopy.lambdaMemorySize" style="width: 250px;">
+                    <option v-for="memSize in LambdaMemorySizes" :key="memSize" :value="memSize">
+                      {{memSize}} mb
                     </option>
                   </select>
-                  
+                </div>
+              </td>
+            </tr>
+            <tr class="tr">
+              <td class="td">
+                <label class="label">Lambda Timeout (seconds)</label>
+              </td>
+              <td class="td">
+                <validation-provider name="Lambda Timeout" rules="required|lambdaTimeout" v-slot="{ errors }">
+                  <input class="input" v-model="stepDefCopy.lambdaTimeout">
                   <div v-if="errors && errors.length > 0" class="message validation-error is-danger">{{ errors[0] }}</div>
                 </validation-provider>
-              </div>
-              <span style="margin-left: 10px; margin-top: 10px; color: red;" 
-                    v-if="stepDefCopy.lambdaCodeSource === 'script' && selectedScript && ! doesLambdaRuntimeMatchScriptType()">
-                Runtime doesn't match script type "{{selectedScript && scriptTypesForMonaco[selectedScript.scriptType]}}"
-              </span>
-            </td>
-          </tr>
-          <tr class="tr">
-            <td class="td">
-              <label class="label">Lamba Memory Size</label>
-            </td>
-            <td class="td">
-              <div class="select">
-                <select v-model="stepDefCopy.lambdaMemorySize" style="width: 250px;">
-                  <option v-for="memSize in LambdaMemorySizes" :key="memSize" :value="memSize">
-                    {{memSize}} mb
-                  </option>
-                </select>
-              </div>
-            </td>
-          </tr>
-          <tr class="tr">
-            <td class="td">
-              <label class="label">Lambda Timeout (seconds)</label>
-            </td>
-            <td class="td">
-              <validation-provider name="Lambda Timeout" rules="required|lambdaTimeout" v-slot="{ errors }">
-                <input class="input" v-model="stepDefCopy.lambdaTimeout">
-                <div v-if="errors && errors.length > 0" class="message validation-error is-danger">{{ errors[0] }}</div>
-              </validation-provider>
-            </td>
-            <td class="td">
-            </td>
-          </tr>
+              </td>
+              <td class="td">
+              </td>
+            </tr>
 
-          <tr class="tr" v-if="stepDefCopy.lambdaCodeSource === 'zipFile'">
-            <td class="td">
-              <label class="label">Lambda Function Handler</label>
-            </td>
-            <td class="td">
-              <validation-provider name="Lambda Function Handler" rules="required|object-name" v-slot="{ errors }">
-                <input class="input" v-model="stepDefCopy.lambdaFunctionHandler">
-                <div v-if="errors && errors.length > 0" class="message validation-error is-danger">{{ errors[0] }}</div>
-              </validation-provider>
-            </td>
-            <td class="td">
-            </td>
-          </tr>
-          <tr class="tr" v-if="stepDefCopy.lambdaCodeSource === 'script'">
-            <td class="td">
-              <label class="label">Lambda Dependencies</label>
-            </td>
-            <td class="td">
-              <input class="input" v-model="stepDefCopy.lambdaDependencies" placeholder="compression;axios">
-            </td>
-            <td class="td">
-            </td>
-          </tr>
+            <tr class="tr" v-if="stepDefCopy.lambdaCodeSource === 'zipFile'">
+              <td class="td">
+                <label class="label">Lambda Function Handler</label>
+              </td>
+              <td class="td">
+                <validation-provider name="Lambda Function Handler" rules="required|object-name" v-slot="{ errors }">
+                  <input class="input" v-model="stepDefCopy.lambdaFunctionHandler">
+                  <div v-if="errors && errors.length > 0" class="message validation-error is-danger">{{ errors[0] }}</div>
+                </validation-provider>
+              </td>
+              <td class="td">
+              </td>
+            </tr>
+            <tr class="tr" v-if="stepDefCopy.lambdaCodeSource === 'script'">
+              <td class="td">
+                <label class="label">Lambda Dependencies</label>
+              </td>
+              <td class="td">
+                <input class="input" v-model="stepDefCopy.lambdaDependencies" placeholder="compression;axios">
+              </td>
+              <td class="td">
+              </td>
+            </tr>
 
-          <tr class="tr"><td class="td" colspan="2">&nbsp;</td></tr>
+            <tr class="tr"><td class="td" colspan="2">&nbsp;</td></tr>
+
+            <tr class="tr">
+              <td class="td" colspan="2">
+                <input type="radio" class="radio" v-model="stepDefCopy.lambdaCodeSource" :value="'script'"/> Script
+                &nbsp;&nbsp;&nbsp;&nbsp;
+                <input type="radio" class="radio" v-model="stepDefCopy.lambdaCodeSource" :value="'zipFile'"/> Script Lambda Zip File
+              </td>
+            </tr>
+            
+            <template v-if="stepDefCopy.lambdaCodeSource === 'script'">
+              <tr class="tr">
+                <td class="td" colspan="2">
+                  <script-search-with-create :scriptId="stepDefCopy._scriptId" @scriptPicked="onScriptPicked"></script-search-with-create>
+                </td>
+              </tr>
+            </template>
+
+            <template v-else>
+              <tr class="tr">
+                <td class="td" colspan="2">
+                  <button class="button" @click="onSelectArtifactClicked" style="margin-bottom: 10px;">Select Artifact</button> 
+                  <input class="input" readonly type="text" v-model="selectedArtifactName">
+                </td>
+              </tr>
+            </template>
+
+          </template>
 
           <tr class="tr">
             <td class="td" colspan="2">
-              <input type="radio" class="radio" v-model="stepDefCopy.lambdaCodeSource" :value="'script'"/> Script
-              &nbsp;&nbsp;&nbsp;&nbsp;
-              <input type="radio" class="radio" v-model="stepDefCopy.lambdaCodeSource" :value="'zipFile'"/> Script Lambda Zip File
+              <button class="button is-primary" :disabled="!hasTaskOrStepDefChanged" @click="onSaveTaskAndStepDefClicked">Save</button>
+              <button class="button button-spaced" :disabled="!hasTaskOrStepDefChanged" @click="cancelTaskAndStepDefChanges">Cancel</button>
             </td>
           </tr>
-          
-          <template v-if="stepDefCopy.lambdaCodeSource === 'script'">
-            <tr class="tr">
-              <td class="td" colspan="2">
-                <script-search-with-create :scriptId="stepDefCopy._scriptId" @scriptPicked="onScriptPicked"></script-search-with-create>
-              </td>
-            </tr>
-          </template>
+        </table>
 
-          <template v-else>
-            <tr class="tr">
-              <td class="td" colspan="2">
-                <button class="button" @click="onSelectArtifactClicked" style="margin-bottom: 10px;">Select Artifact</button> 
-                <input class="input" readonly type="text" v-model="selectedArtifactName">
-              </td>
-            </tr>
-          </template>
+        <div v-if="stepDefCopy && stepDefCopy.lambdaCodeSource === 'script' && selectedScript && selectedJobDef">
+          <script-editor :script="selectedScript" :jobDef="selectedJobDef"></script-editor>
+        </div>
 
-        </template>
-
-        <tr class="tr">
-          <td class="td" colspan="2">
-            <button class="button is-primary" :disabled="!hasTaskOrStepDefChanged" @click="onSaveTaskAndStepDefClicked">Save</button>
-            <button class="button button-spaced" :disabled="!hasTaskOrStepDefChanged" @click="cancelTaskAndStepDefChanges">Cancel</button>
-          </td>
-        </tr>
-      </table>
-
-      <div v-if="stepDefCopy && stepDefCopy.lambdaCodeSource === 'script' && selectedScript && selectedJobDef">
-        <script-editor :script="selectedScript" :jobDef="selectedJobDef"></script-editor>
-      </div>
-
-    </validation-observer>
-
+      </validation-observer>
+    </div>
   </div>
 </template>
 
@@ -366,4 +364,12 @@ td {
 .button-spaced {
   margin-left: 10px;
 }
+
+.tabs-container-item {
+  border: 1px solid lightgray !important;
+  border-bottom: none !important;
+  background-color: var(--grey-bg-color) !important;
+  height: 100vh !important;
+}
+
 </style>
