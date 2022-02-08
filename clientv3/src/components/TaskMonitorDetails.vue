@@ -167,7 +167,7 @@ import { LinkedModel, StoreType } from '@/store/types';
 import { SgAlert, AlertPlacement, AlertCategory } from '@/store/alert/types';
 import { Task } from '@/store/task/types';
 import { TaskOutcome } from '@/store/taskOutcome/types';
-import { JobStatus, TaskStatus, StepStatus, TaskFailureCode, enumKeyToPretty } from '@/utils/Enums.ts';
+import { JobStatus, TaskStatus, StepStatus, TaskFailureCode, enumKeyToPretty } from '@/utils/Enums';
 import axios from 'axios';
 import { showErrors } from '@/utils/ErrorHandler';
 import { TaskDefTarget } from "@/store/taskDef/types";

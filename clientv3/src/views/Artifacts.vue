@@ -276,7 +276,7 @@ export default class Artifacts extends Vue {
       // Send all delete requests in parallel
       for(let count = 0; count < this.selectedArtifacts.length; count++){
         const artifact = this.selectedArtifacts[count];
-        promises.push(new Promise(async (res, rej) => {
+        promises.push(new Promise<void>(async (res, rej) => {
           try {
             await this.$store.dispatch(`${StoreType.ArtifactStore}/delete`, artifact);
             res();

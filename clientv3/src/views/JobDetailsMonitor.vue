@@ -257,7 +257,7 @@ import { TaskOutcome } from '@/store/taskOutcome/types';
 import { TaskDefTarget } from "@/store/taskDef/types";
 import { StepOutcome } from '@/store/stepOutcome/types';
 import { BindStoreModel } from '@/decorator';
-import { JobStatus, TaskStatus, StepStatus, TaskFailureCode, enumKeyToPretty } from '@/utils/Enums.ts';
+import { JobStatus, TaskStatus, StepStatus, TaskFailureCode, enumKeyToPretty } from '@/utils/Enums';
 import { mapToString, truncateString } from '@/utils/Shared';
 import { Agent } from "../store/agent/types";
 import { SgAlert, AlertPlacement, AlertCategory } from '@/store/alert/types';
