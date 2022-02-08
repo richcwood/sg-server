@@ -552,572 +552,612 @@
       </table>
     </modal>
 
-
-    
+    <div class="container">
+      <header class="is-flex my-2">
+          <h2 class="is-size-2 text-ellipsis" :title="jobDefForEdit.name">{{ jobDefForEdit.name }} Job</h2>
+          <ul class="job-menu is-flex is-align-items-center has-text-weight-bold is-size-5 ml-6">
+              <li>
+                <a @click.prevent="activeTab = JobTab.SCHEDULES"
+                  :class="{'is-active': activeTab === JobTab.SCHEDULES}"
+                  class="px-1"
+                  href="#">Schedules</a>
+              </li>
+              <li>
+                <a @click.prevent="activeTab = JobTab.RUN"
+                  :class="{'is-active': activeTab === JobTab.RUN}"
+                  class="px-1"
+                  href="#">{{ runTabTitle }}</a>
+              </li>
+              <li>
+                <a @click.prevent="activeTab = JobTab.SETTINGS"
+                  :class="{'is-active': activeTab === JobTab.SETTINGS}"
+                  class="px-1"
+                  href="#">Settings</a>
+              </li>
+              <li>
+                <a @click.prevent="activeTab = JobTab.VARIABLES"
+                  :class="{'is-active': activeTab === JobTab.VARIABLES}"
+                  class="px-1 text-nowrap"
+                  href="#">Runtime Variables</a>
+              </li>
+              <li>
+                <a @click.prevent="activeTab = JobTab.DESIGNER"
+                  :class="{'is-active': activeTab === JobTab.DESIGNER}"
+                  class="px-1 text-nowrap"
+                  href="#">Workflow Designer</a>
+              </li>
+          </ul>
+      </header>
+    </div>
 
     <!-- Job tasks / steps navigation / selection -->
-    <div ref="navPanel" class="nav-job" v-if="jobDefForEdit" :style="{width: navPanelWidth+'px'}">
-      <div class="dropdown"
-           v-click-outside="onClickedOutsideNavCreateMenu" 
-           :class="{'is-active': showCreateItemMenu}" 
-           style="margin-top: 10px; margin-left: 10px; margin-bottom: 12px;">
-        <div class="dropdown-trigger">
-          <button class="button" 
-                  @click="onClickedCreateItemFromNav"
-                  aria-haspopup="true" 
-                  aria-controls="dropdown-menu">
-            Create
-          </button>
-        </div>
-        <div class="dropdown-menu" id="dropdown-menu" role="menu">
-          <div class="dropdown-content">
-            <a class="dropdown-item" @click.prevent="onNavMenuCreateTaskClicked" >
-              Create Task
-            </a>
-            <a class="dropdown-item" @click.prevent="onNavMenuCreateAWSLambdaTaskClicked">
-              Create AWS Lambda Task
-            </a>
-            <template v-if="selectedTaskDefForEdit === null">
-              <span class="dropdown-item" style="color: lightgray;">Create Step</span>
-            </template>
-            <template v-else>
-              <a class="dropdown-item" @click.prevent="onNavMenuCreateStepClicked">
-                Create Step
-              </a>
-            </template>
-          </div>
-        </div>
+    <div ref="navPanel" class="nav-job px-2" v-if="jobDefForEdit" :style="{width: navPanelWidth+'px'}">
+      <div class="mt-3">
+        <input placeholder="Search Tasks"
+          v-model.trim="taskSearchTerm"
+          type="text"
+          class="input" />
       </div>
-      
-      <button class="button" 
-              :disabled="!selectedTaskDefForEdit && !selectedStepDefForEdit"
-              @click="onNavMenuDeleteClicked"
-              style="margin-top: 10px; margin-left: 10px; margin-bottom: 12px;">
-              Delete
-      </button>
-      
-      <div class="nav-job-item" :class="{selected: jobDefForEdit === selectedItemForNav}" @click="selectItemForNav(jobDefForEdit)"> {{calcNavPanelJobName(jobDefForEdit)}}</div>
-      <div class="nav-task" :class="{selected: taskDef === selectedItemForNav}" @click="selectItemForNav(taskDef)" v-for="taskDef in taskDefs" v-bind:key="taskDef.id">
-        <span v-if="!isAWSLambdaTaskDefType(taskDef.target) && stepDefsForTaskDef(taskDef).length > 0">
-          <span class="nav-expander" @click.stop="onNavTaskDefClicked(taskDef)">{{isNavTaskDefCollapsed(taskDef) ? '+' : '-'}}</span>
-        </span>
-        <span v-else class="nav-spacer">
-        </span>
-        {{calcNavPanelTaskName(taskDef)}} <span v-if="isAWSLambdaTaskDefType(taskDef.target)">(lambda)</span>
-        <span v-if="!isNavTaskDefCollapsed(taskDef) && !isAWSLambdaTaskDefType(taskDef.target)">
-          <div class="nav-step" :class="{selected: stepDef === selectedItemForNav}" @click.stop="selectItemForNav(stepDef)" v-for="stepDef in stepDefsForTaskDef(taskDef)" v-bind:key="stepDef.id">
-            {{calcNavPanelStepName(stepDef)}}
+      <div class="mt-3">
+        <div class="dropdown"
+            v-click-outside="onClickedOutsideNavCreateMenu" 
+            :class="{'is-active': showCreateItemMenu}">
+          <div class="dropdown-trigger">
+            <button class="button"
+                    @click="onClickedCreateItemFromNav"
+                    aria-haspopup="true"
+                    aria-controls="dropdown-menu">
+              Create
+            </button>
           </div>
+          <div class="dropdown-menu" id="dropdown-menu" role="menu">
+            <div class="dropdown-content">
+              <a class="dropdown-item" @click.prevent="onNavMenuCreateTaskClicked">Create Task</a>
+              <a class="dropdown-item" @click.prevent="onNavMenuCreateAWSLambdaTaskClicked">Create AWS Lambda Task</a>
+              <span v-if="selectedTaskDefForEdit === null" class="dropdown-item" style="color: lightgray;">Create Step</span>
+              <a v-else class="dropdown-item" @click.prevent="onNavMenuCreateStepClicked">Create Step</a>
+            </div>
+          </div>
+        </div>
+      
+        <button class="button ml-2"
+                :disabled="!selectedTaskDefForEdit && !selectedStepDefForEdit"
+                @click="onNavMenuDeleteClicked">
+                Delete
+        </button>
+      </div>
+
+      <div class="is-divider my-3"></div>
+
+      <div class="is-clickable" v-for="taskDef in filteredTaskDefs"
+          :class="{selected: taskDef === selectedItemForNav}"
+          :key="taskDef.id"
+          @click="selectItemForNav(taskDef)">
+        <span class="icon-text has-max-width is-flex-wrap-nowrap">
+          <img class="icon" src="@/assets/images/network-icon-world.svg" />
+          <span class="text-ellipsis" :title="taskDef.name">
+            <span v-html="highlightTaskName(taskDef.name)"></span>
+            <span v-if="isAWSLambdaTaskDefType(taskDef.target)">(lambda)</span>
+          </span>
         </span>
+
+        <template v-if="!isAWSLambdaTaskDefType(taskDef.target)">
+          <div class="ml-6 is-clickable" v-for="stepDef in stepDefsCache[taskDef.id]"
+              :class="{selected: stepDef === selectedItemForNav}"
+              :key="stepDef.id"
+              @click.stop="selectItemForNav(stepDef)">
+            <span class="icon-text has-max-width is-flex-wrap-nowrap">
+              <img class="icon" src="@/assets/images/network-icon-world.svg" />
+              <span class="text-ellipsis" :title="stepDef.name">{{ stepDef.name }}</span>
+            </span>
+          </div>
+        </template>
       </div>
     </div>
 
     <!-- For resizing the nav panel -->
     <div class="nav-job-resizer" @mousedown="onResizerMouseDown">
+      <img class="col-resizer-icon" src="@/assets/images/col-resize-icon.svg" />
     </div>
 
-
     <!-- Edit job, including task routes designer -->
-    <div class="edit-job" v-if="jobDefForEdit && selectedItemForNav && selectedItemForNav.id === jobDefForEdit.id" :style="{'margin-left': editPanelMarginLeft+'px'}">
+    <!-- <div class="edit-job" v-if="jobDefForEdit && selectedItemForNav && selectedItemForNav.id === jobDefForEdit.id" :style="{'margin-left': editPanelMarginLeft+'px'}"> -->
 
-      <tabs :defaultIndex="4" :onSelect="onTabSelected">
+      <!-- <tabs :defaultIndex="4" :onSelect="onTabSelected" :style="{'background': 'lightskyblue'}"> -->
 
-        <tab title="Schedules">
+    <div class="tabs-container" :style="{'margin-left': editPanelMarginLeft+'px'}">
+      <div v-if="activeTab === JobTab.SCHEDULES">
+        <table class="table">
+          <tr class="tr"><td class="td"></td></tr>
+          <tr class="tr">
+            <td class="td">
+              Schedule Name
+            </td>
+            <td class="td">
+              Is Active
+            </td>
+            <td class="td">
+              Trigger Type
+            </td>
+            <td class="td">
+              Last Run
+            </td>
+            <td class="td">
+              Next Run
+            </td>
+            <td class="td">
+              Error
+            </td>
+            <td class="td">
+            </td>
+          </tr>
+          <tr class="tr" v-for="schedule in jobDefForEdit_schedules" v-bind:key="schedule.id">
+            <td class="td">
+              {{schedule.name}}
+            </td>
+            <td class="td">
+              <input type="checkbox" v-model="schedule.isActive" @change="onScheduleIsActiveChanged(schedule)"/>
+            </td>
+            <td class="td">
+              {{schedule.TriggerType}}
+            </td>
+            <td class="td">
+              {{momentToStringV2(schedule.lastScheduledRunDate)}}
+            </td>
+            <td class="td">
+              {{momentToStringV2(schedule.nextScheduledRunDate)}}
+            </td>
+            <td class="td">
+              {{schedule.scheduleError}}
+            <td class="td">
+              <a @click.prevent="onEditScheduleClicked(schedule)">edit</a>
+              <a @click.prevent="onDeleteScheduleClicked(schedule)" style="margin-left: 10px;">delete</a>
+            </td>
+          </tr>
+          <tr class="tr">
+            <td class="td">
+              <button class="button" @click="onCreateScheduleClicked">Create Schedule</button>
+            </td>
+            <td colspan="5"></td>
+          </tr>
+        </table>
+      </div>
+
+      <div v-else-if="activeTab === JobTab.RUN">
+        <table class="table">
+          <tr class="tr"><td class="td"></td></tr>
+          <tr class="tr">
+            <td class="td">
+              <button class="button" 
+                      @click="onPauseResumeButtonClicked" 
+                      :class="{'is-primary': jobDef.status === JobDefStatus.PAUSED, 'is-danger': jobDef.status === JobDefStatus.RUNNING}">
+                <template v-if="jobDef.status === JobDefStatus.RUNNING">
+                  Pause new job creation
+                </template>
+                <template v-else>
+                  Resume new job creation
+                </template>
+              </button>
+            </td>
+            <td class="td"></td>
+          </tr>
+          <tr class="tr">
+            <td class="td" colspan="4">
+              <button class="button" @click="onSelectScriptVarsForRuntimeVarsClicked">Add Script Vars (@sgg)</button>
+            </td>
+          </tr>
+          <tr class="tr"><td class="td"></td></tr>
+          <tr class="tr"><td class="td">Variables for next run</td></tr>
+          <tr class="tr">
+            <td class="td">
+              <table class="table striped-table" style="width: 720px;">                  
+                <tr class="tr" v-for="(value, key) in runJobVars" v-bind:key="'runJobVar_' + key">
+                  <td class="td">{{key}}</td>
+                  <td class="td"><span style="font-weight: 700; size: 20px;"> = </span></td>
+                  <td class="td">{{value.value}}</td>
+                  <td class="td"><a @click.prevent="onDeleteRunJobVarClicked(key)">Delete</a></td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          <tr class="tr">
+            <td class="td">
+              <input style="margin-left: 10px; margin-top: 10px;" type="checkbox" v-model="newRunJobVarValue.sensitive" :checked=false>
+              <span style="margin-left: 10px; margin-right: 20px;">Sensitive</span>
+
+              <validation-observer ref="addRunJobVarsValidationObserver">
+                <validation-provider name="Variable Key" rules="required" v-slot="{ errors }"> 
+                  <input class="input" ref="newRunJobVarKeyInput" type="text" style="width: 250px;" v-model="newRunJobVarKey" placeholder="key"/>
+                  <span v-if="errors && errors.length > 0" class="message validation-error is-danger">{{ errors[0] }}</span>
+                </validation-provider>
+
+                <span style="font-weight: 700; margin-left: 4px; margin-right: 4px;">=</span>
+                
+                <validation-provider name="Variable Value" rules="required" v-slot="{ errors }"> 
+                  <input class="input" type="text" style="width: 250px;" v-model="newRunJobVarValue.value" placeholder="value"/>
+                  <span v-if="errors && errors.length > 0" class="message validation-error is-danger">{{ errors[0] }}</span>
+                </validation-provider>
+              </validation-observer>
+          
+              <button class="button button-spaced" @click="onAddRunJobVarClicked">Add Runtime Variable</button>
+            </td>
+          </tr>
+          <tr class="tr">
+            <td class="td">
+              <button class="button" @click="onRunJobClicked" :disabled="jobDef.status === JobDefStatus.PAUSED">Run Job</button>
+            </td>
+            <td class="td">
+            </td>
+          </tr>
+          <tr class="tr">
+            <td class="td">
+              <router-link v-if="runJobId" :to="{name: 'jobDetailsMonitor', params: {jobId: runJobId}}">Running job</router-link>
+            </td>
+            <td class="td"></td>
+          </tr>
+        </table>
+      </div>
+
+      <div v-else-if="activeTab === JobTab.SETTINGS">
+        <validation-observer ref="editJobValidationObserver">
           <table class="table">
             <tr class="tr"><td class="td"></td></tr>
+            
             <tr class="tr">
               <td class="td">
-                Schedule Name
+                <label class="label">Name</label>
               </td>
               <td class="td">
-                Is Active
-              </td>
-              <td class="td">
-                Trigger Type
-              </td>
-              <td class="td">
-                Last Run
-              </td>
-              <td class="td">
-                Next Run
-              </td>
-              <td class="td">
-                Error
-              </td>
-              <td class="td">
-              </td>
-            </tr>
-            <tr class="tr" v-for="schedule in jobDefForEdit_schedules" v-bind:key="schedule.id">
-              <td class="td">
-                {{schedule.name}}
-              </td>
-              <td class="td">
-                <input type="checkbox" v-model="schedule.isActive" @change="onScheduleIsActiveChanged(schedule)"/>
-              </td>
-              <td class="td">
-                {{schedule.TriggerType}}
-              </td>
-              <td class="td">
-                {{momentToStringV2(schedule.lastScheduledRunDate)}}
-              </td>
-              <td class="td">
-                {{momentToStringV2(schedule.nextScheduledRunDate)}}
-              </td>
-              <td class="td">
-                {{schedule.scheduleError}}
-              <td class="td">
-                <a @click.prevent="onEditScheduleClicked(schedule)">edit</a>
-                <a @click.prevent="onDeleteScheduleClicked(schedule)" style="margin-left: 10px;">delete</a>
+                <validation-provider name="Job Name" rules="required|object-name" v-slot="{ errors }">
+                  <input class="input" v-model="jobDefForEdit.name">
+                  <div v-if="errors && errors.length > 0" class="message validation-error is-danger">{{ errors[0] }}</div>
+                </validation-provider>
               </td>
             </tr>
             <tr class="tr">
               <td class="td">
-                <button class="button" @click="onCreateScheduleClicked">Create Schedule</button>
+                <label class="label">Id</label>
               </td>
-              <td colspan="5"></td>
+              <td class="td">
+                {{jobDef.id}}
+              </td>
             </tr>
-          </table>
-        </tab>
+            <tr class="tr">
+              <td class="td">
+                <label class="label">Run Count</label>
+              </td>
+              <td class="td">
+                {{jobDef.lastRunId}}
+              </td>
+            </tr>
+            <tr class="tr">
+              <td class="td">
+                <label class="label">Max Instances</label>
+              </td>
+              <td class="td">
+                <validation-provider name="Max Instances" rules="required|positiveNumber" v-slot="{ errors }">
+                  <input class="input" v-model="jobDefForEdit.maxInstances">
+                  <div v-if="errors && errors.length > 0" class="message validation-error is-danger">{{ errors[0] }}</div>
+                </validation-provider>
+              </td>
+            </tr>
+            <tr class="tr">
+              <td class="td">
+                <label class="label">Misfire Grace Time</label>
+              </td>
+              <td class="td">
+                <validation-provider name="Misfire Grace Time" rules="positiveNumber" v-slot="{ errors }">
+                  <input class="input" v-model="jobDefForEdit.misfireGraceTime"> (seconds)
+                  <div v-if="errors && errors.length > 0" class="message validation-error is-danger">{{ errors[0] }}</div>
+                </validation-provider>
+              </td>
+            </tr>
+            <tr class="tr">
+              <td class="td">
+              </td>
+              <td class="td">
+                <label class="checkbox">
+                  <input type="checkbox" v-model="jobDefForEdit.coalesce">
+                  Coalesce
+                </label>
+              </td>
+            </tr>
+            <tr class="tr">
+              <td class="td">
+              </td>
+              <td class="td">
+                <label class="checkbox">
+                  <input type="checkbox" v-model="jobDefForEdit.pauseOnFailedJob">
+                  Pause on Failed Job
+                </label>
+              </td>
+            </tr>
 
-        <tab :title="runTabTitle">
-          <table class="table">
-            <tr class="tr"><td class="td"></td></tr>
             <tr class="tr">
               <td class="td">
-                <button class="button" 
-                        @click="onPauseResumeButtonClicked" 
-                        :class="{'is-primary': jobDef.status === JobDefStatus.PAUSED, 'is-danger': jobDef.status === JobDefStatus.RUNNING}">
-                  <template v-if="jobDef.status === JobDefStatus.RUNNING">
-                    Pause new job creation
-                  </template>
-                  <template v-else>
-                    Resume new job creation
-                  </template>
-                </button>
+                <span style="font-size: 24px; margin-bottom: 12px;">
+                  Team Alerts
+                </span>
               </td>
+              <td class="td">
+                These override the Team Alert Settings
+              </td>
+            </tr>
+            <tr class="tr">
+              <td class="td">
+                <label class="label" style="margin-left: 20px;">Task Interrupted</label>
+              </td>
+              <td class="td">
+                <validation-provider name="Task Interrupted Email Address" rules="email" v-slot="{ errors }"> 
+                  <input class="input" type="text" style="width: 400px;" v-model="jobDefForEdit.onJobTaskInterruptedAlertEmail" placeholder="email@address.com"/>
+                  <span v-if="errors && errors.length > 0" class="message validation-error is-danger">{{ errors[0] }}</span>
+                </validation-provider>
+              </td>
+            </tr>
+            <tr class="tr">
+              <td class="td">
+                <label class="label" style="margin-left: 20px;">Task Failed</label>
+              </td>
+              <td class="td">
+                <validation-provider name="Task Failed Email Address" rules="email" v-slot="{ errors }"> 
+                  <input class="input" type="text" style="width: 400px;" v-model="jobDefForEdit.onJobTaskFailAlertEmail" placeholder="email@address.com"/>
+                  <span v-if="errors && errors.length > 0" class="message validation-error is-danger">{{ errors[0] }}</span>
+                </validation-provider>
+              </td>
+            </tr>
+            <tr class="tr">
+              <td class="td">
+                <label class="label" style="margin-left: 20px;">Job Complete</label>
+              </td>
+              <td class="td">
+                <validation-provider name="Job Complete Email Address" rules="email" v-slot="{ errors }"> 
+                  <input class="input" type="text" style="width: 400px;" v-model="jobDefForEdit.onJobCompleteAlertEmail" placeholder="email@address.com"/>
+                  <span v-if="errors && errors.length > 0" class="message validation-error is-danger">{{ errors[0] }}</span>
+                </validation-provider>
+              </td>
+            </tr>
+
+            <tr class="tr">
+              <td class="td">
+                <span style="font-size: 24px; margin-bottom: 12px;">
+                  Slack Alerts
+                </span>
+              </td>
+              <td class="td">
+                These override the Team Alert Settings
+              </td>
+            </tr>
+            <tr class="tr">
+              <td class="td">
+                <label class="label" style="margin-left: 20px;">Task Interrupted</label>
+              </td>
+              <td class="td">
+                <validation-provider name="Task Interrupted Slack Url" rules="url" v-slot="{ errors }"> 
+                  <input class="input" type="text" style="width: 400px;" v-model="jobDefForEdit.onJobTaskInterruptedAlertSlackURL" placeholder="https://slack.com"/>
+                  <span v-if="errors && errors.length > 0" class="message validation-error is-danger">{{ errors[0] }}</span>
+                </validation-provider>
+              </td>
+            </tr>
+            <tr class="tr">
+              <td class="td">
+                <label class="label" style="margin-left: 20px;">Task Failed</label>
+              </td>
+              <td class="td">
+                <validation-provider name="Task Failed Slack Url" rules="url" v-slot="{ errors }"> 
+                  <input class="input" type="text" style="width: 400px;" v-model="jobDefForEdit.onJobTaskFailAlertSlackURL" placeholder="https://slack.com"/>
+                  <span v-if="errors && errors.length > 0" class="message validation-error is-danger">{{ errors[0] }}</span>
+                </validation-provider>
+              </td>
+            </tr>
+            <tr class="tr">
+              <td class="td">
+                <label class="label" style="margin-left: 20px;">Job Complete</label>
+              </td>
+              <td class="td">
+                <validation-provider name="Job Complete Slack Url" rules="url" v-slot="{ errors }"> 
+                  <input class="input" type="text" style="width: 400px;" v-model="jobDefForEdit.onJobCompleteAlertSlackURL" placeholder="https://slack.com"/>
+                  <span v-if="errors && errors.length > 0" class="message validation-error is-danger">{{ errors[0] }}</span>
+                </validation-provider>
+              </td>
+            </tr>
+
+            <tr class="tr">
+              <td class="td">
+              </td>
+              <td class="td">
+                <button class="button is-primary" :disabled="!hasJobDefChanged" @click="onSaveJobDefClicked">Save</button>
+                <button class="button button-spaced" :disabled="!hasJobDefChanged" @click="cancelJobDefChanges">Cancel</button>
+              </td>
+            </tr>
+
+            <tr class="tr">
               <td class="td"></td>
+              <td class="td">
+                <button class="button" @click="onCloneJobDefClicked">Clone this Job</button>
+              </td>
             </tr>
+
+            <tr class="tr"><td colspan="2"></td></tr>
+          </table>
+        </validation-observer>
+      </div>
+
+      <div v-else-if="activeTab === JobTab.VARIABLES">
+        <div style="margin-top: 20px;">
+          <table class="table" style="width: 800px;">
             <tr class="tr">
               <td class="td" colspan="4">
-                <button class="button" @click="onSelectScriptVarsForRuntimeVarsClicked">Add Script Vars (@sgg)</button>
+                <button class="button" @click="onSelectScriptVarsClicked">Add Script Vars (@sgg)</button>
               </td>
-            </tr>
-            <tr class="tr"><td class="td"></td></tr>
-            <tr class="tr"><td class="td">Variables for next run</td></tr>
-            <tr class="tr">
-              <td class="td">
-                <table class="table striped-table" style="width: 720px;">                  
-                  <tr class="tr" v-for="(value, key) in runJobVars" v-bind:key="'runJobVar_' + key">
-                    <td class="td">{{key}}</td>
-                    <td class="td"><span style="font-weight: 700; size: 20px;"> = </span></td>
-                    <td class="td">{{value.value}}</td>
-                    <td class="td"><a @click.prevent="onDeleteRunJobVarClicked(key)">Delete</a></td>
-                  </tr>
-                </table>
-              </td>
-            </tr>
-            <tr class="tr">
-              <td class="td">
-                <input style="margin-left: 10px; margin-top: 10px;" type="checkbox" v-model="newRunJobVarValue.sensitive" :checked=false>
-                <span style="margin-left: 10px; margin-right: 20px;">Sensitive</span>
-
-                <validation-observer ref="addRunJobVarsValidationObserver">
-                  <validation-provider name="Variable Key" rules="required" v-slot="{ errors }"> 
-                    <input class="input" ref="newRunJobVarKeyInput" type="text" style="width: 250px;" v-model="newRunJobVarKey" placeholder="key"/>
-                    <span v-if="errors && errors.length > 0" class="message validation-error is-danger">{{ errors[0] }}</span>
-                  </validation-provider>
-
-                  <span style="font-weight: 700; margin-left: 4px; margin-right: 4px;">=</span>
-                  
-                  <validation-provider name="Variable Value" rules="required" v-slot="{ errors }"> 
-                    <input class="input" type="text" style="width: 250px;" v-model="newRunJobVarValue.value" placeholder="value"/>
-                    <span v-if="errors && errors.length > 0" class="message validation-error is-danger">{{ errors[0] }}</span>
-                  </validation-provider>
-                </validation-observer>
-            
-                <button class="button button-spaced" @click="onAddRunJobVarClicked">Add Runtime Variable</button>
-              </td>
-            </tr>
-            <tr class="tr">
-              <td class="td">
-                <button class="button" @click="onRunJobClicked" :disabled="jobDef.status === JobDefStatus.PAUSED">Run Job</button>
-              </td>
-              <td class="td">
-              </td>
-            </tr>
-            <tr class="tr">
-              <td class="td">
-                <router-link v-if="runJobId" :to="{name: 'jobDetailsMonitor', params: {jobId: runJobId}}">Running job</router-link>
-              </td>
-              <td class="td"></td>
             </tr>
           </table>
-        </tab>
+          <table class="table striped-table" style="width: 800px;">
+            <tr class="tr" v-if="Object.keys(jobDefForEdit.runtimeVars).length === 0">
+              <td class="td" colspan="4">
+                No runtime vars yet
+              </td>
+            </tr>
+            <template v-else>
+              <validation-observer ref="editRuntimeVarValidationObserver">
+                <tr class="tr" v-for="(tagValue, tagKey) in jobDefForEdit.runtimeVars" v-bind:key="tagKey">
+                  <td class="td">{{tagKey}}</td>
+                  <td class="td"><span style="font-weight: 700; size: 20px;"> = </span></td>
+                  <td class="td">
+                    <template v-if="isVarMasked(tagKey)">
+                      &lt;masked&gt;
+                    </template>
+                    <template v-else>
+                      <validation-provider name="Variable Value" rules="required" v-slot="{ errors }"> 
+                        <input class="input" type="text" v-model.lazy="jobDefForEdit.runtimeVars[tagKey].value" @change="onJobDefRuntimeVarsChanged">
+                        <span v-if="errors && errors.length > 0" class="message validation-error is-danger">{{ errors[0] }}</span>
+                      </validation-provider>
+                    </template>
+                  </td>
+                  <td class="td">
+                    <a v-if="isVarMasked(tagKey)" class="button-spaced" @click.prevent="onUnmaskClicked(tagKey)">unmask</a>
+                  </td>
+                  <td class="td" style="text-align: center; padding: 10px">
+                    <input type="checkbox" v-model.lazy="tagValue.sensitive" @change="onJobDefRuntimeVarsChanged" :checked="isChecked(tagValue.sensitive)">
+                    <label style="margin-left: 10px;">sensitive</label>
+                  </td>
+                  <td class="td"><a @click.prevent="onDeleteRuntimeVarClicked(tagKey)">Delete</a></td>
+                </tr>
+              </validation-observer>
+            </template>
+            <tr class="tr"><td class="td" colspan="2"></td></tr>
+          </table>
+        </div>
+        <div>
+          <input style="margin-left: 10px; margin-top: 10px;" type="checkbox" v-model="newRuntimeVarValue.sensitive" :checked=false>
+          <span style="margin-left: 10px; margin-right: 20px;">Sensitive</span>
 
-        <tab title="Settings">
-          <validation-observer ref="editJobValidationObserver">
-            <table class="table">
-              <tr class="tr"><td class="td"></td></tr>
-              
+          <validation-observer ref="addRuntimeVarValidationObserver">
+            <validation-provider name="Variable Key" rules="required" v-slot="{ errors }"> 
+              <input class="input" ref="newRuntimeVarKeyInput" type="text" style="width: 250px;" v-model="newRuntimeVarKey" placeholder="key"/>
+              <span v-if="errors && errors.length > 0" class="message validation-error is-danger">{{ errors[0] }}</span>
+            </validation-provider>
+
+            <span style="font-weight: 700; margin-left: 4px; margin-right: 4px;">=</span>
+            
+            <validation-provider name="Variable Value" rules="required" v-slot="{ errors }"> 
+              <input class="input" type="text" style="width: 250px;" v-model="newRuntimeVarValue.value" placeholder="value"/>
+              <span v-if="errors && errors.length > 0" class="message validation-error is-danger">{{ errors[0] }}</span>
+            </validation-provider>
+          </validation-observer>
+        
+          <button class="button button-spaced" @click="onAddRuntimeVarClicked">Add Runtime Variable</button>
+          <br><br>&nbsp;
+        </div>              
+      </div>
+      
+      <div v-else-if="activeTab === JobTab.DESIGNER">
+        <div class="task-designer">
+          <div class="task-designer-nav">
+            <button class="button" :disabled="selectedTaskDefTarget" @click="createNewTaskDef_chooseTarget">New Task</button>
+            <button class="button button-spaced" :disabled="selectedTaskDefTarget || !selectedTaskDefForDesigner" @click="editTaskDef(selectedTaskDefForDesigner)">Edit Task</button>
+            <button class="button button-spaced" :disabled="selectedTaskDefTarget || !selectedTaskDefForDesigner" @click="onDeleteTaskDefClicked">Delete Task</button>
+            <button class="button button-spaced" :disabled="selectedTaskDefTarget || !selectedTaskDefForDesigner" @click="onRouteAllTasksToClicked">Route All To {{selectedTaskDefForDesigner && selectedTaskDefForDesigner.name}}</button>
+
+            <button class="button button-spaced" :disabled="!selectedTaskDefTarget" @click="onExitRouteEditClicked">Exit Route Mode</button>
+          
+            <span  v-if="taskDesignerMode === 'editRoutes_inbound'" style="margin-left: 10px; position: relative; bottom: -8px;"><br>Edit direct routes to <strong>{{selectedTaskDefTarget.name}}</strong> (ALL must finish for {{selectedTaskDefTarget.name}} to run.)</span>
+            <span v-if="taskDesignerMode === 'editRoutes_outbound'" style="margin-left: 10px; position: relative; bottom: -8px;"><br>Edit direct routes from <strong>{{selectedTaskDefTarget.name}}</strong> </span>              
+            <span v-if="taskDesignerMode === 'showRoutes'" style="margin-left: 10px; position: relative; bottom: -8px;"><br>Showing all route paths to task <strong>{{selectedTaskDefTarget.name}}</strong></span>
+          </div>
+          <div class="task-designer-body" @click="onDesignerClicked">
+            <designer-task v-for="taskDef in taskDefs" v-bind:key="taskDef.id" 
+                            @clickedBody="onTaskDefInDesignerClicked(taskDef)" 
+                            @clickedEditInboundTasks="editInboundTasks(taskDef)"
+                            @clickedShowInboundPaths="showInboundPaths(taskDef)"
+                            @clickedEditOutboundTasks="editOutboundTasks(taskDef)"
+                            :taskDesignerMode="taskDesignerMode"
+                            :taskDefs="taskDefs"
+                            :source="taskDef" 
+                            :target="selectedTaskDefTarget"
+                            :selected="selectedTaskDefForDesigner"
+                            :inboundTaskPaths="inboundTaskPaths"
+                            :illegalLoopTasks="illegalLoopTasks"
+                            :inboundHighlightPath="inboundHighlightPath"
+                            @setInboundHighlightPath="inboundHighlightPath = $event">
+            </designer-task>
+          </div>
+        </div>
+      </div>
+
+      <!-- Edit task -->
+      <div v-else-if="activeTab === JobTab.TASK">
+        <task-def-editor v-if="selectedTaskDefForEdit && selectedTaskDefForEdit.target !== TaskDefTarget.AWS_LAMBDA" 
+                        @editStepDef="onEditStepDefClicked"
+                        @createNewStepDef="onCreateStepDefClicked"
+                        @deleteStepDef="onDeleteStepDefClicked">
+        </task-def-editor>
+        <s-g-c-task-def-editor v-if="selectedTaskDefForEdit && selectedTaskDefForEdit.target === TaskDefTarget.AWS_LAMBDA">
+        </s-g-c-task-def-editor>
+      </div>
+
+      <div v-else-if="activeTab === JobTab.STEP">
+        <!-- Edit step -->
+        <div class="edit-step" v-if="selectedStepDefForEdit">
+          <validation-observer ref="editStepDefValidationObserver">
+            <table class="table" style="width: 100%;">
               <tr class="tr">
-                <td class="td">
-                  <label class="label">Name</label>
+                <td class="td" style="width: 120px;">
+                  <label class="label">Step Name</label>
                 </td>
                 <td class="td">
-                  <validation-provider name="Job Name" rules="required|object-name" v-slot="{ errors }">
-                    <input class="input" v-model="jobDefForEdit.name">
+                  <validation-provider name="Step Name" rules="required|object-name" v-slot="{ errors }">
+                    <input class="input" style="width: 475px;"  v-model="selectedStepDefForEdit.name">
                     <div v-if="errors && errors.length > 0" class="message validation-error is-danger">{{ errors[0] }}</div>
                   </validation-provider>
                 </td>
               </tr>
               <tr class="tr">
                 <td class="td">
-                  <label class="label">Id</label>
+                  <label class="label">Arguments</label>
                 </td>
                 <td class="td">
-                  {{jobDef.id}}
+                  <input class="control input" style="width: 475px;" v-model="selectedStepDefForEdit.arguments">
                 </td>
               </tr>
               <tr class="tr">
                 <td class="td">
-                  <label class="label">Run Count</label>
+                  <label class="label">Variables</label>
                 </td>
                 <td class="td">
-                  {{jobDef.lastRunId}}
+                  <div class="select is-multiple">
+                    <select multiple size="5" style="width: 475px; margin-bottom: 10px;" v-model="selectedStepDefVariables">
+                      <option v-for="(value, key) in selectedStepDefForEdit.variables" v-bind:key="key" :value="key">{{`${key}=${value}`}}</option>
+                    </select>
+                  </div>
+                  <br>
+                  <button class="button" @click="onCreateNewStepDefVariableClicked">Create variable</button>
+                  <button class="button button-spaced" :disabled="!selectedStepDefVariable" @click="onDeleteStepDefVariableClicked">Delete variable</button>
                 </td>
               </tr>
               <tr class="tr">
                 <td class="td">
-                  <label class="label">Max Instances</label>
+                  <label class="label">Script</label>
                 </td>
                 <td class="td">
-                  <validation-provider name="Max Instances" rules="required|positiveNumber" v-slot="{ errors }">
-                    <input class="input" v-model="jobDefForEdit.maxInstances">
-                    <div v-if="errors && errors.length > 0" class="message validation-error is-danger">{{ errors[0] }}</div>
-                  </validation-provider>
+                  <script-search-with-create :scriptId="selectedStepDefForEdit._scriptId" @scriptPicked="onScriptPicked"></script-search-with-create>
                 </td>
               </tr>
-              <tr class="tr">
-                <td class="td">
-                  <label class="label">Misfire Grace Time</label>
-                </td>
-                <td class="td">
-                  <validation-provider name="Misfire Grace Time" rules="positiveNumber" v-slot="{ errors }">
-                    <input class="input" v-model="jobDefForEdit.misfireGraceTime"> (seconds)
-                    <div v-if="errors && errors.length > 0" class="message validation-error is-danger">{{ errors[0] }}</div>
-                  </validation-provider>
-                </td>
-              </tr>
-              <tr class="tr">
-                <td class="td">
-                </td>
-                <td class="td">
-                  <label class="checkbox">
-                    <input type="checkbox" v-model="jobDefForEdit.coalesce">
-                    Coalesce
-                  </label>
-                </td>
-              </tr>
-              <tr class="tr">
-                <td class="td">
-                </td>
-                <td class="td">
-                  <label class="checkbox">
-                    <input type="checkbox" v-model="jobDefForEdit.pauseOnFailedJob">
-                    Pause on Failed Job
-                  </label>
-                </td>
-              </tr>
-
-              <tr class="tr">
-                <td class="td">
-                  <span style="font-size: 24px; margin-bottom: 12px;">
-                    Team Alerts
-                  </span>
-                </td>
-                <td class="td">
-                  These override the Team Alert Settings
-                </td>
-              </tr>
-              <tr class="tr">
-                <td class="td">
-                  <label class="label" style="margin-left: 20px;">Task Interrupted</label>
-                </td>
-                <td class="td">
-                  <validation-provider name="Task Interrupted Email Address" rules="email" v-slot="{ errors }"> 
-                    <input class="input" type="text" style="width: 400px;" v-model="jobDefForEdit.onJobTaskInterruptedAlertEmail" placeholder="email@address.com"/>
-                    <span v-if="errors && errors.length > 0" class="message validation-error is-danger">{{ errors[0] }}</span>
-                  </validation-provider>
-                </td>
-              </tr>
-              <tr class="tr">
-                <td class="td">
-                  <label class="label" style="margin-left: 20px;">Task Failed</label>
-                </td>
-                <td class="td">
-                  <validation-provider name="Task Failed Email Address" rules="email" v-slot="{ errors }"> 
-                    <input class="input" type="text" style="width: 400px;" v-model="jobDefForEdit.onJobTaskFailAlertEmail" placeholder="email@address.com"/>
-                    <span v-if="errors && errors.length > 0" class="message validation-error is-danger">{{ errors[0] }}</span>
-                  </validation-provider>
-                </td>
-              </tr>
-              <tr class="tr">
-                <td class="td">
-                  <label class="label" style="margin-left: 20px;">Job Complete</label>
-                </td>
-                <td class="td">
-                  <validation-provider name="Job Complete Email Address" rules="email" v-slot="{ errors }"> 
-                    <input class="input" type="text" style="width: 400px;" v-model="jobDefForEdit.onJobCompleteAlertEmail" placeholder="email@address.com"/>
-                    <span v-if="errors && errors.length > 0" class="message validation-error is-danger">{{ errors[0] }}</span>
-                  </validation-provider>
-                </td>
-              </tr>
-
-              <tr class="tr">
-                <td class="td">
-                  <span style="font-size: 24px; margin-bottom: 12px;">
-                    Slack Alerts
-                  </span>
-                </td>
-                <td class="td">
-                  These override the Team Alert Settings
-                </td>
-              </tr>
-              <tr class="tr">
-                <td class="td">
-                  <label class="label" style="margin-left: 20px;">Task Interrupted</label>
-                </td>
-                <td class="td">
-                  <validation-provider name="Task Interrupted Slack Url" rules="url" v-slot="{ errors }"> 
-                    <input class="input" type="text" style="width: 400px;" v-model="jobDefForEdit.onJobTaskInterruptedAlertSlackURL" placeholder="https://slack.com"/>
-                    <span v-if="errors && errors.length > 0" class="message validation-error is-danger">{{ errors[0] }}</span>
-                  </validation-provider>
-                </td>
-              </tr>
-              <tr class="tr">
-                <td class="td">
-                  <label class="label" style="margin-left: 20px;">Task Failed</label>
-                </td>
-                <td class="td">
-                  <validation-provider name="Task Failed Slack Url" rules="url" v-slot="{ errors }"> 
-                    <input class="input" type="text" style="width: 400px;" v-model="jobDefForEdit.onJobTaskFailAlertSlackURL" placeholder="https://slack.com"/>
-                    <span v-if="errors && errors.length > 0" class="message validation-error is-danger">{{ errors[0] }}</span>
-                  </validation-provider>
-                </td>
-              </tr>
-              <tr class="tr">
-                <td class="td">
-                  <label class="label" style="margin-left: 20px;">Job Complete</label>
-                </td>
-                <td class="td">
-                  <validation-provider name="Job Complete Slack Url" rules="url" v-slot="{ errors }"> 
-                    <input class="input" type="text" style="width: 400px;" v-model="jobDefForEdit.onJobCompleteAlertSlackURL" placeholder="https://slack.com"/>
-                    <span v-if="errors && errors.length > 0" class="message validation-error is-danger">{{ errors[0] }}</span>
-                  </validation-provider>
-                </td>
-              </tr>
-
-              <tr class="tr">
-                <td class="td">
-                </td>
-                <td class="td">
-                  <button class="button is-primary" :disabled="!hasJobDefChanged" @click="onSaveJobDefClicked">Save</button>
-                  <button class="button button-spaced" :disabled="!hasJobDefChanged" @click="cancelJobDefChanges">Cancel</button>
-                </td>
-              </tr>
-
               <tr class="tr">
                 <td class="td"></td>
                 <td class="td">
-                  <button class="button" @click="onCloneJobDefClicked">Clone this Job</button>
+                  <button class="button is-primary" :disabled="!hasStepDefChanged" @click="onSaveStepDefClicked">Save</button>
+                  <button class="button button-spaced" :disabled="!hasStepDefChanged" @click="cancelStepDefChanges">Cancel</button>
                 </td>
               </tr>
-
-              <tr class="tr"><td colspan="2"></td></tr>
+              <tr class="tr">
+                <td class="td" colspan="3">
+                  <script-editor :script="selectedScript" :jobDef="jobDef"></script-editor>
+                </td>
+              </tr>
             </table>
           </validation-observer>
-        </tab>
-
-        <tab title="Runtime Variables">
-          <div style="margin-top: 20px;">
-            <table class="table" style="width: 800px;">
-              <tr class="tr">
-                <td class="td" colspan="4">
-                  <button class="button" @click="onSelectScriptVarsClicked">Add Script Vars (@sgg)</button>
-                </td>
-              </tr>
-            </table>
-            <table class="table striped-table" style="width: 800px;">
-              <tr class="tr" v-if="Object.keys(jobDefForEdit.runtimeVars).length === 0">
-                <td class="td" colspan="4">
-                  No runtime vars yet
-                </td>
-              </tr>
-              <template v-else>
-                <validation-observer ref="editRuntimeVarValidationObserver">
-                  <tr class="tr" v-for="(tagValue, tagKey) in jobDefForEdit.runtimeVars" v-bind:key="tagKey">
-                    <td class="td">{{tagKey}}</td>
-                    <td class="td"><span style="font-weight: 700; size: 20px;"> = </span></td>
-                    <td class="td">
-                      <template v-if="isVarMasked(tagKey)">
-                        &lt;masked&gt;
-                      </template>
-                      <template v-else>
-                        <validation-provider name="Variable Value" rules="required" v-slot="{ errors }"> 
-                          <input class="input" type="text" v-model.lazy="jobDefForEdit.runtimeVars[tagKey].value" @change="onJobDefRuntimeVarsChanged">
-                          <span v-if="errors && errors.length > 0" class="message validation-error is-danger">{{ errors[0] }}</span>
-                        </validation-provider>
-                      </template>
-                    </td>
-                    <td class="td">
-                      <a v-if="isVarMasked(tagKey)" class="button-spaced" @click.prevent="onUnmaskClicked(tagKey)">unmask</a>
-                    </td>
-                    <td class="td" style="text-align: center; padding: 10px">
-                      <input type="checkbox" v-model.lazy="tagValue.sensitive" @change="onJobDefRuntimeVarsChanged" :checked="isChecked(tagValue.sensitive)">
-                      <label style="margin-left: 10px;">sensitive</label>
-                    </td>
-                    <td class="td"><a @click.prevent="onDeleteRuntimeVarClicked(tagKey)">Delete</a></td>
-                  </tr>
-                </validation-observer>
-              </template>
-              <tr class="tr"><td class="td" colspan="2"></td></tr>
-            </table>
-          </div>
-          <div>
-            <input style="margin-left: 10px; margin-top: 10px;" type="checkbox" v-model="newRuntimeVarValue.sensitive" :checked=false>
-            <span style="margin-left: 10px; margin-right: 20px;">Sensitive</span>
-
-            <validation-observer ref="addRuntimeVarValidationObserver">
-              <validation-provider name="Variable Key" rules="required" v-slot="{ errors }"> 
-                <input class="input" ref="newRuntimeVarKeyInput" type="text" style="width: 250px;" v-model="newRuntimeVarKey" placeholder="key"/>
-                <span v-if="errors && errors.length > 0" class="message validation-error is-danger">{{ errors[0] }}</span>
-              </validation-provider>
-
-              <span style="font-weight: 700; margin-left: 4px; margin-right: 4px;">=</span>
-              
-              <validation-provider name="Variable Value" rules="required" v-slot="{ errors }"> 
-                <input class="input" type="text" style="width: 250px;" v-model="newRuntimeVarValue.value" placeholder="value"/>
-                <span v-if="errors && errors.length > 0" class="message validation-error is-danger">{{ errors[0] }}</span>
-              </validation-provider>
-            </validation-observer>
-          
-            <button class="button button-spaced" @click="onAddRuntimeVarClicked">Add Runtime Variable</button>
-            <br><br>&nbsp;
-          </div>              
-        </tab>
-        
-        <tab title="Workflow Designer">
-          <div class="task-designer">
-            <div class="task-designer-nav">
-              <button class="button" :disabled="selectedTaskDefTarget" @click="createNewTaskDef_chooseTarget">New Task</button>
-              <button class="button button-spaced" :disabled="selectedTaskDefTarget || !selectedTaskDefForDesigner" @click="editTaskDef(selectedTaskDefForDesigner)">Edit Task</button>
-              <button class="button button-spaced" :disabled="selectedTaskDefTarget || !selectedTaskDefForDesigner" @click="onDeleteTaskDefClicked">Delete Task</button>
-              <button class="button button-spaced" :disabled="selectedTaskDefTarget || !selectedTaskDefForDesigner" @click="onRouteAllTasksToClicked">Route All To {{selectedTaskDefForDesigner && selectedTaskDefForDesigner.name}}</button>
-
-              <button class="button button-spaced" :disabled="!selectedTaskDefTarget" @click="onExitRouteEditClicked">Exit Route Mode</button>
-            
-              <span  v-if="taskDesignerMode === 'editRoutes_inbound'" style="margin-left: 10px; position: relative; bottom: -8px;"><br>Edit direct routes to <strong>{{selectedTaskDefTarget.name}}</strong> (ALL must finish for {{selectedTaskDefTarget.name}} to run.)</span>
-              <span v-if="taskDesignerMode === 'editRoutes_outbound'" style="margin-left: 10px; position: relative; bottom: -8px;"><br>Edit direct routes from <strong>{{selectedTaskDefTarget.name}}</strong> </span>              
-              <span v-if="taskDesignerMode === 'showRoutes'" style="margin-left: 10px; position: relative; bottom: -8px;"><br>Showing all route paths to task <strong>{{selectedTaskDefTarget.name}}</strong></span>
-            </div>
-            <div class="task-designer-body" @click="onDesignerClicked">
-              <designer-task v-for="taskDef in taskDefs" v-bind:key="taskDef.id" 
-                              @clickedBody="onTaskDefInDesignerClicked(taskDef)" 
-                              @clickedEditInboundTasks="editInboundTasks(taskDef)"
-                              @clickedShowInboundPaths="showInboundPaths(taskDef)"
-                              @clickedEditOutboundTasks="editOutboundTasks(taskDef)"
-                              :taskDesignerMode="taskDesignerMode"
-                              :taskDefs="taskDefs"
-                              :source="taskDef" 
-                              :target="selectedTaskDefTarget"
-                              :selected="selectedTaskDefForDesigner"
-                              :inboundTaskPaths="inboundTaskPaths"
-                              :illegalLoopTasks="illegalLoopTasks"
-                              :inboundHighlightPath="inboundHighlightPath"
-                              @setInboundHighlightPath="inboundHighlightPath = $event">
-              </designer-task>
-            </div>
-          </div>
-        </tab>
-        
-        
-      </tabs>
-    </div>
-
-    <!-- Edit task -->
-    <task-def-editor v-if="selectedTaskDefForEdit && selectedTaskDefForEdit.target !== TaskDefTarget.AWS_LAMBDA" 
-                     :style="{'margin-left': editPanelMarginLeft+'px'}"
-                     @editStepDef="onEditStepDefClicked"
-                     @createNewStepDef="onCreateStepDefClicked"
-                     @deleteStepDef="onDeleteStepDefClicked">
-    </task-def-editor>
-
-    <s-g-c-task-def-editor v-if="selectedTaskDefForEdit && selectedTaskDefForEdit.target === TaskDefTarget.AWS_LAMBDA" 
-                     :style="{'margin-left': editPanelMarginLeft+'px'}">
-    </s-g-c-task-def-editor>
-
-
-    <!-- Edit step -->
-    <div class="edit-step" v-if="selectedStepDefForEdit" :style="{'margin-left': editPanelMarginLeft+'px'}">
-      <validation-observer ref="editStepDefValidationObserver">
-        <table class="table" style="width: 100%;">
-          <tr class="tr">
-            <td class="td" style="width: 120px;">
-              <label class="label">Step Name</label>
-            </td>
-            <td class="td">
-              <validation-provider name="Step Name" rules="required|object-name" v-slot="{ errors }">
-                <input class="input" style="width: 475px;"  v-model="selectedStepDefForEdit.name">
-                <div v-if="errors && errors.length > 0" class="message validation-error is-danger">{{ errors[0] }}</div>
-              </validation-provider>
-            </td>
-          </tr>
-          <tr class="tr">
-            <td class="td">
-              <label class="label">Arguments</label>
-            </td>
-            <td class="td">
-              <input class="control input" style="width: 475px;" v-model="selectedStepDefForEdit.arguments">
-            </td>
-          </tr>
-          <tr class="tr">
-            <td class="td">
-              <label class="label">Variables</label>
-            </td>
-            <td class="td">
-              <div class="select is-multiple">
-                <select multiple size="5" style="width: 475px; margin-bottom: 10px;" v-model="selectedStepDefVariables">
-                  <option v-for="(value, key) in selectedStepDefForEdit.variables" v-bind:key="key" :value="key">{{`${key}=${value}`}}</option>
-                </select>
-              </div>
-              <br>
-              <button class="button" @click="onCreateNewStepDefVariableClicked">Create variable</button>
-              <button class="button button-spaced" :disabled="!selectedStepDefVariable" @click="onDeleteStepDefVariableClicked">Delete variable</button>
-            </td>
-          </tr>
-          <tr class="tr">
-            <td class="td">
-              <label class="label">Script</label>
-            </td>
-            <td class="td">
-              <script-search-with-create :scriptId="selectedStepDefForEdit._scriptId" @scriptPicked="onScriptPicked"></script-search-with-create>
-            </td>
-          </tr>
-          <tr class="tr">
-            <td class="td"></td>
-            <td class="td">
-              <button class="button is-primary" :disabled="!hasStepDefChanged" @click="onSaveStepDefClicked">Save</button>
-              <button class="button button-spaced" :disabled="!hasStepDefChanged" @click="cancelStepDefChanges">Cancel</button>
-            </td>
-          </tr>
-          <tr class="tr">
-            <td class="td" colspan="3">
-              <script-editor :script="selectedScript" :jobDef="jobDef"></script-editor>
-            </td>
-          </tr>
-        </table>
-
-      </validation-observer>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -1154,6 +1194,16 @@ import TaskDefEditor from '../components/TaskDefEditor.vue';
 import SGCTaskDefEditor from '../components/SGCTaskDefEditor.vue';
 import { stringToMap, mapToString } from '../utils/Shared';
 
+enum JobTab {
+  VARIABLES = 'RuntimeVariables',
+  DESIGNER = 'WorkflowDesigner',
+  SCHEDULES = 'Schedules',
+  SETTINGS = 'Settings',
+  STEP = 'Step',
+  TASK = 'Task',
+  RUN = 'Run',
+}
+
 @Component({
   components: {
     Tabs, 
@@ -1183,32 +1233,17 @@ export default class JobDesigner extends Vue {
   private readonly ScheduleTriggerType = ScheduleTriggerType;
   private readonly JobDefStatus = JobDefStatus;
   private readonly timeZones = timeZones;
+  private readonly JobTab = JobTab;
 
   @BindProp({storeType: StoreType.TeamStore, selectedModelName: 'selected', propName: 'id'})
-  private selectedTeamId!: string;
-  
+  private selectedTeamId: string;
+
   private newTaskName = '';
   private newTaskTarget = TaskDefTarget.SINGLE_AGENT;
 
   private newStepName = '';
- 
-  private collapsedTaskDefIds: string[] = [];
-
-  private onNavTaskDefClicked(taskDef: TaskDef){
-    if(taskDef.id){
-      const collapsedTaskDefIdIndex = this.collapsedTaskDefIds.indexOf(taskDef.id);
-
-      if(collapsedTaskDefIdIndex === -1){
-        this.collapsedTaskDefIds.push(taskDef.id);
-      }
-      else {
-        // Vue is not reactive on array internals
-        const newIds = _.clone(this.collapsedTaskDefIds);
-        newIds.splice(newIds.indexOf(taskDef.id), 1);
-        this.collapsedTaskDefIds = newIds;
-      }
-    }
-  }
+  private activeTab: JobTab = JobTab.DESIGNER;
+  private taskSearchTerm: string = '';
 
   private get runTabTitle(){
     if(this.jobDef.status === JobDefStatus.PAUSED){
@@ -1216,15 +1251,6 @@ export default class JobDesigner extends Vue {
     }
     else {
       return 'Run';
-    }
-  }
-
-  private isNavTaskDefCollapsed(taskDef: TaskDef){
-    if(taskDef.id){
-      return this.collapsedTaskDefIds.indexOf(taskDef.id) !== -1;
-    }
-    else {
-      return false;
     }
   }
 
@@ -1294,6 +1320,7 @@ export default class JobDesigner extends Vue {
 
       if(tabListEl){
         (<HTMLElement>tabListEl).style.borderBottomStyle = 'none';
+        (<HTMLElement>tabListEl).style.backgroundColor = 'pink';
       }
 
       if(tabListEl || stylingCheckCount++ > 10){
@@ -1319,7 +1346,7 @@ export default class JobDesigner extends Vue {
       const notSelected = document.querySelectorAll('[role=tab][aria-selected=false]');
       if(notSelected && notSelected.length > 0){
         notSelected.forEach((el: any) => {
-          el.style.backgroundColor = 'white';
+          el.style.backgroundColor = 'pink';
           el.style.fontWeight = '';
         });
       }
@@ -1334,12 +1361,26 @@ export default class JobDesigner extends Vue {
     localStorage.setItem('jobDesigner_navPanelWidth', ''+this.navPanelWidth);
   }
 
+  private get filteredTaskDefs(): TaskDef[] {
+    return this.taskDefs.filter(task => task.name.toLowerCase().includes(this.taskSearchTerm.toLowerCase()));
+  }
+
   private get taskDefs(): TaskDef[] {
     return this.$store.getters[`${StoreType.TaskDefStore}/getByJobDefId`](this.jobDefForEdit.id);
   }
 
-  private stepDefsForTaskDef(taskDef: TaskDef): StepDef[] {
-    return this.$store.getters[`${StoreType.StepDefStore}/getByTaskDefId`](taskDef.id);
+  private get stepDefsCache (): Record<string, StepDef[]> {
+    const steps: Record<string, StepDef[]> = {};
+
+    this.taskDefs.forEach(task => {
+      steps[task.id] = this.$store.getters[`${StoreType.StepDefStore}/getByTaskDefId`](task.id);
+    });
+
+    return steps;
+  }
+
+  private highlightTaskName (name: string): string {
+    return name.replaceAll(new RegExp(this.taskSearchTerm, 'ig'), '<b>$&</b>');
   }
 
   private selectItemForNav(selectedItem: null|TaskDef|StepDef){
@@ -1351,6 +1392,7 @@ export default class JobDesigner extends Vue {
         case 'JobDef':
           this.selectedTaskDef = null;
           this.selectedStepDef = null;
+          this.activeTab = JobTab.DESIGNER;
           break;
 
         case 'TaskDef':
@@ -1360,11 +1402,13 @@ export default class JobDesigner extends Vue {
           }
 
           this.selectedTaskDef = <TaskDef>selectedItem;
+          this.activeTab = JobTab.TASK;
           break;
 
         case 'StepDef':
           this.selectedTaskDef = null;
           this.selectedStepDef = <StepDef>selectedItem;
+          this.activeTab = JobTab.STEP;
           break;
       }
     }
@@ -1555,7 +1599,7 @@ export default class JobDesigner extends Vue {
     }
 
     try {
-      const stepDefs = this.stepDefsForTaskDef(this.selectedTaskDef);
+      const stepDefs = this.stepDefsCache[this.selectedTaskDef.id];
 
       this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Creating step - ${this.newStepName}`, AlertPlacement.FOOTER));
       const newStep: StepDef = {
@@ -2139,10 +2183,10 @@ export default class JobDesigner extends Vue {
     this.navResizing = true;
   }
 
-  private navPanelWidth = 200;
+  private navPanelWidth = 300;
 
   private get editPanelMarginLeft(): number {
-    return this.navPanelWidth + 45;
+    return this.navPanelWidth + 42;
   }
 
   private get maxNavPanelJobNameLength(): number {
@@ -2155,33 +2199,6 @@ export default class JobDesigner extends Vue {
 
   private get maxNavPanelStepNameLength(): number {
     return Math.floor(this.navPanelWidth / 9.5);
-  }
-
-  private calcNavPanelJobName(jobDef: JobDef): string {
-    if(jobDef){
-      return truncateString(jobDef.name, this.maxNavPanelJobNameLength);
-    }
-    else {
-      return '';
-    }
-  }
-
-  private calcNavPanelTaskName(taskDef: TaskDef): string {
-    if(taskDef){
-      return truncateString(taskDef.name, this.maxNavPanelTaskNameLength);
-    }
-    else {
-      return '';
-    }
-  }
-
-  private calcNavPanelStepName(stepDef: StepDef): string {
-    if(stepDef){
-      return truncateString(stepDef.name, this.maxNavPanelStepNameLength);
-    }
-    else {
-      return '';
-    }
   }
 
   private onMouseMove(event: MouseEvent){
@@ -2210,7 +2227,7 @@ export default class JobDesigner extends Vue {
       const fetchScriptPromises = [];
 
       for(let taskDef of this.taskDefs){
-        for(let stepDef of this.stepDefsForTaskDef(taskDef)){
+        for(let stepDef of this.stepDefsCache[taskDef.id]){
           fetchScriptPromises.push(this.$store.dispatch(`${StoreType.ScriptStore}/fetchModel`, stepDef._scriptId));
         }
       }
@@ -2306,29 +2323,48 @@ export default class JobDesigner extends Vue {
     font-size: 18px;
   }
 
+  .content-divider {
+    background: red !important;
+    height: 2px;
+    margin: 0px !important;
+    position:relative;
+    left: 0px;
+    top: -2px;
+  }
+
   .nav-job {
+    background-color: #f2f2f2;
     font-size: 18px;
-    margin-left: 10px;
-    border-style: solid;
-    border-width: .5px;
-    border-radius: 5px;
-    border-color: lightgray;
+    margin-left: 30px;
+    border: 1px solid lightgray;
+    border-right: none;
     width: 200px;
-    height: 90vh;
+    height: 100vh;
     overflow-y: auto;
     float: left;
-    border-right-width: 2px;
   }
 
   // for resizing the nav-job panel
   .nav-job-resizer {
     float: left;
-    height: 90vh;
+    height: 100vh;
     width: 12px;
+    border: 1px solid lightgray;
+    border-top: none;
+    border-bottom: none;
+    cursor: col-resize;
+    position: relative;
   }
 
-  .nav-job-resizer:hover {
-    cursor: pointer;
+  .col-resizer-icon {
+    width: 16px;
+    max-width: initial;
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: -3px;
+    margin: auto;
+    z-index: 1;
   }
 
   .nav-job-item {
@@ -2336,39 +2372,15 @@ export default class JobDesigner extends Vue {
     cursor: pointer;
   }
 
-  .nav-task {
-    font-weight: normal;
-    margin-left: 8px;
-    cursor: pointer;
-  }
-
-  .nav-spacer {
-    margin-left: 20px;
-  }
-
-  .nav-expander {
-    font-size: 20px;
-    padding-left: 5px;
-    padding-right: 5px;
-    font-weight: bold;
-  }
-
-  .nav-expander:hover {
-    border-style: solid;
-    border-width: 1px;
-    border-radius: 4px;
-    border-color: #dbdbdb;
-  }
-
-  .nav-step {
-    font-weight: normal;
-    margin-left: 32px;
-    cursor: pointer;
-  }
-
-  .selected {
+  .selected > .icon-text {
     font-weight: bold;
     cursor: pointer;
+  }
+
+  .tabs-container {
+    padding-top: 0px;
+    padding-left: 0px;
+    border-top: 1px solid lightgrey;
   }
 
   .edit-job {
@@ -2378,7 +2390,6 @@ export default class JobDesigner extends Vue {
 
   .edit-step {
     background: lightgray;
-    margin-left: 245px;
     margin-right: 10px;
   }
 
@@ -2387,27 +2398,24 @@ export default class JobDesigner extends Vue {
   }
 
   .task-designer {
-    border-style: solid;
-    border-width: 1px;
-    border-radius: 5px;
-    border-color: lightgray;
+    border: 1px solid lightgray;
+    border-left: none;
+    border-top: none;
   }
 
   .task-designer-nav {
     background-color: $white-ter;
     padding: 8px;
     border-bottom: 1px solid lightgray;
-    border-radius: inherit;
   }
 
   .task-designer-body {
-    background-color: #ebf6fa;
+    background-color: var(--grey-bg-color);
     padding-top: 20px;
     padding-left: 10px;
     padding-right: 10px;
     padding-bottom: 10px;
     height: 81vh;
-    border-radius: inherit;
   }
 
   .cron-options-table {
@@ -2426,5 +2434,23 @@ export default class JobDesigner extends Vue {
     display: block;
     height: 450px;
   }
-  
+
+  .has-background-deepskyblue {
+      background: linear-gradient(to right, #00d2ff, #3a7bd5);
+  }
+
+  .job-menu a {
+      font-variant-caps: all-small-caps;
+      letter-spacing: 2px;
+      margin-right: 1rem;
+  }
+
+  .job-menu .is-active {
+      background: deepskyblue;
+      color: white;
+  }
+
+  .has-max-width {
+    max-width: 100%;
+  }
 </style>

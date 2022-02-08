@@ -6,6 +6,14 @@ $splash-color: rgb(214, 143, 12);
 @import '../../node_modules/bulma/bulma.sass';
 @import '../../node_modules/bulma-divider/dist/css/bulma-divider.sass';
 
+.dropdown-divider {
+  margin: 0;
+}
+
+.dropdown-content {
+  padding: 0;
+}
+
 
 // v-tooltip styles
 .tooltip {

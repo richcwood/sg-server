@@ -9,7 +9,7 @@ import { StoreType } from './store/types';
 import { isUserReadyToUseApp } from '@/store/security';
 import VModal from 'vue-js-modal';
 import { library } from '@fortawesome/fontawesome-svg-core';
-import { faSearch, faSpinner, faEllipsisH, faQuestionCircle } from '@fortawesome/free-solid-svg-icons';
+import { faSearch, faSpinner, faEllipsisH, faQuestionCircle, faAngleDown } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 import { initValidation } from './utils/Validation';
 import VueSplit from 'vue-split-panel';
@@ -22,6 +22,7 @@ library.add(faSearch);
 library.add(faSpinner);
 library.add(faEllipsisH);
 library.add(faQuestionCircle);
+library.add(faAngleDown);
 Vue.component('font-awesome-icon', FontAwesomeIcon);
 
 initValidation();

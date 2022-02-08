@@ -308,7 +308,7 @@ export default class DesignerTask extends Vue {
     border-style: solid;
     border-width: 1px;
     border-radius: 5px;
-    border-color: lightgray;
+    border-color: #8f8a8a;
     background-color: $white-ter;
     padding-top: 2px;
     padding-bottom: 2px;
@@ -321,10 +321,12 @@ export default class DesignerTask extends Vue {
     margin: 10px;
     overflow-y: auto;
     cursor: pointer;
+    box-shadow: 4px 3px 6px 0px #ccc;
+    box-sizing: border-box;
   }
 
   .task:hover {
-   border-width: 3px; 
+    border-color: #5f5e5e;
   }
 
   .task-title {

@@ -48,11 +48,13 @@
               <label class="label" style="width: 150px;">Target Agent(s)</label>
             </td>
             <td class="td">
-              <select class="input" style="width: 350px;" v-model="taskDef.target">
-                <option v-for="(targetIndex, targetName) in TargetAgentChoices" :key="`target-choice-${targetIndex}`" :value="targetIndex">
-                  {{targetName}}
-                </option>
-              </select>
+              <div class="select is-info">
+                <select v-model="taskDef.target">
+                  <option v-for="(targetIndex, targetName) in TargetAgentChoices" :key="`target-choice-${targetIndex}`" :value="targetIndex">
+                    {{targetName}}
+                  </option>
+                </select>
+              </div>
             </td>
           </tr>
 
