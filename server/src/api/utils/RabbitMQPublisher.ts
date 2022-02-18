@@ -52,7 +52,7 @@ class RabbitMQPublisher {
     if (!this.started) {
       await this.start();
     }
-    this.amqp.PublishRoute(SGStrings.GetTeamExchangeName(_teamId), rmqBrowserPushRoute, { domainType, operation, model: data, correlationId, userEmail });
+  this.amqp.PublishRoute(SGStrings.GetTeamExchangeName(_teamId.toHexString()), rmqBrowserPushRoute, { domainType, operation, model: data, correlationId, userEmail });
   }
 
 
@@ -62,7 +62,7 @@ class RabbitMQPublisher {
     if (!this.started) {
       await this.start();
     }
-    this.amqp.PublishRoute(SGStrings.GetTeamExchangeName(_teamId), rmqBrowserAlertsRoute, { message });
+    this.amqp.PublishRoute(SGStrings.GetTeamExchangeName(_teamId.toHexString()), rmqBrowserAlertsRoute, { message });
   }
 
 

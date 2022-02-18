@@ -43,7 +43,8 @@ let GetTaskRoutes = async (_teamId: mongodb.ObjectId, task: TaskSchema, logger: 
         }
 
         routes.push({ route: SGStrings.GetAgentQueue(_teamId.toHexString(), task.targetAgentId), type: 'queue', queueAssertArgs: agentQueueProperties, targetAgentId: task.targetAgentId });
-        await agentService.updateAgentLastTaskAssignedTime(_teamId, task.targetAgentId, Date.now(), null, '_id');
+        const targetAgentId = new mongodb.ObjectId(task.targetAgentId);
+        await agentService.updateAgentLastTaskAssignedTime(_teamId, targetAgentId, Date.now(), null, '_id');
     }
     /// For tasks requiring agents with designated tags, get a list of all active agents with all required tags. If no agents exist with all
     ///     required tags, log an error and return.
@@ -194,7 +195,7 @@ let GetTaskRoutes = async (_teamId: mongodb.ObjectId, task: TaskSchema, logger: 
                 const b_lastTaskAssignedTime = b.lastTaskAssignedTime ? b.lastTaskAssignedTime : 0;
                 return (b_unusedCapacity > a_unusedCapacity) ? 1 : ((a_unusedCapacity > b_unusedCapacity) ? -1 : (b_lastTaskAssignedTime > a_lastTaskAssignedTime ? 1 : ((a_lastTaskAssignedTime > b_lastTaskAssignedTime) ? -1 : 0)));
             });
-            console.log(`GetTaskRoutes -> after sort -> ${JSON.stringify(agentCandidates, null, 4)}`);
+            // console.log(`GetTaskRoutes -> after sort -> ${JSON.stringify(agentCandidates, null, 4)}`);
             const agentQueue = SGStrings.GetAgentQueue(_teamId.toHexString(), agentCandidates[0]._id);
             routes.push({ route: agentQueue, type: 'queue', queueAssertArgs: agentQueueProperties, targetAgentId: agentCandidates[0]._id });
             updatedTask = await TaskModel.findOneAndUpdate({ _id: task._id, _teamId }, { $push: { attemptedRunAgentIds: agentCandidates[0]._id } }, { new: true });

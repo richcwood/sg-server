@@ -77,7 +77,7 @@ export class TeamController {
         return;
       }
 
-      const userId = new mongodb.ObjectId(req.headers.userid);
+      const userId = new mongodb.ObjectId(<string>req.headers.userid);
       const user: UserSchema = <UserSchema>await userService.findUser(userId);
       if ( !user) {
         next(new MissingObjectError(`User '${req.headers.userid}' not found.`));

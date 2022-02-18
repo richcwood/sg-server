@@ -118,7 +118,7 @@ export class TeamService {
     const rmqAdmin = new RabbitMQAdmin(rmqAdminUrl, rmqVhost, logger);
     const newUsername = newTeam._id.toString();
 
-    const teamExchange = SGStrings.GetTeamRoutingPrefix(newTeam._id);
+    const teamExchange = SGStrings.GetTeamRoutingPrefix(newTeam._id.toHexString());
     await rmqAdmin.createExchange(teamExchange, 'topic', false, true);
     await rmqAdmin.createUser(newUsername, newTeam.rmqPassword, teamExchange);
 

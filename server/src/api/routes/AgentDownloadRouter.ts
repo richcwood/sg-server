@@ -629,7 +629,7 @@ export class AgentDownloadRouter {
 
   // Returns 303 if agent install does not exist - otherwise returns 200 plus a signed url for direct s3 download
   async downloadAgent(req: Request, res: Response, next: NextFunction) {
-    const _teamId: string = <string>req.headers._teamid;
+    const _teamId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._teamid);
     const logger: BaseLogger = (<any>req).logger;
     const machineId: string = <string>req.params.machineId;
     const response: ResponseWrapper = (res as any).body;
@@ -750,7 +750,7 @@ export class AgentDownloadRouter {
     if (arch)
       createAgentUrl += `/${arch}`;
 
-    await localRestAccess.RestAPICall(createAgentUrl, 'POST', _teamId, null, null, req.cookies.Auth);
+    await localRestAccess.RestAPICall(createAgentUrl, 'POST', _teamId.toHexString(), null, null, req.cookies.Auth);
   }
 }
 

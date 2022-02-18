@@ -251,7 +251,7 @@ export class AgentController {
             const numNotStartedTasks = await NumNotStartedTasks(_teamId);
             if (numNotStartedTasks > 0) {
                 await SGUtils.sleep(1000);
-                await CheckWaitingForAgentTasks(_teamId, newAgent, logger, amqp);
+                await CheckWaitingForAgentTasks(_teamId, newAgent._id, logger, amqp);
             }
 
             if (_teamId == adminTeamId && _.isArray(newAgent.tags) && newAgent.tags.length > 0) {

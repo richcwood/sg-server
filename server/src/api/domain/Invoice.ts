@@ -119,7 +119,7 @@ export class InvoiceSchema {
   public static readonly dataConverters = {
     toDB: {
       _id: (data) => {
-        return new mongodb.ObjectID(data._id);
+        return new mongodb.ObjectId(data._id);
       }
     },
 

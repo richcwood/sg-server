@@ -137,45 +137,44 @@ export class UserService {
 
 
   /// TODO: if team removed, make sure there is a team owner
-  public async leaveTeam(id: mongodb.ObjectId, removedById: mongodb.ObjectId, _teamId: string, logger: BaseLogger, correlationId?: string): Promise<object> {
+  public async leaveTeam(id: mongodb.ObjectId, removedById: mongodb.ObjectId, _teamId: mongodb.ObjectId, logger: BaseLogger, correlationId?: string): Promise<object> {
     const filter = { _id: id };
+
+    const teamIdAsString: string = _teamId.toHexString();
 
     const userModel: any = await userService.findUser(id);
     if (!userModel)
       throw new MissingObjectError('User not found');
 
-    if (!_teamId)
-      throw new ValidationError('Missing header _teamId');
-
     if (!userModel.teamIds)
       return userModel;
 
     /// Check if the user is in the team
-    if (userModel.teamIds.indexOf(_teamId) < 0) {
-      logger.LogError('User is not a member of the team', { Class: 'UserService', Method: 'leaveTeam', TeamId: _teamId, id: id.toHexString() });
+    if (userModel.teamIds.indexOf(teamIdAsString) < 0) {
+      logger.LogError('User is not a member of the team', { Class: 'UserService', Method: 'leaveTeam', TeamId: teamIdAsString, id: id.toHexString() });
       throw new ValidationError('User is not a member of the team');
     }
 
     let newTeamIds = [];
     let newTeamIdsInactive = [];
     for (let i = 0; i < userModel.teamIds.length; i++) {
-      if (userModel.teamIds[i] != _teamId)
+      if (userModel.teamIds[i] != teamIdAsString)
         newTeamIds.push(userModel.teamIds[i]);
       else
         newTeamIdsInactive.push(userModel.teamIds[i]);
     }
 
-    let newTeamAccessRightIds: {[_teamId: string] : number[]} = {};
+    let newTeamAccessRightIds: {[teamIdAsString: string] : number[]} = {};
     for (let i = 0; i < Object.keys(userModel.teamAccessRightIds).length; i++) {
       const key = Object.keys(userModel.teamAccessRightIds)[i];
-      if (key != _teamId) {
+      if (key != teamIdAsString) {
         newTeamAccessRightIds[key] = userModel.teamAccessRightIds[key];
       }
     }
 
     const updatedUser = await UserModel.findOneAndUpdate(filter, { teamIds: newTeamIds, teamIdsInactive: newTeamIdsInactive, teamAccessRightIds: newTeamAccessRightIds }, { new: true }).select('_id teamIds teamIdsInactive');
 
-    logger.LogWarning('User removed from team', { Class: 'UserService', Method: 'leaveTeam', TeamId: _teamId, id: id.toHexString(), RemovedBy: removedById.toHexString() });
+    logger.LogWarning('User removed from team', { Class: 'UserService', Method: 'leaveTeam', TeamId: teamIdAsString, id: id.toHexString(), RemovedBy: removedById.toHexString() });
 
     const deltas = { _id: id, teamIds: updatedUser.teamIds, teamIdsInactive: updatedUser.teamIdsInactive };
     await rabbitMQPublisher.publish(_teamId, "User", correlationId, PayloadOperation.UPDATE, convertData(UserSchema, deltas));

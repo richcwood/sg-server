@@ -24,7 +24,7 @@ export class ArtifactController {
         try {
             let _teamId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._teamid);
             if (_teamId.toHexString() == config.get('sgAdminTeam') && req.body._teamId && req.body._teamId != _teamId.toHexString())
-            _teamId = mongodb.ObjectId(req.body._teamId);
+            _teamId = new mongodb.ObjectId(req.body._teamId);
                   const response: ResponseWrapper = (resp as any).body;
             const artifact = await artifactService.findArtifact(_teamId, new mongodb.ObjectId(req.params.artifactId));
 

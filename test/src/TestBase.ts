@@ -433,7 +433,7 @@ export default abstract class TestBase {
         ev.cntPartialMatch += cntMatchedValues;
     }
 
-    protected async CompletedTaskHandler(taskOutcome: TaskOutcomeSchema) {
+    protected async CompletedTaskHandler(taskOutcome: any) {
         const getTask: any = await this.testSetup.RestAPICall(`task/${taskOutcome._taskId}`, 'GET', taskOutcome._teamId, {});
         const task = getTask.data.data;
         taskOutcome = Object.assign(taskOutcome, { source: task.source, name: task.name });
@@ -607,7 +607,7 @@ export abstract class FailedTestBase extends TestBase {
         super(testName, testSetup);
     }
 
-    public abstract async SetupJobRelaunch(): Promise<any>;
+    public abstract SetupJobRelaunch(): Promise<any>;
 
     public async RunTest() {
         let firstTestResult = await super.RunTest();

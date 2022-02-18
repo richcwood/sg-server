@@ -60,7 +60,7 @@ export class AccessKeySchema {
     toDB: {
       _id: (data) => {
         if(data && data._id){
-          return new mongodb.ObjectID(data._id);
+          return new mongodb.ObjectId(data._id);
         }
         else {
           return undefined;

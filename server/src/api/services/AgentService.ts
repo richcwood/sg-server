@@ -303,7 +303,7 @@ export class AgentService {
                             const queryTasks = await taskService.findAllJobTasks(_teamId, orphanedTask._jobId);
                             if (_.isArray(queryTasks) && queryTasks.length > 0) {
                                 const task = queryTasks[0];
-                                await localRestAccess.RestAPICall(`taskaction/republish/${task._id}`, 'POST', _teamId, null, null);
+                                await localRestAccess.RestAPICall(`taskaction/republish/${task._id}`, 'POST', _teamId.toHexString(), null, null);
                             }
                         } catch (e) {
                             if (!(e instanceof MissingObjectError)) {

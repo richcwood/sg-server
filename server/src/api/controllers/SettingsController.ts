@@ -23,7 +23,7 @@ export class SettingsController {
     public async getSettings(req: Request, resp: Response, next: NextFunction): Promise<void> {
         try {
             const response: ResponseWrapper = (resp as any).body;
-            const settings = await settingsService.findSettings(new mongodb.ObjectId(req.params.type));
+            const settings = await settingsService.findSettings(req.params.type);
 
             if (_.isArray(settings) && settings.length === 0) {
                 next(new MissingObjectError(`Settings ${req.params.type} not found.`));

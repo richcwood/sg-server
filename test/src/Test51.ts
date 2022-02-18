@@ -10,11 +10,11 @@ const mongoose = require("mongoose");
 const script1 = `
 import time
 import sys
-print 'start'
+print('start')
 for i in range(1000):
     time.sleep(5)
-print 'done'
-print '@sgo{"route": "ok"}'
+print('done')
+print('@sgo{"route": "ok"}')
 `;
 const script1_b64 = SGUtils.btoa(script1);
 

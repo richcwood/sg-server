@@ -12,10 +12,10 @@ import { ScriptSchema } from '../../server/src/api/domain/Script';
 
 const script1 = `
 import time
-print 'start'
+print('start')
 time.sleep(2)
-print 'done'
-print '@sgo{"route": "ok"}'
+print('done')
+print('@sgo{"route": "ok"}')
 `;
 const script_b64 = SGUtils.btoa(script1);
 

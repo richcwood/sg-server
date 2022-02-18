@@ -49,7 +49,7 @@ export class JoinTeamController {
         try {
             if (!req.headers.userid)
                 next(new ValidationError('Something went wrong. Please request a new invite link from the team administrator.'));
-            const user: any = await joinTeamService.anonymousJoinTeam(new mongodb.ObjectId(req.headers.userid), req.params.token);
+            const user: any = await joinTeamService.anonymousJoinTeam(new mongodb.ObjectId(<string>req.headers.userid), req.params.token);
 
             let jwtExpiration = Date.now() + (1000 * 60 * 60 * 24); // 1 day
             const secret = config.get('secret');

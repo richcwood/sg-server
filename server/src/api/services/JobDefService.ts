@@ -628,7 +628,7 @@ export class JobDefService {
         runtimeVars: jobDefJSON.runtimeVars
       };
 
-      const createdJobDefs:any = <any> await jobDefService.createJobDef(_teamId, newJobDefData, userId, correlationId);
+      const createdJobDefs:any = <any> await jobDefService.createJobDef(_teamId, newJobDefData, correlationId);
       const createdJobDef = createdJobDefs[0];
 
       // now create the schedules for the new jobDef

@@ -225,7 +225,7 @@ export class TaskOutcomeService {
                                 updatedTaskOutcome = await TaskOutcomeModel.findOneAndUpdate(filter, { status: TaskStatus.CANCELLED }, { new: true }).select(responseFields);
                                 if (updatedTaskOutcome)
                                     data.status = updatedTaskOutcome.status;
-                                await localRestAccess.RestAPICall(`taskaction/republish/${taskQuery[0]._id}`, 'POST', _teamId, null, null);
+                                await localRestAccess.RestAPICall(`taskaction/republish/${taskQuery[0]._id}`, 'POST', _teamId.toHexString(), null, null);
                             }
                         }
                     }

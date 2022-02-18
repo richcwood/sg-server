@@ -99,7 +99,7 @@ export class StepOutcomeController {
   public async createStepOutcome(req: Request, resp: Response, next: NextFunction): Promise<void> {
     let _teamId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._teamid);
     if (_teamId.toHexString() == config.get('sgAdminTeam') && req.body._teamId && req.body._teamId != _teamId.toHexString())
-      _teamId = mongodb.ObjectId(req.body._teamId);
+      _teamId = new mongodb.ObjectId(req.body._teamId);
     const response: ResponseWrapper = resp['body'];
     try {
       const newStepOutcome = await stepOutcomeService.createStepOutcome(_teamId, convertRequestData(StepOutcomeSchema, req.body), req.header('correlationId'), (<string>req.query.responseFields));
@@ -117,7 +117,7 @@ export class StepOutcomeController {
     const logger: BaseLogger = (<any>req).logger;
     let _teamId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._teamid);
     if (_teamId.toHexString() == config.get('sgAdminTeam') && req.body._teamId && req.body._teamId != _teamId.toHexString())
-      _teamId = mongodb.ObjectId(req.body._teamId);
+      _teamId = new mongodb.ObjectId(req.body._teamId);
     const response: ResponseWrapper = resp['body'];
     try {
       const updatedStepOutcome: any = await stepOutcomeService.updateStepOutcome(_teamId, new mongodb.ObjectId(req.params.stepOutcomeId), convertRequestData(StepOutcomeSchema, req.body), logger, null, req.header('correlationId'), (<string>req.query.responseFields));

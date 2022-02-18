@@ -25,10 +25,10 @@ export class ScriptSchema {
   code: string;
 
   @prop({ required: true })
-  _originalAuthorUserId: mongodb.ObjectID;
+  _originalAuthorUserId: mongodb.ObjectId;
 
   @prop({ required: true })
-  _lastEditedUserId: mongodb.ObjectID;
+  _lastEditedUserId: mongodb.ObjectId;
 
   @prop({ default: true })
   teamUsable?: boolean;
@@ -71,19 +71,19 @@ export class ScriptSchema {
     // This isn't hooked up yet until needed - if it does, then call this in the controller layer on data before passing to service
     toDB: {
       // _originalAuthorUserId: (data) => {
-      //   return new mongodb.ObjectID(data._originalAuthorUserId);
+      //   return new mongodb.ObjectId(data._originalAuthorUserId);
       // },
       // _lastEditedUserId: (data) => {
-      //   return new mongodb.ObjectID(data._lastEditedUserId);
+      //   return new mongodb.ObjectId(data._lastEditedUserId);
       // }
     },
 
     fromDB: {
       // _originalAuthorUserId: (data) => {
-      //   return new mongodb.ObjectID(data._originalAuthorUserId);
+      //   return new mongodb.ObjectId(data._originalAuthorUserId);
       // },
       // _lastEditedUserId: (data) => {
-      //   return new mongodb.ObjectID(data._lastEditedUserId);
+      //   return new mongodb.ObjectId(data._lastEditedUserId);
       // }
     }
   }

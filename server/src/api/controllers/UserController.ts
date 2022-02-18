@@ -112,15 +112,16 @@ export class UserController {
 
       const userIdToRemove: mongodb.ObjectId = new mongodb.ObjectId(req.params.userId);
       const userRemovedBy: mongodb.ObjectId = new mongodb.ObjectId(req.params.userId);
-      const teamId = <string>req.headers._teamid;
+      const _teamId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._teamid);
+      const teamIdAsString: string = _teamId.toHexString();
 
       let authorized: boolean = false;
       if (userIdToRemove.toHexString() != userRemovedBy.toHexString()) {
         const teamAccessRightIds = req.headers.teamAccessRightIds;
 
-        if (teamAccessRightIds && teamAccessRightIds[teamId]) {
+        if (teamAccessRightIds && teamAccessRightIds[teamIdAsString]) {
           const rightIdsToVerify = await accessRightsVerifier.convertAccessRightNamesToIds(['TEAM_GLOBAL']);
-          const userRightsBitset = BitSet.fromHexString(teamAccessRightIds[teamId]);
+          const userRightsBitset = BitSet.fromHexString(teamAccessRightIds[teamIdAsString]);
 
           if (rightIdsToVerify.some((rightId: number) => {
             return userRightsBitset.get(rightId) === 1;
@@ -135,11 +136,11 @@ export class UserController {
       }
 
       if (!authorized) {
-        logger.LogError('User not authorized', { Class: 'UserController', Method: 'leaveTeam', UserIdToRemove: userIdToRemove.toHexString(), UserRemovedBy: userRemovedBy.toHexString(), TeamId: teamId });
+        logger.LogError('User not authorized', { Class: 'UserController', Method: 'leaveTeam', UserIdToRemove: userIdToRemove.toHexString(), UserRemovedBy: userRemovedBy.toHexString(), TeamId: teamIdAsString });
         throw new ValidationError('User not authorized');
       }
 
-      const userUpdated: any = await userService.leaveTeam(userIdToRemove, userRemovedBy, teamId, logger, req.header('correlationId'));
+      const userUpdated: any = await userService.leaveTeam(userIdToRemove, userRemovedBy, _teamId, logger, req.header('correlationId'));
 
       const jwtExpiration = Date.now() + (1000 * 60 * 60 * 24); // 1 day
       const secret = config.get('secret');

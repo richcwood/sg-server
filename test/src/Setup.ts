@@ -188,7 +188,7 @@ export default class TestSetup {
         const paymentMethod = await gateway.creditCard.create(creditCardParams);
         console.log('Customer payment method created -> ', util.inspect(paymentMethod.creditCard, false, null));
 
-        await this.RestAPICall('paymentMethod', 'POST', team.id, null, { _teamId: team.id, name: "Visa credit card", token: paymentMethod.creditCard.token, default: true, type: Enums.PaymentMethodType.CREDIT_CARD });
+        await this.RestAPICall('paymentMethod', 'POST', team.id.toHexString(), null, { _teamId: team.id, name: "Visa credit card", token: paymentMethod.creditCard.token, default: true, type: Enums.PaymentMethodType.CREDIT_CARD });
     }
 
 

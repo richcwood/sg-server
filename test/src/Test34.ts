@@ -11,51 +11,51 @@ import { ScriptSchema } from '../../server/src/api/domain/Script';
 
 const script1 = `
 import time
-print 'start'
+print('start')
 time.sleep(2)
-print 'done'
-print '@sgo{"route": "ok"}'
+print('done')
+print('@sgo{"route": "ok"}')
 `;
 const script1_b64 = SGUtils.btoa(script1);
 
 const script2 = `
 import time
-print 'start'
+print('start')
 time.sleep(2)
-print 'done'
+print('done')
 `;
 const script2_b64 = SGUtils.btoa(script2);
 
 const script3 = `
 import time
-print 'start'
+print('start')
 time.sleep(2)
-print 'done'
-print '@sgo{"outVal": "val"}'
+print('done')
+print('@sgo{"outVal": "val"}')
 `;
 const script3_b64 = SGUtils.btoa(script3);
 
 const script4 = `
 import time
-print 'start'
+print('start')
 time.sleep(2)
-print 'done - 4'
+print('done - 4')
 `;
 const script4_b64 = SGUtils.btoa(script4);
 
 const script5 = `
 import time
-print 'start'
+print('start')
 time.sleep(2)
-print 'done - 5'
+print('done - 5')
 `;
 const script5_b64 = SGUtils.btoa(script5);
 
 const script6 = `
 import time
-print 'start'
+print('start')
 time.sleep(2)
-print 'done - 6'
+print('done - 6')
 `;
 const script6_b64 = SGUtils.btoa(script6);
 
@@ -121,13 +121,13 @@ export default class Test34 extends TestBase.default {
         let script_obj1: ScriptSchema = { '_teamId': _teamId, 'name': 'Script 34.1', 'scriptType': Enums.ScriptType.PYTHON, 'code': script1_b64, _originalAuthorUserId: this.sgUser.id, _lastEditedUserId: this.sgUser.id, lastEditedDate: new Date(), shadowCopyCode: script1_b64 };
         script_obj1 = await self.CreateScript(script_obj1, _teamId);
         self.scripts.push(script_obj1);
-        let step1: StepDefSchema = { '_teamId': _teamId, '_taskDefId': '', 'name': 'step1', '_scriptId': script_obj1['id'], 'order': 0, 'arguments': '' };
+        let step1: StepDefSchema = { '_teamId': _teamId, '_taskDefId': null, 'name': 'step1', '_scriptId': script_obj1['id'], 'order': 0, 'arguments': '' };
         await self.CreateStepDef(Object.assign(step1, { _taskDefId: taskDef1.id }), _teamId, jobDef.id);
 
         let script_obj2: ScriptSchema = { '_teamId': _teamId, 'name': 'Script 34.2', 'scriptType': Enums.ScriptType.PYTHON, 'code': script2_b64, _originalAuthorUserId: this.sgUser.id, _lastEditedUserId: this.sgUser.id, lastEditedDate: new Date(), shadowCopyCode: script1_b64 };
         script_obj2 = await self.CreateScript(script_obj2, _teamId);
         self.scripts.push(script_obj2);
-        let step2: StepDefSchema = { '_teamId': _teamId, '_taskDefId': '', 'name': 'step2', '_scriptId': script_obj2['id'], 'order': 0, 'arguments': '' };
+        let step2: StepDefSchema = { '_teamId': _teamId, '_taskDefId': null, 'name': 'step2', '_scriptId': script_obj2['id'], 'order': 0, 'arguments': '' };
         await self.CreateStepDef(Object.assign(step2, { _taskDefId: taskDef2.id }), _teamId, jobDef.id);
         await self.CreateStepDef(Object.assign(step2, { _taskDefId: taskDef8.id }), _teamId, jobDef.id);
         await self.CreateStepDef(Object.assign(step2, { _taskDefId: taskDef9.id }), _teamId, jobDef.id);
@@ -138,7 +138,7 @@ export default class Test34 extends TestBase.default {
         let script_obj4: ScriptSchema = { '_teamId': _teamId, 'name': 'Script 34.4', 'scriptType': Enums.ScriptType.PYTHON, 'code': script4_b64, _originalAuthorUserId: this.sgUser.id, _lastEditedUserId: this.sgUser.id, lastEditedDate: new Date(), shadowCopyCode: script4_b64 };
         script_obj4 = await self.CreateScript(script_obj4, _teamId);
         self.scripts.push(script_obj4);
-        let step4: StepDefSchema = { '_teamId': _teamId, '_taskDefId': '', 'name': 'step4', '_scriptId': script_obj4['id'], 'order': 0, 'arguments': '' };
+        let step4: StepDefSchema = { '_teamId': _teamId, '_taskDefId': null, 'name': 'step4', '_scriptId': script_obj4['id'], 'order': 0, 'arguments': '' };
         await self.CreateStepDef(Object.assign(step4, { _taskDefId: taskDef2.id }), _teamId, jobDef.id);
         await self.CreateStepDef(Object.assign(step4, { _taskDefId: taskDef8.id }), _teamId, jobDef.id);
         await self.CreateStepDef(Object.assign(step4, { _taskDefId: taskDef9.id }), _teamId, jobDef.id);
@@ -149,7 +149,7 @@ export default class Test34 extends TestBase.default {
         let script_obj5: ScriptSchema = { '_teamId': _teamId, 'name': 'Script 34.5', 'scriptType': Enums.ScriptType.PYTHON, 'code': script5_b64, _originalAuthorUserId: this.sgUser.id, _lastEditedUserId: this.sgUser.id, lastEditedDate: new Date(), shadowCopyCode: script5_b64 };
         script_obj5 = await self.CreateScript(script_obj5, _teamId);
         self.scripts.push(script_obj5);
-        let step5: StepDefSchema = { '_teamId': _teamId, '_taskDefId': '', 'name': 'step5', '_scriptId': script_obj5['id'], 'order': 0, 'arguments': '' };
+        let step5: StepDefSchema = { '_teamId': _teamId, '_taskDefId': null, 'name': 'step5', '_scriptId': script_obj5['id'], 'order': 0, 'arguments': '' };
         await self.CreateStepDef(Object.assign(step5, { _taskDefId: taskDef2.id }), _teamId, jobDef.id);
         await self.CreateStepDef(Object.assign(step5, { _taskDefId: taskDef8.id }), _teamId, jobDef.id);
         await self.CreateStepDef(Object.assign(step5, { _taskDefId: taskDef9.id }), _teamId, jobDef.id);
@@ -160,7 +160,7 @@ export default class Test34 extends TestBase.default {
         let script_obj6: ScriptSchema = { '_teamId': _teamId, 'name': 'Script 34.6', 'scriptType': Enums.ScriptType.PYTHON, 'code': script6_b64, _originalAuthorUserId: this.sgUser.id, _lastEditedUserId: this.sgUser.id, lastEditedDate: new Date(), shadowCopyCode: script6_b64 };
         script_obj6 = await self.CreateScript(script_obj6, _teamId);
         self.scripts.push(script_obj6);
-        let step6: StepDefSchema = { '_teamId': _teamId, '_taskDefId': '', 'name': 'step6', '_scriptId': script_obj6['id'], 'order': 0, 'arguments': '' };
+        let step6: StepDefSchema = { '_teamId': _teamId, '_taskDefId': null, 'name': 'step6', '_scriptId': script_obj6['id'], 'order': 0, 'arguments': '' };
         await self.CreateStepDef(Object.assign(step6, { _taskDefId: taskDef2.id }), _teamId, jobDef.id);
         await self.CreateStepDef(Object.assign(step6, { _taskDefId: taskDef8.id }), _teamId, jobDef.id);
         await self.CreateStepDef(Object.assign(step6, { _taskDefId: taskDef9.id }), _teamId, jobDef.id);
@@ -171,7 +171,7 @@ export default class Test34 extends TestBase.default {
         let script_obj3: ScriptSchema = { '_teamId': _teamId, 'name': 'Script 34.3', 'scriptType': Enums.ScriptType.PYTHON, 'code': script3_b64, _originalAuthorUserId: this.sgUser.id, _lastEditedUserId: this.sgUser.id, lastEditedDate: new Date(), shadowCopyCode: script1_b64 };
         script_obj3 = await self.CreateScript(script_obj3, _teamId);
         self.scripts.push(script_obj3);
-        let step3: StepDefSchema = { '_teamId': _teamId, '_taskDefId': '', 'name': 'step3', '_scriptId': script_obj3['id'], 'order': 0, 'arguments': '' };
+        let step3: StepDefSchema = { '_teamId': _teamId, '_taskDefId': null, 'name': 'step3', '_scriptId': script_obj3['id'], 'order': 0, 'arguments': '' };
         await self.CreateStepDef(Object.assign(step3, { _taskDefId: taskDef3.id }), _teamId, jobDef.id);
 
         taskDef1.expectedValues = {

@@ -8,9 +8,9 @@ import * as _ from 'lodash';
 const script1 = `
 import time
 import sys
-print 'start'
+print('start')
 time.sleep(5)
-print 'done'
+print('done')
 sys.exit(1)
 `;
 const script1_b64 = SGUtils.btoa(script1);

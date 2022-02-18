@@ -169,7 +169,7 @@ export class SGAgentUtils {
 
     static GzipFile = async (filePath: string) => {
         const compressedFilePath = filePath + ".gz";
-        await new Promise((resolve, reject) => {
+        await new Promise<void>((resolve, reject) => {
             compressing.gzip.compressFile(filePath, compressedFilePath)
                 .then(() => { resolve(); })
                 .catch((err) => { reject(err); })
@@ -181,7 +181,7 @@ export class SGAgentUtils {
 
     static GunzipFile = async (filePath: string) => {
         const uncompressedFilePath = SGAgentUtils.ChangeFileExt(filePath, "");
-        await new Promise((resolve, reject) => {
+        await new Promise<void>((resolve, reject) => {
           compressing.gzip.uncompress(filePath, uncompressedFilePath)
             .then(() => { resolve(); })
             .catch((err) => { reject(err); })
@@ -259,15 +259,15 @@ export class SGAgentUtils {
               };
 
             while (true) {
-                let res: any = await new Promise((resolve, reject) => {
+                let res: any = await new Promise<null | any>((resolve, reject) => {
                     cwl.getLogEvents(getLogEventsParams, function (err, data) {
                         if (err) {
                             logger.LogError('Error in GetCloudWatchLogsEvents.getLogEvents: ' + err.message, {stack: err.stack});
-                            return resolve();
+                            return resolve(null);
                         }
                         if (data.events)
                             return resolve({ events: data.events, nextToken: data.nextForwardToken });
-                        return resolve();
+                        return resolve(null);
                     });
                 });
 

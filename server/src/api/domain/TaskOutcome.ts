@@ -86,19 +86,19 @@ export class TaskOutcomeSchema {
     public static readonly dataConverters = {
         toDB: {
             _id: (data) => {
-                return new mongodb.ObjectID(data._id);
+                return new mongodb.ObjectId(data._id);
             },
             _teamId: (data) => {
-                return new mongodb.ObjectID(data._teamId);
+                return new mongodb.ObjectId(data._teamId);
             },
             _jobId: (data) => {
-                return new mongodb.ObjectID(data._jobId);
+                return new mongodb.ObjectId(data._jobId);
             },
             _taskId: (data) => {
-                return new mongodb.ObjectID(data._taskId);
+                return new mongodb.ObjectId(data._taskId);
             },
             _agentId: (data) => {
-                return new mongodb.ObjectID(data._agentId);
+                return new mongodb.ObjectId(data._agentId);
             }
         },
 

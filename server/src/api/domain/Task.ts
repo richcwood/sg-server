@@ -100,13 +100,13 @@ export class TaskSchema {
         // This isn't hooked up yet until needed - if it does, then call this in the controller layer on data before passing to service
         toDB: {
             _id: (data) => {
-                return new mongodb.ObjectID(data._id);
+                return new mongodb.ObjectId(data._id);
             },
             _teamId: (data) => {
-                return new mongodb.ObjectID(data._teamId);
+                return new mongodb.ObjectId(data._teamId);
             },
             _jobId: (data) => {
-                return new mongodb.ObjectID(data._jobId);
+                return new mongodb.ObjectId(data._jobId);
             }
         },
 

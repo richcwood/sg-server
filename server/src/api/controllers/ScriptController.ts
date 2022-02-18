@@ -62,7 +62,7 @@ export class ScriptController {
     const _teamId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._teamid);
     const response: ResponseWrapper = resp['body'];
     try {
-      const newScript = await scriptService.createScript(_teamId, convertRequestData(ScriptSchema, req.body), new mongodb.ObjectId(req.headers.userid), req.header('correlationId'), (<string>req.query.responseFields));
+      const newScript = await scriptService.createScript(_teamId, convertRequestData(ScriptSchema, req.body), new mongodb.ObjectId(<string>req.headers.userid), req.header('correlationId'), (<string>req.query.responseFields));
       response.data = convertResponseData(ScriptSchema, newScript);
       response.statusCode = ResponseCode.CREATED;
       next();
@@ -77,7 +77,7 @@ export class ScriptController {
     const _teamId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._teamid);
     const response: ResponseWrapper = resp['body'];
     try {
-      const updatedScript: any = await scriptService.updateScript(_teamId, new mongodb.ObjectId(req.params.scriptId), convertRequestData(ScriptSchema, req.body), new mongodb.ObjectId(req.headers.userid), req.header('correlationId'), (<string>req.query.responseFields));
+      const updatedScript: any = await scriptService.updateScript(_teamId, new mongodb.ObjectId(req.params.scriptId), convertRequestData(ScriptSchema, req.body), new mongodb.ObjectId(<string>req.headers.userid), req.header('correlationId'), (<string>req.query.responseFields));
 
       if (_.isArray(updatedScript) && updatedScript.length === 0) {
         next(new MissingObjectError(`Script ${req.params.scriptId} not found.`));

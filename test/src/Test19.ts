@@ -11,10 +11,10 @@ import * as mongodb from 'mongodb';
 
 
 const script1 = `
-print 'start\n'
+print('start\n')
 sleep(5)
-print 'done\n'
-print '@sgo{"route": "ok"}\n'
+print('done\n')
+print('@sgo{"route": "ok"}\n')
 `;
 const script1_b64 = SGUtils.btoa(script1);
 

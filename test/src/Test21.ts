@@ -14,10 +14,10 @@ import * as _ from 'lodash';
 const script1 = `
 import time
 import sys
-print 'start'
+print('start')
 time.sleep(2)
-print 'done'
-print '@sgo{"route": "ok"}'
+print('done')
+print('@sgo{"route": "ok"}')
 sys.exit(1)
 `;
 const script1_b64 = SGUtils.btoa(script1);

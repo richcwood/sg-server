@@ -110,7 +110,7 @@ let DownloadAgent_Create = async () => {
 
 
 let ParseScriptStdout = async (filePath: string, saveOutput: boolean) => {
-  let appInst = this;
+  let appInst: any = this;
   return new Promise((resolve, reject) => {
     try {
       let lineCount = 0;
@@ -209,7 +209,7 @@ let DownloadAgent_GetUrl = async (numTries: number = 0) => {
 
 
 let DownloadAgent_Download = async (url) => {
-  return new Promise(async (resolve, reject) => {
+  return new Promise<void>(async (resolve, reject) => {
     const agentPath = './sg-agent-launcher';
 
     const writer = fs.createWriteStream(agentPath);
@@ -226,55 +226,6 @@ let DownloadAgent_Download = async (url) => {
 }
 
 
-const script1 = `
-import time
-print 'start'
-time.sleep(5)
-print 'done'
-print '@sgo{"route": "ok"}'
-`;
-const script1_json = JSON.stringify(script1);
-
-let ScheduleScript = async () => {
-  const mongoUrl = config.get('mongoUrl');
-  const mongoDbname = config.get('mongoDbName');
-  const rmqScheduleUpdatesQueue = config.get('rmqScheduleUpdatesQueue');
-
-  let logger = new BaseLogger('RunTestHarness');
-  logger.Start();
-
-  const amqpUrl = config.get('amqpUrl');
-  const rmqVhost = config.get('rmqVhost');
-  let amqp = new AMQPConnector('SchedulerTest', '', amqpUrl, rmqVhost, 1, (activeMessages) => { }, logger);
-  await amqp.Start();
-
-  let mongoRepo = new MongoRepo('RunTestHarness', mongoUrl, mongoDbname, logger);
-
-  const team: any = await mongoRepo.GetOneByQuery({ 'name': 'Barts Test Team' }, 'team', { _id: 1 });
-  const _teamId = team._id;
-
-  /// Create script
-  let script;
-  script = { '_teamId': mongoRepo.ObjectIdFromString(team.id), 'name': 'TestScript', 'scriptType': Enums.ScriptType.PYTHON, 'code': script1_json, _originalAuthorUserId: this.sgUser.id, _lastEditedUserId: this.sgUser.id, lastEditedDate: new Date(), shadowCopyCode: script1_json };
-  await mongoRepo.InsertOne(script, 'script');
-
-  /// Create task
-  let task: any;
-  task = { 'name': 'TestScheduledTask', '_teamId': _teamId, 'createdBy': 'user:rich', 'requiredTags': {}, 'target': Enums.TaskDefTarget.SINGLE_AGENT, 'scriptId': script['id'], 'arguments': '', 'variables': {}, 'fromRoutes': [] };
-  await mongoRepo.InsertOne(task, 'task');
-
-  /// Create schedule
-  let schedule = {
-    '_teamId': _teamId, 'Name': 'Schedule_TestScript', 'ScheduleId': mongoRepo.GetObjectId(),
-    'TriggerType': 'cron', 'Second': '*/20', 'Start_Date': new Date(new Date().getTime() + (1000 * 30)).toISOString(), 'End_Date': new Date(new Date().getTime() + (1000 * 110)).toISOString(),
-    'FunctionKwargs': { '_teamId': team.id, 'targetType': 'task', 'targetId': task['id'] }
-  };
-
-  await amqp.PublishRoute('worker', rmqScheduleUpdatesQueue, Object.assign(schedule, { 'Action': 'UpdateJob' }));
-};
-
-
-
 let StompTest = async () => {
   const rmqUsername = config.get('rmqUsername');
   const rmqPassword = config.get('rmqPassword');
@@ -286,7 +237,7 @@ let StompTest = async () => {
   const stompUrl = config.get('stompUrl');
   const rmqAdminUrl = config.get('rmqAdminUrl');
   const rmqVhost = config.get('rmqVhost');
-  const connector = new StompConnector('test', 'instanceId', stompUrl, rmqUsername, rmqPassword, rmqAdminUrl, rmqVhost, 1, (activeMessages) => this.OnRabbitMQDisconnect(activeMessages), logger);
+  const connector = new StompConnector('test', 'instanceId', stompUrl, rmqUsername, rmqPassword, rmqAdminUrl, rmqVhost, 1, (activeMessages) => {}, logger);
   await connector.Start();
 
   // await connector.ConsumeQueue('temp_queue_1', false, true, false, true, (msg, msgKey, cb) => {console.log(`received message 1 - ${util.inspect(msg, false, null)}`)}, 'job', 60000);
@@ -371,7 +322,7 @@ let RabbitMQTeamSetup = async (teamId: string) => {
   logger.Start();
 
   try {
-    let team: any = await teamService.findTeam(teamId);
+    let team: any = await teamService.findTeam(new mongodb.ObjectId(teamId));
   
     const rmqAdmin = new RabbitMQAdmin(rmqAdminUrl, rmqVhost, logger);
     const newUsername = team._id.toString();
@@ -1076,7 +1027,7 @@ let CreateInvoices = async () => {
       lastTeam = teams.data.data[i];
       console.log(lastTeam.id);
 
-      const createInvoice: any = await RestAPICall('createinvoice', 'POST', lastTeam.id, null, { startDate: '2020-05-01', endDate: '2020-05-31', scriptRate: lastTeam.scriptRate }, auth);
+      const createInvoice: any = await RestAPICall('createinvoice', 'POST', lastTeam.id.toHexString(), null, { startDate: '2020-05-01', endDate: '2020-05-31', scriptRate: lastTeam.scriptRate }, auth);
       console.log(createInvoice.data);
     }
 
@@ -1136,7 +1087,7 @@ let SubmitInvoicesForPayment = async () => {
       console.log(lastInvoice.id);
 
       try {
-        const createPaymentTransaction: any = await RestAPICall('paymenttransaction', 'POST', lastInvoice._teamId, null, { _invoiceId: lastInvoice.id }, auth);
+        const createPaymentTransaction: any = await RestAPICall('paymenttransaction', 'POST', lastInvoice._teamId.toHexString(), null, { _invoiceId: lastInvoice.id }, auth);
         console.log(createPaymentTransaction.data);
       } catch (e) {
         console.log(`Error creating payment transaction for invoice "${lastInvoice.id}": ${e}`);
@@ -1393,7 +1344,7 @@ let GetS3PrefixSize = async (prefix: string) => {
 
 
 let WaitFn = async (waitTime) => {
-  return new Promise(async (resolve, reject) => {
+  return new Promise<void>(async (resolve, reject) => {
     setTimeout(() => { resolve(); }, waitTime);
   });
 }
@@ -1459,7 +1410,7 @@ let CreateUser = async (email: string, password: string, teamIds: string[] = [])
 
 
 let StopScheduler = async () => {
-  return new Promise((resolve, reject) => {
+  return new Promise<void>((resolve, reject) => {
     exec("kill $(ps aux | grep JobScheduler | grep -v grep | awk '{print $2}')", (err, stdout, stderr) => {
       if (err) {
         console.log('StopScheduler -> err -> ', err);
@@ -1974,7 +1925,7 @@ let PublishJobTask = async () => {
   let amqp: AMQPConnector = new AMQPConnector(appName, '', amqpUrl, rmqVhost, 1, (activeMessages) => { }, logger);
 
   const _teamId = config.get('sgTestTeam');
-  const _jobId = '5e88a1fa4ff0b10b4847a4e7';
+  const _jobId = new mongodb.ObjectId('5e88a1fa4ff0b10b4847a4e7');
 
   const queryTasks = await taskService.findAllJobTasks(_teamId, _jobId);
   if (_.isArray(queryTasks) && queryTasks.length > 0) {
@@ -2055,7 +2006,7 @@ let ProcessOrphanedTasks = async () => {
 
           const _teamId = new mongodb.ObjectId(agent._teamId);
 
-          await RestAPICall(`agent/cancelorphanedtasks/${agent._id}`, 'POST', _teamId, null, null, auth);
+          await RestAPICall(`agent/cancelorphanedtasks/${agent._id}`, 'POST', _teamId.toHexString(), null, null, auth);
 
           cntOfflineAgentsProcessed += 1;
           if (cntOfflineAgentsProcessed >= maxOfflineAgentsToProcess) {
