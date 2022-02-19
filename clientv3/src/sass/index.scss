@@ -2,9 +2,15 @@ $text-color: rgb(121, 96, 81);
 $back-color: lightblue;
 $splash-color: rgb(214, 143, 12);
 
-
 @import '../../node_modules/bulma/bulma.sass';
 @import '../../node_modules/bulma-divider/dist/css/bulma-divider.sass';
+
+:root {
+  --grey-bg-color: #fafafa;
+  --link-color: #5CAAED;
+  --link-color-hover: #1570C0;
+  --link-color-visited: #A3CFF5;
+}
 
 .dropdown-divider {
   margin: 0;
@@ -13,7 +19,6 @@ $splash-color: rgb(214, 143, 12);
 .dropdown-content {
   padding: 0;
 }
-
 
 // v-tooltip styles
 .tooltip {
@@ -132,4 +137,38 @@ $splash-color: rgb(214, 143, 12);
 .help-popover {
   display: inline; 
   cursor: pointer;
+}
+
+.button.is-info {
+  background-color: deepskyblue;
+}
+
+.has-text-deepskyblue {
+  color: deepskyblue;
+}
+
+.has-background-placeholder {
+  background: rgb(172,158,158);
+}
+
+.text-ellipsis {
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.text-nowrap {
+  white-space: nowrap;
+}
+
+a {
+  color: var(--link-color);
+}
+
+a:hover {
+  color: var(--link-color-hover);
+}
+
+a:visited {
+  color: var(--link-color-visited);
 }
