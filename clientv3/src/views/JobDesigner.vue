@@ -554,7 +554,7 @@
 
     <div class="container">
       <header class="is-flex my-2">
-          <h2 class="is-size-2 text-ellipsis" :title="jobDefForEdit.name">{{ jobDefForEdit.name }} Job</h2>
+          <h2 class="is-size-3 has-text-weight-bold text-ellipsis" :title="jobDefForEdit.name">{{ jobDefForEdit.name }} Job</h2>
           <ul class="job-menu is-flex is-align-items-center has-text-weight-bold is-size-5 ml-6">
               <li>
                 <a @click.prevent="activeTab = JobTab.SCHEDULES; selectedItemForNav = null;"
@@ -594,11 +594,16 @@
 
     <!-- Job tasks / steps navigation / selection -->
     <div ref="navPanel" class="nav-job" v-if="jobDefForEdit" :style="{width: navPanelWidth+'px'}">
-      <div class="ml-4 pr-3">
-        <input placeholder="Search Tasks"
-          v-model.trim="taskSearchTerm"
-          type="text"
-          class="input" />
+      <div class="ml-4 pr-3 field">
+        <p class="control has-icons-left">
+          <input placeholder="Search Tasks"
+            v-model.trim="taskSearchTerm"
+            type="text"
+            class="input" />
+          <span class="icon is-small is-left">
+            <font-awesome-icon icon="search" />
+          </span>
+        </p>
       </div>
       <div class="mt-4 ml-4">
         <div class="dropdown"
