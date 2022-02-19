@@ -653,9 +653,9 @@
               :class="{selected: stepDef === selectedItemForNav}"
               :key="stepDef.id"
               @click.stop="selectItemForNav(stepDef)">
-            <span class="icon-text has-max-width is-flex-wrap-nowrap is-inline-block icon-text-helper">
+            <span class="text-ellipsis icon-text has-max-width is-flex-wrap-nowrap is-inline-block icon-text-helper">
               <img class="icon task-step-icon" src="@/assets/images/step-icon.svg" />
-              <span class="text-ellipsis" :title="stepDef.name">{{ stepDef.name }}</span>
+              <span :title="stepDef.name">{{ stepDef.name }}</span>
             </span>
           </div>
         </template>
