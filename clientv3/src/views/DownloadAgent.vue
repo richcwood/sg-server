@@ -2,19 +2,21 @@
   <div class="main">
 
     <section class="section has-background-deepskyblue">
-      <div class="container has-text-white">
+      <div class="has-container-margin">
         <div class="columns">
-          <div class="column pb-5">
-              <h2 class="title is-size-1-desktop is-size-3-touch has-text-white has-text-weight-bold">SaaSGlue Agent Installation</h2><br>
-              <h3 class="subtitle is-size-3-desktop is-size-6-touch has-text-white">Run scripts on all your devices.</h3>
-              <h3 class="subtitle is-size-3-desktop is-size-6-touch has-text-white">Available for <b>Windows</b>, <b>Linux</b>, and <b>Mac.</b></h3>
+          <div class="column">
+              <h2 class="title has-text-white is-size-1-desktop is-size-3-touch has-text-weight-bold">SaaSGlue Agent Installation</h2><br>
+          </div>
+          <div class="column">
+              <h3 class="is-size-3-desktop has-text-white is-size-6-touch">Run scripts on all your devices.</h3>
+              <h3 class="is-size-3-desktop has-text-white is-size-6-touch">Available for <b>Windows</b>, <b>Linux</b>, and <b>Mac.</b></h3>
           </div>
         </div>
       </div>
     </section>
 
-    <section class="section is-small has-background-light">
-      <div class="container">
+    <section class="section">
+      <div class="has-container-margin">
         <div class="columns is-size-5-desktop is-size-6-touch has-text-left-tablet has-text-centered-mobile">
           <div class="column">
             <a class="button has-action-shadow has-text-weight-bold agent-download-button has-text-white" href="https://sg-agent-installer.s3.us-east-2.amazonaws.com/sg-agent-installer-win-x64.zip">
@@ -50,13 +52,13 @@
       </div>
     </section>
     <section class="is-medium mt-5 mx-6">
-      <div class="container is-size-5-desktop is-size-6-touch">
+      <div class="has-container-margin is-size-5-desktop is-size-6-touch">
         <h2 class="subtitle">
           SaaSGlue executes your scripts on your devices via the SaaSGlue Agent, a lightweight application that you can install on your Windows, Linux & Mac devices. The SaaSGlue Agent Installer is a command line tool to install the agent.<br><br>
           Before installing the agent you’ll need an agent access key. Click <router-link to="/accessKeys">here</router-link> if you don’t already have one.
         </h2>
         <div class="is-divider"></div>
-        <div class="container mt-4">
+        <div class="mt-4">
           <h2 class="has-text-weight-semibold is-size-4-desktop is-size-5-touch mb-4">Usage</h2>
           <h2 class="subtitle">
             First <a href="#unzip_agent_instructions">unzip the agent installer download.</a><br><br>
@@ -496,13 +498,6 @@ export default class DownloadAgent extends Vue {
 
   .has-background-deepskyblue {
       background: linear-gradient(to right, #3a7bd5, #00d2ff);
-      padding-bottom: 4rem;
-      padding-top: 4rem;
-      // transform: skewY(-7deg);
-
-      // .container {
-      //     transform: skewY(7deg);
-      // }
   }
 
   .agent-download-button {
@@ -625,6 +620,10 @@ export default class DownloadAgent extends Vue {
     -ms-flex-pack: center;
     justify-content: center;
 }
+
+  .has-container-margin {
+    margin-left: 120px;
+  }
 
     // 00BFFF deep sky blue
     // CCE8F3 medium blue
