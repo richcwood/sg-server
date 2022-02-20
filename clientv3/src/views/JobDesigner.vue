@@ -596,7 +596,7 @@
     <div ref="navPanel" class="nav-job" v-if="jobDefForEdit" :style="{width: navPanelWidth+'px'}">
       <div class="ml-4 pr-3 field">
         <p class="control has-icons-left">
-          <input placeholder="Search Tasks"
+          <input placeholder="Filter By Task Name"
             v-model.trim="taskSearchTerm"
             type="text"
             class="input" />
