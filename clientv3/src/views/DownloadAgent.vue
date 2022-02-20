@@ -1,5 +1,5 @@
 <template>
-  <div class="main" style="margin-left: 24px; margin-right: 12px;">
+  <div class="main">
 
     <section class="section has-background-deepskyblue">
       <div class="container has-text-white">
