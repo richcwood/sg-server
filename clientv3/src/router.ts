@@ -103,9 +103,18 @@ const router = new Router({
       }
     },
     {
-      path: '/jobList',
+      path: '/jobList/:action?',
       name: 'jobList',
-      component: JobList
+      component: JobList,
+      meta: {
+        beforeEnter: async (to: Route, from: Route) => {
+          if(to.params.action && to.params.action === 'create'){
+            setTimeout(() => {
+              (<any>document.getElementsByClassName('action-create')[0]).click();
+            }, 50);
+          }
+        }
+      }
     },
     {
       path: '/jobDesigner/:jobId/:tabName?',
@@ -121,7 +130,7 @@ const router = new Router({
               if(to.params.tabName === 'schedule'){
                 setTimeout(() => {
                   // silly vue-slim-tabs has no easy way to programatically click a tab
-                  (<any>document.getElementsByClassName('vue-tab')[0]).click();
+                  (<any>document.getElementsByClassName('px-1')[0]).click();
                 }, 50);
               }
             }
@@ -196,9 +205,18 @@ const router = new Router({
       component: TeamAlerts
     },
     {
-      path: '/scripts',
+      path: '/scripts/:action?',
       name: 'scripts',
-      component: Scripts
+      component: Scripts,
+      meta: {
+        beforeEnter: async (to: Route, from: Route) => {
+          if(to.params.action && to.params.action === 'create'){
+            setTimeout(() => {
+              (<any>document.getElementsByClassName('action-create')[0]).click();
+            }, 50);
+          }
+        }
+      }
     },
     {
       path: '/settings',

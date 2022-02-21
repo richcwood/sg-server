@@ -43,5 +43,20 @@ export const getters: GetterTree<JobCoreState, RootState> = {
           return today.diff(jobDate, 'day') <= daysDiff;
         });
       }
+  },
+
+  getLatestJobs: (state) => {
+    return (latestCount = 5) => {
+      return state.models.sort((a, b) => {
+        if(a.dateStarted && b.dateStarted){
+          const aMoment = getMoment(a.dateStarted);
+          const bMoment = getMoment(b.dateStarted);
+          return bMoment.isAfter(aMoment) ? 1 : -1;
+        }
+        else {
+          return 0;
+        }
+      }).slice(0, latestCount);
+    }
   }
 };

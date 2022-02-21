@@ -94,7 +94,7 @@
 import { Component, Vue } from 'vue-property-decorator';
 import Datepicker from 'vuejs-datepicker';
 import { StoreType } from '../store/types';
-import { Job, JobFetchType, getJobFetchTypeDescription } from '../store/job/types';
+import { Job, JobFetchType, getJobFetchTypeDescription, calcJobStatusColor } from '../store/job/types';
 import { BindStoreModel } from '../decorator';
 import { momentToStringV1, momentToStringV3, getMoment } from '../utils/DateTime';
 import moment from 'moment';
@@ -117,6 +117,7 @@ export default class JobMonitor extends Vue {
   private readonly enumKeys = enumKeys;
   private readonly JobFetchType = JobFetchType;
   private readonly getJobFetchTypeDescription = getJobFetchTypeDescription;
+  private readonly calcJobStatusColor = calcJobStatusColor;
 
   private readonly todaysDate = new Date();
 
@@ -194,20 +195,6 @@ export default class JobMonitor extends Vue {
     });
 
     return filteredJobs;
-  }
-
-  private calcJobStatusColor(status: JobStatus){
-    switch(status){
-      case JobStatus.NOT_STARTED:
-      case JobStatus.COMPLETED:
-        return 'black';
-      case JobStatus.RUNNING:
-        return 'green';
-      case JobStatus.FAILED:
-        return 'red';
-      default:
-        return 'orange';
-    }
   }
 
   private async mounted(){
