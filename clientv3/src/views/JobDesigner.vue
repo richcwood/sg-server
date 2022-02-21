@@ -552,9 +552,9 @@
       </table>
     </modal>
 
-    <div class="container">
+    <div class="container job-menu-container">
       <header class="is-flex my-2">
-          <h2 class="is-size-2 text-ellipsis" :title="jobDefForEdit.name">{{ jobDefForEdit.name }} Job</h2>
+          <h2 class="is-size-3 has-text-weight-bold text-ellipsis" :title="jobDefForEdit.name">{{ jobDefForEdit.name }}</h2>
           <ul class="job-menu is-flex is-align-items-center has-text-weight-bold is-size-5 ml-6">
               <li>
                 <a @click.prevent="activeTab = JobTab.SCHEDULES; selectedItemForNav = null;"
@@ -594,11 +594,16 @@
 
     <!-- Job tasks / steps navigation / selection -->
     <div ref="navPanel" class="nav-job" v-if="jobDefForEdit" :style="{width: navPanelWidth+'px'}">
-      <div class="ml-4 pr-3">
-        <input placeholder="Search Tasks"
-          v-model.trim="taskSearchTerm"
-          type="text"
-          class="input" />
+      <div class="ml-4 pr-3 field">
+        <p class="control has-icons-left">
+          <input placeholder="Filter By Task Name"
+            v-model.trim="taskSearchTerm"
+            type="text"
+            class="input" />
+          <span class="icon is-small is-left">
+            <font-awesome-icon icon="search" />
+          </span>
+        </p>
       </div>
       <div class="mt-4 ml-4">
         <div class="dropdown"
@@ -648,9 +653,9 @@
               :class="{selected: stepDef === selectedItemForNav}"
               :key="stepDef.id"
               @click.stop="selectItemForNav(stepDef)">
-            <span class="icon-text has-max-width is-flex-wrap-nowrap is-inline-block icon-text-helper">
+            <span class="text-ellipsis icon-text has-max-width is-flex-wrap-nowrap is-inline-block icon-text-helper">
               <img class="icon task-step-icon" src="@/assets/images/step-icon.svg" />
-              <span class="text-ellipsis" :title="stepDef.name">{{ stepDef.name }}</span>
+              <span :title="stepDef.name">{{ stepDef.name }}</span>
             </span>
           </div>
         </template>
@@ -2470,6 +2475,10 @@ export default class JobDesigner extends Vue {
   .job-menu .is-active {
       background: deepskyblue;
       color: white;
+  }
+
+  .job-menu-container {
+    margin-left: 166px;
   }
 
   .has-max-width {
