@@ -63,7 +63,7 @@ export default {
   // globals: {},
 
   // The maximum amount of workers used to run your tests. Can be specified as % or a number. E.g. maxWorkers: 10% will use 10% of your CPU amount + 1 as the maximum worker number. maxWorkers: 2 will use a maximum of 2 workers.
-  // maxWorkers: "50%",
+  maxWorkers: "50%",
 
   // An array of directory names to be searched recursively up from the requiring module's location
   // moduleDirectories: [
@@ -93,7 +93,7 @@ export default {
   // notifyMode: "failure-change",
 
   // A preset that is used as a base for Jest's configuration
-  // preset: undefined,
+  preset: "ts-jest",
 
   // Run tests from one or more projects
   // projects: undefined,
@@ -114,13 +114,22 @@ export default {
   // restoreMocks: false,
 
   // The root directory that Jest should scan for tests and modules within
-  rootDir: "server/src",
+  // rootDir: "src",
 
   // A list of paths to directories that Jest should use to search for files in
-  // roots: [
-  //   "<rootDir>"
-  // ],
+  roots: [
+    "server/node_modules",
+    "server/dist"
+  ],
+  // roots: ["server/packages"],
+  // moduleNameMapper: {
+  //   '@monopre/(.+)$': 'server/packages/$1/src',
+  // },
 
+  modulePaths: [
+    "dist"
+  ],
+  
   // Allows you to use a custom runner instead of Jest's default test runner
   // runner: "jest-runner",
 
@@ -137,7 +146,7 @@ export default {
   // snapshotSerializers: [],
 
   // The test environment that will be used for testing
-  // testEnvironment: "jest-environment-node",
+  testEnvironment: "node",
 
   // Options that will be passed to the testEnvironment
   // testEnvironmentOptions: {},
@@ -171,7 +180,9 @@ export default {
   // timers: "real",
 
   // A map from regular expressions to paths to transformers
-  // transform: undefined,
+  transform: {
+    "^.+\\.(t|j)sx?$": "ts-jest",
+  },
 
   // An array of regexp pattern strings that are matched against all source file paths, matched files will skip transformation
   // transformIgnorePatterns: [

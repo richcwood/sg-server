@@ -4,7 +4,7 @@ import { StepOutcomeSchema, StepOutcomeModel } from '../domain/StepOutcome';
 import { defaultBulkGet } from '../utils/BulkGet';
 import { stepOutcomeService } from '../services/StepOutcomeService';
 import { MissingObjectError } from '../utils/Errors';
-import { CastError } from 'mongoose';
+import { Error } from 'mongoose';
 import { convertData as convertResponseData } from '../utils/ResponseConverters';
 import { convertData as convertRequestData } from '../utils/RequestConverters';
 import { BaseLogger } from '../../shared/SGLogger';
@@ -71,7 +71,7 @@ export class StepOutcomeController {
     }
     catch (err) {
       // If req.params.stepOutcomeId wasn't a mongo id then we will get a CastError - basically same as if the id wasn't found
-      if (err instanceof CastError) {
+      if (err instanceof Error.CastError) {
         next(new MissingObjectError(`StepOutcome ${req.params.stepOutcomeId} not found.`));
       }
       else {

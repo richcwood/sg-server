@@ -21,8 +21,11 @@ export class InvoiceService {
     }
 
 
-    public async findInvoice(_teamId: mongodb.ObjectId, invoiceId: mongodb.ObjectId, responseFields?: string) {
-        return InvoiceModel.findById(invoiceId).find({ _teamId }).select(responseFields);
+    public async findInvoice(_teamId: mongodb.ObjectId, invoiceId: mongodb.ObjectId, responseFields?: string): Promise<InvoiceSchema|null> {
+        const result: InvoiceSchema[] = await InvoiceModel.findById(invoiceId).find({ _teamId }).select(responseFields);
+        if (_.isArray(result) && result.length > 0)
+            return result[0];
+        return null;
     }
 
 
@@ -83,7 +86,7 @@ export class InvoiceService {
         }
 
         if (Object.keys(data).length > 0) {
-            const invoice = await this.findInvoice(_teamId, id, 'status')
+            const invoice: InvoiceSchema = await this.findInvoice(_teamId, id, 'status')
             if (invoice.status == InvoiceStatus.PAID)
                 throw new ValidationError(`Error updating invoice "${id}" - invoice has status ${invoice.status}`);
 

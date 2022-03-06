@@ -5,7 +5,7 @@ import { defaultBulkGet } from '../utils/BulkGet';
 import { taskDefService } from '../services/TaskDefService';
 import { stepDefService } from '../services/StepDefService';
 import { MissingObjectError } from '../utils/Errors';
-import { CastError } from 'mongoose';
+import { Error } from 'mongoose';
 import { convertData as convertResponseData } from '../utils/ResponseConverters';
 import { convertData as convertRequestData } from '../utils/RequestConverters';
 import * as _ from 'lodash';
@@ -52,7 +52,7 @@ export class TaskDefController {
     }
     catch (err) {
       // If req.params.taskDefId wasn't a mongo id then we will get a CastError - basically same as if the id wasn't found
-      if (err instanceof CastError) {
+      if (err instanceof Error.CastError) {
         next(new MissingObjectError(`TaskDef ${req.params.taskDefId} not found.`));
       }
       else {
@@ -124,7 +124,7 @@ export class TaskDefController {
     }
     catch (err) {
       // If req.params.taskDefId wasn't a mongo id then we will get a CastError - basically same as if the id wasn't found
-      if (err instanceof CastError) {
+      if (err instanceof Error.CastError) {
         next(new MissingObjectError(`TaskDef ${req.params.taskDefId} not found.`));
       }
       else {

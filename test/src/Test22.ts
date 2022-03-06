@@ -60,8 +60,8 @@ export default class Test22 extends TestBase.default {
         const teamName = 'TestTeam';
         const _teamId = self.testSetup.teams[teamName].id;
 
-        const filePath1 = 'file1.txt';
-        const filePath2 = 'file2.txt';
+        const filePath1 = 'resources/file1.txt';
+        const filePath2 = 'resources/file2.txt';
 
         fs.writeFileSync(filePath1, 'hello');
         fs.writeFileSync(filePath2, 'world');

@@ -12,6 +12,7 @@ import { jobService } from './JobService';
 import { jobDefService } from './JobDefService';
 import { taskService } from './TaskService';
 import { taskActionService } from './TaskActionService';
+import { JobDefSchema } from '../domain/JobDef';
 
 
 export class JobActionService {
@@ -128,7 +129,7 @@ export class JobActionService {
 
     public async interruptJob(_teamId: mongodb.ObjectId, _jobId: mongodb.ObjectId, logger: BaseLogger, correlationId?: string, responseFields?: string): Promise<object> {
         const filter = { _id: _jobId, _teamId, status: JobStatus.RUNNING };
-        let updatedJob = await JobModel.findOneAndUpdate(filter, { status: JobStatus.INTERRUPTING }, { new: true }).select('_id status');
+        let updatedJob: JobSchema = await JobModel.findOneAndUpdate(filter, { status: JobStatus.INTERRUPTING }, { new: true }).select('_id status');
 
         if (updatedJob)
             await rabbitMQPublisher.publish(_teamId, "Job", correlationId, PayloadOperation.UPDATE, convertData(JobSchema, updatedJob));
@@ -157,9 +158,9 @@ export class JobActionService {
     }
 
 
-    public async restartJob(_teamId: mongodb.ObjectId, _jobId: mongodb.ObjectId, logger: BaseLogger, correlationId?: string, responseFields?: string): Promise<object> {
+    public async restartJob(_teamId: mongodb.ObjectId, _jobId: mongodb.ObjectId, logger: BaseLogger, correlationId?: string, responseFields?: string): Promise<JobSchema> {
         const filter = { _id: _jobId, _teamId, status: { $in: [JobStatus.INTERRUPTED, JobStatus.FAILED] } };
-        let updatedJob = await JobModel.findOneAndUpdate(filter, { status: JobStatus.RUNNING }, { new: true }).select('_id status');
+        let updatedJob: JobSchema = await JobModel.findOneAndUpdate(filter, { status: JobStatus.RUNNING }, { new: true }).select('_id status');
 
         if (updatedJob)
             await rabbitMQPublisher.publish(_teamId, "Job", correlationId, PayloadOperation.UPDATE, convertData(JobSchema, updatedJob));
@@ -188,9 +189,9 @@ export class JobActionService {
     }
 
 
-    public async cancelJob(_teamId: mongodb.ObjectId, _jobId: mongodb.ObjectId, logger: BaseLogger, correlationId?: string, responseFields?: string): Promise<object> {
+    public async cancelJob(_teamId: mongodb.ObjectId, _jobId: mongodb.ObjectId, logger: BaseLogger, correlationId?: string, responseFields?: string): Promise<JobSchema> {
         const filter = { _id: _jobId, _teamId, $or: [{ status: { $lt: JobStatus.CANCELING } }, { status: JobStatus.FAILED }] };
-        let updatedJob = await JobModel.findOneAndUpdate(filter, { status: JobStatus.CANCELING }, { new: true }).select('_id status');
+        let updatedJob: JobSchema = await JobModel.findOneAndUpdate(filter, { status: JobStatus.CANCELING }, { new: true }).select('_id status');
 
         if (updatedJob)
             await rabbitMQPublisher.publish(_teamId, "Job", correlationId, PayloadOperation.UPDATE, convertData(JobSchema, updatedJob));

@@ -48,8 +48,11 @@ export class JobService {
     }
 
 
-    public async findJob(_teamId: mongodb.ObjectId, jobId: mongodb.ObjectId, responseFields?: string) {
-        return JobModel.findById(jobId).find({ _teamId }).select(responseFields);
+    public async findJob(_teamId: mongodb.ObjectId, jobId: mongodb.ObjectId, responseFields?: string): Promise<JobSchema|null> {
+        const result: JobSchema[] = await JobModel.findById(jobId).find({ _teamId }).select(responseFields);
+        if (_.isArray(result) && result.length > 0)
+            return result[0];
+        return null;
     }
 
 
@@ -88,7 +91,7 @@ export class JobService {
                 //     logger.LogError(`Error deleting tasks for job "${job._id}": ${deleteTaskRes.n} tasks exist but ${deleteTaskRes.deletedCount} deleted`, {});
 
                 let deleted = await JobModel.deleteOne({_id: job._id});
-                if (deleted.ok) {
+                if (deleted.acknowledged) {
                     res.deletedCount += deleted.deletedCount;
                     await rabbitMQPublisher.publish(_teamId, "Job", correlationId, PayloadOperation.DELETE, { id: job._id });
                 }
@@ -194,9 +197,16 @@ export class JobService {
                     autoRestart: taskDef.autoRestart
                 };
                 if (task.fromRoutes) {
-                    for (let i = 0; i < task.fromRoutes.length; i++)
-                        task.up_dep[task.fromRoutes[i][0]] = task.fromRoutes[i][1];
+                    for (let i = 0; i < task.fromRoutes.length; i++) {
+                        // console.log('JobService -> createJobFromJobDef -> fromroute -> ', i, ' -> ', JSON.stringify(task.fromRoutes[i], null, 4));
+                        let rtCode = '';
+                        if (task.fromRoutes[i][1])
+                            rtCode = task.fromRoutes[i][1];
+                        task.up_dep[task.fromRoutes[i][0]] = rtCode;
+                        // console.log('JobService -> createJobFromJobDef -> up_dep -> ', i, ' -> ', JSON.stringify(task.up_dep, null, 4));
+                    }
                 }
+                // console.log('JobService -> createJobFromJobDef -> task -> ', JSON.stringify(task, null, 4));
 
                 const taskModel: TaskSchema = <TaskSchema>await taskService.createTask(_teamId, task, correlationId);
 
@@ -609,17 +619,16 @@ export class JobService {
     }
 
 
-    async UpdateJobStatus(_teamId: mongodb.ObjectId, _jobId: mongodb.ObjectId, logger: BaseLogger, job: JobSchema = null, responseFields?: string) {
+    async UpdateJobStatus(_teamId: mongodb.ObjectId, _jobId: mongodb.ObjectId, logger: BaseLogger, job: JobSchema = null, responseFields?: string): Promise<JobSchema> {
         if (!job) {
             if (!responseFields)
                 responseFields = 'status';
             if (responseFields.indexOf('status"') < 0)
                 responseFields += ' status';
             responseFields = responseFields.trim();
-            const currentJobQuery: JobSchema[] = await this.findJob(_teamId, _jobId, responseFields);
-            if (!currentJobQuery || (_.isArray(currentJobQuery) && currentJobQuery.length === 0))
+            job = await this.findJob(_teamId, _jobId, responseFields);
+            if (!job)
                 throw new MissingObjectError(`Job '${_jobId.toHexString()}' not found for team '${_teamId.toHexString()}'`);
-            job = currentJobQuery[0];
         }
 
         const status = await this.CheckJobStatus(_teamId, _jobId, job.status);
@@ -629,9 +638,8 @@ export class JobService {
             update['status'] = status;
             if (status >= Enums.JobStatus.COMPLETED && job.status < Enums.JobStatus.COMPLETED)
                 update['dateCompleted'] = new Date().toISOString();
-            const jobUpdateQuery: any = (<JobSchema>await this.updateJob(_teamId, _jobId, update));
-            if (_.isArray(jobUpdateQuery) && jobUpdateQuery.length > 0) {
-                const jobUpdated: JobSchema = jobUpdateQuery[0];
+            const jobUpdated: any = (<JobSchema>await this.updateJob(_teamId, _jobId, update));
+            if (jobUpdated) {
                 job = jobUpdated;
                 if (jobUpdated.status >= Enums.JobStatus.COMPLETED && (jobUpdated.onJobCompleteAlertEmail || jobUpdated.onJobCompleteAlertSlackURL)) {
                     await SGUtils.OnJobComplete(_teamId, jobUpdated, logger);
@@ -648,10 +656,9 @@ export class JobService {
 
 
     async LaunchTasksWithNoUpstreamDependencies(_teamId: mongodb.ObjectId, _jobId: mongodb.ObjectId, logger: BaseLogger) {
-        const currentJobQuery: JobSchema[] = await this.findJob(_teamId, _jobId, 'status _jobDefId');
-        if (!currentJobQuery || (_.isArray(currentJobQuery) && currentJobQuery.length === 0))
+        const currentJob: JobSchema = await this.findJob(_teamId, _jobId, 'status _jobDefId');
+        if (!currentJob)
             throw new MissingObjectError(`Job '${_jobId.toHexString()}" not found for team "${_teamId.toHexString()}'`);
-        const currentJob: JobSchema = currentJobQuery[0];
         // console.log('JobService -> LaunchTasksWithNoUpstreamDependencies -> job -> ', JSON.stringify(currentJob, null, 4));
 
         // await FreeTierChecks.MaxScriptsCheck(_teamId);

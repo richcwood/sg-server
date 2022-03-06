@@ -29,10 +29,9 @@ export class PayInvoiceAutoService {
         if (_.isArray(team) && team.length === 0)
             throw new MissingObjectError(`Team '${_teamId}' not found`);
 
-        const getInvoice: InvoiceSchema[] = await invoiceService.findInvoice(_teamId, new mongodb.ObjectId(data._invoiceId), 'status billAmount paidAmount');
-        if (_.isArray(getInvoice) && getInvoice.length === 0)
+        const invoice: InvoiceSchema = await invoiceService.findInvoice(_teamId, new mongodb.ObjectId(data._invoiceId), 'status billAmount paidAmount');
+        if (!invoice)
             throw new MissingObjectError(`Invoice '${data._invoiceId}' not found for team '${_teamId}'`);
-        const invoice: InvoiceSchema = getInvoice[0];
         if (invoice.status == InvoiceStatus.SUBMITTED || invoice.status == InvoiceStatus.PAID)
             throw new ValidationError(`Error creating payment transaction - invoice '${data._invoiceId}' has status '${InvoiceStatus[invoice.status]}'`);
 

@@ -69,7 +69,7 @@ export default class TestSetup {
     public allScripts: any[] = [];
 
     constructor(appName: string, logger: BaseLogger) {
-        mongoose.connect(mongoUrl, { useNewUrlParser: true });
+        mongoose.connect(mongoUrl, {});
           
         this.appName = appName;
         this.logger = logger;

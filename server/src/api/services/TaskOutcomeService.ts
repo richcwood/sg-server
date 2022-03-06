@@ -49,8 +49,11 @@ export class TaskOutcomeService {
     }
 
 
-    public async findTaskOutcome(_teamId: mongodb.ObjectId, taskOutcomeId: mongodb.ObjectId, responseFields?: string) {
-        return TaskOutcomeModel.findById(taskOutcomeId).find({ _teamId }).select(responseFields);
+    public async findTaskOutcome(_teamId: mongodb.ObjectId, taskOutcomeId: mongodb.ObjectId, responseFields?: string): Promise<TaskOutcomeSchema|null> {
+        const result: TaskOutcomeSchema[] = await TaskOutcomeModel.findById(taskOutcomeId).find({ _teamId }).select(responseFields);
+        if (_.isArray(result) && result.length > 0)
+            return result[0];
+        return null;
     }
 
 
@@ -67,7 +70,7 @@ export class TaskOutcomeService {
             for (let i = 0; i < taskOutcomesQuery.length; i++) {
                 const taskOutcome: any = taskOutcomesQuery[i];
                 let deleted = await TaskOutcomeModel.deleteOne({_id: taskOutcome._id});
-                if (deleted.ok) {
+                if (deleted.acknowledged) {
                     res.deletedCount += deleted.deletedCount;
                     await rabbitMQPublisher.publish(_teamId, "TaskOutcome", correlationId, PayloadOperation.DELETE, { id: taskOutcome._id });
                 }
@@ -88,7 +91,7 @@ export class TaskOutcomeService {
     public async createTaskOutcome(_teamId: mongodb.ObjectId, data: any, logger: BaseLogger, correlationId?: string, responseFields?: string): Promise<object> {
         data._teamId = _teamId;
         const taskOutcomeModel = new TaskOutcomeModel(data);
-        let newTaskOutcome = await taskOutcomeModel.save();
+        let newTaskOutcome: TaskOutcomeSchema = await taskOutcomeModel.save();
 
         await rabbitMQPublisher.publish(_teamId, "TaskOutcome", correlationId, PayloadOperation.CREATE, convertData(TaskOutcomeSchema, newTaskOutcome));
 
@@ -118,11 +121,10 @@ export class TaskOutcomeService {
 
     public async updateTaskOutcome(_teamId: mongodb.ObjectId, id: mongodb.ObjectId, data: any, logger: BaseLogger, filter?: any, correlationId?: string, responseFields?: string): Promise<object> {
          try {
-            const currentTaskOutcomeQuery: TaskOutcomeSchema[] = await this.findTaskOutcome(_teamId, id, 'status');
+            const currentTaskOutcome: TaskOutcomeSchema = await this.findTaskOutcome(_teamId, id, 'status');
             // console.log('TaskOutcomeService -> updateTaskOutcome -> currentTaskOutcome -> ', JSON.stringify(currentTaskOutcomeQuery, null, 4));
-            if (!currentTaskOutcomeQuery || (_.isArray(currentTaskOutcomeQuery) && currentTaskOutcomeQuery.length === 0))
+            if (!currentTaskOutcome)
                 throw new MissingObjectError(`TaskOutcome "${id}" not found for team "${_teamId}"`);
-            const currentTaskOutcome: TaskOutcomeSchema = currentTaskOutcomeQuery[0];
             if (data.status && data.status != currentTaskOutcome.status && currentTaskOutcome.status >= TaskStatus.SUCCEEDED)
                 if (data.status != TaskStatus.INTERRUPTED || currentTaskOutcome.status != TaskStatus.CANCELLED)
                     throw new ValidationError(`Cannot update TaskOutcome '${id}" status to ${data.status} - already completed with status "${TaskStatus[currentTaskOutcome.status]}'`);
@@ -194,7 +196,7 @@ export class TaskOutcomeService {
                 }
 
                 if (updatedTaskOutcome.status >= TaskStatus.SUCCEEDED || updatedTaskOutcome.status == TaskStatus.INTERRUPTED) {
-                    const job: JobSchema = await jobService.UpdateJobStatus(_teamId, updatedTaskOutcome._jobId, logger, null, 'name runId onJobTaskInterruptedAlertEmail onJobTaskInterruptedAlertSlackURL');
+                    const job: JobSchema = await jobService.UpdateJobStatus(_teamId, updatedTaskOutcome._jobId, logger, null, 'name _jobDefId runId onJobTaskInterruptedAlertEmail onJobTaskInterruptedAlertSlackURL');
 
                     await CheckWaitingForAgentTasks(_teamId, updatedTaskOutcome._agentId, logger, amqp);
 
@@ -351,12 +353,10 @@ export class TaskOutcomeService {
     async PublishTask(_teamId: mongodb.ObjectId, task: TaskSchema, logger: BaseLogger, amqp: AMQPConnector) {
         let success: boolean = false;
         try {
-            const resFindJob = await jobService.findJob(_teamId, task._jobId, 'runtimeVars');
-            if (!resFindJob || (_.isArray(resFindJob) && resFindJob.length === 0)) {
+            const job: JobSchema = await jobService.findJob(_teamId, task._jobId, 'runtimeVars');
+            if (!job) {
                 throw new MissingObjectError(`Job ${task._jobId} for task ${task._id} not found.`);
             }
-
-            const job: JobSchema = resFindJob[0];
 
             if (task.target == Enums.TaskDefTarget.SINGLE_SPECIFIC_AGENT) {
                 let targetAgentId: string = task.targetAgentId;

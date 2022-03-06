@@ -29,8 +29,11 @@ export class JobDefService {
     return JobDefModel.find(filter).select(responseFields);
   }
 
-  public async findJobDef(_teamId: mongodb.ObjectId, jobDefId: mongodb.ObjectId, responseFields?: string) {
-    return JobDefModel.findById(jobDefId).find({ _teamId }).select(responseFields);
+  public async findJobDef(_teamId: mongodb.ObjectId, jobDefId: mongodb.ObjectId, responseFields?: string): Promise<JobDefSchema|null> {
+    const result: JobDefSchema[] = await JobDefModel.findById(jobDefId).find({ _teamId }).select(responseFields);
+    if (_.isArray(result) && result.length > 0)
+        return result[0];
+    return null;
   }
 
 
@@ -65,10 +68,9 @@ export class JobDefService {
     if (!data.createdBy)
       throw new ValidationError('Request body missing "createdBy"');
 
-    const jobDefSourceQuery = await this.findJobDef(_teamId, new mongodb.ObjectId(data._jobDefId));
-    if (!jobDefSourceQuery || (_.isArray(jobDefSourceQuery) && jobDefSourceQuery.length === 0))
+    const jobDefSource = await this.findJobDef(_teamId, new mongodb.ObjectId(data._jobDefId));
+    if (!jobDefSource)
       throw new MissingObjectError(`JobDef ${data._jobDefId} not found.`);
-    const jobDefSource = jobDefSourceQuery[0];
 
     const jobDef_data = {
       _teamId: data._teamId,
@@ -310,7 +312,7 @@ export class JobDefService {
   }
 
 
-  public async deleteJobDef(_teamId: mongodb.ObjectId, id: mongodb.ObjectId, correlationId?: string): Promise<void> {
+  public async deleteJobDef(_teamId: mongodb.ObjectId, id: mongodb.ObjectId, correlationId?: string): Promise<object> {
     const deleted = await JobDefModel.deleteOne({ _id: id });
 
     await rabbitMQPublisher.publish(_teamId, "JobDef", correlationId, PayloadOperation.DELETE, { id, correlationId });

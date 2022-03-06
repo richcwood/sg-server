@@ -56,7 +56,7 @@ export class TaskService {
             for (let i = 0; i < tasksQuery.length; i++) {
                 const task: any = tasksQuery[i];
                 let deleted = await TaskModel.deleteOne({_id: task._id});
-                if (deleted.ok) {
+                if (deleted.acknowledged) {
                     res.deletedCount += deleted.deletedCount;
                     await rabbitMQPublisher.publish(_teamId, "Task", correlationId, PayloadOperation.DELETE, { id: task._id });
                 }
@@ -104,7 +104,7 @@ export class TaskService {
         else
             filter = defaultFilter;
 
-        const task: TaskSchema = await TaskModel.findOneAndUpdate(filter, data, { new: true }).select();
+        const task: TaskSchema = await TaskModel.findOneAndUpdate(filter, data, { new: true }).select(responseFields);
         // console.log('TaskService -> updateTask -> task -> ', JSON.stringify(task, null, 4));
         if (!task)
             throw new MissingObjectError(`Task "${id}" not found with filter "${JSON.stringify(filter)}"`);

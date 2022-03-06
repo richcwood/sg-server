@@ -4,7 +4,7 @@ import { AccessKeySchema, AccessKeyModel } from '../domain/AccessKey';
 import { defaultBulkGet } from '../utils/BulkGet';
 import { accessKeyService } from '../services/AccessKeyService';
 import { MissingObjectError } from '../utils/Errors';
-import { CastError } from 'mongoose';
+import { Error } from 'mongoose';
 import { convertData as convertResponseData } from '../utils/ResponseConverters';
 import { convertData as convertRequestData } from '../utils/RequestConverters';
 import * as _ from 'lodash';
@@ -36,7 +36,7 @@ export class AccessKeyController {
         }
         catch (err) {
             // If req.params.accessKeyId wasn't a mongo id then we will get a CastError - basically same as if the id wasn't found
-            if (err instanceof CastError) {
+            if (err instanceof Error.CastError) {
                 next(new MissingObjectError(`AccessKey ${req.params.accessKeyId} not found.`));
             }
             else {

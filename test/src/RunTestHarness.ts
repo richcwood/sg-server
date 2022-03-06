@@ -311,7 +311,7 @@ let RabbitMQAdminTest = async () => {
 
 
 let RabbitMQTeamSetup = async (teamId: string) => {
-  mongoose.connect(config.get('mongoUrl'), { useNewUrlParser: true });
+  mongoose.connect(config.get('mongoUrl'), {});
   const rmqAdminUrl = config.get('rmqAdminUrl');
   let rmqVhost = config.get('rmqVhost');
 
@@ -466,7 +466,7 @@ let DeleteMongoData = async () => {
 
 
 let RunCheckWaitingForAgentTasks = async (_teamId: string) => {
-  mongoose.connect(config.get('mongoUrl'), { useNewUrlParser: true });
+  mongoose.connect(config.get('mongoUrl'), {});
 
   let logger = new BaseLogger('RunTestHarness');
   logger.Start();
@@ -482,7 +482,7 @@ let RunCheckWaitingForAgentTasks = async (_teamId: string) => {
 
 
 let FixTeamDBRecords = async () => {
-  mongoose.connect(config.get('mongoUrl'), { useNewUrlParser: true });
+  mongoose.connect(config.get('mongoUrl'), {});
 
   let teams: any = await teamService.findAllTeamsInternal({ 'userAssigned': { $exists: false } });
 
@@ -505,7 +505,7 @@ let FixTeamDBRecords = async () => {
 let CancelFailedJobs = async () => {
   let logger = new BaseLogger('RunTestHarness');
   logger.Start();
-  mongoose.connect(config.get('mongoUrl'), { useNewUrlParser: true });
+  mongoose.connect(config.get('mongoUrl'), {});
 
   const _teamId = '5f57b2f14b5da00017df0d4f';
   const teamId: any = new mongodb.ObjectId(_teamId);
@@ -532,7 +532,7 @@ let CancelFailedJobs = async () => {
 let DeleteNotStartedJobs = async () => {
   let logger = new BaseLogger('RunTestHarness');
   logger.Start();
-  mongoose.connect(config.get('mongoUrl'), { useNewUrlParser: true });
+  mongoose.connect(config.get('mongoUrl'), {});
 
   const _teamId = '5f57b2f14b5da00017df0d4f';
   const teamId: any = new mongodb.ObjectId(_teamId);
@@ -557,7 +557,7 @@ let DeleteNotStartedJobs = async () => {
 
 
 let FixScriptDBRecords = async () => {
-  mongoose.connect(config.get('mongoUrl'), { useNewUrlParser: true });
+  mongoose.connect(config.get('mongoUrl'), {});
 
   let scripts: any = await scriptService.findAllScriptsInternal();
 
@@ -579,7 +579,7 @@ let FixScriptDBRecords = async () => {
 
 
 let FixRuntimeVarsDBRecords = async () => {
-  mongoose.connect(config.get('mongoUrl'), { useNewUrlParser: true });
+  mongoose.connect(config.get('mongoUrl'), {});
 
   // Update team variables
   let teamVars: any = await teamVariableService.findAllTeamVariablesInternal();
@@ -711,7 +711,7 @@ let FixRuntimeVarsDBRecords = async () => {
 
 
 let DumpMongoData = async (path: string) => {
-  mongoose.connect(config.get('mongoUrl'), { useNewUrlParser: true });
+  mongoose.connect(config.get('mongoUrl'), {});
 
   let user: any = await userService.findAllUsersInternal();
   let team: any = await teamService.findAllTeamsInternal();
@@ -757,7 +757,7 @@ let DumpMongoData = async (path: string) => {
 
 
 let LoadMongoData = async (path: string) => {
-  mongoose.connect(config.get('mongoUrl'), { useNewUrlParser: true });
+  mongoose.connect(config.get('mongoUrl'), {});
 
   const mongoUrl = config.get('mongoUrl');
   const mongoDbname = config.get('mongoDbName');
@@ -911,7 +911,7 @@ let LoadMongoData = async (path: string) => {
 
 
 let DumpSettingsFromMongo = async () => {
-  mongoose.connect(config.get('mongoUrl'), { useNewUrlParser: true });
+  mongoose.connect(config.get('mongoUrl'), {});
 
   const path = './settings.json';
 
@@ -928,7 +928,7 @@ let DumpSettingsFromMongo = async () => {
 
 
 let LoadSettingsToMongo = async () => {
-  mongoose.connect(config.get('mongoUrl'), { useNewUrlParser: true });
+  mongoose.connect(config.get('mongoUrl'), {});
 
   const path = './settings.json';
 
@@ -987,7 +987,7 @@ let TestBraintreeWebhook = async () => {
 
 
 let CreateInvoiceReports = async () => {
-  mongoose.connect(config.get('mongoUrl'), { useNewUrlParser: true });
+  mongoose.connect(config.get('mongoUrl'), {});
 
   let teams = await teamService.findAllTeamsInternal({userAssigned: true}, 'id scriptRate jobStoragePerMBRate');
   console.log('teams -> ', teams);
@@ -1110,7 +1110,7 @@ let CreateTeam = async (teamName, ownerId) => {
   let logger = new BaseLogger(appName);
   logger.Start();
 
-  mongoose.connect(config.get('mongoUrl'), { useNewUrlParser: true });
+  mongoose.connect(config.get('mongoUrl'), {});
 
   let team = await teamService.createTeam({"name" : teamName, "ownerId" : new mongodb.ObjectId(ownerId)}, logger);
 
@@ -1144,7 +1144,7 @@ let CreateJob = async () => {
 
 
 let CreateAccessKey = async() => {
-  mongoose.connect(config.get('mongoUrl'), { useNewUrlParser: true });
+  mongoose.connect(config.get('mongoUrl'), {});
 
   let data: any = {
     accessKeyType: 1,
@@ -1169,7 +1169,7 @@ let LoadAccessRightIdsToProd = async () => {
   const accessRights = [{"_id":"601aea57b0da974904990e6c","rightId":1,"name":"TEAM_READ_ALL"},{"_id":"601aea57b0da974904990e6d","rightId":2,"name":"TEAM_CREATE_UNASSIGNED"},{"_id":"601aea57b0da974904990e6e","rightId":3,"name":"TEAM_READ"},{"_id":"601aea57b0da974904990e6f","rightId":4,"name":"TEAM_WRITE"},{"_id":"601aea57b0da974904990e70","rightId":5,"name":"AGENT_DOWNLOAD_CREATE"},{"_id":"601aea57b0da974904990e71","rightId":6,"name":"AGENT_DOWNLOAD"},{"_id":"601aea57b0da974904990e72","rightId":7,"name":"AGENT_STUB_DOWNLOAD"},{"_id":"601aea57b0da974904990e73","rightId":8,"name":"AGENT_READ"},{"_id":"601aea57b0da974904990e74","rightId":9,"name":"AGENT_CREATE"},{"_id":"601aea57b0da974904990e75","rightId":10,"name":"AGENT_UPDATE_TARGET_VERSION"},{"_id":"601aea57b0da974904990e76","rightId":11,"name":"AGENT_UPDATE_HEARTBEAT"},{"_id":"601aea57b0da974904990e77","rightId":12,"name":"AGENT_WRITE"},{"_id":"601aea57b0da974904990e78","rightId":13,"name":"AGENT_CANCEL_ORPHANED_TASKS"},{"_id":"601aea57b0da974904990e79","rightId":14,"name":"AGENT_DELETE"},{"_id":"601aea57b0da974904990e7a","rightId":15,"name":"AGENT_LOG_WRITE"},{"_id":"601aea57b0da974904990e7b","rightId":16,"name":"SCRIPT_READ"},{"_id":"601aea57b0da974904990e7c","rightId":17,"name":"SCRIPT_WRITE"},{"_id":"601aea57b0da974904990e7d","rightId":18,"name":"SCHEDULE_READ"},{"_id":"601aea57b0da974904990e7e","rightId":19,"name":"SCHEDULE_WRITE"},{"_id":"601aea57b0da974904990e7f","rightId":20,"name":"SCHEDULE_UPDATE_BY_SCHEDULER"},{"_id":"601aea57b0da974904990e80","rightId":21,"name":"JOB_READ"},{"_id":"601aea57b0da974904990e81","rightId":22,"name":"JOB_CREATE"},{"_id":"601aea57b0da974904990e82","rightId":23,"name":"JOB_WRITE"},{"_id":"601aea57b0da974904990e83","rightId":24,"name":"JOB_DELETE"},{"_id":"601aea57b0da974904990e84","rightId":25,"name":"TASK_OUTCOME_WRITE"},{"_id":"601aea57b0da974904990e85","rightId":26,"name":"STEP_OUTCOME_WRITE"},{"_id":"601aea57b0da974904990e86","rightId":27,"name":"JOB_DEF_READ"},{"_id":"601aea57b0da974904990e87","rightId":28,"name":"JOB_DEF_WRITE"},{"_id":"601aea57b0da974904990e88","rightId":29,"name":"USER_READ"},{"_id":"601aea57b0da974904990e89","rightId":30,"name":"USER_WRITE"},{"_id":"601aea57b0da974904990e8a","rightId":31,"name":"PAYMENT_METHOD_READ"},{"_id":"601aea57b0da974904990e8b","rightId":32,"name":"PAYMENT_METHOD_WRITE"},{"_id":"601aea57b0da974904990e8c","rightId":33,"name":"PAYMENT_TRANSACTION_READ"},{"_id":"601aea57b0da974904990e8d","rightId":34,"name":"PAYMENT_TRANSACTION_WRITE"},{"_id":"601aea57b0da974904990e8e","rightId":35,"name":"PAY_INVOICE_AUTO"},{"_id":"601aea57b0da974904990e8f","rightId":36,"name":"PAY_INVOICE_MANUAL"},{"_id":"601aea57b0da974904990e90","rightId":37,"name":"PAYMENT_TOKEN_CREATE"},{"_id":"601aea57b0da974904990e91","rightId":38,"name":"INVOICE_READ"},{"_id":"601aea57b0da974904990e92","rightId":39,"name":"INVOICE_WRITE"},{"_id":"601aea57b0da974904990e93","rightId":40,"name":"TEAM_INVITE"},{"_id":"601aea57b0da974904990e94","rightId":41,"name":"TEAM_JOIN"},{"_id":"601aea57b0da974904990e95","rightId":42,"name":"TASK_ACTION"},{"_id":"601aea57b0da974904990e96","rightId":43,"name":"JOB_ACTION"},{"_id":"601aea57b0da974904990e97","rightId":44,"name":"TEAM_VAR_READ"},{"_id":"601aea57b0da974904990e98","rightId":45,"name":"TEAM_VAR_WRITE"},{"_id":"601aea57b0da974904990e99","rightId":46,"name":"TEAM_STORAGE_READ"},{"_id":"601aea57b0da974904990e9a","rightId":47,"name":"TEAM_STORAGE_WRITE"},{"_id":"601aea57b0da974904990e9b","rightId":48,"name":"ARTIFACT_READ"},{"_id":"601aea57b0da974904990e9c","rightId":49,"name":"ARTIFACT_WRITE"},{"_id":"601aea57b0da974904990e9d","rightId":50,"name":"SCRIPT_SHADOW_READ"},{"_id":"601aea57b0da974904990e9e","rightId":51,"name":"SCRIPT_SHADOW_WRITE"},{"_id":"601aea57b0da974904990e9f","rightId":52,"name":"ACCESSKEY_READ"},{"_id":"601aea57b0da974904990ea0","rightId":53,"name":"ACCESSKEY_WRITE"},{"_id":"601aea57b0da974904990ea1","rightId":54,"name":"SETTINGS_READ"},{"_id":"601aea57b0da974904990ea2","rightId":55,"name":"SETTINGS_WRITE"},{"_id":"601aea57b0da974904990ea3","rightId":56,"name":"TEAM_GLOBAL"},{"_id":"601aea57b0da974904990ea4","rightId":57,"name":"GLOBAL"}];
 
   console.log('mongoUrl -> @sgg("mongoUrl")');
-  mongoose.connect(config.get("mongoUrl"), { useNewUrlParser: true });
+  mongoose.connect(config.get("mongoUrl"), {});
   await AccessRightModel.deleteMany();
 
   for (let i = 0; i < accessRights.length; i++) {
@@ -1187,7 +1187,7 @@ let CreateAccessRightIds = async () => {
   const accessRights = [{'name': 'TEAM_READ_ALL'}, {'name': 'TEAM_CREATE_UNASSIGNED'}, {'name': 'TEAM_READ'}, {'name': 'TEAM_WRITE'}, {'name': 'AGENT_DOWNLOAD_CREATE'}, {'name': 'AGENT_DOWNLOAD'}, {'name': 'AGENT_STUB_DOWNLOAD'}, {'name': 'AGENT_READ'}, {'name': 'AGENT_CREATE'}, {'name': 'AGENT_UPDATE_TARGET_VERSION'}, {'name': 'AGENT_UPDATE_HEARTBEAT'}, {'name': 'AGENT_WRITE'}, {'name': 'AGENT_CANCEL_ORPHANED_TASKS'}, {'name': 'AGENT_DELETE'}, {'name': 'AGENT_LOG_WRITE'}, {'name': 'SCRIPT_READ'}, {'name': 'SCRIPT_WRITE'}, {'name': 'SCHEDULE_READ'}, {'name': 'SCHEDULE_WRITE'}, {'name': 'SCHEDULE_UPDATE_BY_SCHEDULER'}, {'name': 'JOB_READ'}, {'name': 'JOB_CREATE'}, {'name': 'JOB_WRITE'}, {'name': 'JOB_DELETE'}, {'name': 'TASK_OUTCOME_WRITE'}, {'name': 'STEP_OUTCOME_WRITE'}, {'name': 'JOB_DEF_READ'}, {'name': 'JOB_DEF_WRITE'}, {'name': 'USER_READ'}, {'name': 'USER_WRITE'}, {'name': 'PAYMENT_METHOD_READ'}, {'name': 'PAYMENT_METHOD_WRITE'}, {'name': 'PAYMENT_TRANSACTION_READ'}, {'name': 'PAYMENT_TRANSACTION_WRITE'}, {'name': 'PAY_INVOICE_AUTO'}, {'name': 'PAY_INVOICE_MANUAL'}, {'name': 'PAYMENT_TOKEN_CREATE'}, {'name': 'INVOICE_READ'}, {'name': 'INVOICE_WRITE'}, {'name': 'TEAM_INVITE'}, {'name': 'TEAM_JOIN'}, {'name': 'TASK_ACTION'}, {'name': 'JOB_ACTION'}, {'name': 'TEAM_VAR_READ'}, {'name': 'TEAM_VAR_WRITE'}, {'name': 'TEAM_STORAGE_READ'}, {'name': 'TEAM_STORAGE_WRITE'}, {'name': 'ARTIFACT_READ'}, {'name': 'ARTIFACT_WRITE'}, {'name': 'SCRIPT_SHADOW_READ'}, {'name': 'SCRIPT_SHADOW_WRITE'}, {'name': 'ACCESSKEY_READ'}, {'name': 'ACCESSKEY_WRITE'}, {'name': 'SETTINGS_READ'}, {'name': 'SETTINGS_WRITE'}, {'name': 'TEAM_GLOBAL'}, {'name': 'GLOBAL'}];
 
   console.log('mongoUrl -> @sgg("mongoUrl")');
-  mongoose.connect(config.get("mongoUrl"), { useNewUrlParser: true });
+  mongoose.connect(config.get("mongoUrl"), {});
   await AccessRightModel.deleteMany();
 
   let rightId = 1;
@@ -1205,7 +1205,7 @@ let GetAllAccessRights = async () => {
   let lstAccessRights: string[] = [];
 
   console.log('mongoUrl -> @sgg("mongoUrl")');
-  mongoose.connect(config.get("mongoUrl"), { useNewUrlParser: true });
+  mongoose.connect(config.get("mongoUrl"), {});
 
   const accessRights = await AccessRightModel.find({}).select('name rightId');
 
@@ -1225,7 +1225,7 @@ let GetAccessRightIds = async (accessRightNames) => {
   const accessRights = await AccessRightModel.find({name: {$in: accessRightNames}}).select('rightId');
 
   for (let i = 0; i < accessRights.length; i++) {
-    lstAccessRights.push(accessRights[i].rightId)
+    lstAccessRights.push(accessRights[i].rightId.toString())
   }
 
   return lstAccessRights;
@@ -1236,7 +1236,7 @@ let CreateProdAccessKeys = async () => {
   const mongoose = require("mongoose");
 
   console.log('mongoUrl -> @sgg("mongoUrl")');
-  mongoose.connect(config.get("mongoUrl"), { useNewUrlParser: true });
+  mongoose.connect(config.get("mongoUrl"), {});
   await AccessKeyModel.deleteMany({accessKeyType: Enums.AccessKeyType.AGENT});
 
   let teams = await teamService.findAllTeamsInternal({}, 'ownerId');
@@ -1253,7 +1253,7 @@ let UpdateUserTeamAccessRights = async () => {
   const mongoose = require("mongoose");
 
   console.log('mongoUrl -> @sgg("mongoUrl")');
-  mongoose.connect(config.get("mongoUrl"), { useNewUrlParser: true });
+  mongoose.connect(config.get("mongoUrl"), {});
 
   let teams = await teamService.findAllTeamsInternal({}, 'ownerId');
 
@@ -1287,7 +1287,7 @@ let UpdateUserTeamAccessRights = async () => {
 //   const mongoose = require("mongoose");
 
 //   console.log('mongoUrl -> @sgg("mongoUrl")');
-//   mongoose.connect(config.get("mongoUrl"), { useNewUrlParser: true });
+//   mongoose.connect(config.get("mongoUrl"), {});
 
 //   let teamAccessRightIds = {};
   
@@ -1705,7 +1705,7 @@ let GenerateToken = async () => {
   const mongoose = require("mongoose");
 
   console.log('mongoUrl -> @sgg("mongoUrl")');
-  mongoose.connect(config.get("mongoUrl"), { useNewUrlParser: true });
+  mongoose.connect(config.get("mongoUrl"), {});
 
 
   const jwtExpiration = Date.now() + (1000 * 60 * 60 * 24 * 180); // 180 days
@@ -1915,7 +1915,7 @@ steps.push({ 'script': script2_json, 'arguments': 'there', 'variables': script_e
 let PublishJobTask = async () => {
   const appName = 'PublishJobTask';
 
-  mongoose.connect(config.get('mongoUrl'), { useNewUrlParser: true });
+  mongoose.connect(config.get('mongoUrl'), {});
 
   let logger = new BaseLogger(appName);
   logger.Start();
@@ -1939,7 +1939,7 @@ let PublishJobTask = async () => {
 
 
 let CreateStripeCompanyForTeams = async () => {
-  mongoose.connect(config.get('mongoUrl'), { useNewUrlParser: true });
+  mongoose.connect(config.get('mongoUrl'), {});
 
   const teams = await teamService.findAllTeamsInternal({userAssigned: true});
 
@@ -1962,7 +1962,7 @@ let CreateStripeCompanyForTeams = async () => {
 
 let CreateBrainTreeCompanyForTeams = async () => {
   const auth = `${config.get('adminToken')};`;
-  mongoose.connect(config.get('mongoUrl'), { useNewUrlParser: true });
+  mongoose.connect(config.get('mongoUrl'), {});
 
   const teams = await teamService.findAllTeamsInternal({});
 
@@ -1984,7 +1984,7 @@ let CreateBrainTreeCompanyForTeams = async () => {
 
 let ProcessOrphanedTasks = async () => {
     const auth = `${config.get('adminToken')};`;
-    mongoose.connect(config.get('mongoUrl'), { useNewUrlParser: true });
+    mongoose.connect(config.get('mongoUrl'), {});
 
     const batchSize: number = 10;
 
@@ -2023,7 +2023,7 @@ let ProcessOrphanedTasks = async () => {
 
 
 let DeleteJobs = async (filter: any) => {
-  mongoose.connect(config.get('mongoUrl'), { useNewUrlParser: true });
+  mongoose.connect(config.get('mongoUrl'), {});
 
   const mongoUrl = config.get('mongoUrl');
   const mongoDbname = config.get('mongoDbName');
@@ -2048,7 +2048,7 @@ let DeleteJobs = async (filter: any) => {
 
 
 let DeleteJobDefs = async (filter: any) => {
-  mongoose.connect(config.get('mongoUrl'), { useNewUrlParser: true });
+  mongoose.connect(config.get('mongoUrl'), {});
 
   const mongoUrl = config.get('mongoUrl');
   const mongoDbname = config.get('mongoDbName');
@@ -2081,7 +2081,7 @@ let DeleteJobDefs = async (filter: any) => {
 let PruneJobs = async (teamId: string) => {
   const auth = `${config.get('adminToken')};`;
 
-  mongoose.connect(config.get('mongoUrl'), { useNewUrlParser: true });
+  mongoose.connect(config.get('mongoUrl'), {});
 
   const mongoUrl = config.get('mongoUrl');
   const mongoDbname = config.get('mongoDbName');
@@ -2360,7 +2360,7 @@ FixRuntimeVarsDBRecords();
 
 
 // (async () => {
-  // mongoose.connect(config.get('mongoUrl'), { useNewUrlParser: true });
+  // mongoose.connect(config.get('mongoUrl'), {});
 
   // const activeAgentTimeoutSeconds = config.get('activeAgentTimeoutSeconds');
   // let inactiveAgentsFilter = {};

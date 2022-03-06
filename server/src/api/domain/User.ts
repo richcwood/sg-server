@@ -1,4 +1,4 @@
-import { modelOptions, prop, arrayProp, getModelForClass } from '@typegoose/typegoose';
+import { modelOptions, prop, getModelForClass } from '@typegoose/typegoose';
 import { FilterOperator } from '../utils/BulkGet';
 import Bitset from 'bitset';
 import * as mongodb from 'mongodb';

@@ -30,7 +30,7 @@ amqp.Start();
 
 export class TaskOutcomeActionService {
 
-    public async interruptTaskOutcome(_teamId: mongodb.ObjectId, _taskOutcomeId: mongodb.ObjectId, correlationId?: string, responseFields?: string): Promise<object> {
+    public async interruptTaskOutcome(_teamId: mongodb.ObjectId, _taskOutcomeId: mongodb.ObjectId, correlationId?: string, responseFields?: string): Promise<TaskOutcomeSchema> {
         const filter = { _id: _taskOutcomeId, _teamId, status: TaskStatus.RUNNING };
         const updatedTaskOutcome = await TaskOutcomeModel.findOneAndUpdate(filter, { status: TaskStatus.INTERRUPTING }, { new: true }).select('_id _teamId _jobId _agentId target sourceTaskRoute correlationId runtimeVars status');
 
@@ -50,7 +50,7 @@ export class TaskOutcomeActionService {
     }
 
 
-    public async restartTaskOutcome(_teamId: mongodb.ObjectId, _taskOutcomeId: mongodb.ObjectId, correlationId?: string, responseFields?: string): Promise<object> {
+    public async restartTaskOutcome(_teamId: mongodb.ObjectId, _taskOutcomeId: mongodb.ObjectId, correlationId?: string, responseFields?: string): Promise<TaskOutcomeSchema> {
         const filter = { _id: _taskOutcomeId, _teamId, $or: [ { status: TaskStatus.INTERRUPTED }, { $and: [ { status: TaskStatus.FAILED }, { $or: [ { failureCode: TaskFailureCode.AGENT_EXEC_ERROR }, { failureCode: TaskFailureCode.LAUNCH_TASK_ERROR }, { failureCode: TaskFailureCode.TASK_EXEC_ERROR } ] } ] } ] };
         let taskOutcomeUpdateQuery = {};
         taskOutcomeUpdateQuery['$unset'] = {'runtimeVars.route': ''};
@@ -74,7 +74,7 @@ export class TaskOutcomeActionService {
         task.runtimeVars = updatedTaskOutcome.runtimeVars;
         if (task.target & (TaskDefTarget.ALL_AGENTS|TaskDefTarget.ALL_AGENTS_WITH_TAGS)) {
             task.target = TaskDefTarget.SINGLE_SPECIFIC_AGENT;
-            task.targetAgentId = updatedTaskOutcome._agentId;
+            task.targetAgentId = updatedTaskOutcome._agentId.toHexString();
         }
 
         for (let step of await stepService.findAllTaskSteps(_teamId, task._id, "_id script")) {
@@ -118,7 +118,7 @@ export class TaskOutcomeActionService {
         }
     }
 
-    public async cancelTaskOutcome(_teamId: mongodb.ObjectId, _taskOutcomeId: mongodb.ObjectId, correlationId?: string, responseFields?: string): Promise<object> {
+    public async cancelTaskOutcome(_teamId: mongodb.ObjectId, _taskOutcomeId: mongodb.ObjectId, correlationId?: string, responseFields?: string): Promise<TaskOutcomeSchema> {
         let filter = { _id: _taskOutcomeId, _teamId, $or: [{ status: { $lt: TaskStatus.CANCELING } }, { status: TaskStatus.FAILED }] };
         let updatedTaskOutcome = await TaskOutcomeModel.findOneAndUpdate(filter, { status: TaskStatus.CANCELING }, { new: true }).select(responseFields);
 

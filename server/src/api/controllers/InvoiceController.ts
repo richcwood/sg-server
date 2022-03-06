@@ -4,7 +4,7 @@ import { InvoiceSchema, InvoiceModel } from '../domain/Invoice';
 import { defaultBulkGet } from '../utils/BulkGet';
 import { invoiceService } from '../services/InvoiceService';
 import { MissingObjectError } from '../utils/Errors';
-import { CastError } from 'mongoose';
+import { Error } from 'mongoose';
 import { convertData as convertResponseData } from '../utils/ResponseConverters';
 import { convertData as convertRequestData } from '../utils/RequestConverters';
 import * as _ from 'lodash';
@@ -27,17 +27,17 @@ export class InvoiceController {
             const response: ResponseWrapper = (resp as any).body;
             const invoice = await invoiceService.findInvoice(_teamId, new mongodb.ObjectId(req.params.invoiceId), (<string>req.query.responseFields));
 
-            if (_.isArray(invoice) && invoice.length === 0) {
+            if (!invoice) {
                 next(new MissingObjectError(`Invoice ${req.params.invoiceId} not found.`));
             }
             else {
-                response.data = convertResponseData(InvoiceSchema, invoice[0]);
+                response.data = convertResponseData(InvoiceSchema, invoice);
                 next();
             }
         }
         catch (err) {
             // If req.params.invoiceId wasn't a mongo id then we will get a CastError - basically same as if the id wasn't found
-            if (err instanceof CastError) {
+            if (err instanceof Error.CastError) {
                 next(new MissingObjectError(`Invoice ${req.params.invoiceId} not found.`));
             }
             else {
@@ -58,7 +58,7 @@ export class InvoiceController {
         }
         catch (err) {
             // If req.params.invoiceId wasn't a mongo id then we will get a CastError - basically same as if the id wasn't found
-            if (err instanceof CastError) {
+            if (err instanceof Error.CastError) {
                 next(new MissingObjectError(`Invoice ${req.params.invoiceId} not found.`));
             }
             else {

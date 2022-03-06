@@ -43,7 +43,7 @@ export default class Test51 extends TestBase.WorkflowTestBase {
             let auth = tmp[0];
             auth = auth.substring(5) + ';';
 
-            // mongoose.connect(config.get('mongoUrl'), { useNewUrlParser: true });
+            // mongoose.connect(config.get('mongoUrl'), {});
 
             /// To prevent a run away process - if we have tons of orphaned tasks it may be an indicator of a problem with SaaSGlue itself
             const maxOfflineAgentsToProcess = 10;

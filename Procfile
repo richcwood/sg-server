@@ -1,1 +1,0 @@
-workers: npm run startTest

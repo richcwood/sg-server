@@ -1,4 +1,4 @@
-import { modelOptions, prop, mapProp, getModelForClass } from '@typegoose/typegoose';
+import { modelOptions, prop, getModelForClass } from '@typegoose/typegoose';
 import { FilterOperator } from '../utils/BulkGet';
 import * as mongodb from 'mongodb';
 import { MongoDbSettings } from 'aws-sdk/clients/dms';
@@ -34,7 +34,7 @@ export class StepDefSchema {
   @prop({default: ''}) 
   arguments: string;
 
-  @mapProp({of: String, default: new Map([])})
+  @prop({ type: String, default: new Map([])})
   variables?: Map<string, string>;
 
   @prop({ default: 'script' })

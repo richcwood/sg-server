@@ -49,7 +49,7 @@ export class StepOutcomeService {
     public async deleteStepOutcome(_teamId: mongodb.ObjectId, _jobId: mongodb.ObjectId, correlationId?: string): Promise<object> {
         const filter = { _jobId, _teamId };
 
-        let res: any = {"ok": 1, "deletedCount": 0};
+        let res: any = { "ok": 1, "deletedCount": 0 };
 
         const stepOutcomesQuery = await StepOutcomeModel.find(filter).select('id');
         if (_.isArray(stepOutcomesQuery) && stepOutcomesQuery.length === 0) {
@@ -58,8 +58,8 @@ export class StepOutcomeService {
             res.n = stepOutcomesQuery.length;
             for (let i = 0; i < stepOutcomesQuery.length; i++) {
                 const stepOutcome: any = stepOutcomesQuery[i];
-                let deleted = await StepOutcomeModel.deleteOne({_id: stepOutcome._id});
-                if (deleted.ok) {
+                let deleted = await StepOutcomeModel.deleteOne({ _id: stepOutcome._id });
+                if (deleted.acknowledged) {
                     res.deletedCount += deleted.deletedCount;
                     await rabbitMQPublisher.publish(_teamId, "StepOutcome", correlationId, PayloadOperation.DELETE, { id: stepOutcome._id });
                 }
@@ -131,7 +131,7 @@ export class StepOutcomeService {
                 stderr += data.stderr;
             data.stderr = stderr;
 
-            
+
             // if ('stdout' in data) {
             //     updatedStepOutcome = await new Promise(async (resolve, reject) => {
             //         await StepOutcomeModel.findById(id, async (err, stepOutcome) => {
@@ -181,6 +181,18 @@ export class StepOutcomeService {
             return updatedStepOutcome; // fully populated model
         } catch (err) {
             logger.LogError(err, { Class: 'StepOutcomeService', Method: 'updateStepOutcome', _teamId, stepOutcome: data });
+            throw err;
+        }
+    }
+
+
+    public async updateMany(_teamId: mongodb.ObjectId, filter: any, document: any, logger: BaseLogger) {
+        let expandedFilter = { _teamId };
+        expandedFilter = Object.assign(expandedFilter, filter);
+        try {
+            StepOutcomeModel.updateMany(expandedFilter, { $set: document })
+        } catch (err) {
+            logger.LogError(err, { Class: 'StepOutcomeService', Method: 'updateMany', _teamId, Filter: expandedFilter });
             throw err;
         }
     }

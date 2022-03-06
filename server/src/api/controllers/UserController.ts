@@ -3,7 +3,7 @@ import { ResponseWrapper, ResponseCode } from '../utils/Types';
 import { UserSchema } from '../domain/User';
 import { userService } from '../services/UserService';
 import { MissingObjectError, ValidationError } from '../utils/Errors';
-import { CastError } from 'mongoose';
+import { Error } from 'mongoose';
 import { convertData as convertResponseData } from '../utils/ResponseConverters';
 import * as _ from 'lodash';
 import * as mongodb from 'mongodb';
@@ -31,7 +31,6 @@ export class UserController {
   public async getUser(req: Request, resp: Response, next: NextFunction): Promise<void> {
     try {
       const response: ResponseWrapper = (resp as any).body;
-      console.log('getUser -> ', req.params.userId);
       const user = await userService.findUser(new mongodb.ObjectId(req.params.userId), (<string>req.query.responseFields));
 
       if (!user) {
@@ -44,7 +43,7 @@ export class UserController {
     }
     catch (err) {
       // If req.params.userId wasn't a mongo id then we will get a CastError - basically same as if the id wasn't found
-      if (err instanceof CastError) {
+      if (err instanceof Error.CastError) {
         next(new MissingObjectError(`User ${req.params.userId} not found.`));
       }
       else {

@@ -103,7 +103,7 @@ export class StepDefService {
     }
 
 
-    public async deleteStepDef(_teamId: mongodb.ObjectId, id: mongodb.ObjectId, correlationId?: string): Promise<void> {
+    public async deleteStepDef(_teamId: mongodb.ObjectId, id: mongodb.ObjectId, correlationId?: string): Promise<object> {
         const filter = { _id: id, _teamId };
         const origStepDef = await StepDefModel.findOne(filter);
         if (!origStepDef)

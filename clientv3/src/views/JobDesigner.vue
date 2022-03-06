@@ -2354,7 +2354,7 @@ export default class JobDesigner extends Vue {
     float: left;
     height: 100vh;
     width: 1px;
-    border: 1px solid lightgray;
+    border: 1px solid #d3d3d3;
     border-top: none;
     border-bottom: none;
     border-left: none;

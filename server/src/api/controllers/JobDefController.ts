@@ -8,7 +8,7 @@ import { taskDefService } from '../services/TaskDefService';
 import { StepDefSchema } from '../domain/StepDef';
 import { stepDefService } from '../services/StepDefService';
 import { MissingObjectError } from '../utils/Errors';
-import { CastError } from 'mongoose';
+import { Error } from 'mongoose';
 import { convertData as convertResponseData } from '../utils/ResponseConverters';
 import { convertData as convertRequestData } from '../utils/RequestConverters';
 import * as mongodb from 'mongodb';
@@ -32,17 +32,17 @@ export class JobDefController {
       const response: ResponseWrapper = (resp as any).body;
       const jobDef = await jobDefService.findJobDef(_teamId, _jobDefId, (<string>req.query.responseFields));
 
-      if (_.isArray(jobDef) && jobDef.length === 0) {
+      if (!jobDef) {
         next(new MissingObjectError(`JobDef ${req.params.jobDefId} not found.`));
       }
       else {
-        response.data = convertResponseData(JobDefSchema, jobDef[0]);
+        response.data = convertResponseData(JobDefSchema, jobDef);
         next();
       }
     }
     catch (err) {
       // If req.params.jobDefId wasn't a mongo id then we will get a CastError - basically same as if the id wasn't found
-      if (err instanceof CastError) {
+      if (err instanceof Error.CastError) {
         next(new MissingObjectError(`JobDef ${req.params.jobDefId} not found.`));
       }
       else {
@@ -58,7 +58,7 @@ export class JobDefController {
     const response: ResponseWrapper = resp['body'];
     try {
       const newJobDef = await jobDefService.createJobDef(_teamId, convertRequestData(JobDefSchema, req.body), req.header('correlationId'), (<string>req.query.responseFields));
-      response.data = convertResponseData(JobDefSchema, newJobDef[0]);
+      response.data = convertResponseData(JobDefSchema, newJobDef);
       response.statusCode = ResponseCode.CREATED;
       next();
     }
@@ -123,11 +123,11 @@ export class JobDefController {
     try {
       const updatedJobDef: any = await jobDefService.updateJobDef(_teamId, _jobDefId, convertRequestData(JobDefSchema, req.body), null, req.get('correlationId'), <null | string>req.headers['email'], (<string>req.query.responseFields));
 
-      if (_.isArray(updatedJobDef) && updatedJobDef.length === 0) {
+      if (!updatedJobDef) {
         next(new MissingObjectError(`JobDef ${req.params.jobDefId} not found.`));
       }
       else {
-        response.data = convertResponseData(JobDefSchema, updatedJobDef[0]);
+        response.data = convertResponseData(JobDefSchema, updatedJobDef);
         response.statusCode = ResponseCode.OK;
         next();
       }
@@ -142,13 +142,12 @@ export class JobDefController {
     const _teamId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._teamid);
     const response: ResponseWrapper = resp['body'];
     try {
-      const jobDefs = await jobDefService.findJobDef(_teamId, new mongodb.ObjectId(req.params.jobDefId), (<string>req.query.responseFields));
+      const jobDef = await jobDefService.findJobDef(_teamId, new mongodb.ObjectId(req.params.jobDefId), (<string>req.query.responseFields));
 
-      if (_.isArray(jobDefs) && jobDefs.length === 0) {
+      if (!jobDef) {
         return next(new MissingObjectError(`JobDef ${req.params.jobDefId} not found.`));
       }
       else {
-        const jobDef = jobDefs[0];
         // First delete all of the task defs associated with the job
         const taskDefIds = await taskDefService.findJobDefTaskDefs(_teamId, new mongodb.ObjectId(jobDef._id), '_id');
 
@@ -171,7 +170,7 @@ export class JobDefController {
     }
     catch (err) {
       // If req.params.jobDefId wasn't a mongo id then we will get a CastError - basically same as if the id wasn't found
-      if (err instanceof CastError) {
+      if (err instanceof Error.CastError) {
         next(new MissingObjectError(`JobDef ${req.params.jobDefId} not found.`));
       }
       else {
@@ -204,7 +203,7 @@ export class JobDefController {
     }
     catch (err) {
       // If req.params.jobDefId wasn't a mongo id then we will get a CastError - basically same as if the id wasn't found
-      if (err instanceof CastError) {
+      if (err instanceof Error.CastError) {
         next(new MissingObjectError(`JobDef ${req.params.jobDefId} not found.`));
       }
       else {

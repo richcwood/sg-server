@@ -3,7 +3,7 @@ import { ResponseWrapper, ResponseCode } from '../utils/Types';
 import { UserSchema } from '../domain/User';
 import { joinTeamService } from '../services/JoinTeamService';
 import { MissingObjectError, ValidationError } from '../utils/Errors';
-import { CastError } from 'mongoose';
+import { Error } from 'mongoose';
 import { convertData as convertResponseData } from '../utils/ResponseConverters';
 import * as _ from 'lodash';
 import * as mongodb from 'mongodb';

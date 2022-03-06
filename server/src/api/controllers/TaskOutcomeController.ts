@@ -4,7 +4,7 @@ import { TaskOutcomeSchema, TaskOutcomeModel } from '../domain/TaskOutcome';
 import { defaultBulkGet } from '../utils/BulkGet';
 import { taskOutcomeService } from '../services/TaskOutcomeService';
 import { MissingObjectError } from '../utils/Errors';
-import { CastError } from 'mongoose';
+import { Error } from 'mongoose';
 import { convertData as convertResponseData } from '../utils/ResponseConverters';
 import { convertData as convertRequestData } from '../utils/RequestConverters';
 import { BaseLogger } from '../../shared/SGLogger';
@@ -44,17 +44,17 @@ export class TaskOutcomeController {
       const response: ResponseWrapper = (resp as any).body;
       const taskOutcome = await taskOutcomeService.findTaskOutcome(_teamId, new mongodb.ObjectId(req.params.taskOutcomeId), (<string>req.query.responseFields));
 
-      if (_.isArray(taskOutcome) && taskOutcome.length === 0) {
+      if (!taskOutcome) {
         next(new MissingObjectError(`TaskOutcome ${req.params.taskOutcomeId} not found.`));
       }
       else {
-        response.data = convertResponseData(TaskOutcomeSchema, taskOutcome[0]);
+        response.data = convertResponseData(TaskOutcomeSchema, taskOutcome);
         next();
       }
     }
     catch (err) {
       // If req.params.taskOutcomeId wasn't a mongo id then we will get a CastError - basically same as if the id wasn't found
-      if (err instanceof CastError) {
+      if (err instanceof Error.CastError) {
         next(new MissingObjectError(`TaskOutcome ${req.params.taskOutcomeId} not found.`));
       }
       else {
@@ -104,7 +104,7 @@ export class TaskOutcomeController {
       _teamId = new mongodb.ObjectId(req.body._teamId);
     const response: ResponseWrapper = resp['body'];
     try {
-      console.log('task outcome -> ', convertRequestData(TaskOutcomeSchema, req.body));
+      // console.log('task outcome -> ', convertRequestData(TaskOutcomeSchema, req.body));
       const updatedTaskOutcome: any = await taskOutcomeService.updateTaskOutcome(_teamId, new mongodb.ObjectId(req.params.taskOutcomeId), convertRequestData(TaskOutcomeSchema, req.body), logger, null, req.header('correlationId'), (<string>req.query.responseFields));
 
       if (_.isArray(updatedTaskOutcome) && updatedTaskOutcome.length === 0) {

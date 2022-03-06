@@ -203,7 +203,7 @@ export class TaskDefService {
   }
 
 
-  public async deleteTaskDef(_teamId: mongodb.ObjectId, id: mongodb.ObjectId, correlationId?: string): Promise<void> {
+  public async deleteTaskDef(_teamId: mongodb.ObjectId, id: mongodb.ObjectId, correlationId?: string): Promise<object> {
     /// Delete outbound routes to this task
     const taskDefQuery = await TaskDefModel.findById(id).find({ _teamId }).select('_jobDefId name');
     if (!taskDefQuery || (_.isArray(taskDefQuery) && taskDefQuery.length === 0))

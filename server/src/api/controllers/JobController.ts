@@ -4,7 +4,7 @@ import { JobSchema, JobModel } from '../domain/Job';
 import { defaultBulkGet } from '../utils/BulkGet';
 import { jobService } from '../services/JobService';
 import { MissingObjectError } from '../utils/Errors';
-import { CastError } from 'mongoose';
+import { Error } from 'mongoose';
 import { convertData as convertResponseData } from '../utils/ResponseConverters';
 import { convertData as convertRequestData } from '../utils/RequestConverters';
 import { BaseLogger } from '../../shared/SGLogger';
@@ -29,17 +29,17 @@ export class JobController {
             const job = await jobService.findJob(_teamId, new mongodb.ObjectId(req.params.jobId), (<string>req.query.responseFields));
             // console.log('JobController -> getJob -> job -> ', JSON.stringify(job, null, 4));
 
-            if (_.isArray(job) && job.length === 0) {
+            if (!job) {
                 next(new MissingObjectError(`Job ${req.params.jobId} not found.`));
             }
             else {
-                response.data = convertResponseData(JobSchema, job[0]);
+                response.data = convertResponseData(JobSchema, job);
                 next();
             }
         }
         catch (err) {
             // If req.params.jobId wasn't a mongo id then we will get a CastError - basically same as if the id wasn't found
-            if (err instanceof CastError) {
+            if (err instanceof Error.CastError) {
                 next(new MissingObjectError(`Job ${req.params.jobId} not found.`));
             }
             else {
