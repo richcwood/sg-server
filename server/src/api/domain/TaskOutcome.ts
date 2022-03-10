@@ -1,4 +1,4 @@
-import { modelOptions, prop, getModelForClass } from '@typegoose/typegoose';
+import { modelOptions, prop, getModelForClass, Severity } from '@typegoose/typegoose';
 import { FilterOperator } from '../utils/BulkGet';
 import { TaskDefTarget, TaskSource } from '../../shared/Enums';
 import * as mongodb from 'mongodb';
@@ -6,7 +6,7 @@ import { MongoDbSettings } from 'aws-sdk/clients/dms';
 
 
 // Example of a schema / domain in Mongoose
-@modelOptions({ schemaOptions: { collection: 'taskOutcome', minimize: false } })
+@modelOptions({ schemaOptions: { collection: 'taskOutcome', minimize: false }, options: { allowMixed: Severity.ALLOW } })
 export class TaskOutcomeSchema {
 
     _id?: mongodb.ObjectId;

@@ -28,14 +28,6 @@ import * as mongodb from 'mongodb';
 import * as _ from 'lodash';
 
 
-let appName: string = 'TaskOutcomeService';
-const amqpUrl = config.get('amqpUrl');
-const rmqVhost = config.get('rmqVhost');
-let logger: BaseLogger = new BaseLogger(appName);
-logger.Start();
-let amqp: AMQPConnector = new AMQPConnector(appName, '', amqpUrl, rmqVhost, 1, (activeMessages) => { }, logger);
-amqp.Start();
-
 export class TaskOutcomeService {
 
     public async findAllTaskOutcomesInternal(filter?: any, responseFields?: string) {
@@ -119,7 +111,7 @@ export class TaskOutcomeService {
     }
 
 
-    public async updateTaskOutcome(_teamId: mongodb.ObjectId, id: mongodb.ObjectId, data: any, logger: BaseLogger, filter?: any, correlationId?: string, responseFields?: string): Promise<object> {
+    public async updateTaskOutcome(_teamId: mongodb.ObjectId, id: mongodb.ObjectId, data: any, logger: BaseLogger, amqp: AMQPConnector, filter?: any, correlationId?: string, responseFields?: string): Promise<object> {
          try {
             const currentTaskOutcome: TaskOutcomeSchema = await this.findTaskOutcome(_teamId, id, 'status');
             // console.log('TaskOutcomeService -> updateTaskOutcome -> currentTaskOutcome -> ', JSON.stringify(currentTaskOutcomeQuery, null, 4));
@@ -153,7 +145,7 @@ export class TaskOutcomeService {
                                 qryUpdate[`runtimeVars.${key}.value`] = val;
                                 qryUpdate[`runtimeVars.${key}.sensitive`] = sensitive;
 
-                                const resJobQuery = await jobService.updateJob(_teamId, updatedTaskOutcome._jobId, qryUpdate);
+                                const resJobQuery = await jobService.updateJob(_teamId, updatedTaskOutcome._jobId, qryUpdate, logger, amqp);
                                 if (!resJobQuery)
                                     throw new MissingObjectError(`Job '${updatedTaskOutcome._jobId}" not found for team "${_teamId}"`);
                             }
@@ -196,17 +188,17 @@ export class TaskOutcomeService {
                 }
 
                 if (updatedTaskOutcome.status >= TaskStatus.SUCCEEDED || updatedTaskOutcome.status == TaskStatus.INTERRUPTED) {
-                    const job: JobSchema = await jobService.UpdateJobStatus(_teamId, updatedTaskOutcome._jobId, logger, null, 'name _jobDefId runId onJobTaskInterruptedAlertEmail onJobTaskInterruptedAlertSlackURL');
+                    const job: JobSchema = await jobService.UpdateJobStatus(_teamId, updatedTaskOutcome._jobId, logger, amqp, null, 'name _jobDefId runId onJobTaskInterruptedAlertEmail onJobTaskInterruptedAlertSlackURL');
 
                     await CheckWaitingForAgentTasks(_teamId, updatedTaskOutcome._agentId, logger, amqp);
 
                     if (job.status != Enums.JobStatus.INTERRUPTING && job.status != Enums.JobStatus.INTERRUPTED)
-                        await this.LaunchDownstreamTasks(_teamId, job, updatedTaskOutcome, logger);
+                        await this.LaunchDownstreamTasks(_teamId, job, updatedTaskOutcome, logger, amqp);
 
                     if (job._jobDefId) {
                         if (job.status == Enums.JobStatus.INTERRUPTED || job.status == Enums.JobStatus.FAILED) {
                             try {
-                                await jobDefService.updateJobDef(_teamId, job._jobDefId, { status: Enums.JobDefStatus.PAUSED }, { status: Enums.JobDefStatus.RUNNING, pauseOnFailedJob: true });
+                                await jobDefService.updateJobDef(_teamId, job._jobDefId, { status: Enums.JobDefStatus.PAUSED }, logger, amqp, { status: Enums.JobDefStatus.RUNNING, pauseOnFailedJob: true });
                             } catch (e) {
                                 if (!(e instanceof MissingObjectError))
                                     throw e;
@@ -247,7 +239,7 @@ export class TaskOutcomeService {
     }
 
 
-    async LaunchDownstreamTasks(_teamId: mongodb.ObjectId, job: JobSchema, taskOutcome: TaskOutcomeSchema, logger: BaseLogger) {
+    async LaunchDownstreamTasks(_teamId: mongodb.ObjectId, job: JobSchema, taskOutcome: TaskOutcomeSchema, logger: BaseLogger, amqp: AMQPConnector) {
         let tasksToLaunch = [];
         let toRouteTasks = [];
 
@@ -316,12 +308,12 @@ export class TaskOutcomeService {
         }
 
         for (let i = 0; i < tasksToLaunch.length; i++) {
-            await this.LaunchTask(_teamId, tasksToLaunch[i], logger);
+            await this.LaunchTask(_teamId, tasksToLaunch[i], logger, amqp);
         }
     }
 
 
-    async LaunchTask(_teamId: mongodb.ObjectId, taskToLaunch: any, logger: BaseLogger) {
+    async LaunchTask(_teamId: mongodb.ObjectId, taskToLaunch: any, logger: BaseLogger, amqp: AMQPConnector) {
         // await FreeTierChecks.MaxScriptsCheck(_teamId);
 
         const _taskId: mongodb.ObjectId = taskToLaunch.taskId;

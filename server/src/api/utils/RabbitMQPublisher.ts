@@ -46,13 +46,20 @@ class RabbitMQPublisher {
     this.started = true;
   }
 
+  public async stop() {
+    if (this.started) {
+      await this.amqp.Stop();
+      this.started = false;
+    }
+  }
+
   // todo
   public async publish(_teamId: mongodb.ObjectId, domainType: string, correlationId: string, operation: PayloadOperation, data: any, userEmail?: string) {
     // console.log(`rabbitMQ message: team=${_teamId} domainType=${domainType} op=${operation} correlation=${correlationId} data=${JSON.stringify(data)}`);
     if (!this.started) {
       await this.start();
     }
-  this.amqp.PublishRoute(SGStrings.GetTeamExchangeName(_teamId.toHexString()), rmqBrowserPushRoute, { domainType, operation, model: data, correlationId, userEmail });
+    this.amqp.PublishRoute(SGStrings.GetTeamExchangeName(_teamId.toHexString()), rmqBrowserPushRoute, { domainType, operation, model: data, correlationId, userEmail });
   }
 
 

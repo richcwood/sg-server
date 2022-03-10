@@ -1,11 +1,11 @@
-import { modelOptions, prop, getModelForClass } from '@typegoose/typegoose';
+import { modelOptions, prop, getModelForClass, Severity } from '@typegoose/typegoose';
 import { FilterOperator } from '../utils/BulkGet';
 import * as mongodb from 'mongodb';
 import { AccessKeyType } from '../../shared/Enums';
 
 /// TODO: change some of these to required like ownerId and inviteLink
 // Example of a schema / domain in Mongoose
-@modelOptions({ schemaOptions: { collection: 'accessKey' } })
+@modelOptions({ schemaOptions: { collection: 'accessKey' }, options: { allowMixed: Severity.ALLOW } })
 export class AccessKeySchema {
 
   _id?: mongodb.ObjectId;

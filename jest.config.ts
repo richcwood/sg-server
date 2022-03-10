@@ -54,10 +54,10 @@ export default {
   // forceCoverageMatch: [],
 
   // A path to a module which exports an async function that is triggered once before all test suites
-  // globalSetup: undefined,
+  // globalSetup: "<rootDir>/test_helpers/Setup.ts",
 
   // A path to a module which exports an async function that is triggered once after all test suites
-  // globalTeardown: undefined,
+  globalTeardown: "<rootDir>/test_helpers/Teardown.ts",
 
   // A set of global variables that need to be available in all test environments
   // globals: {},
@@ -67,7 +67,8 @@ export default {
 
   // An array of directory names to be searched recursively up from the requiring module's location
   // moduleDirectories: [
-  //   "node_modules"
+  //   "node_modules",
+  //   "."
   // ],
 
   // An array of file extensions your modules use
@@ -114,22 +115,22 @@ export default {
   // restoreMocks: false,
 
   // The root directory that Jest should scan for tests and modules within
-  // rootDir: "src",
+  rootDir: "server/src",
 
   // A list of paths to directories that Jest should use to search for files in
-  roots: [
-    "server/node_modules",
-    "server/dist"
-  ],
+  // roots: [
+  //   "node_modules",
+  //   "dist"
+  // ],
   // roots: ["server/packages"],
   // moduleNameMapper: {
   //   '@monopre/(.+)$': 'server/packages/$1/src',
   // },
 
-  modulePaths: [
-    "dist"
-  ],
-  
+  // modulePaths: [
+  //   "<rootDir>/../dist/"
+  // ],
+
   // Allows you to use a custom runner instead of Jest's default test runner
   // runner: "jest-runner",
 
@@ -137,7 +138,7 @@ export default {
   // setupFiles: [],
 
   // A list of paths to modules that run some code to configure or set up the testing framework before each test
-  // setupFilesAfterEnv: [],
+  // setupFilesAfterEnv: ["<rootDir>/test_helpers/SetupAfterEnv.ts"],
 
   // The number of seconds after which a test is considered as slow and reported as such in the results.
   // slowTestThreshold: 5,

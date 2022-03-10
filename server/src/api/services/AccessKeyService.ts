@@ -31,12 +31,15 @@ export class AccessKeyService {
     }
 
 
-    public async findAccessKey(_teamId: mongodb.ObjectId, accessKeyId: mongodb.ObjectId, responseFields?: string) {
-        return AccessKeyModel.findById(accessKeyId).find({ _teamId }).select(responseFields);
+    public async findAccessKey(_teamId: mongodb.ObjectId, accessKeyId: mongodb.ObjectId, responseFields?: string): Promise<AccessKeySchema|null> {
+        const result: AccessKeySchema[] = await AccessKeyModel.findById(accessKeyId).find({ _teamId }).select(responseFields);
+        if (_.isArray(result) && result.length > 0)
+            return result[0];
+        return null;
     }
 
 
-    public async createAccessKeyInternal(data): Promise<object> {
+    public async createAccessKeyInternal(data): Promise<AccessKeySchema> {
         if (!data.accessKeyId)
             data.accessKeyId = SGUtils.makeid(20, false).toUpperCase();
         if (!data.accessKeySecret)
@@ -49,7 +52,7 @@ export class AccessKeyService {
     }
 
 
-    public async createAccessKey(_teamId: mongodb.ObjectId, teamAccessRightIds: string[], data: any, correlationId: string, responseFields?: string): Promise<object> {
+    public async createAccessKey(_teamId: mongodb.ObjectId, teamAccessRightIds: string[], data: any, correlationId: string, responseFields?: string): Promise<AccessKeySchema> {
         if (!data.hasOwnProperty("accessKeyType"))
             throw new ValidationError(`Missing required field "accessKeyType"`);
         if (!data.hasOwnProperty("description"))

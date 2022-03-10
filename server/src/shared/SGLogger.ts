@@ -1,6 +1,6 @@
 import * as os from 'os';
 import * as fs from 'fs';
-import { LogLevel } from './Enums.js';
+import { LogLevel } from './Enums';
 import * as AsyncLock from 'async-lock';
 import * as config from 'config';
 import * as path from 'path';

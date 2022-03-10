@@ -1,11 +1,11 @@
-import { modelOptions, prop, getModelForClass } from '@typegoose/typegoose';
+import { modelOptions, prop, getModelForClass, Severity } from '@typegoose/typegoose';
 import { FilterOperator } from '../utils/BulkGet';
 import { TaskDefTarget } from '../../shared/Enums';
 import * as mongodb from 'mongodb';
 
 
 // Example of a schema / domain in Mongoose
-@modelOptions({schemaOptions: {collection: 'taskDef', minimize: false}})
+@modelOptions({ schemaOptions: { collection: 'taskDef', minimize: false }, options: { allowMixed: Severity.ALLOW } })
 export class TaskDefSchema {
 
   _id?: mongodb.ObjectId;

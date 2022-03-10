@@ -15,6 +15,9 @@ import { scheduleService } from './ScheduleService';
 import { SGUtils } from '../../shared/SGUtils';
 import * as _ from 'lodash';
 import * as Enums from '../../shared/Enums';
+import { BaseLogger } from '../../shared/SGLogger';
+import { AMQPConnector } from '../../shared/AMQPLib';
+
 
 export class JobDefService {
 
@@ -276,7 +279,7 @@ export class JobDefService {
   }
 
 
-  public async updateJobDef(_teamId: mongodb.ObjectId, id: mongodb.ObjectId, data: any, filter?: any, correlationId?: string, userEmail?: string, responseFields?: string): Promise<object> {
+  public async updateJobDef(_teamId: mongodb.ObjectId, id: mongodb.ObjectId, data: any, logger: BaseLogger, amqp: AMQPConnector, filter?: any, correlationId?: string, userEmail?: string, responseFields?: string): Promise<object> {
     if (data.name) {
       const existingJobDefQuery: any = await this.findAllJobDefsInternal({ _teamId, name: data.name });
       if (_.isArray(existingJobDefQuery) && existingJobDefQuery.length > 0)
@@ -296,12 +299,12 @@ export class JobDefService {
       throw new MissingObjectError(`Job template with id '${id}' not found.`)
 
     if (data.status == JobDefStatus.RUNNING && jobDef.status == JobDefStatus.PAUSED)
-      await jobService.LaunchReadyJobs(_teamId, id);
+      await jobService.LaunchReadyJobs(_teamId, id, logger, amqp);
     
     if (data.maxInstances) {
       const maxInstancesNew = parseInt(data.maxInstances);
       if (maxInstancesNew > jobDef.maxInstances)
-        await jobService.LaunchReadyJobs(_teamId, id);
+        await jobService.LaunchReadyJobs(_teamId, id, logger, amqp);
     }
 
     let deltas = Object.assign({ _id: id }, data);

@@ -8,6 +8,7 @@ import { Error } from 'mongoose';
 import { convertData as convertResponseData } from '../utils/ResponseConverters';
 import { convertData as convertRequestData } from '../utils/RequestConverters';
 import { BaseLogger } from '../../shared/SGLogger';
+import { AMQPConnector } from '../../shared/AMQPLib';
 import * as _ from 'lodash';
 import * as mongodb from 'mongodb';
 import * as config from 'config';
@@ -99,13 +100,14 @@ export class TaskOutcomeController {
 
   public async updateTaskOutcome(req: Request, resp: Response, next: NextFunction): Promise<void> {
     const logger: BaseLogger = (<any>req).logger;
+    const amqp: AMQPConnector = (<any>req).amqp;
     let _teamId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._teamid);
     if (_teamId.toHexString() == config.get('sgAdminTeam') && req.body._teamId && req.body._teamId != _teamId.toHexString())
       _teamId = new mongodb.ObjectId(req.body._teamId);
     const response: ResponseWrapper = resp['body'];
     try {
       // console.log('task outcome -> ', convertRequestData(TaskOutcomeSchema, req.body));
-      const updatedTaskOutcome: any = await taskOutcomeService.updateTaskOutcome(_teamId, new mongodb.ObjectId(req.params.taskOutcomeId), convertRequestData(TaskOutcomeSchema, req.body), logger, null, req.header('correlationId'), (<string>req.query.responseFields));
+      const updatedTaskOutcome: any = await taskOutcomeService.updateTaskOutcome(_teamId, new mongodb.ObjectId(req.params.taskOutcomeId), convertRequestData(TaskOutcomeSchema, req.body), logger, amqp, null, req.header('correlationId'), (<string>req.query.responseFields));
 
       if (_.isArray(updatedTaskOutcome) && updatedTaskOutcome.length === 0) {
         next(new MissingObjectError(`TaskOutcome ${req.params.taskOutcomeId} not found.`));

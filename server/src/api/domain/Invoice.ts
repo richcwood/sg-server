@@ -1,4 +1,4 @@
-import { modelOptions, prop, getModelForClass } from '@typegoose/typegoose';
+import { modelOptions, prop, getModelForClass, Severity } from '@typegoose/typegoose';
 import { FilterOperator } from '../utils/BulkGet';
 import { InvoiceStatus } from '../../shared/Enums';
 import { AccessRight } from '../../shared/Enums';
@@ -6,7 +6,7 @@ import * as mongodb from 'mongodb';
 
 
 // Example of a schema / domain in Mongoose
-@modelOptions({ schemaOptions: { collection: 'invoice' } })
+@modelOptions({ schemaOptions: { collection: 'invoice' }, options: { allowMixed: Severity.ALLOW } })
 export class InvoiceSchema {
 
   _id?: mongodb.ObjectId;

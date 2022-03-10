@@ -15,18 +15,9 @@ import { SGUtils } from '../../shared/SGUtils';
 import { SGStrings } from '../../shared/SGStrings';
 
 
-let appName: string = 'TaskActionService';
-const amqpUrl = config.get('amqpUrl');
-const rmqVhost = config.get('rmqVhost');
-let logger: BaseLogger = new BaseLogger(appName);
-logger.Start();
-let amqp: AMQPConnector = new AMQPConnector(appName, '', amqpUrl, rmqVhost, 1, (activeMessages) => { }, logger);
-amqp.Start();
-
-
 export class TaskActionService {
 
-    public async republishTask(_teamId: mongodb.ObjectId, _taskId: mongodb.ObjectId, logger: BaseLogger, correlationId?: string, responseFields?: string): Promise<object> {
+    public async republishTask(_teamId: mongodb.ObjectId, _taskId: mongodb.ObjectId, logger: BaseLogger, amqp: AMQPConnector, correlationId?: string, responseFields?: string): Promise<object> {
         const filter = { _id: _taskId, _teamId, status: { $lte: TaskStatus.PUBLISHED } };
 
         // let taskUpdateQuery = {};
@@ -71,7 +62,7 @@ export class TaskActionService {
     }
 
 
-    public async requeueTask(_teamId: mongodb.ObjectId, _taskId: mongodb.ObjectId, data: any, logger: BaseLogger, correlationId?: string, responseFields?: string): Promise<object> {
+    public async requeueTask(_teamId: mongodb.ObjectId, _taskId: mongodb.ObjectId, data: any, logger: BaseLogger, amqp: AMQPConnector, correlationId?: string, responseFields?: string): Promise<object> {
         const filter = { _id: _taskId, _teamId, status: TaskStatus.PUBLISHED };
 
         let taskUpdateQuery = {};

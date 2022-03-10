@@ -15,7 +15,7 @@
     "dev-buildserver": "cd server && npm run watch-build",
     "dev-redeployserver": "nodemon --watch ./server/dist ./server/dist/server/src/api/StartServer.js",
     "dev-client": "cd clientv3 && npm run serve",
-    "test": "jest"
+    "test": "jest --detectOpenHandles"
   },
   "nodemonConfig": {
     "watch": [

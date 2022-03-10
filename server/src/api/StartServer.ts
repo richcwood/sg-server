@@ -59,6 +59,7 @@ import { accessKeyRouter } from './routes/AccessKeyRouter';
 import { accessRightRouter } from './routes/AccessRightRouter';
 import { settingsRouter } from './routes/SettingsRouter';
 import { teamAdminAccessRouter } from './routes/TeamAdminAccessRouter';
+import { AMQPConnector } from '../shared/AMQPLib';
 const IPCIDR = require('ip-cidr');
 import { read } from 'fs';
 import { AuthTokenType } from '../shared/Enums';
@@ -191,6 +192,7 @@ class AppBuilder {
 
     this.setUpClient();
     this.setUpLogger();
+    this.setUpAmqp();
   }
 
   private setUpClient() {
@@ -214,6 +216,17 @@ class AppBuilder {
     logger.Start();
     this.app.use((req, res, next) => {
       req.logger = logger;
+      next();
+    });
+  }
+
+  private setUpAmqp() {
+    this.app.use((req, res, next) => {
+        const amqpUrl = config.get('amqpUrl');
+        const rmqVhost = config.get('rmqVhost');
+        let amqp: AMQPConnector = new AMQPConnector(appName, '', amqpUrl, rmqVhost, 1, (activeMessages) => { }, req.logger);
+        amqp.Start();
+        req.amqp = amqp;
       next();
     });
   }

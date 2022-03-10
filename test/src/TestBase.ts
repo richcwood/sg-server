@@ -925,7 +925,7 @@ export abstract class WorkflowTestBase extends TestBase {
                         // console.log('Unmatched bp -> \n', JSON.stringify(unmatchedBp, null, 4));
                         // console.log('Unmatched dlq -> \n', JSON.stringify(unmatchedDlq, null, 4));
 
-                        // wftInst.logger.LogError('Failed - timeout', {date: Date.now()});
+                        wftInst.logger.LogError('Failed - timeout', {date: Date.now()});
                         resolve();
                     }
 

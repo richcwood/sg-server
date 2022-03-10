@@ -19,15 +19,6 @@ import * as config from 'config';
 import { AMQPConnector } from '../../shared/AMQPLib';
 
 
-let appName: string = 'JobService';
-const amqpUrl = config.get('amqpUrl');
-const rmqVhost = config.get('rmqVhost');
-let logger: BaseLogger = new BaseLogger(appName);
-logger.Start();
-let amqp: AMQPConnector = new AMQPConnector(appName, '', amqpUrl, rmqVhost, 1, (activeMessages) => { }, logger);
-amqp.Start();
-
-
 export class TaskOutcomeActionService {
 
     public async interruptTaskOutcome(_teamId: mongodb.ObjectId, _taskOutcomeId: mongodb.ObjectId, correlationId?: string, responseFields?: string): Promise<TaskOutcomeSchema> {
@@ -50,7 +41,7 @@ export class TaskOutcomeActionService {
     }
 
 
-    public async restartTaskOutcome(_teamId: mongodb.ObjectId, _taskOutcomeId: mongodb.ObjectId, correlationId?: string, responseFields?: string): Promise<TaskOutcomeSchema> {
+    public async restartTaskOutcome(_teamId: mongodb.ObjectId, _taskOutcomeId: mongodb.ObjectId, logger: BaseLogger, amqp: AMQPConnector, correlationId?: string, responseFields?: string): Promise<TaskOutcomeSchema> {
         const filter = { _id: _taskOutcomeId, _teamId, $or: [ { status: TaskStatus.INTERRUPTED }, { $and: [ { status: TaskStatus.FAILED }, { $or: [ { failureCode: TaskFailureCode.AGENT_EXEC_ERROR }, { failureCode: TaskFailureCode.LAUNCH_TASK_ERROR }, { failureCode: TaskFailureCode.TASK_EXEC_ERROR } ] } ] } ] };
         let taskOutcomeUpdateQuery = {};
         taskOutcomeUpdateQuery['$unset'] = {'runtimeVars.route': ''};

@@ -1,10 +1,10 @@
-import { modelOptions, prop, getModelForClass } from '@typegoose/typegoose';
+import { modelOptions, prop, getModelForClass, Severity } from '@typegoose/typegoose';
 import { FilterOperator } from '../utils/BulkGet';
 import * as mongodb from 'mongodb';
 
 
 // Example of a schema / domain in Mongoose
-@modelOptions({ schemaOptions: { collection: 'userScriptShadowCopy' } })
+@modelOptions({ schemaOptions: { collection: 'userScriptShadowCopy' }, options: { allowMixed: Severity.ALLOW } })
 export class UserScriptShadowCopySchema {
 
   _id?: mongodb.ObjectId;

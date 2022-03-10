@@ -15,9 +15,11 @@ import * as mongodb from 'mongodb';
 import * as _ from 'lodash';
 import { Stream } from 'stream';
 import { readFileSync } from 'fs';
+import { BaseLogger } from '../../shared/SGLogger';
+import { AMQPConnector } from '../../shared/AMQPLib';
+
 
 export class JobDefController {
-
 
   public async getManyJobDefs(req: Request, resp: Response, next: NextFunction): Promise<void> {
     const _teamId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._teamid);
@@ -117,11 +119,13 @@ export class JobDefController {
 
 
   public async updateJobDef(req: Request, resp: Response, next: NextFunction): Promise<void> {
+    const logger: BaseLogger = (<any>req).logger;
+    const amqp: AMQPConnector = (<any>req).amqp;
     const _teamId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._teamid);
     const _jobDefId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.params.jobDefId);
     const response: ResponseWrapper = resp['body'];
     try {
-      const updatedJobDef: any = await jobDefService.updateJobDef(_teamId, _jobDefId, convertRequestData(JobDefSchema, req.body), null, req.get('correlationId'), <null | string>req.headers['email'], (<string>req.query.responseFields));
+      const updatedJobDef: any = await jobDefService.updateJobDef(_teamId, _jobDefId, convertRequestData(JobDefSchema, req.body), logger, amqp, null, req.get('correlationId'), <null | string>req.headers['email'], (<string>req.query.responseFields));
 
       if (!updatedJobDef) {
         next(new MissingObjectError(`JobDef ${req.params.jobDefId} not found.`));

@@ -1,11 +1,11 @@
-import { modelOptions, prop, getModelForClass } from '@typegoose/typegoose';
+import { modelOptions, prop, getModelForClass, Severity } from '@typegoose/typegoose';
 import { FilterOperator } from '../utils/BulkGet';
 import * as mongodb from 'mongodb';
 import { MongoDbSettings } from 'aws-sdk/clients/dms';
 
 
 // Example of a schema / domain in Mongoose
-@modelOptions({ schemaOptions: { collection: 'job', minimize: false } })
+@modelOptions({ schemaOptions: { collection: 'job', minimize: false }, options: { allowMixed: Severity.ALLOW } })
 export class JobSchema {
 
     _id?: mongodb.ObjectId;

@@ -1,11 +1,11 @@
-import { modelOptions, prop, getModelForClass } from '@typegoose/typegoose';
+import { modelOptions, prop, getModelForClass, Severity } from '@typegoose/typegoose';
 import { FilterOperator } from '../utils/BulkGet';
 import Bitset from 'bitset';
 import * as mongodb from 'mongodb';
 
 
 // Example of a schema / domain in Mongoose
-@modelOptions({ schemaOptions: { collection: 'user' } })
+@modelOptions({ schemaOptions: { collection: 'user' }, options: { allowMixed: Severity.ALLOW } })
 export class UserSchema {
 
   _id?: mongodb.ObjectId;

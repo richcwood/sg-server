@@ -25,14 +25,6 @@ import * as mongodb from 'mongodb';
 import { stepOutcomeService } from './StepOutcomeService';
 
 
-let appName: string = 'JobService';
-const amqpUrl = config.get('amqpUrl');
-const rmqVhost = config.get('rmqVhost');
-let logger: BaseLogger = new BaseLogger(appName);
-logger.Start();
-let amqp: AMQPConnector = new AMQPConnector(appName, '', amqpUrl, rmqVhost, 1, (activeMessages) => { }, logger);
-amqp.Start();
-
 export class JobService {
 
     // Some services might need to add additional restrictions to bulk queries
@@ -102,29 +94,29 @@ export class JobService {
     }
 
 
-    public async createJobFromJobDefId(_teamId: mongodb.ObjectId, _jobDefId: mongodb.ObjectId, data: any, correlationId?: string, responseFields?: string): Promise<object> {
+    public async createJobFromJobDefId(_teamId: mongodb.ObjectId, _jobDefId: mongodb.ObjectId, data: any, logger: BaseLogger, amqp: AMQPConnector, correlationId?: string, responseFields?: string): Promise<JobSchema> {
         const filterJobDef = { _id: _jobDefId, _teamId };
         const jobDef = await JobDefModel.findOneAndUpdate(filterJobDef, { $inc: { 'lastRunId': 1 } }).select('lastRunId name createdBy runtimeVars onJobTaskFailAlertEmail onJobCompleteAlertEmail onJobTaskInterruptedAlertEmail onJobTaskFailAlertSlackURL onJobCompleteAlertSlackURL onJobTaskInterruptedAlertSlackURL');
         if (!jobDef)
             throw new MissingObjectError(`Job template '${_jobDefId}" not found`);
         await rabbitMQPublisher.publish(_teamId, "JobDef", correlationId, PayloadOperation.UPDATE, { id: jobDef._id, lastRunId: jobDef.lastRunId });
 
-        return this.createJobFromJobDef(_teamId, jobDef, data, responseFields);
+        return this.createJobFromJobDef(_teamId, jobDef, data, logger, amqp, responseFields);
     }
 
 
-    public async createJobFromJobDefName(_teamId: mongodb.ObjectId, jobDefName: string, data: any, correlationId?: string, responseFields?: string): Promise<object> {
+    public async createJobFromJobDefName(_teamId: mongodb.ObjectId, jobDefName: string, data: any, logger: BaseLogger, amqp: AMQPConnector, correlationId?: string, responseFields?: string): Promise<JobSchema> {
         const filterJobDef = { name: jobDefName, _teamId };
         const jobDef = await JobDefModel.findOneAndUpdate(filterJobDef, { $inc: { 'lastRunId': 1 } }).select('lastRunId name createdBy runtimeVars onJobTaskFailAlertEmail onJobCompleteAlertEmail onJobTaskInterruptedAlertEmail onJobTaskFailAlertSlackURL onJobCompleteAlertSlackURL onJobTaskInterruptedAlertSlackURL');
         if (!jobDef)
             throw new MissingObjectError(`Job template '${jobDefName}" not found`);
         await rabbitMQPublisher.publish(_teamId, "JobDef", correlationId, PayloadOperation.UPDATE, { id: jobDef._id, lastRunId: jobDef.lastRunId });
 
-        return this.createJobFromJobDef(_teamId, jobDef, data, responseFields);
+        return this.createJobFromJobDef(_teamId, jobDef, data, logger, amqp, responseFields);
     }
 
 
-    public async createJobFromJobDef(_teamId: mongodb.ObjectId, jobDef: any, data: any, correlationId?: string, responseFields?: string): Promise<object> {
+    public async createJobFromJobDef(_teamId: mongodb.ObjectId, jobDef: any, data: any, logger: BaseLogger, amqp: AMQPConnector, correlationId?: string, responseFields?: string): Promise<JobSchema> {
         let runtimeVars: any = {};
         if (jobDef.runtimeVars)
             runtimeVars = <any>jobDef.runtimeVars;
@@ -253,7 +245,7 @@ export class JobService {
                 }
             }
 
-            this.LaunchReadyJobs(_teamId, job._jobDefId);
+            this.LaunchReadyJobs(_teamId, job._jobDefId, logger, amqp);
 
             if (responseFields) {
                 // It's is a bit wasteful to do another query but I can't chain a save with a select
@@ -265,14 +257,14 @@ export class JobService {
         }
         catch (err) {
             if (newJob) {
-                await this.updateJob(_teamId, newJob._id, { status: Enums.JobStatus.FAILED, error: err.message });
+                await this.updateJob(_teamId, newJob._id, { status: Enums.JobStatus.FAILED, error: err.message }, logger, amqp);
             }
             throw err;
         }
     }
 
 
-    public async createJob(_teamId: mongodb.ObjectId, data: any, createdBy: mongodb.ObjectId, source: Enums.TaskSource, logger: BaseLogger, correlationId?: string, responseFields?: string): Promise<object> {
+    public async createJob(_teamId: mongodb.ObjectId, data: any, createdBy: mongodb.ObjectId, source: Enums.TaskSource, logger: BaseLogger, amqp: AMQPConnector, correlationId?: string, responseFields?: string): Promise<object> {
         SGUtils.validateJob(data.job);
 
         let newJob: JobSchema = null;
@@ -364,7 +356,7 @@ export class JobService {
                 }
             }
 
-            await this.LaunchTasksWithNoUpstreamDependencies(_teamId, newJob._id, logger);
+            await this.LaunchTasksWithNoUpstreamDependencies(_teamId, newJob._id, logger, amqp);
 
             if (responseFields) {
                 // It's is a bit wasteful to do another query but I can't chain a save with a select
@@ -376,14 +368,14 @@ export class JobService {
         }
         catch (err) {
             if (newJob) {
-                await this.updateJob(_teamId, newJob._id, { status: Enums.JobStatus.FAILED, error: err.message });
+                await this.updateJob(_teamId, newJob._id, { status: Enums.JobStatus.FAILED, error: err.message }, logger, amqp);
             }
             throw err;
         }
     }
 
 
-    public async updateJob(_teamId: mongodb.ObjectId, id: mongodb.ObjectId, data: any, filter?: any, correlationId?: string, responseFields?: string): Promise<object> {
+    public async updateJob(_teamId: mongodb.ObjectId, id: mongodb.ObjectId, data: any, logger: BaseLogger, amqp: AMQPConnector, filter?: any, correlationId?: string, responseFields?: string): Promise<object> {
         const defaultFilter = { _id: id, _teamId };
         if (filter)
             filter = Object.assign(defaultFilter, filter);
@@ -401,7 +393,7 @@ export class JobService {
                     const failedJobs: JobSchema[] = <JobSchema[]>await this.findAllJobsInternal({ _teamId, _jobDefId: job._jobDefId, $or: [{ status: Enums.JobStatus.INTERRUPTED }, { status: Enums.JobStatus.FAILED }] }, 'id');
                     if (!failedJobs || (_.isArray(failedJobs) && failedJobs.length < 1)) {
                         try {
-                            await jobDefService.updateJobDef(_teamId, job._jobDefId, { status: Enums.JobDefStatus.RUNNING }, { status: Enums.JobDefStatus.PAUSED });
+                            await jobDefService.updateJobDef(_teamId, job._jobDefId, { status: Enums.JobDefStatus.RUNNING }, logger, amqp, { status: Enums.JobDefStatus.PAUSED });
                         } catch (e) {
                             if (!(e instanceof MissingObjectError))
                                 throw e;
@@ -411,7 +403,7 @@ export class JobService {
             }
 
             if (data.status >= Enums.JobStatus.COMPLETED)
-                await jobService.LaunchReadyJobs(_teamId, job._jobDefId);
+                await jobService.LaunchReadyJobs(_teamId, job._jobDefId, logger, amqp);
         }
 
 
@@ -429,7 +421,7 @@ export class JobService {
     };
 
 
-    async LaunchReadyJobs(_teamId: mongodb.ObjectId, _jobDefId: mongodb.ObjectId) {
+    async LaunchReadyJobs(_teamId: mongodb.ObjectId, _jobDefId: mongodb.ObjectId, logger: BaseLogger, amqp: AMQPConnector) {
         if (!_jobDefId)
             return;
 
@@ -464,7 +456,7 @@ export class JobService {
                         if (lag <= jobDef.misfireGraceTime) {
                             jobsToRun.push(job);
                         } else {
-                            this.updateJob(_teamId, job._id, { status: Enums.JobStatus.SKIPPED, error: "Exceeded misfire grace time" });
+                            this.updateJob(_teamId, job._id, { status: Enums.JobStatus.SKIPPED, error: "Exceeded misfire grace time" }, logger, amqp);
                         }
                     } else {
                         jobsToRun.push(job);
@@ -486,12 +478,12 @@ export class JobService {
                 /// If "coalesce", skip all ready jobs except the most recent
                 if ((numJobsToStart > 0) && jobDef.coalesce) {
                     for (let i = 0; i < jobsToRun.length - 1; i++) {
-                        this.updateJob(_teamId, jobsToRun[i]._id, { status: Enums.JobStatus.SKIPPED, error: "Job skipped due to coalesce" });
+                        this.updateJob(_teamId, jobsToRun[i]._id, { status: Enums.JobStatus.SKIPPED, error: "Job skipped due to coalesce" }, logger, amqp);
                     }
                     const jobToRun = jobsToRun[jobsToRun.length - 1];
                     try {
-                        await this.updateJob(_teamId, jobToRun._id, { status: Enums.JobStatus.RUNNING, dateStarted: new Date().toISOString() }, { status: Enums.JobStatus.NOT_STARTED });
-                        await this.LaunchTasksWithNoUpstreamDependencies(_teamId, jobToRun._id, logger);
+                        await this.updateJob(_teamId, jobToRun._id, { status: Enums.JobStatus.RUNNING, dateStarted: new Date().toISOString() }, logger, amqp, { status: Enums.JobStatus.NOT_STARTED });
+                        await this.LaunchTasksWithNoUpstreamDependencies(_teamId, jobToRun._id, logger, amqp);
                     } catch (err) {
                         if (!(err instanceof MissingObjectError)) {
                             logger.LogError('Launching next available job', { _jobDefId: jobToRun._jobDefId.toHexString(), _jobId: jobToRun._id.toHexString() });
@@ -507,8 +499,8 @@ export class JobService {
                         const jobToRun = jobsToRun[i];
 
                         try {
-                            await this.updateJob(_teamId, jobToRun._id, { status: Enums.JobStatus.RUNNING, dateStarted: new Date().toISOString() }, { status: Enums.JobStatus.NOT_STARTED });
-                            await this.LaunchTasksWithNoUpstreamDependencies(_teamId, jobToRun._id, logger);
+                            await this.updateJob(_teamId, jobToRun._id, { status: Enums.JobStatus.RUNNING, dateStarted: new Date().toISOString() }, logger, amqp, { status: Enums.JobStatus.NOT_STARTED });
+                            await this.LaunchTasksWithNoUpstreamDependencies(_teamId, jobToRun._id, logger, amqp);
                         } catch (err) {
                             if (!(err instanceof MissingObjectError)) {
                                 logger.LogDebug('Launching next available job', { _jobDefId: _jobDefId.toHexString(), _jobId: jobToRun._id.toHexString() });
@@ -527,7 +519,7 @@ export class JobService {
                 await JobDefModel.findOneAndUpdate({ _teamId, _id: _jobDefId }, { launchingJobs: false }).select('_id');
                 let jobNotStarted: any = JobModel.find({ _teamId, _jobDefId, status: Enums.JobStatus.NOT_STARTED }).limit(1);
                 if (_.isArray(jobNotStarted) && jobNotStarted.length > 0)
-                    this.LaunchReadyJobs(_teamId, _jobDefId);
+                    this.LaunchReadyJobs(_teamId, _jobDefId, logger, amqp);
             } catch (err) {
                 logger.LogError('Error in LaunchReadyJobs finally block', { err, _jobDefId: _jobDefId.toHexString() });
             }
@@ -619,7 +611,7 @@ export class JobService {
     }
 
 
-    async UpdateJobStatus(_teamId: mongodb.ObjectId, _jobId: mongodb.ObjectId, logger: BaseLogger, job: JobSchema = null, responseFields?: string): Promise<JobSchema> {
+    async UpdateJobStatus(_teamId: mongodb.ObjectId, _jobId: mongodb.ObjectId, logger: BaseLogger, amqp: AMQPConnector, job: JobSchema = null, responseFields?: string): Promise<JobSchema> {
         if (!job) {
             if (!responseFields)
                 responseFields = 'status';
@@ -638,7 +630,7 @@ export class JobService {
             update['status'] = status;
             if (status >= Enums.JobStatus.COMPLETED && job.status < Enums.JobStatus.COMPLETED)
                 update['dateCompleted'] = new Date().toISOString();
-            const jobUpdated: any = (<JobSchema>await this.updateJob(_teamId, _jobId, update));
+            const jobUpdated: any = (<JobSchema>await this.updateJob(_teamId, _jobId, update, logger, amqp));
             if (jobUpdated) {
                 job = jobUpdated;
                 if (jobUpdated.status >= Enums.JobStatus.COMPLETED && (jobUpdated.onJobCompleteAlertEmail || jobUpdated.onJobCompleteAlertSlackURL)) {
@@ -655,7 +647,7 @@ export class JobService {
     }
 
 
-    async LaunchTasksWithNoUpstreamDependencies(_teamId: mongodb.ObjectId, _jobId: mongodb.ObjectId, logger: BaseLogger) {
+    async LaunchTasksWithNoUpstreamDependencies(_teamId: mongodb.ObjectId, _jobId: mongodb.ObjectId, logger: BaseLogger, amqp: AMQPConnector) {
         const currentJob: JobSchema = await this.findJob(_teamId, _jobId, 'status _jobDefId');
         if (!currentJob)
             throw new MissingObjectError(`Job '${_jobId.toHexString()}" not found for team "${_teamId.toHexString()}'`);
@@ -700,9 +692,9 @@ export class JobService {
 
         if (no_tasks_to_run) {
             logger.LogError(`No tasks to run`, { Class: 'JobService', Method: 'LaunchTasksWithNoUpstreamDependencies', _teamId, _jobId });
-            await this.UpdateJobStatus(_teamId, _jobId, logger, currentJob);
+            await this.UpdateJobStatus(_teamId, _jobId, logger, amqp, currentJob);
             // await this.updateJob(_teamId, _jobId, { status: Enums.JobStatus.COMPLETED, dateCompleted: new Date().toISOString() });
-            this.LaunchReadyJobs(_teamId, currentJob._jobDefId);
+            this.LaunchReadyJobs(_teamId, currentJob._jobDefId, logger, amqp);
         }
     }
 }

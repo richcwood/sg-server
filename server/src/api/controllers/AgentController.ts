@@ -18,7 +18,6 @@ import { BaseLogger } from '../../shared/SGLogger';
 import { RabbitMQAdmin } from '../../shared/RabbitMQAdmin';
 import { TaskStatus } from '../../shared/Enums';
 import { TaskFailureCode } from '../../shared/Enums';
-import { taskService } from '../services/TaskService';
 import { AMQPConnector } from '../../shared/AMQPLib';
 import { rabbitMQPublisher } from '../utils/RabbitMQPublisher';
 import { CheckWaitingForAgentTasks, CheckWaitingForLambdaRunnerTasks, NumNotStartedTasks } from '../utils/Shared';
@@ -32,14 +31,6 @@ const inactiveAgentQueueTTLHours = parseInt(config.get('inactiveAgentQueueTTLHou
 const activeAgentTimeoutSeconds = parseInt(config.get('activeAgentTimeoutSeconds'), 10);
 const adminTeamId = config.get("sgAdminTeam");
 const awsLambdaRequiredTags = config.get("awsLambdaRequiredTags");
-
-
-let appName: string = 'TaskOutcomeService';
-const amqpUrl = config.get('amqpUrl');
-let logger: BaseLogger = new BaseLogger(appName);
-logger.Start();
-let amqp: AMQPConnector = new AMQPConnector(appName, '', amqpUrl, rmqVhost, 1, (activeMessages) => { }, logger);
-amqp.Start();
 
 
 let configureAgentQueues = async (_teamId: mongodb.ObjectId, _agentId: mongodb.ObjectId, logger: BaseLogger) => {
@@ -239,6 +230,7 @@ export class AgentController {
 
     public async createAgent(req: Request, resp: Response, next: NextFunction): Promise<void> {
         const logger: BaseLogger = (<any>req).logger;
+        const amqp: AMQPConnector = (<any>req).amqp;
         const _teamId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._teamid);
         const response: ResponseWrapper = resp['body'];
         try {
@@ -326,6 +318,7 @@ export class AgentController {
     public async updateAgentHeartbeat(req: Request, resp: Response, next: NextFunction): Promise<void> {
         // console.log('updateAgentHeartbeat -> ', JSON.stringify(req.body, null, 4));
         const logger: BaseLogger = (<any>req).logger;
+        const amqp: AMQPConnector = (<any>req).amqp;
         const _teamId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._teamid);
         const _agentId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.params.agentId);
         const response: ResponseWrapper = resp['body'];
@@ -400,6 +393,8 @@ export class AgentController {
 
     public async updateAgentTags(req: Request, resp: Response, next: NextFunction): Promise<void> {
         // console.log('updateAgentProperties -> ', JSON.stringify(req.headers, null, 4));
+        const logger: BaseLogger = (<any>req).logger;
+        const amqp: AMQPConnector = (<any>req).amqp;
         const _teamId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._teamid);
         const _agentId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.params.agentId);
         const response: ResponseWrapper = resp['body'];
@@ -457,6 +452,8 @@ export class AgentController {
 
     public async updateAgentProperties(req: Request, resp: Response, next: NextFunction): Promise<void> {
         // console.log('updateAgentProperties -> ', JSON.stringify(req.body, null, 4));
+        const logger: BaseLogger = (<any>req).logger;
+        const amqp: AMQPConnector = (<any>req).amqp;
         const _teamId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._teamid);
         const _agentId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.params.agentId);
         const userEmail: string = <string>req.headers.email;
@@ -576,11 +573,12 @@ export class AgentController {
 
     public async processOrphanedTasks(req: Request, resp: Response, next: NextFunction): Promise<void> {
         const logger: BaseLogger = (<any>req).logger;
+        const amqp: AMQPConnector = (<any>req).amqp;
         const _teamId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._teamid);
         const _agentId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.params.agentId);
         const response: ResponseWrapper = resp['body'];
         try {
-            response.data = await agentService.processOrphanedTasks(_teamId, _agentId, logger);
+            response.data = await agentService.processOrphanedTasks(_teamId, _agentId, logger, amqp);
             response.statusCode = ResponseCode.CREATED;
             next();
         }

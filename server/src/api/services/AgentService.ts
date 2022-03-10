@@ -12,6 +12,7 @@ import { stepOutcomeService } from '../services/StepOutcomeService';
 import { taskService } from '../services/TaskService';
 import { TaskDefModel } from '../domain/TaskDef';
 import { localRestAccess } from '../utils/LocalRestAccess';
+import { AMQPConnector } from '../../shared/AMQPLib';
 
 
 const userConfigurableProperties: string[] = ['maxActiveTasks', 'inactivePeriodWaitTime', 'inactiveAgentJob', 'handleGeneralTasks', 'trackSysInfo'];
@@ -262,7 +263,7 @@ export class AgentService {
     }
 
 
-    public async processOrphanedTasks(_teamId: mongodb.ObjectId, id: mongodb.ObjectId, logger: BaseLogger): Promise<object> {
+    public async processOrphanedTasks(_teamId: mongodb.ObjectId, id: mongodb.ObjectId, logger: BaseLogger, amqp: AMQPConnector): Promise<object> {
         let result: any = { success: true };
         try {
             const agent = await AgentModel.findById(id);
@@ -299,7 +300,7 @@ export class AgentService {
                                     await stepOutcomeService.updateStepOutcome(_teamId, stepOutcome._id, stepOutcomeUpdates, null, null, '_id');
                                 }
                             }
-                            await taskOutcomeService.updateTaskOutcome(_teamId, orphanedTask._id, taskOutcomeUpdates, logger, { status: { $lt: Enums.TaskStatus.SUCCEEDED } }, null, '_id');
+                            await taskOutcomeService.updateTaskOutcome(_teamId, orphanedTask._id, taskOutcomeUpdates, logger, amqp, { status: { $lt: Enums.TaskStatus.SUCCEEDED } }, null, '_id');
                             const queryTasks = await taskService.findAllJobTasks(_teamId, orphanedTask._jobId);
                             if (_.isArray(queryTasks) && queryTasks.length > 0) {
                                 const task = queryTasks[0];
@@ -333,7 +334,7 @@ export class AgentService {
                                     await stepOutcomeService.updateStepOutcome(_teamId, stepOutcome._id, stepOutcomeUpdates, null, null, '_id');
                                 }
                             }
-                            await taskOutcomeService.updateTaskOutcome(_teamId, orphanedTask._id, taskOutcomeUpdates, logger, { status: { $lt: Enums.TaskStatus.SUCCEEDED } });
+                            await taskOutcomeService.updateTaskOutcome(_teamId, orphanedTask._id, taskOutcomeUpdates, logger, amqp, { status: { $lt: Enums.TaskStatus.SUCCEEDED } });
                         } catch (e) {
                             if (!(e instanceof MissingObjectError)) {
                                 logger.LogError(`Error canceling orphaned autoRestart task`, { orphanedTask });

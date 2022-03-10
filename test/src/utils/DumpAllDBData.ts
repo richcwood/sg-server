@@ -94,4 +94,4 @@ let DumpMongoData = async (path: string) => {
 }
 
 
-DumpMongoData(`./test/data/testdata_2.json`);
+DumpMongoData(`./test/data/testdata_1.json`);
