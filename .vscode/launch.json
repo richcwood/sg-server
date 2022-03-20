@@ -13,6 +13,7 @@
         },
         {
             "type": "node",
+            "runtimeVersion": "14",
             "request": "attach",
             "name": "Attach to Server",
             "processId": "${command:PickProcess}",
@@ -25,6 +26,7 @@
         },
         {
             "type": "node",
+            "runtimeVersion": "14",
             "request": "launch",
             "sourceMaps": true,
             "name": "Debug Server",
@@ -43,6 +45,7 @@
         },
         {
             "type": "node",
+            "runtimeVersion": "14",
             "request": "launch",
             "sourceMaps": true,
             "name": "Debug Server Workers",
@@ -62,6 +65,7 @@
         },
         {
             "type": "node",
+            "runtimeVersion": "14",
             "request": "launch",
             "sourceMaps": true,
             "name": "Debug Tests",
@@ -80,8 +84,23 @@
                 "SENDGRID_API_KEY": "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",
                 "AWS_ACCESS_KEY_ID": "AKIAX3EV7JGZPNRECXBG",
                 "AWS_SECRET_ACCESS_KEY": "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"
-                
             }
+        },
+        {
+            "type": "node",
+            "runtimeVersion": "14",
+            "name": "vscode-jest-tests",
+            "request": "launch",
+            "console": "integratedTerminal",
+            "internalConsoleOptions": "neverOpen",
+            "disableOptimisticBPs": true,
+            "program": "${workspaceFolder}/node_modules/.bin/jest",
+            "cwd": "${workspaceFolder}",
+            "args": [
+                "--detectOpenHandles",
+                "--runInBand",
+                "--watchAll=false"
+            ]
         }
     ]
 }
