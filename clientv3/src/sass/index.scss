@@ -1,6 +1,7 @@
 $text-color: rgb(121, 96, 81);
 $back-color: lightblue;
 $splash-color: rgb(214, 143, 12);
+$primary: deepskyblue;
 
 @import '../../node_modules/bulma/bulma.sass';
 @import '../../node_modules/bulma-divider/dist/css/bulma-divider.sass';
@@ -9,7 +10,6 @@ $splash-color: rgb(214, 143, 12);
   --grey-bg-color: #fafafa;
   --link-color: #5CAAED;
   --link-color-hover: #1570C0;
-  --link-color-visited: #A3CFF5;
 }
 
 .dropdown-divider {
@@ -161,14 +161,11 @@ $splash-color: rgb(214, 143, 12);
   white-space: nowrap;
 }
 
-a {
+a,
+a:visited {
   color: var(--link-color);
 }
 
 a:hover {
   color: var(--link-color-hover);
-}
-
-a:visited {
-  color: var(--link-color-visited);
 }
