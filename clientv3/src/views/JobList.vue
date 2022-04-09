@@ -1,5 +1,5 @@
  <template>
-  <div class="main" style="margin-left: 36px; margin-right: 12px;">
+  <div class="sg-container-p">
 
     <!-- Modals -->
     <modal name="create-jobdef-modal" :classes="'round-popup'" :width="400" :height="200">
@@ -91,59 +91,57 @@
 
 
     <!-- Job Def selection -->
-    <div>
-      <table class="table" width="100%">
-        <tbody class="tbody">
-          <tr class="tr">
-            <td class="td">
-              <span style="position: relative;">
-                <input class="input" style="padding-left: 30px;" type="text" v-model="filterString" placeholder="Filter by Job Name and Created By">
-                <font-awesome-icon icon="search" style="position: absolute; left: 10px; top: 10px; color: #dbdbdb;" />
-              </span>
-            </td>
-          </tr>
-          <tr class="tr">
-            <td class="td">
-              <!-- 460 => 920 <button class="button" @click="runTest">Test</button> -->
-              <button class="button is-primary action-create" @click="createNewJobDef">Create new job</button>
+    <table class="table is-fullwidth">
+      <tbody class="tbody">
+        <tr class="tr">
+          <td class="td">
+            <span style="position: relative;">
+              <input class="input" style="padding-left: 30px;" type="text" v-model="filterString" placeholder="Filter by Job Name and Created By">
+              <font-awesome-icon icon="search" style="position: absolute; left: 10px; top: 10px; color: #dbdbdb;" />
+            </span>
+          </td>
+        </tr>
+        <tr class="tr">
+          <td class="td">
+            <!-- 460 => 920 <button class="button" @click="runTest">Test</button> -->
+            <button class="button is-primary action-create" @click="createNewJobDef">Create new job</button>
 
-              <button class="button button-spaced" :disabled="selectedJobDefIds.length === 0" @click="onExportJobDefsClicked">
-                Export Jobs {{selectedJobDefIds.length === 0 ? '' : `(${selectedJobDefIds.length})`}}
-              </button>
-              <button class="button button-spaced" @click="onImportJobDefsClicked">Import Jobs</button>
-            </td>
-          </tr>
+            <button class="button button-spaced" :disabled="selectedJobDefIds.length === 0" @click="onExportJobDefsClicked">
+              Export Jobs {{selectedJobDefIds.length === 0 ? '' : `(${selectedJobDefIds.length})`}}
+            </button>
+            <button class="button button-spaced" @click="onImportJobDefsClicked">Import Jobs</button>
+          </td>
+        </tr>
 
-          <tr class="tr">
-            <td class="td">
-              <table class="table is-striped">
-                <thead class="thead">
-                  <tr class="tr">
-                    <td class="td col-header">Job Definition Name</td>
-                    <td class="td col-header">Created By</td>
-                    <td class="td col-header">Date Created</td>
-                    <td class="td col-header">Schedule</td>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr class="tr" v-for="jobDef in filteredJobDefs" v-bind:key="jobDef.id">
-                    <td class="td">
-                      <input type="checkbox" v-model="selectedJobDefIdsMap[jobDef.id]">
-                      <router-link class="button-spaced" :to="{name: 'jobDesigner', params: {jobId: jobDef.id}}">{{jobDef.name}}</router-link>
-                    </td>
-                    <td class="td">{{getUser(jobDef.createdBy).name}}</td>
-                    <td class="td">{{momentToStringV1(jobDef.dateCreated)}}</td>
-                    <td class="td">
-                      <a @click="onClickedScheduleLinkText(jobDef)">{{getScheduleLinkTextForJobDef(jobDef)}}</a>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
+        <tr class="tr">
+          <td class="td">
+            <table class="table is-striped">
+              <thead class="thead">
+                <tr class="tr">
+                  <td class="td col-header">Job Definition Name</td>
+                  <td class="td col-header">Created By</td>
+                  <td class="td col-header">Date Created</td>
+                  <td class="td col-header">Schedule</td>
+                </tr>
+              </thead>
+              <tbody>
+                <tr class="tr" v-for="jobDef in filteredJobDefs" v-bind:key="jobDef.id">
+                  <td class="td">
+                    <input type="checkbox" v-model="selectedJobDefIdsMap[jobDef.id]">
+                    <router-link class="button-spaced" :to="{name: 'jobDesigner', params: {jobId: jobDef.id}}">{{jobDef.name}}</router-link>
+                  </td>
+                  <td class="td">{{getUser(jobDef.createdBy).name}}</td>
+                  <td class="td">{{momentToStringV1(jobDef.dateCreated)}}</td>
+                  <td class="td">
+                    <a @click="onClickedScheduleLinkText(jobDef)">{{getScheduleLinkTextForJobDef(jobDef)}}</a>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </td>
+        </tr>
+      </tbody>
+    </table>
   </div>
 </template>
 
@@ -424,14 +422,13 @@ export default class JobList extends Vue {
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped lang="scss">
-
-  table {
+  .table {
     border-width: 0;
   }
 
-  // td {
-  //   border-width: 0 !important;
-  // }
+  .table td:first-of-type {
+    padding-left: 0;
+  }
 
   .col-header {
     font-weight: 700;
@@ -440,5 +437,4 @@ export default class JobList extends Vue {
   .button-spaced {
     margin-left: 12px;
   }
-
 </style>

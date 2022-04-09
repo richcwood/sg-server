@@ -552,7 +552,7 @@
       </table>
     </modal>
 
-    <div class="container job-menu-container">
+    <div class="sg-container-px">
       <header class="is-flex my-2">
           <h2 class="is-size-3 has-text-weight-bold text-ellipsis" :title="jobDefForEdit.name">{{ jobDefForEdit.name }}</h2>
           <ul class="job-menu is-flex is-align-items-center has-text-weight-bold is-size-5 ml-6">
@@ -2475,10 +2475,6 @@ export default class JobDesigner extends Vue {
   .job-menu .is-active {
       background: deepskyblue;
       color: white;
-  }
-
-  .job-menu-container {
-    margin-left: 166px;
   }
 
   .has-max-width {

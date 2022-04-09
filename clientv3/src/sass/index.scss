@@ -3,7 +3,7 @@ $back-color: lightblue;
 $splash-color: rgb(214, 143, 12);
 $primary: deepskyblue;
 
-@import '../../node_modules/bulma/bulma.sass';
+@import 'bulma';
 @import '../../node_modules/bulma-divider/dist/css/bulma-divider.sass';
 
 :root {
@@ -158,7 +158,13 @@ a:hover {
   color: var(--link-color-hover);
 }
 
-.sg-container {
+.sg-container-p {
+  padding-top: 1.5rem;
+  padding-left: 64px;
+  padding-right: 64px;
+}
+
+.sg-container-px {
   padding-left: 64px;
   padding-right: 64px;
 }

@@ -1,7 +1,7 @@
 <template>
   <div class="main">
 
-    <section class="sg-container py-5 has-background-deepskyblue">
+    <section class="sg-container-px py-5 has-background-deepskyblue">
       <div class="columns">
         <div class="column">
             <h2 class="has-text-white is-size-1-desktop is-size-3-touch has-text-weight-bold">SaaSGlue Agent Installation</h2><br>
@@ -13,7 +13,7 @@
       </div>
     </section>
 
-    <section class="sg-container py-6">
+    <section class="sg-container-px py-6">
       <div class="columns mb-5 has-text-white has-text-weight-bold download-section">
         <div class="column">
           <a class="button is-primary py-4 icon-text has-button-shadow" href="https://sg-agent-installer.s3.us-east-2.amazonaws.com/sg-agent-installer-win-x64.zip">
