@@ -488,6 +488,7 @@ export default class DownloadAgent extends Vue {
 
   .download-section .button {
     width: 100%;
+    max-width: 350px;
     height: auto;
   }
 
