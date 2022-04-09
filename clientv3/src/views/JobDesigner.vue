@@ -2484,4 +2484,8 @@ export default class JobDesigner extends Vue {
   .has-max-width {
     max-width: 100%;
   }
+
+  .text-nowrap {
+    white-space: nowrap;
+  }
 </style>

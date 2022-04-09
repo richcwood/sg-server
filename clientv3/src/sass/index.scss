@@ -139,26 +139,14 @@ $primary: deepskyblue;
   cursor: pointer;
 }
 
-.button.is-info {
-  background-color: deepskyblue;
-}
-
-.has-text-deepskyblue {
-  color: deepskyblue;
-}
-
-.has-background-placeholder {
-  background: rgb(172,158,158);
-}
-
 .text-ellipsis {
   text-overflow: ellipsis;
   overflow: hidden;
   white-space: nowrap;
 }
 
-.text-nowrap {
-  white-space: nowrap;
+.has-button-shadow {
+  box-shadow: 0 18px 20px -15px RGB(0 0 0 / 40%);
 }
 
 a,
@@ -168,4 +156,9 @@ a:visited {
 
 a:hover {
   color: var(--link-color-hover);
+}
+
+.sg-container {
+  padding-left: 64px;
+  padding-right: 64px;
 }
