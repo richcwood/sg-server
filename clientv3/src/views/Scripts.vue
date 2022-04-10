@@ -1,19 +1,19 @@
 <template>
-  <div class="home">
+  <div class="sg-container-p">
 
     <!-- todo - consolidate this with the modal in InteractiveConsole -->
     <!-- Create script modal -->
     <modal name="create-script-modal" :classes="'round-popup'" :width="450" :height="250">
       <validation-observer ref="createScriptValidationObserver">
         <table class="table" width="100%" height="100%">
-          <tbody class="tbody">
-            <tr class="tr">
-              <td class="td"></td>
-              <td class="td">Create a new script</td>
+          <tbody>
+            <tr>
+              <td></td>
+              <td>Create a new script</td>
             </tr>
-            <tr class="tr">
-              <td class="td">Script Name</td>
-              <td class="td">
+            <tr>
+              <td>Script Name</td>
+              <td>
                 <validation-provider
                   name="Script Name"
                   rules="required|object-name"
@@ -34,9 +34,9 @@
                 </validation-provider>
               </td>
             </tr>
-            <tr class="tr">
-              <td class="td">Script Type</td>
-              <td class="td">
+            <tr>
+              <td>Script Type</td>
+              <td>
                 <validation-provider name="Script Type" rules="required" v-slot="{ errors }">
                   <select
                     class="input select"
@@ -56,9 +56,9 @@
                 </validation-provider>
               </td>
             </tr>
-            <tr class="tr">
-              <td class="td"></td>
-              <td class="td">
+            <tr>
+              <td></td>
+              <td>
                 <button class="button is-primary" @click="saveNewScript">Create new script</button>
                 <button class="button button-spaced" style="margin-left: 12px;" @click="cancelCreateNewScript">Cancel</button>
               </td>
@@ -71,26 +71,26 @@
      <modal name="rename-script-modal" :classes="'round-popup'" :width="650" :height="200">
       <validation-observer ref="renameScriptValidationObserver">
         <table class="table" width="100%" height="100%">
-          <tr class="tr">
-            <td class="td" colspan="2">
+          <tr>
+            <td colspan="2">
               Rename the script {{renameScript && renameScript.name}}
             </td>
           </tr>
-          <tr class="tr">
-            <td class="td">
+          <tr>
+            <td>
               New name
             </td>
-            <td class="td">
+            <td>
               <validation-provider name="Script Name" rules="required|object-name" v-slot="{ errors }"> 
                 <input class="input" type="text" v-model="renameScriptName">
                 <span v-if="errors && errors.length > 0" class="message validation-error is-danger">{{ errors[0] }}</span>
               </validation-provider>
             </td>
           </tr>
-          <tr class="tr">
-            <td class="td">
+          <tr>
+            <td>
             </td>
-            <td class="td">
+            <td>
               <button class="button is-primary" @click="onRenameScript">Rename Script</button>
               <button class="button button-spaced" @click="onCancelRename">Cancel</button>
             </td>
@@ -101,13 +101,13 @@
 
      <modal name="delete-script-modal" :classes="'round-popup'" :width="650" :height="200">
         <table class="table" width="100%" height="100%">
-          <tr class="tr">
-            <td class="td">
+          <tr>
+            <td>
               Are you sure you want to delete the script {{deleteScript && deleteScript.name}}
             </td>
           </tr>
-          <tr class="tr">
-            <td class="td">
+          <tr>
+            <td>
               <button class="button is-danger" @click="onDeleteScript">Delete Script</button>
               <button class="button button-spaced" @click="onCancelDelete">Cancel</button>
             </td>
@@ -115,42 +115,34 @@
         </table>
      </modal>
 
-
-    <!-- Filter -->
-    <table class="table" width="550px">
-      <tbody class="tbody">
-        <tr class="tr">
-          <td class="td">
-            <span style="position: relative;">
-              <input class="input" style="padding-left: 30px;" type="text" v-model="filterString" placeholder="Filter by Script Name, Script Type, Created By and Last Edited By">
-              <font-awesome-icon icon="search" style="position: absolute; left: 10px; top: 10px; color: #dbdbdb;" />
-            </span>
-          </td>
-        </tr>
-        <tr class="tr">
-          <td class="td">
-            <button class="button action-create" @click="onCreateScriptClicked">Create Script</button>
-          </td>
-        </tr>
-      </tbody>
-    </table>
+    <div class="field is-grouped">
+      <div class="control has-icons-left">
+        <input class="input" type="text" style="width: 550px;" v-model="filterString" placeholder="Filter by Script Name, Script Type, Created By and Last Edited By">
+        <span class="icon is-small is-left">
+          <font-awesome-icon icon="search" />
+        </span>
+      </div>
+      <div class="control has-icons-left">
+        <button class="button is-primary" @click="onCreateScriptClicked">Create Script</button>
+      </div>
+    </div>
 
     <!-- List of scripts -->
     <table class="table is-striped">
-      <thead class="thead">
-        <td class="td">Script Name</td>
-        <td class="td">Rename</td>
-        <td class="td">Delete</td>
-        <td class="td">Script Type</td>
-        <td class="td">Created By</td>
-        <td class="td">Last Edited</td>
-        <td class="td">Last Edited By</td>
+      <thead>
+        <th>Script Name</th>
+        <th>Rename</th>
+        <th>Delete</th>
+        <th>Script Type</th>
+        <th>Created By</th>
+        <th>Last Edited</th>
+        <th>Last Edited By</th>
       </thead>
 
-      <tbody class="tbody">
-        <tr class="tr" v-for="script in filteredScripts" v-bind:key="script.id">
-          <td class="td"><router-link :to="{name: 'interactiveConsole', params: {scriptId: script.id}}">{{script.name}}</router-link></td>
-          <td class="td">
+      <tbody>
+        <tr v-for="script in filteredScripts" v-bind:key="script.id">
+          <td><router-link :to="{name: 'interactiveConsole', params: {scriptId: script.id}}">{{script.name}}</router-link></td>
+          <td>
             <button v-if="isScriptEditable(script)" class="button" @click="onClickedRename(script)">Rename</button>
             <template v-else>
               <div class="readonly-tooltip-container">(read-only)
@@ -161,11 +153,11 @@
                
             </template>
           </td>
-          <td class="td"><button v-if="isScriptEditable(script)" class="button" @click="onClickedDelete(script)">Delete</button></td>
-          <td class="td">{{scriptTypesForMonaco[script.scriptType]}}</td>
-          <td class="td">{{getUser(script._originalAuthorUserId).name}}</td>
-          <td class="td">{{momentToStringV1(script.lastEditedDate)}}</td>
-          <td class="td">{{getUser(script._lastEditedUserId).name}}</td>
+          <td><button v-if="isScriptEditable(script)" class="button" @click="onClickedDelete(script)">Delete</button></td>
+          <td>{{scriptTypesForMonaco[script.scriptType]}}</td>
+          <td>{{getUser(script._originalAuthorUserId).name}}</td>
+          <td>{{momentToStringV1(script.lastEditedDate)}}</td>
+          <td>{{getUser(script._lastEditedUserId).name}}</td>
         </tr>
       </tbody>
     </table>
