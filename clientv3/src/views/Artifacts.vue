@@ -1,5 +1,5 @@
  <template>
-  <div class="main" style="margin-left: 36px; margin-right: 12px;">
+  <div class="sg-container-p">
 
     <!-- Modals -->
     <modal name="upload-modal" :width="1200" :height="900">
@@ -61,66 +61,58 @@
       </div>
     </modal>
 
-
-
-
-    <div style="font-size: 24px;">
-      Shared artifacts for your team 
+    <h2 class="is-size-4 subtitle">Shared artifacts for your team</h2>
+    <div class="field is-grouped">
+      <div class="control has-icons-left">
+        <input class="input" type="text" style="width: 200px;" v-model="prefixFilter" placeholder="Filter folders">
+        <span class="icon is-small is-left">
+          <font-awesome-icon icon="search" />
+        </span>
+      </div>
+      <div class="control has-icons-left">
+        <input class="input" type="text" style="width: 200px;" v-model="nameFilter" placeholder="Filter names">
+        <span class="icon is-small is-left">
+          <font-awesome-icon icon="search" />
+        </span>
+      </div>
+      <div class="control has-icons-left">
+        <button class="button is-primary" @click="onUploadArtifactsShowClicked">Upload New Artifacts</button>
+      </div>
     </div>
+
     <table class="table" width="700px">
-      <tr class="tr">
-        <td class="td" colspan="4">
-          <span style="position: relative;">
-            <input class="input" type="text" style="padding-left: 30px; width: 200px;" v-model="prefixFilter" placeholder="Filter folders">
-            <font-awesome-icon icon="search" style="position: absolute; left: 10px; top: 10px; color: #dbdbdb;" />
-          </span>
-          <span style="position: relative;">
-            <input class="input button-spaced" type="text" style="padding-left: 30px; width: 200px;" v-model="nameFilter" placeholder="Filter names">
-            <font-awesome-icon icon="search" style="position: absolute; left: 20px; top: 10px; color: #dbdbdb;" />
-          </span>
-          <button class="button button-spaced" @click="onUploadArtifactsShowClicked">Upload New Artifacts</button>
-        </td>
-      </tr>
-      <tr class="tr">
-        <td class="td">
-        </td>
-        <td class="td">
-          Folder
-        </td>
-        <td class="td">
-          Name
-        </td>
-        <!-- <td class="td">
-        </td> -->
-      </tr>
-      <tr class="tr" v-if="artifacts.length === 0">
-        <td class="td" colspan="4">
+      <thead>
+        <tr>
+          <th></th>
+          <th>Folder</th>
+          <th>Name</th>
+        </tr>
+      </thead>
+      <tr v-if="artifacts.length === 0">
+        <td colspan="3">
           There are no artifacts for your team yet.
         </td>
       </tr>
-      <tr class="tr" v-for="artifact in filteredArtifacts" v-bind:key="artifact.id">
-        <td class="td">
-          <input type="checkbox" @change="onArtifactChecked($event, artifact)">
+      <tr v-for="artifact in filteredArtifacts" v-bind:key="artifact.id">
+        <td>
+          <div class="control">
+            <div class="checkbox">
+              <input type="checkbox" @change="onArtifactChecked($event, artifact)">
+            </div>
+          </div>
         </td>
-        <td class="td">
-          {{artifact.prefix}}
-        </td>
-        <td class="td">
-          {{artifact.name}}
-        </td>
+        <td>{{artifact.prefix}}</td>
+        <td>{{artifact.name}}</td>
         <!-- <td class="td">
           <a @click.prevent="onDownloadArtifactClicked(artifact)">download</a>
         </td> -->
       </tr>
-      <tr class="tr">
-        <td class="td">
-          <button class="button" @click="onDeleteSelectedArtifacts" :disabled="selectedArtifacts.length === 0">Delete Selected Artifacts</button>
-        </td>
-        <td class="td" colspan="3">
-        </td>
-      </tr>
     </table>
-    
+    <div class="field">
+      <div class="control">
+        <button class="button is-danger" @click="onDeleteSelectedArtifacts" :disabled="selectedArtifacts.length === 0">Delete Selected Artifacts</button>
+      </div>
+    </div>
   </div>
 </template>
 
