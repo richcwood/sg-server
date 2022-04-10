@@ -6,7 +6,7 @@ import { jobService } from "../services/JobService";
 import { AMQPConnector } from "../../shared/AMQPLib";
 import { BaseLogger } from "../../shared/SGLogger";
 import { SGStrings } from "../../shared/SGStrings";
-import { NumNotStartedTasks, GetWaitingForLambdaRunnerTasks, TaskReadyToStart } from "./Shared";
+import { NumNotStartedTasks, GetWaitingForLambdaRunnerTasks, TaskReadyToPublish } from "./Shared";
 import { convertData as convertResponseData } from "../utils/ResponseConverters";
 import db from "../../test_helpers/DB";
 import { CreateJobDefsFromTemplates, CreateTasks } from "../../test_helpers/TestArtifacts";
@@ -55,13 +55,13 @@ let OnBrowserPush = async (params: any, msgKey: string, ch: any) => {
 
 describe("Test 'get not started tasks' functions 1", () => {
   const _teamId: mongodb.ObjectId = new mongodb.ObjectId();
+  const _jobId: mongodb.ObjectId = new mongodb.ObjectId();
   beforeAll(async () => {
-    const _jobId: mongodb.ObjectId = new mongodb.ObjectId("6223e93e6f2b00e5f916160a");
     const tasks: Array<Partial<TaskSchema>> = [
       {
         _teamId: _teamId,
         _jobId: _jobId,
-        name: "Task1",
+        name: "Task 1",
         source: 1,
         target: Enums.TaskDefTarget.AWS_LAMBDA,
         runtimeVars: {},
@@ -70,7 +70,7 @@ describe("Test 'get not started tasks' functions 1", () => {
       {
         _teamId: _teamId,
         _jobId: _jobId,
-        name: "Task1",
+        name: "Task 2",
         source: 1,
         target: Enums.TaskDefTarget.AWS_LAMBDA,
         runtimeVars: {},
@@ -79,7 +79,7 @@ describe("Test 'get not started tasks' functions 1", () => {
       {
         _teamId: _teamId,
         _jobId: _jobId,
-        name: "Task1",
+        name: "Task 3",
         source: 1,
         target: 1,
         runtimeVars: {},
@@ -88,7 +88,7 @@ describe("Test 'get not started tasks' functions 1", () => {
       {
         _teamId: _teamId,
         _jobId: _jobId,
-        name: "Task1",
+        name: "Task 4",
         source: 1,
         target: 1,
         runtimeVars: {},
@@ -110,6 +110,28 @@ describe("Test 'get not started tasks' functions 1", () => {
     const tasksWaitingForLambda: TaskSchema[] = await GetWaitingForLambdaRunnerTasks();
     validateArrayLength(tasksWaitingForLambda, 2);
   });
+
+  test("Test TaskReadyToPublish with ready task", async () => {
+    const task1: TaskSchema = await taskService.findTaskByName(_teamId, _jobId, "Task 1");
+    const task1ReadyToStart = await TaskReadyToPublish(_teamId, task1, logger);
+    validateEquality(task1ReadyToStart, true);
+  });
+
+  test("Test TaskReadyToPublish with not ready task", async () => {
+    const task2: TaskSchema = await taskService.findTaskByName(_teamId, _jobId, "Task 4");
+    const task1ReadyToStart = await TaskReadyToPublish(_teamId, task2, logger);
+    validateEquality(task1ReadyToStart, true);
+  });
+
+  test("Test TaskReadyToPublish with invalid task", async () => {
+    const task: TaskSchema = <TaskSchema>{};
+    await expect(TaskReadyToPublish(_teamId, task, logger)).rejects.toThrow("Invalid task object");
+  });
+
+  test("Test NumNotStartedTasks with not started tasks", async () => {
+    const numNotStartedTasks = await NumNotStartedTasks(_teamId);
+    validateEquality(numNotStartedTasks, 3);
+  });
 });
 
 describe("Test 'get not started tasks' functions 2", () => {
@@ -125,7 +147,7 @@ describe("Test 'get not started tasks' functions 2", () => {
   });
 });
 
-describe("Test TaskReadyToStart function", () => {
+describe("Test TaskReadyToPublish function", () => {
   let job: JobSchema;
   const _teamId: mongodb.ObjectId = new mongodb.ObjectId();
   const _userId: mongodb.ObjectId = new mongodb.ObjectId();
@@ -171,27 +193,15 @@ describe("Test TaskReadyToStart function", () => {
     ],
   };
 
-  beforeAll(async () => {
-    const { scripts, jobDefs } = await CreateJobDefsFromTemplates(_teamId, _userId, properties);
-    job = await convertResponseData(
-      JobSchema,
-      await jobService.createJobFromJobDef(_teamId, jobDefs["Job 1"], {}, logger, amqp)
-    );
-  });
+  //   beforeAll(async () => {
+  //     const { scripts, jobDefs } = await CreateJobDefsFromTemplates(_teamId, _userId, properties);
+  //     job = await convertResponseData(
+  //       JobSchema,
+  //       await jobService.createJobFromJobDef(_teamId, jobDefs["Job 1"], {}, logger, amqp)
+  //     );
+  //   });
 
-  afterAll(async () => await db.clearDatabase());
-
-  test("Test TaskReadyToStart with ready task", async () => {
-    const task1: TaskSchema = await taskService.findTaskByName(_teamId, job.id, "Task 1");
-    const task1ReadyToStart = await TaskReadyToStart(_teamId, task1);
-    validateEquality(task1ReadyToStart, true);
-  });
-
-  test("Test TaskReadyToStart with not ready task", async () => {
-    const task2: TaskSchema = await taskService.findTaskByName(_teamId, job.id, "Task 2");
-    const task1ReadyToStart = await TaskReadyToStart(_teamId, task2);
-    validateEquality(task1ReadyToStart, true);
-  });
+  //   afterAll(async () => await db.clearDatabase());
 });
 
 // describe("Re-publish tasks waiting for lambda runner agent tests", () => {

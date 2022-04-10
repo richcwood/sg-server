@@ -12,6 +12,7 @@ import * as mongodb from "mongodb";
 import * as _ from "lodash";
 import BitSet from "bitset";
 import { int } from "aws-sdk/clients/datapipeline";
+import { hasUncaughtExceptionCaptureCallback } from "process";
 const jwt = require("jsonwebtoken");
 
 const activeAgentTimeoutSeconds = config.get("activeAgentTimeoutSeconds");
@@ -23,7 +24,12 @@ const activeAgentTimeoutSeconds = config.get("activeAgentTimeoutSeconds");
  * @param task
  * @param logger
  */
-let TaskReadyToStart = async (_teamId: mongodb.ObjectId, task: TaskSchema): Promise<boolean> => {
+let TaskReadyToPublish = async (_teamId: mongodb.ObjectId, task: TaskSchema, logger: BaseLogger): Promise<boolean> => {
+  if (!_.isObject(task) || !("_jobId" in task) || !("up_dep" in task) || !("name" in task)) {
+    const msg = "Invalid task object";
+    logger.LogError(msg, { _teamId: _teamId, task: task });
+    throw new Error(msg);
+  }
   const tasks = await taskService.findAllJobTasks(_teamId, task._jobId, "toRoutes");
   const tasksToRoutes = SGUtils.flatMap(
     (x) => x,
@@ -433,7 +439,6 @@ let CheckWaitingForAgentTasks = async (
   const noAgentTasks = await taskService.findAllTasksInternal(noAgentTasksFilter);
   if (_.isArray(noAgentTasks) && noAgentTasks.length > 0) {
     for (let i = 0; i < noAgentTasks.length; i++) {
-      // logger.LogInfo('No agent task', {Task: noAgentTasks[i]});
       let updatedTask: any;
       if (_agentId)
         updatedTask = await taskService.updateTask(
@@ -483,7 +488,6 @@ let GetWaitingForLambdaRunnerTasks = async (): Promise<TaskSchema[]> => {
   noAgentTasksFilter["status"] = { $eq: Enums.TaskStatus.WAITING_FOR_AGENT };
   noAgentTasksFilter["target"] = { $eq: Enums.TaskDefTarget.AWS_LAMBDA };
   // noAgentTasksFilter['failureCode'] = { $eq: TaskFailureCode.NO_AGENT_AVAILABLE };
-  console.log("noAgentTasksFilter -> ", noAgentTasksFilter);
   return await taskService.findAllTasksInternal(noAgentTasksFilter, "_id _teamId", 10);
 };
 
@@ -519,7 +523,7 @@ let RepublishTasksWaitingForLambdaRunner = async (
           logger
         );
 
-      if (await TaskReadyToStart(teamIdTask, updatedTask)) {
+      if (await TaskReadyToPublish(teamIdTask, updatedTask, logger)) {
         if (updatedTask.status == Enums.TaskStatus.WAITING_FOR_AGENT) {
           updatedTask = await taskService.updateTask(
             teamIdTask,
@@ -598,4 +602,4 @@ export { GetAccessRightIdsForSGAdmin };
 export { GetAccessRightIdsForSGAgent };
 export { GetGlobalAccessRightId };
 export { NumNotStartedTasks };
-export { TaskReadyToStart };
+export { TaskReadyToPublish };
