@@ -10,16 +10,24 @@
         </label>
       </div>
 
-      <validation-provider tag="div" class="control" name="Key" rules="required" v-slot="{ errors }">
-        <input class="input" style="width: 250px;" type="text" v-model="newKey" placeholder="key"/>
-        <span v-if="errors && errors.length > 0" class="message validation-error is-danger">{{ errors[0] }}</span>
+      <validation-provider tag="div" name="Key" rules="required" v-slot="{ errors }">
+        <div class="control">
+          <input class="input" style="width: 250px;" type="text" v-model="newKey" placeholder="key"/>
+        </div>
+        <div class="is-absolute">
+          <p v-if="errors && errors.length > 0" class="help is-danger">{{ errors[0] }}</p>
+        </div>
       </validation-provider>
 
-      <span class="has-text-weight-bold is-size-5 mr-3">=</span>
+      <span class="has-text-weight-bold is-size-5 mx-3">=</span>
 
-      <validation-provider tag="div" class="control" name="Value" rules="required" v-slot="{ errors }">
-        <input class="input" style="width: 250px;" type="text" v-model="newValue.value" placeholder="value"/>
-        <span v-if="errors && errors.length > 0" class="message validation-error is-danger">{{ errors[0] }}</span>
+      <validation-provider tag="div" name="Value" rules="required" v-slot="{ errors }">
+        <div class="control">
+          <input class="input" style="width: 250px;" type="text" v-model="newValue.value" placeholder="value"/>
+        </div>
+        <div class="is-absolute">
+          <p v-if="errors && errors.length > 0" class="help is-danger">{{ errors[0] }}</p>
+        </div>
       </validation-provider>
 
       <div class="control">
