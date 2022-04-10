@@ -170,13 +170,4 @@ export default class TeamVars extends Vue {
   .button-spaced {
     margin-left: 12px;
   }
-
-  .validation-error {
-    margin-top: 3px;
-    margin-bottom: 3px;
-    padding-left: 3px;
-    padding-right: 3px;
-    color: $danger;
-  }
-
 </style>
