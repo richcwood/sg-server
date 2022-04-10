@@ -1,20 +1,14 @@
  <template>
-  <div class="main" style="margin-left: 36px; margin-right: 12px;">
-
-    <br>
-    <h1 class="title">
-      API Access Keys
-    </h1>
-
+  <div class="pt-5">
+    <h1 class="title sg-container-px">API Access Keys</h1>
     <tabs>
-      <tab title="Agent Access Keys">
+      <tab class="sg-container-px" title="Agent Access Keys">
         <access-keys-grid :accessKeys="agentAccessKeys" :accessKeyType="AccessKeyType.AGENT"/>
       </tab>
-      <tab title="User Access Keys">
+      <tab class="sg-container-px" title="User Access Keys">
         <access-keys-grid :accessKeys="userAccessKeys" :accessKeyType="AccessKeyType.USER"/>
       </tab>
     </tabs>
-
   </div>
 </template>
 
@@ -68,4 +62,8 @@ export default class AccessKeys extends Vue {
     border-width: 0 !important;
   }
 
+  /deep/ .vue-tablist {
+    padding-left: 64px;
+    padding-right: 64px;
+  }
 </style>
