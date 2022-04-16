@@ -12,7 +12,7 @@
     <nav class="navbar" v-if="!isOnLandingPage()">
       <div class="navbar-brand">
           <router-link activeClass="" to="/" class="navbar-item navbar-logo">
-              <img src="/logo4.png" alt="SaaSGlue logo" width="132" height="22">
+              <img src="/SaasLogoRevised.svg" alt="SaaSGlue logo" width="132" height="22">
           </router-link>
       </div>
       <div class="navbar-menu is-active">

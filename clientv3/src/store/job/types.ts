@@ -98,3 +98,18 @@ export const getJobFetchTypeFilter = function(jobFetchType: JobFetchType): strin
     return 'unknown job fetch type ' + jobFetchType;
   }
 }
+
+
+export const calcJobStatusColor = function(status: JobStatus){
+  switch(status){
+    case JobStatus.NOT_STARTED:
+    case JobStatus.COMPLETED:
+      return 'black';
+    case JobStatus.RUNNING:
+      return 'green';
+    case JobStatus.FAILED:
+      return 'red';
+    default:
+      return 'orange';
+  }
+}

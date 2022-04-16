@@ -15,8 +15,6 @@ import { initValidation } from './utils/Validation';
 import VueSplit from 'vue-split-panel';
 import bitset from 'bitset';
 import VTooltip from 'v-tooltip';
-import 'bulma/css/bulma.css';
-import '@/style/index.scss';
 
 library.add(faSearch);
 library.add(faSpinner);

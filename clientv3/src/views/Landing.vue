@@ -4,7 +4,7 @@
 
     <div>
       <div style="margin-left: 100px;">
-        <router-link class="logo-container" to="/"> <img src="/logo4.png" class="logo" style="height: 35px; margin-top: 12px;"> </router-link>
+        <router-link class="logo-container" to="/"> <img src="/SaasLogoRevised.svg" class="logo" style="height: 35px; margin-top: 12px;"> </router-link>
       </div>
       <div class="is-divider" style="margin-left: 100px; margin-top: 15px; max-width: 1200px;"></div>
     </div>

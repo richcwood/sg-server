@@ -105,7 +105,7 @@
           <tr class="tr">
             <td class="td">
               <!-- 460 => 920 <button class="button" @click="runTest">Test</button> -->
-              <button class="button is-primary" @click="createNewJobDef">Create new job</button>
+              <button class="button is-primary action-create" @click="createNewJobDef">Create new job</button>
 
               <button class="button button-spaced" :disabled="selectedJobDefIds.length === 0" @click="onExportJobDefsClicked">
                 Export Jobs {{selectedJobDefIds.length === 0 ? '' : `(${selectedJobDefIds.length})`}}

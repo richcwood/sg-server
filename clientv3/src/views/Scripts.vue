@@ -129,7 +129,7 @@
         </tr>
         <tr class="tr">
           <td class="td">
-            <button class="button" @click="onCreateScriptClicked">Create Script</button>
+            <button class="button action-create" @click="onCreateScriptClicked">Create Script</button>
           </td>
         </tr>
       </tbody>
