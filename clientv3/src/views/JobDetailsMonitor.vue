@@ -147,11 +147,9 @@
       </table>
     </modal>
 
-    
 
 
-
-    Job Details: {{filterTaskOutcomeStatus}}
+    <h2 class="title is-size-4">Job Details: {{ filterTaskOutcomeStatus }}</h2>
     <table class="table">
       <tbody class="tbody">
         <tr class="tr">

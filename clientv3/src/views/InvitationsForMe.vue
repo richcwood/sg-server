@@ -7,13 +7,13 @@
     <div v-else-if="invitedTeamsCount > 0" class="invitations"> 
       <table>
         <tr v-if="hasLocalStorageInvitedTeamToken">
-          <td class="invitation-td" style="font-weight: 700;">{{localStorageInvitedTeamName}}</td>
+          <td class="invitation-td has-text-weight-bold">{{localStorageInvitedTeamName}}</td>
           <td class="invitation-td"><button class="button is-primary" @click="onAcceptGenericInviteClicked">Accept Invitation</button></td>
         </tr>
         <div v-if="user && user.teamIdsInvited">
           <tr v-for="teamIdInvited of user.teamIdsInvited" v-bind:key="teamIdInvited._teamId">
             <td class="invitation-td">{{getTeam(teamIdInvited._teamId).name}}</td>
-            <td class="invitation-td"><button class="button" @click="onAcceptInvitationClicked(teamIdInvited._teamId)">Accept Invitation</button></td>
+            <td class="invitation-td"><button class="button is-primary" @click="onAcceptInvitationClicked(teamIdInvited._teamId)">Accept Invitation</button></td>
           </tr>
         </div>
       </table>
