@@ -6,7 +6,12 @@ import { jobService } from "../services/JobService";
 import { AMQPConnector } from "../../shared/AMQPLib";
 import { BaseLogger } from "../../shared/SGLogger";
 import { SGStrings } from "../../shared/SGStrings";
-import { NumNotStartedTasks, GetWaitingForLambdaRunnerTasks, TaskReadyToPublish } from "./Shared";
+import {
+  NumNotStartedTasks,
+  GetWaitingForLambdaRunnerTasks,
+  TaskReadyToPublish,
+  GetWaitingForAgentTasks,
+} from "./Shared";
 import { convertData as convertResponseData } from "../utils/ResponseConverters";
 import db from "../../test_helpers/DB";
 import { CreateJobDefsFromTemplates, CreateTasks } from "../../test_helpers/TestArtifacts";
@@ -94,6 +99,15 @@ describe("Test 'get not started tasks' functions 1", () => {
         runtimeVars: {},
         status: Enums.TaskStatus.SUCCEEDED,
       },
+      {
+        _teamId: _teamId,
+        _jobId: _jobId,
+        name: "Task 5",
+        source: 1,
+        target: 1,
+        runtimeVars: {},
+        status: Enums.TaskStatus.WAITING_FOR_AGENT,
+      },
     ];
 
     await CreateTasks(_teamId, tasks);
@@ -103,12 +117,17 @@ describe("Test 'get not started tasks' functions 1", () => {
 
   test("Test NumNotStartedTasks function", async () => {
     const numNotStartedTasks = await NumNotStartedTasks(_teamId);
-    validateEquality(numNotStartedTasks, 3);
+    validateEquality(numNotStartedTasks, 4);
   });
 
   test("Test GetWaitingForLambdaRunnerTasks function", async () => {
     const tasksWaitingForLambda: TaskSchema[] = await GetWaitingForLambdaRunnerTasks();
     validateArrayLength(tasksWaitingForLambda, 2);
+  });
+
+  test("Test GetWaitingForAgentTasks function", async () => {
+    const tasksWaitingForAgent: TaskSchema[] = await GetWaitingForAgentTasks(_teamId);
+    validateArrayLength(tasksWaitingForAgent, 1);
   });
 
   test("Test TaskReadyToPublish with ready task", async () => {
@@ -130,7 +149,7 @@ describe("Test 'get not started tasks' functions 1", () => {
 
   test("Test NumNotStartedTasks with not started tasks", async () => {
     const numNotStartedTasks = await NumNotStartedTasks(_teamId);
-    validateEquality(numNotStartedTasks, 3);
+    validateEquality(numNotStartedTasks, 4);
   });
 });
 
@@ -144,6 +163,11 @@ describe("Test 'get not started tasks' functions 2", () => {
   test("Test GetWaitingForLambdaRunnerTasks function with no results", async () => {
     const tasksWaitingForLambda: TaskSchema[] = await GetWaitingForLambdaRunnerTasks();
     validateArrayLength(tasksWaitingForLambda, 0);
+  });
+
+  test("Test GetWaitingForAgentTasks function with no results", async () => {
+    const tasksWaitingForAgent: TaskSchema[] = await GetWaitingForAgentTasks(_teamId);
+    validateArrayLength(tasksWaitingForAgent, 0);
   });
 });
 

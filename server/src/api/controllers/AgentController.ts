@@ -20,7 +20,11 @@ import { TaskStatus } from "../../shared/Enums";
 import { TaskFailureCode } from "../../shared/Enums";
 import { AMQPConnector } from "../../shared/AMQPLib";
 import { rabbitMQPublisher } from "../utils/RabbitMQPublisher";
-import { CheckWaitingForAgentTasks, RepublishTasksWaitingForLambdaRunner, NumNotStartedTasks } from "../utils/Shared";
+import {
+  RepublishTasksWaitingForAgent,
+  RepublishTasksWaitingForLambdaRunner,
+  NumNotStartedTasks,
+} from "../utils/Shared";
 import { SGUtils } from "../../shared/SGUtils";
 
 const stompUrl = config.get("stompUrl");
@@ -222,11 +226,11 @@ export class AgentController {
       response.data = await addServerPropertiesToAgent(convertResponseData(AgentSchema, newAgent));
       response.statusCode = ResponseCode.CREATED;
 
-      await CheckWaitingForAgentTasks(_teamId, newAgent._id, logger, amqp);
+      await RepublishTasksWaitingForAgent(_teamId, newAgent._id, logger, amqp);
       const numNotStartedTasks = await NumNotStartedTasks(_teamId);
       if (numNotStartedTasks > 0) {
         await SGUtils.sleep(1000);
-        await CheckWaitingForAgentTasks(_teamId, newAgent._id, logger, amqp);
+        await RepublishTasksWaitingForAgent(_teamId, newAgent._id, logger, amqp);
       }
 
       if (_teamId == adminTeamId && _.isArray(newAgent.tags) && newAgent.tags.length > 0) {
@@ -331,11 +335,11 @@ export class AgentController {
           }
         }
 
-        await CheckWaitingForAgentTasks(_teamId, _agentId, logger, amqp);
+        await RepublishTasksWaitingForAgent(_teamId, _agentId, logger, amqp);
         const numNotStartedTasks = await NumNotStartedTasks(_teamId);
         if (numNotStartedTasks > 0) {
           await SGUtils.sleep(1000);
-          await CheckWaitingForAgentTasks(_teamId, _agentId, logger, amqp);
+          await RepublishTasksWaitingForAgent(_teamId, _agentId, logger, amqp);
         }
 
         if (_teamId == adminTeamId) {
@@ -395,11 +399,11 @@ export class AgentController {
         responseFields
       );
 
-      await CheckWaitingForAgentTasks(_teamId, _agentId, logger, amqp);
+      await RepublishTasksWaitingForAgent(_teamId, _agentId, logger, amqp);
       const numNotStartedTasks = await NumNotStartedTasks(_teamId);
       if (numNotStartedTasks > 0) {
         await SGUtils.sleep(1000);
-        await CheckWaitingForAgentTasks(_teamId, _agentId, logger, amqp);
+        await RepublishTasksWaitingForAgent(_teamId, _agentId, logger, amqp);
       }
 
       if (_teamId == adminTeamId) {
@@ -472,11 +476,11 @@ export class AgentController {
           "maxActiveTasks" in updatedAgent.propertyOverrides
         ) {
           if (parseInt(updatedAgent.propertyOverrides.maxActiveTasks) > updatedAgent.numActiveTasks) {
-            await CheckWaitingForAgentTasks(_teamId, _agentId, logger, amqp);
+            await RepublishTasksWaitingForAgent(_teamId, _agentId, logger, amqp);
             const numNotStartedTasks = await NumNotStartedTasks(_teamId);
             if (numNotStartedTasks > 0) {
               await SGUtils.sleep(1000);
-              await CheckWaitingForAgentTasks(_teamId, _agentId, logger, amqp);
+              await RepublishTasksWaitingForAgent(_teamId, _agentId, logger, amqp);
             }
 
             if (_teamId == adminTeamId) {

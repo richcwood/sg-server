@@ -426,84 +426,19 @@ let GetTaskRoutes = async (_teamId: mongodb.ObjectId, task: TaskSchema, logger: 
   return { routes: routes, task: updatedTask };
 };
 
-let CheckWaitingForAgentTasks = async (
-  _teamId: mongodb.ObjectId,
-  _agentId: mongodb.ObjectId,
-  logger: BaseLogger,
-  amqp: AMQPConnector
-) => {
-  let noAgentTasksFilter = {};
-  noAgentTasksFilter["_teamId"] = _teamId;
-  noAgentTasksFilter["status"] = { $eq: Enums.TaskStatus.WAITING_FOR_AGENT };
-  // noAgentTasksFilter['failureCode'] = { $eq: TaskFailureCode.NO_AGENT_AVAILABLE };
-  const noAgentTasks = await taskService.findAllTasksInternal(noAgentTasksFilter);
-  if (_.isArray(noAgentTasks) && noAgentTasks.length > 0) {
-    for (let i = 0; i < noAgentTasks.length; i++) {
-      let updatedTask: any;
-      if (_agentId)
-        updatedTask = await taskService.updateTask(
-          _teamId,
-          noAgentTasks[i]._id,
-          { $pull: { attemptedRunAgentIds: _agentId } },
-          logger
-        );
-      else
-        updatedTask = await taskService.updateTask(_teamId, noAgentTasks[i]._id, { attemptedRunAgentIds: [] }, logger);
-
-      // logger.LogInfo('No agent task udpated', {Task: updatedTask});
-      const tasks = await taskService.findAllJobTasks(_teamId, updatedTask._jobId, "toRoutes");
-      const tasksToRoutes = SGUtils.flatMap(
-        (x) => x,
-        tasks.map((t) => SGUtils.flatMap((x) => x[0], t.toRoutes))
-      );
-      if (
-        (!updatedTask.up_dep || Object.keys(updatedTask.up_dep).length < 1) &&
-        tasksToRoutes.indexOf(updatedTask.name) < 0
-      ) {
-        // logger.LogInfo('No agent task - no up_dep', {Task: updatedTask});
-        if (updatedTask.status == Enums.TaskStatus.WAITING_FOR_AGENT) {
-          updatedTask.status = Enums.TaskStatus.NOT_STARTED;
-          updatedTask = await taskService.updateTask(
-            _teamId,
-            updatedTask._id,
-            { status: updatedTask.status },
-            logger,
-            { status: Enums.TaskStatus.WAITING_FOR_AGENT },
-            null,
-            null
-          );
-          if (updatedTask) await taskOutcomeService.PublishTask(_teamId, updatedTask, logger, amqp);
-        }
-      }
-    }
-  }
-};
-
 /**
- * Gets an array of all tasks waiting for a lambda agent.
- * @returns {TaskSchema[]}
- */
-let GetWaitingForLambdaRunnerTasks = async (): Promise<TaskSchema[]> => {
-  let noAgentTasksFilter = {};
-  noAgentTasksFilter["status"] = { $eq: Enums.TaskStatus.WAITING_FOR_AGENT };
-  noAgentTasksFilter["target"] = { $eq: Enums.TaskDefTarget.AWS_LAMBDA };
-  // noAgentTasksFilter['failureCode'] = { $eq: TaskFailureCode.NO_AGENT_AVAILABLE };
-  return await taskService.findAllTasksInternal(noAgentTasksFilter, "_id _teamId", 10);
-};
-
-/**
- * Republish tasks waiting for a lambda runner agent
+ * Republish tasks waiting for an agent
  * @param _agentId optional - if included only this agent will be attempted again,
  *                              otherwise all agents will be attempted again
  * @param logger
  * @param amqp
  */
-let RepublishTasksWaitingForLambdaRunner = async (
+let RepublishTasks = async (
   _agentId: mongodb.ObjectId,
   logger: BaseLogger,
-  amqp: AMQPConnector
+  amqp: AMQPConnector,
+  noAgentTasks: TaskSchema[]
 ) => {
-  const noAgentTasks = await GetWaitingForLambdaRunnerTasks();
   if (_.isArray(noAgentTasks) && noAgentTasks.length > 0) {
     for (let i = 0; i < noAgentTasks.length; i++) {
       const teamIdTask = noAgentTasks[i]._teamId;
@@ -539,6 +474,60 @@ let RepublishTasksWaitingForLambdaRunner = async (
       }
     }
   }
+};
+
+/**
+ * Gets an array of all tasks waiting for an agent for the given team.
+ * @param _teamId
+ * @returns {TaskSchema[]}
+ */
+let GetWaitingForAgentTasks = async (_teamId: mongodb.ObjectId): Promise<TaskSchema[]> => {
+  let noAgentTasksFilter = {};
+  noAgentTasksFilter["_teamId"] = _teamId;
+  noAgentTasksFilter["status"] = { $eq: Enums.TaskStatus.WAITING_FOR_AGENT };
+  noAgentTasksFilter["target"] = { $ne: Enums.TaskDefTarget.AWS_LAMBDA };
+  // noAgentTasksFilter['failureCode'] = { $eq: TaskFailureCode.NO_AGENT_AVAILABLE };
+  console.log("GetWaitingForAgentTasks -> noAgentTasksFilter ----------> ", noAgentTasksFilter);
+  return await taskService.findAllTasksInternal(noAgentTasksFilter, "_id _teamId");
+};
+
+let RepublishTasksWaitingForAgent = async (
+  _teamId: mongodb.ObjectId,
+  _agentId: mongodb.ObjectId,
+  logger: BaseLogger,
+  amqp: AMQPConnector
+) => {
+  const noAgentTasks: TaskSchema[] = await GetWaitingForAgentTasks(_teamId);
+  console.log("RepublishTasksWaitingForAgent -> noAgentTasks ----------> ", noAgentTasks);
+  await RepublishTasks(_agentId, logger, amqp, noAgentTasks);
+};
+
+/**
+ * Gets an array of all tasks waiting for a lambda agent.
+ * @returns {TaskSchema[]}
+ */
+let GetWaitingForLambdaRunnerTasks = async (): Promise<TaskSchema[]> => {
+  let noAgentTasksFilter = {};
+  noAgentTasksFilter["status"] = { $eq: Enums.TaskStatus.WAITING_FOR_AGENT };
+  noAgentTasksFilter["target"] = { $eq: Enums.TaskDefTarget.AWS_LAMBDA };
+  // noAgentTasksFilter['failureCode'] = { $eq: TaskFailureCode.NO_AGENT_AVAILABLE };
+  return await taskService.findAllTasksInternal(noAgentTasksFilter, "_id _teamId", 10);
+};
+
+/**
+ * Republish tasks waiting for a lambda runner agent
+ * @param _agentId optional - if included only this agent will be attempted again,
+ *                              otherwise all agents will be attempted again
+ * @param logger
+ * @param amqp
+ */
+let RepublishTasksWaitingForLambdaRunner = async (
+  _agentId: mongodb.ObjectId,
+  logger: BaseLogger,
+  amqp: AMQPConnector
+) => {
+  const noAgentTasks: TaskSchema[] = await GetWaitingForLambdaRunnerTasks();
+  await RepublishTasks(_agentId, logger, amqp, noAgentTasks);
 };
 
 /**
@@ -592,8 +581,9 @@ let convertTeamAccessRightsToBitset = (accessRightIds: number[]) => {
 };
 
 export { GetTaskRoutes };
-export { CheckWaitingForAgentTasks };
+export { RepublishTasksWaitingForAgent };
 export { GetWaitingForLambdaRunnerTasks };
+export { GetWaitingForAgentTasks };
 export { RepublishTasksWaitingForLambdaRunner };
 export { convertTeamAccessRightsToBitset };
 export { GetAccessRightIdsForTeamUser };

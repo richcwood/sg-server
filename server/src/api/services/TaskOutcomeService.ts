@@ -22,7 +22,7 @@ import { AMQPConnector } from "../../shared/AMQPLib";
 import { GetTaskRoutes } from "../utils/Shared";
 import { FreeTierChecks } from "../../shared/FreeTierChecks";
 import { localRestAccess } from "../utils/LocalRestAccess";
-import { CheckWaitingForAgentTasks } from "../utils/Shared";
+import { RepublishTasksWaitingForAgent } from "../utils/Shared";
 import * as config from "config";
 import * as mongodb from "mongodb";
 import * as _ from "lodash";
@@ -243,7 +243,7 @@ export class TaskOutcomeService {
             "name _jobDefId runId onJobTaskInterruptedAlertEmail onJobTaskInterruptedAlertSlackURL"
           );
 
-          await CheckWaitingForAgentTasks(_teamId, updatedTaskOutcome._agentId, logger, amqp);
+          await RepublishTasksWaitingForAgent(_teamId, updatedTaskOutcome._agentId, logger, amqp);
 
           if (job.status != Enums.JobStatus.INTERRUPTING && job.status != Enums.JobStatus.INTERRUPTED)
             await this.LaunchDownstreamTasks(_teamId, job, updatedTaskOutcome, logger, amqp);
