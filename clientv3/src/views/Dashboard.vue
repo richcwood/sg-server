@@ -1,205 +1,160 @@
  <template>
-  <div style="margin-left: 36px; margin-right: 12px;">
+  <div class="sg-container-p">
+    <div class="tile is-ancestor">
+      <div class="tile is-parent">
+        <div class="tile is-child box">
 
-    <br><br>
-
-    <div style="display: flex">
-      <div class="dash-section" style="height: 800px; width: 800px;">
-        <div class="dash-title-row">
-          <img src="@/assets/images/job-run-icon.svg" style="width:40px;"/>
-          <div class="dash-title">
-            Job Runs
+          <div class="is-flex is-justify-content-space-between is-align-items-center">
+            <span class="is-flex">
+              <img class="mr-3" src="@/assets/images/job-run-icon.svg" width="40" />
+              <h2 class="is-size-3 has-text-weight-bold">Job Runs</h2>
+            </span>
+            <router-link class="is-size-2" :to="{name: 'jobList', params: {action: 'create'}}">+</router-link>
           </div>
-          <div class="dash-title dash-title-add">
-            <router-link :to="{name: 'jobList', params: {action: 'create'}}">
-              +
+
+          <p class="is-size-6">{{getJobFetchTypeDescription(selectedJobFetchType)}}</p>
+
+          <div class="mt-3">
+            <router-link to="/jobMonitor">
+              Total {{filteredJobs.length}}
+            </router-link>
+            <router-link to="/jobMonitor" style="margin-left: 10px;">
+              Not Started {{filteredJobsStatusCounts[JobStatus.NOT_STARTED]}}
+            </router-link>
+            <router-link to="/jobMonitor" style="margin-left: 10px;">
+              Running {{filteredJobsStatusCounts[JobStatus.RUNNING]}}
+            </router-link>
+            <router-link to="/jobMonitor" style="margin-left: 10px;">
+              Interupting {{filteredJobsStatusCounts[JobStatus.INTERRUPTING]}}
+            </router-link>
+            <router-link to="/jobMonitor" style="margin-left: 10px;">
+              Interupted {{filteredJobsStatusCounts[JobStatus.INTERRUPTED]}}
+            </router-link>
+            <router-link to="/jobMonitor" style="margin-left: 10px;">
+              Cancelling {{filteredJobsStatusCounts[JobStatus.CANCELING]}}
+            </router-link>
+            <router-link to="/jobMonitor" style="margin-left: 10px;">
+              Completed {{filteredJobsStatusCounts[JobStatus.COMPLETED]}}
             </router-link>
           </div>
-        </div>
-        <div>
-          <span class="smaller-text">{{getJobFetchTypeDescription(selectedJobFetchType)}}
-          </span>
-        </div>
-        <div style="margin-top: 12px;">
-          <router-link to="/jobMonitor">
-            Total {{filteredJobs.length}}
-          </router-link>
-          <router-link to="/jobMonitor" style="margin-left: 10px;">
-            Not Started {{filteredJobsStatusCounts[JobStatus.NOT_STARTED]}}
-          </router-link>
-          <router-link to="/jobMonitor" style="margin-left: 10px;">
-            Running {{filteredJobsStatusCounts[JobStatus.RUNNING]}}
-          </router-link>
-          <router-link to="/jobMonitor" style="margin-left: 10px;">
-            Interupting {{filteredJobsStatusCounts[JobStatus.INTERRUPTING]}}
-          </router-link>
-          <router-link to="/jobMonitor" style="margin-left: 10px;">
-            Interupted {{filteredJobsStatusCounts[JobStatus.INTERRUPTED]}}
-          </router-link>
-          <router-link to="/jobMonitor" style="margin-left: 10px;">
-            Cancelling {{filteredJobsStatusCounts[JobStatus.CANCELING]}}
-          </router-link>
-          <router-link to="/jobMonitor" style="margin-left: 10px;">
-            Completed {{filteredJobsStatusCounts[JobStatus.COMPLETED]}}
-          </router-link>
-        </div>
-        <div>
-          <hr>
-        </div>
-        <div class="dash-title">
-          Recent Job Runs (up to 5 shown)
-        </div>
-        <div>
-          <table class="table">
-            <tr class="tr">
-              <th class="th">Run Number</th>
-              <th class="th">Name</th>
-              <th class="th">Status</th>
-              <th class="th">Started</th>
-              <th class="th">Completed</th>
+
+          <div class="is-divider"></div>
+          <p class="is-size-6">Recent Job Runs (up to 5 shown)</p>
+
+          <table class="table is-fullwidth">
+            <thead>
+              <tr>
+              <th>Run Number</th>
+              <th>Name</th>
+              <th>Status</th>
+              <th>Started</th>
+              <th>Completed</th>
             </tr>
-            <tr class="tr" v-for="job in recentJobs" v-bind:key="job.id">
-              <td class="td"><router-link :to="{name: 'jobDetailsMonitor', params: {jobId: job.id}}">Monitor {{job.runId}}</router-link></td>
-              <td class="td">
-                <template v-if="job._jobDefId">
-                  <router-link :to="{name: 'jobDesigner', params: {jobId: job._jobDefId}}">{{job.name}}</router-link>
-                </template>
-                <template v-else>
-                  {{job.name}}
-                </template>
+            </thead>
+            <tbody>
+              <tr v-for="job in recentJobs" :key="job.id">
+                <td><router-link :to="{name: 'jobDetailsMonitor', params: {jobId: job.id}}">Monitor {{job.runId}}</router-link></td>
+                <td>
+                  <template v-if="job._jobDefId">
+                    <router-link :to="{name: 'jobDesigner', params: {jobId: job._jobDefId}}">{{job.name}}</router-link>
+                  </template>
+                  <template v-else>
+                    {{job.name}}
+                  </template>
+                </td>
+                <td :style="{color: calcJobStatusColor(job.status)}" >{{enumKeyToPretty(JobStatus, job.status)}}</td>
+                <td>{{momentToStringV1(job.dateStarted)}}</td>
+                <td>{{momentToStringV1(job.dateCompleted)}}</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="is-divider"></div>
+          <p class="is-size-6">Scheduled Job Runs (Next 24 Hours)</p>
+
+          <table class="table">
+            <tr v-for="schedule in schedulesNext24Hours" :key="schedule.id">
+              <td class="thin-td">{{momentToStringV1(schedule.nextScheduledRunDate)}}</td>
+              <td class="thin-td">
+                <a class="is-size-6" href="#" @click.prevent="onClickedSchedule(schedule)">{{getJobName(schedule)}}</a>
               </td>
-              <td class="td" :style="{color: calcJobStatusColor(job.status)}" >{{enumKeyToPretty(JobStatus, job.status)}}</td>
-              <td class="td">{{momentToStringV1(job.dateStarted)}}</td>
-              <td class="td">{{momentToStringV1(job.dateCompleted)}}</td>
             </tr>
           </table>
         </div>
-        <div>
-          <hr>
-        </div>
-        <div class="dash-title">
-          Scheduled Job Runs (Next 24 Hours)
-        </div>
-        <div class="dash-title">
-          <table class="table">
-              <tr class="tr" v-for="schedule in schedulesNext24Hours" :key="schedule.id">
-                <td class="td thin-td">
-                  {{momentToStringV1(schedule.nextScheduledRunDate)}}
-                </td>
-                <td class="td thin-td">
-                  <span class="smallest-text">
-                    <a class="smallest-text" href="" @click.prevent="onClickedSchedule(schedule)">
-                      {{getJobName(schedule)}}
-                    </a>
-                  </span>
-                </td>
-              </tr>
-            </table>
-        </div>
       </div>
-      <div style="display: flex; flex-direction: column;">
-        <div style="display: flex">
-          <div class="dash-section" style="width: 500px;">
-            <div class="dash-title-row">
-              <img src="@/assets/images/job-icon.svg" style="width:40px;"/>
-              <div class="dash-title" style="padding-right: 100px;">
-                Jobs
-              </div>
-              <div class="dash-title dash-title-add">
-                <router-link :to="{name: 'jobList', params: {action: 'create'}}">
-                  +
-                </router-link>
-              </div>
+
+      <div class="tile is-vertical is-parent">
+        <div class="tile is-parent">
+          <div class="tile is-child box">
+            <div class="is-flex is-justify-content-space-between is-align-items-center">
+              <span class="is-flex">
+                <img class="mr-3" src="@/assets/images/job-icon.svg" width="40"/>
+                <h2 class="is-size-3 has-text-weight-bold">Jobs</h2>
+              </span>
+              <router-link class="is-size-2" :to="{name: 'jobList', params: {action: 'create'}}">+</router-link>
             </div>
-            <div style="margin-left: 12px;">
-              <div>
-                <router-link to="/jobList">
-                  {{jobDefs ? jobDefs.length : 0}} Total
-                </router-link>
-              </div>
-              <div>
-                <router-link to="/jobList">
-                  {{runningJobDefs ? runningJobDefs.length : 0}} Active
-                </router-link>
-              </div>
-              <div>
-                <router-link to="/jobList">
-                  {{pausedJobDefs ? pausedJobDefs.length : 0}} Paused
-                </router-link>
-              </div>
+
+            <div class="buttons is-align-items-start is-flex-direction-column ml-3">
+              <router-link to="/jobList">{{jobDefs ? jobDefs.length : 0}} Total</router-link>
+              <router-link to="/jobList">{{runningJobDefs ? runningJobDefs.length : 0}} Active</router-link>
+              <router-link to="/jobList">{{pausedJobDefs ? pausedJobDefs.length : 0}} Paused</router-link>
             </div>
           </div>
-          <div class="dash-section">
-            <div class="dash-title-row">
-              <img src="@/assets/images/step-icon.svg" style="width:40px;"/>
-              <div class="dash-title" style="padding-right: 100px;">
-                Scripts
-              </div>
-              <div class="dash-title dash-title-add">
-                <router-link :to="{name: 'scripts', params: {action: 'create'}}">
-                  +
-                </router-link>
-              </div>
+
+          <div class="tile is-child box">
+            <div class="is-flex is-justify-content-space-between is-align-items-center">
+              <span class="is-flex">
+                <img class="mr-3" src="@/assets/images/step-icon.svg" width="40"/>
+                <h2 class="is-size-3 has-text-weight-bold">Scripts</h2>
+              </span>
+              <router-link class="is-size-2" :to="{name: 'scripts', params: {action: 'create'}}">+</router-link>
             </div>
-            <div style="margin-left: 12px;">
-              <div>
-                <router-link to="/scripts">
-                  {{scripts ? scripts.length : 0}} Total
-                </router-link>
-              </div>
+
+            <div class="ml-3">
+              <router-link to="/scripts">{{scripts ? scripts.length : 0}} Total</router-link>
             </div>
           </div>
         </div>
-        <div class="dash-section" style="height: 600px;">
-          <div class="dash-title-row">
-              <img src="@/assets/images/agent.svg" style="width:40px;"/>
-              <div class="dash-title">
-                Agents
-              </div>
-              <div class="dash-title dash-title-add">
-                <router-link to="/downloadAgent">
-                  +
-                </router-link>
-              </div>
+
+        <div class="tile is-parent">
+          <div class="tile is-child box">
+            <div class="is-flex is-justify-content-space-between is-align-items-center">
+              <span class="is-flex">
+                <img class="mr-3" src="@/assets/images/agent.svg" width="40"/>
+                <h2 class="is-size-3 has-text-weight-bold">Agents</h2>
+              </span>
+              <router-link class="is-size-2" to="/downloadAgent">+</router-link>
             </div>
-            <div style="margin-left: 12px;">
-              <table class="table">
-                <tr class="tr">
-                  <td class="td">
-                    <router-link to="/agentMonitor">
-                      {{agents ? agents.length : 0}} Total
-                    </router-link>
-                  </td>
-                  <td class="td">
-                    <router-link to="/agentMonitor">
-                      {{activeAgents ? activeAgents.length : 0}} Active
-                    </router-link>
-                  </td>
-                </tr>
-              </table>
+
+            <div class="ml-3">
               <div>
-                <hr>
+                <router-link class="mr-3" to="/agentMonitor">{{agents ? agents.length : 0}} Total</router-link>
+                <router-link to="/agentMonitor">{{activeAgents ? activeAgents.length : 0}} Active</router-link>
               </div>
-              <div class="dash-title">
-                Active Agents (up to 5 shown)
-              </div>
+
+              <div class="is-divider"></div>
+              <p class="is-size-6">Active Agents (up to 5 shown)</p>
+
               <table class="table">
-                <tr class="tr">
-                  <th class="th">Name</th>
-                  <th class="th">Tags</th>
-                  <th class="th">Num Running Tasks</th>
-                  <th class="th">Last Heartbeat</th>
-                </tr>
-                <tr class="tr" v-for="agent in activeAgents" v-bind:key="agent.id">
-                  <td class="td"><router-link :to="{name: 'agentMonitor', params: {jobId: agent.id}}">{{agent.name}}</router-link></td>
-                  <td class="td">
-                    <div v-html="tagsMapToString(agent.tags, 2)"></div>
-                  </td>
-                  <td class="td">{{agent.numActiveTasks}}</td>
-                  <td class="td">{{momentToStringV1(agent.lastHeartbeatTime)}}</td>
-                </tr>
+                <thead>
+                  <tr>
+                    <th>Name</th>
+                    <th>Tags</th>
+                    <th>Num Running Tasks</th>
+                    <th>Last Heartbeat</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="agent in activeAgents" :key="agent.id">
+                    <td><router-link :to="{name: 'agentMonitor', params: {jobId: agent.id}}">{{agent.name}}</router-link></td>
+                    <td v-html="tagsMapToString(agent.tags, 2)"></td>
+                    <td>{{agent.numActiveTasks}}</td>
+                    <td>{{momentToStringV1(agent.lastHeartbeatTime)}}</td>
+                  </tr>
+                </tbody>
               </table>
             </div>
+          </div>
         </div>
       </div>
     </div>
@@ -288,7 +243,7 @@
           </div>
           <div class="dashboard-item-text">
             <table class="table">
-              <tr class="tr" v-for="schedule in schedulesNext24Hours" :key="schedule.id">
+              <tr v-for="schedule in schedulesNext24Hours" :key="schedule.id">
                 <td class="td thin-td">
                   <a class="smallest-text" href="" @click.prevent="onClickedSchedule(schedule)">
                     {{momentToStringV1(schedule.nextScheduledRunDate)}}
