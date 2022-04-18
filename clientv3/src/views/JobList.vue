@@ -1,5 +1,5 @@
  <template>
-  <div class="main" style="margin-left: 36px; margin-right: 12px;">
+  <div class="sg-container-p">
 
     <!-- Modals -->
     <modal name="create-jobdef-modal" :classes="'round-popup'" :width="400" :height="200">

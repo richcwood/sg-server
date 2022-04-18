@@ -1,78 +1,84 @@
 <template>
-  <div class="home">
+  <div class="sg-container-p">
     <!-- Filter -->
-    <table class="table" width="500px">
-      <tbody class="tbody">
-        <tr class="tr">
-          <td class="td">
-            <select class="input" style="margin-bottom: 12px;" v-model="selectedJobFetchType">
-              <option v-for="jobFetchType in enumKeys(JobFetchType)" :key="jobFetchType" :value="jobFetchType">{{getJobFetchTypeDescription(jobFetchType)}}</option>
-            </select>
-            <span style="position: relative;">
-              <input class="input" style="padding-left: 30px;" type="text" v-model="filterString" placeholder="Filter by Job Name and Created By">
-              <font-awesome-icon icon="search" style="position: absolute; left: 10px; top: 10px; color: #dbdbdb;" />
-            </span>
-          </td>
-        </tr>
-        <tr class="tr">
-          <td ref="statusPopupContainer" class="td" style="width:400px">
-            <a href="" @click.prevent="hideStatusPopup = !hideStatusPopup">
-              <span v-for="(statusTypeKey, index) in filterStatus" v-bind:key="statusTypeKey"> {{enumKeyToPretty(JobStatus, statusTypeKey)}}<span v-if="index !== Object.keys(filterStatus).length-1">,</span> </span>
-            </a>
-            <div style="position:relative;" :hidden="hideStatusPopup">
-              <div class="status-popup" style="position:absolute;">
-                <div>
-                  <a @click.prevent="onSelectAllFilterStatusClicked()">select all</a>
-                </div>
-                <div>
-                  <a @click.prevent="onSelectNoneFilterStatusClicked()">select none</a>
-                </div>
-                <div v-for="statusTypeKey in enumKeys(JobStatus)" v-bind:key="statusTypeKey">
-                  <label class="checkbox">
-                    <input type="checkbox" :value="statusTypeKey" v-model="filterStatus">
-                    {{enumKeyToPretty(JobStatus, statusTypeKey)}}
-                  </label>
-                </div>
-              </div>
+
+    <div class="columns mb-0">
+      <div class="column is-half">
+
+        <div class="field">
+          <div class="control">
+            <div class="select is-fullwidth">
+              <select v-model="selectedJobFetchType">
+                <option v-for="jobFetchType in enumKeys(JobFetchType)" :key="jobFetchType" :value="jobFetchType">{{getJobFetchTypeDescription(jobFetchType)}}</option>
+              </select>
             </div>
-          </td>
-        </tr>
-      </tbody>
-    </table>
-    
+          </div>
+        </div>
+
+        <div class="field">
+          <div class="control has-icons-left">
+            <input class="input" type="text" v-model="filterString" placeholder="Filter by Job Name and Created By">
+            <span class="icon is-small is-left">
+              <font-awesome-icon icon="search" />
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="is-relative mb-3" ref="statusPopupContainer">
+      <a href="#" @click.prevent="hideStatusPopup = !hideStatusPopup">
+        <span v-for="(statusTypeKey, index) in filterStatus" v-bind:key="statusTypeKey"> {{enumKeyToPretty(JobStatus, statusTypeKey)}}<span v-if="index !== Object.keys(filterStatus).length-1">,</span> </span>
+      </a>
+      <div class="is-relative" v-show="!hideStatusPopup">
+        <div class="status-popup" style="position:absolute;">
+          <div>
+            <a @click.prevent="onSelectAllFilterStatusClicked()">select all</a>
+          </div>
+          <div>
+            <a @click.prevent="onSelectNoneFilterStatusClicked()">select none</a>
+          </div>
+          <div v-for="statusTypeKey in enumKeys(JobStatus)" :key="statusTypeKey">
+            <label class="checkbox">
+              <input type="checkbox" :value="statusTypeKey" v-model="filterStatus">
+              {{enumKeyToPretty(JobStatus, statusTypeKey)}}
+            </label>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- List of jobs -->
     <table class="table is-striped">
-      <thead class="thead">
-        <td class="td">Run Number</td>
-        <td class="td">Job Name</td>
-        <td class="td">Created By</td>
-        <td class="td">Status</td>
-        <td class="td">Started</td>
-        <td class="td">Completed</td>
+      <thead>
+        <tr>
+          <th>Run Number</th>
+          <th>Job Name</th>
+          <th>Created By</th>
+          <th>Status</th>
+          <th>Started</th>
+          <th>Completed</th>
+        </tr>
       </thead>
 
-      <tbody class="tbody">
-        <tr class="tr" v-if="filteredJobs.length === 0">
-          <td class="td" colspan="6">
-            <div style="margin-left: 10px;">
-              <p>
-                No results
-              </p>
-              <p style="margin-left: 10px;">
-                Filter date: <span style="font-weight: 700;">{{getJobFetchTypeDescription(selectedJobFetchType)}}</span>
-                (only jobs in the date range will be shown)
-                <br><br>
-                <span v-if="filterString">
-                  Filter job name and created by: <span style="font-weight: 700;">{{filterString}}</span>
-                </span>
-              </p>
-            </div>
+      <tbody>
+        <tr v-if="filteredJobs.length === 0">
+          <td colspan="6" class="pl-5">
+            <p>No results</p>
+            <p class="pl-3">
+              Filter date: <span class="has-text-weight-bold">{{getJobFetchTypeDescription(selectedJobFetchType)}}</span>
+              (only jobs in the date range will be shown)
+              <br />
+              <span v-if="filterString">
+                Filter job name and created by: <span class="has-text-weight-bold">{{filterString}}</span>
+              </span>
+            </p>
           </td>
         </tr>
 
-        <tr class="tr" v-for="job in filteredJobs" v-bind:key="job.id">
-          <td class="td"><router-link :to="{name: 'jobDetailsMonitor', params: {jobId: job.id}}">Monitor {{job.runId}}</router-link></td>
-          <td class="td">
+        <tr v-for="job in filteredJobs" :key="job.id">
+          <td><router-link :to="{name: 'jobDetailsMonitor', params: {jobId: job.id}}">Monitor {{job.runId}}</router-link></td>
+          <td>
             <template v-if="job._jobDefId">
               <router-link :to="{name: 'jobDesigner', params: {jobId: job._jobDefId}}">{{job.name}}</router-link>
             </template>
@@ -80,10 +86,10 @@
               {{job.name}}
             </template>
           </td>
-          <td class="td">{{getUser(job.createdBy, job.name).name}}</td>
-          <td class="td" :style="{color: calcJobStatusColor(job.status)}" >{{enumKeyToPretty(JobStatus, job.status)}}</td>
-          <td class="td">{{momentToStringV1(job.dateStarted)}}</td>
-          <td class="td">{{momentToStringV1(job.dateCompleted)}}</td>
+          <td>{{getUser(job.createdBy, job.name).name}}</td>
+          <td :style="{color: calcJobStatusColor(job.status)}" >{{enumKeyToPretty(JobStatus, job.status)}}</td>
+          <td>{{momentToStringV1(job.dateStarted)}}</td>
+          <td>{{momentToStringV1(job.dateCompleted)}}</td>
         </tr>
       </tbody>
     </table>
@@ -197,7 +203,7 @@ export default class JobMonitor extends Vue {
     return filteredJobs;
   }
 
-  private async mounted(){
+  private mounted(){
     document.addEventListener('click', this.onGlobalClicked);
     document.addEventListener('touchstart', this.onGlobalClicked);
 
@@ -275,14 +281,6 @@ export default class JobMonitor extends Vue {
 </script>
 
 <style scoped lang="scss">
-  table {
-    border-width: 0;
-  }
-
-  td {
-    border-width: 0 !important;
-  }
-
   .status-popup {
     background-color: white; 
     border-radius: 5px; 

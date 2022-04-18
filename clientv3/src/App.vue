@@ -92,15 +92,13 @@
 
     <hr class="navbar-divider">
 
-    <div class="nav-main">
-      <router-view/>
-    </div>
+    <router-view/>
 
-    <div class="nav-footer" v-if="! isOnLandingPage()">
+    <div class="main-footer" v-if="! isOnLandingPage()">
       <span v-if="alertFooter" class="footer-message" :class="AlertCategory[alertFooter.category]">{{alertFooter.message}}</span>
       <span v-else>&nbsp;</span>
 
-      <span v-if="alertFooterRight" class="footer-message nav-footer-right" :class="AlertCategory[alertFooterRight.category]">{{alertFooterRight.message}}</span>
+      <span v-if="alertFooterRight" class="footer-message main-footer-right" :class="AlertCategory[alertFooterRight.category]">{{alertFooterRight.message}}</span>
     </div>
   </div>
 </template>
@@ -403,7 +401,7 @@ export default class App extends Vue {
     font-size: 0.89em;
 }
 
-.nav-footer {
+.main-footer {
   display: flex;
   justify-content: space-between;
   position: fixed;
@@ -420,7 +418,7 @@ export default class App extends Vue {
   padding-bottom: 8px;
 }
 
-.nav-footer-right {
+.main-footer-right {
   margin-right: 5px;
 }
 
@@ -440,11 +438,6 @@ export default class App extends Vue {
 
 .footer-message.ERROR{
   color: red;
-}
-
-.nav-main {
-  margin-top: 0px;
-  margin-bottom: 25px;
 }
 
 .round-popup {
