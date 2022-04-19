@@ -1,5 +1,5 @@
 <template>
-  <div class="home">
+  <div class="sg-container-p">
 
     <!-- Modals -->
     <modal name="runtime-vars-modal" :classes="'round-popup'" :width="800" :height="750">
@@ -147,11 +147,9 @@
       </table>
     </modal>
 
-    
 
 
-
-    Job Details: {{filterTaskOutcomeStatus}}
+    <h2 class="title is-size-4">Job Details: {{ filterTaskOutcomeStatus }}</h2>
     <table class="table">
       <tbody class="tbody">
         <tr class="tr">
@@ -681,10 +679,6 @@ export default class JobDetailsMonitor extends Vue {
 </script>
 
 <style scoped lang="scss">
-.home {
-  margin-left: 12px;
-}
-
 table {
 
   // The borders just make things really ugly

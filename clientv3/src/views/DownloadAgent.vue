@@ -1,58 +1,47 @@
 <template>
   <div class="main">
 
-    <section class="section has-background-deepskyblue">
-      <div class="has-container-margin">
-        <div class="columns">
-          <div class="column">
-              <h2 class="title has-text-white is-size-1-desktop is-size-3-touch has-text-weight-bold">SaaSGlue Agent Installation</h2><br>
-          </div>
-          <div class="column">
-              <h3 class="is-size-3-desktop has-text-white is-size-6-touch">Run scripts on all your devices.</h3>
-              <h3 class="is-size-3-desktop has-text-white is-size-6-touch">Available for <b>Windows</b>, <b>Linux</b>, and <b>Mac.</b></h3>
-          </div>
+    <section class="sg-container-px py-5 has-background-deepskyblue">
+      <div class="columns">
+        <div class="column">
+            <h2 class="has-text-white is-size-1-desktop is-size-3-touch has-text-weight-bold">SaaSGlue Agent Installation</h2><br>
+        </div>
+        <div class="column">
+            <h3 class="is-size-3-desktop has-text-white is-size-6-touch">Run scripts on all your devices.</h3>
+            <h3 class="is-size-3-desktop has-text-white is-size-6-touch">Available for <b>Windows</b>, <b>Linux</b>, and <b>Mac.</b></h3>
         </div>
       </div>
     </section>
 
-    <section class="section">
-      <div class="has-container-margin">
-        <div class="columns is-size-5-desktop is-size-6-touch has-text-left-tablet has-text-centered-mobile">
-          <div class="column">
-            <a class="button has-action-shadow has-text-weight-bold agent-download-button has-text-white" href="https://sg-agent-installer.s3.us-east-2.amazonaws.com/sg-agent-installer-win-x64.zip">
-              <div class="columns has-text-weight-semibold is-flex is-align-items-center is-justify-content-left">
-                <figure class="image is-24x24 mr-4">
-                  <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/3/34/Windows_logo_-_2012_derivative.svg/25px-Windows_logo_-_2012_derivative.svg.png">
-                </figure>
-                <span class="is-size-4 is-flex-shrink-0">Download Windows x64</span>
-              </div>
-            </a>
-          </div>
-          <div class="column">
-            <a class="button has-action-shadow has-text-weight-bold agent-download-button has-text-white" href="https://sg-agent-installer.s3.us-east-2.amazonaws.com/sg-agent-installer-linux.gz">
-              <div class="columns has-text-weight-semibold is-flex is-align-items-center is-justify-content-left">
-                <figure class="image is-24x24 mr-4">
-                  <img src="https://upload.wikimedia.org/wikipedia/commons/a/ab/Linux_Logo_in_Linux_Libertine_Font.svg">
-                </figure>
-                <span class="is-size-4 is-flex-shrink-0">Download Linux</span>
-              </div>
-            </a>
-          </div>
-          <div class="column">
-            <a class="button has-action-shadow has-text-weight-bold agent-download-button has-text-white" href="https://sg-agent-installer.s3.us-east-2.amazonaws.com/sg-agent-installer-mac.gz">
-              <div class="columns has-text-weight-semibold is-flex is-align-items-center is-justify-content-left">
-                <figure class="image is-24x24 mr-4 mb-2">
-                  <img src="https://upload.wikimedia.org/wikipedia/commons/f/fa/Apple_logo_black.svg">
-                </figure>
-                <span class="is-size-4 is-flex-shrink-0">Download Mac</span>
-              </div>
-            </a>
-          </div>
+    <section class="sg-container-px py-6">
+      <div class="columns mb-5 has-text-white has-text-weight-bold download-section">
+        <div class="column">
+          <a class="button is-primary py-4 icon-text has-button-shadow" href="https://sg-agent-installer.s3.us-east-2.amazonaws.com/sg-agent-installer-win-x64.zip">
+            <span class="icon mr-3">
+              <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/3/34/Windows_logo_-_2012_derivative.svg/25px-Windows_logo_-_2012_derivative.svg.png">
+            </span>
+            <span class="is-size-4 is-size-5-touch">Download Windows x64</span>
+          </a>
+        </div>
+        <div class="column">
+          <a class="button is-primary py-4 icon-text has-button-shadow" href="https://sg-agent-installer.s3.us-east-2.amazonaws.com/sg-agent-installer-linux.gz">
+            <span class="icon mr-3">
+              <img src="https://upload.wikimedia.org/wikipedia/commons/a/ab/Linux_Logo_in_Linux_Libertine_Font.svg">
+            </span>
+            <span class="is-size-4 is-size-5-touch">Download Linux</span>
+          </a>
+        </div>
+        <div class="column">
+          <a class="button is-primary py-4 icon-text has-button-shadow" href="https://sg-agent-installer.s3.us-east-2.amazonaws.com/sg-agent-installer-mac.gz">
+            <span class="icon mr-3">
+              <img src="https://upload.wikimedia.org/wikipedia/commons/f/fa/Apple_logo_black.svg" />
+            </span>
+            <span class="is-size-4 is-size-5-touch">Download Mac</span>
+          </a>
         </div>
       </div>
-    </section>
-    <section class="is-medium mt-5 mx-6">
-      <div class="has-container-margin is-size-5-desktop is-size-6-touch">
+
+      <div class="is-size-5-desktop is-size-6-touch">
         <h2 class="subtitle">
           SaaSGlue executes your scripts on your devices via the SaaSGlue Agent, a lightweight application that you can install on your Windows, Linux & Mac devices. The SaaSGlue Agent Installer is a command line tool to install the agent.<br><br>
           Before installing the agent you’ll need an agent access key. Click <router-link to="/accessKeys">here</router-link> if you don’t already have one.
@@ -486,149 +475,24 @@ export default class DownloadAgent extends Vue {
 
 
 <style scoped lang="scss">
-  @import 'bulma/sass/utilities/mixins';
-
   .code-snippet {
-    display:inline-block;
-    width: 1250px;
-    border-style: solid;
-    border-width: 1px;
-    border-color: lightgray;
+    display: block;
+    white-space: nowrap;
+    border: 1px solid lightgray;
+    overflow: auto;
   }
 
   .has-background-deepskyblue {
       background: linear-gradient(to right, #3a7bd5, #00d2ff);
   }
 
-  .agent-download-button {
-    background: linear-gradient(to right, #00d2ff, #24a5ee);
-    width: 350px;
-    height: 70px;
-  }
-
-  .has-action-shadow {
-      box-shadow: 0 18px 20px -15px RGB(0 0 0 / 40%);
+  .download-section .button {
+    width: 100%;
+    max-width: 350px;
+    height: auto;
   }
 
   .subtitle {
       line-height: 26px;
   }
-
-  .has-border-radius-5 {
-      border-radius: 5px;
-  }
-
-  .tagline-container {
-      .title {
-          letter-spacing: 5px;
-      }
-
-      .title-shift {
-          margin-left: 81px;
-      }
-  }
-
-  .is-width-50 {
-      width: 50%;
-  }
-
-  .is-width-75 {
-      width: 75%;
-  }
-
-  .prefect-logo {
-      width: 35%;
-  }
-
-  .fade-right-enter-active {
-      transition: transform 1s ease-out, opacity 1s ease-out;
-      transform: translateX(10%);
-      opacity: 0;
-  }
-
-  .fade-right-enter-to {
-      transform: translateX(0);
-      opacity: 1;
-  }
-
-  .fade-top-enter-active {
-      transition: transform .3s ease-out, opacity .3s ease-out;
-      transform: translateY(-10%);
-      opacity: 0;
-  }
-
-  .fade-top-enter-to {
-      transform: translateY(0);
-      opacity: 1;
-  }
-
-  .sign-up-box {
-      background: linear-gradient(105deg, #2edaff, #0085ff);
-      box-shadow: 0 79px 68px -47px RGB(0 0 0 / 43%);
-  }
-
-  .has-icon-muted {
-      filter: grayscale(1);
-      opacity: .3;
-  }
-
-  .has-border-success {
-      border: 1px solid #48c78e;
-  }
-
-  .tool-link {
-      width: 100%;
-      height: 100%;
-  }
-
-  @include desktop {
-      .tool-logo {
-          transition: filter .3s linear;
-          filter: grayscale(1) opacity(.5);
-
-          &:hover {
-              filter: grayscale(0) opacity(1);
-          }
-      }
-  }
-
-  @include touch {
-      .tagline-container .title-shift {
-          margin-left: 57px;
-      }
-  }
-
-  @include mobile {
-      .tagline-container .buttons {
-          justify-content: center;
-      }
-
-      .field.try-today-controls {
-          flex-direction: column;
-
-          .control.input-control {
-              margin: 0 0 1rem 0;
-          }
-      }
-  }
-
-.elementor-button-content-wrapper {
-      display: -webkit-box;
-    display: -ms-flexbox;
-    display: flex;
-    -webkit-box-pack: center;
-    -ms-flex-pack: center;
-    justify-content: center;
-}
-
-  .has-container-margin {
-    margin-left: 120px;
-  }
-
-    // 00BFFF deep sky blue
-    // CCE8F3 medium blue
-    // #EDFAFF page light blue
-    // 8D8D8D .5 (border color)
-    // ABA5A5 lighter border color
-    // D9D1D1    (inner whitish color)
 </style>

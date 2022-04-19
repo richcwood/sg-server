@@ -1,42 +1,39 @@
 <template>
-  <div>
-    <div style="font-weight: 700; font-size: 32px; margin-top: 20px; margin-bottom: 20px; margin-left: 100px;">
-        Invite Teammates
-    </div>
-    <div v-if="showSuccessMessage" style="margin-left: 130px;">
+  <div class="sg-container-p">
+    <h2 class="is-size-4 subtitle has-text-weight-bold">Invite Teammates</h2>
+    <div v-if="showSuccessMessage" class="ml-5">
       Invitations have been sent to your team members.
     </div>
-    <div v-else style="display: flex; flex-direction: column; margin-left: 130px;">
-      <div style="margin-bottom: 40px;">
-        Team invite link: <a @click.prevent="onCopyInviteLinkClicked">Copy to clipboard</a>
+    <div v-else class="is-flex is-flex-direction-column ml-5">
+      <div class="block">
+        Team invite link: <a href="#" @click.prevent="onCopyInviteLinkClicked">Copy to clipboard</a>
         <input id="inviteLinkInput" :hidden="!isCopyingTeamInviteLink" style="opacity: .01;" type="text" v-model="selectedTeamInviteLink">
-        <span :hidden="!showCopyLinkSuccess" style="margin-left: 10px;">Invite link copied</span>
-        <br><br>
+        <span :hidden="!showCopyLinkSuccess" class="ml-3">Invite link copied</span>
+        <br>
         Careful! Anyone who has this link can join your team!
       </div>
-      
-      <div style="font-weight: 700;">
-        Who else is on your team?
-      </div>
-      
-      <validation-observer ref="emailValidationObserver">
-        <div v-for="teammate in teammates" v-bind:key="teammate.id">
-          <validation-provider name="Team Email Address" rules="email" v-slot="{ errors }"> 
-            <input class="input" style="margin-top: 15px; width: 250px;" type="text" placeholder="team_member@something.com" v-model="teammate.email">
-            <template v-if="errors && errors.length > 0">
-              <br>
-              <span class="message validation-error is-danger">{{ errors[0] }}</span>
-            </template>
-          </validation-provider>
+
+      <p class="has-text-weight-bold block">Who else is on your team?</p>
+
+      <validation-observer tag="div" style="width: 250px" class="mb-3" ref="emailValidationObserver" v-slot="{ invalid }">
+        <validation-provider v-for="teammate in teammates" :key="teammate.id" tag="div" class="field" name="Team Email Address" rules="email" v-slot="{ errors }"> 
+          <div class="control">
+            <input class="input" type="email" placeholder="team_member@something.com" v-model="teammate.email">
+          </div>
+          <p v-if="errors && errors.length > 0" class="help is-danger">{{ errors[0] }}</p>
+        </validation-provider>
+
+        <div class="field">
+            <div class="control has-text-right">
+            <a href="#" class="button is-ghost pr-0" @click.prevent="onAddMoreTeammatesClicked">+ add more teammates</a>
+          </div>
+        </div>
+        <div class="field">
+          <div class="control has-text-right">
+            <button class="button is-primary" :disabled="invalid" @click="onAddTeammatesClicked">Add Teammates</button>
+          </div>
         </div>
       </validation-observer>
-
-      <div style="margin-left:80px; margin-top:10px;">
-        <a href="" @click.prevent="onAddMoreTeammatesClicked">+ add more teammates</a>
-      </div>
-      <div style="margin-right:100px; margin-top:20px;">
-        <button class="button is-primary" @click="onAddTeammatesClicked">Add Teammates</button>
-      </div>
     </div>
   </div>
 </template>

@@ -1,8 +1,6 @@
 <template>
-  <div class="main" style="margin-left: 36px; margin-right: 12px;">
-    <div style="font-size: 24px; margin-bottom: 16px;">
-      General Team Settings
-    </div>
+  <div class="sg-container-p">
+    <h1 class="title">General Team Settings</h1>
     <table class="table">
       <tr class="tr">
         <td class="td">
@@ -72,9 +70,9 @@
         <td class="td">
           &nbsp;
         </td>
-        <td class="td">
-          <button class="button is-primary" :disabled="!hasTeamCopyChanged" @click="onSaveClicked">Save</button>
-          <button class="button button-spaced" :disabled="!hasTeamCopyChanged" @click="onCancelClicked">Cancel</button>
+        <td class="buttons">
+          <button class="button is-primary" :class="{'is-loading': isSaving}" :disabled="!hasTeamCopyChanged" @click="onSaveClicked">Save</button>
+          <button class="button" :disabled="!hasTeamCopyChanged" @click="onCancelClicked">Cancel</button>
         </td>
       </tr>
 
@@ -136,7 +134,8 @@ import axios from 'axios';
   components: { },
   props: { },
 })
-export default class Settings extends Vue { 
+export default class Settings extends Vue {
+  private isSaving = false;
 
   @BindStoreModel({storeType: StoreType.SecurityStore, selectedModelName: 'user'})
   private user: any;
@@ -210,6 +209,7 @@ export default class Settings extends Vue {
 
   private async onSaveClicked(){
     try {
+      this.isSaving = true;
 
       await this.$store.dispatch(`${StoreType.TeamStore}/save`, {
         id: this.selectedTeamCopy.id,
@@ -222,10 +222,11 @@ export default class Settings extends Vue {
         billing_email: this.selectedTeamCopy.billing_email,
       });
       this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Updated team settings`, AlertPlacement.FOOTER));     
-    }
-    catch(err){
+    } catch(err) {
       console.error(err);
       showErrors('Unable to save team settings', err);
+    } finally {
+      this.isSaving = false;
     }
   }
 }
@@ -241,9 +242,4 @@ export default class Settings extends Vue {
   td {
     border-width: 0 !important;
   }
-
-  .button-spaced {
-    margin-left: 12px;
-  }
-
 </style>

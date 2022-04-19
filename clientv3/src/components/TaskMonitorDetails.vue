@@ -77,14 +77,14 @@
       </table>
     </modal>
 
-    <table class="table" style="margin-left: 10px;">
-      <thead class="thead" style="font-weight: 700;">
-        <td class="td">Agent Name</td>
-        <td class="td">Status</td>
-        <td class="td">Failure</td>
-        <td class="td">Actions</td>
-        <td class="td">Started</td>
-        <td class="td">Completed</td>
+    <table class="table">
+      <thead>
+        <th>Agent Name</th>
+        <th>Status</th>
+        <th>Failure</th>
+        <th>Actions</th>
+        <th>Started</th>
+        <th>Completed</th>
       </thead>
 
       <tbody class="tbody">

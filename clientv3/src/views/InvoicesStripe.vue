@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="sg-container-p">
     <!-- modals -->
     <modal name="add-payment-modal" :classes="'round-popup'" :width="650" :height="325">
       <validation-observer ref="addPaymentValidationObserver">
@@ -43,167 +43,154 @@
 
 
 
-    <div class="main" style="margin-left: 36px; margin-right: 12px;">
-      <div>
-        <button class="button is-primary" @click="onAddCardClicked" style="margin-left: 15px; margin-bottom: 15px;">Add Credit Card</button>
+    <div class="field">
+      <div class="control">
+        <button class="button is-primary" @click="onAddCardClicked">Add Credit Card</button>
       </div>
-
-      <table class="table">
-        <tr class="tr">
-          <td class="td">
-            <span style="font-size: 24px;">Payment Methods</span>
-            <div v-if="paymentMethods.length === 0">
-              No payment methods added yet
-            </div>
-            <table v-else class="table">
-              <tr class="tr">
-                <td class="td">
-                  Name
-                </td>
-                <td class="td">
-                  Card Brand
-                </td>
-                <td class="td">
-                  Is Default Card
-                </td>
-                <td class="td">
-                  Delete
-                </td>
-              </tr>
-              <tr class="tr" v-for="paymentMethod in paymentMethods" :key="paymentMethod.id">
-                <td class="td">
-                  {{paymentMethod.name}}
-                </td>
-                <td class="td">
-                  {{paymentMethod.cardBrand}}
-                </td>
-                <td class="td">
-                  <span v-if="isDefaultPaymentMethod(paymentMethod)" style="color: green;">Default</span>
-                  <button v-else class="button vertical-aligned-center" @click="makeDefaultPaymentMethod(paymentMethod)">Make Default</button>
-                </td>
-                <td class="td">
-                  <button class="button vertical-aligned-center" @click="onDeletePaymentMethodClicked(paymentMethod)">Delete Method</button>
-                </td>
-              </tr>
-            </table>
-          </td>
-        </tr>
-
-        <tr class="tr">
-          <td class="td">
-            <span style="font-size: 24px;">Payments Due</span>
-            <div v-if="unPaidInvoices.length === 0">
-              No unpaid invoices
-            </div>
-            <table v-else class="table">
-              <tr class="tr">
-                <td class="td">
-                  Invoice Date
-                </td>
-                <td class="td">
-                  Invoice ID
-                </td>
-                <td class="td">
-                  Status
-                </td>
-                <td class="td">
-                  Amount Due
-                </td>
-                <td class="td">
-                  Amount Paid
-                </td>
-                <td class="td">
-                  
-                </td>
-              </tr>
-              <tr class="tr" v-for="invoice in unPaidInvoices" v-bind:key="invoice.id">
-                <td class="td">
-                  {{momentToStringV3(invoice.endDate)}}
-                </td>
-                <td class="td">
-                  {{invoice.id}}
-                </td>
-                <td class="td">
-                  {{enumKeyToPretty(InvoiceStatus, invoice.status)}}
-                </td>
-                <td class="td">
-                  {{(invoice.billAmount/100).toFixed(2)}} 
-                </td>
-                <td class="td">
-                  {{(invoice.paidAmount/100).toFixed(2)}}
-                </td>
-                <td class="td">
-                  <invoice-payment :invoice="invoice"></invoice-payment>
-                </td>
-              </tr>
-            </table>
-          </td>
-        </tr>
-
-        <tr class="tr">
-          <td class="td">
-            <span style="font-size: 24px;">Payments History</span>
-            <div v-if="paidInvoices.length === 0">
-              No previously paid invoices
-            </div>
-            <table v-else class="table">
-              <tr class="tr">
-                <td class="td">
-                  Payment Date
-                </td>
-                <td class="td">
-                  Invoice ID
-                </td>
-                <td class="td">
-                  Payment Instrument
-                </td>
-                <td class="td">
-                  Transaction Type
-                </td>
-                <td class="td">
-                  Payment Method
-                </td>
-                <td class="td">
-                  Transaction Amount
-                </td>
-                <td class="td">
-                  Status
-                </td>
-              </tr>
-              <template v-for="invoice in paidInvoices">
-                <tr class="tr" v-for="transaction in getTransactionsByInvoice(invoice)" v-bind:key="transaction.id">
-                  <td class="td">
-                    {{momentToStringV3(transaction.createdAt)}}
-                  </td>
-                  <td class="td">
-                    <a @click.prevent="onDownloadInvoiceClicked(invoice)">{{invoice.id}}</a>
-                  </td>
-                  <td class="td">
-                    {{transaction.paymentInstrument}}
-                  </td>
-                  <td class="td">
-                    {{transaction.transactionType}}
-                  </td>
-                  <td class="td">
-                    {{transaction.paymentInstrumentType}}
-                  </td>
-                  <td class="td">
-                    {{transaction.amount}}
-                  </td>
-                  <td class="td">
-                    {{transaction.status}}
-                  </td>
-                </tr>
-              </template>
-            </table>
-          </td>
-        </tr>
-
-      </table>
     </div>
 
+    <h2 class="subtitle is-4 mb-1 has-text-weight-bold">Payment Methods</h2>
+    <p v-if="paymentMethods.length === 0" class="is-size-5 block">No payment methods added yet</p>
+    <table v-else class="table">
+      <thead>
+        <tr>
+          <th>
+            Name
+          </th>
+          <th>
+            Card Brand
+          </th>
+          <th>
+            Is Default Card
+          </th>
+          <th>
+            Delete
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr v-for="paymentMethod in paymentMethods" :key="paymentMethod.id">
+          <td>
+            {{paymentMethod.name}}
+          </td>
+          <td>
+            {{paymentMethod.cardBrand}}
+          </td>
+          <td>
+            <span v-if="isDefaultPaymentMethod(paymentMethod)" style="color: green;">Default</span>
+            <button v-else class="button vertical-aligned-center" @click="makeDefaultPaymentMethod(paymentMethod)">Make Default</button>
+          </td>
+          <td>
+            <button class="button vertical-aligned-center" @click="onDeletePaymentMethodClicked(paymentMethod)">Delete Method</button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h2 class="subtitle is-4 mb-1 has-text-weight-bold">Payments Due</h2>
+    <p v-if="unPaidInvoices.length === 0" class="is-size-5 block">No unpaid invoices</p>
+    <table v-else class="table">
+      <thead>
+        <tr>
+          <th>
+            Invoice Date
+          </th>
+          <th>
+            Invoice ID
+          </th>
+          <th>
+            Status
+          </th>
+          <th>
+            Amount Due
+          </th>
+          <th colspan="2">
+            Amount Paid
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr v-for="invoice in unPaidInvoices" :key="invoice.id">
+          <td>
+            {{momentToStringV3(invoice.endDate)}}
+          </td>
+          <td>
+            {{invoice.id}}
+          </td>
+          <td>
+            {{enumKeyToPretty(InvoiceStatus, invoice.status)}}
+          </td>
+          <td>
+            {{(invoice.billAmount/100).toFixed(2)}} 
+          </td>
+          <td>
+            {{(invoice.paidAmount/100).toFixed(2)}}
+          </td>
+          <td>
+            <invoice-payment :invoice="invoice"></invoice-payment>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h2 class="subtitle is-4 mb-1 has-text-weight-bold">Payments History</h2>
+    <p v-if="unPaidInvoices.length === 0" class="is-size-5 block">No previously paid invoices</p>
+    <table v-else class="table">
+      <thead>
+        <tr>
+          <th>
+            Payment Date
+          </th>
+          <th>
+            Invoice ID
+          </th>
+          <th>
+            Payment Instrument
+          </th>
+          <th>
+            Transaction Type
+          </th>
+          <th>
+            Payment Method
+          </th>
+          <th>
+            Transaction Amount
+          </th>
+          <th>
+            Status
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        <template v-for="invoice in paidInvoices">
+          <tr v-for="transaction in getTransactionsByInvoice(invoice)" v-bind:key="transaction.id">
+            <td>
+              {{momentToStringV3(transaction.createdAt)}}
+            </td>
+            <td>
+              <a @click.prevent="onDownloadInvoiceClicked(invoice)">{{invoice.id}}</a>
+            </td>
+            <td>
+              {{transaction.paymentInstrument}}
+            </td>
+            <td>
+              {{transaction.transactionType}}
+            </td>
+            <td>
+              {{transaction.paymentInstrumentType}}
+            </td>
+            <td>
+              {{transaction.amount}}
+            </td>
+            <td>
+              {{transaction.status}}
+            </td>
+          </tr>
+        </template>
+      </tbody>
+    </table>
   </div>
-</template> 
+</template>
 
 <script lang="ts">
 import { Component, Vue, Watch } from 'vue-property-decorator';

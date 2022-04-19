@@ -1,29 +1,31 @@
  <template>
-  <div class="main" style="margin-left: 36px; margin-right: 12px;">
+  <div class="sg-container-p">
 
     <!-- Modals -->
     <modal name="create-jobdef-modal" :classes="'round-popup'" :width="400" :height="200">
       <validation-observer ref="newJobValidationObserver">
         <table class="table" width="100%" height="100%">
           <tbody class="tbody">
-            <tr class="tr">
-              <td class="td"></td>
-              <td class="td">Create a new job</td>
+            <tr>
+              <td></td>
+              <td>Create a new job</td>
             </tr>
-            <tr class="tr">
-              <td class="td">Job Name</td>
-              <td class="td">
+            <tr>
+              <td>Job Name</td>
+              <td>
                 <validation-provider name="Job Name" rules="required|object-name" v-slot="{ errors }">
                   <input class="input" id="create-jobdef-modal-autofocus" type="text" v-on:keyup.enter="saveNewJobDef" autofocus v-model="newJobName" placeholder="Enter the new job name">
                   <div v-if="errors && errors.length > 0" class="message validation-error is-danger">{{ errors[0] }}</div>
                 </validation-provider>
               </td>
             </tr>
-            <tr class="tr">
-              <td class="td"></td>
-              <td class="td">
-                <button class="button is-primary" @click="saveNewJobDef">Create new job</button> 
-                <button class="button button-spaced" @click="cancelCreateNewJobDef">Cancel</button>
+            <tr>
+              <td></td>
+              <td>
+                <div class="buttons">
+                  <button class="button is-primary" @click="saveNewJobDef">Create new job</button> 
+                  <button class="button" @click="cancelCreateNewJobDef">Cancel</button>
+                </div>
               </td>
             </tr>
           </tbody> 
@@ -31,28 +33,45 @@
       </validation-observer>
     </modal>
 
-    <modal name="export-jobdefs-modal" :classes="'round-popup'" :width="400" :height="150">
-      <validation-observer ref="exportJobDefsValidationObserver">
-        <table class="table" width="100%" height="100%">
-          <tbody class="tbody">
-            <tr class="tr">
-              <td class="td">Export file name</td>
-              <td class="td">
-                <validation-provider name="Export File Name" rules="required" v-slot="{ errors }">
-                  <input class="input" id="export-jobdefs-modal-autofocus" type="text"  v-model="exportJobDefsFileName" placeholder="Enter the export file name">
-                  <div v-if="errors && errors.length > 0" class="message validation-error is-danger">{{ errors[0] }}</div>
-                </validation-provider>
-              </td>
-            </tr>
-            <tr class="tr">
-              <td class="td"></td>
-              <td class="td">
-                <button class="button is-primary" @click="exportJobDefs">Export jobs</button> 
-                <button class="button button-spaced" @click="cancelExportJobDefs">Cancel</button>
-              </td>
-            </tr>
-          </tbody> 
-        </table>
+    <modal name="export-jobdefs-modal" :width="400" height="auto">
+      <validation-observer tag="div" class="p-3" ref="exportJobDefsValidationObserver" v-slot="{ invalid }">
+        <div class="field is-horizontal">
+          <div class="field-label is-normal">
+            <label class="label text-nowrap">Export file name</label>
+          </div>
+          <div class="field-body">
+            <validation-provider tag="div" class="field" name="Export File Name" rules="required" v-slot="{ errors }">
+              <div class="control">
+                <input class="input" id="export-jobdefs-modal-autofocus" type="text" v-model="exportJobDefsFileName" placeholder="Enter the export file name">
+              </div>
+              <p v-if="errors && errors.length > 0" class="help is-danger">{{ errors[0] }}</p>
+            </validation-provider>
+          </div>
+        </div>
+        <div class="table-wrapper mb-3">
+          <table class="table is-fullwidth is-striped">
+            <thead>
+              <tr>
+                <th>Job Name</th>
+              </tr>
+            </thead>
+            <validation-provider name="job" tag="tbody" rules="required_checkbox" v-slot="{ errors }">
+              <tr v-for="jobDef in filteredJobDefs" :key="jobDef.id">
+                <td>
+                  <input class="mr-3" type="checkbox" :value="jobDef.id" v-model="selectedJobDefIds" />
+                  <span>{{ jobDef.name }}</span>
+                </td>
+              </tr>
+              <tr class="white-gb" v-if="errors && errors.length > 0">
+                <p class="help is-danger">{{ errors[0] }}</p>
+              </tr>
+            </validation-provider>
+          </table>
+        </div>
+        <div class="buttons">
+          <button class="button is-primary" @click="exportJobDefs" :disabled="invalid">Export jobs</button> 
+          <button class="button" @click="cancelExportJobDefs">Cancel</button>
+        </div>
       </validation-observer>
     </modal>
 
@@ -66,7 +85,7 @@
           <input id="file_upload" class="input inputfile" style="width: 550px;" type="file" accept=".sgj" @change="onImportFilesChanged">
         </div>
         <div>&nbsp;</div>
-        <div>
+        <div class="buttons">
           <button class="button is-primary" @click="onImportJobDefs" :disabled="importFiles.length === 0 || importingJobs">
             <template v-if="importingJobs">
               Importing Jobs ...
@@ -75,7 +94,7 @@
               Import Jobs
             </template>
           </button>
-          <button class="button button-spaced" @click="onImportJobDefsClose">Close</button> 
+          <button class="button" @click="onImportJobDefsClose">Close</button>
         </div>
         <div>&nbsp;</div>
         <div style="overflow: scroll; width: 800px; height: 250px;">
@@ -88,62 +107,43 @@
 
 
 
-
+    <div class="field">
+      <div class="control has-icons-left">
+        <input class="input" type="text" v-model="filterString" placeholder="Filter by Job Name and Created By">
+        <span class="icon is-small is-left">
+          <font-awesome-icon icon="search" />
+        </span>
+      </div>
+    </div>
+    <div class="buttons">
+      <button class="button is-primary" @click="createNewJobDef">Create new job</button>
+      <button class="button" :disabled="filteredJobDefs.length === 0" @click="onExportJobDefsClicked">Export Jobs</button>
+      <button class="button" @click="onImportJobDefsClicked">Import Jobs</button>
+    </div>
 
     <!-- Job Def selection -->
-    <div>
-      <table class="table" width="100%">
-        <tbody class="tbody">
-          <tr class="tr">
-            <td class="td">
-              <span style="position: relative;">
-                <input class="input" style="padding-left: 30px;" type="text" v-model="filterString" placeholder="Filter by Job Name and Created By">
-                <font-awesome-icon icon="search" style="position: absolute; left: 10px; top: 10px; color: #dbdbdb;" />
-              </span>
-            </td>
-          </tr>
-          <tr class="tr">
-            <td class="td">
-              <!-- 460 => 920 <button class="button" @click="runTest">Test</button> -->
-              <button class="button is-primary action-create" @click="createNewJobDef">Create new job</button>
-
-              <button class="button button-spaced" :disabled="selectedJobDefIds.length === 0" @click="onExportJobDefsClicked">
-                Export Jobs {{selectedJobDefIds.length === 0 ? '' : `(${selectedJobDefIds.length})`}}
-              </button>
-              <button class="button button-spaced" @click="onImportJobDefsClicked">Import Jobs</button>
-            </td>
-          </tr>
-
-          <tr class="tr">
-            <td class="td">
-              <table class="table is-striped">
-                <thead class="thead">
-                  <tr class="tr">
-                    <td class="td col-header">Job Definition Name</td>
-                    <td class="td col-header">Created By</td>
-                    <td class="td col-header">Date Created</td>
-                    <td class="td col-header">Schedule</td>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr class="tr" v-for="jobDef in filteredJobDefs" v-bind:key="jobDef.id">
-                    <td class="td">
-                      <input type="checkbox" v-model="selectedJobDefIdsMap[jobDef.id]">
-                      <router-link class="button-spaced" :to="{name: 'jobDesigner', params: {jobId: jobDef.id}}">{{jobDef.name}}</router-link>
-                    </td>
-                    <td class="td">{{getUser(jobDef.createdBy).name}}</td>
-                    <td class="td">{{momentToStringV1(jobDef.dateCreated)}}</td>
-                    <td class="td">
-                      <a @click="onClickedScheduleLinkText(jobDef)">{{getScheduleLinkTextForJobDef(jobDef)}}</a>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
+    <table class="table is-striped">
+      <thead>
+        <tr>
+          <th>Job Definition Name</th>
+          <th>Created By</th>
+          <th>Date Created</th>
+          <th>Schedule</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr v-for="jobDef in filteredJobDefs" :key="jobDef.id">
+          <td>
+            <router-link :to="{name: 'jobDesigner', params: {jobId: jobDef.id}}">{{jobDef.name}}</router-link>
+          </td>
+          <td>{{getUser(jobDef.createdBy).name}}</td>
+          <td>{{momentToStringV1(jobDef.dateCreated)}}</td>
+          <td>
+            <a href="#" @click.prevent="onClickedScheduleLinkText(jobDef)">{{getScheduleLinkTextForJobDef(jobDef)}}</a>
+          </td>
+        </tr>
+      </tbody>
+    </table>
   </div>
 </template>
 
@@ -159,7 +159,6 @@ import { JobDef } from '../store/jobDef/types';
 import { User } from '../store/user/types';
 import { momentToStringV1 } from '../utils/DateTime';
 import { Schedule } from '../store/schedule/types';
-import _ from 'lodash';
 import axios from 'axios';
 
 @Component({
@@ -322,12 +321,7 @@ export default class JobList extends Vue {
     return this.$store.getters[`${StoreType.ScheduleStore}/getByJobDefId`](jobDef.id);
   }
 
-  private readonly selectedJobDefIdsMap = {};
-
-  private get selectedJobDefIds(){
-    return  _.keys(_.pickBy(this.selectedJobDefIdsMap));
-  }
-
+  private selectedJobDefIds = [];
   private exportJobDefsFileName = '';
 
   private onExportJobDefsClicked(){
@@ -424,21 +418,20 @@ export default class JobList extends Vue {
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped lang="scss">
-
   table {
     border-width: 0;
   }
 
-  // td {
-  //   border-width: 0 !important;
-  // }
-
-  .col-header {
-    font-weight: 700;
+  [data-modal="export-jobdefs-modal"] .v--modal-box {
+    background: #fff;
   }
 
-  .button-spaced {
-    margin-left: 12px;
-  }
+  .table-wrapper {
+    max-height: 200px;
+    overflow: auto;
 
+    .white-gb {
+      background-color: #fff !important;
+    }
+  }
 </style>
