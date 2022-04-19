@@ -1,103 +1,104 @@
  <template>
-  <div class="main" style="margin-left: 36px; margin-right: 12px;">
+  <validation-observer tag="div" class="sg-container-p" ref="alertsValidationObserver" v-slot="{ invalid }">
+    <h2 class="is-size-4 block">Email Alerts</h2>
+    <div class="field is-horizontal">
+      <div class="field-label flex-item is-normal">
+        <label class="label">Task Interrupted</label>
+      </div>
+      <div class="field-body">
+        <validation-provider tag="div" class="field" name="Task Interrupted Email Address" rules="email" v-slot="{ errors }"> 
+          <div class="control">
+            <input class="input" type="email" style="width: 400px;" v-model="selectedTeamCopy.onJobTaskInterruptedAlertEmail" placeholder="email@address.com"/>
+          </div>
+          <p v-if="errors && errors.length > 0" class="help is-danger">{{ errors[0] }}</p>
+        </validation-provider>
+      </div>
+    </div>
 
-    
+    <div class="field is-horizontal">
+      <div class="field-label flex-item is-normal">
+        <label class="label">Task Failed</label>
+      </div>
+      <div class="field-body">
+        <validation-provider tag="div" class="field" name="Task Failed Email Address" rules="email" v-slot="{ errors }"> 
+          <div class="control">
+            <input class="input" type="email" style="width: 400px;" v-model="selectedTeamCopy.onJobTaskFailAlertEmail" placeholder="email@address.com"/>
+          </div>
+          <p v-if="errors && errors.length > 0" class="help is-danger">{{ errors[0] }}</p>
+        </validation-provider>
+      </div>
+    </div>
 
-  <validation-observer ref="alertsValidationObserver">
-    <table class="table">
-      <tr class="tr">
-        <td class="td" colspan="2">
-          <span style="font-size: 24px; margin-bottom: 12px;">
-            Email Alerts
-          </span>
-        </td>
-      </tr>
-      <tr class="tr">
-        <td class="td">
-          <label class="label" style="margin-left: 20px;">Task Interrupted</label>
-        </td>
-        <td class="td">
-          <validation-provider name="Task Interrupted Email Address" rules="email" v-slot="{ errors }"> 
-            <input class="input" type="text" style="width: 400px;" v-model="selectedTeamCopy.onJobTaskInterruptedAlertEmail" placeholder="email@address.com"/>
-            <span v-if="errors && errors.length > 0" class="message validation-error is-danger">{{ errors[0] }}</span>
-          </validation-provider>
-        </td>
-      </tr>
-      <tr class="tr">
-        <td class="td">
-          <label class="label" style="margin-left: 20px;">Task Failed</label>
-        </td>
-        <td class="td">
-          <validation-provider name="Task Failed Email Address" rules="email" v-slot="{ errors }"> 
-            <input class="input" type="text" style="width: 400px;" v-model="selectedTeamCopy.onJobTaskFailAlertEmail" placeholder="email@address.com"/>
-            <span v-if="errors && errors.length > 0" class="message validation-error is-danger">{{ errors[0] }}</span>
-          </validation-provider>
-        </td>
-      </tr>
-      <tr class="tr">
-        <td class="td">
-          <label class="label" style="margin-left: 20px;">Job Complete</label>
-        </td>
-        <td class="td">
-          <validation-provider name="Job Complete Email Address" rules="email" v-slot="{ errors }"> 
-            <input class="input" type="text" style="width: 400px;" v-model="selectedTeamCopy.onJobCompleteAlertEmail" placeholder="email@address.com"/>
-            <span v-if="errors && errors.length > 0" class="message validation-error is-danger">{{ errors[0] }}</span>
-          </validation-provider>
-        </td>
-      </tr>
+    <div class="field is-horizontal">
+      <div class="field-label flex-item is-normal">
+        <label class="label">Job Complete</label>
+      </div>
+      <div class="field-body">
+        <validation-provider tag="div" class="field" name="Job Complete Email Address" rules="email" v-slot="{ errors }"> 
+          <div class="control">
+            <input class="input" type="email" style="width: 400px;" v-model="selectedTeamCopy.onJobCompleteAlertEmail" placeholder="email@address.com"/>
+          </div>
+          <p v-if="errors && errors.length > 0" class="help is-danger">{{ errors[0] }}</p>
+        </validation-provider>
+      </div>
+    </div>
 
-      <tr class="tr">
-        <td class="td" colspan="2">
-          <span style="font-size: 24px; margin-bottom: 12px;">
-            Slack Alerts
-          </span>
-        </td>
-      </tr>
-      <tr class="tr">
-        <td class="td">
-          <label class="label" style="margin-left: 20px;">Task Interrupted</label>
-        </td>
-        <td class="td">
-          <validation-provider name="Task Interrupted Slack Url" rules="url" v-slot="{ errors }"> 
-            <input class="input" type="text" style="width: 400px;" v-model="selectedTeamCopy.onJobTaskInterruptedAlertSlackURL" placeholder="https://slack.com"/>
-            <span v-if="errors && errors.length > 0" class="message validation-error is-danger">{{ errors[0] }}</span>
-          </validation-provider>
-        </td>
-      </tr>
-      <tr class="tr">
-        <td class="td">
-          <label class="label" style="margin-left: 20px;">Task Failed</label>
-        </td>
-        <td class="td">
-          <validation-provider name="Task Failed Slack Url" rules="url" v-slot="{ errors }"> 
-            <input class="input" type="text" style="width: 400px;" v-model="selectedTeamCopy.onJobTaskFailAlertSlackURL" placeholder="https://slack.com"/>
-            <span v-if="errors && errors.length > 0" class="message validation-error is-danger">{{ errors[0] }}</span>
-          </validation-provider>
-        </td>
-      </tr>
-      <tr class="tr">
-        <td class="td">
-          <label class="label" style="margin-left: 20px;">Job Complete</label>
-        </td>
-        <td class="td">
-          <validation-provider name="Job Complete Slack Url" rules="url" v-slot="{ errors }"> 
-            <input class="input" type="text" style="width: 400px;" v-model="selectedTeamCopy.onJobCompleteAlertSlackURL" placeholder="https://slack.com"/>
-            <span v-if="errors && errors.length > 0" class="message validation-error is-danger">{{ errors[0] }}</span>
-          </validation-provider>
-        </td>
-      </tr>
+    <h2 class="is-size-4 block">Slack Alerts</h2>
 
-      <tr class="tr">
-        <td class="td"></td>
-        <td class="td">
-          <button class="button is-primary" @click="onSaveClicked" :disabled="!hasTeamChanged">Save</button>
-          <button class="button button-spaced" @click="onCancelClicked" :disabled="!hasTeamChanged">Cancel</button>
-        </td>
-      </tr>
-    </table>
+    <div class="field is-horizontal">
+      <div class="field-label flex-item is-normal">
+        <label class="label">Task Interrupted</label>
+      </div>
+      <div class="field-body">
+        <validation-provider tag="div" class="field" name="Task Interrupted Slack Url" rules="url" v-slot="{ errors }"> 
+          <div class="control">
+            <input class="input" type="url" style="width: 400px;" v-model="selectedTeamCopy.onJobTaskInterruptedAlertSlackURL" placeholder="https://slack.com"/>
+          </div>
+          <p v-if="errors && errors.length > 0" class="help is-danger">{{ errors[0] }}</p>
+        </validation-provider>
+      </div>
+    </div>
+
+    <div class="field is-horizontal">
+      <div class="field-label flex-item is-normal">
+        <label class="label">Task Failed</label>
+      </div>
+      <div class="field-body">
+        <validation-provider tag="div" class="field" name="Task Failed Slack Url" rules="url" v-slot="{ errors }"> 
+          <div class="control">
+            <input class="input" type="url" style="width: 400px;" v-model="selectedTeamCopy.onJobTaskFailAlertSlackURL" placeholder="https://slack.com"/>
+          </div>
+          <p v-if="errors && errors.length > 0" class="help is-danger">{{ errors[0] }}</p>
+        </validation-provider>
+      </div>
+    </div>
+
+    <div class="field is-horizontal">
+      <div class="field-label flex-item is-normal">
+        <label class="label">Job Complete</label>
+      </div>
+      <div class="field-body">
+        <validation-provider tag="div" class="field" name="Job Complete Slack Url" rules="url" v-slot="{ errors }"> 
+          <div class="control">
+            <input class="input" type="url" style="width: 400px;" v-model="selectedTeamCopy.onJobCompleteAlertSlackURL" placeholder="https://slack.com"/>
+          </div>
+          <p v-if="errors && errors.length > 0" class="help is-danger">{{ errors[0] }}</p>
+        </validation-provider>
+      </div>
+    </div>
+
+    <div class="field is-horizontal">
+      <div class="field-label flex-item"></div>
+      <div class="field-body">
+        <div class="control">
+          <div class="buttons">
+            <button class="button is-primary" :class="{'is-loading': isSaving}" @click="onSaveClicked" :disabled="!hasTeamChanged && invalid">Save</button>
+            <button class="button" @click="onCancelClicked" :disabled="!hasTeamChanged">Cancel</button>
+          </div>
+        </div>
+      </div>
+    </div>
   </validation-observer>
-    
-  </div>
 </template>
 
 <script lang="ts">
@@ -121,6 +122,8 @@ export default class TeamAlerts extends Vue {
   @BindSelectedCopy({storeType: StoreType.TeamStore})
   private selectedTeamCopy!: Team;
 
+  private isSaving = false;
+
   private get hasTeamChanged(){
     return this.$store.state[StoreType.TeamStore].storeUtils.hasSelectedCopyChanged();
   } 
@@ -143,12 +146,15 @@ export default class TeamAlerts extends Vue {
         return;
       }
 
+      this.isSaving = true;
+
       await this.$store.dispatch(`${StoreType.TeamStore}/save`);
       this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Saved the team alerts`, AlertPlacement.FOOTER));
-    }
-    catch(err){
+    } catch(err){
       console.error(err);
       showErrors(`Error saving the team alerts`, err);
+    } finally {
+      this.isSaving = false;
     }
   }
 }
@@ -156,7 +162,6 @@ export default class TeamAlerts extends Vue {
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped lang="scss">
-
   table {
     border-width: 0;
   }
@@ -165,16 +170,9 @@ export default class TeamAlerts extends Vue {
     border-width: 0 !important;
   }
 
-  .button-spaced {
-    margin-left: 12px;
+  .flex-item {
+    flex-basis: auto;
+    flex-grow: 0;
+    width: 150px;
   }
-
-  .validation-error {
-    margin-top: 3px;
-    margin-bottom: 3px;
-    padding-left: 3px;
-    padding-right: 3px;
-    color: $danger;
-  }
-
 </style>

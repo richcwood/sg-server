@@ -1,5 +1,5 @@
 <template>
-  <div class="main" style="margin-left: 12px; margin-right: 12px;">
+  <div class="pt-5">
 
     <!-- Modals -->
     <modal name="import-cron-modal" :width="800" :height="600">
@@ -34,177 +34,187 @@
     </modal>
 
 
-
-
-
-
-    <div v-if="agents.length === 0">
-      <div style="font-size: 26px; margin-top">
+    <div v-if="agents.length === 0" class="sg-container-px">
+      <div class="is-size-4">
         There are no agents created yet. 
-        <br>
+        <br />
         Download an agent from the "Download Agent" menu and once the agent starts you will see it in this screen.
       </div>
     </div>
     <Split v-else style="height: 1000px;" direction="vertical">
       <SplitArea :size="35">
-        <table class="table">
-          <tr class="tr">
-            <td class="td" colspan="8">
-              <span style="position: relative;">
-                <input class="input" type="text" style="padding-left: 30px; width: 450px;" v-model="filterString" placeholder="Filter by Agent Name, Tags and IP Address">
-                <font-awesome-icon icon="search" style="position: absolute; left: 10px; top: 10px; color: #dbdbdb;" />
+        <div class="sg-container-px">
+          <div class="field">
+            <div class="control has-icons-left">
+              <input class="input" type="text" style="width: 450px;" v-model="filterString" placeholder="Filter by Agent Name, Tags and IP Address">
+              <span class="icon is-small is-left">
+                <font-awesome-icon icon="search" />
               </span>
-            </td>
-          </tr>
-          <tr class="tr">
-            <td class="td" colspan="3">
-              <input type="checkbox" v-model="includeInactiveAgents"/> Include inactive agents
-            </td>
-          </tr>
-          <tr class="tr">
-            <th class="th"></th>
-            <th class="th">Name</th>
-            <th class="th">Status</th>
-            <th class="th">IP Address</th>
-            <th class="th">Tags</th>
-            <th class="th">Track Stats</th>
-            <th class="th">Last Heartbeat</th>
-            <th class="th">Import Cron</th>
-          </tr>
-          <tr class="tr" v-for="agent in filteredAgents" v-bind:key="agent.id">
-            <td class="td"><input type="checkbox" v-model="agent._isSelectedInMonitor"></td>
-            <td class="td">{{agent.name}}</td>
-            <td class="td">
-              <span class="activeAgent" v-if="isAgentActive(agent)">Active</span>
-              <span v-else>Inactive</span>
-            </td>
-            <td class="td">{{agent.ipAddress}}</td>
-            <td class="td"><span v-html="tagsMapToString(agent.tags, 2)"></span></td>
-            <td class="td" style="text-align: center; padding: 10px">
-              <input type="checkbox" v-bind:value="isChecked(agent.propertyOverrides.trackSysInfo)" @change="ontrackSysInfoChanged(agent)" :checked="isChecked(agent.propertyOverrides.trackSysInfo)">
-            </td>
-            <td class="td">{{momentToStringV1(agent.lastHeartbeatTime)}}</td>
-            <td class="td"><button class="button" :disabled="!agent.cron" @click="onImportCronClicked(agent)">Import</button></td>
-          </tr>
-        </table>
+            </div>
+          </div>
+          <div class="field">
+            <div class="control">
+              <label class="checkbox">
+                <input type="checkbox" v-model="includeInactiveAgents"/> Include inactive agents
+              </label>
+            </div>
+          </div>
+
+          <table class="table">
+            <tr>
+              <th colspan="2">Name</th>
+              <th>Status</th>
+              <th>IP Address</th>
+              <th>Tags</th>
+              <th>Track Stats</th>
+              <th>Last Heartbeat</th>
+              <th>Import Cron</th>
+            </tr>
+            <tr v-for="agent in filteredAgents" :key="agent.id">
+              <td>
+                <label class="checkbox">
+                  <input type="checkbox" v-model="agent._isSelectedInMonitor">
+                </label>
+              </td>
+              <td>{{agent.name}}</td>
+              <td>
+                <span class="activeAgent" v-if="isAgentActive(agent)">Active</span>
+                <span v-else>Inactive</span>
+              </td>
+              <td>{{agent.ipAddress}}</td>
+              <td><span v-html="tagsMapToString(agent.tags, 2)"></span></td>
+              <td class="has-text-centered">
+                <label class="checkbox">
+                  <input type="checkbox" :value="isChecked(agent.propertyOverrides.trackSysInfo)" @change="ontrackSysInfoChanged(agent)" :checked="isChecked(agent.propertyOverrides.trackSysInfo)">
+                </label>
+              </td>
+              <td>{{momentToStringV1(agent.lastHeartbeatTime)}}</td>
+              <td class="pt-0">
+                <button class="button" :disabled="!agent.cron" @click="onImportCronClicked(agent)">Import</button>
+              </td>
+            </tr>
+          </table>
+        </div>
       </SplitArea>
       <SplitArea :size="65">
-        <div>
-          <tabs>
-            <tab title="Settings">
-              <validation-observer ref="agentSettingsValidationObserver">
-                <table class="table" style="width: 575px; margin-top: 10px;">
-                  <tr class="tr">
-                    <td class="td">
-                      Agent name
-                    </td>
-                    <td class="td">
-                      <validation-provider name="Agent Name" rules="agent-name" v-slot="{ errors }">
-                        <input class="input" type="text" style="width: 300px; margin-left: 10px;" v-model="selectedAgentName" :disabled="selectedAgents.length !== 1"/>
-                        <div v-if="errors && errors.length > 0" class="message validation-error is-danger">{{ errors[0] }}</div>
-                      </validation-provider>
-                    </td>
-                  </tr>
-                  <tr class="tr">
-                    <td class="td">
-                      Max Active Tasks
-                    </td>
-                    <td class="td">
-                      <validation-provider name="Max Active Tasks" rules="agent-positiveNumber" v-slot="{ errors }">
-                        <input class="input" type="text" style="width: 300px; margin-left: 10px;" v-model="selectedMaxActiveTasks" :disabled="selectedAgents.length === 0"/>
-                        <div v-if="errors && errors.length > 0" class="message validation-error is-danger">{{ errors[0] }}</div>
-                      </validation-provider>
-                    </td>
-                  </tr>
-                  <tr class="tr">
-                    <td class="td">
-                      Handle General Tasks
-                    </td>
-                    <td class="td">
-                      <input type="checkbox" style="margin-left: 10px;" v-model="selectedHandleGeneralTasks" :disabled="selectedAgents.length === 0"/>
-                    </td>
-                  </tr>
-                  <tr class="tr">
-                    <td class="td">
-                      Inactive Agent Timeout (ms)
-                    </td>
-                    <td class="td">
-                      <validation-provider name="Inactive Agent Timeout(ms)" rules="agent-positiveNumber" v-slot="{ errors }">
-                        <input class="input" type="text" style="width: 300px; margin-left: 10px;" v-model="selectedInactiveAgentTimeout" :disabled="selectedAgents.length === 0"/>
-                        <div v-if="errors && errors.length > 0" class="message validation-error is-danger">{{ errors[0] }}</div>
-                      </validation-provider>
-                    </td>
-                  </tr>
-                  <tr class="tr">
-                    <td class="td">
-                      Inactive Agent Job
-                    </td>
-                    <td class="td">
-                      <job-def-search :jobDefId="selectedInactiveAgentJobDefId" @jobDefPicked="onJobDefPicked" :disabled="selectedAgents.length === 0"></job-def-search>
-                    </td>
-                  </tr>
-                  <tr class="tr">
-                    <td class="td">
-                      Inactive Job Vars
-                    </td>
-                    <td class="td">
-                      <validation-provider name="RuntimeVars" rules="variable-map" v-slot="{ errors }">
-                        <input class="input" 
-                               type="text" 
-                               style="width: 300px; margin-left: 10px;" 
-                               v-model="selectedInactiveAgentJobDefRuntimeVars" 
-                               @change="selectedInactiveAgentJobDefRuntimeVarsChanged"
-                               :disabled="selectedAgents.length === 0" 
-                               placeholder="key=val,key=val"/>
-                        <div v-if="errors && errors.length > 0" class="message validation-error is-danger">{{ errors[0] }}</div>
-                      </validation-provider>
-                    </td>
-                  </tr>
-                  <tr class="tr">
-                    <td class="td">
-                    </td>
-                    <td class="td">
-                      <button class="button is-primary" @click="onSaveSettingsClicked" :disabled="selectedAgents.length === 0">Save</button>
-                      <button class="button" style="margin-left: 12px;" @click="onCancelSettingsClicked" :disabled="selectedAgents.length === 0">Cancel</button>
-                    </td>
-                  </tr>
-                </table>
-              </validation-observer>
-            </tab>
-            <tab title="System Information">
-              System information for the selected agent (nothing if multiple agents selected)
-              <pre>{{((selectedAgent && selectedAgent.sysInfo) ? selectedAgent.sysInfo : '')}}</pre>
-            </tab>
-            <tab title="Tags">
-              <br>
-              <div v-if="selectedAgents.length === 0">
-                No agents selected
-              </div>
-              <table v-else class="table">
-                <tr class="tr" v-if="selectedAgentTags.length === 0">
-                  <td class="td" colspan="2">
-                    No common tags for selected agents
-                  </td>
-                </tr>
-                <tr class="tr" v-for="tag in selectedAgentTags" v-bind:key="tag">
-                  <td class="td">{{tag}}</td>
-                  <td class="td"><a @click.prevent="onDeleteTagClicked(tag)">Delete</a></td>
-                </tr>
-                <tr class="tr"><td class="td" colspan="2"></td></tr>
+        <tabs class="mt-2">
+          <tab title="Settings">
+            <validation-observer tag="div" class="sg-container-px" ref="agentSettingsValidationObserver">
+              <table class="table" style="width: 575px; margin-top: 10px;">
                 <tr class="tr">
                   <td class="td">
-                    <input class="input" type="text" style="width: 125px;" v-model="newTagKey" placeholder="key"/>
-                    <span style="font-weight: 700; margin-left: 4px; margin-right: 4px;">=</span>
-                    <input class="input" type="text" style="width: 125px;" v-model="newTagValue" placeholder="value"/>
+                    Agent name
                   </td>
                   <td class="td">
+                    <validation-provider name="Agent Name" rules="agent-name" v-slot="{ errors }">
+                      <input class="input" type="text" style="width: 300px; margin-left: 10px;" v-model="selectedAgentName" :disabled="selectedAgents.length !== 1"/>
+                      <div v-if="errors && errors.length > 0" class="message validation-error is-danger">{{ errors[0] }}</div>
+                    </validation-provider>
+                  </td>
+                </tr>
+                <tr class="tr">
+                  <td class="td">
+                    Max Active Tasks
+                  </td>
+                  <td class="td">
+                    <validation-provider name="Max Active Tasks" rules="agent-positiveNumber" v-slot="{ errors }">
+                      <input class="input" type="text" style="width: 300px; margin-left: 10px;" v-model="selectedMaxActiveTasks" :disabled="selectedAgents.length === 0"/>
+                      <div v-if="errors && errors.length > 0" class="message validation-error is-danger">{{ errors[0] }}</div>
+                    </validation-provider>
+                  </td>
+                </tr>
+                <tr class="tr">
+                  <td class="td">
+                    Handle General Tasks
+                  </td>
+                  <td class="td">
+                    <input type="checkbox" style="margin-left: 10px;" v-model="selectedHandleGeneralTasks" :disabled="selectedAgents.length === 0"/>
+                  </td>
+                </tr>
+                <tr class="tr">
+                  <td class="td">
+                    Inactive Agent Timeout (ms)
+                  </td>
+                  <td class="td">
+                    <validation-provider name="Inactive Agent Timeout(ms)" rules="agent-positiveNumber" v-slot="{ errors }">
+                      <input class="input" type="text" style="width: 300px; margin-left: 10px;" v-model="selectedInactiveAgentTimeout" :disabled="selectedAgents.length === 0"/>
+                      <div v-if="errors && errors.length > 0" class="message validation-error is-danger">{{ errors[0] }}</div>
+                    </validation-provider>
+                  </td>
+                </tr>
+                <tr class="tr">
+                  <td class="td">
+                    Inactive Agent Job
+                  </td>
+                  <td class="td">
+                    <job-def-search :jobDefId="selectedInactiveAgentJobDefId" @jobDefPicked="onJobDefPicked" :disabled="selectedAgents.length === 0"></job-def-search>
+                  </td>
+                </tr>
+                <tr class="tr">
+                  <td class="td">
+                    Inactive Job Vars
+                  </td>
+                  <td class="td">
+                    <validation-provider name="RuntimeVars" rules="variable-map" v-slot="{ errors }">
+                      <input class="input" 
+                              type="text" 
+                              style="width: 300px; margin-left: 10px;" 
+                              v-model="selectedInactiveAgentJobDefRuntimeVars" 
+                              @change="selectedInactiveAgentJobDefRuntimeVarsChanged"
+                              :disabled="selectedAgents.length === 0" 
+                              placeholder="key=val,key=val"/>
+                      <div v-if="errors && errors.length > 0" class="message validation-error is-danger">{{ errors[0] }}</div>
+                    </validation-provider>
+                  </td>
+                </tr>
+                <tr class="tr">
+                  <td class="td">
+                  </td>
+                  <td class="td">
+                    <button class="button is-primary" @click="onSaveSettingsClicked" :disabled="selectedAgents.length === 0">Save</button>
+                    <button class="button" style="margin-left: 12px;" @click="onCancelSettingsClicked" :disabled="selectedAgents.length === 0">Cancel</button>
+                  </td>
+                </tr>
+              </table>
+            </validation-observer>
+          </tab>
+          <tab title="System Information">
+            <div class="sg-container-px">
+              <p class="my-5">System information for the selected agent (nothing if multiple agents selected)</p>
+              <div v-if="selectedAgent">
+                <pre>{{ selectedAgent.sysInfo || '' }}</pre>
+              </div>
+              <p v-else class="is-size-4 has-text-centered">Please select an agent</p>
+            </div>
+          </tab>
+          <tab title="Tags">
+            <div class="sg-container-p">
+              <p v-if="selectedAgents.length === 0" class="is-size-4 has-text-centered">
+                No agents selected
+              </p>
+              <table v-else class="table">
+                <tr v-if="selectedAgentTags.length === 0">
+                  <td colspan="2">No common tags for selected agents</td>
+                </tr>
+                <tr v-for="tag in selectedAgentTags" :key="tag">
+                  <td>{{tag}}</td>
+                  <td><a href="#" class="button is-ghost" @click.prevent="onDeleteTagClicked(tag)">Delete</a></td>
+                </tr>
+                <tr><td colspan="2"></td></tr>
+                <tr>
+                  <td>
+                    <input class="input" type="text" style="width: 125px;" v-model="newTagKey" placeholder="key"/>
+                    <span class="has-text-weight-bold mx-3">=</span>
+                    <input class="input" type="text" style="width: 125px;" v-model="newTagValue" placeholder="value"/>
+                  </td>
+                  <td>
                     <button class="button" @click="onAddTagClicked">Add tag to selected agents</button>
                   </td>
                 </tr>
               </table>
-            </tab>
-          </tabs>
-        </div>
+            </div>
+          </tab>
+        </tabs>
       </SplitArea>
     </Split>
   </div>
@@ -813,5 +823,9 @@ export default class AgentMonitor extends Vue {
   ul {
      list-style: none;
      padding-left: .25rem;
+  }
+
+  /deep/ .vue-tablist {
+    padding: 0 64px;
   }
 </style>

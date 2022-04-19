@@ -1,33 +1,25 @@
 <template>
-  <div style="text-align: center;">
-    <section class="hero">
-      <div class="hero-body">
-        <div class="container">
-          <h1 class="title">
-            You are invited to these SaaSGlue teams
-          </h1>
-        </div>
-      </div>
-    </section>
-    <div v-if="showAcceptedGenericInviteSuccess" style="text-align: center;">
-      Success.  You've joined the team.
+  <div class="sg-container-p">
+    <h1 class="title">You are invited to these SaaSGlue teams</h1>
+    <div v-if="showAcceptedGenericInviteSuccess">
+      Success. You've joined the team.
     </div>
-    <div v-else-if="invitedTeamsCount > 0" class="invitations" style="text-align: center;"> 
+    <div v-else-if="invitedTeamsCount > 0" class="invitations"> 
       <table>
         <tr v-if="hasLocalStorageInvitedTeamToken">
-          <td class="invitation-td" style="font-weight: 700;">{{localStorageInvitedTeamName}}</td>
+          <td class="invitation-td has-text-weight-bold">{{localStorageInvitedTeamName}}</td>
           <td class="invitation-td"><button class="button is-primary" @click="onAcceptGenericInviteClicked">Accept Invitation</button></td>
         </tr>
         <div v-if="user && user.teamIdsInvited">
           <tr v-for="teamIdInvited of user.teamIdsInvited" v-bind:key="teamIdInvited._teamId">
             <td class="invitation-td">{{getTeam(teamIdInvited._teamId).name}}</td>
-            <td class="invitation-td"><button class="button" @click="onAcceptInvitationClicked(teamIdInvited._teamId)">Accept Invitation</button></td>
+            <td class="invitation-td"><button class="button is-primary" @click="onAcceptInvitationClicked(teamIdInvited._teamId)">Accept Invitation</button></td>
           </tr>
         </div>
       </table>
     </div>
-    <div v-else style="text-align: center;">
-      There are no active invitations.  <br>Contact your team lead if you need an invitation and refresh this page.
+    <div v-else>
+      There are no active invitations. <br>Contact your team lead if you need an invitation and refresh this page.
     </div>
   </div>
 </template>

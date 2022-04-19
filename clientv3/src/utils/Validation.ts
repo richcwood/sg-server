@@ -12,6 +12,14 @@ vee_validate_extend('required', {
   computesRequired: true
 });
 
+vee_validate_extend('required_checkbox', {
+  validate (value: any[]): boolean {
+    return value.length > 0;
+  },
+  message: 'At least one {_field_} must be selected.',
+  computesRequired: true
+});
+
 const initValidation = function(){
   // custom validation rules for SaaSGlue
   const objectNameRegex = /^[\.a-zA-Z0-9 _-]{3,}$/;

@@ -231,8 +231,8 @@
 
 
 
-    <div style="margin-left: 5px; margin-right: 10px;">
-      <div v-if="script" class="script-button-bar" style="margin-bottom: 10px;">
+    <div>
+      <div v-if="script" class="script-button-bar block">
         <button class="button" @click="onClickedScriptFullScreen">Full Screen</button>
         <select class="input select button-spaced" style="width: 150px;" v-model="theme">
           <option value="vs">Light</option>

@@ -1,15 +1,15 @@
 $text-color: rgb(121, 96, 81);
 $back-color: lightblue;
 $splash-color: rgb(214, 143, 12);
+$primary: deepskyblue;
 
-@import '../../node_modules/bulma/bulma.sass';
+@import 'bulma';
 @import '../../node_modules/bulma-divider/dist/css/bulma-divider.sass';
 
 :root {
   --grey-bg-color: #fafafa;
   --link-color: #5CAAED;
   --link-color-hover: #1570C0;
-  --link-color-visited: #A3CFF5;
 }
 
 .dropdown-divider {
@@ -139,29 +139,18 @@ $splash-color: rgb(214, 143, 12);
   cursor: pointer;
 }
 
-.button.is-info {
-  background-color: deepskyblue;
-}
-
-.has-text-deepskyblue {
-  color: deepskyblue;
-}
-
-.has-background-placeholder {
-  background: rgb(172,158,158);
-}
-
 .text-ellipsis {
   text-overflow: ellipsis;
   overflow: hidden;
   white-space: nowrap;
 }
 
-.text-nowrap {
-  white-space: nowrap;
+.has-button-shadow {
+  box-shadow: 0 18px 20px -15px RGB(0 0 0 / 40%);
 }
 
-a {
+a,
+a:visited {
   color: var(--link-color);
 }
 
@@ -169,6 +158,15 @@ a:hover {
   color: var(--link-color-hover);
 }
 
-a:visited {
-  color: var(--link-color-visited);
+.sg-container-p {
+  padding: 1.5rem 64px;
+}
+
+.sg-container-px {
+  padding-left: 64px;
+  padding-right: 64px;
+}
+
+.is-absolute {
+  position: absolute;
 }
