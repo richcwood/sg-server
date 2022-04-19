@@ -159,7 +159,7 @@ a:hover {
 }
 
 .sg-container-p {
-  padding: 1.5rem 64px;
+  padding: 1.5rem 64px calc(1.5rem + 25px) 64px;
 }
 
 .sg-container-px {

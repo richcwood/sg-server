@@ -83,35 +83,39 @@
         </div>
       </div>
 
-      <div class="tile is-vertical is-parent">
-        <div class="tile is-parent">
-          <div class="tile is-child box">
-            <div class="is-flex is-justify-content-space-between is-align-items-center">
-              <span class="is-flex">
-                <img class="mr-3" src="@/assets/images/job-icon.svg" width="40"/>
-                <h2 class="is-size-3 has-text-weight-bold">Jobs</h2>
-              </span>
-              <router-link class="is-size-2" :to="{name: 'jobList', params: {action: 'create'}}">+</router-link>
-            </div>
+      <div class="tile is-vertical">
+        <div class="tile">
+          <div class="tile is-parent">
+            <div class="tile is-child box">
+              <div class="is-flex is-justify-content-space-between is-align-items-center">
+                <span class="is-flex">
+                  <img class="mr-3" src="@/assets/images/job-icon.svg" width="40"/>
+                  <h2 class="is-size-3 has-text-weight-bold">Jobs</h2>
+                </span>
+                <router-link class="is-size-2" :to="{name: 'jobList', params: {action: 'create'}}">+</router-link>
+              </div>
 
-            <div class="buttons is-align-items-start is-flex-direction-column ml-3">
-              <router-link to="/jobList">{{jobDefs ? jobDefs.length : 0}} Total</router-link>
-              <router-link to="/jobList">{{runningJobDefs ? runningJobDefs.length : 0}} Active</router-link>
-              <router-link to="/jobList">{{pausedJobDefs ? pausedJobDefs.length : 0}} Paused</router-link>
+              <div class="buttons is-align-items-start is-flex-direction-column ml-3">
+                <router-link to="/jobList">{{jobDefs ? jobDefs.length : 0}} Total</router-link>
+                <router-link to="/jobList">{{runningJobDefs ? runningJobDefs.length : 0}} Active</router-link>
+                <router-link to="/jobList">{{pausedJobDefs ? pausedJobDefs.length : 0}} Paused</router-link>
+              </div>
             </div>
           </div>
 
-          <div class="tile is-child box">
-            <div class="is-flex is-justify-content-space-between is-align-items-center">
-              <span class="is-flex">
-                <img class="mr-3" src="@/assets/images/step-icon.svg" width="40"/>
-                <h2 class="is-size-3 has-text-weight-bold">Scripts</h2>
-              </span>
-              <router-link class="is-size-2" :to="{name: 'scripts', params: {action: 'create'}}">+</router-link>
-            </div>
+          <div class="tile is-parent">
+            <div class="tile is-child box">
+              <div class="is-flex is-justify-content-space-between is-align-items-center">
+                <span class="is-flex">
+                  <img class="mr-3" src="@/assets/images/step-icon.svg" width="40"/>
+                  <h2 class="is-size-3 has-text-weight-bold">Scripts</h2>
+                </span>
+                <router-link class="is-size-2" :to="{name: 'scripts', params: {action: 'create'}}">+</router-link>
+              </div>
 
-            <div class="ml-3">
-              <router-link to="/scripts">{{scripts ? scripts.length : 0}} Total</router-link>
+              <div class="ml-3">
+                <router-link to="/scripts">{{scripts ? scripts.length : 0}} Total</router-link>
+              </div>
             </div>
           </div>
         </div>
