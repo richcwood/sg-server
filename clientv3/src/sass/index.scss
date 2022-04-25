@@ -11,6 +11,7 @@ $primary: deepskyblue;
   --link-color: #5CAAED;
   --link-color-hover: #1570C0;
   --main-background-color: #eff4fa;
+  --wetasphalt-color: #34495E;
 }
 
 html,
@@ -213,4 +214,16 @@ a:hover {
 
 .box {
   box-shadow: 0 1px 3px rgba(34, 25, 25, .4);
+}
+
+.has-text-carrot {
+  color: #E67E22;
+}
+
+.has-text-emerland {
+  color: #2ECC71;
+}
+
+.has-background-wetasphalt {
+  background: #34495E;
 }

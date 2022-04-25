@@ -4,13 +4,13 @@
     <!-- Modals -->
     <modal name="show-script-modal" :classes="'round-popup'" :width="800" :height="650">
       <table class="table" width="100%" height="100%">
-        <tr class="tr">
-          <td class="td">
+        <tr>
+          <td>
             <strong>script for step: {{stepOutcomeForPopup && stepOutcomeForPopup.name}}</strong>
           </td>
         </tr>
-        <tr class="tr">
-          <td class="td">
+        <tr>
+          <td>
             <div v-if="stepOutcomeForPopup  && stepOutcomeForPopup.runCode" 
                  style="overflow: scroll; width: 750px; height: 525px;"
                  v-html="'<pre>' + stepOutcomeRunCodeBase64Decoded + '</pre>'"></div>
@@ -19,8 +19,8 @@
             </div>
           </td>
         </tr>
-        <tr class="tr">
-          <td class="td">
+        <tr>
+          <td>
             <button class="button" @click="onCloseScriptModalClicked">Close</button>
           </td>
         </tr>
@@ -29,13 +29,13 @@
 
     <modal name="show-stdout-modal" :classes="'round-popup'" :width="800" :height="650">
       <table class="table" width="100%" height="100%">
-        <tr class="tr">
-          <td class="td">
+        <tr>
+          <td>
             <strong>stdout for step: {{stepOutcomeForPopup && stepOutcomeForPopup.name}}</strong>
           </td>
         </tr>
-        <tr class="tr">
-          <td class="td">
+        <tr>
+          <td>
             <div v-if="stepOutcomeForPopup  && stepOutcomeForPopup.stdout" 
                  style="overflow: scroll; width: 750px; height: 525px;" 
                  v-html="formatStdString(stepOutcomeForPopup.stdout)"></div>
@@ -44,8 +44,8 @@
             </div>
           </td>
         </tr>
-        <tr class="tr">
-          <td class="td">
+        <tr>
+          <td>
             <button class="button" @click="onCloseStdoutModalClicked">Close</button>
           </td>
         </tr>
@@ -54,13 +54,13 @@
 
     <modal name="show-stderr-modal" :classes="'round-popup'" :width="800" :height="650">
       <table class="table" width="100%" height="100%">
-        <tr class="tr">
-          <td class="td">
+        <tr>
+          <td>
             <strong>stderr for step: {{stepOutcomeForPopup && stepOutcomeForPopup.name}}</strong>
           </td>
         </tr>
-        <tr class="tr">
-          <td class="td">
+        <tr>
+          <td>
             <div v-if="stepOutcomeForPopup  && stepOutcomeForPopup.stderr" 
                  style="overflow: scroll; width: 750px; height: 525px;" 
                  v-html="formatStdString(stepOutcomeForPopup.stderr)"></div>
@@ -69,15 +69,15 @@
             </div>
           </td>
         </tr>
-        <tr class="tr">
-          <td class="td">
+        <tr>
+          <td>
             <button class="button" @click="onCloseStderrModalClicked">Close</button>
           </td>
         </tr>
       </table>
     </modal>
 
-    <table class="table">
+    <table class="table steps-table">
       <thead>
         <th>Agent Name</th>
         <th>Status</th>
@@ -87,14 +87,14 @@
         <th>Completed</th>
       </thead>
 
-      <tbody class="tbody">
+      <tbody class="has-background-wetasphalt is-family-code">
         <template v-for="taskOutcome in getTaskOutcomes()">
-          <tr class="tr" v-bind:key="taskOutcome.id+'main'">
-            <td class="td" v-if="taskOutcome.target == TaskDefTarget.AWS_LAMBDA">SG Compute</td>
-            <td class="td" v-else>{{getAgentName(taskOutcome._agentId)}}</td>
-            <td class="td">{{enumKeyToPretty(TaskStatus, taskOutcome.status)}}</td>
-            <td class="td">{{enumKeyToPretty(TaskFailureCode, taskOutcome.failureCode)}}</td>
-            <td class="td">
+          <tr :key="taskOutcome.id+'main'" class="has-text-white">
+            <td v-if="taskOutcome.target == TaskDefTarget.AWS_LAMBDA">SG Compute</td>
+            <td v-else>{{getAgentName(taskOutcome._agentId)}}</td>
+            <td>{{enumKeyToPretty(TaskStatus, taskOutcome.status)}}</td>
+            <td>{{enumKeyToPretty(TaskFailureCode, taskOutcome.failureCode)}}</td>
+            <td>
               <template v-if="taskOutcome.status < TaskStatus.CANCELING || taskOutcome.status === TaskStatus.FAILED">
                 <button class="button button-spaced" @click="onCancelTaskOutcomeClicked(taskOutcome)">Cancel</button>
               </template>
@@ -108,29 +108,29 @@
                 none
               </template>
             </td>
-            <td class="td">{{momentToStringV1(taskOutcome.dateStarted)}}</td>
-            <td class="td">{{momentToStringV1(taskOutcome.dateCompleted)}}</td>
+            <td>{{momentToStringV1(taskOutcome.dateStarted)}}</td>
+            <td>{{momentToStringV1(taskOutcome.dateCompleted)}}</td>
           </tr>
-          <tr class="tr" v-bind:key="taskOutcome.id+'steps'">
-            <td class="td" colspan="4">
-              <table class="table" style="margin-left: 10px;">
-                <tbody class="tbody">
+          <tr :key="taskOutcome.id+'steps'">
+            <td colspan="6">
+              <table class="steps-table">
+                <tbody class="has-text-emerland">
                   <template v-for="stepOutcome in getStepOutcomes(taskOutcome)">
-                    <tr class="tr" v-bind:key="'one_'+stepOutcome.id">
-                      <td class="td" style="padding-bottom: 0px;">{{stepOutcome.name}}</td>
-                      <td class="td" style="padding-bottom: 0px;">{{stepOutcome && enumKeyToPretty(TaskStatus, stepOutcome.status)}}</td>
-                      <td class="td" style="padding-bottom: 0px;">{{momentToStringV1(stepOutcome.dateStarted)}}</td>
-                      <td class="td" style="padding-top: 0px;">
+                    <tr :key="'one_'+stepOutcome.id">
+                      <td class="has-text-carrot" style="padding-bottom: 0px;">{{stepOutcome.name}}</td>
+                      <td style="padding-bottom: 0px;">{{stepOutcome && enumKeyToPretty(TaskStatus, stepOutcome.status)}}</td>
+                      <td style="padding-bottom: 0px;">{{momentToStringV1(stepOutcome.dateStarted)}}</td>
+                      <td style="padding-top: 0px;">
                         <span class="spaced" style="margin-bottom: -5px;"><a @click.prevent="onShowScriptClicked(stepOutcome)">script</a></span>
                         <span class="spaced"><a @click.prevent="onShowStdoutClicked(stepOutcome)">stdout</a></span>
                         <span class="spaced"><a @click.prevent="onShowStderrClicked(stepOutcome)">stderr</a></span>
                       </td>
                     </tr>
-                    <tr v-bind:key="'two_'+stepOutcome.id">
-                      <td class="td" style="padding-top: 0px; text-align:right;">
+                    <tr :key="'two_'+stepOutcome.id">
+                      <td class="has-text-white" style="padding-top: 0px; text-align:right;">
                         stdout tail>
                       </td>
-                      <td class="td" style="padding-top: 0px;" colspan="3">
+                      <td style="padding-top: 0px;" colspan="3">
                         <div v-if="stepOutcome.tail && stepOutcome.tail.length > 4">
                           {{formatTailRow(stepOutcome.tail[4])}}
                         </div>
@@ -377,15 +377,47 @@ export default class TaskMonitorDetails extends Vue {
 }
 </script>
 
-<!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped lang="scss">
-table {
-  border-width: 0;
-}
+  .steps-table {
+    border-collapse: collapse;
+    border-spacing: 0;
+  }
 
-td {
-  border-width: 0 !important;
-}
+  .table {
+    tbody {
+      &.has-background-wetasphalt,
+      tr {
+        background: var(--wetasphalt-color);
+      }
+
+      tr {
+        td:first-child,
+        td:last-child {
+            border-radius: 0;
+        }
+
+        &:first-child {
+          td:first-child {
+              border-top-left-radius: 8px;
+          }
+
+          td:last-child {
+              border-top-right-radius: 8px;
+          }
+        }
+
+        &:last-child {
+          td:first-child {
+              border-bottom-left-radius: 8px;
+          }
+
+          td:last-child {
+              border-bottom-right-radius: 8px;
+          }
+        }
+      }
+    }
+  }
 
 .button-spaced {
   margin-left: 12px;
@@ -397,5 +429,4 @@ td {
   text-align: center;
   line-height: 36px;
 }
-
 </style>
