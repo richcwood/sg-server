@@ -10,14 +10,13 @@ $primary: deepskyblue;
   --grey-bg-color: #fafafa;
   --link-color: #5CAAED;
   --link-color-hover: #1570C0;
+  --main-background-color: #eff4fa;
 }
 
-.dropdown-divider {
-  margin: 0;
-}
-
-.dropdown-content {
-  padding: 0;
+html,
+body {
+  height: 100%;
+  width: 100%;
 }
 
 // v-tooltip styles
@@ -169,4 +168,49 @@ a:hover {
 
 .is-absolute {
   position: absolute;
+}
+
+.table {
+  border-collapse: separate;
+  border-spacing: 0 2px;
+  background: transparent;
+
+  thead {
+    tr {
+      background: transparent;
+    }
+
+    th {
+      color: #c0c5d4;
+      font-size: 0.75rem;
+    }
+  }
+
+  tbody {
+    tr {
+      background: #fff;
+
+      td:first-child {
+        border-top-left-radius: 8px;
+        border-bottom-left-radius: 8px;
+      }
+
+      td:last-child {
+        border-top-right-radius: 8px;
+        border-bottom-right-radius: 8px;
+      }
+    }
+
+    &.has-lightblue-bg tr {
+      background: #ebfaff;
+    }
+  }
+}
+
+.tile {
+  border-radius: 15px;
+}
+
+.box {
+  box-shadow: 0 1px 3px rgba(34, 25, 25, .4);
 }

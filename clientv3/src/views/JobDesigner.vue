@@ -1,5 +1,5 @@
 <template>
-  <div @mousemove="onMouseMove" @mouseup="onMouseUp">
+  <div @mousemove="onMouseMove" @mouseup="onMouseUp" class="job-designer-page">
     <!-- Modals -->
 
     <modal name="select-script-vars-modal" :classes="'round-popup'" :width="600" :height="750">
@@ -553,7 +553,7 @@
     </modal>
 
     <div class="sg-container-px">
-      <header class="is-flex my-2">
+      <header class="is-flex py-2">
           <h2 class="is-size-3 has-text-weight-bold text-ellipsis" :title="jobDefForEdit.name">{{ jobDefForEdit.name }}</h2>
           <ul class="job-menu is-flex is-align-items-center has-text-weight-bold is-size-5 ml-6">
               <li>
@@ -618,7 +618,7 @@
             </button>
           </div>
           <div class="dropdown-menu" id="dropdown-menu" role="menu">
-            <div class="dropdown-content">
+            <div class="p-0">
               <a class="dropdown-item" @click.prevent="onNavMenuCreateTaskClicked">Create Task</a>
               <a class="dropdown-item" @click.prevent="onNavMenuCreateAWSLambdaTaskClicked">Create AWS Lambda Task</a>
               <span v-if="selectedTaskDefForEdit === null" class="dropdown-item" style="color: lightgray;">Create Step</span>
@@ -2309,7 +2309,11 @@ export default class JobDesigner extends Vue {
 }
 </script>
 
-<style  lang="scss">
+<style lang="scss">
+  .job-designer-page {
+    background: var(--main-background-color);
+  }
+
   table {
     // The borders just make things really ugly
     td,th  {
