@@ -2,28 +2,38 @@ import * as _ from "lodash";
 import * as moment from "moment";
 import * as mongodb from "mongodb";
 
+import { JobSchema } from "../api/domain/Job";
 import { JobDefSchema } from "../api/domain/JobDef";
 import { ScriptSchema } from "../api/domain/Script";
 import { StepDefSchema } from "../api/domain/StepDef";
 import { TaskSchema } from "../api/domain/Task";
 import { TaskDefSchema } from "../api/domain/TaskDef";
+import { TeamVariableSchema } from "../api/domain/TeamVariable";
+
+import { jobService } from "../api/services/JobService";
 import { jobDefService } from "../api/services/JobDefService";
 import { scriptService } from "../api/services/ScriptService";
 import { stepDefService } from "../api/services/StepDefService";
 import { taskService } from "../api/services/TaskService";
 import { taskDefService } from "../api/services/TaskDefService";
+import { teamVariableService } from "../api/services/TeamVariableService";
+
 import { convertData as convertResponseData } from "../api/utils/ResponseConverters";
+
+import { AMQPConnector } from "../shared/AMQPLib";
 import { SGUtils } from "../shared/SGUtils";
+
 import { validateArrayLengthLessThanOrEqual } from "./Validators";
 
 import * as config from "config";
+import { TaskSource } from "../shared/Enums";
+import { BaseLogger } from "../shared/SGLogger";
 
 let LongRunningJob: any = {
   job: {
     name: "RunLongRunningScript",
     tasks: [
       {
-        _teamId: config.get("sgTestTeam"),
         name: "Task1",
         source: 0,
         requiredTags: [],
@@ -55,7 +65,6 @@ let InteractiveConsoleJob: any = {
     runtimeVars: {},
     tasks: [
       {
-        _teamId: config.get("sgTestTeam"),
         name: "Task1",
         source: 0,
         requiredTags: {},
@@ -66,7 +75,6 @@ let InteractiveConsoleJob: any = {
           {
             name: "Step1",
             script: {
-              scriptType: "PYTHON",
               code: "aW1wb3J0IHRpbWUKcHJpbnQoJ3N0YXJ0JykKdGltZS5zbGVlcCg1KQpwcmludCgnZG9uZScpCnByaW50KCdAc2dveyJyb3V0ZSI6ICJvayJ9Jyk=",
             },
             order: 0,
@@ -83,7 +91,6 @@ let InteractiveConsoleJob: any = {
 export { InteractiveConsoleJob };
 
 let ScriptTemplate: any = {
-  _teamId: config.get("sgTestTeam"),
   name: "Script 1",
   scriptType: "2",
   code: "ZWNobyAiSGVsbG8gV29ybGQi",
@@ -93,7 +100,6 @@ export { ScriptTemplate };
 
 let JobDefTemplate: any = {
   Name: "Job 1",
-  _teamId: config.get("sgTestTeam"),
   createdBy: mongodb.ObjectId(),
   runtimeVars: {},
 };
@@ -101,8 +107,6 @@ export { JobDefTemplate };
 
 let TaskDefTemplate: any = {
   name: "Task 1",
-  _teamId: config.get("sgTestTeam"),
-  _jobDefId: "{{_jobDefId}}",
   requiredTags: [],
   dependsOn: [],
   target: 1,
@@ -111,9 +115,6 @@ export { TaskDefTemplate };
 
 let StepDefTemplate: any = {
   name: "Step 1",
-  _teamId: config.get("sgTestTeam"),
-  _taskDefId: "{{_taskDefId}}",
-  _scriptId: "{{_scriptId}}",
   order: "0",
   arguments: "",
   variables: "",
@@ -226,6 +227,14 @@ let CreateJobDefsFromTemplates = async (
   return { scripts, jobDefs };
 };
 export { CreateJobDefsFromTemplates };
+/**
+ *
+ * @param job
+ */
+let CreateJob = async (_teamId: mongodb.ObjectId, job: Partial<JobSchema>, logger: BaseLogger, amqp: AMQPConnector) => {
+  await jobService.createJob(_teamId, job, null, TaskSource.CONSOLE, logger, amqp);
+};
+export { CreateJob };
 
 /**
  *
@@ -237,3 +246,10 @@ let CreateTasks = async (_teamId: mongodb.ObjectId, tasks: Partial<TaskSchema>[]
   }
 };
 export { CreateTasks };
+
+let CreateTeamVariables = async (_teamId: mongodb.ObjectId, teamVars: Partial<TeamVariableSchema>[]) => {
+  for (let t of teamVars) {
+    await teamVariableService.createTeamVariable(_teamId, t, null);
+  }
+};
+export { CreateTeamVariables };

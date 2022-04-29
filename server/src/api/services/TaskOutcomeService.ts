@@ -1,28 +1,31 @@
-import { convertData } from "../utils/ResponseConverters";
-import { TaskOutcomeSchema, TaskOutcomeModel } from "../domain/TaskOutcome";
-import { StepOutcomeModel } from "../domain/StepOutcome";
 import { JobSchema, JobModel } from "../domain/Job";
-import { TaskSchema, TaskModel } from "../domain/Task";
 import { StepSchema } from "../domain/Step";
-import { stepOutcomeService } from "./StepOutcomeService";
-import { rabbitMQPublisher, PayloadOperation } from "../utils/RabbitMQPublisher";
-import { MissingObjectError, ValidationError } from "../utils/Errors";
-import { stepService } from "../services/StepService";
-import { taskService } from "./TaskService";
-import { taskOutcomeActionService } from "./TaskOutcomeActionService";
+import { StepOutcomeModel } from "../domain/StepOutcome";
+import { TaskSchema, TaskModel } from "../domain/Task";
+import { TaskOutcomeSchema, TaskOutcomeModel } from "../domain/TaskOutcome";
+
 import { jobDefService } from "./JobDefService";
 import { jobService } from "./JobService";
-import { TaskStatus, StepStatus } from "../../shared/Enums";
-import { SGStrings } from "../../shared/SGStrings";
-import { BaseLogger } from "../../shared/SGLogger";
-import { teamVariableService } from "../services/TeamVariableService";
-import * as Enums from "../../shared/Enums";
-import { SGUtils } from "../../shared/SGUtils";
+import { stepOutcomeService } from "./StepOutcomeService";
+import { stepService } from "./StepService";
+import { taskOutcomeActionService } from "./TaskOutcomeActionService";
+import { taskService } from "./TaskService";
+import { teamVariableService } from "./TeamVariableService";
+
+import { MissingObjectError, ValidationError } from "../utils/Errors";
+import { rabbitMQPublisher, PayloadOperation } from "../utils/RabbitMQPublisher";
+import { convertData } from "../utils/ResponseConverters";
+
 import { AMQPConnector } from "../../shared/AMQPLib";
-import { GetTaskRoutes } from "../utils/Shared";
+import { JobStatus, JobDefStatus, StepStatus, TaskDefTarget, TaskFailureCode, TaskStatus } from "../../shared/Enums";
 import { FreeTierChecks } from "../../shared/FreeTierChecks";
+import { BaseLogger } from "../../shared/SGLogger";
+import { SGStrings } from "../../shared/SGStrings";
+import { SGUtils } from "../../shared/SGUtils";
+
 import { localRestAccess } from "../utils/LocalRestAccess";
-import { RepublishTasksWaitingForAgent } from "../utils/Shared";
+import { GetTargetAgentId, GetTaskRoutes, RepublishTasksWaitingForAgent } from "../utils/Shared";
+
 import * as config from "config";
 import * as mongodb from "mongodb";
 import * as _ from "lodash";
@@ -245,19 +248,19 @@ export class TaskOutcomeService {
 
           await RepublishTasksWaitingForAgent(_teamId, updatedTaskOutcome._agentId, logger, amqp);
 
-          if (job.status != Enums.JobStatus.INTERRUPTING && job.status != Enums.JobStatus.INTERRUPTED)
+          if (job.status != JobStatus.INTERRUPTING && job.status != JobStatus.INTERRUPTED)
             await this.LaunchDownstreamTasks(_teamId, job, updatedTaskOutcome, logger, amqp);
 
           if (job._jobDefId) {
-            if (job.status == Enums.JobStatus.INTERRUPTED || job.status == Enums.JobStatus.FAILED) {
+            if (job.status == JobStatus.INTERRUPTED || job.status == JobStatus.FAILED) {
               try {
                 await jobDefService.updateJobDef(
                   _teamId,
                   job._jobDefId,
-                  { status: Enums.JobDefStatus.PAUSED },
+                  { status: JobDefStatus.PAUSED },
                   logger,
                   amqp,
-                  { status: Enums.JobDefStatus.RUNNING, pauseOnFailedJob: true }
+                  { status: JobDefStatus.RUNNING, pauseOnFailedJob: true }
                 );
               } catch (e) {
                 if (!(e instanceof MissingObjectError)) throw e;
@@ -268,13 +271,13 @@ export class TaskOutcomeService {
           }
 
           if (
-            updatedTaskOutcome.status == Enums.TaskStatus.INTERRUPTED &&
+            updatedTaskOutcome.status == TaskStatus.INTERRUPTED &&
             (job.onJobTaskInterruptedAlertEmail || job.onJobTaskInterruptedAlertSlackURL)
           ) {
             await SGUtils.OnTaskInterrupted(_teamId, updatedTaskOutcome, job, logger);
           }
 
-          if (updatedTaskOutcome.status == Enums.TaskStatus.INTERRUPTED) {
+          if (updatedTaskOutcome.status == TaskStatus.INTERRUPTED) {
             const taskQuery: TaskSchema[] = await taskService.findTask(
               _teamId,
               updatedTaskOutcome._taskId,
@@ -334,7 +337,7 @@ export class TaskOutcomeService {
     if (!task) throw new MissingObjectError(`Task not found with filter "${JSON.stringify(filter)}"`);
 
     const route = taskOutcome.route ? taskOutcome.route : "";
-    if (task.toRoutes && job.status != Enums.JobStatus.CANCELING && job.status != Enums.JobStatus.COMPLETED) {
+    if (task.toRoutes && job.status != JobStatus.CANCELING && job.status != JobStatus.COMPLETED) {
       for (let i = 0; i < task.toRoutes.length; i++) {
         let downStreamTaskName = task.toRoutes[i][0];
         let routePattern = /^(?!fail$).*$/;
@@ -369,7 +372,7 @@ export class TaskOutcomeService {
     if (task.down_dep) {
       for (let i = 0; i < task.down_dep.length; i++) {
         let downStreamTaskName = task.down_dep[i][0];
-        if (job.status == Enums.JobStatus.CANCELING || job.status == Enums.JobStatus.COMPLETED) {
+        if (job.status == JobStatus.CANCELING || job.status == JobStatus.COMPLETED) {
           await this.OnTaskSkipped(_teamId, task._jobId, downStreamTaskName, logger);
         } else {
           let routePattern = /^(?!fail$).*$/;
@@ -475,37 +478,7 @@ export class TaskOutcomeService {
         throw new MissingObjectError(`Job ${task._jobId} for task ${task._id} not found.`);
       }
 
-      if (task.target == Enums.TaskDefTarget.SINGLE_SPECIFIC_AGENT) {
-        let targetAgentId: string = task.targetAgentId;
-
-        let runtimeVarsTask: any = {};
-        if (task.runtimeVars) runtimeVarsTask = Object.assign(runtimeVarsTask, task.runtimeVars);
-
-        let arrFound: string[] = task.targetAgentId.match(/@sgg?(\([^)]*\))/gi);
-        if (arrFound) {
-          // replace runtime variable in target agent id
-          try {
-            let varKey = arrFound[0].substr(5, arrFound[0].length - 6);
-            if (varKey.substr(0, 1) === '"' && varKey.substr(varKey.length - 1, 1) === '"')
-              varKey = varKey.slice(1, -1);
-            if (runtimeVarsTask[varKey]) {
-              targetAgentId = runtimeVarsTask[varKey]["value"];
-            } else if (job.runtimeVars[varKey]) {
-              targetAgentId = job.runtimeVars[varKey]["value"];
-            } else {
-              const teamVar = await teamVariableService.findTeamVariableByName(_teamId, varKey, "value");
-              if (_.isArray(teamVar) && teamVar.length > 0) targetAgentId = teamVar[0].value;
-            }
-          } catch (e) {
-            logger.LogError(
-              `Error in arguments @sgg capture for targetAgentId string \"${task.targetAgentId}\": ${e.message}`,
-              { Class: "TaskOutcomeService", Method: "PublishTask", _teamId, task: task }
-            );
-          }
-        }
-
-        task.targetAgentId = targetAgentId;
-      }
+      task.targetAgentId = await GetTargetAgentId(_teamId, task, job, logger);
 
       // const maxTries: number = 3;
       // let tryCount: number = 1;
@@ -514,7 +487,7 @@ export class TaskOutcomeService {
       //     getTaskRoutesRes = await GetTaskRoutes(_teamId, task, logger);
       //     if (getTaskRoutesRes.routes)
       //         break;
-      //     else if (getTaskRoutesRes.failureCode !== Enums.TaskFailureCode.NO_AGENT_AVAILABLE)
+      //     else if (getTaskRoutesRes.failureCode !== TaskFailureCode.NO_AGENT_AVAILABLE)
       //         break;
       //     tryCount += 1;
       //     await SGUtils.sleep(500);
@@ -525,16 +498,16 @@ export class TaskOutcomeService {
       if (!getTaskRoutesRes.routes) {
         let deltas: any;
         let taskFailed: boolean = false;
-        if (getTaskRoutesRes.failureCode == Enums.TaskFailureCode.TARGET_AGENT_NOT_SPECIFIED) {
+        if (getTaskRoutesRes.failureCode == TaskFailureCode.TARGET_AGENT_NOT_SPECIFIED) {
           taskFailed = true;
-          deltas = { status: Enums.TaskStatus.FAILED, failureCode: getTaskRoutesRes.failureCode, route: "" };
+          deltas = { status: TaskStatus.FAILED, failureCode: getTaskRoutesRes.failureCode, route: "" };
           await taskService.updateTask(_teamId, task._id, deltas, logger);
-        } else if (getTaskRoutesRes.failureCode == Enums.TaskFailureCode.NO_AGENT_AVAILABLE) {
-          deltas = { status: Enums.TaskStatus.WAITING_FOR_AGENT, failureCode: getTaskRoutesRes.failureCode, route: "" };
+        } else if (getTaskRoutesRes.failureCode == TaskFailureCode.NO_AGENT_AVAILABLE) {
+          deltas = { status: TaskStatus.WAITING_FOR_AGENT, failureCode: getTaskRoutesRes.failureCode, route: "" };
           await taskService.updateTask(_teamId, task._id, deltas, logger);
         } else {
           taskFailed = true;
-          deltas = { status: Enums.TaskStatus.FAILED, failureCode: getTaskRoutesRes.failureCode, route: "" };
+          deltas = { status: TaskStatus.FAILED, failureCode: getTaskRoutesRes.failureCode, route: "" };
           await taskService.updateTask(_teamId, task._id, deltas, logger);
           logger.LogError(`Unhandled failure code: ${getTaskRoutesRes.failureCode}`, {
             Class: "TaskOutcomeService",
@@ -545,7 +518,7 @@ export class TaskOutcomeService {
         }
 
         if (taskFailed) {
-          await SGUtils.OnTaskFailed(_teamId, task, Enums.TaskFailureCode[getTaskRoutesRes.failureCode], logger);
+          await SGUtils.OnTaskFailed(_teamId, task, TaskFailureCode[getTaskRoutesRes.failureCode], logger);
         }
 
         // Object.assign(deltas, { _id: task._id });
@@ -629,12 +602,7 @@ export class TaskOutcomeService {
 
         let ttl = config.get("defaultQueuedTaskTTL");
 
-        await taskService.updateTask(
-          _teamId,
-          task._id,
-          { status: Enums.TaskStatus.PUBLISHED, failureCode: "" },
-          logger
-        );
+        await taskService.updateTask(_teamId, task._id, { status: TaskStatus.PUBLISHED, failureCode: "" }, logger);
 
         for (let i = 0; i < routes.length; i++) {
           if (routes[i]["type"] == "queue") {
@@ -703,8 +671,8 @@ export class TaskOutcomeService {
           return;
         }
 
-        task.status = Enums.TaskStatus.SKIPPED;
-        resUpdate = await taskService.updateTask(_teamId, task.id, { status: Enums.TaskStatus.SKIPPED }, logger);
+        task.status = TaskStatus.SKIPPED;
+        resUpdate = await taskService.updateTask(_teamId, task.id, { status: TaskStatus.SKIPPED }, logger);
 
         // console.log('OnTaskSkipped -> resUpdate -> ', JSON.stringify(resUpdate, null, 4));
 

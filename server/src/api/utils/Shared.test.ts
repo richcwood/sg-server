@@ -1,25 +1,32 @@
+import * as config from "config";
 import * as mongodb from "mongodb";
+import * as _ from "lodash";
 
 import { JobSchema } from "../domain/Job";
 import { TaskSchema } from "../domain/Task";
+import { TeamVariableSchema } from "../domain/TeamVariable";
+
 import { jobService } from "../services/JobService";
+import { taskService } from "../services/TaskService";
+
 import { AMQPConnector } from "../../shared/AMQPLib";
+import * as Enums from "../../shared/Enums";
 import { BaseLogger } from "../../shared/SGLogger";
 import { SGStrings } from "../../shared/SGStrings";
 import {
   NumNotStartedTasks,
   GetWaitingForLambdaRunnerTasks,
   TaskReadyToPublish,
+  GetTargetAgentId,
   GetWaitingForAgentTasks,
 } from "./Shared";
+
 import { convertData as convertResponseData } from "../utils/ResponseConverters";
 import db from "../../test_helpers/DB";
-import { CreateJobDefsFromTemplates, CreateTasks } from "../../test_helpers/TestArtifacts";
-import { validateArrayLength, validateEquality } from "../../test_helpers/Validators";
 
-import * as config from "config";
-import * as Enums from "../../shared/Enums";
-import { taskService } from "../services/TaskService";
+import { CreateJobDefsFromTemplates, CreateTasks, CreateTeamVariables } from "../../test_helpers/TestArtifacts";
+import { validateArrayLength, validateEquality } from "../../test_helpers/Validators";
+import { teamVariableService } from "../services/TeamVariableService";
 
 const testName = "Shared";
 
@@ -120,34 +127,34 @@ describe("Test 'get not started tasks' functions 1", () => {
     validateEquality(numNotStartedTasks, 4);
   });
 
-  test("Test GetWaitingForLambdaRunnerTasks function", async () => {
+  test("GetWaitingForLambdaRunnerTasks function", async () => {
     const tasksWaitingForLambda: TaskSchema[] = await GetWaitingForLambdaRunnerTasks();
     validateArrayLength(tasksWaitingForLambda, 2);
   });
 
-  test("Test GetWaitingForAgentTasks function", async () => {
+  test("GetWaitingForAgentTasks function", async () => {
     const tasksWaitingForAgent: TaskSchema[] = await GetWaitingForAgentTasks(_teamId);
     validateArrayLength(tasksWaitingForAgent, 1);
   });
 
-  test("Test TaskReadyToPublish with ready task", async () => {
+  test("TaskReadyToPublish with ready task", async () => {
     const task1: TaskSchema = await taskService.findTaskByName(_teamId, _jobId, "Task 1");
     const task1ReadyToStart = await TaskReadyToPublish(_teamId, task1, logger);
     validateEquality(task1ReadyToStart, true);
   });
 
-  test("Test TaskReadyToPublish with not ready task", async () => {
+  test("TaskReadyToPublish with not ready task", async () => {
     const task2: TaskSchema = await taskService.findTaskByName(_teamId, _jobId, "Task 4");
     const task1ReadyToStart = await TaskReadyToPublish(_teamId, task2, logger);
     validateEquality(task1ReadyToStart, true);
   });
 
-  test("Test TaskReadyToPublish with invalid task", async () => {
+  test("TaskReadyToPublish with invalid task", async () => {
     const task: TaskSchema = <TaskSchema>{};
     await expect(TaskReadyToPublish(_teamId, task, logger)).rejects.toThrow("Invalid task object");
   });
 
-  test("Test NumNotStartedTasks with not started tasks", async () => {
+  test("NumNotStartedTasks with not started tasks", async () => {
     const numNotStartedTasks = await NumNotStartedTasks(_teamId);
     validateEquality(numNotStartedTasks, 4);
   });
@@ -155,20 +162,158 @@ describe("Test 'get not started tasks' functions 1", () => {
 
 describe("Test 'get not started tasks' functions 2", () => {
   const _teamId: mongodb.ObjectId = new mongodb.ObjectId();
-  test("Test NumNotStartedTasks function", async () => {
+  test("NumNotStartedTasks function with no resulst", async () => {
     const numNotStartedTasks = await NumNotStartedTasks(_teamId);
     validateEquality(numNotStartedTasks, 0);
   });
 
-  test("Test GetWaitingForLambdaRunnerTasks function with no results", async () => {
+  test("GetWaitingForLambdaRunnerTasks function with no results", async () => {
     const tasksWaitingForLambda: TaskSchema[] = await GetWaitingForLambdaRunnerTasks();
     validateArrayLength(tasksWaitingForLambda, 0);
   });
 
-  test("Test GetWaitingForAgentTasks function with no results", async () => {
+  test("GetWaitingForAgentTasks function with no results", async () => {
     const tasksWaitingForAgent: TaskSchema[] = await GetWaitingForAgentTasks(_teamId);
     validateArrayLength(tasksWaitingForAgent, 0);
   });
+});
+
+describe("Test republish tasks waiting for agent", () => {
+  const _teamId: mongodb.ObjectId = new mongodb.ObjectId();
+  let job: Partial<JobSchema> = null;
+  let tasks: Array<Partial<TaskSchema>> = [];
+  let teamVars: Array<Partial<TeamVariableSchema>>;
+
+  beforeAll(async () => {
+    // await db.open();
+
+    const rmqBrowserPushRoute = config.get("rmqBrowserPushRoute");
+    await amqp.ConsumeRoute(
+      "",
+      true,
+      true,
+      true,
+      true,
+      OnBrowserPush.bind(this),
+      SGStrings.GetTeamRoutingPrefix(config.get("sgTestTeam")),
+      rmqBrowserPushRoute
+    );
+
+    const _jobId: mongodb.ObjectId = new mongodb.ObjectId();
+
+    job = {
+      _id: _jobId,
+      runtimeVars: {
+        testAgent2: {
+          value: new mongodb.ObjectId().toHexString(),
+        },
+      },
+    };
+
+    tasks = [
+      {
+        _teamId: _teamId,
+        _jobId: job._id,
+        name: "Task 1",
+        source: 1,
+        target: Enums.TaskDefTarget.AWS_LAMBDA,
+        runtimeVars: {},
+        status: Enums.TaskStatus.WAITING_FOR_AGENT,
+      },
+      {
+        _teamId: _teamId,
+        _jobId: job._id,
+        name: "Task 2",
+        source: 1,
+        target: Enums.TaskDefTarget.AWS_LAMBDA,
+        runtimeVars: {},
+        status: Enums.TaskStatus.WAITING_FOR_AGENT,
+      },
+      {
+        _teamId: _teamId,
+        _jobId: job._id,
+        name: "Task 3",
+        source: 1,
+        target: Enums.TaskDefTarget.SINGLE_AGENT,
+        targetAgentId: "@sgg(testAgent1)",
+        runtimeVars: {},
+        status: Enums.TaskStatus.NOT_STARTED,
+      },
+      {
+        _teamId: _teamId,
+        _jobId: job._id,
+        name: "Task 4",
+        source: 1,
+        target: Enums.TaskDefTarget.SINGLE_AGENT,
+        targetAgentId: "@sgg(testAgent2)",
+        runtimeVars: {},
+        status: Enums.TaskStatus.SUCCEEDED,
+      },
+      {
+        _teamId: _teamId,
+        _jobId: job._id,
+        name: "Task 5",
+        source: 1,
+        target: Enums.TaskDefTarget.SINGLE_AGENT,
+        targetAgentId: "@sgg(testAgent3)",
+        runtimeVars: {
+          testAgent3: {
+            value: new mongodb.ObjectId().toHexString(),
+          },
+        },
+      },
+      {
+        _teamId: _teamId,
+        _jobId: job._id,
+        name: "Task 6",
+        source: 1,
+        target: Enums.TaskDefTarget.SINGLE_AGENT,
+        targetAgentId: "@sgg(testAgent4)",
+        runtimeVars: {},
+        status: Enums.TaskStatus.WAITING_FOR_AGENT,
+      },
+    ];
+    await CreateTasks(_teamId, tasks);
+
+    teamVars = [
+      {
+        name: "testAgent1",
+        value: new mongodb.ObjectId().toHexString(),
+      },
+    ];
+    await CreateTeamVariables(_teamId, teamVars);
+  });
+
+  test("GetTargetAgentId from team var", async () => {
+    const task: TaskSchema = _.filter(tasks, (t) => t.name == "Task 3")[0];
+    const agentId: mongodb.ObjectId = await GetTargetAgentId(_teamId, task, job, logger);
+    const teamVar: TeamVariableSchema = _.filter(teamVars, (t) => t.name == "testAgent1")[0];
+    const expectedAgentId = teamVar.value;
+    validateEquality(agentId, expectedAgentId);
+  });
+
+  test("GetTargetAgentId from job var", async () => {
+    const task: TaskSchema = _.filter(tasks, (t) => t.name == "Task 4")[0];
+    const agentId: mongodb.ObjectId = await GetTargetAgentId(_teamId, task, job, logger);
+    const expectedAgentId = job.runtimeVars["testAgent2"]["value"];
+    validateEquality(agentId, expectedAgentId);
+  });
+
+  test("GetTargetAgentId from task var", async () => {
+    const task: TaskSchema = _.filter(tasks, (t) => t.name == "Task 5")[0];
+    const agentId: mongodb.ObjectId = await GetTargetAgentId(_teamId, task, job, logger);
+    const expectedAgentId = task.runtimeVars["testAgent3"]["value"];
+    validateEquality(agentId, expectedAgentId);
+  });
+
+  test("GetTargetAgentId missing", async () => {
+    const task: TaskSchema = _.filter(tasks, (t) => t.name == "Task 6")[0];
+    const agentId: mongodb.ObjectId = await GetTargetAgentId(_teamId, task, job, logger);
+    const expectedAgentId = task.targetAgentId;
+    validateEquality(agentId, expectedAgentId);
+  });
+
+  afterAll(async () => await db.clearDatabase());
 });
 
 describe("Test TaskReadyToPublish function", () => {

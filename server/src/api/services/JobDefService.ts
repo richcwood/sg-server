@@ -229,14 +229,8 @@ export class JobDefService {
 
     if (!data.createdBy) throw new ValidationError('Request body missing "createdBy"');
 
-    const agentReq = await agentService.findAgent(
-      _teamId,
-      new mongodb.ObjectId(data._agentId),
-      "_id machineId timezone"
-    );
-    if (!agentReq || (_.isArray(agentReq) && agentReq.length === 0))
-      throw new MissingObjectError(`Agent ${data._agentId} not found.`);
-    const agent = agentReq[0];
+    const agent = await agentService.findAgent(_teamId, new mongodb.ObjectId(data._agentId), "_id machineId timezone");
+    if (!agent) throw new MissingObjectError(`Agent ${data._agentId} not found.`);
 
     const cronJobUniqueId = SGUtils.makeid(5);
 
