@@ -1,5 +1,5 @@
 <template>
-  <div id="app" @mousemove="onMouseMoved">
+  <div id="app" class="is-flex is-flex-direction-column" @mousemove="onMouseMoved">
     <modal name="alert-modal" :classes="['round-popup']">
       <div v-if="alertWindow" name="alertMessage" style="background-color:white; width:100%; height:100%; padding:20px;">
         <p :class="enumKeyToPretty(AlertCategory, alertWindow.category)" v-html="alertWindow.message">
@@ -37,25 +37,25 @@
                 </a>
               </div>
               <div class="dropdown-menu" role="menu">
-                <div class="dropdown-content" role="menu">
+                <div class="p-0" role="menu">
                   <a class="dropdown-item" @click.prevent="onClickedInviteTeammates">
                     Invite Teammates
                   </a>
                   <a class="dropdown-item" @click.prevent="onClickedAcceptInvitations">
                     Accept Invitations {{invitationsCountString}}
                   </a>
-                  <hr class="dropdown-divider">
+                  <hr class="m-0">
                   <a class="dropdown-item" @click.prevent="onClickedInvoices">
                     Invoices and Payments
                   </a>
-                  <hr class="dropdown-divider">
+                  <hr class="m-0">
                   <a class="dropdown-item" @click.prevent="onClickedAccessKeys">
                     Access Keys
                   </a>
                   <a class="dropdown-item" @click.prevent="onClickedSettings">
                     Settings
                   </a>
-                  <hr class="dropdown-divider">
+                  <hr class="m-0">
                   <a class="dropdown-item" @click.prevent="onClickedSignOut">
                     Sign Out
                   </a>
@@ -70,9 +70,9 @@
                 <font-awesome-icon class="dropdown-link-caret" icon="angle-down" />
               </a>
               <div class="dropdown-menu" role="menu">
-                <div class="dropdown-content" role="menu">
+                <div class="p-0" role="menu">
                   <span class="dropdown-item has-text-centered has-text-grey has-background-light">Switch Teams</span>
-                  <hr class="dropdown-divider">
+                  <hr class="m-0">
 
                   <a class="dropdown-item" 
                     v-for="teamId of Object.values(userTeamIds)" 
@@ -90,9 +90,9 @@
       </div>
     </nav>
 
-    <hr class="navbar-divider">
+    <hr class="navbar-divider is-flex-shrink-0">
 
-    <router-view/>
+    <router-view class="is-flex-grow-1"/>
 
     <div class="main-footer" v-if="! isOnLandingPage()">
       <span v-if="alertFooter" class="footer-message" :class="AlertCategory[alertFooter.category]">{{alertFooter.message}}</span>
@@ -350,6 +350,8 @@ export default class App extends Vue {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   color: #2c3e50;
+  width: 100%;
+  height: 100%;
 }
 
 .navbar-divider {
