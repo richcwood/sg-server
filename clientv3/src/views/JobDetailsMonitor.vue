@@ -4,8 +4,8 @@
     <!-- Modals -->
     <modal name="runtime-vars-modal" :classes="'round-popup'" :width="800" :height="750">
       <table class="table" width="100%" height="100%" v-if="taskToShowRuntimeVars">
-        <tr class="tr">
-          <td class="td">
+        <tr>
+          <td>
             <div class="container ml-3 my-3">
               <div class="columns is-desktop is-vcentered">
                 <strong>Runtime vars for task: {{taskToShowRuntimeVars.name}}</strong>
@@ -19,16 +19,16 @@
             </div>
           </td>
         </tr>
-        <tr class="tr">
-          <td class="td">
+        <tr>
+          <td>
             <div v-if="taskToShowRuntimeVars.runtimeVars" 
                  style="overflow: scroll; width: 750px; height: 525px;">
               <table class="table">
-                <tr class="tr" v-for="runtimeVarKey in Object.keys(taskToShowRuntimeVars.runtimeVars)" v-bind:key="runtimeVarKey">
-                  <td class="td">{{runtimeVarKey}}</td>
-                  <td class="td"> = </td>
-                  <td class="td" v-if="hideSensitiveRuntimeVars && taskToShowRuntimeVars.runtimeVars[runtimeVarKey]['sensitive']">**{{runtimeVarKey}}**</td>
-                  <td class="td" v-else>{{taskToShowRuntimeVars.runtimeVars[runtimeVarKey]['value']}}</td>
+                <tr v-for="runtimeVarKey in Object.keys(taskToShowRuntimeVars.runtimeVars)" v-bind:key="runtimeVarKey">
+                  <td>{{runtimeVarKey}}</td>
+                  <td> = </td>
+                  <td v-if="hideSensitiveRuntimeVars && taskToShowRuntimeVars.runtimeVars[runtimeVarKey]['sensitive']">**{{runtimeVarKey}}**</td>
+                  <td v-else>{{taskToShowRuntimeVars.runtimeVars[runtimeVarKey]['value']}}</td>
                 </tr>
               </table>     
             </div>
@@ -37,8 +37,8 @@
             </div>
           </td>
         </tr>
-        <tr class="tr">
-          <td class="td">
+        <tr>
+          <td>
             <button class="button" @click="onCloseRuntimeVarsModalClicked">Close</button>
           </td>
         </tr>
@@ -48,19 +48,19 @@
     <modal name="inbound-routes-modal" :classes="'round-popup'" :width="800" :height="650">
       <table class="table" width="100%" height="100%" v-if="taskToShowInboundRoutes">
         <tr class="tr">
-          <td class="td">
+          <td>
             <strong>Inbound Routes for task: {{taskToShowInboundRoutes.name}}</strong>
           </td>
         </tr>
         <tr class="tr">
-          <td class="td">
+          <td>
             <div v-if="taskToShowInboundRoutes.fromRoutes" 
                  style="overflow: scroll; width: 750px; height: 525px;">
               <table class="table">
                 <tr class="tr" v-for="fromRoute in taskToShowInboundRoutes.fromRoutes" v-bind:key="fromRoute[0]">
-                  <td class="td">{{fromRoute[0]}}</td>
-                  <td class="td"> | </td>
-                  <td class="td">
+                  <td>{{fromRoute[0]}}</td>
+                  <td> | </td>
+                  <td>
                     <span v-if="fromRoute.length > 1">
                       {{fromRoute[1]}}
                     </span>
@@ -74,7 +74,7 @@
           </td>
         </tr>
         <tr class="tr">
-          <td class="td">
+          <td>
             <button class="button" @click="onCloseInboundRoutesModalClicked">Close</button>
           </td>
         </tr>
@@ -84,19 +84,19 @@
     <modal name="outbound-routes-modal" :classes="'round-popup'" :width="800" :height="650">
       <table class="table" width="100%" height="100%" v-if="taskToShowOutboundRoutes">
         <tr class="tr">
-          <td class="td">
+          <td>
             <strong>Outbound Routes for task: {{taskToShowOutboundRoutes.name}}</strong>
           </td>
         </tr>
         <tr class="tr">
-          <td class="td">
+          <td>
             <div v-if="taskToShowOutboundRoutes.toRoutes" 
                  style="overflow: scroll; width: 750px; height: 525px;">
               <table class="table">
                 <tr class="tr" v-for="toRoute in taskToShowOutboundRoutes.toRoutes" v-bind:key="toRoute[0]">
-                  <td class="td">{{toRoute[0]}}</td>
-                  <td class="td"> | </td>
-                  <td class="td">
+                  <td>{{toRoute[0]}}</td>
+                  <td> | </td>
+                  <td>
                     <span v-if="toRoute.length > 1">
                       {{toRoute[1]}}
                     </span>
@@ -110,7 +110,7 @@
           </td>
         </tr>
         <tr class="tr">
-          <td class="td">
+          <td>
             <button class="button" @click="onCloseOutboundRoutesModalClicked">Close</button>
           </td>
         </tr>
@@ -120,17 +120,17 @@
     <modal name="artifacts-modal" :classes="'round-popup'" :width="800" :height="650">
       <table class="table" width="100%" height="100%" v-if="taskToShowArtifacts">
         <tr class="tr">
-          <td class="td">
+          <td>
             <strong>Artifacts for task: {{taskToShowArtifacts.name}}</strong>
           </td>
         </tr>
         <tr class="tr">
-          <td class="td">
+          <td>
             <div v-if="taskToShowArtifacts.artifacts" 
                  style="overflow: scroll; width: 750px; height: 525px;">
               <table class="table">
                 <tr class="tr" v-for="artifactName in getArtifactNames(taskToShowArtifacts)" v-bind:key="artifactName">
-                  <td class="td">{{artifactName}}</td>
+                  <td>{{artifactName}}</td>
                 </tr>
               </table>     
             </div>
@@ -140,7 +140,7 @@
           </td>
         </tr>
         <tr class="tr">
-          <td class="td">
+          <td>
             <button class="button" @click="onCloseArtifactsModalClicked">Close</button>
           </td>
         </tr>
@@ -148,89 +148,108 @@
     </modal>
 
 
+    <div class="box is-inline-block mb-5">
+      <h2 class="title is-size-4">Job Details: {{ filterTaskOutcomeStatus }}</h2>
+      <table class="table">
+        <tbody>
+          <tr>
+            <td class="has-text-weight-bold has-text-dark">Job Name</td>
+            <td>
+              <template v-if="selectedJob._jobDefId">
+                <router-link :to="{name: 'jobDesigner', params: {jobId: selectedJob._jobDefId}}">{{selectedJob.name}}</router-link>
+              </template>
+              <template v-else>
+                {{selectedJob.name}}
+              </template>
+            </td>
+            <td class="px-6"></td>
+            <td class="has-text-weight-bold has-text-dark">Status</td>
+            <td>
+              {{enumKeyToPretty(JobStatus, selectedJob.status)}}
+              <template v-if="selectedJob.status < JobStatus.CANCELING || selectedJob.status === JobStatus.FAILED">
+                <button class="button button-spaced" @click="onCancelJobClicked(selectedJob)">Cancel</button>
+              </template>
+              <template v-if="selectedJob.status == TaskStatus.RUNNING">
+                <button class="button button-spaced" @click="onInterruptJobClicked(selectedJob)">Interrupt</button>
+              </template>
+              <template v-if="selectedJob.status == TaskStatus.INTERRUPTED || selectedJob.status == TaskStatus.FAILED">
+                <button class="button button-spaced" @click="onRestartJobClicked(selectedJob)">Restart</button>
+              </template>
+            </td>
+          </tr>
+          <tr>
+            <td class="has-text-weight-bold has-text-dark">Run Number</td>
+            <td>{{selectedJob.runId}}</td>
+            <td class="px-6"></td>
+            <td class="has-text-weight-bold has-text-dark">Error</td>
+            <td>{{selectedJob.error}}</td>
+          </tr>
+          <tr>
+            <td class="has-text-weight-bold has-text-dark">Started</td>
+            <td>{{momentToStringV1(selectedJob.dateStarted)}}</td>
+            <td class="px-6"></td>
+            <td class="has-text-weight-bold has-text-dark">Completed</td>
+            <td>{{momentToStringV1(selectedJob.dateCompleted)}}</td>
+          </tr>
+          <tr>
+            <td class="has-text-weight-bold has-text-dark">Created By</td>
+            <td>{{getUser(selectedJob.createdBy, selectedJob.name).name}}</td>
+            <td class="px-6"></td>
+            <td colspan="2"></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
 
-    <h2 class="title is-size-4">Job Details: {{ filterTaskOutcomeStatus }}</h2>
-    <table class="table">
-      <tbody class="tbody">
-        <tr class="tr">
-          <td class="td">Job Name</td>
-          <td class="td">
-            <template v-if="selectedJob._jobDefId">
-              <router-link :to="{name: 'jobDesigner', params: {jobId: selectedJob._jobDefId}}">{{selectedJob.name}}</router-link>
-            </template>
-            <template v-else>
-              {{selectedJob.name}}
-            </template>
-          </td>
-          <td style="width: 100px"> </td>
-          <td class="td">Status</td>
-          <td class="td">
-            {{enumKeyToPretty(JobStatus, selectedJob.status)}}
-            <template v-if="selectedJob.status < JobStatus.CANCELING || selectedJob.status === JobStatus.FAILED">
-              <button class="button button-spaced" @click="onCancelJobClicked(selectedJob)">Cancel</button>
-            </template>
-            <template v-if="selectedJob.status == TaskStatus.RUNNING">
-              <button class="button button-spaced" @click="onInterruptJobClicked(selectedJob)">Interrupt</button>
-            </template>
-            <template v-if="selectedJob.status == TaskStatus.INTERRUPTED || selectedJob.status == TaskStatus.FAILED">
-              <button class="button button-spaced" @click="onRestartJobClicked(selectedJob)">Restart</button>
-            </template>
+
+
+     <table class="table is-striped">
+      <thead>
+        <tr>
+          <th>Task Name</th>
+          <th>Status</th>
+          <th>Task Outcomes</th>
+          <th>Failure</th>
+          <th>Runtime Vars</th>
+          <th>Inbound Routes</th>
+          <th>Outbound Routes</th>
+          <th>Artifacts</th>
+        </tr>
+      </thead>
+
+      <tbody class="has-lightblue-bg">
+        <tr v-if="tasks.length === 0" class="has-background-white">
+          <td colspan="8">
+            There are no tasks yet for the job
           </td>
         </tr>
-        <tr class="tr">
-          <td class="td">Run Number</td><td class="td">{{selectedJob.runId}}</td>
-          <td style="width: 100px"> </td>
-          <td class="td">Error</td><td class="td">{{selectedJob.error}}</td>
-        </tr>
-        <tr class="tr">
-          <td class="td">Started</td><td class="td">{{momentToStringV1(selectedJob.dateStarted)}}</td>
-          <td style="width: 100px"> </td>
-          <td class="td">Completed</td><td class="td">{{momentToStringV1(selectedJob.dateCompleted)}}</td>
-        </tr>
-        <tr class="tr">
-          <td class="td">Created By</td><td class="td">{{getUser(selectedJob.createdBy, selectedJob.name).name}}</td>
-          <td class="td"></td>
-          <td class="td"></td>
+        <tr v-else v-for="task in tasks" v-bind:key="task.id">
+          <td><a @click.prevent="onClickedTask(task)">{{task.name}}</a></td>
+          <td>{{enumKeyToPretty(TaskStatus, task.status)}}</td>
+          <td><span v-html="formatTaskOutcomes(task)"></span></td>
+          <td>{{enumKeyToPretty(TaskFailureCode, task.failureCode)}}</td>
+          <td><a @click.prevent="onClickedRuntimeVarsSummary(task)" v-html="formatRuntimeVars(task)"></a></td>
+          <td><a @click.prevent="onClickedInboundRoutesSummary(task)" v-html="formatInboundRoutes(task)"></a></td>
+          <td><a @click.prevent="onClickedOutboundRoutesSummary(task)" v-html="formatOutboundRoutes(task)"></a></td>
+          <td><a @click.prevent="onClickedArtifactsSummary(task)" v-html="formatArtifacts(task)"></a></td>
         </tr>
       </tbody>
     </table>
 
-
-     <table class="table">
-      <tr class="thead" style="font-weight: 700;">
-        <td class="td">Task Name</td>
-        <td class="td">Status</td>
-        <td class="td">Task Outcomes</td>
-        <td class="td">Failure</td>
-        <td class="td">Runtime Vars</td>
-        <td class="td">Inbound Routes</td>
-        <td class="td">Outbound Routes</td>
-        <td class="td">Artifacts</td>
-      </tr>
-
-      <tr v-if="tasks.length === 0">
-        <td colspan="8">
-          There are no tasks yet for the job
-        </td>
-      </tr>
-      <tr v-else v-for="task in tasks" class="tr" v-bind:key="task.id">
-        <td class="td"><a @click.prevent="onClickedTask(task)">{{task.name}}</a></td>
-        <td class="td">{{enumKeyToPretty(TaskStatus, task.status)}}</td>
-        <td class="td"><span v-html="formatTaskOutcomes(task)"></span></td>
-        <td class="td">{{enumKeyToPretty(TaskFailureCode, task.failureCode)}}</td>
-        <td class="td"><a @click.prevent="onClickedRuntimeVarsSummary(task)" v-html="formatRuntimeVars(task)"></a></td>
-        <td class="td"><a @click.prevent="onClickedInboundRoutesSummary(task)" v-html="formatInboundRoutes(task)"></a></td>
-        <td class="td"><a @click.prevent="onClickedOutboundRoutesSummary(task)" v-html="formatOutboundRoutes(task)"></a></td>
-        <td class="td"><a @click.prevent="onClickedArtifactsSummary(task)" v-html="formatArtifacts(task)"></a></td>
-      </tr>
-    </table>
-
     <template v-if="selectedTask">
-      <div style="margin-bottom: 15px;">
-        <input class="input" v-model="filterTaskOutcomeStatus" type="text" placeholder="Filter status" style="width: 150px;"/>
-        <input class="input" v-model="filterTaskOutcomeAgent" type="text" placeholder="Filter agents" style="width: 150px; margin-left: 10px;"/>
-        <input class="input" v-model="filterStepOutcome" type="text" placeholder="Filter steps" style="width: 150px; margin-left: 10px;"/>
-        <a style="margin-left: 10px;" @click.prevent="onCloseSelectedTaskDetails">close</a>
+      <div class="field is-grouped mb-4">
+        <div class="control">
+          <input class="input" v-model="filterTaskOutcomeStatus" type="text" placeholder="Filter status" style="width: 150px;"/>
+        </div>
+        <div class="control">
+          <input class="input" v-model="filterTaskOutcomeAgent" type="text" placeholder="Filter agents" style="width: 150px;"/>
+        </div>
+        <div class="control">
+          <input class="input" v-model="filterStepOutcome" type="text" placeholder="Filter steps" style="width: 150px;"/>
+        </div>
+        <div class="control">
+          <a href="#" class="button is-ghost" @click.prevent="onCloseSelectedTaskDetails">Close</a>
+        </div>
       </div>
 
       <task-monitor-details :selectedTaskId="selectedTask.id" 
@@ -238,7 +257,6 @@
                             :filterTaskOutcomeAgent="filterTaskOutcomeAgent"
                             :filterStepOutcome="filterStepOutcome" >
       </task-monitor-details>
-
     </template>
   </div>
 </template>
