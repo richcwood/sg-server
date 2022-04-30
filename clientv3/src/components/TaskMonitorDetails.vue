@@ -117,10 +117,10 @@
                 <tbody class="has-text-emerland">
                   <template v-for="stepOutcome in getStepOutcomes(taskOutcome)">
                     <tr :key="'one_'+stepOutcome.id">
-                      <td class="has-text-carrot" style="padding-bottom: 0px;">{{stepOutcome.name}}</td>
-                      <td style="padding-bottom: 0px;">{{stepOutcome && enumKeyToPretty(TaskStatus, stepOutcome.status)}}</td>
-                      <td style="padding-bottom: 0px;">{{momentToStringV1(stepOutcome.dateStarted)}}</td>
-                      <td style="padding-top: 0px;">
+                      <td class="has-text-carrot">{{stepOutcome.name}}</td>
+                      <td :class="getStatusColor(stepOutcome)">{{stepOutcome && enumKeyToPretty(TaskStatus, stepOutcome.status)}}</td>
+                      <td>{{momentToStringV1(stepOutcome.dateStarted)}}</td>
+                      <td>
                         <span class="spaced" style="margin-bottom: -5px;"><a @click.prevent="onShowScriptClicked(stepOutcome)">script</a></span>
                         <span class="spaced"><a @click.prevent="onShowStdoutClicked(stepOutcome)">stdout</a></span>
                         <span class="spaced"><a @click.prevent="onShowStderrClicked(stepOutcome)">stderr</a></span>
@@ -372,6 +372,23 @@ export default class TaskMonitorDetails extends Vue {
     }
     else {
       return '';
+    }
+  }
+
+  getStatusColor ({ status = StepStatus.NOT_STARTED }: StepOutcome): string {
+    switch (status) {
+      case StepStatus.FAILED:
+          return 'has-text-danger';
+
+      case StepStatus.NOT_STARTED:
+      case StepStatus.INTERRUPTED:
+      case StepStatus.CANCELLED:
+          return 'has-text-warning';
+
+      case StepStatus.RUNNING:
+      case StepStatus.SUCCEEDED:
+      default:
+        return 'has-text-success';
     }
   }
 }
