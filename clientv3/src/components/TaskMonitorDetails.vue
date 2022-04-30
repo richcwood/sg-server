@@ -87,7 +87,7 @@
         <th>Completed</th>
       </thead>
 
-      <tbody class="has-background-wetasphalt is-family-code">
+      <tbody class="is-family-code">
         <template v-for="taskOutcome in getTaskOutcomes()">
           <tr :key="taskOutcome.id+'main'" class="has-text-white">
             <td v-if="taskOutcome.target == TaskDefTarget.AWS_LAMBDA">SG Compute</td>
@@ -395,41 +395,39 @@ export default class TaskMonitorDetails extends Vue {
 </script>
 
 <style scoped lang="scss">
-  .steps-table {
-    border-collapse: collapse;
-    border-spacing: 0;
-  }
-
   .table {
-    tbody {
-      &.has-background-wetasphalt,
+    &.steps-table {
+      border-collapse: collapse;
+      border-spacing: 0;
+
       tr {
         background: var(--wetasphalt-color);
       }
+    }
 
+    tbody {
       tr {
-        td:first-child,
-        td:last-child {
-            border-radius: 0;
-        }
-
         &:first-child {
           td:first-child {
               border-top-left-radius: 8px;
+              border-bottom-left-radius: 0 !important;
           }
 
           td:last-child {
               border-top-right-radius: 8px;
+              border-bottom-right-radius: 0 !important;
           }
         }
 
         &:last-child {
           td:first-child {
               border-bottom-left-radius: 8px;
+              border-top-left-radius: 0 !important;
           }
 
           td:last-child {
               border-bottom-right-radius: 8px;
+              border-top-right-radius: 0 !important;
           }
         }
       }

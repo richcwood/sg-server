@@ -150,7 +150,7 @@
 
     <div class="box is-inline-block mb-5">
       <h2 class="title is-size-4">Job Details: {{ filterTaskOutcomeStatus }}</h2>
-      <table class="table">
+      <table class="table job-details-table">
         <tbody>
           <tr>
             <td class="has-text-weight-bold has-text-dark">Job Name</td>
@@ -217,13 +217,15 @@
         </tr>
       </thead>
 
-      <tbody>
-        <tr v-if="tasks.length === 0" class="has-background-white">
+      <tbody v-if="tasks.length === 0">
+        <tr>
           <td colspan="8">
             There are no tasks yet for the job
           </td>
         </tr>
-        <tr v-else v-for="task in tasks" v-bind:key="task.id">
+      </tbody>
+      <tbody v-else>
+        <tr v-for="task in tasks" :class="{'is-selected': selectedTask === task}" :key="task.id">
           <td><a @click.prevent="onClickedTask(task)">{{task.name}}</a></td>
           <td>{{enumKeyToPretty(TaskStatus, task.status)}}</td>
           <td><span v-html="formatTaskOutcomes(task)"></span></td>
@@ -697,34 +699,13 @@ export default class JobDetailsMonitor extends Vue {
 </script>
 
 <style scoped lang="scss">
-table {
-
-  // The borders just make things really ugly
-  td  {
-    border-width: 0 !important;
-  }
-
-  td .agent-details {
-    margin-left: 30px;
-  }
-
-  td .script-tail {
-    padding-left: 40px;
-  }
-}
-
 .button-spaced {
   margin-left: 12px;
 }
 
-.spaced {
-  margin-left: 14px;
-  margin-right: 14px;
-  text-align: center;
-  line-height: 36px;
-}
-
-.tab { 
-  margin-left: 40px; 
+.job-details-table {
+  tr {
+    background: inherit !important;
+  }
 }
 </style>
