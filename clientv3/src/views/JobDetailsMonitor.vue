@@ -203,7 +203,7 @@
 
 
 
-     <table class="table is-striped">
+    <table class="table is-striped is-hoverable">
       <thead>
         <tr>
           <th>Task Name</th>
@@ -217,7 +217,7 @@
         </tr>
       </thead>
 
-      <tbody class="has-lightblue-bg">
+      <tbody>
         <tr v-if="tasks.length === 0" class="has-background-white">
           <td colspan="8">
             There are no tasks yet for the job

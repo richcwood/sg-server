@@ -79,7 +79,7 @@
               <th>Completed</th>
             </tr>
             </thead>
-            <tbody class="is-size-7 is-size-6-fullhd has-lightblue-bg">
+            <tbody class="is-size-7 is-size-6-fullhd">
               <tr v-for="job in recentJobs" :key="job.id">
                 <td><router-link :to="{name: 'jobDetailsMonitor', params: {jobId: job.id}}">Monitor {{job.runId}}</router-link></td>
                 <td>
@@ -100,7 +100,7 @@
           <p class="is-size-6 has-text-weight-bold mt-4 mb-1">Scheduled Job Runs (Next 24 Hours)</p>
 
           <table class="table is-striped is-fullwidth">
-            <tbody class="is-size-7 is-size-6-fullhd has-lightblue-bg">
+            <tbody class="is-size-7 is-size-6-fullhd">
               <tr v-for="schedule in schedulesNext24Hours" :key="schedule.id">
                 <td>{{momentToStringV1(schedule.nextScheduledRunDate)}}</td>
                 <td>
@@ -195,7 +195,7 @@
                   <th>Last Heartbeat</th>
                 </tr>
               </thead>
-              <tbody class="is-size-7 is-size-6-fullhd has-lightblue-bg">
+              <tbody class="is-size-7 is-size-6-fullhd">
                 <tr v-for="agent in activeAgents" :key="agent.id">
                   <td><router-link :to="{name: 'agentMonitor', params: {jobId: agent.id}}">{{agent.name}}</router-link></td>
                   <td v-html="tagsMapToString(agent.tags, 2)"></td>
