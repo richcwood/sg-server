@@ -161,7 +161,7 @@ export class AgentController {
       const _teamId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._teamid);
       const tags: any = JSON.parse(<string>req.params.tags);
       const response: ResponseWrapper = (resp as any).body;
-      const agents = await agentService.findAgentsByTags(_teamId, tags, <string>req.query.responseFields);
+      const agents = await agentService.findActiveAgentsWithTags(_teamId, tags, <string>req.query.responseFields);
 
       if (!agents || (_.isArray(agents) && agents.length === 0)) {
         next(new MissingObjectError(`No agent with tags ${req.params.tags} was found.`));

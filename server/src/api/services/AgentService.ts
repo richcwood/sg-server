@@ -32,6 +32,8 @@ const systemProperties: string[] = [
   "cron",
 ];
 
+const activeAgentTimeoutSeconds = config.get("activeAgentTimeoutSeconds");
+
 export class AgentService {
   // Some services might need to add additional restrictions to bulk queries
   // This is how they would add more to the base query (Example: fetch only non-deleted users for all queries)
@@ -86,20 +88,27 @@ export class AgentService {
     return null;
   }
 
-  public async findAgentsByTags(_teamId: mongodb.ObjectId, tags: any, responseFields?: string): Promise<AgentSchema[]> {
-    const activeAgentTimeoutSeconds = config.get("activeAgentTimeoutSeconds");
+  public async findActiveAgentsWithTags(
+    _teamId: mongodb.ObjectId,
+    tags: any,
+    responseFields?: string
+  ): Promise<AgentSchema[]> {
+    if (!_.isPlainObject || Object.keys(tags).length < 1) throw new ValidationError("Missing or invalid tags");
     let filter: any = { _teamId };
     filter.offline = false;
-    filter.lastHeartbeatTime = { $gte: new Date().getTime() - parseInt(activeAgentTimeoutSeconds) * 1000 };
-    for (let i = 0; i < tags.length; i++) {
-      const key = `tags.${tags[0]["key"]}`;
-      const val = tags[0]["value"];
-      filter[key] = val;
+    filter.lastHeartbeatTime = {
+      $gte: new Date().getTime() - parseInt(activeAgentTimeoutSeconds) * 1000,
+    };
+    filter["$and"] = [];
+    for (let i = 0; i < Object.keys(tags).length; i++) {
+      const tagKey = Object.keys(tags)[i];
+      const tagFilterKey: string = `tags.${tagKey}`;
+      let tagFilter: any = {};
+      tagFilter[tagFilterKey] = tags[tagKey];
+      filter["$and"].push(tagFilter);
     }
 
-    return await AgentModel.find({
-      $and: [filter],
-    }).select(responseFields);
+    return await AgentModel.find(filter).select(responseFields);
   }
 
   public async findDisconnectedAgents(

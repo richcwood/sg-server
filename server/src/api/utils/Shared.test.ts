@@ -2,6 +2,7 @@ import * as config from "config";
 import * as mongodb from "mongodb";
 import * as _ from "lodash";
 
+import { AgentSchema } from "../domain/Agent";
 import { JobSchema } from "../domain/Job";
 import { TaskSchema } from "../domain/Task";
 import { TeamVariableSchema } from "../domain/TeamVariable";
@@ -14,17 +15,27 @@ import * as Enums from "../../shared/Enums";
 import { BaseLogger } from "../../shared/SGLogger";
 import { SGStrings } from "../../shared/SGStrings";
 import {
-  NumNotStartedTasks,
-  GetWaitingForLambdaRunnerTasks,
-  TaskReadyToPublish,
+  ActiveAgentSortFunction,
+  ActiveLambdaRunnerAgentSortFunction,
+  CreateTaskRoutesForAgents,
+  CreateTaskRouteForSingleAgent,
+  GetSingleAgentTaskRoute,
   GetTargetAgentId,
   GetWaitingForAgentTasks,
+  GetWaitingForLambdaRunnerTasks,
+  NumNotStartedTasks,
+  TaskReadyToPublish,
 } from "./Shared";
 
 import { convertData as convertResponseData } from "../utils/ResponseConverters";
 import db from "../../test_helpers/DB";
 
-import { CreateJobDefsFromTemplates, CreateTasks, CreateTeamVariables } from "../../test_helpers/TestArtifacts";
+import {
+  CreateJobDefsFromTemplates,
+  CreateAgents,
+  CreateTasks,
+  CreateTeamVariables,
+} from "../../test_helpers/TestArtifacts";
 import { validateArrayLength, validateEquality } from "../../test_helpers/Validators";
 import { teamVariableService } from "../services/TeamVariableService";
 
@@ -180,9 +191,25 @@ describe("Test 'get not started tasks' functions 2", () => {
 
 describe("Test republish tasks waiting for agent", () => {
   const _teamId: mongodb.ObjectId = new mongodb.ObjectId();
+  const task1_Id = new mongodb.ObjectId();
+  const task2_Id = new mongodb.ObjectId();
+  const task3_Id = new mongodb.ObjectId();
+  const task4_Id = new mongodb.ObjectId();
+  const task5_Id = new mongodb.ObjectId();
+  const task6_Id = new mongodb.ObjectId();
+  const agent1_Id = new mongodb.ObjectId();
+  const agent2_Id = new mongodb.ObjectId();
+  const agent3_Id = new mongodb.ObjectId();
+  const agent4_Id = new mongodb.ObjectId();
+  const agent5_Id = new mongodb.ObjectId();
+  const agent6_Id = new mongodb.ObjectId();
+  const agent7_Id = new mongodb.ObjectId();
+  let agents: Array<Partial<AgentSchema>> = [];
   let job: Partial<JobSchema> = null;
   let tasks: Array<Partial<TaskSchema>> = [];
   let teamVars: Array<Partial<TeamVariableSchema>>;
+  const tags1: any = { tag1: "val1" };
+  const tags2: any = { tag1: "val1", tag2: "val2" };
 
   beforeAll(async () => {
     // await db.open();
@@ -199,8 +226,106 @@ describe("Test republish tasks waiting for agent", () => {
       rmqBrowserPushRoute
     );
 
-    const _jobId: mongodb.ObjectId = new mongodb.ObjectId();
+    agents = [
+      {
+        _id: agent1_Id,
+        machineId: "agent1",
+        targetVersion: "v1",
+        reportedVersion: "v1",
+        ipAddress: "ipAddress",
+        propertyOverrides: {
+          maxActiveTasks: 10,
+        },
+        numActiveTasks: 10,
+        lastTaskAssignedTime: Date.now() - 60 * 1000,
+        tags: tags1,
+      },
+      {
+        _id: agent2_Id,
+        machineId: "agent2",
+        targetVersion: "v1",
+        reportedVersion: "v1",
+        ipAddress: "ipAddress",
+        propertyOverrides: {
+          maxActiveTasks: 10,
+        },
+        numActiveTasks: 5,
+        lastTaskAssignedTime: Date.now() - 1000 * 60,
+        tags: tags1,
+      },
+      {
+        _id: agent3_Id,
+        machineId: "agent3",
+        targetVersion: "v1",
+        reportedVersion: "v1",
+        ipAddress: "ipAddress",
+        propertyOverrides: {
+          maxActiveTasks: 10,
+        },
+        numActiveTasks: 5,
+        lastTaskAssignedTime: Date.now() - 5 * 60 * 1000,
+        tags: tags2,
+      },
+      {
+        _id: agent4_Id,
+        machineId: "agent4",
+        targetVersion: "v1",
+        reportedVersion: "v1",
+        ipAddress: "ipAddress",
+        propertyOverrides: {
+          maxActiveTasks: 10,
+        },
+        numActiveTasks: 5,
+        lastTaskAssignedTime: Date.now() - 5 * 60 * 1000,
+        tags: tags1,
+      },
+      {
+        _id: agent5_Id,
+        machineId: "agent5",
+        targetVersion: "v1",
+        reportedVersion: "v1",
+        ipAddress: "ipAddress",
+        propertyOverrides: {
+          maxActiveTasks: 10,
+        },
+        numActiveTasks: 4,
+        lastTaskAssignedTime: Date.now() - 5 * 60 * 1000,
+        lastHeartbeatTime: Date.now() - 30 * 1000,
+        tags: tags1,
+      },
+      {
+        _id: agent6_Id,
+        machineId: "agent6",
+        targetVersion: "v1",
+        reportedVersion: "v1",
+        ipAddress: "ipAddress",
+        offline: true,
+        propertyOverrides: {
+          maxActiveTasks: 10,
+        },
+        numActiveTasks: 0,
+        lastTaskAssignedTime: Date.now() - 60 * 60 * 1000,
+        lastHeartbeatTime: Date.now() - 2 * 60 * 1000,
+        tags: tags1,
+      },
+      {
+        _id: agent7_Id,
+        machineId: "agent7",
+        targetVersion: "v1",
+        reportedVersion: "v1",
+        ipAddress: "ipAddress",
+        propertyOverrides: {
+          maxActiveTasks: 10,
+        },
+        numActiveTasks: 0,
+        lastTaskAssignedTime: Date.now() - 60 * 60 * 1000,
+        lastHeartbeatTime: Date.now() - 2 * 60 * 1000,
+        tags: tags2,
+      },
+    ];
+    await CreateAgents(_teamId, agents);
 
+    const _jobId: mongodb.ObjectId = new mongodb.ObjectId();
     job = {
       _id: _jobId,
       runtimeVars: {
@@ -212,6 +337,7 @@ describe("Test republish tasks waiting for agent", () => {
 
     tasks = [
       {
+        _id: task1_Id,
         _teamId: _teamId,
         _jobId: job._id,
         name: "Task 1",
@@ -221,6 +347,7 @@ describe("Test republish tasks waiting for agent", () => {
         status: Enums.TaskStatus.WAITING_FOR_AGENT,
       },
       {
+        _id: task2_Id,
         _teamId: _teamId,
         _jobId: job._id,
         name: "Task 2",
@@ -230,6 +357,7 @@ describe("Test republish tasks waiting for agent", () => {
         status: Enums.TaskStatus.WAITING_FOR_AGENT,
       },
       {
+        _id: task3_Id,
         _teamId: _teamId,
         _jobId: job._id,
         name: "Task 3",
@@ -238,8 +366,10 @@ describe("Test republish tasks waiting for agent", () => {
         targetAgentId: "@sgg(testAgent1)",
         runtimeVars: {},
         status: Enums.TaskStatus.NOT_STARTED,
+        attemptedRunAgentIds: [agent5_Id.toHexString()],
       },
       {
+        _id: task4_Id,
         _teamId: _teamId,
         _jobId: job._id,
         name: "Task 4",
@@ -250,6 +380,7 @@ describe("Test republish tasks waiting for agent", () => {
         status: Enums.TaskStatus.SUCCEEDED,
       },
       {
+        _id: task5_Id,
         _teamId: _teamId,
         _jobId: job._id,
         name: "Task 5",
@@ -263,6 +394,7 @@ describe("Test republish tasks waiting for agent", () => {
         },
       },
       {
+        _id: task6_Id,
         _teamId: _teamId,
         _jobId: job._id,
         name: "Task 6",
@@ -311,6 +443,72 @@ describe("Test republish tasks waiting for agent", () => {
     const agentId: mongodb.ObjectId = await GetTargetAgentId(_teamId, task, job, logger);
     const expectedAgentId = task.targetAgentId;
     validateEquality(agentId, expectedAgentId);
+  });
+
+  test("GetSingleAgentTaskRoute test 1", async () => {
+    const task: TaskSchema = _.filter(tasks, (t) => t.name == "Task 3")[0];
+    const routes: object[] = await GetSingleAgentTaskRoute(_teamId, task, logger, {}, agents, ActiveAgentSortFunction);
+
+    validateArrayLength(routes, 1);
+    validateEquality(agent6_Id.toHexString(), routes[0]["targetAgentId"]);
+  });
+
+  test("CreateTaskRouteForSingleAgent test 1", async () => {
+    const task: TaskSchema = _.filter(tasks, (t) => t.name == "Task 3")[0];
+    const [routes, updatedTask] = await CreateTaskRouteForSingleAgent(
+      _teamId,
+      agents,
+      task,
+      ActiveAgentSortFunction,
+      {},
+      logger
+    );
+
+    validateArrayLength(routes, 1);
+    validateEquality(agent6_Id.toHexString(), routes[0]["targetAgentId"]);
+    expect(updatedTask).toEqual(
+      expect.objectContaining({
+        attemptedRunAgentIds: [agent5_Id.toHexString(), agent6_Id.toHexString()],
+      })
+    );
+  });
+
+  test("CreateTaskRouteForSingleAgent test none available", async () => {
+    const task: TaskSchema = _.filter(tasks, (t) => t.name == "Task 3")[0];
+    await expect(CreateTaskRouteForSingleAgent(_teamId, [], task, ActiveAgentSortFunction, {}, logger)).rejects.toThrow(
+      "No qualified agent available to complete this task"
+    );
+  });
+
+  test("CreateTaskRoutesForAgents test 1", async () => {
+    const routes: any[] = await CreateTaskRoutesForAgents(_teamId, agents, {});
+
+    validateArrayLength(routes, 7);
+    expect(routes).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          targetAgentId: agent1_Id.toHexString(),
+        }),
+        expect.objectContaining({
+          targetAgentId: agent2_Id.toHexString(),
+        }),
+        expect.objectContaining({
+          targetAgentId: agent3_Id.toHexString(),
+        }),
+        expect.not.objectContaining({
+          targetAgentId: agent4_Id.toHexString(),
+        }),
+        expect.not.objectContaining({
+          targetAgentId: agent5_Id.toHexString(),
+        }),
+        expect.not.objectContaining({
+          targetAgentId: agent6_Id.toHexString(),
+        }),
+        expect.not.objectContaining({
+          targetAgentId: agent7_Id.toHexString(),
+        }),
+      ])
+    );
   });
 
   afterAll(async () => await db.clearDatabase());

@@ -1,23 +1,28 @@
+import { int } from "aws-sdk/clients/datapipeline";
+
+import BitSet from "bitset";
 import * as config from "config";
-import { SGStrings } from "../../shared/SGStrings";
-import { BaseLogger } from "../../shared/SGLogger";
+const jwt = require("jsonwebtoken");
+import * as _ from "lodash";
+import * as mongodb from "mongodb";
+import { hasUncaughtExceptionCaptureCallback } from "process";
 
 import { AgentSchema } from "../domain/Agent";
+import { JobSchema } from "../domain/Job";
 import { TaskSchema, TaskModel } from "../domain/Task";
+
 import { agentService } from "../services/AgentService";
 import { taskService } from "../services/TaskService";
-import { teamVariableService } from "../services/TeamVariableService";
 import { taskOutcomeService } from "../services/TaskOutcomeService";
-import * as Enums from "../../shared/Enums";
+import { teamVariableService } from "../services/TeamVariableService";
+
 import { AMQPConnector } from "../../shared/AMQPLib";
+import * as Enums from "../../shared/Enums";
+import { SGStrings } from "../../shared/SGStrings";
+import { BaseLogger } from "../../shared/SGLogger";
 import { SGUtils } from "../../shared/SGUtils";
-import * as mongodb from "mongodb";
-import * as _ from "lodash";
-import BitSet from "bitset";
-import { int } from "aws-sdk/clients/datapipeline";
-import { hasUncaughtExceptionCaptureCallback } from "process";
-import { JobSchema } from "../domain/Job";
-const jwt = require("jsonwebtoken");
+
+import { LaunchTaskError } from "../utils/Errors";
 
 const activeAgentTimeoutSeconds = config.get("activeAgentTimeoutSeconds");
 
@@ -40,29 +45,6 @@ let TaskReadyToPublish = async (_teamId: mongodb.ObjectId, task: TaskSchema, log
     tasks.map((t) => SGUtils.flatMap((x) => x[0], t.toRoutes))
   );
   return (!task.up_dep || Object.keys(task.up_dep).length < 1) && tasksToRoutes.indexOf(task.name) < 0;
-};
-
-/**
- * Returns a filter to be used in a mongodb query to select active agents
- * @param requiredTags if not empty, will only return agents with all tags listed
- * @returns
- */
-let ConstructActiveAgentsMongoFilter = async (requiredTags: any): Promise<any> => {
-  let filter: any = {};
-  filter.offline = false;
-  filter.lastHeartbeatTime = {
-    $gte: new Date().getTime() - parseInt(activeAgentTimeoutSeconds) * 1000,
-  };
-  filter["$and"] = [];
-  for (let i = 0; i < Object.keys(requiredTags).length; i++) {
-    const tagKey = Object.keys(requiredTags)[i];
-    const tagFilterKey: string = `tags.${tagKey}`;
-    let tagFilter: any = {};
-    tagFilter[tagFilterKey] = requiredTags[tagKey];
-    filter["$and"].push(tagFilter);
-  }
-
-  return filter;
 };
 
 /**
@@ -184,287 +166,241 @@ let ActiveLambdaRunnerAgentSortFunction = (a, b) => {
 };
 
 /**
- * For tasks requiring a single agent with designated tags, get a list of all active agents with all required tags.
- *  If no agents exist with all required tags, log an error and return.
+ * For tasks targeting a single agent, get the least utilized agent from a given list
  * @param _teamId
  * @param task
  * @param logger
  * @param agentQueueProperties
+ * @params candidateAgents
+ * @params AgentSortFunction
  * @returns
  */
-let GetSingleAgentWithTagsTaskRoute = async (
+let GetSingleAgentTaskRoute = async (
   _teamId: mongodb.ObjectId,
   task: TaskSchema,
   logger: BaseLogger,
   agentQueueProperties: any,
-  agentsWithRequiredTags: AgentSchema[],
+  candidateAgents: Array<Partial<AgentSchema>>,
   AgentSortFunction: any
 ): Promise<object[] | null> => {
-  // console.log(`GetTaskRoutes -> before filter -> ${JSON.stringify(agentsWithRequiredTags, null, 4)}`);
-  const agentCandidates = _.filter(agentsWithRequiredTags, (a) => task.attemptedRunAgentIds.indexOf(a._id) < 0);
-  // console.log(`GetTaskRoutes -> after filter -> ${JSON.stringify(agentCandidates, null, 4)}`);
-  if (agentCandidates.length < 1) {
-    const errMsg = `No agents with required tags available to complete this task`;
-    logger.LogError(errMsg, {
-      Class: "Shared",
-      Method: "GetTaskRoutes",
-      _teamId,
-      _jobId: task._jobId,
-      task: task,
-    });
-    return null;
+  const filteredAgentCandidates = _.filter(
+    candidateAgents,
+    (a) => task.attemptedRunAgentIds.indexOf(a._id.toHexString()) < 0
+  );
+  if (filteredAgentCandidates.length < 1) {
+    throw new LaunchTaskError(
+      "No qualified agent available to complete this task",
+      Enums.TaskFailureCode.NO_AGENT_AVAILABLE,
+      task
+    );
   }
 
-  agentCandidates.sort(AgentSortFunction);
+  filteredAgentCandidates.sort(AgentSortFunction);
   // console.log(`GetTaskRoutes -> after sort -> ${JSON.stringify(agentCandidates, null, 4)}`);
-  const agentQueue = SGStrings.GetAgentQueue(_teamId.toHexString(), agentCandidates[0]._id);
+  const targetAgentIdAsString = filteredAgentCandidates[0]._id.toHexString();
+  const agentQueue = SGStrings.GetAgentQueue(_teamId.toHexString(), targetAgentIdAsString);
   return [
     {
       route: agentQueue,
       type: "queue",
       queueAssertArgs: agentQueueProperties,
-      targetAgentId: agentCandidates[0]._id,
+      targetAgentId: targetAgentIdAsString,
     },
   ];
 };
 
+/**
+ * Pick the agent that is currently the least utilized
+ * @param _teamId
+ * @param agentCandidates
+ * @param agentQueueProperties
+ */
+let CreateTaskRouteForSingleAgent = async (
+  _teamId: mongodb.ObjectId,
+  agentCandidates: Partial<AgentSchema>[],
+  task: TaskSchema,
+  agentSortFunction: any,
+  agentQueueProperties: any,
+  logger: BaseLogger
+): Promise<[any[], TaskSchema | undefined]> => {
+  let updatedTask: TaskSchema = undefined;
+  let routes: any[] = await GetSingleAgentTaskRoute(
+    _teamId,
+    task,
+    logger,
+    agentQueueProperties,
+    agentCandidates,
+    agentSortFunction
+  );
+
+  if (!routes || (_.isArray(routes) && routes.length < 1)) {
+    throw new LaunchTaskError("No agent with required tags available", Enums.TaskFailureCode.NO_AGENT_AVAILABLE, task);
+  } else {
+    if (!routes[0].hasOwnProperty("targetAgentId"))
+      throw new LaunchTaskError("Route missing targetAgentId", Enums.TaskFailureCode.TARGET_AGENT_NOT_SPECIFIED, task);
+    const targetAgentId = routes[0].targetAgentId;
+    updatedTask = await TaskModel.findOneAndUpdate(
+      { _id: task._id, _teamId },
+      { $push: { attemptedRunAgentIds: targetAgentId } },
+      { new: true }
+    );
+    await agentService.updateAgentLastTaskAssignedTime(_teamId, targetAgentId, Date.now(), null, "_id");
+  }
+
+  return [routes, updatedTask];
+};
+
+/**
+ * Publish the task in the queue of each qualified agent
+ * @param _teamId
+ * @param agents
+ * @param logger
+ * @param agentQueueProperties
+ */
+let CreateTaskRoutesForAgents = async (
+  _teamId: mongodb.ObjectId,
+  agents: Partial<AgentSchema>[],
+  agentQueueProperties: any
+): Promise<any[]> => {
+  let routes: any[] = [];
+  for (let i = 0; i < agents.length; i++) {
+    const agentQueue = SGStrings.GetAgentQueue(_teamId.toHexString(), agents[i]._id);
+    routes.push({
+      route: agentQueue,
+      type: "queue",
+      queueAssertArgs: agentQueueProperties,
+      targetAgentId: agents[i]._id.toHexString(),
+    });
+    await agentService.updateAgentLastTaskAssignedTime(_teamId, agents[i]._id, Date.now(), null, "_id");
+  }
+
+  return routes;
+};
+
 let GetTaskRoutes = async (_teamId: mongodb.ObjectId, task: TaskSchema, logger: BaseLogger) => {
   let routes: any[] = [];
-  let updatedTask = undefined;
+  let updatedTask: TaskSchema = undefined;
 
   const agentQueueProperties: any = {
     exclusive: false,
     durable: true,
     autoDelete: false,
   };
-  const inactiveAgentQueueTTLHours = parseInt(config.get("inactiveAgentQueueTTLHours"), 10);
-  let inactiveAgentQueueTTL = inactiveAgentQueueTTLHours * 60 * 60 * 1000;
-  if (inactiveAgentQueueTTL > 0) agentQueueProperties["expires"] = inactiveAgentQueueTTL;
+  try {
+    const inactiveAgentQueueTTLHours = parseInt(config.get("inactiveAgentQueueTTLHours"), 10);
+    let inactiveAgentQueueTTL = inactiveAgentQueueTTLHours * 60 * 60 * 1000;
+    if (inactiveAgentQueueTTL > 0) agentQueueProperties["expires"] = inactiveAgentQueueTTL;
 
-  /// Tasks targeting one specific agent
-  if (task.target == Enums.TaskDefTarget.SINGLE_SPECIFIC_AGENT) {
-    routes = await GetSingleSpecificAgentTaskRoute(_teamId, task, logger, agentQueueProperties);
-    if (!routes)
-      return {
-        routes: null,
-        error: "Target agent not available",
-        failureCode: Enums.TaskFailureCode.NO_AGENT_AVAILABLE,
-      };
-    else routes.push(routes);
-    const targetAgentId = new mongodb.ObjectId(task.targetAgentId);
-    await agentService.updateAgentLastTaskAssignedTime(_teamId, targetAgentId, Date.now(), null, "_id");
-  }
-  /// For tasks requiring agents with designated tags, get a list of all active agents with all required tags.
-  ///   If no agents exist with all required tags, log an error and return.
-  else if (task.target & (Enums.TaskDefTarget.SINGLE_AGENT_WITH_TAGS | Enums.TaskDefTarget.ALL_AGENTS_WITH_TAGS)) {
-    if (_.isPlainObject(task.requiredTags) && Object.keys(task.requiredTags).length > 0) {
-      const filter = await ConstructActiveAgentsMongoFilter(task.requiredTags);
-      const agentsWithRequiredTags: AgentSchema[] = await agentService.findAllAgents(
+    /// Tasks targeting one specific agent
+    if (task.target == Enums.TaskDefTarget.SINGLE_SPECIFIC_AGENT) {
+      routes = await GetSingleSpecificAgentTaskRoute(_teamId, task, logger, agentQueueProperties);
+
+      if (!routes || (_.isArray(routes) && routes.length < 1))
+        throw new LaunchTaskError("Target agent not available", Enums.TaskFailureCode.NO_AGENT_AVAILABLE, task);
+      const targetAgentId = new mongodb.ObjectId(task.targetAgentId);
+      await agentService.updateAgentLastTaskAssignedTime(_teamId, targetAgentId, Date.now(), null, "_id");
+    }
+
+    /// For tasks requiring agents with designated tags, get a list of all active agents with all required tags.
+    ///   If no agents exist with all required tags, log an error and return.
+    else if (task.target & (Enums.TaskDefTarget.SINGLE_AGENT_WITH_TAGS | Enums.TaskDefTarget.ALL_AGENTS_WITH_TAGS)) {
+      if (!_.isPlainObject(task.requiredTags) || Object.keys(task.requiredTags).length < 1)
+        throw new LaunchTaskError(
+          "Missing or invalid requiredTags property",
+          Enums.TaskFailureCode.MISSING_TARGET_TAGS,
+          task
+        );
+
+      const agentsWithRequiredTags: AgentSchema[] = await agentService.findActiveAgentsWithTags(
         _teamId,
-        filter,
+        task.requiredTags,
         "lastHeartbeatTime propertyOverrides numActiveTasks attemptedRunAgentIds lastTaskAssignedTime"
       );
-
-      if (agentsWithRequiredTags.length < 1) {
-        const errMsg = `No agent with required tags available`;
-        logger.LogDebug(errMsg, {
-          Class: "Shared",
-          Method: "GetTaskRoutes",
-          _teamId,
-          _jobId: task._jobId,
-          task: task,
-        });
-        return {
-          routes: null,
-          error: errMsg,
-          failureCode: Enums.TaskFailureCode.NO_AGENT_AVAILABLE,
-        };
-      }
+      if (agentsWithRequiredTags.length < 1)
+        throw new LaunchTaskError(
+          "No agent with required tags available",
+          Enums.TaskFailureCode.NO_AGENT_AVAILABLE,
+          task
+        );
 
       if (task.target == Enums.TaskDefTarget.ALL_AGENTS_WITH_TAGS) {
-        /// Publish the task in the queue of each qualified agent
-        for (let i = 0; i < agentsWithRequiredTags.length; i++) {
-          const agentQueue = SGStrings.GetAgentQueue(_teamId.toHexString(), agentsWithRequiredTags[i]._id);
-          routes.push({
-            route: agentQueue,
-            type: "queue",
-            queueAssertArgs: agentQueueProperties,
-            targetAgentId: agentsWithRequiredTags[i]._id,
-          });
-          await agentService.updateAgentLastTaskAssignedTime(
-            _teamId,
-            agentsWithRequiredTags[i]._id,
-            Date.now(),
-            null,
-            "_id"
-          );
-        }
+        routes = await CreateTaskRoutesForAgents(_teamId, agentsWithRequiredTags, agentQueueProperties);
       } else {
-        /// Pick the agent that is currently the least utilized and send the task to it.
-        const routes: any[] = await GetSingleAgentWithTagsTaskRoute(
+        [routes, updatedTask] = await CreateTaskRouteForSingleAgent(
           _teamId,
-          task,
-          logger,
-          agentQueueProperties,
           agentsWithRequiredTags,
-          ActiveAgentSortFunction
-        );
-
-        if (!routes) {
-          return {
-            routes: null,
-            error: "No agent with required tags available",
-            failureCode: Enums.TaskFailureCode.NO_AGENT_AVAILABLE,
-          };
-        } else {
-          if (routes[0].targetAgentId) {
-            const targetAgentId = routes[0].targetAgentId;
-            updatedTask = await TaskModel.findOneAndUpdate(
-              { _id: task._id, _teamId },
-              { $push: { attemptedRunAgentIds: targetAgentId } },
-              { new: true }
-            );
-            await agentService.updateAgentLastTaskAssignedTime(_teamId, targetAgentId, Date.now(), null, "_id");
-          }
-        }
-      }
-    } else {
-      let errMsg = "";
-      if (_.isPlainObject(task.requiredTags))
-        errMsg = `Task target is "SINGLE_AGENT_WITH_TAGS" or "ALL_AGENTS_WITH_TAGS" but no required tags are specified`;
-      else
-        errMsg = `Task target is "SINGLE_AGENT_WITH_TAGS" or "ALL_AGENTS_WITH_TAGS" but required tags are incorrectly formatted`;
-      logger.LogError(errMsg, {
-        Class: "Shared",
-        Method: "GetTaskRoutes",
-        _teamId,
-        _jobId: task._jobId,
-        task: task,
-      });
-      return {
-        routes: null,
-        error: errMsg,
-        failureCode: Enums.TaskFailureCode.MISSING_TARGET_TAGS,
-      };
-    }
-  }
-  /// For aws lambda objectives, route the task to a SaaSGlue aws lambda agent
-  else if (task.target == Enums.TaskDefTarget.AWS_LAMBDA) {
-    const sgAdminTeam = new mongodb.ObjectId(config.get("sgAdminTeam"));
-    const requiredTags = config.get("awsLambdaRequiredTags");
-
-    const filter = await ConstructActiveAgentsMongoFilter(requiredTags);
-    const agentsWithRequiredTags = await agentService.findAllAgents(
-      sgAdminTeam,
-      filter,
-      "lastHeartbeatTime propertyOverrides numActiveTasks attemptedRunAgentIds"
-    );
-
-    if (agentsWithRequiredTags.length < 1) {
-      const errMsg = `No lambda runner agents available`;
-      logger.LogError(errMsg, {
-        Class: "Shared",
-        Method: "GetTaskRoutes",
-        _teamId,
-        _jobId: task._jobId,
-        task: task,
-      });
-      return {
-        routes: null,
-        error: errMsg,
-        failureCode: Enums.TaskFailureCode.NO_AGENT_AVAILABLE,
-      };
-    }
-
-    const routes: any[] = await GetSingleAgentWithTagsTaskRoute(
-      _teamId,
-      task,
-      logger,
-      agentQueueProperties,
-      agentsWithRequiredTags,
-      ActiveLambdaRunnerAgentSortFunction
-    );
-
-    if (!routes) {
-      return {
-        routes: null,
-        error: "No agent with required tags available",
-        failureCode: Enums.TaskFailureCode.NO_AGENT_AVAILABLE,
-      };
-    } else {
-      if (routes[0].targetAgentId) {
-        const targetAgentId = routes[0].targetAgentId;
-        updatedTask = await TaskModel.findOneAndUpdate(
-          { _id: task._id, _teamId },
-          { $push: { attemptedRunAgentIds: targetAgentId } },
-          { new: true }
+          task,
+          ActiveAgentSortFunction,
+          logger,
+          agentQueueProperties
         );
       }
     }
-  }
-  /// For objecives not requiring particular tags, route the task to a single agent or all agents
-  else {
-    const filter: any = ConstructGeneralTaskHandlerAgentsMongoFilter();
-    const agentsQuery = await agentService.findAllAgents(
-      _teamId,
-      filter,
-      "lastHeartbeatTime tags propertyOverrides numActiveTasks attemptedRunAgentIds"
-    );
-    if (!agentsQuery || (_.isArray(agentsQuery) && agentsQuery.length === 0)) {
-      const errMsg = `No agent available`;
-      logger.LogError(errMsg, {
-        Class: "Shared",
-        Method: "GetTaskRoutes",
-        _teamId,
-        _jobId: task._jobId,
-        task: task,
-      });
-      return {
-        routes: null,
-        error: errMsg,
-        failureCode: Enums.TaskFailureCode.NO_AGENT_AVAILABLE,
-      };
-    }
 
-    if (task.target & Enums.TaskDefTarget.ALL_AGENTS) {
-      for (let i = 0; i < Object.keys(agentsQuery).length; i++) {
-        const agentQueue = SGStrings.GetAgentQueue(_teamId.toHexString(), agentsQuery[i]._id);
-        routes.push({
-          route: agentQueue,
-          type: "queue",
-          queueAssertArgs: agentQueueProperties,
-          targetAgentId: agentsQuery[i]._id,
-        });
-        await agentService.updateAgentLastTaskAssignedTime(_teamId, agentsQuery[i]._id, Date.now(), null, "_id");
-      }
-    } else {
-      /// Pick the agent that is currently the least utilized and send the task to it.
-      const routes: any[] = await GetSingleAgentWithTagsTaskRoute(
-        _teamId,
-        task,
-        logger,
-        agentQueueProperties,
-        agentsQuery,
-        ActiveAgentSortFunction
+    /// For aws lambda objectives, route the task to a SaaSGlue aws lambda agent
+    else if (task.target == Enums.TaskDefTarget.AWS_LAMBDA) {
+      const sgAdminTeam = new mongodb.ObjectId(config.get("sgAdminTeam"));
+      const requiredTags = config.get("awsLambdaRequiredTags");
+
+      const agentsWithRequiredTags = await agentService.findActiveAgentsWithTags(
+        sgAdminTeam,
+        requiredTags,
+        "lastHeartbeatTime propertyOverrides numActiveTasks attemptedRunAgentIds"
       );
+      if (agentsWithRequiredTags.length < 1)
+        throw new LaunchTaskError("No lambda runner agents available", Enums.TaskFailureCode.NO_AGENT_AVAILABLE, task);
 
-      if (!routes) {
-        return {
-          routes: null,
-          error: "No agent available to complete this task",
-          failureCode: Enums.TaskFailureCode.NO_AGENT_AVAILABLE,
-        };
-      } else {
-        if (routes[0].targetAgentId) {
-          const targetAgentId = routes[0].targetAgentId;
-          updatedTask = await TaskModel.findOneAndUpdate(
-            { _id: task._id, _teamId },
-            { $push: { attemptedRunAgentIds: targetAgentId } },
-            { new: true }
-          );
-          await agentService.updateAgentLastTaskAssignedTime(_teamId, targetAgentId, Date.now(), null, "_id");
-        }
+      [routes, updatedTask] = await CreateTaskRouteForSingleAgent(
+        _teamId,
+        agentsWithRequiredTags,
+        task,
+        ActiveLambdaRunnerAgentSortFunction,
+        logger,
+        agentQueueProperties
+      );
+    }
+
+    /// For objecives not requiring particular tags, route the task to a single agent or all agents
+    else {
+      const filter: any = ConstructGeneralTaskHandlerAgentsMongoFilter();
+      const agentsQuery = await agentService.findAllAgents(
+        _teamId,
+        filter,
+        "lastHeartbeatTime tags propertyOverrides numActiveTasks attemptedRunAgentIds"
+      );
+      if (!agentsQuery || (_.isArray(agentsQuery) && agentsQuery.length < 1)) {
+        throw new LaunchTaskError("No agent available", Enums.TaskFailureCode.NO_AGENT_AVAILABLE, task);
       }
+
+      if (task.target & Enums.TaskDefTarget.ALL_AGENTS) {
+        routes = await CreateTaskRoutesForAgents(_teamId, agentsQuery, agentQueueProperties);
+      } else {
+        [routes, updatedTask] = await CreateTaskRouteForSingleAgent(
+          _teamId,
+          agentsQuery,
+          task,
+          ActiveAgentSortFunction,
+          logger,
+          agentQueueProperties
+        );
+      }
+    }
+  } catch (err) {
+    if (err instanceof LaunchTaskError) {
+      const failureCode: Enums.TaskFailureCode | undefined = (err as LaunchTaskError).getFailureCode();
+      const failedTask: TaskSchema | undefined = (err as LaunchTaskError).getContext();
+      logger.LogError(err.message, {
+        Class: "Shared",
+        Method: "GetTaskRoutes",
+        _teamId,
+        _jobId: failedTask._jobId,
+        task: failedTask,
+      });
+      return {
+        routes: null,
+        error: err.message,
+        failureCode: failureCode,
+      };
     }
   }
 
@@ -673,17 +609,22 @@ let convertTeamAccessRightsToBitset = (accessRightIds: number[]) => {
   return bitset.toString(16); // more efficient as hex
 };
 
-export { GetTargetAgentId };
+export { ActiveAgentSortFunction };
+export { ActiveLambdaRunnerAgentSortFunction };
 export { convertTeamAccessRightsToBitset };
-export { GetTaskRoutes };
-export { RepublishTasksWaitingForAgent };
-export { GetWaitingForLambdaRunnerTasks };
-export { GetWaitingForAgentTasks };
-export { RepublishTasksWaitingForLambdaRunner };
+export { CreateTaskRoutesForAgents };
+export { CreateTaskRouteForSingleAgent };
 export { GetAccessRightIdsForTeamUser };
 export { GetAccessRightIdsForTeamAdmin };
 export { GetAccessRightIdsForSGAdmin };
 export { GetAccessRightIdsForSGAgent };
 export { GetGlobalAccessRightId };
+export { GetSingleAgentTaskRoute };
+export { GetTargetAgentId };
+export { GetTaskRoutes };
+export { GetWaitingForLambdaRunnerTasks };
+export { GetWaitingForAgentTasks };
 export { NumNotStartedTasks };
+export { RepublishTasksWaitingForAgent };
+export { RepublishTasksWaitingForLambdaRunner };
 export { TaskReadyToPublish };

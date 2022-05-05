@@ -2,6 +2,7 @@ import * as _ from "lodash";
 import * as moment from "moment";
 import * as mongodb from "mongodb";
 
+import { AgentSchema } from "../api/domain/Agent";
 import { JobSchema } from "../api/domain/Job";
 import { JobDefSchema } from "../api/domain/JobDef";
 import { ScriptSchema } from "../api/domain/Script";
@@ -10,6 +11,7 @@ import { TaskSchema } from "../api/domain/Task";
 import { TaskDefSchema } from "../api/domain/TaskDef";
 import { TeamVariableSchema } from "../api/domain/TeamVariable";
 
+import { agentService } from "../api/services/AgentService";
 import { jobService } from "../api/services/JobService";
 import { jobDefService } from "../api/services/JobDefService";
 import { scriptService } from "../api/services/ScriptService";
@@ -253,3 +255,14 @@ let CreateTeamVariables = async (_teamId: mongodb.ObjectId, teamVars: Partial<Te
   }
 };
 export { CreateTeamVariables };
+
+/**
+ *
+ * @param agents
+ */
+let CreateAgents = async (_teamId: mongodb.ObjectId, agents: Partial<AgentSchema>[]) => {
+  for (let a of agents) {
+    await agentService.createAgent(_teamId, a, null);
+  }
+};
+export { CreateAgents };
