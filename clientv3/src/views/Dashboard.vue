@@ -11,104 +11,109 @@
             <router-link :to="{name: 'jobList', params: {action: 'create'}}">Create</router-link>
           </div>
 
-          <p class="is-size-6 py-1">
-            <font-awesome-icon :icon="['fas', 'calendar-alt']" />
-            {{getJobFetchTypeDescription(selectedJobFetchType)}}
+          <template v-if="filteredJobs">
+            <p class="is-size-6 py-1">
+              <font-awesome-icon :icon="['fas', 'calendar-alt']" />
+              {{getJobFetchTypeDescription(selectedJobFetchType)}}
+            </p>
+
+            <div class="field is-grouped is-grouped-multiline mt-3">
+              <div class="control">
+                <div class="tags has-addons">
+                  <router-link class="tag is-light is-success" to="/jobMonitor">Total</router-link>
+                  <span class="tag is-success">{{filteredJobs.length}}</span>
+                </div>
+              </div>
+
+              <div class="control">
+                <div class="tags has-addons">
+                  <router-link class="tag is-light is-success" to="/jobMonitor">Completed</router-link>
+                  <span class="tag is-success">{{filteredJobsStatusCounts[JobStatus.COMPLETED]}}</span>
+                </div>
+              </div>
+
+              <div class="control">
+                <div class="tags has-addons">
+                  <router-link class="tag is-light is-info" to="/jobMonitor">Running</router-link>
+                  <span class="tag is-info">{{filteredJobsStatusCounts[JobStatus.RUNNING]}}</span>
+                </div>
+              </div>
+
+              <div class="control">
+                <div class="tags has-addons">
+                  <router-link class="tag is-light is-warning" to="/jobMonitor">Not Started</router-link>
+                  <span class="tag is-warning">{{filteredJobsStatusCounts[JobStatus.NOT_STARTED]}}</span>
+                </div>
+              </div>
+
+              <div class="control">
+                <div class="tags has-addons">
+                  <router-link class="tag is-light is-warning" to="/jobMonitor">Cancelling</router-link>
+                  <span class="tag is-warning">{{filteredJobsStatusCounts[JobStatus.CANCELING]}}</span>
+                </div>
+              </div>
+
+              <div class="control">
+                <div class="tags has-addons">
+                  <router-link class="tag is-light is-warning" to="/jobMonitor">Interupting</router-link>
+                  <span class="tag is-warning">{{filteredJobsStatusCounts[JobStatus.INTERRUPTING]}}</span>
+                </div>
+              </div>
+
+              <div class="control">
+                <div class="tags has-addons">
+                  <router-link class="tag is-light is-danger" to="/jobMonitor">Interupted</router-link>
+                  <span class="tag is-danger">{{filteredJobsStatusCounts[JobStatus.INTERRUPTED]}}</span>
+                </div>
+              </div>
+            </div>
+
+            <p class="is-size-6 has-text-weight-bold mt-4 mb-1">Recent Job Runs (up to 5 shown)</p>
+
+            <table class="table is-striped is-fullwidth">
+              <thead>
+                <tr>
+                <th>Run Number</th>
+                <th>Name</th>
+                <th>Status</th>
+                <th>Started</th>
+                <th>Completed</th>
+              </tr>
+              </thead>
+              <tbody class="is-size-7 is-size-6-fullhd">
+                <tr v-for="job in recentJobs" :key="job.id">
+                  <td><router-link :to="{name: 'jobDetailsMonitor', params: {jobId: job.id}}">Monitor {{job.runId}}</router-link></td>
+                  <td>
+                    <template v-if="job._jobDefId">
+                      <router-link :to="{name: 'jobDesigner', params: {jobId: job._jobDefId}}">{{job.name}}</router-link>
+                    </template>
+                    <template v-else>
+                      {{job.name}}
+                    </template>
+                  </td>
+                  <td :style="{color: calcJobStatusColor(job.status)}" >{{enumKeyToPretty(JobStatus, job.status)}}</td>
+                  <td>{{momentToStringV1(job.dateStarted)}}</td>
+                  <td>{{momentToStringV1(job.dateCompleted)}}</td>
+                </tr>
+              </tbody>
+            </table>
+
+            <p class="is-size-6 has-text-weight-bold mt-4 mb-1">Scheduled Job Runs (Next 24 Hours)</p>
+
+            <table class="table is-striped is-fullwidth">
+              <tbody class="is-size-7 is-size-6-fullhd">
+                <tr v-for="schedule in schedulesNext24Hours" :key="schedule.id">
+                  <td>{{momentToStringV1(schedule.nextScheduledRunDate)}}</td>
+                  <td>
+                    <a href="#" @click.prevent="onClickedSchedule(schedule)">{{getJobName(schedule)}}</a>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </template>
+          <p v-else class="has-text-centered is-size-5 mt-5">
+            No Jobs yet.<br /> <router-link :to="{name: 'jobList', params: {action: 'create'}}">Create</router-link> your first Job.
           </p>
-
-          <div class="field is-grouped is-grouped-multiline mt-3">
-            <div class="control">
-              <div class="tags has-addons">
-                <router-link class="tag is-light is-success" to="/jobMonitor">Total</router-link>
-                <span class="tag is-success">{{filteredJobs.length}}</span>
-              </div>
-            </div>
-
-            <div class="control">
-              <div class="tags has-addons">
-                <router-link class="tag is-light is-success" to="/jobMonitor">Completed</router-link>
-                <span class="tag is-success">{{filteredJobsStatusCounts[JobStatus.COMPLETED]}}</span>
-              </div>
-            </div>
-
-            <div class="control">
-              <div class="tags has-addons">
-                <router-link class="tag is-light is-info" to="/jobMonitor">Running</router-link>
-                <span class="tag is-info">{{filteredJobsStatusCounts[JobStatus.RUNNING]}}</span>
-              </div>
-            </div>
-
-            <div class="control">
-              <div class="tags has-addons">
-                <router-link class="tag is-light is-warning" to="/jobMonitor">Not Started</router-link>
-                <span class="tag is-warning">{{filteredJobsStatusCounts[JobStatus.NOT_STARTED]}}</span>
-              </div>
-            </div>
-
-            <div class="control">
-              <div class="tags has-addons">
-                <router-link class="tag is-light is-warning" to="/jobMonitor">Cancelling</router-link>
-                <span class="tag is-warning">{{filteredJobsStatusCounts[JobStatus.CANCELING]}}</span>
-              </div>
-            </div>
-
-            <div class="control">
-              <div class="tags has-addons">
-                <router-link class="tag is-light is-warning" to="/jobMonitor">Interupting</router-link>
-                <span class="tag is-warning">{{filteredJobsStatusCounts[JobStatus.INTERRUPTING]}}</span>
-              </div>
-            </div>
-
-            <div class="control">
-              <div class="tags has-addons">
-                <router-link class="tag is-light is-danger" to="/jobMonitor">Interupted</router-link>
-                <span class="tag is-danger">{{filteredJobsStatusCounts[JobStatus.INTERRUPTED]}}</span>
-              </div>
-            </div>
-          </div>
-
-          <p class="is-size-6 has-text-weight-bold mt-4 mb-1">Recent Job Runs (up to 5 shown)</p>
-
-          <table class="table is-striped is-fullwidth">
-            <thead>
-              <tr>
-              <th>Run Number</th>
-              <th>Name</th>
-              <th>Status</th>
-              <th>Started</th>
-              <th>Completed</th>
-            </tr>
-            </thead>
-            <tbody class="is-size-7 is-size-6-fullhd has-lightblue-bg">
-              <tr v-for="job in recentJobs" :key="job.id">
-                <td><router-link :to="{name: 'jobDetailsMonitor', params: {jobId: job.id}}">Monitor {{job.runId}}</router-link></td>
-                <td>
-                  <template v-if="job._jobDefId">
-                    <router-link :to="{name: 'jobDesigner', params: {jobId: job._jobDefId}}">{{job.name}}</router-link>
-                  </template>
-                  <template v-else>
-                    {{job.name}}
-                  </template>
-                </td>
-                <td :style="{color: calcJobStatusColor(job.status)}" >{{enumKeyToPretty(JobStatus, job.status)}}</td>
-                <td>{{momentToStringV1(job.dateStarted)}}</td>
-                <td>{{momentToStringV1(job.dateCompleted)}}</td>
-              </tr>
-            </tbody>
-          </table>
-
-          <p class="is-size-6 has-text-weight-bold mt-4 mb-1">Scheduled Job Runs (Next 24 Hours)</p>
-
-          <table class="table is-striped is-fullwidth">
-            <tbody class="is-size-7 is-size-6-fullhd has-lightblue-bg">
-              <tr v-for="schedule in schedulesNext24Hours" :key="schedule.id">
-                <td>{{momentToStringV1(schedule.nextScheduledRunDate)}}</td>
-                <td>
-                  <a href="#" @click.prevent="onClickedSchedule(schedule)">{{getJobName(schedule)}}</a>
-                </td>
-              </tr>
-            </tbody>
-          </table>
         </div>
       </div>
 
@@ -124,18 +129,23 @@
                 <router-link :to="{name: 'jobList', params: {action: 'create'}}">Create</router-link>
               </div>
 
-              <div class="tags has-addons mb-1">
-                <router-link class="tag is-light is-success" to="/jobList">Total</router-link>
-                <span class="tag is-success">{{jobDefs ? jobDefs.length : 0}}</span>
-              </div>
-              <div class="tags has-addons mb-1">
-                <router-link class="tag is-light is-success" to="/jobList">Active</router-link>
-                <span class="tag is-success">{{runningJobDefs ? runningJobDefs.length : 0}}</span>
-              </div>
-              <div class="tags has-addons">
-                <router-link class="tag is-light is-warning" to="/jobList">Paused</router-link>
-                <span class="tag is-warning">{{pausedJobDefs ? pausedJobDefs.length : 0}}</span>
-              </div>
+              <template v-if="jobDefs && jobDefs.length !== 0">
+                <div class="tags has-addons mb-1">
+                  <router-link class="tag is-light is-success" to="/jobList">Total</router-link>
+                  <span class="tag is-success">{{ jobDefs.length }}</span>
+                </div>
+                <div class="tags has-addons mb-1">
+                  <router-link class="tag is-light is-success" to="/jobList">Active</router-link>
+                  <span class="tag is-success">{{runningJobDefs ? runningJobDefs.length : 0}}</span>
+                </div>
+                <div class="tags has-addons">
+                  <router-link class="tag is-light is-warning" to="/jobList">Paused</router-link>
+                  <span class="tag is-warning">{{pausedJobDefs ? pausedJobDefs.length : 0}}</span>
+                </div>
+              </template>
+              <p v-else class="has-text-centered is-size-5">
+                No Jobs yet.<br /> <router-link :to="{name: 'jobList', params: {action: 'create'}}">Create</router-link> your first Job.
+              </p>
 
             </div>
           </div>
@@ -150,10 +160,14 @@
                 <router-link :to="{name: 'scripts', params: {action: 'create'}}">Create</router-link>
               </div>
 
-              <div class="tags has-addons">
+              <div v-if="scripts && scripts.length !== 0" class="tags has-addons">
                 <router-link class="tag is-light is-success" to="/scripts">Total</router-link>
-                <span class="tag is-success">{{scripts ? scripts.length : 0}}</span>
+                <span class="tag is-success">{{ scripts.length }}</span>
               </div>
+              <p v-else class="has-text-centered is-size-5">
+                No Scripts yet.<br /> <router-link :to="{name: 'scripts', params: {action: 'create'}}">Create</router-link> your first Script.
+              </p>
+
             </div>
           </div>
         </div>
@@ -168,42 +182,47 @@
               <router-link to="/downloadAgent">Create</router-link>
             </div>
 
-            <div class="field is-grouped is-grouped-multiline">
-              <div class="control">
-                <div class="tags has-addons">
-                  <router-link class="tag is-light is-success" to="/agentMonitor">Total</router-link>
-                  <span class="tag is-success">{{agents ? agents.length : 0}}</span>
+            <template v-if="agents && agents.length !== 0">
+              <div class="field is-grouped is-grouped-multiline">
+                <div class="control">
+                  <div class="tags has-addons">
+                    <router-link class="tag is-light is-success" to="/agentMonitor">Total</router-link>
+                    <span class="tag is-success">{{ agents.length }}</span>
+                  </div>
+                </div>
+
+                <div class="control">
+                  <div class="tags has-addons">
+                    <router-link class="tag is-light is-success" to="/agentMonitor">Active</router-link>
+                    <span class="tag is-success">{{activeAgents ? activeAgents.length : 0}}</span>
+                  </div>
                 </div>
               </div>
 
-              <div class="control">
-                <div class="tags has-addons">
-                  <router-link class="tag is-light is-success" to="/agentMonitor">Active</router-link>
-                  <span class="tag is-success">{{activeAgents ? activeAgents.length : 0}}</span>
-                </div>
-              </div>
-            </div>
-            
-            <p class="is-size-6 has-text-weight-bold mt-4 mb-1">Active Agents (up to 5 shown)</p>
+              <p class="is-size-6 has-text-weight-bold mt-4 mb-1">Active Agents (up to 5 shown)</p>
 
-            <table class="table is-striped is-fullwidth">
-              <thead>
-                <tr>
-                  <th>Name</th>
-                  <th>Tags</th>
-                  <th>Num Running Tasks</th>
-                  <th>Last Heartbeat</th>
-                </tr>
-              </thead>
-              <tbody class="is-size-7 is-size-6-fullhd has-lightblue-bg">
-                <tr v-for="agent in activeAgents" :key="agent.id">
-                  <td><router-link :to="{name: 'agentMonitor', params: {jobId: agent.id}}">{{agent.name}}</router-link></td>
-                  <td v-html="tagsMapToString(agent.tags, 2)"></td>
-                  <td>{{agent.numActiveTasks}}</td>
-                  <td>{{momentToStringV1(agent.lastHeartbeatTime)}}</td>
-                </tr>
-              </tbody>
-            </table>
+              <table class="table is-striped is-fullwidth">
+                <thead>
+                  <tr>
+                    <th>Name</th>
+                    <th>Tags</th>
+                    <th>Num Running Tasks</th>
+                    <th>Last Heartbeat</th>
+                  </tr>
+                </thead>
+                <tbody class="is-size-7 is-size-6-fullhd">
+                  <tr v-for="agent in activeAgents" :key="agent.id">
+                    <td><router-link :to="{name: 'agentMonitor', params: {jobId: agent.id}}">{{agent.name}}</router-link></td>
+                    <td v-html="tagsMapToString(agent.tags, 2)"></td>
+                    <td>{{agent.numActiveTasks}}</td>
+                    <td>{{momentToStringV1(agent.lastHeartbeatTime)}}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </template>
+            <p v-else class="has-text-centered is-size-5 mt-3">
+              <router-link :to="{name: 'downloadAgent'}">Download</router-link> your first agent.
+            </p>
 
           </div>
         </div>
