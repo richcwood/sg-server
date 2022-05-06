@@ -87,7 +87,7 @@
         <th>Completed</th>
       </thead>
 
-      <tbody class="has-background-wetasphalt is-family-code">
+      <tbody class="is-family-code">
         <template v-for="taskOutcome in getTaskOutcomes()">
           <tr :key="taskOutcome.id+'main'" class="has-text-white">
             <td v-if="taskOutcome.target == TaskDefTarget.AWS_LAMBDA">SG Compute</td>
@@ -117,10 +117,10 @@
                 <tbody class="has-text-emerland">
                   <template v-for="stepOutcome in getStepOutcomes(taskOutcome)">
                     <tr :key="'one_'+stepOutcome.id">
-                      <td class="has-text-carrot" style="padding-bottom: 0px;">{{stepOutcome.name}}</td>
-                      <td style="padding-bottom: 0px;">{{stepOutcome && enumKeyToPretty(TaskStatus, stepOutcome.status)}}</td>
-                      <td style="padding-bottom: 0px;">{{momentToStringV1(stepOutcome.dateStarted)}}</td>
-                      <td style="padding-top: 0px;">
+                      <td class="has-text-carrot">{{stepOutcome.name}}</td>
+                      <td :class="getStatusColor(stepOutcome)">{{stepOutcome && enumKeyToPretty(TaskStatus, stepOutcome.status)}}</td>
+                      <td>{{momentToStringV1(stepOutcome.dateStarted)}}</td>
+                      <td>
                         <span class="spaced" style="margin-bottom: -5px;"><a @click.prevent="onShowScriptClicked(stepOutcome)">script</a></span>
                         <span class="spaced"><a @click.prevent="onShowStdoutClicked(stepOutcome)">stdout</a></span>
                         <span class="spaced"><a @click.prevent="onShowStderrClicked(stepOutcome)">stderr</a></span>
@@ -374,45 +374,60 @@ export default class TaskMonitorDetails extends Vue {
       return '';
     }
   }
+
+  getStatusColor ({ status = StepStatus.NOT_STARTED }: StepOutcome): string {
+    switch (status) {
+      case StepStatus.FAILED:
+          return 'has-text-danger';
+
+      case StepStatus.NOT_STARTED:
+      case StepStatus.INTERRUPTED:
+      case StepStatus.CANCELLED:
+          return 'has-text-warning';
+
+      case StepStatus.RUNNING:
+      case StepStatus.SUCCEEDED:
+      default:
+        return 'has-text-success';
+    }
+  }
 }
 </script>
 
 <style scoped lang="scss">
-  .steps-table {
-    border-collapse: collapse;
-    border-spacing: 0;
-  }
-
   .table {
-    tbody {
-      &.has-background-wetasphalt,
+    &.steps-table {
+      border-collapse: collapse;
+      border-spacing: 0;
+
       tr {
         background: var(--wetasphalt-color);
       }
+    }
 
+    tbody {
       tr {
-        td:first-child,
-        td:last-child {
-            border-radius: 0;
-        }
-
         &:first-child {
           td:first-child {
               border-top-left-radius: 8px;
+              border-bottom-left-radius: 0 !important;
           }
 
           td:last-child {
               border-top-right-radius: 8px;
+              border-bottom-right-radius: 0 !important;
           }
         }
 
         &:last-child {
           td:first-child {
               border-bottom-left-radius: 8px;
+              border-top-left-radius: 0 !important;
           }
 
           td:last-child {
               border-bottom-right-radius: 8px;
+              border-top-right-radius: 0 !important;
           }
         }
       }

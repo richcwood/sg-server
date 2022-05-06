@@ -69,7 +69,7 @@
                 Team: {{ selectedTeamName }}
                 <font-awesome-icon class="dropdown-link-caret" icon="angle-down" />
               </a>
-              <div class="dropdown-menu" role="menu">
+              <div class="dropdown-menu p-0 has-background-white" role="menu">
                 <div class="p-0" role="menu">
                   <span class="dropdown-item has-text-centered has-text-grey has-background-light">Switch Teams</span>
                   <hr class="m-0">

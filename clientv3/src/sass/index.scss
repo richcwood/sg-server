@@ -171,7 +171,7 @@ a:hover {
   position: absolute;
 }
 
-.table {
+table.table {
   border-collapse: separate;
   border-spacing: 0 2px;
   background: transparent;
@@ -189,7 +189,7 @@ a:hover {
 
   tbody {
     tr {
-      background: #fff;
+      background: #ebfaff;
 
       td:first-child {
         border-top-left-radius: 8px;
@@ -201,10 +201,11 @@ a:hover {
         border-bottom-right-radius: 8px;
       }
     }
+  }
 
-    &.has-lightblue-bg tr {
-      background: #ebfaff;
-    }
+  &.is-hoverable.is-striped tbody tr:not(.is-selected):hover:nth-child(odd),
+  &.is-hoverable.is-striped tbody tr:not(.is-selected):hover:nth-child(even) {
+    background: #C8F1FF;
   }
 }
 
