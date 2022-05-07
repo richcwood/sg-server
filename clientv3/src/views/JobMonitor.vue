@@ -49,7 +49,7 @@
     </div>
 
     <!-- List of jobs -->
-    <table class="table is-striped is-hoverable">
+    <table class="table sg-table is-striped is-hoverable">
       <thead>
         <tr>
           <th>Run Number</th>
