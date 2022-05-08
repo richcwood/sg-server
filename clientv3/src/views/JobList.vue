@@ -49,7 +49,7 @@
           </div>
         </div>
         <div class="table-wrapper mb-3">
-          <table class="table is-fullwidth is-striped">
+          <table class="table sg-table is-fullwidth is-striped">
             <thead>
               <tr>
                 <th>Job Name</th>
@@ -122,7 +122,7 @@
     </div>
 
     <!-- Job Def selection -->
-    <table class="table is-striped">
+    <table class="table sg-table is-striped">
       <thead>
         <tr>
           <th>Job Definition Name</th>

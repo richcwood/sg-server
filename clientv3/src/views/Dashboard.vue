@@ -70,7 +70,7 @@
 
             <p class="is-size-6 has-text-weight-bold mt-4 mb-1">Recent Job Runs (up to 5 shown)</p>
 
-            <table class="table is-striped is-fullwidth">
+            <table class="table sg-table is-striped is-fullwidth">
               <thead>
                 <tr>
                 <th>Run Number</th>
@@ -100,7 +100,7 @@
 
             <p class="is-size-6 has-text-weight-bold mt-4 mb-1">Scheduled Job Runs (Next 24 Hours)</p>
 
-            <table class="table is-striped is-fullwidth">
+            <table class="table sg-table is-striped is-fullwidth">
               <tbody class="is-size-7 is-size-6-fullhd">
                 <tr v-for="schedule in schedulesNext24Hours" :key="schedule.id">
                   <td>{{momentToStringV1(schedule.nextScheduledRunDate)}}</td>
@@ -201,7 +201,7 @@
 
               <p class="is-size-6 has-text-weight-bold mt-4 mb-1">Active Agents (up to 5 shown)</p>
 
-              <table class="table is-striped is-fullwidth">
+              <table class="table sg-table is-striped is-fullwidth">
                 <thead>
                   <tr>
                     <th>Name</th>

@@ -203,7 +203,7 @@
 
 
 
-    <table class="table is-striped is-hoverable">
+    <table class="table sg-table is-striped is-hoverable">
       <thead>
         <tr>
           <th>Task Name</th>
@@ -218,7 +218,7 @@
       </thead>
 
       <tbody v-if="tasks.length === 0">
-        <tr>
+        <tr class="has-background-white">
           <td colspan="8">
             There are no tasks yet for the job
           </td>
