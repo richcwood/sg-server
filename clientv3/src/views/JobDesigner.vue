@@ -1,5 +1,5 @@
 <template>
-  <div @mousemove="onMouseMove" @mouseup="onMouseUp" class="job-designer-page">
+  <div @mousemove="onMouseMove" @mouseup="onMouseUp">
     <!-- Modals -->
 
     <modal name="select-script-vars-modal" :classes="'round-popup'" :width="600" :height="750">
@@ -2310,10 +2310,6 @@ export default class JobDesigner extends Vue {
 </script>
 
 <style lang="scss">
-  .job-designer-page {
-    background: var(--main-background-color);
-  }
-
   table {
     // The borders just make things really ugly
     td,th  {

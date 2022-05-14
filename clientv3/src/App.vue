@@ -1,5 +1,5 @@
 <template>
-  <div id="app" class="is-flex is-flex-direction-column" @mousemove="onMouseMoved">
+  <div id="app" :class="appClasses" @mousemove="onMouseMoved">
     <modal name="alert-modal" :classes="['round-popup']">
       <div v-if="alertWindow" name="alertMessage" style="background-color:white; width:100%; height:100%; padding:20px;">
         <p :class="enumKeyToPretty(AlertCategory, alertWindow.category)" v-html="alertWindow.message">
@@ -10,8 +10,8 @@
     </modal>
 
     <nav class="navbar" v-if="!isOnLandingPage()">
-      <div class="navbar-brand">
-          <router-link activeClass="" to="/" class="navbar-item navbar-logo">
+      <div class="navbar-brand mr-6">
+          <router-link exact activeClass="navbar-logo-active" to="/" class="navbar-item navbar-logo is-relative">
               <img src="/SaasLogoRevised.svg" alt="SaaSGlue logo" width="132" height="22">
           </router-link>
       </div>
@@ -27,72 +27,66 @@
           <router-link class="navbar-item" to="/teamAlerts">Alerts</router-link>
           <router-link class="navbar-item" to="/scripts">Scripts</router-link>
         </div>
-        <div class="navbar-end is-flex-direction-column is-align-items-end mr-3">
-          <div>
-            <div class="dropdown is-right" :class="{'is-active': showUserMenu}" v-click-outside="onClickedOutsideUserMenu">
-              <div class="dropdown-trigger">
-                <a class="dropdown-link" @click.prevent="onClickedUserMenu">
-                  Hello, {{ userName }}
-                  <font-awesome-icon class="dropdown-link-caret" icon="angle-down" />
+        <div class="navbar-end mr-6 is-flex-grow-1 is-align-items-center is-justify-content-end">
+
+          <div class="team-dropdown dropdown is-right mr-4" :class="{'is-active': showTeamsMenu}" v-click-outside="onClickedOutsideTeamsMenu">
+            <a href="#" class="dropdown-trigger dropdown-link" @click.prevent="onClickedTeamsMenu">
+              <font-awesome-icon icon="users" /> Team
+            </a>
+            <div class="dropdown-menu has-text-weight-bold" role="menu">
+              <div class="dropdown-content" role="menu">
+                <span class="dropdown-item has-text-centered has-text-grey">Switch Teams</span>
+                <hr class="dropdown-divider">
+
+                <a class="dropdown-item"
+                  v-for="teamId of Object.values(userTeamIds)"
+                  @click.prevent="onClickedTeamId(teamId)"
+                  :key="teamId"
+                  :class="{'is-active': selectedTeam && selectedTeam.id === teamId}">
+                  {{ getTeam(teamId).name }}
                 </a>
               </div>
-              <div class="dropdown-menu" role="menu">
-                <div class="p-0 dropdown-content" role="menu">
-                  <a class="dropdown-item" @click.prevent="onClickedInviteTeammates">
-                    Invite Teammates
-                  </a>
-                  <a class="dropdown-item" @click.prevent="onClickedAcceptInvitations">
-                    Accept Invitations {{invitationsCountString}}
-                  </a>
-                  <hr class="m-0">
-                  <a class="dropdown-item" @click.prevent="onClickedInvoices">
-                    Invoices and Payments
-                  </a>
-                  <hr class="m-0">
-                  <a class="dropdown-item" @click.prevent="onClickedAccessKeys">
-                    Access Keys
-                  </a>
-                  <a class="dropdown-item" @click.prevent="onClickedSettings">
-                    Settings
-                  </a>
-                  <hr class="m-0">
-                  <a class="dropdown-item" @click.prevent="onClickedSignOut">
-                    Sign Out
-                  </a>
-                </div>
-              </div>
             </div>
           </div>
-          <div>
-            <div v-if="userTeamIds.length > 1" class="dropdown is-right" :class="{'is-active': showTeamsMenu}" v-click-outside="onClickedOutsideTeamsMenu">
-              <a class="dropdown-trigger dropdown-link is-size-7" @click.prevent="onClickedTeamsMenu">
-                Team: {{ selectedTeamName }}
-                <font-awesome-icon class="dropdown-link-caret" icon="angle-down" />
-              </a>
-              <div class="dropdown-menu p-0" role="menu">
-                <div class="p-0 dropdown-content" role="menu">
-                  <span class="dropdown-item has-text-centered has-text-grey has-background-light">Switch Teams</span>
-                  <hr class="m-0">
 
-                  <a class="dropdown-item" 
-                    v-for="teamId of Object.values(userTeamIds)" 
-                    @click.prevent="onClickedTeamId(teamId)"
-                    :key="teamId"
-                    :class="{'is-active': selectedTeam && selectedTeam.id === teamId}">
-                    {{ getTeam(teamId).name }}
-                  </a>
-                </div>
+          <div class="dropdown is-right" :class="{'is-active': showUserMenu}" v-click-outside="onClickedOutsideUserMenu">
+            <div class="dropdown-trigger">
+              <a href="#" class="dropdown-link" @click.prevent="onClickedUserMenu">
+                <font-awesome-icon icon="cog" /> Settings
+              </a>
+            </div>
+            <div class="dropdown-menu" role="menu">
+              <div class="dropdown-content" role="menu">
+                <a class="dropdown-item" @click.prevent="onClickedInviteTeammates">
+                  Invite Teammates
+                </a>
+                <a class="dropdown-item" @click.prevent="onClickedAcceptInvitations">
+                  Accept Invitations {{invitationsCountString}}
+                </a>
+                <hr class="dropdown-divider">
+                <a class="dropdown-item" @click.prevent="onClickedInvoices">
+                  Invoices and Payments
+                </a>
+                <hr class="dropdown-divider">
+                <a class="dropdown-item" @click.prevent="onClickedAccessKeys">
+                  Access Keys
+                </a>
+                <a class="dropdown-item" @click.prevent="onClickedSettings">
+                  Settings
+                </a>
+                <hr class="dropdown-divider">
+                <a class="dropdown-item" @click.prevent="onClickedSignOut">
+                  <font-awesome-icon icon="sign-out-alt" class="mr-1" /> Sign Out
+                </a>
               </div>
             </div>
-            <span v-else class="has-text-grey is-size-7">Team: {{ selectedTeamName }}</span>
           </div>
+
         </div>
       </div>
     </nav>
 
-    <hr class="navbar-divider is-flex-shrink-0">
-
-    <router-view class="is-flex-grow-1"/>
+    <router-view />
 
     <div class="main-footer" v-if="! isOnLandingPage()">
       <span v-if="alertFooter" class="footer-message" :class="AlertCategory[alertFooter.category]">{{alertFooter.message}}</span>
@@ -177,13 +171,10 @@ export default class App extends Vue {
     return (router.currentRoute.name === 'landing' || router.currentRoute.name === 'oauthCallback');
   }
 
-  private get userName(){
-    if(this.user){
-      return this.user.name;
-    }
-    else {
-      return '';
-    }
+  private get appClasses () {
+    return {
+      'has-light-background': this.$route.path === '/' || this.$route.path.startsWith('/jobDesigner')
+    };
   }
 
   private get userTeamIds(){
@@ -352,55 +343,65 @@ export default class App extends Vue {
   color: #2c3e50;
   width: 100%;
   height: 100%;
-}
 
-.navbar-divider {
-  background: linear-gradient(to right, #80e8ff, #00b0d6);
-  height: 2px;
-  margin: 0px;
+  &.has-light-background {
+    background-color: var(--main-background-color);
+  }
 }
 
 .navbar {
-  background-color: #f0f0f0;
+  background-color: inherit;
+
+  .navbar-logo-active::after {
+    content: "";
+    position: absolute;
+    left: 3px;
+    bottom: 5px;
+    top: 5px;
+    right: 3px;
+    border: 2px solid var(--font-color-active);
+    border-radius: 5px;
+  }
 
   .navbar-item:not(.navbar-logo) {
-    font-variant-caps: all-small-caps;
-    font-size: 1.175rem;
+    position: relative;
     color: #5a5959;
 
     &.router-link-active,
     &:hover {
-      background-color: white;
+      background-color: inherit;
+      color: var(--font-color-active);
     }
 
-    &.router-link-active {
-      background-color: white;
-      color: #5caaed;
-      font-weight: bold;
+    &.router-link-active::after {
+      content: "";
+      position: absolute;
+      top: 10px;
+      left: 3px;
+      bottom: 10px;
+      right: 3px;
+      border: 2px solid var(--font-color-active);
+      border-radius: 5px;
     }
   }
 
   .dropdown-link {
-    position: relative;
-    padding-right: 15px;
-    color: #5caaed;
+    color: #5a5959;
+    font-weight: bold;
+
+    &:hover {
+      color: var(--font-color-active);
+    }
   }
 
-  .dropdown-link-caret {
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    margin: auto;
-    right: 0;
+  .team-dropdown a.is-active {
+    color: var(--font-color-active);
+    background-color: inherit;
   }
-}
 
-.test-item:hover {
-  background-color: red;
-}
-
-.dropdown-item {
-    font-size: 0.89em;
+  .dropdown.is-active .dropdown-link {
+    color: var(--font-color-active);
+  }
 }
 
 .main-footer {
