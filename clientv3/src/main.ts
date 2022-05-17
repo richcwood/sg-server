@@ -30,7 +30,13 @@ Vue.component('font-awesome-icon', FontAwesomeIcon);
 
 initValidation();
 
-Vue.use(VModal);
+Vue.use(VModal, {
+  injectModalsContainer: true,
+  dynamic: true,
+  dynamicDefaults: {
+      pivotY: 0.2
+  }
+});
 Vue.use(VueSplit);
 Vue.use(VTooltip, {
   defaultTemplate: '<span eat="shit" class="tooltip" role="tooltip"><div class="tooltip-arrow"></div><div class="tooltip-inner"></div></span>',
