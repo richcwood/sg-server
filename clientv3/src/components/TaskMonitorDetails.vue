@@ -1,179 +1,101 @@
 <template>
-  <div>
+  <table class="table steps-table">
+    <thead>
+      <th>Agent Name</th>
+      <th>Status</th>
+      <th>Failure</th>
+      <th>Actions</th>
+      <th>Started</th>
+      <th>Completed</th>
+    </thead>
 
-    <!-- Modals -->
-    <modal name="show-script-modal" :classes="'round-popup'" :width="800" :height="650">
-      <table class="table" width="100%" height="100%">
-        <tr>
+    <tbody class="is-family-code">
+      <template v-for="taskOutcome in getTaskOutcomes()">
+        <tr :key="taskOutcome.id+'main'" class="has-text-white">
+          <td v-if="taskOutcome.target == TaskDefTarget.AWS_LAMBDA">SG Compute</td>
+          <td v-else>{{getAgentName(taskOutcome._agentId)}}</td>
+          <td>{{enumKeyToPretty(TaskStatus, taskOutcome.status)}}</td>
+          <td>{{enumKeyToPretty(TaskFailureCode, taskOutcome.failureCode)}}</td>
           <td>
-            <strong>script for step: {{stepOutcomeForPopup && stepOutcomeForPopup.name}}</strong>
+            <template v-if="taskOutcome.status < TaskStatus.CANCELING || taskOutcome.status === TaskStatus.FAILED">
+              <button class="button button-spaced" @click="onCancelTaskOutcomeClicked(taskOutcome)">Cancel</button>
+            </template>
+            <template v-if="taskOutcome.status == TaskStatus.RUNNING">
+              <button class="button button-spaced" @click="onInterruptTaskOutcomeClicked(taskOutcome)">Interrupt</button>
+            </template>
+            <template v-if="taskOutcome.status == TaskStatus.INTERRUPTED || (taskOutcome.status == TaskStatus.FAILED && (taskOutcome.failureCode == TaskFailureCode.AGENT_EXEC_ERROR || taskOutcome.failureCode == TaskFailureCode.LAUNCH_TASK_ERROR || taskOutcome.failureCode == TaskFailureCode.TASK_EXEC_ERROR ))">
+              <button class="button button-spaced" @click="onRestartTaskOutcomeClicked(taskOutcome)">Restart</button>
+            </template>
+            <template v-else>
+              none
+            </template>
+          </td>
+          <td>{{momentToStringV1(taskOutcome.dateStarted)}}</td>
+          <td>{{momentToStringV1(taskOutcome.dateCompleted)}}</td>
+        </tr>
+        <tr :key="taskOutcome.id+'steps'">
+          <td colspan="6">
+            <table class="steps-table">
+              <tbody class="has-text-emerland">
+                <template v-for="stepOutcome in getStepOutcomes(taskOutcome)">
+                  <tr :key="'one_'+stepOutcome.id">
+                    <td class="has-text-carrot">{{stepOutcome.name}}</td>
+                    <td :class="getStatusColor(stepOutcome)">{{stepOutcome && enumKeyToPretty(TaskStatus, stepOutcome.status)}}</td>
+                    <td>{{momentToStringV1(stepOutcome.dateStarted)}}</td>
+                    <td>
+                      <a href="#" class="mr-4" @click.prevent="onShowScriptClicked(stepOutcome)">script</a>
+                      <a href="#" class="mr-4" @click.prevent="onShowStdoutClicked(stepOutcome)">stdout</a>
+                      <a href="#" @click.prevent="onShowStderrClicked(stepOutcome)">stderr</a>
+                    </td>
+                  </tr>
+                  <tr :key="'two_'+stepOutcome.id">
+                    <td class="has-text-white align-top has-text-right">
+                      stdout tail>
+                    </td>
+                    <td colspan="3">
+                      <div v-if="stepOutcome.tail && stepOutcome.tail.length > 4">
+                        {{formatTailRow(stepOutcome.tail[4])}}
+                      </div>
+                      <div v-if="stepOutcome.tail && stepOutcome.tail.length > 3">
+                        {{formatTailRow(stepOutcome.tail[3])}}
+                      </div>
+                      <div v-if="stepOutcome.tail && stepOutcome.tail.length > 2">
+                        {{formatTailRow(stepOutcome.tail[2])}}
+                      </div>
+                      <div v-if="stepOutcome.tail && stepOutcome.tail.length > 1">
+                        {{formatTailRow(stepOutcome.tail[1])}}
+                      </div>
+                      <div v-if="stepOutcome.tail && stepOutcome.tail.length > 0">
+                        {{formatTailRow(stepOutcome.tail[0])}}
+                      </div>
+                    </td>
+                  </tr>
+                </template>
+              </tbody>
+            </table>
           </td>
         </tr>
-        <tr>
-          <td>
-            <div v-if="stepOutcomeForPopup  && stepOutcomeForPopup.runCode" 
-                 style="overflow: scroll; width: 750px; height: 525px;"
-                 v-html="'<pre>' + stepOutcomeRunCodeBase64Decoded + '</pre>'"></div>
-            <div v-else>
-              Code was missing
-            </div>
-          </td>
-        </tr>
-        <tr>
-          <td>
-            <button class="button" @click="onCloseScriptModalClicked">Close</button>
-          </td>
-        </tr>
-      </table>
-    </modal>
-
-    <modal name="show-stdout-modal" :classes="'round-popup'" :width="800" :height="650">
-      <table class="table" width="100%" height="100%">
-        <tr>
-          <td>
-            <strong>stdout for step: {{stepOutcomeForPopup && stepOutcomeForPopup.name}}</strong>
-          </td>
-        </tr>
-        <tr>
-          <td>
-            <div v-if="stepOutcomeForPopup  && stepOutcomeForPopup.stdout" 
-                 style="overflow: scroll; width: 750px; height: 525px;" 
-                 v-html="formatStdString(stepOutcomeForPopup.stdout)"></div>
-            <div v-else>
-              No stdout available yet...
-            </div>
-          </td>
-        </tr>
-        <tr>
-          <td>
-            <button class="button" @click="onCloseStdoutModalClicked">Close</button>
-          </td>
-        </tr>
-      </table>
-    </modal>
-
-    <modal name="show-stderr-modal" :classes="'round-popup'" :width="800" :height="650">
-      <table class="table" width="100%" height="100%">
-        <tr>
-          <td>
-            <strong>stderr for step: {{stepOutcomeForPopup && stepOutcomeForPopup.name}}</strong>
-          </td>
-        </tr>
-        <tr>
-          <td>
-            <div v-if="stepOutcomeForPopup  && stepOutcomeForPopup.stderr" 
-                 style="overflow: scroll; width: 750px; height: 525px;" 
-                 v-html="formatStdString(stepOutcomeForPopup.stderr)"></div>
-            <div v-else>
-              No stderr available yet...
-            </div>
-          </td>
-        </tr>
-        <tr>
-          <td>
-            <button class="button" @click="onCloseStderrModalClicked">Close</button>
-          </td>
-        </tr>
-      </table>
-    </modal>
-
-    <table class="table steps-table">
-      <thead>
-        <th>Agent Name</th>
-        <th>Status</th>
-        <th>Failure</th>
-        <th>Actions</th>
-        <th>Started</th>
-        <th>Completed</th>
-      </thead>
-
-      <tbody class="is-family-code">
-        <template v-for="taskOutcome in getTaskOutcomes()">
-          <tr :key="taskOutcome.id+'main'" class="has-text-white">
-            <td v-if="taskOutcome.target == TaskDefTarget.AWS_LAMBDA">SG Compute</td>
-            <td v-else>{{getAgentName(taskOutcome._agentId)}}</td>
-            <td>{{enumKeyToPretty(TaskStatus, taskOutcome.status)}}</td>
-            <td>{{enumKeyToPretty(TaskFailureCode, taskOutcome.failureCode)}}</td>
-            <td>
-              <template v-if="taskOutcome.status < TaskStatus.CANCELING || taskOutcome.status === TaskStatus.FAILED">
-                <button class="button button-spaced" @click="onCancelTaskOutcomeClicked(taskOutcome)">Cancel</button>
-              </template>
-              <template v-if="taskOutcome.status == TaskStatus.RUNNING">
-                <button class="button button-spaced" @click="onInterruptTaskOutcomeClicked(taskOutcome)">Interrupt</button>
-              </template>
-              <template v-if="taskOutcome.status == TaskStatus.INTERRUPTED || (taskOutcome.status == TaskStatus.FAILED && (taskOutcome.failureCode == TaskFailureCode.AGENT_EXEC_ERROR || taskOutcome.failureCode == TaskFailureCode.LAUNCH_TASK_ERROR || taskOutcome.failureCode == TaskFailureCode.TASK_EXEC_ERROR ))">
-                <button class="button button-spaced" @click="onRestartTaskOutcomeClicked(taskOutcome)">Restart</button>
-              </template>
-              <template v-else>
-                none
-              </template>
-            </td>
-            <td>{{momentToStringV1(taskOutcome.dateStarted)}}</td>
-            <td>{{momentToStringV1(taskOutcome.dateCompleted)}}</td>
-          </tr>
-          <tr :key="taskOutcome.id+'steps'">
-            <td colspan="6">
-              <table class="steps-table">
-                <tbody class="has-text-emerland">
-                  <template v-for="stepOutcome in getStepOutcomes(taskOutcome)">
-                    <tr :key="'one_'+stepOutcome.id">
-                      <td class="has-text-carrot">{{stepOutcome.name}}</td>
-                      <td :class="getStatusColor(stepOutcome)">{{stepOutcome && enumKeyToPretty(TaskStatus, stepOutcome.status)}}</td>
-                      <td>{{momentToStringV1(stepOutcome.dateStarted)}}</td>
-                      <td>
-                        <span class="spaced" style="margin-bottom: -5px;"><a @click.prevent="onShowScriptClicked(stepOutcome)">script</a></span>
-                        <span class="spaced"><a @click.prevent="onShowStdoutClicked(stepOutcome)">stdout</a></span>
-                        <span class="spaced"><a @click.prevent="onShowStderrClicked(stepOutcome)">stderr</a></span>
-                      </td>
-                    </tr>
-                    <tr :key="'two_'+stepOutcome.id">
-                      <td class="has-text-white" style="padding-top: 0px; text-align:right;">
-                        stdout tail>
-                      </td>
-                      <td style="padding-top: 0px;" colspan="3">
-                        <div v-if="stepOutcome.tail && stepOutcome.tail.length > 4">
-                          {{formatTailRow(stepOutcome.tail[4])}}
-                        </div>
-                        <div v-if="stepOutcome.tail && stepOutcome.tail.length > 3">
-                          {{formatTailRow(stepOutcome.tail[3])}}
-                        </div>
-                        <div v-if="stepOutcome.tail && stepOutcome.tail.length > 2">
-                          {{formatTailRow(stepOutcome.tail[2])}}
-                        </div>
-                        <div v-if="stepOutcome.tail && stepOutcome.tail.length > 1">
-                          {{formatTailRow(stepOutcome.tail[1])}}
-                        </div>
-                        <div v-if="stepOutcome.tail && stepOutcome.tail.length > 0">
-                          {{formatTailRow(stepOutcome.tail[0])}}
-                        </div>
-                      </td>
-                    </tr>
-                  </template>
-                </tbody>
-              </table>
-            </td>
-          </tr>
-        </template>
-      </tbody>
-    </table>
-  </div>
+      </template>
+    </tbody>
+  </table>
 </template>
 
 <script lang="ts">
-import _ from 'lodash';
-import { Component, Prop, Vue, Watch } from 'vue-property-decorator';
-import { Agent } from '@/store/agent/types';
-import { LinkedModel, StoreType } from '@/store/types';
-import { SgAlert, AlertPlacement, AlertCategory } from '@/store/alert/types';
-import { Task } from '@/store/task/types';
-import { TaskOutcome } from '@/store/taskOutcome/types';
-import { JobStatus, TaskStatus, StepStatus, TaskFailureCode, enumKeyToPretty } from '@/utils/Enums';
+import { Component, Prop, Vue } from 'vue-property-decorator';
 import axios from 'axios';
-import { showErrors } from '@/utils/ErrorHandler';
+import _ from 'lodash';
+
+import { TaskStatus, StepStatus, TaskFailureCode, enumKeyToPretty } from '@/utils/Enums';
+import ScriptModal from '@/components/monitor/ScriptModal.vue';
+import StdoutModal from '@/components/monitor/StdoutModal.vue';
+import StderrModal from '@/components/monitor/StderrModal.vue';
+import { StepOutcome } from '../store/stepOutcome/types';
+import { TaskOutcome } from '@/store/taskOutcome/types';
 import { TaskDefTarget } from "@/store/taskDef/types";
 import { momentToStringV1 } from '@/utils/DateTime';
-import { StepOutcome } from '../store/stepOutcome/types';
-import { BindStoreModel } from '@/decorator';
+import { showErrors } from '@/utils/ErrorHandler';
+import { Agent } from '@/store/agent/types';
+import { StoreType } from '@/store/types';
 
 @Component
 export default class TaskMonitorDetails extends Vue {
@@ -310,45 +232,16 @@ export default class TaskMonitorDetails extends Vue {
     }
   }
 
-  private stepOutcomeForPopup: StepOutcome | null = null;
-
-  private onShowScriptClicked(stepOutcome: StepOutcome){
-    this.stepOutcomeForPopup = stepOutcome;
-    this.$modal.show('show-script-modal');
+  private onShowScriptClicked (stepOutcome: StepOutcome) {
+    this.$modal.show(ScriptModal, { stepOutcome: stepOutcome }, { height: 'auto' });
   }
 
-  private onShowStdoutClicked(stepOutcome: StepOutcome){
-    this.stepOutcomeForPopup = stepOutcome;
-    this.$modal.show('show-stdout-modal');
+  private onShowStdoutClicked (stepOutcome: StepOutcome) {
+    this.$modal.show(StdoutModal, { stepOutcome: stepOutcome }, { height: 'auto' });
   }
 
-  private onShowStderrClicked(stepOutcome: StepOutcome){
-    this.stepOutcomeForPopup = stepOutcome;
-    this.$modal.show('show-stderr-modal');
-  }
-
-  private onCloseScriptModalClicked(){
-    this.stepOutcomeForPopup = null;
-    this.$modal.hide('show-script-modal');
-  }
-
-  private onCloseStdoutModalClicked(){
-    this.stepOutcomeForPopup = null;
-    this.$modal.hide('show-stdout-modal');
-  }
-
-  private onCloseStderrModalClicked(){
-    this.stepOutcomeForPopup = null;
-    this.$modal.hide('show-stderr-modal');
-  }
-
-  private formatStdString(std: string|undefined): string {
-    if(std){
-      return std.replace(/</g, "&#60;").replace(/>/g, "&#62;").split('\n').reverse().join('<br>');
-    }
-    else {
-      return '';
-    }
+  private onShowStderrClicked (stepOutcome: StepOutcome) {
+    this.$modal.show(StderrModal, { stepOutcome: stepOutcome }, { height: 'auto' });
   }
 
   private formatTailRow(tailRow: string): string {
@@ -360,15 +253,6 @@ export default class TaskMonitorDetails extends Vue {
       }
 
       return tailRow;
-    }
-    else {
-      return '';
-    }
-  }
-
-  private get stepOutcomeRunCodeBase64Decoded(){
-    if(this.stepOutcomeForPopup && this.stepOutcomeForPopup.runCode){
-      return atob(this.stepOutcomeForPopup.runCode).replace(/</g, "&#60;").replace(/>/g, "&#62;");
     }
     else {
       return '';
@@ -401,11 +285,19 @@ export default class TaskMonitorDetails extends Vue {
       border-spacing: 0;
 
       tr {
-        background: var(--wetasphalt-color);
+        background: var(--code-background-color);
       }
     }
 
     tbody {
+      td {
+        vertical-align: middle;
+      }
+
+      td.align-top {
+        vertical-align: top;
+      }
+
       tr {
         &:first-child {
           td:first-child {
@@ -436,12 +328,5 @@ export default class TaskMonitorDetails extends Vue {
 
 .button-spaced {
   margin-left: 12px;
-}
-
-.spaced {
-  margin-left: 14px;
-  margin-right: 14px;
-  text-align: center;
-  line-height: 36px;
 }
 </style>

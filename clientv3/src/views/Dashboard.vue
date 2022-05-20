@@ -481,10 +481,6 @@ export default class Dashboard extends Vue {
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped lang="scss">
-  .sg-container-p {
-    background: var(--main-background-color);
-  }
-
   .dashboard {
     margin-right: 20px;
     margin-top: 40px;

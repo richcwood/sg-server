@@ -9,7 +9,7 @@ import { StoreType } from './store/types';
 import { isUserReadyToUseApp } from '@/store/security';
 import VModal from 'vue-js-modal';
 import { library } from '@fortawesome/fontawesome-svg-core';
-import { faSearch, faSpinner, faEllipsisH, faQuestionCircle, faAngleDown, faCalendarAlt } from '@fortawesome/free-solid-svg-icons';
+import { faSearch, faSpinner, faEllipsisH, faQuestionCircle, faAngleDown, faCalendarAlt, faCog, faUsers, faSignOutAlt } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 import { initValidation } from './utils/Validation';
 import VueSplit from 'vue-split-panel';
@@ -22,11 +22,21 @@ library.add(faEllipsisH);
 library.add(faQuestionCircle);
 library.add(faAngleDown);
 library.add(faCalendarAlt);
+library.add(faCog);
+library.add(faUsers);
+library.add(faSignOutAlt);
+
 Vue.component('font-awesome-icon', FontAwesomeIcon);
 
 initValidation();
 
-Vue.use(VModal);
+Vue.use(VModal, {
+  injectModalsContainer: true,
+  dynamic: true,
+  dynamicDefaults: {
+      pivotY: 0.2
+  }
+});
 Vue.use(VueSplit);
 Vue.use(VTooltip, {
   defaultTemplate: '<span eat="shit" class="tooltip" role="tooltip"><div class="tooltip-arrow"></div><div class="tooltip-inner"></div></span>',
