@@ -498,7 +498,7 @@ export class JobService {
     const jobDef: JobDefSchema = await JobDefModel.findOneAndUpdate(
       { _teamId, _id: _jobDefId, launchingJobs: { $ne: true } },
       { launchingJobs: true }
-    ).select("maxInstances misfireGraceTime coalesce status");
+    ).select("maxInstances misfireGraceTime coalesce status launchingJobs");
     if (!jobDef) {
       const jobDefsExisting = await JobDefModel.findOne({ _teamId, _id: _jobDefId }).select("id");
       if (!jobDefsExisting) throw new MissingObjectError(`Job template ${_jobDefId.toHexString()} not found.`);
@@ -829,6 +829,7 @@ export class JobService {
               }
             }
 
+            console.log("44444444444444444444444444444");
             let publishRes = await taskOutcomeService.PublishTask(_teamId, task, logger, amqp);
             // console.log('LaunchReadyTasks -> publishRes -> ', publishRes);
             if (publishRes.success) {

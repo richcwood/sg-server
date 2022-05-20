@@ -20,9 +20,11 @@ import {
   CreateTaskRoutesForAgents,
   CreateTaskRouteForSingleAgent,
   GetSingleAgentTaskRoute,
+  GetTaskRoutes,
   GetTargetAgentId,
   GetWaitingForAgentTasks,
   GetWaitingForLambdaRunnerTasks,
+  IGetTaskRouteResult,
   NumNotStartedTasks,
   TaskReadyToPublish,
 } from "./Shared";
@@ -189,7 +191,8 @@ describe("Test 'get not started tasks' functions 2", () => {
   });
 });
 
-describe("Test republish tasks waiting for agent", () => {
+describe("Test task routing", () => {
+  const inactiveAgentQueueTTLHours = parseInt(config.get("inactiveAgentQueueTTLHours"), 10) * 60 * 60 * 1000;
   const _teamId: mongodb.ObjectId = new mongodb.ObjectId();
   const task1_Id = new mongodb.ObjectId();
   const task2_Id = new mongodb.ObjectId();
@@ -197,6 +200,11 @@ describe("Test republish tasks waiting for agent", () => {
   const task4_Id = new mongodb.ObjectId();
   const task5_Id = new mongodb.ObjectId();
   const task6_Id = new mongodb.ObjectId();
+  const task7_Id = new mongodb.ObjectId();
+  const task8_Id = new mongodb.ObjectId();
+  const task9_Id = new mongodb.ObjectId();
+  const task10_Id = new mongodb.ObjectId();
+  const task11_Id = new mongodb.ObjectId();
   const agent1_Id = new mongodb.ObjectId();
   const agent2_Id = new mongodb.ObjectId();
   const agent3_Id = new mongodb.ObjectId();
@@ -210,6 +218,7 @@ describe("Test republish tasks waiting for agent", () => {
   let teamVars: Array<Partial<TeamVariableSchema>>;
   const tags1: any = { tag1: "val1" };
   const tags2: any = { tag1: "val1", tag2: "val2" };
+  const tags3: any = { tag3: "val3" };
 
   beforeAll(async () => {
     // await db.open();
@@ -238,6 +247,7 @@ describe("Test republish tasks waiting for agent", () => {
         },
         numActiveTasks: 10,
         lastTaskAssignedTime: Date.now() - 60 * 1000,
+        lastHeartbeatTime: Date.now() - 30 * 1000,
         tags: tags1,
       },
       {
@@ -248,9 +258,11 @@ describe("Test republish tasks waiting for agent", () => {
         ipAddress: "ipAddress",
         propertyOverrides: {
           maxActiveTasks: 10,
+          handleGeneralTasks: true,
         },
         numActiveTasks: 5,
         lastTaskAssignedTime: Date.now() - 1000 * 60,
+        lastHeartbeatTime: Date.now() - 30 * 1000,
         tags: tags1,
       },
       {
@@ -261,9 +273,11 @@ describe("Test republish tasks waiting for agent", () => {
         ipAddress: "ipAddress",
         propertyOverrides: {
           maxActiveTasks: 10,
+          handleGeneralTasks: true,
         },
         numActiveTasks: 5,
         lastTaskAssignedTime: Date.now() - 5 * 60 * 1000,
+        lastHeartbeatTime: Date.now() - 30 * 1000,
         tags: tags2,
       },
       {
@@ -277,6 +291,7 @@ describe("Test republish tasks waiting for agent", () => {
         },
         numActiveTasks: 5,
         lastTaskAssignedTime: Date.now() - 5 * 60 * 1000,
+        lastHeartbeatTime: Date.now() - 30 * 1000,
         tags: tags1,
       },
       {
@@ -306,7 +321,7 @@ describe("Test republish tasks waiting for agent", () => {
         numActiveTasks: 0,
         lastTaskAssignedTime: Date.now() - 60 * 60 * 1000,
         lastHeartbeatTime: Date.now() - 2 * 60 * 1000,
-        tags: tags1,
+        tags: tags3,
       },
       {
         _id: agent7_Id,
@@ -345,6 +360,7 @@ describe("Test republish tasks waiting for agent", () => {
         target: Enums.TaskDefTarget.AWS_LAMBDA,
         runtimeVars: {},
         status: Enums.TaskStatus.WAITING_FOR_AGENT,
+        attemptedRunAgentIds: [],
       },
       {
         _id: task2_Id,
@@ -354,7 +370,8 @@ describe("Test republish tasks waiting for agent", () => {
         source: 1,
         target: Enums.TaskDefTarget.AWS_LAMBDA,
         runtimeVars: {},
-        status: Enums.TaskStatus.WAITING_FOR_AGENT,
+        status: Enums.TaskStatus.NOT_STARTED,
+        attemptedRunAgentIds: [],
       },
       {
         _id: task3_Id,
@@ -378,6 +395,7 @@ describe("Test republish tasks waiting for agent", () => {
         targetAgentId: "@sgg(testAgent2)",
         runtimeVars: {},
         status: Enums.TaskStatus.SUCCEEDED,
+        attemptedRunAgentIds: [],
       },
       {
         _id: task5_Id,
@@ -389,9 +407,10 @@ describe("Test republish tasks waiting for agent", () => {
         targetAgentId: "@sgg(testAgent3)",
         runtimeVars: {
           testAgent3: {
-            value: new mongodb.ObjectId().toHexString(),
+            value: agent3_Id.toHexString(),
           },
         },
+        attemptedRunAgentIds: [],
       },
       {
         _id: task6_Id,
@@ -399,10 +418,70 @@ describe("Test republish tasks waiting for agent", () => {
         _jobId: job._id,
         name: "Task 6",
         source: 1,
-        target: Enums.TaskDefTarget.SINGLE_AGENT,
-        targetAgentId: "@sgg(testAgent4)",
+        target: Enums.TaskDefTarget.ALL_AGENTS_WITH_TAGS,
+        targetAgentId: "@sgg(testAgent3)",
+        requiredTags: tags1,
         runtimeVars: {},
         status: Enums.TaskStatus.WAITING_FOR_AGENT,
+        attemptedRunAgentIds: [],
+      },
+      {
+        _id: task7_Id,
+        _teamId: _teamId,
+        _jobId: job._id,
+        name: "Task 7",
+        source: 1,
+        target: Enums.TaskDefTarget.SINGLE_AGENT,
+        runtimeVars: {},
+        status: Enums.TaskStatus.NOT_STARTED,
+        attemptedRunAgentIds: [],
+      },
+      {
+        _id: task8_Id,
+        _teamId: _teamId,
+        _jobId: job._id,
+        name: "Task 8",
+        source: 1,
+        target: Enums.TaskDefTarget.SINGLE_AGENT_WITH_TAGS,
+        requiredTags: tags1,
+        runtimeVars: {},
+        status: Enums.TaskStatus.NOT_STARTED,
+        attemptedRunAgentIds: [],
+      },
+      {
+        _id: task9_Id,
+        _teamId: _teamId,
+        _jobId: job._id,
+        name: "Task 9",
+        source: 1,
+        target: Enums.TaskDefTarget.ALL_AGENTS_WITH_TAGS,
+        requiredTags: tags1,
+        runtimeVars: {},
+        status: Enums.TaskStatus.NOT_STARTED,
+        attemptedRunAgentIds: [],
+      },
+      {
+        _id: task10_Id,
+        _teamId: _teamId,
+        _jobId: job._id,
+        name: "Task 10",
+        source: 1,
+        target: Enums.TaskDefTarget.ALL_AGENTS_WITH_TAGS,
+        requiredTags: tags2,
+        runtimeVars: {},
+        status: Enums.TaskStatus.NOT_STARTED,
+        attemptedRunAgentIds: [],
+      },
+      {
+        _id: task11_Id,
+        _teamId: _teamId,
+        _jobId: job._id,
+        name: "Task 11",
+        source: 1,
+        target: Enums.TaskDefTarget.ALL_AGENTS,
+        runtimeVars: {},
+        status: Enums.TaskStatus.NOT_STARTED,
+        attemptedRunAgentIds: [],
       },
     ];
     await CreateTasks(_teamId, tasks);
@@ -443,6 +522,11 @@ describe("Test republish tasks waiting for agent", () => {
     const agentId: mongodb.ObjectId = await GetTargetAgentId(_teamId, task, job, logger);
     const expectedAgentId = task.targetAgentId;
     validateEquality(agentId, expectedAgentId);
+  });
+
+  test("GetTargetAgentId missing targetAgentId property", async () => {
+    const task: TaskSchema = _.filter(tasks, (t) => t.name == "Task 7")[0];
+    await expect(GetTargetAgentId(_teamId, task, job, logger)).rejects.toThrow("Task targetAgentId property not set");
   });
 
   test("GetSingleAgentTaskRoute test 1", async () => {
@@ -505,6 +589,227 @@ describe("Test republish tasks waiting for agent", () => {
           targetAgentId: agent6_Id.toHexString(),
         }),
         expect.not.objectContaining({
+          targetAgentId: agent7_Id.toHexString(),
+        }),
+      ])
+    );
+  });
+
+  test("CreateTaskRoutesForAgents test none available", async () => {
+    const routes: any[] = await CreateTaskRoutesForAgents(_teamId, [], {});
+
+    validateArrayLength(routes, 0);
+  });
+
+  test("GetTaskRoutes test 1", async () => {
+    const task: TaskSchema = _.filter(tasks, (t) => t.name == "Task 1")[0];
+    const res: IGetTaskRouteResult = await GetTaskRoutes(_teamId, task, logger);
+
+    expect(res).toEqual(
+      expect.objectContaining({
+        routes: null,
+        error: "Invalid task status",
+        failureCode: Enums.TaskFailureCode.INVALID_TASK_STATUS,
+      })
+    );
+  });
+
+  test("GetTaskRoutes test 2", async () => {
+    const task: TaskSchema = _.filter(tasks, (t) => t.name == "Task 2")[0];
+    const res: IGetTaskRouteResult = await GetTaskRoutes(_teamId, task, logger);
+
+    expect(res).toEqual(
+      expect.objectContaining({
+        routes: null,
+        error: "No lambda runner agents available",
+        failureCode: Enums.TaskFailureCode.NO_AGENT_AVAILABLE,
+      })
+    );
+  });
+
+  test("GetTaskRoutes test 3", async () => {
+    const task: TaskSchema = _.filter(tasks, (t) => t.name == "Task 3")[0];
+    const res: IGetTaskRouteResult = await GetTaskRoutes(_teamId, task, logger);
+
+    expect(Object.keys(res)).toEqual(expect.arrayContaining(["routes", "task"]));
+
+    expect(res.routes).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          targetAgentId: agent6_Id.toHexString(),
+        }),
+      ])
+    );
+
+    expect(res.task).toEqual(
+      expect.objectContaining({
+        attemptedRunAgentIds: [agent5_Id.toHexString(), agent6_Id.toHexString()],
+      })
+    );
+  });
+
+  test("GetTaskRoutes test 4", async () => {
+    const task: TaskSchema = _.filter(tasks, (t) => t.name == "Task 4")[0];
+    const res: IGetTaskRouteResult = await GetTaskRoutes(_teamId, task, logger);
+
+    expect(res).toEqual(
+      expect.objectContaining({
+        routes: null,
+        error: "Invalid task status",
+        failureCode: Enums.TaskFailureCode.INVALID_TASK_STATUS,
+      })
+    );
+  });
+
+  test("GetTaskRoutes test 6", async () => {
+    const task: TaskSchema = _.filter(tasks, (t) => t.name == "Task 6")[0];
+    const res: IGetTaskRouteResult = await GetTaskRoutes(_teamId, task, logger);
+
+    expect(res).toEqual(
+      expect.objectContaining({
+        routes: null,
+        error: "Invalid task status",
+        failureCode: Enums.TaskFailureCode.INVALID_TASK_STATUS,
+      })
+    );
+  });
+
+  test("GetTaskRoutes test 7", async () => {
+    const task: TaskSchema = _.filter(tasks, (t) => t.name == "Task 7")[0];
+    const res: IGetTaskRouteResult = await GetTaskRoutes(_teamId, task, logger);
+
+    expect(Object.keys(res)).toEqual(expect.arrayContaining(["routes", "task"]));
+
+    expect(res.routes).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          targetAgentId: agent6_Id.toHexString(),
+        }),
+      ])
+    );
+
+    expect(res.task).toEqual(
+      expect.objectContaining({
+        attemptedRunAgentIds: [agent6_Id.toHexString()],
+      })
+    );
+  });
+
+  test("GetTaskRoutes test 8", async () => {
+    const task: TaskSchema = _.filter(tasks, (t) => t.name == "Task 8")[0];
+    const res: IGetTaskRouteResult = await GetTaskRoutes(_teamId, task, logger);
+
+    expect(Object.keys(res)).toEqual(expect.arrayContaining(["routes", "task"]));
+
+    expect(res.routes).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          targetAgentId: agent5_Id.toHexString(),
+          type: "queue",
+          queueAssertArgs: expect.objectContaining({
+            expires: inactiveAgentQueueTTLHours,
+          }),
+        }),
+      ])
+    );
+
+    expect(res.task).toEqual(
+      expect.objectContaining({
+        attemptedRunAgentIds: [agent5_Id.toHexString()],
+      })
+    );
+  });
+
+  test("GetTaskRoutes test 9", async () => {
+    const task: TaskSchema = _.filter(tasks, (t) => t.name == "Task 9")[0];
+    const res: IGetTaskRouteResult = await GetTaskRoutes(_teamId, task, logger);
+
+    expect(Object.keys(res)).toEqual(expect.arrayContaining(["routes"]));
+
+    expect(res.routes).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          targetAgentId: agent1_Id.toHexString(),
+          type: "queue",
+          queueAssertArgs: expect.objectContaining({
+            expires: inactiveAgentQueueTTLHours,
+          }),
+        }),
+        expect.objectContaining({
+          targetAgentId: agent2_Id.toHexString(),
+          type: "queue",
+          queueAssertArgs: expect.objectContaining({
+            expires: inactiveAgentQueueTTLHours,
+          }),
+        }),
+        expect.objectContaining({
+          targetAgentId: agent3_Id.toHexString(),
+          type: "queue",
+          queueAssertArgs: expect.objectContaining({
+            expires: inactiveAgentQueueTTLHours,
+          }),
+        }),
+        expect.objectContaining({
+          targetAgentId: agent4_Id.toHexString(),
+          type: "queue",
+          queueAssertArgs: expect.objectContaining({
+            expires: inactiveAgentQueueTTLHours,
+          }),
+        }),
+        expect.objectContaining({
+          targetAgentId: agent5_Id.toHexString(),
+          type: "queue",
+          queueAssertArgs: expect.objectContaining({
+            expires: inactiveAgentQueueTTLHours,
+          }),
+        }),
+      ])
+    );
+  });
+
+  test("GetTaskRoutes test 10", async () => {
+    const task: TaskSchema = _.filter(tasks, (t) => t.name == "Task 10")[0];
+    const res: IGetTaskRouteResult = await GetTaskRoutes(_teamId, task, logger);
+
+    expect(Object.keys(res)).toEqual(expect.arrayContaining(["routes"]));
+
+    expect(res.routes).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          targetAgentId: agent3_Id.toHexString(),
+        }),
+      ])
+    );
+  });
+
+  test("GetTaskRoutes test 11", async () => {
+    const task: TaskSchema = _.filter(tasks, (t) => t.name == "Task 11")[0];
+    const res: IGetTaskRouteResult = await GetTaskRoutes(_teamId, task, logger);
+
+    expect(Object.keys(res)).toEqual(expect.arrayContaining(["routes"]));
+    validateArrayLength(res.routes, 7);
+
+    expect(res.routes).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          targetAgentId: agent1_Id.toHexString(),
+        }),
+        expect.objectContaining({
+          targetAgentId: agent2_Id.toHexString(),
+        }),
+        expect.objectContaining({
+          targetAgentId: agent3_Id.toHexString(),
+        }),
+        expect.objectContaining({
+          targetAgentId: agent4_Id.toHexString(),
+        }),
+        expect.objectContaining({
+          targetAgentId: agent5_Id.toHexString(),
+        }),
+        expect.objectContaining({
+          targetAgentId: agent6_Id.toHexString(),
+        }),
+        expect.objectContaining({
           targetAgentId: agent7_Id.toHexString(),
         }),
       ])

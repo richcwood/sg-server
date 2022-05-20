@@ -103,7 +103,7 @@ export class TaskOutcomeActionService {
     const taskFilter = { _id: new mongodb.ObjectId(updatedTaskOutcome._taskId), _teamId };
     let taskUpdateQuery = {};
     taskUpdateQuery["$unset"] = { "runtimeVars.route": "" };
-    taskUpdateQuery["$set"] = { attemptedRunAgentIds: [] };
+    taskUpdateQuery["$set"] = { attemptedRunAgentIds: [], status: TaskStatus.NOT_STARTED };
     let task: TaskSchema = await TaskModel.findOneAndUpdate(taskFilter, taskUpdateQuery, { new: true });
     if (!task)
       throw new MissingObjectError(
@@ -154,6 +154,7 @@ export class TaskOutcomeActionService {
       }
     }
 
+    console.log("11111111111111111111111111111");
     await taskOutcomeService.PublishTask(_teamId, task, logger, amqp);
 
     if (responseFields) {

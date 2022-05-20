@@ -24,7 +24,7 @@ import { SGStrings } from "../../shared/SGStrings";
 import { SGUtils } from "../../shared/SGUtils";
 
 import { localRestAccess } from "../utils/LocalRestAccess";
-import { GetTargetAgentId, GetTaskRoutes, RepublishTasksWaitingForAgent } from "../utils/Shared";
+import { GetTargetAgentId, GetTaskRoutes, IGetTaskRouteResult, RepublishTasksWaitingForAgent } from "../utils/Shared";
 
 import * as config from "config";
 import * as mongodb from "mongodb";
@@ -345,13 +345,12 @@ export class TaskOutcomeService {
           if (task.toRoutes[i][1] != ".*") routePattern = new RegExp(task.toRoutes[i][1]);
 
         if (route.search(routePattern) >= 0) {
-          let downstreamTask = await taskService.findTaskByName(_teamId, task._jobId, downStreamTaskName, "id");
+          let downstreamTask = await taskService.findTaskByName(_teamId, task._jobId, downStreamTaskName, "_id");
           if (downstreamTask) {
-            const downstreamTaskId = downstreamTask.id;
-            if (toRouteTasks.indexOf(downstreamTaskId.toHexString()) < 0)
-              toRouteTasks.push(downstreamTaskId.toHexString());
+            if (toRouteTasks.indexOf(downstreamTask._id.toHexString()) < 0)
+              toRouteTasks.push(downstreamTask._id.toHexString());
             tasksToLaunch.push({
-              taskId: downstreamTaskId,
+              taskId: downstreamTask._id,
               sourceTaskRoute: { sourceTaskOutcomeId: taskOutcome._id, sourceRoute: route },
             });
           } else {
@@ -384,12 +383,12 @@ export class TaskOutcomeService {
               _teamId,
               taskOutcome._jobId,
               downStreamTaskName,
-              "id"
+              "_id"
             );
             if (downstreamTask) {
               let queryUpdate: any = {};
               queryUpdate[`up_dep.${task.name}`] = "";
-              const taskFilter = { _teamId, _id: downstreamTask.id };
+              const taskFilter = { _teamId, _id: downstreamTask._id.toHexString() };
               downstreamTask = await TaskModel.findOneAndUpdate(taskFilter, { $unset: queryUpdate }).select(
                 "_id up_dep"
               );
@@ -399,7 +398,7 @@ export class TaskOutcomeService {
                 Object.keys(downstreamTask.up_dep).length === 1 &&
                 task.name in downstreamTask.up_dep
               ) {
-                if (toRouteTasks.indexOf(downstreamTask._id.toHexString()) < 0)
+                if (toRouteTasks.indexOf(downstreamTask._id.toHexString) < 0)
                   tasksToLaunch.push({ taskId: downstreamTask._id });
               }
             } else {
@@ -454,6 +453,7 @@ export class TaskOutcomeService {
           null
         );
       }
+      console.log("2222222222222222222222222222222");
       await this.PublishTask(_teamId, task, logger, amqp);
     } catch (err) {
       if (err instanceof MissingObjectError) {
@@ -478,23 +478,15 @@ export class TaskOutcomeService {
         throw new MissingObjectError(`Job ${task._jobId} for task ${task._id} not found.`);
       }
 
-      task.targetAgentId = await GetTargetAgentId(_teamId, task, job, logger);
+      if (task.target == TaskDefTarget.SINGLE_SPECIFIC_AGENT)
+        task.targetAgentId = await GetTargetAgentId(_teamId, task, job, logger);
 
-      // const maxTries: number = 3;
-      // let tryCount: number = 1;
-      // let getTaskRoutesRes: any;
-      // while (tryCount < maxTries) {
-      //     getTaskRoutesRes = await GetTaskRoutes(_teamId, task, logger);
-      //     if (getTaskRoutesRes.routes)
-      //         break;
-      //     else if (getTaskRoutesRes.failureCode !== TaskFailureCode.NO_AGENT_AVAILABLE)
-      //         break;
-      //     tryCount += 1;
-      //     await SGUtils.sleep(500);
-      // }
-
-      let getTaskRoutesRes = await GetTaskRoutes(_teamId, task, logger);
-      // console.log('PublishTask -> getTaskRoutesRes -> ', JSON.stringify(getTaskRoutesRes, null, 4));
+      console.log("PublishTask ----------------------> task -> ", JSON.stringify(task, null, 4));
+      let getTaskRoutesRes: IGetTaskRouteResult = await GetTaskRoutes(_teamId, task, logger);
+      console.log(
+        "PublishTask ----------------------> getTaskRoutesRes -> ",
+        JSON.stringify(getTaskRoutesRes, null, 4)
+      );
       if (!getTaskRoutesRes.routes) {
         let deltas: any;
         let taskFailed: boolean = false;
@@ -672,7 +664,7 @@ export class TaskOutcomeService {
         }
 
         task.status = TaskStatus.SKIPPED;
-        resUpdate = await taskService.updateTask(_teamId, task.id, { status: TaskStatus.SKIPPED }, logger);
+        resUpdate = await taskService.updateTask(_teamId, task._id, { status: TaskStatus.SKIPPED }, logger);
 
         // console.log('OnTaskSkipped -> resUpdate -> ', JSON.stringify(resUpdate, null, 4));
 

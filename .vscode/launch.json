@@ -1,106 +1,84 @@
 {
-    // Use IntelliSense to learn about possible attributes.
-    // Hover to view descriptions of existing attributes.
-    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
-    "version": "0.2.0",
-    "configurations": [
-        {
-            "name": "Python: Current File",
-            "type": "python",
-            "request": "launch",
-            "program": "${file}",
-            "console": "integratedTerminal"
-        },
-        {
-            "type": "node",
-            "runtimeVersion": "14",
-            "request": "attach",
-            "name": "Attach to Server",
-            "processId": "${command:PickProcess}",
-            "skipFiles": [
-                "<node_internals>/**"
-            ],
-            "outFiles": [
-                "${workspaceFolder}/server/dist/server/**/*.js"
-            ]
-        },
-        {
-            "type": "node",
-            "runtimeVersion": "14",
-            "request": "launch",
-            "sourceMaps": true,
-            "name": "Debug Server",
-            "skipFiles": [
-                "<node_internals>/**"
-            ],
-            "program": "${workspaceFolder}/server/dist/api/StartServer.js",
-            "outFiles": [
-                "${workspaceFolder}/server/dist/**/*.js"
-            ],
-            "env": {
-                "environment": "debug",
-                "NODE_ENV": "debug",
-                "SENDGRID_API_KEY": "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"
-            }
-        },
-        {
-            "type": "node",
-            "runtimeVersion": "14",
-            "request": "launch",
-            "sourceMaps": true,
-            "name": "Debug Server Workers",
-            "skipFiles": [
-                "<node_internals>/**"
-            ],
-            "program": "${workspaceFolder}/server/dist/RunServerWorkers.js",
-            "outFiles": [
-                "${workspaceFolder}/server/dist/*.js"
-            ],
-            "env": {
-                "AWS_ACCESS_KEY_ID": "AKIA5ZOZE6PNDQ4LSZLC",
-                "AWS_SECRET_ACCESS_KEY": "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",
-                "environment": "debug",
-                "NODE_ENV": "debug"
-            }
-        },
-        {
-            "type": "node",
-            "runtimeVersion": "14",
-            "request": "launch",
-            "sourceMaps": true,
-            "name": "Debug Tests",
-            "skipFiles": [
-                "<node_internals>/**"
-            ],
-            "program": "${workspaceFolder}/test/dist/sg-server/test/src/RunUnitTestsHarness.js",
-            "args": [
-                "Test1.js"
-            ],
-            "outFiles": [
-                "${workspaceFolder}//test/dist/sg-server/test/**/*.js"
-            ],
-            "env": {
-                "NODE_ENV": "debug",
-                "SENDGRID_API_KEY": "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",
-                "AWS_ACCESS_KEY_ID": "AKIAX3EV7JGZPNRECXBG",
-                "AWS_SECRET_ACCESS_KEY": "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"
-            }
-        },
-        {
-            "type": "node",
-            "runtimeVersion": "14",
-            "name": "vscode-jest-tests",
-            "request": "launch",
-            "console": "integratedTerminal",
-            "internalConsoleOptions": "neverOpen",
-            "disableOptimisticBPs": true,
-            "program": "${workspaceFolder}/node_modules/.bin/jest",
-            "cwd": "${workspaceFolder}",
-            "args": [
-                "--detectOpenHandles",
-                "--runInBand",
-                "--watchAll=false"
-            ]
-        }
-    ]
+  // Use IntelliSense to learn about possible attributes.
+  // Hover to view descriptions of existing attributes.
+  // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Python: Current File",
+      "type": "python",
+      "request": "launch",
+      "program": "${file}",
+      "console": "integratedTerminal"
+    },
+    {
+      "type": "node",
+      "runtimeVersion": "14",
+      "request": "attach",
+      "name": "Attach to Server",
+      "processId": "${command:PickProcess}",
+      "skipFiles": ["<node_internals>/**"],
+      "outFiles": ["${workspaceFolder}/server/dist/server/**/*.js"]
+    },
+    {
+      "type": "node",
+      "runtimeVersion": "16",
+      "request": "launch",
+      "sourceMaps": true,
+      "name": "Debug Server",
+      "skipFiles": ["<node_internals>/**"],
+      "program": "${workspaceFolder}/server/dist/api/StartServer.js",
+      "outFiles": ["${workspaceFolder}/server/dist/**/*.js"],
+      "env": {
+        "environment": "debug",
+        "NODE_ENV": "debug",
+        "SENDGRID_API_KEY": "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"
+      }
+    },
+    {
+      "type": "node",
+      "runtimeVersion": "16",
+      "request": "launch",
+      "sourceMaps": true,
+      "name": "Debug Server Workers",
+      "skipFiles": ["<node_internals>/**"],
+      "program": "${workspaceFolder}/server/dist/RunServerWorkers.js",
+      "outFiles": ["${workspaceFolder}/server/dist/*.js"],
+      "env": {
+        "AWS_ACCESS_KEY_ID": "AKIA5ZOZE6PNDQ4LSZLC",
+        "AWS_SECRET_ACCESS_KEY": "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",
+        "environment": "debug",
+        "NODE_ENV": "debug"
+      }
+    },
+    {
+      "type": "node",
+      "runtimeVersion": "16",
+      "request": "launch",
+      "sourceMaps": true,
+      "name": "Debug Tests",
+      "skipFiles": ["<node_internals>/**"],
+      "program": "${workspaceFolder}/test/dist/sg-server/test/src/RunUnitTestsHarness.js",
+      "args": ["Test1.js"],
+      "outFiles": ["${workspaceFolder}//test/dist/sg-server/test/**/*.js"],
+      "env": {
+        "NODE_ENV": "debug",
+        "SENDGRID_API_KEY": "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",
+        "AWS_ACCESS_KEY_ID": "AKIAX3EV7JGZPNRECXBG",
+        "AWS_SECRET_ACCESS_KEY": "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"
+      }
+    },
+    {
+      "type": "node",
+      "runtimeVersion": "14",
+      "name": "vscode-jest-tests",
+      "request": "launch",
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen",
+      "disableOptimisticBPs": true,
+      "program": "${workspaceFolder}/node_modules/.bin/jest",
+      "cwd": "${workspaceFolder}",
+      "args": ["--detectOpenHandles", "--runInBand", "--watchAll=false"]
+    }
+  ]
 }

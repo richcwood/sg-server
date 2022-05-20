@@ -22,9 +22,23 @@ import { SGStrings } from "../../shared/SGStrings";
 import { BaseLogger } from "../../shared/SGLogger";
 import { SGUtils } from "../../shared/SGUtils";
 
-import { LaunchTaskError } from "../utils/Errors";
+import { LaunchTaskError, ValidationError } from "../utils/Errors";
 
-const activeAgentTimeoutSeconds = config.get("activeAgentTimeoutSeconds");
+const __ACTIVE_AGENT_TIMEOUT_SECONDS = config.get("activeAgentTimeoutSeconds");
+
+interface IPublishTaskRoute {
+  route: string;
+  type: string;
+  queueAssertArgs: any;
+  targetAgentId: string;
+}
+
+interface IGetTaskRouteResult {
+  routes: IPublishTaskRoute[] | null;
+  task?: TaskSchema;
+  error?: string;
+  failureCode?: Enums.TaskFailureCode;
+}
 
 /**
  * Returns true if the given task can be started which is generally true if it has no upstream dependencies and is not the target
@@ -59,7 +73,7 @@ let ConstructGeneralTaskHandlerAgentsMongoFilter = async (): Promise<any> => {
     ],
     offline: false,
     lastHeartbeatTime: {
-      $gte: new Date().getTime() - parseInt(activeAgentTimeoutSeconds) * 1000,
+      $gte: new Date().getTime() - parseInt(__ACTIVE_AGENT_TIMEOUT_SECONDS) * 1000,
     },
   };
 };
@@ -96,7 +110,7 @@ let GetSingleSpecificAgentTaskRoute = async (
       _id: task.targetAgentId,
       offline: false,
       lastHeartbeatTime: {
-        $gte: new Date().getTime() - parseInt(activeAgentTimeoutSeconds) * 1000,
+        $gte: new Date().getTime() - parseInt(__ACTIVE_AGENT_TIMEOUT_SECONDS) * 1000,
       },
     },
     "lastHeartbeatTime tags propertyOverrides numActiveTasks attemptedRunAgentIds"
@@ -241,7 +255,7 @@ let CreateTaskRouteForSingleAgent = async (
     const targetAgentId = routes[0].targetAgentId;
     updatedTask = await TaskModel.findOneAndUpdate(
       { _id: task._id, _teamId },
-      { $push: { attemptedRunAgentIds: targetAgentId } },
+      { $addToSet: { attemptedRunAgentIds: targetAgentId } },
       { new: true }
     );
     await agentService.updateAgentLastTaskAssignedTime(_teamId, targetAgentId, Date.now(), null, "_id");
@@ -261,7 +275,7 @@ let CreateTaskRoutesForAgents = async (
   _teamId: mongodb.ObjectId,
   agents: Partial<AgentSchema>[],
   agentQueueProperties: any
-): Promise<any[]> => {
+): Promise<IPublishTaskRoute[]> => {
   let routes: any[] = [];
   for (let i = 0; i < agents.length; i++) {
     const agentQueue = SGStrings.GetAgentQueue(_teamId.toHexString(), agents[i]._id);
@@ -277,7 +291,18 @@ let CreateTaskRoutesForAgents = async (
   return routes;
 };
 
-let GetTaskRoutes = async (_teamId: mongodb.ObjectId, task: TaskSchema, logger: BaseLogger) => {
+/**
+ * Gets routes for delivering tasks to agents
+ * @param _teamId
+ * @param task
+ * @param logger
+ * @returns
+ */
+let GetTaskRoutes = async (
+  _teamId: mongodb.ObjectId,
+  task: TaskSchema,
+  logger: BaseLogger
+): Promise<IGetTaskRouteResult> => {
   let routes: any[] = [];
   let updatedTask: TaskSchema = undefined;
 
@@ -287,6 +312,9 @@ let GetTaskRoutes = async (_teamId: mongodb.ObjectId, task: TaskSchema, logger: 
     autoDelete: false,
   };
   try {
+    if (task.status > Enums.TaskStatus.NOT_STARTED)
+      throw new LaunchTaskError("Invalid task status", Enums.TaskFailureCode.INVALID_TASK_STATUS, task);
+
     const inactiveAgentQueueTTLHours = parseInt(config.get("inactiveAgentQueueTTLHours"), 10);
     let inactiveAgentQueueTTL = inactiveAgentQueueTTLHours * 60 * 60 * 1000;
     if (inactiveAgentQueueTTL > 0) agentQueueProperties["expires"] = inactiveAgentQueueTTL;
@@ -331,8 +359,8 @@ let GetTaskRoutes = async (_teamId: mongodb.ObjectId, task: TaskSchema, logger: 
           agentsWithRequiredTags,
           task,
           ActiveAgentSortFunction,
-          logger,
-          agentQueueProperties
+          agentQueueProperties,
+          logger
         );
       }
     }
@@ -355,8 +383,8 @@ let GetTaskRoutes = async (_teamId: mongodb.ObjectId, task: TaskSchema, logger: 
         agentsWithRequiredTags,
         task,
         ActiveLambdaRunnerAgentSortFunction,
-        logger,
-        agentQueueProperties
+        agentQueueProperties,
+        logger
       );
     }
 
@@ -380,8 +408,8 @@ let GetTaskRoutes = async (_teamId: mongodb.ObjectId, task: TaskSchema, logger: 
           agentsQuery,
           task,
           ActiveAgentSortFunction,
-          logger,
-          agentQueueProperties
+          agentQueueProperties,
+          logger
         );
       }
     }
@@ -426,6 +454,8 @@ let GetTargetAgentId = async (
   job: Partial<JobSchema>,
   logger: BaseLogger
 ): Promise<mongodb.ObjectId> => {
+  if (!task.targetAgentId) throw new ValidationError("Task targetAgentId property not set");
+
   let targetAgentId: string = task.targetAgentId;
 
   let runtimeVarsTask: any = {};
@@ -624,6 +654,7 @@ export { GetTargetAgentId };
 export { GetTaskRoutes };
 export { GetWaitingForLambdaRunnerTasks };
 export { GetWaitingForAgentTasks };
+export { IGetTaskRouteResult };
 export { NumNotStartedTasks };
 export { RepublishTasksWaitingForAgent };
 export { RepublishTasksWaitingForLambdaRunner };

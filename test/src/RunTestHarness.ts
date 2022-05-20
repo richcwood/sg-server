@@ -2187,12 +2187,12 @@ let ProcessOrphanedTasks = async () => {
   const maxOfflineAgentsToProcess = 10;
   let cntOfflineAgentsProcessed = 0;
 
-  const activeAgentTimeoutSeconds = config.get("activeAgentTimeoutSeconds");
+  const __ACTIVE_AGENT_TIMEOUT_SECONDS = config.get("activeAgentTimeoutSeconds");
 
   while (true) {
     let inactiveAgentsFilter = {};
     inactiveAgentsFilter["lastHeartbeatTime"] = {
-      $lt: new Date().getTime() - parseInt(activeAgentTimeoutSeconds) * 1000,
+      $lt: new Date().getTime() - parseInt(__ACTIVE_AGENT_TIMEOUT_SECONDS) * 1000,
     };
     inactiveAgentsFilter["offline"] = false;
     const inactiveAgents = await agentService.findAllAgentsInternal(inactiveAgentsFilter, null, batchSize);
@@ -2559,9 +2559,9 @@ FixRuntimeVarsDBRecords();
 // (async () => {
 // mongoose.connect(config.get('mongoUrl'), {});
 
-// const activeAgentTimeoutSeconds = config.get('activeAgentTimeoutSeconds');
+// const __ACTIVE_AGENT_TIMEOUT_SECONDS = config.get('__ACTIVE_AGENT_TIMEOUT_SECONDS');
 // let inactiveAgentsFilter = {};
-// // inactiveAgentsFilter['lastHeartbeatTime'] = { $lt: (new Date().getTime()) - parseInt(activeAgentTimeoutSeconds) * 60 * 1000 };
+// // inactiveAgentsFilter['lastHeartbeatTime'] = { $lt: (new Date().getTime()) - parseInt(__ACTIVE_AGENT_TIMEOUT_SECONDS) * 60 * 1000 };
 // // inactiveAgentsFilter['archived'] = false;
 // const inactiveAgents = await agentService.findAllAgentsInternal(inactiveAgentsFilter, null, 1000);
 // for (let i = 0; i < inactiveAgents.length; i++) {

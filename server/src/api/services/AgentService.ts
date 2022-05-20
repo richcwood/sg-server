@@ -32,7 +32,7 @@ const systemProperties: string[] = [
   "cron",
 ];
 
-const activeAgentTimeoutSeconds = config.get("activeAgentTimeoutSeconds");
+const __ACTIVE_AGENT_TIMEOUT_SECONDS = config.get("activeAgentTimeoutSeconds");
 
 export class AgentService {
   // Some services might need to add additional restrictions to bulk queries
@@ -97,7 +97,7 @@ export class AgentService {
     let filter: any = { _teamId };
     filter.offline = false;
     filter.lastHeartbeatTime = {
-      $gte: new Date().getTime() - parseInt(activeAgentTimeoutSeconds) * 1000,
+      $gte: new Date().getTime() - parseInt(__ACTIVE_AGENT_TIMEOUT_SECONDS) * 1000,
     };
     filter["$and"] = [];
     for (let i = 0; i < Object.keys(tags).length; i++) {
@@ -116,10 +116,10 @@ export class AgentService {
     batchSize: number,
     responseFields?: string
   ): Promise<AgentSchema[]> {
-    const activeAgentTimeoutSeconds = config.get("activeAgentTimeoutSeconds");
+    const __ACTIVE_AGENT_TIMEOUT_SECONDS = config.get("activeAgentTimeoutSeconds");
     let filter: any = { _teamId };
     filter.offline = false;
-    filter.lastHeartbeatTime = { $lt: new Date().getTime() - parseInt(activeAgentTimeoutSeconds) * 1000 };
+    filter.lastHeartbeatTime = { $lt: new Date().getTime() - parseInt(__ACTIVE_AGENT_TIMEOUT_SECONDS) * 1000 };
 
     return await AgentModel.find(filter).select(responseFields).limit(batchSize);
   }

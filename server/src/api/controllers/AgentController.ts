@@ -31,7 +31,7 @@ const stompUrl = config.get("stompUrl");
 const rmqVhost = config.get("rmqVhost");
 const rmqAdminUrl = config.get("rmqAdminUrl");
 const inactiveAgentQueueTTLHours = parseInt(config.get("inactiveAgentQueueTTLHours"), 10);
-const activeAgentTimeoutSeconds = parseInt(config.get("activeAgentTimeoutSeconds"), 10);
+const __ACTIVE_AGENT_TIMEOUT_SECONDS = parseInt(config.get("activeAgentTimeoutSeconds"), 10);
 const adminTeamId = config.get("sgAdminTeam");
 const awsLambdaRequiredTags = config.get("awsLambdaRequiredTags");
 
@@ -318,9 +318,9 @@ export class AgentController {
       if (
         agent.offline ||
         agent.lastHeartbeatTime == null ||
-        agent.lastHeartbeatTime < new Date().getTime() - activeAgentTimeoutSeconds * 2 * 1000
+        agent.lastHeartbeatTime < new Date().getTime() - __ACTIVE_AGENT_TIMEOUT_SECONDS * 2 * 1000
       ) {
-        if (agent.offline || agent.lastHeartbeatTime < new Date().getTime() - activeAgentTimeoutSeconds * 1000) {
+        if (agent.offline || agent.lastHeartbeatTime < new Date().getTime() - __ACTIVE_AGENT_TIMEOUT_SECONDS * 1000) {
           rabbitMQPublisher.publishBrowserAlert(_teamId, `Agent ${agent.machineId} is back online`);
           let orphanedTasksFilter = {};
           orphanedTasksFilter["_teamId"] = _teamId;
