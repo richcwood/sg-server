@@ -1,5 +1,5 @@
 <template>
-  <div @mousemove="onMouseMove" @mouseup="onMouseUp" class="job-designer-page">
+  <div @mousemove="onMouseMove" @mouseup="onMouseUp">
     <!-- Modals -->
 
     <modal name="select-script-vars-modal" :classes="'round-popup'" :width="600" :height="750">
@@ -664,7 +664,7 @@
 
     <!-- For resizing the nav panel -->
     <div class="nav-job-resizer" @mousedown="onResizerMouseDown">
-      <img class="col-resizer-icon" src="@/assets/images/col-resize-icon.svg" />
+      <div class="col-resizer-icon"></div>
     </div>
 
     <!-- Edit job, including task routes designer -->
@@ -2193,7 +2193,9 @@ export default class JobDesigner extends Vue {
   private navPanelWidth = 300;
 
   private get editPanelMarginLeft(): number {
-    return this.navPanelWidth + 1;
+    const dividerOffset = 5;
+
+    return this.navPanelWidth + 1 + dividerOffset;
   }
 
   private get maxNavPanelJobNameLength(): number {
@@ -2310,10 +2312,6 @@ export default class JobDesigner extends Vue {
 </script>
 
 <style lang="scss">
-  .job-designer-page {
-    background: var(--main-background-color);
-  }
-
   table {
     // The borders just make things really ugly
     td,th  {
@@ -2360,24 +2358,23 @@ export default class JobDesigner extends Vue {
 
   // for resizing the nav-job panel
   .nav-job-resizer {
+    background: #eee;
     float: left;
     height: 100vh;
-    width: 1px;
+    width: 7px;
     border: 1px solid lightgray;
-    border-top: none;
     border-bottom: none;
-    border-left: none;
     cursor: col-resize;
     position: relative;
   }
 
   .col-resizer-icon {
-    width: 16px;
-    max-width: initial;
+    height: 30px;
+    width: 7px;
     position: absolute;
     top: 0;
     bottom: 0;
-    left: -7px;
+    background: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAeCAYAAADkftS9AAAAIklEQVQoU2M4c+bMfxAGAgYYmwGrIIiDjrELjpo5aiZeMwF+yNnOs5KSvgAAAABJRU5ErkJggg==') no-repeat;
     margin: auto;
     z-index: 1;
   }
