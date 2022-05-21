@@ -154,7 +154,6 @@ export class TaskOutcomeActionService {
       }
     }
 
-    console.log("11111111111111111111111111111");
     await taskOutcomeService.PublishTask(_teamId, task, logger, amqp);
 
     if (responseFields) {

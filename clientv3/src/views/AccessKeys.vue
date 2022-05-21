@@ -59,7 +59,7 @@ td {
   border-width: 0 !important;
 }
 
-::v-deep .vue-tablist {
+:deep(.vue-tablist) {
   padding-left: 64px;
   padding-right: 64px;
 }

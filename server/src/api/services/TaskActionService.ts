@@ -60,7 +60,6 @@ export class TaskActionService {
         null,
         null
       );
-      console.log("333333333333333333333333333");
       await taskOutcomeService.PublishTask(_teamId, updatedTask, logger, amqp);
 
       if (responseFields) {

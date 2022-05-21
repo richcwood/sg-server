@@ -900,7 +900,7 @@ ul {
   padding-left: 0.25rem;
 }
 
-::v-deep .vue-tablist {
+:deep(.vue-tablist) {
   padding: 0 64px;
 }
 </style>

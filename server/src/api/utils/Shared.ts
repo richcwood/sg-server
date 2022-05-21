@@ -312,7 +312,7 @@ let GetTaskRoutes = async (
     autoDelete: false,
   };
   try {
-    if (task.status > Enums.TaskStatus.NOT_STARTED)
+    if (task.status > Enums.TaskStatus.PUBLISHED)
       throw new LaunchTaskError("Invalid task status", Enums.TaskFailureCode.INVALID_TASK_STATUS, task);
 
     const inactiveAgentQueueTTLHours = parseInt(config.get("inactiveAgentQueueTTLHours"), 10);
@@ -323,8 +323,9 @@ let GetTaskRoutes = async (
     if (task.target == Enums.TaskDefTarget.SINGLE_SPECIFIC_AGENT) {
       routes = await GetSingleSpecificAgentTaskRoute(_teamId, task, logger, agentQueueProperties);
 
-      if (!routes || (_.isArray(routes) && routes.length < 1))
+      if (!routes || (_.isArray(routes) && routes.length < 1)) {
         throw new LaunchTaskError("Target agent not available", Enums.TaskFailureCode.NO_AGENT_AVAILABLE, task);
+      }
       const targetAgentId = new mongodb.ObjectId(task.targetAgentId);
       await agentService.updateAgentLastTaskAssignedTime(_teamId, targetAgentId, Date.now(), null, "_id");
     }
@@ -344,12 +345,13 @@ let GetTaskRoutes = async (
         task.requiredTags,
         "lastHeartbeatTime propertyOverrides numActiveTasks attemptedRunAgentIds lastTaskAssignedTime"
       );
-      if (agentsWithRequiredTags.length < 1)
+      if (agentsWithRequiredTags.length < 1) {
         throw new LaunchTaskError(
           "No agent with required tags available",
           Enums.TaskFailureCode.NO_AGENT_AVAILABLE,
           task
         );
+      }
 
       if (task.target == Enums.TaskDefTarget.ALL_AGENTS_WITH_TAGS) {
         routes = await CreateTaskRoutesForAgents(_teamId, agentsWithRequiredTags, agentQueueProperties);
@@ -379,7 +381,7 @@ let GetTaskRoutes = async (
         throw new LaunchTaskError("No lambda runner agents available", Enums.TaskFailureCode.NO_AGENT_AVAILABLE, task);
 
       [routes, updatedTask] = await CreateTaskRouteForSingleAgent(
-        _teamId,
+        sgAdminTeam,
         agentsWithRequiredTags,
         task,
         ActiveLambdaRunnerAgentSortFunction,
@@ -390,7 +392,7 @@ let GetTaskRoutes = async (
 
     /// For objecives not requiring particular tags, route the task to a single agent or all agents
     else {
-      const filter: any = ConstructGeneralTaskHandlerAgentsMongoFilter();
+      const filter: any = await ConstructGeneralTaskHandlerAgentsMongoFilter();
       const agentsQuery = await agentService.findAllAgents(
         _teamId,
         filter,

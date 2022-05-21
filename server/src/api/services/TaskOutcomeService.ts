@@ -453,7 +453,6 @@ export class TaskOutcomeService {
           null
         );
       }
-      console.log("2222222222222222222222222222222");
       await this.PublishTask(_teamId, task, logger, amqp);
     } catch (err) {
       if (err instanceof MissingObjectError) {
@@ -481,12 +480,7 @@ export class TaskOutcomeService {
       if (task.target == TaskDefTarget.SINGLE_SPECIFIC_AGENT)
         task.targetAgentId = await GetTargetAgentId(_teamId, task, job, logger);
 
-      console.log("PublishTask ----------------------> task -> ", JSON.stringify(task, null, 4));
       let getTaskRoutesRes: IGetTaskRouteResult = await GetTaskRoutes(_teamId, task, logger);
-      console.log(
-        "PublishTask ----------------------> getTaskRoutesRes -> ",
-        JSON.stringify(getTaskRoutesRes, null, 4)
-      );
       if (!getTaskRoutesRes.routes) {
         let deltas: any;
         let taskFailed: boolean = false;

@@ -93,7 +93,7 @@ export class AgentService {
     tags: any,
     responseFields?: string
   ): Promise<AgentSchema[]> {
-    if (!_.isPlainObject || Object.keys(tags).length < 1) throw new ValidationError("Missing or invalid tags");
+    if (!_.isPlainObject(tags) || Object.keys(tags).length < 1) throw new ValidationError("Missing or invalid tags");
     let filter: any = { _teamId };
     filter.offline = false;
     filter.lastHeartbeatTime = {
@@ -108,7 +108,8 @@ export class AgentService {
       filter["$and"].push(tagFilter);
     }
 
-    return await AgentModel.find(filter).select(responseFields);
+    const agents: AgentSchema[] = await AgentModel.find(filter).select(responseFields);
+    return agents;
   }
 
   public async findDisconnectedAgents(

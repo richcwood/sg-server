@@ -194,6 +194,7 @@ describe("Test 'get not started tasks' functions 2", () => {
 describe("Test task routing", () => {
   const inactiveAgentQueueTTLHours = parseInt(config.get("inactiveAgentQueueTTLHours"), 10) * 60 * 60 * 1000;
   const _teamId: mongodb.ObjectId = new mongodb.ObjectId();
+  const sgAdminTeamId = new mongodb.ObjectId(config.get("sgAdminTeam"));
   const task1_Id = new mongodb.ObjectId();
   const task2_Id = new mongodb.ObjectId();
   const task3_Id = new mongodb.ObjectId();
@@ -205,6 +206,8 @@ describe("Test task routing", () => {
   const task9_Id = new mongodb.ObjectId();
   const task10_Id = new mongodb.ObjectId();
   const task11_Id = new mongodb.ObjectId();
+  const task12_Id = new mongodb.ObjectId();
+  const task13_Id = new mongodb.ObjectId();
   const agent1_Id = new mongodb.ObjectId();
   const agent2_Id = new mongodb.ObjectId();
   const agent3_Id = new mongodb.ObjectId();
@@ -212,7 +215,9 @@ describe("Test task routing", () => {
   const agent5_Id = new mongodb.ObjectId();
   const agent6_Id = new mongodb.ObjectId();
   const agent7_Id = new mongodb.ObjectId();
+  const lambdaAgent_Id = new mongodb.ObjectId();
   let agents: Array<Partial<AgentSchema>> = [];
+  let lambdaAgents: Array<Partial<AgentSchema>> = [];
   let job: Partial<JobSchema> = null;
   let tasks: Array<Partial<TaskSchema>> = [];
   let teamVars: Array<Partial<TeamVariableSchema>>;
@@ -339,6 +344,27 @@ describe("Test task routing", () => {
       },
     ];
     await CreateAgents(_teamId, agents);
+    console.log("agents -------------------------> ", agents);
+
+    const lambdaRunnerAgentTags = config.get("awsLambdaRequiredTags");
+    lambdaAgents = [
+      {
+        _id: lambdaAgent_Id,
+        machineId: "lambdaAgent",
+        targetVersion: "v1",
+        reportedVersion: "v1",
+        ipAddress: "ipAddress",
+        propertyOverrides: {
+          maxActiveTasks: 10,
+        },
+        numActiveTasks: 10,
+        lastTaskAssignedTime: Date.now() - 60 * 1000,
+        lastHeartbeatTime: Date.now() - 30 * 1000,
+        tags: lambdaRunnerAgentTags,
+      },
+    ];
+    await CreateAgents(sgAdminTeamId, lambdaAgents);
+    console.log("lambdaAgents -------------------------> ", lambdaAgents);
 
     const _jobId: mongodb.ObjectId = new mongodb.ObjectId();
     job = {
@@ -483,6 +509,31 @@ describe("Test task routing", () => {
         status: Enums.TaskStatus.NOT_STARTED,
         attemptedRunAgentIds: [],
       },
+      {
+        _id: task12_Id,
+        _teamId: _teamId,
+        _jobId: job._id,
+        name: "Task 12",
+        source: 1,
+        target: Enums.TaskDefTarget.ALL_AGENTS_WITH_TAGS,
+        targetAgentId: "@sgg(testAgent3)",
+        requiredTags: tags1,
+        runtimeVars: {},
+        status: Enums.TaskStatus.SUCCEEDED,
+        attemptedRunAgentIds: [],
+      },
+      {
+        _id: task13_Id,
+        _teamId: _teamId,
+        _jobId: job._id,
+        name: "Task 13",
+        source: 1,
+        target: Enums.TaskDefTarget.SINGLE_AGENT,
+        targetAgentId: "@sgg(testAgent1)",
+        runtimeVars: {},
+        status: Enums.TaskStatus.NOT_STARTED,
+        attemptedRunAgentIds: [agent5_Id.toHexString()],
+      },
     ];
     await CreateTasks(_teamId, tasks);
 
@@ -605,12 +656,15 @@ describe("Test task routing", () => {
     const task: TaskSchema = _.filter(tasks, (t) => t.name == "Task 1")[0];
     const res: IGetTaskRouteResult = await GetTaskRoutes(_teamId, task, logger);
 
-    expect(res).toEqual(
-      expect.objectContaining({
-        routes: null,
-        error: "Invalid task status",
-        failureCode: Enums.TaskFailureCode.INVALID_TASK_STATUS,
-      })
+    expect(Object.keys(res)).toEqual(expect.arrayContaining(["routes"]));
+    validateArrayLength(res.routes, 1);
+
+    expect(res.routes).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          targetAgentId: lambdaAgent_Id.toHexString(),
+        }),
+      ])
     );
   });
 
@@ -618,33 +672,15 @@ describe("Test task routing", () => {
     const task: TaskSchema = _.filter(tasks, (t) => t.name == "Task 2")[0];
     const res: IGetTaskRouteResult = await GetTaskRoutes(_teamId, task, logger);
 
-    expect(res).toEqual(
-      expect.objectContaining({
-        routes: null,
-        error: "No lambda runner agents available",
-        failureCode: Enums.TaskFailureCode.NO_AGENT_AVAILABLE,
-      })
-    );
-  });
-
-  test("GetTaskRoutes test 3", async () => {
-    const task: TaskSchema = _.filter(tasks, (t) => t.name == "Task 3")[0];
-    const res: IGetTaskRouteResult = await GetTaskRoutes(_teamId, task, logger);
-
-    expect(Object.keys(res)).toEqual(expect.arrayContaining(["routes", "task"]));
+    expect(Object.keys(res)).toEqual(expect.arrayContaining(["routes"]));
+    validateArrayLength(res.routes, 1);
 
     expect(res.routes).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          targetAgentId: agent6_Id.toHexString(),
+          targetAgentId: lambdaAgent_Id.toHexString(),
         }),
       ])
-    );
-
-    expect(res.task).toEqual(
-      expect.objectContaining({
-        attemptedRunAgentIds: [agent5_Id.toHexString(), agent6_Id.toHexString()],
-      })
     );
   });
 
@@ -664,13 +700,27 @@ describe("Test task routing", () => {
   test("GetTaskRoutes test 6", async () => {
     const task: TaskSchema = _.filter(tasks, (t) => t.name == "Task 6")[0];
     const res: IGetTaskRouteResult = await GetTaskRoutes(_teamId, task, logger);
+    expect(Object.keys(res)).toEqual(expect.arrayContaining(["routes"]));
+    validateArrayLength(res.routes, 5);
 
-    expect(res).toEqual(
-      expect.objectContaining({
-        routes: null,
-        error: "Invalid task status",
-        failureCode: Enums.TaskFailureCode.INVALID_TASK_STATUS,
-      })
+    expect(res.routes).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          targetAgentId: agent1_Id.toHexString(),
+        }),
+        expect.objectContaining({
+          targetAgentId: agent2_Id.toHexString(),
+        }),
+        expect.objectContaining({
+          targetAgentId: agent3_Id.toHexString(),
+        }),
+        expect.objectContaining({
+          targetAgentId: agent4_Id.toHexString(),
+        }),
+        expect.objectContaining({
+          targetAgentId: agent5_Id.toHexString(),
+        }),
+      ])
     );
   });
 
@@ -683,14 +733,14 @@ describe("Test task routing", () => {
     expect(res.routes).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          targetAgentId: agent6_Id.toHexString(),
+          targetAgentId: agent5_Id.toHexString(),
         }),
       ])
     );
 
     expect(res.task).toEqual(
       expect.objectContaining({
-        attemptedRunAgentIds: [agent6_Id.toHexString()],
+        attemptedRunAgentIds: [agent5_Id.toHexString()],
       })
     );
   });
@@ -787,7 +837,7 @@ describe("Test task routing", () => {
     const res: IGetTaskRouteResult = await GetTaskRoutes(_teamId, task, logger);
 
     expect(Object.keys(res)).toEqual(expect.arrayContaining(["routes"]));
-    validateArrayLength(res.routes, 7);
+    validateArrayLength(res.routes, 5);
 
     expect(res.routes).toEqual(
       expect.arrayContaining([
@@ -806,11 +856,54 @@ describe("Test task routing", () => {
         expect.objectContaining({
           targetAgentId: agent5_Id.toHexString(),
         }),
+      ])
+    );
+  });
+
+  test("GetTaskRoutes test 12", async () => {
+    const task: TaskSchema = _.filter(tasks, (t) => t.name == "Task 12")[0];
+    const res: IGetTaskRouteResult = await GetTaskRoutes(_teamId, task, logger);
+
+    expect(res).toEqual(
+      expect.objectContaining({
+        routes: null,
+        error: "Invalid task status",
+        failureCode: Enums.TaskFailureCode.INVALID_TASK_STATUS,
+      })
+    );
+  });
+
+  test("GetTaskRoutes test 13", async () => {
+    const task: TaskSchema = _.filter(tasks, (t) => t.name == "Task 13")[0];
+    const res: IGetTaskRouteResult = await GetTaskRoutes(_teamId, task, logger);
+
+    expect(Object.keys(res)).toEqual(expect.arrayContaining(["routes", "task"]));
+
+    expect(res.routes).toEqual(
+      expect.arrayContaining([
         expect.objectContaining({
-          targetAgentId: agent6_Id.toHexString(),
+          targetAgentId: agent2_Id.toHexString(),
         }),
+      ])
+    );
+
+    expect(res.task).toEqual(
+      expect.objectContaining({
+        attemptedRunAgentIds: [agent5_Id.toHexString(), agent2_Id.toHexString()],
+      })
+    );
+  });
+
+  test("GetTaskRoutes lambda test", async () => {
+    const task: TaskSchema = _.filter(tasks, (t) => t.name == "Task 2")[0];
+    const res: IGetTaskRouteResult = await GetTaskRoutes(_teamId, task, logger);
+
+    expect(Object.keys(res)).toEqual(expect.arrayContaining(["routes"]));
+
+    expect(res.routes).toEqual(
+      expect.arrayContaining([
         expect.objectContaining({
-          targetAgentId: agent7_Id.toHexString(),
+          targetAgentId: lambdaAgent_Id.toHexString(),
         }),
       ])
     );

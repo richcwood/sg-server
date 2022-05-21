@@ -1,9 +1,8 @@
-import * as config from 'config';
-import * as TestBase from './TestBase';
-import { SGUtils } from '../../server/src/shared/SGUtils';
-import { ScriptType, TaskDefTarget } from '../../server/src/shared/Enums';
-import * as _ from 'lodash';
-
+import * as config from "config";
+import * as TestBase from "./TestBase";
+import { SGUtils } from "../../server/src/shared/SGUtils";
+import { ScriptType, TaskDefTarget } from "../../server/src/shared/Enums";
+import * as _ from "lodash";
 
 const script1 = `
 const fs = require('fs');
@@ -36,110 +35,106 @@ let GzipFile = async (filePath) => {
 `;
 const script1_b64 = SGUtils.btoa(script1);
 
-
 let self: Test57;
 
-
 export default class Test57 extends TestBase.WorkflowTestBase {
+  constructor(testSetup) {
+    super("Test57", testSetup);
+    this.description = "Run node task as lambda with dependencies";
 
-    constructor(testSetup) {
-        super('Test57', testSetup);
-        this.description = 'Run node task as lambda with dependencies';
+    self = this;
+  }
 
-        self = this;
-    }
+  public async RunTest() {
+    let result: boolean;
+    let resApiCall: any;
 
+    const _teamId: string = config.get("sgTestTeam");
 
-    public async RunTest() {
-        let result: boolean;
-        let resApiCall: any;
+    // const sgAdminTeam: string = config.get('sgAdminTeam');
+    // const awsLambdaRequiredTags: string = config.get('awsLambdaRequiredTags');
+    // const newAgentProperties = { '_teamId': sgAdminTeam, 'machineId': 'AdminAgent', 'ipAddress': '10.10.0.104', 'tags': awsLambdaRequiredTags, 'numActiveTasks': 0, 'lastHeartbeatTime': null, 'rmqPassword': 'lpUs8Cnsju' };
+    // const newAgent = await self.testSetup.InitAgent(newAgentProperties);
 
-        const _teamId: string = config.get('sgTestTeam');
-
-        // const sgAdminTeam: string = config.get('sgAdminTeam');
-        // const awsLambdaRequiredTags: string = config.get('awsLambdaRequiredTags');
-        // const newAgentProperties = { '_teamId': sgAdminTeam, 'machineId': 'AdminAgent', 'ipAddress': '10.10.0.104', 'tags': awsLambdaRequiredTags, 'numActiveTasks': 0, 'lastHeartbeatTime': null, 'rmqPassword': 'lpUs8Cnsju' };
-        // const newAgent = await self.testSetup.InitAgent(newAgentProperties);
-
-        const properties: any = {
-            scripts: [
-                {
-                    name: 'Script 57',
-                    scriptType: ScriptType.NODE,
-                    code: script1_b64,
-                    shadowCopyCode: script1_b64
-                }
-            ],
-            jobDefs: [
-                {
-                    name: 'Job 57',
-                    taskDefs: [
-                        {
-                            name: 'Task 1',
-                            target: TaskDefTarget.AWS_LAMBDA,
-                            stepDefs: [
-                                {
-                                    name: 'Step 1',
-                                    scriptName: 'Script 57',
-                                    lambdaRuntime: 'nodejs12.x',
-                                    lambdaRole: config.get('lambda-admin-iam-role'),
-                                    lambdaAWSRegion: config.get('AWS_REGION'),
-                                    lambdaDependencies: 'compressing;axios',
-                                    lambdaTimeout: 10
-                                }
-                            ]
-                        }
-                    ]
-                }
-            ]
-        };
-
-        const { scripts, jobDefs } = await this.CreateJobDefsFromTemplates(properties);
-
-        let startedJobId;
-        resApiCall = await this.testSetup.RestAPICall(`job`, 'POST', _teamId, { jobDefName: jobDefs['Job 57'].name });
-        if (resApiCall.data.statusCode != 201) {
-            self.logger.LogError('Failed', { Message: `job POST returned ${resApiCall.data.statusCode}`, _jobDefId: jobDefs['Job 57'].id });
-            return false;
-        }
-        startedJobId = resApiCall.data.data.id;
-
-        const jobStartedBP: any = {
-            domainType: 'Job',
-            operation: 1,
-            model:
+    const properties: any = {
+      scripts: [
+        {
+          name: "Script 57",
+          scriptType: ScriptType.NODE,
+          code: script1_b64,
+          shadowCopyCode: script1_b64,
+        },
+      ],
+      jobDefs: [
+        {
+          name: "Job 57",
+          taskDefs: [
             {
-                _teamId: config.get('sgTestTeam'),
-                _jobDefId: jobDefs[properties.jobDefs[0].name].id,
-                runId: 0,
-                name: properties.jobDefs[0].name,
-                status: 0,
-                id: startedJobId,
-                type: 'Job'
-            }
-        }
-        self.bpMessagesExpected.push(jobStartedBP);
+              name: "Task 1",
+              target: TaskDefTarget.AWS_LAMBDA,
+              stepDefs: [
+                {
+                  name: "Step 1",
+                  scriptName: "Script 57",
+                  lambdaRuntime: "nodejs12.x",
+                  lambdaRole: config.get("lambda-admin-iam-role"),
+                  lambdaAWSRegion: config.get("AWS_REGION"),
+                  lambdaDependencies: "compressing;axios",
+                  lambdaTimeout: 10,
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    };
 
-        const jobCompletedBP: any = {
-            domainType: 'Job',
-            operation: 2,
-            model:
-            {
-                status: 20,
-                id: startedJobId,
-                type: 'Job'
-            }
-        };
-        self.bpMessagesExpected.push(jobCompletedBP);
+    const { scripts, jobDefs } = await this.CreateJobDefsFromTemplates(properties);
 
-        result = await self.WaitForTestToComplete();
-        if (!result)
-            return result;
-
-        // newAgent.offline = true;
-        // await newAgent.SendHeartbeat(false, true);
-        // await newAgent.Stop();
-    
-        return true;
+    let startedJobId;
+    resApiCall = await this.testSetup.RestAPICall(`job`, "POST", _teamId, { jobDefName: jobDefs["Job 57"].name });
+    if (resApiCall.data.statusCode != 201) {
+      self.logger.LogError("Failed", {
+        Message: `job POST returned ${resApiCall.data.statusCode}`,
+        _jobDefId: jobDefs["Job 57"].id,
+      });
+      return false;
     }
+    startedJobId = resApiCall.data.data.id;
+
+    const jobStartedBP: any = {
+      domainType: "Job",
+      operation: 1,
+      model: {
+        _teamId: config.get("sgTestTeam"),
+        _jobDefId: jobDefs[properties.jobDefs[0].name].id,
+        runId: 0,
+        name: properties.jobDefs[0].name,
+        status: 0,
+        id: startedJobId,
+        type: "Job",
+      },
+    };
+    self.bpMessagesExpected.push(jobStartedBP);
+
+    const jobCompletedBP: any = {
+      domainType: "Job",
+      operation: 2,
+      model: {
+        status: 20,
+        id: startedJobId,
+        type: "Job",
+      },
+    };
+    self.bpMessagesExpected.push(jobCompletedBP);
+
+    result = await self.WaitForTestToComplete();
+    if (!result) return result;
+
+    // newAgent.offline = true;
+    // await newAgent.SendHeartbeat(false, true);
+    // await newAgent.Stop();
+
+    return true;
+  }
 }
