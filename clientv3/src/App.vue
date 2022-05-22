@@ -88,12 +88,7 @@
 
     <router-view />
 
-    <div class="main-footer" v-if="! isOnLandingPage()">
-      <span v-if="alertFooter" class="footer-message" :class="AlertCategory[alertFooter.category]">{{alertFooter.message}}</span>
-      <span v-else>&nbsp;</span>
-
-      <span v-if="alertFooterRight" class="footer-message main-footer-right" :class="AlertCategory[alertFooterRight.category]">{{alertFooterRight.message}}</span>
-    </div>
+    <main-footer v-if="!isOnLandingPage()" />
   </div>
 </template>
 
@@ -107,11 +102,11 @@ import { enumKeyToPretty } from './utils/Enums';
 import { Team } from './store/team/types';
 import { SgAlert, AlertPlacement, AlertCategory } from './store/alert/types';
 import { BindSelected, BindStoreModel } from './decorator';
-import axios from 'axios';
-import Cookies from 'js-cookie';
+import MainFooter from '@/components/MainFooter.vue';
 
 @Component({
-  directives: { ClickOutside }
+  directives: { ClickOutside },
+  components: { MainFooter }
 })
 export default class App extends Vue {
 
@@ -127,12 +122,6 @@ export default class App extends Vue {
 
   @BindStoreModel({storeType: StoreType.AlertStore, selectedModelName: 'models'})
   private alerts!: SgAlert[];
-
-  @BindStoreModel({storeType: StoreType.AlertStore, selectedModelName: 'currentFooter'})
-  private alertFooter!: SgAlert;
-
-  @BindStoreModel({storeType: StoreType.AlertStore, selectedModelName: 'currentFooterRight'})
-  private alertFooterRight!: SgAlert;
 
   @BindStoreModel({storeType: StoreType.AlertStore, selectedModelName: 'currentWindow'})
   private alertWindow!: SgAlert;
@@ -404,42 +393,7 @@ export default class App extends Vue {
   }
 }
 
-.main-footer {
-  display: flex;
-  justify-content: space-between;
-  position: fixed;
-  height: 25px;
-  background-color: white;
-  border-top: 1px solid $grey-lighter;
-  left: 0px;
-  bottom: 0px;
-  right: 0px;
-  margin-bottom: 0px;
-  padding-left: 5px;
-  padding-right: 5px;
-  padding-top: 2px;
-  padding-bottom: 8px;
-}
-
-.main-footer-right {
-  margin-right: 5px;
-}
-
 [name=alertMessage] .Error {
-  color: red;
-}
-
-.footer-message {
-  color: black;
-  font-weight: 700;
-  margin-left: 10px;
-}
-
-.footer-message.WARNING{
-  color: orange;
-}
-
-.footer-message.ERROR{
   color: red;
 }
 
