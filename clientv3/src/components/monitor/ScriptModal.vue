@@ -40,8 +40,8 @@ export default class ScriptModal extends Vue {
 </script>
 
 <style lang="scss" scoped>
-:deep(.modal-card-body),
-:deep(pre) {
+::v-deep .modal-card-body,
+::v-deep pre {
   background: var(--code-background-color);
   color: white;
 }
