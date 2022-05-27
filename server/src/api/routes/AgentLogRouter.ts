@@ -127,7 +127,7 @@ export const agentLogRouter = agentLogRouterSingleton.router;
 //   //   async getAll(req: Request, res: Response, next: NextFunction){
 //   //     const _teamId:string = <string>req.headers._teamid;
 //   //     const mongoLib: MongoLib = (<any>req).mongoLib;
-//   //     const agents:any = await mongoLib.GetManyByQuery({_teamId: new mongodb.ObjectID(_teamId)}, 'agent');
+//   //     const agents:any = await mongoLib.GetManyByQuery({_teamId: new mongodb.ObjectId(_teamId)}, 'agent');
 //   //     for(let agent of agents){
 //   //       agent.isHeartbeatActive = (Date.now() - agent.isHeartbeatActive) < 30000;
 //   //     }

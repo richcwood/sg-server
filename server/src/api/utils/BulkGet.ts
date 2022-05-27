@@ -6,7 +6,7 @@ import { ResponseWrapper } from './Types';
 import { convertData } from '../utils/ResponseConverters';
 import * as _ from 'lodash';
 import { MissingObjectError } from '../utils/Errors';
-import { CastError } from 'mongoose';
+import { Error } from 'mongoose';
 
 
 /*
@@ -239,7 +239,7 @@ export const defaultBulkGet = async function(filter: any, req: Request, resp: Re
   catch(err){
     // Mongo CastError occurs when the ids aren't well formed
     // console.log('defaultBulkGet -> err -> ', err);
-    if(err instanceof CastError){
+    if(err instanceof Error.CastError){
       next(new MissingObjectError(`Filter ids don't appear to be valid ${req.query.filter}.`));
     }
     else {

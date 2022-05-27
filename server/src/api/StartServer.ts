@@ -3,8 +3,8 @@ MetricsLogger.init();
 
 import express = require('express');
 import { NextFunction, Request, Response } from 'express';
-const enforce = require('express-sslify');
-const cors = require('cors');
+// const enforce = require('express-sslify');
+// const cors = require('cors');
 import path = require('path');
 import util = require('util');
 const bodyParser = require('body-parser');
@@ -12,7 +12,6 @@ const cookieParser = require('cookie-parser')
 const compression = require('compression');
 const multer = require('multer');
 import * as config from 'config';
-import { MongoRepo } from '../shared/MongoLib';
 import * as mongodb from 'mongodb';
 import { BaseLogger } from '../shared/SGLogger';
 import LoginRouter from './routes/LoginRouter';
@@ -60,6 +59,7 @@ import { accessKeyRouter } from './routes/AccessKeyRouter';
 import { accessRightRouter } from './routes/AccessRightRouter';
 import { settingsRouter } from './routes/SettingsRouter';
 import { teamAdminAccessRouter } from './routes/TeamAdminAccessRouter';
+import { AMQPConnector } from '../shared/AMQPLib';
 const IPCIDR = require('ip-cidr');
 import { read } from 'fs';
 import { AuthTokenType } from '../shared/Enums';
@@ -84,18 +84,16 @@ const environment = process.env.NODE_ENV || 'development';
 
 var options = {
   autoIndex: false, // Don't build indexes
-  reconnectTries: Number.MAX_VALUE, // Never stop trying to reconnect
-  reconnectInterval: 500, // Reconnect every 500ms
-  poolSize: 10, // Maintain up to 10 socket connections
+  useUnifiedTopology: true,
+  maxPoolSize: 10, // Maintain up to 10 socket connections
   // If not connected, return errors immediately rather than waiting for reconnect
-  bufferMaxEntries: 0,
-  useNewUrlParser: true
+  // bufferMaxEntries: 0
 };
 mongoose.connect(config.get('mongoUrl'), options);
 
-const redisClient = redis.createClient(config.get('redisUrl'), {no_ready_check: true});
+const redisClient = redis.createClient(config.get('redisUrl'), { no_ready_check: true });
 const expressSessionOptions: any = {
-  store: new RedisStore({client: redisClient}),
+  store: new RedisStore({ client: redisClient }),
   saveUninitialized: false,
   secret: config.get('sessionSecret'),
   resave: false,
@@ -106,7 +104,7 @@ if (environment === 'production') {
 }
 app.use(session(expressSessionOptions));
 
-app.use(`/api/v0/stripewebhook`, bodyParser.raw({type: "*/*"}), new StripeWebhookRouter().router);
+app.use(`/api/v0/stripewebhook`, bodyParser.raw({ type: "*/*" }), new StripeWebhookRouter().router);
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -124,16 +122,16 @@ class AppBuilder {
   private setUpMiddleware() {
     app.disable('etag');
 
-    if (environment != 'debug' && environment !== 'bartdev') {
-      this.app.use(enforce.HTTPS({ trustProtoHeader: true }));
-    }
+    // if (environment != 'debug' && environment !== 'bartdev') {
+    //   this.app.use(enforce.HTTPS({ trustProtoHeader: true }));
+    // }
 
-    const validOrigins = ['http://console.saasglue.com', 
-                          'https://console.saasglue.com', 
-                          'http://saasglue.com',
-                          'https://saasglue.com',
-                          'http://www.saasglue.com',
-                          'https://www.saasglue.com'];
+    const validOrigins = ['http://console.saasglue.com',
+      'https://console.saasglue.com',
+      'http://saasglue.com',
+      'https://saasglue.com',
+      'http://www.saasglue.com',
+      'https://www.saasglue.com'];
 
     const stripPortRegex = /(?<baseUrl>http[s]?:\/\/[^:]+)/;
 
@@ -142,22 +140,22 @@ class AppBuilder {
         const baseUrl = origin.match(stripPortRegex).groups['baseUrl'];
         return validOrigins.indexOf(baseUrl) !== -1;
       }
-      catch(err){
+      catch (err) {
         return false; // something weird we don't recognize, just fail it
       }
     }
 
-    if (environment == 'stage'){
+    if (environment == 'stage') {
       validOrigins.push('http://saasglue-stage.herokuapp.com');
     }
-    else if(environment === 'bartdev' || environment === 'debug'){
+    else if (environment === 'bartdev' || environment === 'debug') {
       validOrigins.push('http://localhost');
     }
 
     const corsOptions: any = {
       origin: (origin, callback) => {
         console.log(`\n\n *** Bart *** \n origin=>${origin}\n\n`);
-        if(!origin || isValidOrigin(origin)){
+        if (!origin || isValidOrigin(origin)) {
           console.log(`Origin ${origin} was VALID`);
           callback(null, true);
         }
@@ -171,9 +169,9 @@ class AppBuilder {
       maxAge: 3628800,
       credentials: true
     };
-    app.use(cors(corsOptions));
+    // app.use(cors(corsOptions));
 
-    if(config.get('httpLogs.enabled')){
+    if (config.get('httpLogs.enabled')) {
       morgan.token('user_id', req => req.headers.userid);
       morgan.token('user_email', req => req.headers.email);
       morgan.token('team_id', req => req.headers._teamid);
@@ -194,7 +192,7 @@ class AppBuilder {
 
     this.setUpClient();
     this.setUpLogger();
-    this.setUpMongoLib();
+    this.setUpAmqp();
   }
 
   private setUpClient() {
@@ -222,14 +220,13 @@ class AppBuilder {
     });
   }
 
-  private setUpMongoLib() {
-    const mongoUrl = config.get('mongoUrl');
-    const mongoDbName = config.get('mongoDbName');
-    // not sure if this is the best way to share a mongo lib but I think it will work OK
-    // if requests need unique mongo libs I can just create a new one every request I guess
+  private setUpAmqp() {
     this.app.use((req, res, next) => {
-      const mongoLib = new MongoRepo(appName, mongoUrl, mongoDbName, req.logger);
-      req.mongoLib = mongoLib;
+        const amqpUrl = config.get('amqpUrl');
+        const rmqVhost = config.get('rmqVhost');
+        let amqp: AMQPConnector = new AMQPConnector(appName, '', amqpUrl, rmqVhost, 1, (activeMessages) => { }, req.logger);
+        amqp.Start();
+        req.amqp = amqp;
       next();
     });
   }
@@ -247,7 +244,7 @@ class AppBuilder {
     this.app.get('/securecheck', async (req: Request, res: Response, next: NextFunction) => {
       // Write back the cookie to refresh it with a new life and to let the client know
       // if they were invited to new teams, joined new teams etc.
-      const userId = new mongodb.ObjectId(req.headers.userid);
+      const userId = new mongodb.ObjectId(<string>req.headers.userid);
       const user: UserSchema = <UserSchema>await userService.findUser(userId, 'id passwordHash email teamIds teamIdsInvited name companyName teamAccessRightIds');
 
       const jwtExpiration = Date.now() + (1000 * 60 * 60 * 24); // 1 day
@@ -309,7 +306,7 @@ class AppBuilder {
   }
 
   private setUpJwtSecurity(): void {
-    app.use( async (req, res, next) => {
+    app.use(async (req, res, next) => {
       const logger: BaseLogger = (<any>req).logger;
       // // simple development
       // req.headers._teamid = '5d2f857e5a47381334ab3fab';
@@ -370,7 +367,7 @@ class AppBuilder {
           if (paramUserId != jwtData.id) {
             res.status(403).send('Redirect to login - no access to requested user');
           } else {
-            console.log('setUpJwtSecurity -> jwtData -> ', util.inspect(jwtData, false, null));
+            // console.log('setUpJwtSecurity -> jwtData -> ', util.inspect(jwtData, false, null));
             next();
             return;
           }
@@ -388,7 +385,7 @@ class AppBuilder {
             let jwtData;
             try {
               jwtData = jwt.verify(authToken, secret);
-            } catch(err) {
+            } catch (err) {
               if (err.name == 'TokenExpiredError') {
                 jwtData = jwt.decode(authToken);
                 if (jwtData.type == AuthTokenType.ACCESSKEY) {

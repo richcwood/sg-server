@@ -10,8 +10,8 @@ import { AgentModel } from '../domain/Agent';
 import { SGUtils } from '../../shared/SGUtils';
 import { teamService } from './TeamService';
 import { userService } from './UserService';
+import { stepOutcomeService } from './StepOutcomeService';
 import { invoiceService } from './InvoiceService';
-import { MongoRepo } from '../../shared/MongoLib';
 import * as mongodb from 'mongodb';
 import * as _ from 'lodash';
 import * as moment from 'moment';
@@ -20,7 +20,7 @@ import { TaskSource } from '../../shared/Enums';
 
 
 export class CreateInvoiceService {
-    public async createInvoice(data: any, mongoLib: MongoRepo, logger: BaseLogger, correlationId: string, responseFields?: string): Promise<object> {
+    public async createInvoice(data: any, logger: BaseLogger, correlationId: string, responseFields?: string): Promise<object> {
         if (!data._teamId)
             throw new MissingObjectError('Missing _teamId');
         data._teamId = new mongodb.ObjectId(data._teamId);
@@ -92,7 +92,6 @@ export class CreateInvoiceService {
 
         /// Get number of non-interactive console scripts executed in billing period
         let invoiceScriptsFilter: any = {};
-        invoiceScriptsFilter['_teamId'] = data._teamId;
         invoiceScriptsFilter['dateStarted'] = { $gte: data.startDate, $lte: data.endDate };
         invoiceScriptsFilter['_invoiceId'] = { $exists: false };
         invoiceScriptsFilter['source'] = TaskSource.JOB;
@@ -108,7 +107,6 @@ export class CreateInvoiceService {
 
         /// Get number of interactive console scripts executed in billing period
         let invoiceICScriptsFilter: any = {};
-        invoiceICScriptsFilter['_teamId'] = data._teamId;
         invoiceICScriptsFilter['dateStarted'] = { $gte: data.startDate, $lte: data.endDate };
         invoiceICScriptsFilter['_invoiceId'] = { $exists: false };
         invoiceICScriptsFilter['source'] = TaskSource.CONSOLE;
@@ -240,12 +238,11 @@ export class CreateInvoiceService {
         const invoiceModel = new InvoiceModel(data);
         const newInvoice = await invoiceModel.save();
 
-        // const res = await StepOutcomeModel.udpateMany( invoiceScriptsFilter, { $set: { _invoiceId: newInvoice._id }});
-        const res: any = await mongoLib.UpdateMany('stepOutcome', invoiceScriptsFilter, { $set: { _invoiceId: newInvoice._id } });
-        if (res.matchedCount != res.modifiedCount != newInvoice.numScripts) {
+        const res: any = await stepOutcomeService.updateMany(data._teamId, invoiceScriptsFilter, { $set: { _invoiceId: newInvoice._id } }, logger);
+        if (res.matchedCount != res.modifiedCount && res.modifiedCount != newInvoice.numScripts) {
             logger.LogError(`Create invoice error: counts mismatch`, { _teamId: data._teamId, _invoiceId: newInvoice._id, numScripts: newInvoice.numScripts, matchedCount: res.matchedCount, modifiedCount: res.modifiedCount });
         }
-        await mongoLib.UpdateMany('stepOutcome', invoiceICScriptsFilter, { $set: { _invoiceId: newInvoice._id } });
+        await stepOutcomeService.updateMany(data._teamId, invoiceICScriptsFilter, { $set: { _invoiceId: newInvoice._id } }, logger);
 
         await rabbitMQPublisher.publish(data._teamId, "Invoice", correlationId, PayloadOperation.CREATE, convertData(InvoiceSchema, newInvoice));
 

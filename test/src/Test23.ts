@@ -13,12 +13,12 @@ const script1 = `
 import time
 from datetime import datetime
 import sys
-print 'start'
+print('start')
 time.sleep(30)
-print 'done'
-print '@sgo{"route": "ok"}'
+print('done')
+print('@sgo{"route": "ok"}')
 for i in range(10):
-  print i, datetime.now().strftime('%H:%M:%S')
+  print(i, datetime.now().strftime('%H:%M:%S'))
   sys.stdout.flush()
   time.sleep(.5)
 `;

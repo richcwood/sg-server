@@ -4,7 +4,7 @@ import { AccessKeySchema, AccessKeyModel } from '../domain/AccessKey';
 import { defaultBulkGet } from '../utils/BulkGet';
 import { accessKeyService } from '../services/AccessKeyService';
 import { MissingObjectError } from '../utils/Errors';
-import { CastError } from 'mongoose';
+import { Error } from 'mongoose';
 import { convertData as convertResponseData } from '../utils/ResponseConverters';
 import { convertData as convertRequestData } from '../utils/RequestConverters';
 import * as _ from 'lodash';
@@ -26,17 +26,17 @@ export class AccessKeyController {
             const response: ResponseWrapper = (resp as any).body;
             const accessKey = await accessKeyService.findAccessKey(_teamId, new mongodb.ObjectId(req.params.accessKeyId), (<string>req.query.responseFields));
 
-            if (_.isArray(accessKey) && accessKey.length === 0) {
+            if (!accessKey) {
                 next(new MissingObjectError(`AccessKey ${req.params.accessKeyId} not found.`));
             }
             else {
-                response.data = convertResponseData(AccessKeySchema, accessKey[0]);
+                response.data = convertResponseData(AccessKeySchema, accessKey);
                 next();
             }
         }
         catch (err) {
             // If req.params.accessKeyId wasn't a mongo id then we will get a CastError - basically same as if the id wasn't found
-            if (err instanceof CastError) {
+            if (err instanceof Error.CastError) {
                 next(new MissingObjectError(`AccessKey ${req.params.accessKeyId} not found.`));
             }
             else {
@@ -60,14 +60,9 @@ export class AccessKeyController {
             req.body.createdBy = new mongodb.ObjectId(<string>req.headers.userid);
             const _teamId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._teamid);
             const teamAccessRightIds: string[] = <string[]>req.headers.teamAccessRightIds;
-            const newAccessKey: AccessKeySchema = <AccessKeySchema>await accessKeyService.createAccessKey(_teamId, teamAccessRightIds, convertRequestData(AccessKeySchema, req.body), req.header('correlationId'), responseFields);
+            const newAccessKey: AccessKeySchema = await accessKeyService.createAccessKey(_teamId, teamAccessRightIds, convertRequestData(AccessKeySchema, req.body), req.header('correlationId'), responseFields);
             response.data = convertResponseData(AccessKeySchema, newAccessKey);
-            if (_.isArray(newAccessKey)) {
-                for (let i = 0; i < response.data.length; i++)
-                    response.data[i].accessKeySecret = newAccessKey[i].accessKeySecret;
-            } else {
-                response.data.accessKeySecret = newAccessKey.accessKeySecret;
-            }
+            response.data.accessKeySecret = newAccessKey.accessKeySecret;
 
             response.statusCode = ResponseCode.CREATED;
             next();

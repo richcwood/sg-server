@@ -12,10 +12,10 @@ import { TeamVariableSchema } from '../../server/src/api/domain/TeamVariable';
 
 const script1 = `
 import time
-print 'start'
+print('start')
 time.sleep(2)
-print '@sgo{"globalParam1": "@sgg("globalParam1")"}'
-print 'done'
+print('@sgo{"globalParam1": "@sgg("globalParam1")"}')
+print('done')
 `;
 const script1_b64 = SGUtils.btoa(script1);
 

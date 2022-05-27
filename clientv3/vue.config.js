@@ -1,21 +1,19 @@
-const MonacoWebpackPlugin = require('monaco-editor-webpack-plugin');
+const MonacoWebpackPlugin = require("monaco-editor-webpack-plugin");
 
 module.exports = {
   configureWebpack: {
-    plugins: [
-      new MonacoWebpackPlugin()
-    ]
+    plugins: [new MonacoWebpackPlugin()],
   },
   devServer: {
-    proxy: 'http://localhost:3000'
+    proxy: "http://localhost:3000",
   },
   css: {
     loaderOptions: {
       sass: {
-        prependData: `
+        additionalData: `
           @import "@/sass/index.scss";
-        `
-      }
-    }
-  }
+        `,
+      },
+    },
+  },
 };

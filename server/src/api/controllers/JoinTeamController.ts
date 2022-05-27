@@ -3,7 +3,7 @@ import { ResponseWrapper, ResponseCode } from '../utils/Types';
 import { UserSchema } from '../domain/User';
 import { joinTeamService } from '../services/JoinTeamService';
 import { MissingObjectError, ValidationError } from '../utils/Errors';
-import { CastError } from 'mongoose';
+import { Error } from 'mongoose';
 import { convertData as convertResponseData } from '../utils/ResponseConverters';
 import * as _ from 'lodash';
 import * as mongodb from 'mongodb';
@@ -49,7 +49,7 @@ export class JoinTeamController {
         try {
             if (!req.headers.userid)
                 next(new ValidationError('Something went wrong. Please request a new invite link from the team administrator.'));
-            const user: any = await joinTeamService.anonymousJoinTeam(new mongodb.ObjectId(req.headers.userid), req.params.token);
+            const user: any = await joinTeamService.anonymousJoinTeam(new mongodb.ObjectId(<string>req.headers.userid), req.params.token);
 
             let jwtExpiration = Date.now() + (1000 * 60 * 60 * 24); // 1 day
             const secret = config.get('secret');

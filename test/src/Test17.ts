@@ -11,10 +11,10 @@ import { ScriptSchema } from '../../server/src/api/domain/Script';
 
 const script1 = `
 import time
-print 'start'
+print('start')
 time.sleep(10)
-print 'done'
-print '@sgo{"route": "ok"}'
+print('done')
+print('@sgo{"route": "ok"}')
 `;
 const script1_b64 = SGUtils.btoa(script1);
 
@@ -49,7 +49,7 @@ export default class Test17 extends TestBase.default {
         let script_obj1: ScriptSchema = { '_teamId': _teamId, 'name': 'Script 17', 'scriptType': Enums.ScriptType.PYTHON, 'code': script1_b64, _originalAuthorUserId: this.sgUser.id, _lastEditedUserId: this.sgUser.id, lastEditedDate: new Date(), shadowCopyCode: script1_b64 };
         script_obj1 = await self.CreateScript(script_obj1, _teamId);
         self.scripts.push(script_obj1);
-        let step: StepDefSchema = { '_teamId': _teamId, '_taskDefId': '', 'name': 'step1', '_scriptId': script_obj1['id'], 'order': 0, 'arguments': '' };
+        let step: StepDefSchema = { '_teamId': _teamId, '_taskDefId': null, 'name': 'step1', '_scriptId': script_obj1['id'], 'order': 0, 'arguments': '' };
 
         /// Create job defs
         for (let i = 0; i < 10; i++) {

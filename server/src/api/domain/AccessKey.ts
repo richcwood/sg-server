@@ -1,11 +1,11 @@
-import { modelOptions, prop, getModelForClass } from '@typegoose/typegoose';
+import { modelOptions, prop, getModelForClass, Severity } from '@typegoose/typegoose';
 import { FilterOperator } from '../utils/BulkGet';
 import * as mongodb from 'mongodb';
 import { AccessKeyType } from '../../shared/Enums';
 
 /// TODO: change some of these to required like ownerId and inviteLink
 // Example of a schema / domain in Mongoose
-@modelOptions({ schemaOptions: { collection: 'accessKey' } })
+@modelOptions({ schemaOptions: { collection: 'accessKey' }, options: { allowMixed: Severity.ALLOW } })
 export class AccessKeySchema {
 
   _id?: mongodb.ObjectId;
@@ -14,7 +14,7 @@ export class AccessKeySchema {
   id?: mongodb.ObjectId;
   
   @prop({ required: true })
-  _teamId: string;
+  _teamId: mongodb.ObjectId;
 
   @prop({ required: true })
   createdBy: mongodb.ObjectId;
@@ -60,7 +60,7 @@ export class AccessKeySchema {
     toDB: {
       _id: (data) => {
         if(data && data._id){
-          return new mongodb.ObjectID(data._id);
+          return new mongodb.ObjectId(data._id);
         }
         else {
           return undefined;

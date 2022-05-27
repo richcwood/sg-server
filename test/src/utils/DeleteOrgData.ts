@@ -13,7 +13,7 @@ const rl = readline.createInterface({
 
 
 let DeleteTeamJobData = async (teamId: string) => {
-    mongoose.connect(config.get('mongoUrl'), { useNewUrlParser: true });
+    mongoose.connect(config.get('mongoUrl'), {});
 
     const mongoUrl = config.get('mongoUrl');
     const mongoDbname = config.get('mongoDbName');

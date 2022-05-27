@@ -1,10 +1,10 @@
-import { modelOptions, prop, getModelForClass } from '@typegoose/typegoose';
+import { modelOptions, prop, getModelForClass, Severity } from '@typegoose/typegoose';
 import { FilterOperator } from '../utils/BulkGet';
 import * as mongodb from 'mongodb';
 
 
 // Example of a schema / domain in Mongoose
-@modelOptions({ schemaOptions: { collection: 'teamVariable' } })
+@modelOptions({ schemaOptions: { collection: 'teamVariable' }, options: { allowMixed: Severity.ALLOW } })
 export class TeamVariableSchema {
 
   _id?: mongodb.ObjectId;
@@ -47,7 +47,7 @@ export class TeamVariableSchema {
   public static readonly dataConverters = {
     toDB: {
       _id: (data) => {
-        return new mongodb.ObjectID(data._id);
+        return new mongodb.ObjectId(data._id);
       }
     },
 

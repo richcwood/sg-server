@@ -1,23 +1,25 @@
-import { convertData } from '../utils/ResponseConverters';
-import { JobDefSchema, JobDefModel } from '../domain/JobDef';
-import { StepDefSchema, StepDefModel } from '../domain/StepDef';
-import { TaskDefSchema, TaskDefModel } from '../domain/TaskDef';
-import { rabbitMQPublisher, PayloadOperation } from '../utils/RabbitMQPublisher';
-import { MissingObjectError, ValidationError } from '../utils/Errors';
-import * as mongodb from 'mongodb';
-import { JobDefStatus, ScriptType, TaskDefTarget } from '../../shared/Enums';
-import { jobService } from './JobService';
-import { scriptService } from './ScriptService';
-import { stepDefService } from './StepDefService';
-import { taskDefService } from './TaskDefService';
-import { agentService } from './AgentService';
-import { scheduleService } from './ScheduleService';
-import { SGUtils } from '../../shared/SGUtils';
-import * as _ from 'lodash';
-import * as Enums from '../../shared/Enums';
+import { convertData } from "../utils/ResponseConverters";
+import { JobDefSchema, JobDefModel } from "../domain/JobDef";
+import { ScriptSchema } from "../domain/Script";
+import { StepDefSchema } from "../domain/StepDef";
+import { TaskDefSchema } from "../domain/TaskDef";
+import { rabbitMQPublisher, PayloadOperation } from "../utils/RabbitMQPublisher";
+import { MissingObjectError, ValidationError } from "../utils/Errors";
+import * as mongodb from "mongodb";
+import { JobDefStatus, ScriptType, TaskDefTarget } from "../../shared/Enums";
+import { jobService } from "./JobService";
+import { scriptService } from "./ScriptService";
+import { stepDefService } from "./StepDefService";
+import { taskDefService } from "./TaskDefService";
+import { agentService } from "./AgentService";
+import { scheduleService } from "./ScheduleService";
+import { SGUtils } from "../../shared/SGUtils";
+import * as _ from "lodash";
+import * as Enums from "../../shared/Enums";
+import { BaseLogger } from "../../shared/SGLogger";
+import { AMQPConnector } from "../../shared/AMQPLib";
 
 export class JobDefService {
-
   // Some services might need to add additional restrictions to bulk queries
   // This is how they would add more to the base query (Example: fetch only non-deleted users for all queries)
   // public async updateBulkQuery(query): Promise<object> {
@@ -29,10 +31,15 @@ export class JobDefService {
     return JobDefModel.find(filter).select(responseFields);
   }
 
-  public async findJobDef(_teamId: mongodb.ObjectId, jobDefId: mongodb.ObjectId, responseFields?: string) {
-    return JobDefModel.findById(jobDefId).find({ _teamId }).select(responseFields);
+  public async findJobDef(
+    _teamId: mongodb.ObjectId,
+    jobDefId: mongodb.ObjectId,
+    responseFields?: string
+  ): Promise<JobDefSchema | null> {
+    const result: JobDefSchema[] = await JobDefModel.findById(jobDefId).find({ _teamId }).select(responseFields);
+    if (_.isArray(result) && result.length > 0) return result[0];
+    return null;
   }
-
 
   public async createJobDefInternal(data: any): Promise<object> {
     const model = new JobDefModel(data);
@@ -40,35 +47,45 @@ export class JobDefService {
     return newJobDef;
   }
 
-
-  public async createJobDef(_teamId: mongodb.ObjectId, data: any, correlationId: string, responseFields?: string): Promise<object> {
+  public async createJobDef(
+    _teamId: mongodb.ObjectId,
+    data: any,
+    correlationId: string,
+    responseFields?: string
+  ): Promise<JobDefSchema> {
     const existingJobDefQuery: any = await this.findAllJobDefsInternal({ _teamId, name: data.name });
     if (_.isArray(existingJobDefQuery) && existingJobDefQuery.length > 0)
-        throw new ValidationError(`Job definition with name "${data.name}" already exists`);
-      
+      throw new ValidationError(`Job definition with name "${data.name}" already exists`);
+
     data._teamId = _teamId;
     const jobDefModel = new JobDefModel(data);
     const newJobDef = await jobDefModel.save();
 
-    await rabbitMQPublisher.publish(_teamId, "JobDef", correlationId, PayloadOperation.CREATE, convertData(JobDefSchema, newJobDef));
+    await rabbitMQPublisher.publish(
+      _teamId,
+      "JobDef",
+      correlationId,
+      PayloadOperation.CREATE,
+      convertData(JobDefSchema, newJobDef)
+    );
 
     return this.findJobDef(_teamId, newJobDef._id, responseFields);
   }
 
-
-  public async createJobDefFromJobDef(_teamId: mongodb.ObjectId, data: any, correlationId: string, responseFields?: string): Promise<object> {
+  public async createJobDefFromJobDef(
+    _teamId: mongodb.ObjectId,
+    data: any,
+    correlationId: string,
+    responseFields?: string
+  ): Promise<object> {
     data._teamId = _teamId;
 
-    if (!data._jobDefId)
-      throw new ValidationError('Request body missing "_jobDefId"');
+    if (!data._jobDefId) throw new ValidationError('Request body missing "_jobDefId"');
 
-    if (!data.createdBy)
-      throw new ValidationError('Request body missing "createdBy"');
+    if (!data.createdBy) throw new ValidationError('Request body missing "createdBy"');
 
-    const jobDefSourceQuery = await this.findJobDef(_teamId, new mongodb.ObjectId(data._jobDefId));
-    if (!jobDefSourceQuery || (_.isArray(jobDefSourceQuery) && jobDefSourceQuery.length === 0))
-      throw new MissingObjectError(`JobDef ${data._jobDefId} not found.`);
-    const jobDefSource = jobDefSourceQuery[0];
+    const jobDefSource = await this.findJobDef(_teamId, new mongodb.ObjectId(data._jobDefId));
+    if (!jobDefSource) throw new MissingObjectError(`JobDef ${data._jobDefId} not found.`);
 
     const jobDef_data = {
       _teamId: data._teamId,
@@ -84,7 +101,7 @@ export class JobDefService {
       onJobTaskInterruptedAlertEmail: jobDefSource.onJobTaskInterruptedAlertEmail,
       onJobTaskFailAlertSlackURL: jobDefSource.onJobTaskFailAlertSlackURL,
       onJobCompleteAlertSlackURL: jobDefSource.onJobCompleteAlertSlackURL,
-      onJobTaskInterruptedAlertSlackURL: jobDefSource.onJobTaskInterruptedAlertSlackURL
+      onJobTaskInterruptedAlertSlackURL: jobDefSource.onJobTaskInterruptedAlertSlackURL,
     };
     const jobDefModel = new JobDefModel(jobDef_data);
     const newJobDef = await jobDefModel.save();
@@ -104,9 +121,9 @@ export class JobDefService {
         fromRoutes: taskDefSource.fromRoutes,
         toRoutes: taskDefSource.toRoutes,
         artifacts: taskDefSource.artifacts,
-      }
+      };
 
-      const taskDefReq: any = await taskDefService.createTaskDef(_teamId, taskDef_data, correlationId, '_id');
+      const taskDefReq: any = await taskDefService.createTaskDef(_teamId, taskDef_data, correlationId, "_id");
 
       if (taskDefSource.target != TaskDefTarget.AWS_LAMBDA) {
         const newTaskDef = taskDefReq[0];
@@ -124,37 +141,47 @@ export class JobDefService {
             command: stepDefSource.command,
             arguments: stepDefSource.arguments,
             variables: stepDefSource.variables,
-          }
+          };
 
-          const stepDefReq: any = await stepDefService.createStepDef(_teamId, stepDef_data, correlationId, '_id');
+          const stepDefReq: any = await stepDefService.createStepDef(_teamId, stepDef_data, correlationId, "_id");
         }
       }
     }
 
-    await rabbitMQPublisher.publish(_teamId, "JobDef", correlationId, PayloadOperation.CREATE, convertData(JobDefSchema, newJobDef));
+    await rabbitMQPublisher.publish(
+      _teamId,
+      "JobDef",
+      correlationId,
+      PayloadOperation.CREATE,
+      convertData(JobDefSchema, newJobDef)
+    );
 
     return this.findJobDef(_teamId, newJobDef._id, responseFields);
   }
 
-
-  public async createJobDefFromScript(_teamId: mongodb.ObjectId, data: any, correlationId: string, responseFields?: string): Promise<object> {
+  public async createJobDefFromScript(
+    _teamId: mongodb.ObjectId,
+    data: any,
+    correlationId: string,
+    responseFields?: string
+  ): Promise<object> {
     data._teamId = _teamId;
 
-    if (!data._scriptId)
-      throw new ValidationError('Request body missing "_scriptId"');
+    if (!data._scriptId) throw new ValidationError('Request body missing "_scriptId"');
 
-    if (!data.createdBy)
-      throw new ValidationError('Request body missing "createdBy"');
+    if (!data.createdBy) throw new ValidationError('Request body missing "createdBy"');
 
-    const scriptReq = await scriptService.findScript(_teamId, new mongodb.ObjectId(data._scriptId), '_id name');
-    if (!scriptReq || (_.isArray(scriptReq) && scriptReq.length === 0))
-      throw new MissingObjectError(`Script ${data._scriptId} not found.`);
-    const script = scriptReq[0];
+    const script: ScriptSchema = await scriptService.findScript(
+      _teamId,
+      new mongodb.ObjectId(data._scriptId),
+      "_id name"
+    );
+    if (!script) throw new MissingObjectError(`Script ${data._scriptId} not found.`);
 
     const jobDef_data = {
       _teamId,
       name: `${script.name} job`,
-      createdBy: data.createdBy
+      createdBy: data.createdBy,
     };
     const jobDefModel = new JobDefModel(jobDef_data);
     const newJobDef = await jobDefModel.save();
@@ -163,97 +190,108 @@ export class JobDefService {
       _teamId,
       _jobDefId: newJobDef._id,
       target: TaskDefTarget.SINGLE_AGENT,
-      name: 'task'
+      name: "task",
     };
-    const taskDefReq: any = await taskDefService.createTaskDef(_teamId, taskDef_data, correlationId, '_id');
+    const taskDefReq: any = await taskDefService.createTaskDef(_teamId, taskDef_data, correlationId, "_id");
     const taskDef = taskDefReq[0];
 
     const stepDef_data = {
       _teamId,
       _taskDefId: taskDef._id,
-      name: 'step',
+      name: "step",
       _scriptId: script._id,
-      order: 1
+      order: 1,
     };
-    await stepDefService.createStepDef(_teamId, stepDef_data, correlationId, '_id');
+    await stepDefService.createStepDef(_teamId, stepDef_data, correlationId, "_id");
 
-    await rabbitMQPublisher.publish(_teamId, "JobDef", correlationId, PayloadOperation.CREATE, convertData(JobDefSchema, newJobDef));
+    await rabbitMQPublisher.publish(
+      _teamId,
+      "JobDef",
+      correlationId,
+      PayloadOperation.CREATE,
+      convertData(JobDefSchema, newJobDef)
+    );
 
     return this.findJobDef(_teamId, newJobDef._id, responseFields);
   }
 
-
-  public async createJobDefFromCron(_teamId: mongodb.ObjectId, data: any, correlationId: string, responseFields?: string): Promise<object> {
+  public async createJobDefFromCron(
+    _teamId: mongodb.ObjectId,
+    data: any,
+    correlationId: string,
+    responseFields?: string
+  ): Promise<object> {
     data._teamId = _teamId;
 
-    if (!data.cronString)
-      throw new ValidationError('Request body missing "cronString"');
+    if (!data.cronString) throw new ValidationError('Request body missing "cronString"');
 
-    if (!data._agentId)
-      throw new ValidationError('Request body missing "_agentId"');
+    if (!data._agentId) throw new ValidationError('Request body missing "_agentId"');
 
-    if (!data.createdBy)
-      throw new ValidationError('Request body missing "createdBy"');
+    if (!data.createdBy) throw new ValidationError('Request body missing "createdBy"');
 
-    const agentReq = await agentService.findAgent(_teamId, new mongodb.ObjectId(data._agentId), '_id machineId timezone');
-    if (!agentReq || (_.isArray(agentReq) && agentReq.length === 0))
-      throw new MissingObjectError(`Agent ${data._agentId} not found.`);
-    const agent = agentReq[0];
+    const agent = await agentService.findAgent(_teamId, new mongodb.ObjectId(data._agentId), "_id machineId timezone");
+    if (!agent) throw new MissingObjectError(`Agent ${data._agentId} not found.`);
 
     const cronJobUniqueId = SGUtils.makeid(5);
 
     const jobDef_data = {
       _teamId,
       name: `Cron Job ${agent.machineId} - ${cronJobUniqueId}`,
-      createdBy: data.createdBy
+      createdBy: data.createdBy,
     };
     const jobDefModel = new JobDefModel(jobDef_data);
     const newJobDef = await jobDefModel.save();
 
-    const tokens = data.cronString.split(' ');
+    const tokens = data.cronString.split(" ");
 
-    const code = SGUtils.btoa(tokens.slice(5).join(' '));
+    const code = SGUtils.btoa(tokens.slice(5).join(" "));
     const script_data = {
       _teamId,
       name: `cron-${agent.machineId}-${cronJobUniqueId}`,
       scriptType: ScriptType.SH,
       code: code,
       shadowCopyCode: code,
-      teamEditable: true
+      teamEditable: true,
     };
-    const scriptReq: any = await scriptService.createScript(_teamId, script_data, data.createdBy, correlationId, '_id');
+    const scriptReq: any = await scriptService.createScript(_teamId, script_data, data.createdBy, correlationId, "_id");
     const script = scriptReq[0];
 
     const taskDef_data = {
       _teamId,
       _jobDefId: newJobDef._id,
       target: TaskDefTarget.SINGLE_SPECIFIC_AGENT,
-      name: 'task',
-      targetAgentId: agent._id.toHexString()
+      name: "task",
+      targetAgentId: agent._id.toHexString(),
     };
-    const taskDefReq: any = await taskDefService.createTaskDef(_teamId, taskDef_data, correlationId, '_id');
+    const taskDefReq: any = await taskDefService.createTaskDef(_teamId, taskDef_data, correlationId, "_id");
     const taskDef = taskDefReq[0];
 
     const stepDef_data = {
       _teamId,
       _taskDefId: taskDef._id,
-      name: 'step',
+      name: "step",
       _scriptId: script._id,
       variables: data.envVars,
-      order: 1
+      order: 1,
     };
-    await stepDefService.createStepDef(_teamId, stepDef_data, correlationId, '_id');
+    await stepDefService.createStepDef(_teamId, stepDef_data, correlationId, "_id");
 
-    await rabbitMQPublisher.publish(_teamId, "JobDef", correlationId, PayloadOperation.CREATE, convertData(JobDefSchema, newJobDef));
+    await rabbitMQPublisher.publish(
+      _teamId,
+      "JobDef",
+      correlationId,
+      PayloadOperation.CREATE,
+      convertData(JobDefSchema, newJobDef)
+    );
 
     const schedule_data: any = {
       _teamId,
       _jobDefId: newJobDef._id,
-      name: 'Schedule from Cron',
+      name: "Schedule from Cron",
       createdBy: data.createdBy,
       lastUpdatedBy: data.createdBy,
       isActive: true,
-      TriggerType: 'cron',
+      TriggerType: "cron",
       cron: {
         Day_Of_Week: tokens[4],
         Month: tokens[3],
@@ -263,18 +301,26 @@ export class JobDefService {
       },
       FunctionKwargs: {
         _teamId,
-        targetId: newJobDef._id
-      }
+        targetId: newJobDef._id,
+      },
     };
-    if (agent.timezone)
-      schedule_data.cron.Timezone = agent.timezone;
-    await scheduleService.createSchedule(_teamId, schedule_data, correlationId, '_id');
+    if (agent.timezone) schedule_data.cron.Timezone = agent.timezone;
+    await scheduleService.createSchedule(_teamId, schedule_data, correlationId, "_id");
 
     return this.findJobDef(_teamId, newJobDef._id, responseFields);
   }
 
-
-  public async updateJobDef(_teamId: mongodb.ObjectId, id: mongodb.ObjectId, data: any, filter?: any, correlationId?: string, userEmail?: string, responseFields?: string): Promise<object> {
+  public async updateJobDef(
+    _teamId: mongodb.ObjectId,
+    id: mongodb.ObjectId,
+    data: any,
+    logger: BaseLogger,
+    amqp: AMQPConnector,
+    filter?: any,
+    correlationId?: string,
+    userEmail?: string,
+    responseFields?: string
+  ): Promise<object> {
     if (data.name) {
       const existingJobDefQuery: any = await this.findAllJobDefsInternal({ _teamId, name: data.name });
       if (_.isArray(existingJobDefQuery) && existingJobDefQuery.length > 0)
@@ -283,34 +329,36 @@ export class JobDefService {
     }
 
     const defaultFilter = { _id: id, _teamId };
-    if (filter)
-      filter = Object.assign(defaultFilter, filter);
-    else
-      filter = defaultFilter;
+    if (filter) filter = Object.assign(defaultFilter, filter);
+    else filter = defaultFilter;
 
     const jobDef = await JobDefModel.findOneAndUpdate(filter, data);
 
-    if (!jobDef)
-      throw new MissingObjectError(`Job template with id '${id}' not found.`)
+    if (!jobDef) throw new MissingObjectError(`Job template with id '${id}' not found.`);
 
     if (data.status == JobDefStatus.RUNNING && jobDef.status == JobDefStatus.PAUSED)
-      await jobService.LaunchReadyJobs(_teamId, id);
-    
+      await jobService.LaunchReadyJobs(_teamId, id, logger, amqp);
+
     if (data.maxInstances) {
       const maxInstancesNew = parseInt(data.maxInstances);
-      if (maxInstancesNew > jobDef.maxInstances)
-        await jobService.LaunchReadyJobs(_teamId, id);
+      if (maxInstancesNew > jobDef.maxInstances) await jobService.LaunchReadyJobs(_teamId, id, logger, amqp);
     }
 
     let deltas = Object.assign({ _id: id }, data);
     let convertedDeltas = convertData(JobDefSchema, deltas);
-    await rabbitMQPublisher.publish(_teamId, "JobDef", correlationId, PayloadOperation.UPDATE, convertedDeltas, userEmail);
+    await rabbitMQPublisher.publish(
+      _teamId,
+      "JobDef",
+      correlationId,
+      PayloadOperation.UPDATE,
+      convertedDeltas,
+      userEmail
+    );
 
     return this.findJobDef(_teamId, id, responseFields);
   }
 
-
-  public async deleteJobDef(_teamId: mongodb.ObjectId, id: mongodb.ObjectId, correlationId?: string): Promise<void> {
+  public async deleteJobDef(_teamId: mongodb.ObjectId, id: mongodb.ObjectId, correlationId?: string): Promise<object> {
     const deleted = await JobDefModel.deleteOne({ _id: id });
 
     await rabbitMQPublisher.publish(_teamId, "JobDef", correlationId, PayloadOperation.DELETE, { id, correlationId });
@@ -319,15 +367,15 @@ export class JobDefService {
   }
 
   public async serializeExportedJobDefs(_teamId: mongodb.ObjectId, jobDefs: JobDefSchema[]): Promise<any> {
-    const results = {jobDefs: [], scripts: []};
+    const results = { jobDefs: [], scripts: [] };
 
     const uniqueScripts = {};
 
-    for(let jobDefCount = 0; jobDefCount < jobDefs.length; jobDefCount++){
+    for (let jobDefCount = 0; jobDefCount < jobDefs.length; jobDefCount++) {
       const jobDef = jobDefs[jobDefCount];
 
       const jobDefJson: any = {
-        version: '0.0',
+        version: "0.0",
         name: jobDef.name,
         maxInstances: jobDef.maxInstances,
         misFireGraceTime: jobDef.misfireGraceTime,
@@ -335,19 +383,19 @@ export class JobDefService {
         pauseOnJobFail: jobDef.pauseOnFailedJob,
         runtimeVars: {},
         schedules: [],
-        taskDefs: []
+        taskDefs: [],
       };
 
-      if(jobDef.runtimeVars){
-        for(let runtimeVar of Object.keys(jobDef.runtimeVars)){
-          jobDefJson.runtimeVars[runtimeVar] = {'value': '*', 'sensitive': false};
+      if (jobDef.runtimeVars) {
+        for (let runtimeVar of Object.keys(jobDef.runtimeVars)) {
+          jobDefJson.runtimeVars[runtimeVar] = { value: "*", sensitive: false };
         }
       }
 
       // get the schedule
       const schedules: any = await scheduleService.findAllSchedulesInternal({ _teamId, _jobDefId: jobDef._id });
 
-      for(let scheduleCount = 0; scheduleCount < schedules.length; scheduleCount++){
+      for (let scheduleCount = 0; scheduleCount < schedules.length; scheduleCount++) {
         const schedule = schedules[scheduleCount];
         const scheduleJson: any = {
           TriggerType: schedule.TriggerType,
@@ -359,21 +407,21 @@ export class JobDefService {
           RunDate: schedule.RunDate,
         };
 
-        if(schedule.cron){
+        if (schedule.cron) {
           scheduleJson.cron = schedule.cron;
         }
 
-        if(schedule.interval){
+        if (schedule.interval) {
           scheduleJson.interval = schedule.interval;
         }
 
         jobDefJson.schedules.push(scheduleJson);
       }
-      
+
       // get all tasks, steps and scripts
       const taskDefs = await taskDefService.findAllTaskDefsInternal({ _teamId, _jobDefId: jobDef._id });
 
-      for(let taskDefCount = 0; taskDefCount < taskDefs.length; taskDefCount++){
+      for (let taskDefCount = 0; taskDefCount < taskDefs.length; taskDefCount++) {
         const taskDef = taskDefs[taskDefCount];
         const taskDefJSON: any = {
           target: taskDef.target,
@@ -385,21 +433,21 @@ export class JobDefService {
           expectedValues: taskDef.expectedValues,
           autoRestart: taskDef.autoRestart,
           stepDefs: [],
-          exportWarnings: []
+          exportWarnings: [],
         };
 
-        if(taskDef.artifacts){
+        if (taskDef.artifacts) {
           // todo - add an export warning for each artifact
         }
 
-        if(taskDef.targetAgentId){
+        if (taskDef.targetAgentId) {
           // todo - add an export warning for the agent
         }
 
         // get all steps for the task
-        const stepDefs = await stepDefService.findAllStepDefsInternal({ _teamId, _taskDefId: taskDef._id })
+        const stepDefs = await stepDefService.findAllStepDefsInternal({ _teamId, _taskDefId: taskDef._id });
 
-        for(let stepDefCount = 0; stepDefCount < stepDefs.length; stepDefCount++){
+        for (let stepDefCount = 0; stepDefCount < stepDefs.length; stepDefCount++) {
           const stepDef = stepDefs[stepDefCount];
           const stepDefJSON: any = {
             name: stepDef.name,
@@ -417,25 +465,24 @@ export class JobDefService {
             lambdaAWSRegion: stepDef.lambdaAWSRegion,
             lambdaDependencies: stepDef.lambdaDependencies,
 
-            lambdaZipfile: stepDef.lambdaZipfile // todo - this is an artifact :(
+            lambdaZipfile: stepDef.lambdaZipfile, // todo - this is an artifact :(
           };
 
           // assemble all of the scripts in a unique root level collection
-          if(stepDef._scriptId){
+          if (stepDef._scriptId) {
             const scripts = await scriptService.findAllScriptsInternal({ _teamId, _id: stepDef._scriptId });
 
-            if(scripts.length > 0){
-
-              if(scripts.length > 1){
-                console.warn('Warning, found multiple scripts for step' + stepDef.name);
+            if (scripts.length > 0) {
+              if (scripts.length > 1) {
+                console.warn("Warning, found multiple scripts for step" + stepDef.name);
               }
 
               // pick the first one
               const script = scripts[0];
-              
+
               stepDefJSON.scriptName = script.name;
 
-              if(uniqueScripts[script.name] === undefined){
+              if (uniqueScripts[script.name] === undefined) {
                 uniqueScripts[script.name] = script;
               }
             }
@@ -451,46 +498,44 @@ export class JobDefService {
     }
 
     // Now you need to recusively drill down through all of the script.sgsElems to find all of the
-    // scripts that are indirectly referenced 
+    // scripts that are indirectly referenced
     const scriptNamesToCheck = Object.keys(uniqueScripts);
 
-    while(scriptNamesToCheck.length > 0){
+    while (scriptNamesToCheck.length > 0) {
       const scriptName = scriptNamesToCheck.pop();
 
-      if(uniqueScripts[scriptName] === undefined){
+      if (uniqueScripts[scriptName] === undefined) {
         const scripts = await scriptService.findAllScriptsInternal({ _teamId, name: scriptName });
 
-        if(scripts.length > 0){
-
-          if(scripts.length > 1){
+        if (scripts.length > 0) {
+          if (scripts.length > 1) {
             console.warn(`Warning, found multiple scripts with name "${scriptName}"`);
           }
 
           uniqueScripts[scriptName] = scripts[0];
-        }
-        else {
+        } else {
           console.error(`Error, unable to find referenced script with name "${scriptName}"`);
         }
       }
 
       // The script might have been referenced by @sgs but it didn't exist.
-      if(uniqueScripts[scriptName] !== undefined){
+      if (uniqueScripts[scriptName] !== undefined) {
         const uniqueScript = uniqueScripts[scriptName];
 
-        if(uniqueScript.sgsElems){
-          for(let sgsScriptName of uniqueScript.sgsElems){
+        if (uniqueScript.sgsElems) {
+          for (let sgsScriptName of uniqueScript.sgsElems) {
             // If you haven't loaded the uniqueScripts yet, put it in the scriptNamesToCheck and it will
             // be loaded immediately in the uniqueScripts in the loop above
-            if(uniqueScripts[sgsScriptName] === undefined){
+            if (uniqueScripts[sgsScriptName] === undefined) {
               scriptNamesToCheck.push(sgsScriptName);
             }
           }
         }
       }
-    };
+    }
 
     // Now assemble all of the unique script information
-    for(let scriptName in uniqueScripts){
+    for (let scriptName in uniqueScripts) {
       const script = uniqueScripts[scriptName];
       const scriptJSON = {
         name: script.name,
@@ -498,7 +543,7 @@ export class JobDefService {
         code: script.code,
         teamUsable: script.teamUsable,
         teamEditable: script.teamEditable,
-        isActive: script.isActive
+        isActive: script.isActive,
       };
 
       results.scripts.push(scriptJSON);
@@ -513,7 +558,12 @@ export class JobDefService {
 
   // Initially this function won't return anything - it relies on browser push to send through all the created scripts,
   // job defs, task defs and step defs.
-  public async importJobDefs(_teamId: mongodb.ObjectId, userId: mongodb.ObjectId, correlationId: string, dataJSON: any): Promise<any> {
+  public async importJobDefs(
+    _teamId: mongodb.ObjectId,
+    userId: mongodb.ObjectId,
+    correlationId: string,
+    dataJSON: any
+  ): Promise<any> {
     const report = []; // todo - this ain't great
 
     // todo - possibly wrap each script / jobdef create inside of a try catch so you can partially fail / succeed.  ugh
@@ -522,7 +572,7 @@ export class JobDefService {
     const scriptsJSON = dataJSON.scripts;
     const scriptIdsByOriginalName = {};
 
-    for(let scriptCount = 0; scriptCount < scriptsJSON.length; scriptCount++){
+    for (let scriptCount = 0; scriptCount < scriptsJSON.length; scriptCount++) {
       const scriptJSON = scriptsJSON[scriptCount];
       let scriptWithSameNameFound = false;
       let script;
@@ -530,30 +580,33 @@ export class JobDefService {
       // Try to reuse existing scripts
       const scripts = await scriptService.findAllScriptsInternal({ _teamId, name: scriptJSON.name });
 
-      if(scripts.length > 0){
+      if (scripts.length > 0) {
         scriptWithSameNameFound = true;
-        if(scripts[0].code === scriptJSON.code){
+        if (scripts[0].code === scriptJSON.code) {
           script = scripts[0];
         }
       }
 
-      if(!script){
+      if (!script) {
         let newScriptName = scriptJSON.name;
 
-        if(scriptWithSameNameFound){
+        if (scriptWithSameNameFound) {
           // generate a unique script name from what's found in the db for the team
-          const nameRegex = new RegExp('^' + scriptJSON.name + '_import_\\d+$');
-          const existingScripts =  await scriptService.findAllScriptsInternal({ _teamId, name: { $regex: nameRegex }}, '_id name');
-          
+          const nameRegex = new RegExp("^" + scriptJSON.name + "_import_\\d+$");
+          const existingScripts = await scriptService.findAllScriptsInternal(
+            { _teamId, name: { $regex: nameRegex } },
+            "_id name"
+          );
+
           // convert to names to a map for quick lookup
           const existingNames = {};
-          for(let existing of existingScripts){
+          for (let existing of existingScripts) {
             existingNames[existing.name] = true;
           }
 
-          for(let i = 1; i < 100; i++){
-            newScriptName = scriptJSON.name + '_import_' + i;
-            if(existingNames[newScriptName] === undefined){
+          for (let i = 1; i < 100; i++) {
+            newScriptName = scriptJSON.name + "_import_" + i;
+            if (existingNames[newScriptName] === undefined) {
               break; // now newScriptName is unique
             }
           }
@@ -566,21 +619,19 @@ export class JobDefService {
           code: scriptJSON.code,
           teamUsable: scriptJSON.teamUsable,
           teamEditable: scriptJSON.teamEditable,
-          isActive: scriptJSON.isActive
+          isActive: scriptJSON.isActive,
         };
 
-        const createdScript:any = <any> await scriptService.createScript(_teamId, newScriptData, userId, correlationId);
+        const createdScript: any = <any>await scriptService.createScript(_teamId, newScriptData, userId, correlationId);
 
         scriptIdsByOriginalName[scriptJSON.name] = createdScript._id;
 
-        if(scriptWithSameNameFound){
+        if (scriptWithSameNameFound) {
           report.push(`Created script ${scriptJSON.name} with new name of ${newScriptName}`);
-        }
-        else {
+        } else {
           report.push(`Created script ${scriptJSON.name}`);
         }
-      }
-      else {
+      } else {
         scriptIdsByOriginalName[scriptJSON.name] = script._id;
       }
     }
@@ -588,7 +639,7 @@ export class JobDefService {
     // After importing the scripts you need to JobDefs / StepDefs and TaskDefs -> Script
     const jobDefsJSON = dataJSON.jobDefs;
 
-    for(let jobDefCount = 0; jobDefCount < jobDefsJSON.length; jobDefCount++){
+    for (let jobDefCount = 0; jobDefCount < jobDefsJSON.length; jobDefCount++) {
       const jobDefJSON = jobDefsJSON[jobDefCount];
       let newJobDefName = jobDefJSON.name;
 
@@ -596,20 +647,23 @@ export class JobDefService {
       // JobDef.name is case sensitive
       const jobDefs = await jobDefService.findAllJobDefsInternal({ _teamId, name: jobDefJSON.name });
 
-      if(jobDefs.length > 0){
+      if (jobDefs.length > 0) {
         // generate a unique job def name from what's found in the db for the team
-        const nameRegex = new RegExp('^' + jobDefJSON.name + '_import_\\d+$');
-        const existingJobDefs =  await jobDefService.findAllJobDefsInternal({ _teamId, name: { $regex: nameRegex }}, '_id name');
-        
+        const nameRegex = new RegExp("^" + jobDefJSON.name + "_import_\\d+$");
+        const existingJobDefs = await jobDefService.findAllJobDefsInternal(
+          { _teamId, name: { $regex: nameRegex } },
+          "_id name"
+        );
+
         // convert to names to a map for quick lookup
         const existingNames = {};
-        for(let existing of existingJobDefs){
+        for (let existing of existingJobDefs) {
           existingNames[existing.name] = true;
         }
 
-        for(let i = 1; i < 100; i++){
-          newJobDefName = jobDefJSON.name + '_import_' + i;
-          if(existingNames[newJobDefName] === undefined){
+        for (let i = 1; i < 100; i++) {
+          newJobDefName = jobDefJSON.name + "_import_" + i;
+          if (existingNames[newJobDefName] === undefined) {
             break; // now newJobDefName is unique and we can create a new job with the name
           }
         }
@@ -620,21 +674,21 @@ export class JobDefService {
       const newJobDefData: any = {
         name: newJobDefName,
         createdBy: userId,
-        version: '0.0',
+        version: "0.0",
         maxInstances: jobDefJSON.maxInstances,
         misFireGraceTime: jobDefJSON.misfireGraceTime,
         coalesce: jobDefJSON.coalesce,
         pauseOnJobFail: jobDefJSON.pauseOnFailedJob,
-        runtimeVars: jobDefJSON.runtimeVars
+        runtimeVars: jobDefJSON.runtimeVars,
       };
 
-      const createdJobDefs:any = <any> await jobDefService.createJobDef(_teamId, newJobDefData, userId, correlationId);
+      const createdJobDefs: any = <any>await jobDefService.createJobDef(_teamId, newJobDefData, correlationId);
       const createdJobDef = createdJobDefs[0];
 
       // now create the schedules for the new jobDef
-      for(let scheduleCount = 0; scheduleCount < jobDefJSON.schedules.length; scheduleCount++){
+      for (let scheduleCount = 0; scheduleCount < jobDefJSON.schedules.length; scheduleCount++) {
         const scheduleJSON = jobDefJSON.schedules[scheduleCount];
-        
+
         const newScheduleData: any = {
           _jobDefId: createdJobDef._id,
           createdBy: userId,
@@ -648,15 +702,15 @@ export class JobDefService {
           RunDate: scheduleJSON.RunDate,
           FunctionKwargs: {
             _teamId,
-            targetId: createdJobDef._id
-          }
+            targetId: createdJobDef._id,
+          },
         };
 
-        if(scheduleJSON.cron){
+        if (scheduleJSON.cron) {
           newScheduleData.cron = scheduleJSON.cron;
         }
 
-        if(scheduleJSON.interval){
+        if (scheduleJSON.interval) {
           newScheduleData.interval = scheduleJSON.interval;
         }
 
@@ -664,9 +718,9 @@ export class JobDefService {
       }
 
       // now create the task defs
-      for(let taskDefCount = 0; taskDefCount < jobDefJSON.taskDefs.length; taskDefCount++){
+      for (let taskDefCount = 0; taskDefCount < jobDefJSON.taskDefs.length; taskDefCount++) {
         const taskDefJSON = jobDefJSON.taskDefs[taskDefCount];
-      
+
         const newTaskDefData = {
           _jobDefId: createdJobDef._id,
           target: taskDefJSON.target,
@@ -677,23 +731,22 @@ export class JobDefService {
           toRoutes: taskDefJSON.toRoutes,
           expectedValues: taskDefJSON.expectedValues,
           autoRestart: taskDefJSON.autoRestart,
-          exportWarnings: []
+          exportWarnings: [],
         };
 
-        const createdTaskDef: any = <any> await taskDefService.createTaskDef(_teamId, newTaskDefData, correlationId);
+        const createdTaskDef: any = <any>await taskDefService.createTaskDef(_teamId, newTaskDefData, correlationId);
 
         // For AWS Lambda tasks the step def was automatically created so you have to find it and update it :(
-        if(taskDefJSON.target == Enums.TaskDefTarget.AWS_LAMBDA){
-          if(taskDefJSON.stepDefs.length < 1){
+        if (taskDefJSON.target == Enums.TaskDefTarget.AWS_LAMBDA) {
+          if (taskDefJSON.stepDefs.length < 1) {
             console.error(`Error, for some reason the importer was passed an aws lambda task without a step def`);
-          }
-          else {
+          } else {
             const stepDefJSON = taskDefJSON.stepDefs[0];
 
             // First locate the lambda step
-            const stepDefs = await stepDefService.findAllStepDefsInternal({_taskDefId: createdTaskDef._id});
+            const stepDefs = await stepDefService.findAllStepDefsInternal({ _taskDefId: createdTaskDef._id });
 
-            if(stepDefs.length > 0){
+            if (stepDefs.length > 0) {
               const stepDef = stepDefs[0];
 
               const newStepDefData: any = {
@@ -712,33 +765,34 @@ export class JobDefService {
                 lambdaAWSRegion: stepDefJSON.lambdaAWSRegion,
                 lambdaDependencies: stepDefJSON.lambdaDependencies,
 
-                lambdaZipfile: stepDefJSON.lambdaZipfile // todo - this won't work right now across teams coz artifacts and blah blah blah
+                lambdaZipfile: stepDefJSON.lambdaZipfile, // todo - this won't work right now across teams coz artifacts and blah blah blah
               };
 
               // Link the step def to the script by import name if it exists
-            if(stepDefJSON.scriptName){
-              if(scriptIdsByOriginalName[stepDefJSON.scriptName]){
-                newStepDefData._scriptId = scriptIdsByOriginalName[stepDefJSON.scriptName];
+              if (stepDefJSON.scriptName) {
+                if (scriptIdsByOriginalName[stepDefJSON.scriptName]) {
+                  newStepDefData._scriptId = scriptIdsByOriginalName[stepDefJSON.scriptName];
+                } else {
+                  console.error(
+                    `Error, when importing a lambda stepDef that referenced script name "${stepDefJSON.scriptName}" the script was not found on import!!`
+                  );
+                }
               }
-              else {
-                console.error(`Error, when importing a lambda stepDef that referenced script name "${stepDefJSON.scriptName}" the script was not found on import!!`);
-              }
-            }
 
               await stepDefService.updateStepDef(_teamId, stepDef._id, newStepDefData, correlationId);
-            }
-            else {
+            } else {
               // todo - better error handling here
-              console.error(`Error, Unable to locate the AWS Lambda step def on import for task def id ${createdTaskDef._id}`);
+              console.error(
+                `Error, Unable to locate the AWS Lambda step def on import for task def id ${createdTaskDef._id}`
+              );
             }
           }
-        }
-        else {
+        } else {
           // now create the step defs per task def for non-lambda task defs
-          for(let stepDefCount = 0; stepDefCount < taskDefJSON.stepDefs.length; stepDefCount++){
+          for (let stepDefCount = 0; stepDefCount < taskDefJSON.stepDefs.length; stepDefCount++) {
             const stepDefJSON = taskDefJSON.stepDefs[stepDefCount];
 
-            const newStepDefData:any = {
+            const newStepDefData: any = {
               _taskDefId: createdTaskDef._id,
 
               name: stepDefJSON.name,
@@ -751,12 +805,13 @@ export class JobDefService {
             };
 
             // Link the step def to the script by import name if it exists
-            if(stepDefJSON.scriptName){
-              if(scriptIdsByOriginalName[stepDefJSON.scriptName]){
+            if (stepDefJSON.scriptName) {
+              if (scriptIdsByOriginalName[stepDefJSON.scriptName]) {
                 newStepDefData._scriptId = scriptIdsByOriginalName[stepDefJSON.scriptName];
-              }
-              else {
-                console.error(`Error, when importing a stepDef that referenced script name "${stepDefJSON.scriptName}" the script was not found on import!!`);
+              } else {
+                console.error(
+                  `Error, when importing a stepDef that referenced script name "${stepDefJSON.scriptName}" the script was not found on import!!`
+                );
               }
             }
 
@@ -765,10 +820,9 @@ export class JobDefService {
         }
       }
 
-      if(jobDefJSON.name !== newJobDefName){
+      if (jobDefJSON.name !== newJobDefName) {
         report.push(`Created job ${jobDefJSON.name} with new name of ${newJobDefName}`);
-      }
-      else {
+      } else {
         report.push(`Created job ${jobDefJSON.name}`);
       }
     }

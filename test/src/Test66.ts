@@ -7,22 +7,22 @@ import * as _ from 'lodash';
 
 const script1 = `
 import time
-print 'start'
+print('start')
 time.sleep(5)
-print 'done'
-print '@sgo{"<<sensitiveRuntimeVar>>": "sensitive_value"}'
-print '@sgo{"nonsensitiveRuntimeVar": "non sensitive value"}'
+print('done')
+print('@sgo{"<<sensitiveRuntimeVar>>": "sensitive_value"}')
+print('@sgo{"nonsensitiveRuntimeVar": "non sensitive value"}')
 `;
 const script1_b64 = SGUtils.btoa(script1);
 
 
 const script2 = `
 import time
-print 'start'
+print('start')
 time.sleep(5)
-print 'done'
-print '@sgg("sensitiveRuntimeVar")'
-print '@sgg("nonsensitiveRuntimeVar")'
+print('done')
+print('@sgg("sensitiveRuntimeVar")')
+print('@sgg("nonsensitiveRuntimeVar")')
 `;
 const script2_b64 = SGUtils.btoa(script2);
 

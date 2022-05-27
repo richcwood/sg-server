@@ -10,16 +10,16 @@ import * as _ from 'lodash';
 const script1 = `
 import time
 import sys
-print 'start'
+print('start')
 for i in range(@sgg("linenum"),50):
-    print i
-    print '@sgo{{"linenum":{}}}'.format(i)
+    print(i)
+    print('@sgo{{"linenum":{}}}'.format(i))
     if i==25:
-        print '@sgo{{"linenum":{}}}'.format(i+1)
+        print('@sgo{{"linenum":{}}}'.format(i+1))
         sys.exit(-1)
     time.sleep(.5)
-print 'done'
-print '@sgo{"route": "ok"}'
+print('done')
+print('@sgo{"route": "ok"}')
 `;
 const script1_b64 = SGUtils.btoa(script1);
 

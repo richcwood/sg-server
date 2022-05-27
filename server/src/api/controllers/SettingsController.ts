@@ -4,7 +4,7 @@ import { SettingsSchema, SettingsModel } from '../domain/Settings';
 import { defaultBulkGet } from '../utils/BulkGet';
 import { settingsService } from '../services/SettingsService';
 import { MissingObjectError } from '../utils/Errors';
-import { CastError } from 'mongoose';
+import { Error } from 'mongoose';
 import { convertData as convertResponseData } from '../utils/ResponseConverters';
 import { convertData as convertRequestData } from '../utils/RequestConverters';
 import * as _ from 'lodash';
@@ -23,7 +23,7 @@ export class SettingsController {
     public async getSettings(req: Request, resp: Response, next: NextFunction): Promise<void> {
         try {
             const response: ResponseWrapper = (resp as any).body;
-            const settings = await settingsService.findSettings(new mongodb.ObjectId(req.params.type));
+            const settings = await settingsService.findSettings(req.params.type);
 
             if (_.isArray(settings) && settings.length === 0) {
                 next(new MissingObjectError(`Settings ${req.params.type} not found.`));
@@ -35,7 +35,7 @@ export class SettingsController {
         }
         catch (err) {
             // If req.params.settingsId wasn't a mongo id then we will get a CastError - basically same as if the id wasn't found
-            if (err instanceof CastError) {
+            if (err instanceof Error.CastError) {
                 next(new MissingObjectError(`Settings ${req.params.type} not found.`));
             }
             else {

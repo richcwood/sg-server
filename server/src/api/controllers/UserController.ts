@@ -3,7 +3,7 @@ import { ResponseWrapper, ResponseCode } from '../utils/Types';
 import { UserSchema } from '../domain/User';
 import { userService } from '../services/UserService';
 import { MissingObjectError, ValidationError } from '../utils/Errors';
-import { CastError } from 'mongoose';
+import { Error } from 'mongoose';
 import { convertData as convertResponseData } from '../utils/ResponseConverters';
 import * as _ from 'lodash';
 import * as mongodb from 'mongodb';
@@ -31,7 +31,6 @@ export class UserController {
   public async getUser(req: Request, resp: Response, next: NextFunction): Promise<void> {
     try {
       const response: ResponseWrapper = (resp as any).body;
-      console.log('getUser -> ', req.params.userId);
       const user = await userService.findUser(new mongodb.ObjectId(req.params.userId), (<string>req.query.responseFields));
 
       if (!user) {
@@ -44,7 +43,7 @@ export class UserController {
     }
     catch (err) {
       // If req.params.userId wasn't a mongo id then we will get a CastError - basically same as if the id wasn't found
-      if (err instanceof CastError) {
+      if (err instanceof Error.CastError) {
         next(new MissingObjectError(`User ${req.params.userId} not found.`));
       }
       else {
@@ -112,15 +111,16 @@ export class UserController {
 
       const userIdToRemove: mongodb.ObjectId = new mongodb.ObjectId(req.params.userId);
       const userRemovedBy: mongodb.ObjectId = new mongodb.ObjectId(req.params.userId);
-      const teamId = <string>req.headers._teamid;
+      const _teamId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._teamid);
+      const teamIdAsString: string = _teamId.toHexString();
 
       let authorized: boolean = false;
       if (userIdToRemove.toHexString() != userRemovedBy.toHexString()) {
         const teamAccessRightIds = req.headers.teamAccessRightIds;
 
-        if (teamAccessRightIds && teamAccessRightIds[teamId]) {
+        if (teamAccessRightIds && teamAccessRightIds[teamIdAsString]) {
           const rightIdsToVerify = await accessRightsVerifier.convertAccessRightNamesToIds(['TEAM_GLOBAL']);
-          const userRightsBitset = BitSet.fromHexString(teamAccessRightIds[teamId]);
+          const userRightsBitset = BitSet.fromHexString(teamAccessRightIds[teamIdAsString]);
 
           if (rightIdsToVerify.some((rightId: number) => {
             return userRightsBitset.get(rightId) === 1;
@@ -135,11 +135,11 @@ export class UserController {
       }
 
       if (!authorized) {
-        logger.LogError('User not authorized', { Class: 'UserController', Method: 'leaveTeam', UserIdToRemove: userIdToRemove.toHexString(), UserRemovedBy: userRemovedBy.toHexString(), TeamId: teamId });
+        logger.LogError('User not authorized', { Class: 'UserController', Method: 'leaveTeam', UserIdToRemove: userIdToRemove.toHexString(), UserRemovedBy: userRemovedBy.toHexString(), TeamId: teamIdAsString });
         throw new ValidationError('User not authorized');
       }
 
-      const userUpdated: any = await userService.leaveTeam(userIdToRemove, userRemovedBy, teamId, logger, req.header('correlationId'));
+      const userUpdated: any = await userService.leaveTeam(userIdToRemove, userRemovedBy, _teamId, logger, req.header('correlationId'));
 
       const jwtExpiration = Date.now() + (1000 * 60 * 60 * 24); // 1 day
       const secret = config.get('secret');

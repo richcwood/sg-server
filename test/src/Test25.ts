@@ -14,19 +14,19 @@ import { JobSchema } from '../../server/src/api/domain/Job';
 
 const script1 = `
 import time
-print 'start'
+print('start')
 time.sleep(2)
-print 'done'
-print '@sgo{"route": "ok"}'
+print('done')
+print('@sgo{"route": "ok"}')
 `;
 const script1_b64 = SGUtils.btoa(script1);
 
 const script2 = `
 import time
-print 'start'
+print('start')
 time.sleep(2)
-print '@sgo{"globalParam1": "@sgg("globalParam1")"}'
-print 'done'
+print('@sgo{"globalParam1": "@sgg("globalParam1")"}')
+print('done')
 `;
 const script2_b64 = SGUtils.btoa(script2);
 

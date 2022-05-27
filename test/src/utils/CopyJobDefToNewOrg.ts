@@ -39,7 +39,7 @@ import * as _ from 'lodash';
 
 
 let CopyJobDefToNewTeam = async (sourceTeam: mongodb.ObjectId, destTeam: mongodb.ObjectId, _jobDefId: mongodb.ObjectId) => {
-    mongoose.connect(config.get('mongoUrl'), { useNewUrlParser: true });
+    mongoose.connect(config.get('mongoUrl'), {});
 
     console.log('mongo url -> ', config.get('mongoUrl'));
 

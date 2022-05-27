@@ -41,7 +41,7 @@ import * as mongoose from 'mongoose';
 
 
 let LoadMongoData = async (path: string, teamId: string = '') => {
-  mongoose.connect(config.get('mongoUrl'), { useNewUrlParser: true });
+  mongoose.connect(config.get('mongoUrl'), { });
 
   const mongoUrl = config.get('mongoUrl');
   const mongoDbname = config.get('mongoDbName');

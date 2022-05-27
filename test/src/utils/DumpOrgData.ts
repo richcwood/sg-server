@@ -40,7 +40,7 @@ import * as mongodb from 'mongodb';
 
 
 let DumpMongoData = async (path: string, _teamId: any) => {
-  mongoose.connect(config.get('mongoUrl'), { useNewUrlParser: true });
+  mongoose.connect(config.get('mongoUrl'), {});
 
   console.log('mongo url -> ', config.get('mongoUrl'));
 

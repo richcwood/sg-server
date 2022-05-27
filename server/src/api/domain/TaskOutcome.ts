@@ -1,4 +1,4 @@
-import { modelOptions, prop, getModelForClass } from '@typegoose/typegoose';
+import { modelOptions, prop, getModelForClass, Severity } from '@typegoose/typegoose';
 import { FilterOperator } from '../utils/BulkGet';
 import { TaskDefTarget, TaskSource } from '../../shared/Enums';
 import * as mongodb from 'mongodb';
@@ -6,7 +6,7 @@ import { MongoDbSettings } from 'aws-sdk/clients/dms';
 
 
 // Example of a schema / domain in Mongoose
-@modelOptions({ schemaOptions: { collection: 'taskOutcome', minimize: false } })
+@modelOptions({ schemaOptions: { collection: 'taskOutcome', minimize: false }, options: { allowMixed: Severity.ALLOW } })
 export class TaskOutcomeSchema {
 
     _id?: mongodb.ObjectId;
@@ -86,19 +86,19 @@ export class TaskOutcomeSchema {
     public static readonly dataConverters = {
         toDB: {
             _id: (data) => {
-                return new mongodb.ObjectID(data._id);
+                return new mongodb.ObjectId(data._id);
             },
             _teamId: (data) => {
-                return new mongodb.ObjectID(data._teamId);
+                return new mongodb.ObjectId(data._teamId);
             },
             _jobId: (data) => {
-                return new mongodb.ObjectID(data._jobId);
+                return new mongodb.ObjectId(data._jobId);
             },
             _taskId: (data) => {
-                return new mongodb.ObjectID(data._taskId);
+                return new mongodb.ObjectId(data._taskId);
             },
             _agentId: (data) => {
-                return new mongodb.ObjectID(data._agentId);
+                return new mongodb.ObjectId(data._agentId);
             }
         },
 

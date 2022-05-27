@@ -1,11 +1,11 @@
-import { modelOptions, prop, arrayProp, getModelForClass } from '@typegoose/typegoose';
+import { modelOptions, prop, getModelForClass, Severity } from '@typegoose/typegoose';
 import { FilterOperator } from '../utils/BulkGet';
 import Bitset from 'bitset';
 import * as mongodb from 'mongodb';
 
 
 // Example of a schema / domain in Mongoose
-@modelOptions({ schemaOptions: { collection: 'user' } })
+@modelOptions({ schemaOptions: { collection: 'user' }, options: { allowMixed: Severity.ALLOW } })
 export class UserSchema {
 
   _id?: mongodb.ObjectId;
@@ -99,7 +99,7 @@ export class UserSchema {
     // This isn't hooked up yet until needed - if it does, then call this in the controller layer on data before passing to service
     toDB: {
       _id: (data) => {
-        return new mongodb.ObjectID(data._id);
+        return new mongodb.ObjectId(data._id);
       }
     },
 

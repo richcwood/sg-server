@@ -1,11 +1,11 @@
-import { modelOptions, prop, mapProp, getModelForClass } from '@typegoose/typegoose';
+import { modelOptions, prop, getModelForClass, Severity } from '@typegoose/typegoose';
 import { FilterOperator } from '../utils/BulkGet';
 import * as mongodb from 'mongodb';
 import { MongoDbSettings } from 'aws-sdk/clients/dms';
 
 
 // Example of a schema / domain in Mongoose
-@modelOptions({schemaOptions: {collection: 'stepDef'}})
+@modelOptions({ schemaOptions: { collection: 'stepDef' }, options: { allowMixed: Severity.ALLOW } })
 export class StepDefSchema {
 
   _id?: mongodb.ObjectId;
@@ -34,7 +34,7 @@ export class StepDefSchema {
   @prop({default: ''}) 
   arguments: string;
 
-  @mapProp({of: String, default: new Map([])})
+  @prop({ type: String, default: new Map([])})
   variables?: Map<string, string>;
 
   @prop({ default: 'script' })
@@ -81,13 +81,13 @@ export class StepDefSchema {
     // This isn't hooked up yet until needed - if it does, then call this in the controller layer on data before passing to service
     toDB: {
       _id: (data) => {
-        return new mongodb.ObjectID(data._id);
+        return new mongodb.ObjectId(data._id);
       },
       _teamId: (data) => {
-        return new mongodb.ObjectID(data._teamId);
+        return new mongodb.ObjectId(data._teamId);
       },
       _taskDefId: (data) => {
-        return new mongodb.ObjectID(data._taskDefId);
+        return new mongodb.ObjectId(data._taskDefId);
       }
     },
 
