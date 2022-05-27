@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "saas glue workers",
   "engines": {
-    "node": ">=0.16.0"
+    "node": "16.x"
   },
   "scripts": {
     "build": "tsc",
