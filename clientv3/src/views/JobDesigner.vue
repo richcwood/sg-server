@@ -729,7 +729,7 @@
             </button>
           </div>
           <div class="dropdown-menu" id="dropdown-menu" role="menu">
-            <div class="p-0">
+            <div class="dropdown-content">
               <a class="dropdown-item" @click.prevent="onNavMenuCreateTaskClicked">Create Task</a>
               <a class="dropdown-item" @click.prevent="onNavMenuCreateAWSLambdaTaskClicked">Create AWS Lambda Task</a>
               <span v-if="selectedTaskDefForEdit === null" class="dropdown-item" style="color: lightgray;"
