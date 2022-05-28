@@ -31,12 +31,15 @@ export class AccessKeyService {
     }
 
 
-    public async findAccessKey(_teamId: mongodb.ObjectId, accessKeyId: mongodb.ObjectId, responseFields?: string) {
-        return AccessKeyModel.findById(accessKeyId).find({ _teamId }).select(responseFields);
+    public async findAccessKey(_teamId: mongodb.ObjectId, accessKeyId: mongodb.ObjectId, responseFields?: string): Promise<AccessKeySchema|null> {
+        const result: AccessKeySchema[] = await AccessKeyModel.findById(accessKeyId).find({ _teamId }).select(responseFields);
+        if (_.isArray(result) && result.length > 0)
+            return result[0];
+        return null;
     }
 
 
-    public async createAccessKeyInternal(data): Promise<object> {
+    public async createAccessKeyInternal(data): Promise<AccessKeySchema> {
         if (!data.accessKeyId)
             data.accessKeyId = SGUtils.makeid(20, false).toUpperCase();
         if (!data.accessKeySecret)
@@ -49,7 +52,7 @@ export class AccessKeyService {
     }
 
 
-    public async createAccessKey(_teamId: mongodb.ObjectId, teamAccessRightIds: string[], data: any, correlationId: string, responseFields?: string): Promise<object> {
+    public async createAccessKey(_teamId: mongodb.ObjectId, teamAccessRightIds: string[], data: any, correlationId: string, responseFields?: string): Promise<AccessKeySchema> {
         if (!data.hasOwnProperty("accessKeyType"))
             throw new ValidationError(`Missing required field "accessKeyType"`);
         if (!data.hasOwnProperty("description"))
@@ -58,14 +61,16 @@ export class AccessKeyService {
             throw new ValidationError(`Missing required field "accessRightIds"`);
         if (data.accessRightIds && data.accessKeyType == AccessKeyType.AGENT)
             throw new ValidationError(`Cannot set "accessRightIds" for Agent access keys`);
+        
+        const teamIdAsString: string = _teamId.toHexString();
 
         if (data.accessKeyType == AccessKeyType.AGENT) {
             data.accessRightIds = GetAccessRightIdsForSGAgent();
         } else {
             if (!_.isArray(data.accessRightIds) || data.accessRightIds.length < 1)
                 throw new ValidationError('Invalid access right ids parameter');
-            if (teamAccessRightIds && teamAccessRightIds[_teamId]) {
-                const allowedRightsBitset = BitSet.fromHexString(teamAccessRightIds[_teamId]);
+            if (teamAccessRightIds && teamAccessRightIds[teamIdAsString]) {
+                const allowedRightsBitset = BitSet.fromHexString(teamAccessRightIds[teamIdAsString]);
                 if (allowedRightsBitset.get(GetGlobalAccessRightId()) !== 1) {
                     const requestedRightsBitset = new BitSet();
                     for (let i = 0; i < data.accessRightIds.length; i++)
@@ -108,7 +113,7 @@ export class AccessKeyService {
     }
 
 
-    public async updateAccessKey(_teamId: string, id: mongodb.ObjectId, data: any, correlationId?: string, responseFields?: string): Promise<object> {
+    public async updateAccessKey(_teamId: mongodb.ObjectId, id: mongodb.ObjectId, data: any, correlationId?: string, responseFields?: string): Promise<object> {
         const filter = { _id: id, _teamId };
 
         if (data.hasOwnProperty('createdBy'))

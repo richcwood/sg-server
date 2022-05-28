@@ -44,7 +44,7 @@ import * as mongoose from 'mongoose';
 
 
 let DumpMongoData = async (path: string) => {
-  mongoose.connect(config.get('mongoUrl'), { useNewUrlParser: true });
+  mongoose.connect(config.get('mongoUrl'), {});
 
   let user: any = await userService.findAllUsersInternal();
   let team: any = await teamService.findAllTeamsInternal();

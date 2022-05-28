@@ -406,7 +406,7 @@ export default class LoginRouter {
       }
 
       // Create a refresh JWT
-      if (loginResults.accessKeyType == AccessKeyType.USER) {
+      if (loginResult.accessKeyType == AccessKeyType.USER) {
         const refreshJwtExpiration = Date.now() + (1000 * 60 * 60 * 24 * 7); // 1 week
         tokenData['exp'] = Math.floor(refreshJwtExpiration / 1000);
       }
@@ -432,7 +432,7 @@ export default class LoginRouter {
         config3: loginResult._teamId
       };
 
-      await accessKeyService.updateAccessKey(loginResult._teamId, new mongodb.ObjectId(loginResult._id), { lastUsed: new Date() });
+      await accessKeyService.updateAccessKey(new mongodb.ObjectId(loginResult._teamId), loginResult._id, { lastUsed: new Date() });
 
       // res.cookie('Auth', token, { secure: false, expires: new Date(jwtExpiration) });
       res.send(loginData);

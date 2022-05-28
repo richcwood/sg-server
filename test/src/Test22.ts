@@ -17,10 +17,10 @@ import * as config from 'config';
 
 const script1 = `
 import time
-print 'start'
+print('start')
 time.sleep(2)
-print 'done'
-print '@sgo{"route": "ok"}'
+print('done')
+print('@sgo{"route": "ok"}')
 `;
 const script1_b64 = SGUtils.btoa(script1);
 
@@ -60,8 +60,8 @@ export default class Test22 extends TestBase.default {
         const teamName = 'TestTeam';
         const _teamId = self.testSetup.teams[teamName].id;
 
-        const filePath1 = 'file1.txt';
-        const filePath2 = 'file2.txt';
+        const filePath1 = 'resources/file1.txt';
+        const filePath2 = 'resources/file2.txt';
 
         fs.writeFileSync(filePath1, 'hello');
         fs.writeFileSync(filePath2, 'world');

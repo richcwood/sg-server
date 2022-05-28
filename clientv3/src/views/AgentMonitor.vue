@@ -1,12 +1,12 @@
 <template>
   <div class="pt-5">
-
     <!-- Modals -->
     <modal name="import-cron-modal" :width="800" :height="600">
       <div class="round-popup" style="margin: 12px; width: 100%; height: 100%">
         <div>
           These cron entries were extracted from your agent's machine.
-          <br> You can import them into SaaSGlue as Jobs.
+          <br />
+          You can import them into SaaSGlue as Jobs.
         </div>
 
         <table class="table" style="margin-top: 12px; margin-left: 8px;">
@@ -15,10 +15,10 @@
               Cron Job
             </td>
             <td class="td"></td>
-            </tr>
+          </tr>
           <tr class="tr" v-for="(rawCronJob, index) in rawCronJobs" v-bind:key="rawCronJob">
             <td class="td">
-              {{rawCronJob}}
+              {{ rawCronJob }}
             </td>
             <td class="td">
               <button class="button" @click="onImportRawCronClicked(index)">Import</button>
@@ -33,10 +33,9 @@
       </div>
     </modal>
 
-
     <div v-if="agents.length === 0" class="sg-container-px">
       <div class="is-size-4">
-        There are no agents created yet. 
+        There are no agents created yet.
         <br />
         Download an agent from the "Download Agent" menu and once the agent starts you will see it in this screen.
       </div>
@@ -46,7 +45,13 @@
         <div class="sg-container-px">
           <div class="field">
             <div class="control has-icons-left">
-              <input class="input" type="text" style="width: 450px;" v-model="filterString" placeholder="Filter by Agent Name, Tags and IP Address">
+              <input
+                class="input"
+                type="text"
+                style="width: 450px;"
+                v-model="filterString"
+                placeholder="Filter by Agent Name, Tags and IP Address"
+              />
               <span class="icon is-small is-left">
                 <font-awesome-icon icon="search" />
               </span>
@@ -55,7 +60,7 @@
           <div class="field">
             <div class="control">
               <label class="checkbox">
-                <input type="checkbox" v-model="includeInactiveAgents"/> Include inactive agents
+                <input type="checkbox" v-model="includeInactiveAgents" /> Include inactive agents
               </label>
             </div>
           </div>
@@ -73,22 +78,27 @@
             <tr v-for="agent in filteredAgents" :key="agent.id">
               <td>
                 <label class="checkbox">
-                  <input type="checkbox" v-model="agent._isSelectedInMonitor">
+                  <input type="checkbox" v-model="agent._isSelectedInMonitor" />
                 </label>
               </td>
-              <td>{{agent.name}}</td>
+              <td>{{ agent.name }}</td>
               <td>
                 <span class="activeAgent" v-if="isAgentActive(agent)">Active</span>
                 <span v-else>Inactive</span>
               </td>
-              <td>{{agent.ipAddress}}</td>
+              <td>{{ agent.ipAddress }}</td>
               <td><span v-html="tagsMapToString(agent.tags, 2)"></span></td>
               <td class="has-text-centered">
                 <label class="checkbox">
-                  <input type="checkbox" :value="isChecked(agent.propertyOverrides.trackSysInfo)" @change="ontrackSysInfoChanged(agent)" :checked="isChecked(agent.propertyOverrides.trackSysInfo)">
+                  <input
+                    type="checkbox"
+                    :value="isChecked(agent.propertyOverrides.trackSysInfo)"
+                    @change="ontrackSysInfoChanged(agent)"
+                    :checked="isChecked(agent.propertyOverrides.trackSysInfo)"
+                  />
                 </label>
               </td>
-              <td>{{momentToStringV1(agent.lastHeartbeatTime)}}</td>
+              <td>{{ momentToStringV1(agent.lastHeartbeatTime) }}</td>
               <td class="pt-0">
                 <button class="button" :disabled="!agent.cron" @click="onImportCronClicked(agent)">Import</button>
               </td>
@@ -107,8 +117,16 @@
                   </td>
                   <td class="td">
                     <validation-provider name="Agent Name" rules="agent-name" v-slot="{ errors }">
-                      <input class="input" type="text" style="width: 300px; margin-left: 10px;" v-model="selectedAgentName" :disabled="selectedAgents.length !== 1"/>
-                      <div v-if="errors && errors.length > 0" class="message validation-error is-danger">{{ errors[0] }}</div>
+                      <input
+                        class="input"
+                        type="text"
+                        style="width: 300px; margin-left: 10px;"
+                        v-model="selectedAgentName"
+                        :disabled="selectedAgents.length !== 1"
+                      />
+                      <div v-if="errors && errors.length > 0" class="message validation-error is-danger">
+                        {{ errors[0] }}
+                      </div>
                     </validation-provider>
                   </td>
                 </tr>
@@ -118,8 +136,16 @@
                   </td>
                   <td class="td">
                     <validation-provider name="Max Active Tasks" rules="agent-positiveNumber" v-slot="{ errors }">
-                      <input class="input" type="text" style="width: 300px; margin-left: 10px;" v-model="selectedMaxActiveTasks" :disabled="selectedAgents.length === 0"/>
-                      <div v-if="errors && errors.length > 0" class="message validation-error is-danger">{{ errors[0] }}</div>
+                      <input
+                        class="input"
+                        type="text"
+                        style="width: 300px; margin-left: 10px;"
+                        v-model="selectedMaxActiveTasks"
+                        :disabled="selectedAgents.length === 0"
+                      />
+                      <div v-if="errors && errors.length > 0" class="message validation-error is-danger">
+                        {{ errors[0] }}
+                      </div>
                     </validation-provider>
                   </td>
                 </tr>
@@ -128,7 +154,12 @@
                     Handle General Tasks
                   </td>
                   <td class="td">
-                    <input type="checkbox" style="margin-left: 10px;" v-model="selectedHandleGeneralTasks" :disabled="selectedAgents.length === 0"/>
+                    <input
+                      type="checkbox"
+                      style="margin-left: 10px;"
+                      v-model="selectedHandleGeneralTasks"
+                      :disabled="selectedAgents.length === 0"
+                    />
                   </td>
                 </tr>
                 <tr class="tr">
@@ -136,9 +167,21 @@
                     Inactive Agent Timeout (ms)
                   </td>
                   <td class="td">
-                    <validation-provider name="Inactive Agent Timeout(ms)" rules="agent-positiveNumber" v-slot="{ errors }">
-                      <input class="input" type="text" style="width: 300px; margin-left: 10px;" v-model="selectedInactiveAgentTimeout" :disabled="selectedAgents.length === 0"/>
-                      <div v-if="errors && errors.length > 0" class="message validation-error is-danger">{{ errors[0] }}</div>
+                    <validation-provider
+                      name="Inactive Agent Timeout(ms)"
+                      rules="agent-positiveNumber"
+                      v-slot="{ errors }"
+                    >
+                      <input
+                        class="input"
+                        type="text"
+                        style="width: 300px; margin-left: 10px;"
+                        v-model="selectedInactiveAgentTimeout"
+                        :disabled="selectedAgents.length === 0"
+                      />
+                      <div v-if="errors && errors.length > 0" class="message validation-error is-danger">
+                        {{ errors[0] }}
+                      </div>
                     </validation-provider>
                   </td>
                 </tr>
@@ -147,7 +190,11 @@
                     Inactive Agent Job
                   </td>
                   <td class="td">
-                    <job-def-search :jobDefId="selectedInactiveAgentJobDefId" @jobDefPicked="onJobDefPicked" :disabled="selectedAgents.length === 0"></job-def-search>
+                    <job-def-search
+                      :jobDefId="selectedInactiveAgentJobDefId"
+                      @jobDefPicked="onJobDefPicked"
+                      :disabled="selectedAgents.length === 0"
+                    ></job-def-search>
                   </td>
                 </tr>
                 <tr class="tr">
@@ -156,23 +203,39 @@
                   </td>
                   <td class="td">
                     <validation-provider name="RuntimeVars" rules="variable-map" v-slot="{ errors }">
-                      <input class="input" 
-                              type="text" 
-                              style="width: 300px; margin-left: 10px;" 
-                              v-model="selectedInactiveAgentJobDefRuntimeVars" 
-                              @change="selectedInactiveAgentJobDefRuntimeVarsChanged"
-                              :disabled="selectedAgents.length === 0" 
-                              placeholder="key=val,key=val"/>
-                      <div v-if="errors && errors.length > 0" class="message validation-error is-danger">{{ errors[0] }}</div>
+                      <input
+                        class="input"
+                        type="text"
+                        style="width: 300px; margin-left: 10px;"
+                        v-model="selectedInactiveAgentJobDefRuntimeVars"
+                        @change="selectedInactiveAgentJobDefRuntimeVarsChanged"
+                        :disabled="selectedAgents.length === 0"
+                        placeholder="key=val,key=val"
+                      />
+                      <div v-if="errors && errors.length > 0" class="message validation-error is-danger">
+                        {{ errors[0] }}
+                      </div>
                     </validation-provider>
                   </td>
                 </tr>
                 <tr class="tr">
+                  <td class="td"></td>
                   <td class="td">
-                  </td>
-                  <td class="td">
-                    <button class="button is-primary" @click="onSaveSettingsClicked" :disabled="selectedAgents.length === 0">Save</button>
-                    <button class="button" style="margin-left: 12px;" @click="onCancelSettingsClicked" :disabled="selectedAgents.length === 0">Cancel</button>
+                    <button
+                      class="button is-primary"
+                      @click="onSaveSettingsClicked"
+                      :disabled="selectedAgents.length === 0"
+                    >
+                      Save
+                    </button>
+                    <button
+                      class="button"
+                      style="margin-left: 12px;"
+                      @click="onCancelSettingsClicked"
+                      :disabled="selectedAgents.length === 0"
+                    >
+                      Cancel
+                    </button>
                   </td>
                 </tr>
               </table>
@@ -182,7 +245,7 @@
             <div class="sg-container-px">
               <p class="my-5">System information for the selected agent (nothing if multiple agents selected)</p>
               <div v-if="selectedAgent">
-                <pre>{{ selectedAgent.sysInfo || '' }}</pre>
+                <pre>{{ selectedAgent.sysInfo || "" }}</pre>
               </div>
               <p v-else class="is-size-4 has-text-centered">Please select an agent</p>
             </div>
@@ -197,15 +260,17 @@
                   <td colspan="2">No common tags for selected agents</td>
                 </tr>
                 <tr v-for="tag in selectedAgentTags" :key="tag">
-                  <td>{{tag}}</td>
+                  <td>{{ tag }}</td>
                   <td><a href="#" class="button is-ghost" @click.prevent="onDeleteTagClicked(tag)">Delete</a></td>
                 </tr>
-                <tr><td colspan="2"></td></tr>
+                <tr>
+                  <td colspan="2"></td>
+                </tr>
                 <tr>
                   <td>
-                    <input class="input" type="text" style="width: 125px;" v-model="newTagKey" placeholder="key"/>
+                    <input class="input" type="text" style="width: 125px;" v-model="newTagKey" placeholder="key" />
                     <span class="has-text-weight-bold mx-3">=</span>
-                    <input class="input" type="text" style="width: 125px;" v-model="newTagValue" placeholder="value"/>
+                    <input class="input" type="text" style="width: 125px;" v-model="newTagValue" placeholder="value" />
                   </td>
                   <td>
                     <button class="button" @click="onAddTagClicked">Add tag to selected agents</button>
@@ -221,40 +286,34 @@
 </template>
 
 <script lang="ts">
-import { Component, Prop, Vue, Watch } from 'vue-property-decorator';
-import { BindStoreModel } from '@/decorator';
-import { StoreType } from '@/store/types';
-import { Agent } from '../store/agent/types';
-import { isAgentActive } from '@/store/agent/agentUtils';
-import VueSplit from 'vue-split-panel';
-import { Tabs, Tab } from 'vue-slim-tabs';
-import axios from 'axios';
-import { SgAlert, AlertPlacement, AlertCategory } from '@/store/alert/types';
-import { momentToStringV1 } from '@/utils/DateTime';
-import _ from 'lodash';
-import moment from 'moment';
-import { focusElement, tagsStringToMap, tagsMapToString } from '@/utils/Shared';
-import { JobDef } from '@/store/jobDef/types';
-import { showErrors } from '@/utils/ErrorHandler';
+import { Component, Prop, Vue, Watch } from "vue-property-decorator";
+import { BindStoreModel } from "@/decorator";
+import { StoreType } from "@/store/types";
+import { Agent } from "../store/agent/types";
+import { isAgentActive } from "@/store/agent/agentUtils";
+import VueSplit from "vue-split-panel";
+import { Tabs, Tab } from "vue-slim-tabs";
+import axios from "axios";
+import { SgAlert, AlertPlacement, AlertCategory } from "@/store/alert/types";
+import { momentToStringV1 } from "@/utils/DateTime";
+import _ from "lodash";
+import moment from "moment";
+import { focusElement, tagsStringToMap, tagsMapToString } from "@/utils/Shared";
+import { JobDef } from "@/store/jobDef/types";
+import { showErrors } from "@/utils/ErrorHandler";
 import { Script } from "@/store/script/types";
 import ScriptSearch from "@/components/ScriptSearch.vue";
 import JobDefSearch from "@/components/JobDefSearch.vue";
-import { ValidationProvider, ValidationObserver } from 'vee-validate';
+import { ValidationProvider, ValidationObserver } from "vee-validate";
 
 enum UpdateTagType {
-  ADD, DELETE
-};
-
-interface InactiveAgentTask {
-  name: string,
-  script: {_id: string},
-  arguments: string[],
-  variables: {[key: string]: string}
+  ADD,
+  DELETE,
 }
 
 @Component({
   components: { Tabs, Tab, ScriptSearch, JobDefSearch, ValidationObserver, ValidationProvider },
-  props: { },
+  props: {},
 })
 export default class AgentMonitor extends Vue {
   // Expose to template
@@ -262,45 +321,44 @@ export default class AgentMonitor extends Vue {
   private readonly tagsMapToString = tagsMapToString;
   private readonly isAgentActive = isAgentActive;
 
-  @BindStoreModel({storeType: StoreType.TeamStore})
-  private selectedTeam : any;
+  @BindStoreModel({ storeType: StoreType.TeamStore })
+  private selectedTeam: any;
 
   private lastCountForSort = 0;
 
-  private filterString = '';
+  private filterString = "";
 
   private includeInactiveAgents = true;
 
-  private selectedAgentsInactiveScriptVariablesString = '';
+  private selectedAgentsInactiveScriptVariablesString = "";
 
-  private mounted(){
-    if(localStorage.getItem('agentMonitor_includeInactiveAgents') !== undefined){
-      this.includeInactiveAgents = localStorage.getItem('agentMonitor_includeInactiveAgents') === 'true';
+  private mounted() {
+    if (localStorage.getItem("agentMonitor_includeInactiveAgents") !== undefined) {
+      this.includeInactiveAgents = localStorage.getItem("agentMonitor_includeInactiveAgents") === "true";
     }
 
     // restore last filters if possible
-    if(localStorage.getItem('agentMonitor_filterString')){
-      this.filterString = localStorage.getItem('agentMonitor_filterString');
-    }
-    else {
+    if (localStorage.getItem("agentMonitor_filterString")) {
+      this.filterString = localStorage.getItem("agentMonitor_filterString");
+    } else {
       this.onFilterStringChanged();
     }
   }
 
-  private beforeDestroy(){
+  private beforeDestroy() {
     // save current filters
-    localStorage.setItem('agentMonitor_filterString', this.filterString);
-    localStorage.setItem('agentMonitor_includeInactiveAgents', this.includeInactiveAgents ? 'true': 'false');
+    localStorage.setItem("agentMonitor_filterString", this.filterString);
+    localStorage.setItem("agentMonitor_includeInactiveAgents", this.includeInactiveAgents ? "true" : "false");
   }
 
   private get agents(): Agent[] {
     // Agent load was already triggered when the app started (security/actions/startApp)
     const agents = this.$store.getters[`${StoreType.AgentStore}/getAgentsBySelectedTeam`];
-     
-    if(this.lastCountForSort !== agents.length){
+
+    if (this.lastCountForSort !== agents.length) {
       this.lastCountForSort = agents.length;
       agents.sort((agentA: Agent, agentB: Agent) => {
-        return (new Date(agentB.lastHeartbeatTime)).getTime() - (new Date(agentA.lastHeartbeatTime)).getTime();
+        return new Date(agentB.lastHeartbeatTime).getTime() - new Date(agentA.lastHeartbeatTime).getTime();
       });
     }
 
@@ -310,29 +368,28 @@ export default class AgentMonitor extends Vue {
   private get filteredAgents(): Agent[] {
     const filterUCase = this.filterString.toUpperCase();
     // split by whitespace and remove empty entries
-    const filterUCaseItems = filterUCase.split(' ').map(item => item.trim()).filter(item => item);
+    const filterUCaseItems = filterUCase
+      .split(" ")
+      .map((item) => item.trim())
+      .filter((item) => item);
     const filteredAgents = this.agents.filter((agent: Agent) => {
-      if(!this.includeInactiveAgents && !isAgentActive(agent)){
+      if (!this.includeInactiveAgents && !isAgentActive(agent)) {
         return false;
-      }
-      else if(filterUCaseItems.length === 0){
+      } else if (filterUCaseItems.length === 0) {
         return true;
-      }
-      else {
+      } else {
         return filterUCaseItems.some((filter: string) => {
-          if(agent.name.toUpperCase().indexOf(filter) !== -1){
+          if (agent.name.toUpperCase().indexOf(filter) !== -1) {
             return true;
-          } 
-          else if(agent.ipAddress.indexOf(filter) !== -1){
+          } else if (agent.ipAddress.indexOf(filter) !== -1) {
             return true;
-          }
-          else if(Object.keys(agent.tags).some((tagKey: string) => tagKey.toUpperCase().indexOf(filter) !== -1)){
+          } else if (Object.keys(agent.tags).some((tagKey: string) => tagKey.toUpperCase().indexOf(filter) !== -1)) {
             return true;
-          }
-          else if(Object.values(agent.tags).some((tagValue: string) => tagValue.toUpperCase().indexOf(filter) !== -1)){
+          } else if (
+            Object.values(agent.tags).some((tagValue: string) => tagValue.toUpperCase().indexOf(filter) !== -1)
+          ) {
             return true;
-          }
-          else {
+          } else {
             return false;
           }
         });
@@ -343,23 +400,22 @@ export default class AgentMonitor extends Vue {
       const aIsActive = isAgentActive(a);
       const bIsActive = isAgentActive(b);
 
-      if(aIsActive !== bIsActive){
+      if (aIsActive !== bIsActive) {
         return aIsActive ? -1 : 1;
-      }
-      else {
+      } else {
         return a.name.localeCompare(b.name);
       }
-    })
+    });
   }
 
-  @Watch('filterString')
-  private onFilterStringChanged(){
+  @Watch("filterString")
+  private onFilterStringChanged() {
     // Whenever the filter text changes, just be safe and clear any existing selections
     // because it's dangerous to continue selecting something that is no longer visible
     // just make it consistent and clear all selections rather than being fancy and clearing out
     // existing selections that are no longer visible
-    for(let agent of this.agents){
-      this.$store.commit(`${StoreType.AgentStore}/update`, {id: agent.id, _isSelectedInMonitor: false});
+    for (let agent of this.agents) {
+      this.$store.commit(`${StoreType.AgentStore}/update`, { id: agent.id, _isSelectedInMonitor: false });
     }
   }
 
@@ -367,32 +423,31 @@ export default class AgentMonitor extends Vue {
     return this.agents.filter((agent: Agent) => agent._isSelectedInMonitor);
   }
 
-  private selectedAgentCopies: {[agentId: string] : Agent} = {};
+  private selectedAgentCopies: { [agentId: string]: Agent } = {};
 
-  private get selectedAgent(): Agent|null {
-    if(this.selectedAgents.length === 1){
+  private get selectedAgent(): Agent | null {
+    if (this.selectedAgents.length === 1) {
       return this.selectedAgents[0];
-    }
-    else {
+    } else {
       return null;
     }
   }
 
-  @Watch('selectedAgents')
-  private onSelectedAgentsChanged(){
+  @Watch("selectedAgents")
+  private onSelectedAgentsChanged() {
     // Need to update the copies used for mutations
     const newCopies = _.clone(this.selectedAgentCopies); // shallow clone - references
-    
+
     // Remove copies no longer selected
-    for(const agentId of Object.keys(newCopies)){
-      if(!this.selectedAgents.find((agent: Agent) => agent.id === agentId)){
+    for (const agentId of Object.keys(newCopies)) {
+      if (!this.selectedAgents.find((agent: Agent) => agent.id === agentId)) {
         delete newCopies[agentId];
       }
     }
 
     // Add new copies
-    for(const agent of this.selectedAgents){
-      if(!newCopies[agent.id]){
+    for (const agent of this.selectedAgents) {
+      if (!newCopies[agent.id]) {
         newCopies[agent.id] = _.cloneDeep(agent);
       }
     }
@@ -405,9 +460,9 @@ export default class AgentMonitor extends Vue {
 
   // Whenever you save agents, you need to recreate the copies to be reactive
   // only call this after saving the agents in the API
-  private refreshSelectedAgentCopies(){
+  private refreshSelectedAgentCopies() {
     const updatedSelectedAgentCopies = {};
-    for(const agent of this.selectedAgents){
+    for (const agent of this.selectedAgents) {
       updatedSelectedAgentCopies[agent.id] = _.cloneDeep(agent);
     }
 
@@ -418,116 +473,119 @@ export default class AgentMonitor extends Vue {
     return val == true;
   }
 
-  private ontrackSysInfoChanged(agent: any){
+  private ontrackSysInfoChanged(agent: any) {
     const properties = {
-      trackSysInfo: !agent.propertyOverrides.trackSysInfo
+      trackSysInfo: !agent.propertyOverrides.trackSysInfo,
     };
-    this.$store.dispatch(`${StoreType.AgentStore}/saveSettings`, {id: agent.id, properties})
+    this.$store.dispatch(`${StoreType.AgentStore}/saveSettings`, { id: agent.id, properties });
   }
 
   private removeItemFromArray(array: any[], item: any) {
     const index = array.indexOf(item);
-    if (index > -1)
-        array.splice(index, 1);
+    if (index > -1) array.splice(index, 1);
   }
 
   private get selectedAgentName(): string {
     const selectedAgentIds = Object.keys(this.selectedAgentCopies);
-    if(selectedAgentIds.length === 0){
-      return '';
-    }
-    else if(selectedAgentIds.length === 1){
+    if (selectedAgentIds.length === 0) {
+      return "";
+    } else if (selectedAgentIds.length === 1) {
       return this.selectedAgentCopies[selectedAgentIds[0]].name;
-    }
-    else {
-      return '<>';
+    } else {
+      return "<>";
     }
   }
 
-  private set selectedAgentName(name: string){
+  private set selectedAgentName(name: string) {
     const selectedAgentIds = Object.keys(this.selectedAgentCopies);
-    if(selectedAgentIds.length === 1){
+    if (selectedAgentIds.length === 1) {
       this.selectedAgentCopies[selectedAgentIds[0]].name = name;
     }
   }
 
   // Helper to get all of the selected tasks property override values if they are homogenous
-  private getSelectedAgentsSharedPropertyOverride(key: string): string|null {
+  private getSelectedAgentsSharedPropertyOverride(key: string): string | null {
     const selectedAgentIds = Object.keys(this.selectedAgentCopies);
 
-    if(selectedAgentIds.length > 0){
+    if (selectedAgentIds.length > 0) {
       const firstValue = this.selectedAgentCopies[selectedAgentIds[0]].propertyOverrides[key];
-    
-      if( selectedAgentIds.map((agentId: string) => {
+
+      if (
+        selectedAgentIds
+          .map((agentId: string) => {
             return this.selectedAgentCopies[agentId].propertyOverrides[key];
-          }).every((val: string) => val === firstValue)){
+          })
+          .every((val: string) => val === firstValue)
+      ) {
         return firstValue;
+      } else {
+        return "<>"; // they don't all match
       }
-      else {
-        return '<>'; // they don't all match
-      }
-    }
-    else {
+    } else {
       return null;
     }
   }
 
   private getSelectedAgentsSharedPropertyOverride_boolean(key: string): boolean {
     const value = this.getSelectedAgentsSharedPropertyOverride(key);
-    return value === '<>' ? false : <boolean><unknown>value;
+    return value === "<>" ? false : <boolean>(<unknown>value);
   }
 
-  private setSelectedAgentsSharedPropertyOverride(key: string, value: string){
+  private setSelectedAgentsSharedPropertyOverride(key: string, value: string) {
     const selectedAgentIds = Object.keys(this.selectedAgentCopies);
-    for(const selectedAgentId of selectedAgentIds){
+    for (const selectedAgentId of selectedAgentIds) {
       this.selectedAgentCopies[selectedAgentId].propertyOverrides[key] = value;
     }
   }
 
   private get selectedMaxActiveTasks(): string {
-    return this.getSelectedAgentsSharedPropertyOverride('maxActiveTasks');
+    return this.getSelectedAgentsSharedPropertyOverride("maxActiveTasks");
   }
 
   private set selectedMaxActiveTasks(newValue: string) {
-    this.setSelectedAgentsSharedPropertyOverride('maxActiveTasks', newValue);
+    this.setSelectedAgentsSharedPropertyOverride("maxActiveTasks", newValue);
   }
 
   private get selectedHandleGeneralTasks(): boolean {
-    return this.getSelectedAgentsSharedPropertyOverride_boolean('handleGeneralTasks');
+    return this.getSelectedAgentsSharedPropertyOverride_boolean("handleGeneralTasks");
   }
 
   private set selectedHandleGeneralTasks(newValue: boolean) {
-    this.setSelectedAgentsSharedPropertyOverride('handleGeneralTasks', <string><unknown>newValue);
+    this.setSelectedAgentsSharedPropertyOverride("handleGeneralTasks", <string>(<unknown>newValue));
   }
 
   private get selectedInactiveAgentTimeout(): string {
-    return this.getSelectedAgentsSharedPropertyOverride('inactivePeriodWaitTime');
+    return this.getSelectedAgentsSharedPropertyOverride("inactivePeriodWaitTime");
   }
 
   private set selectedInactiveAgentTimeout(newValue: string) {
-    this.setSelectedAgentsSharedPropertyOverride('inactivePeriodWaitTime', newValue);
+    this.setSelectedAgentsSharedPropertyOverride("inactivePeriodWaitTime", newValue);
   }
 
-  private selectedInactiveAgentJobDefId = '';
+  private selectedInactiveAgentJobDefId = "";
 
-  private recomputeSelectedInactiveAgentJobDefId(){
+  private recomputeSelectedInactiveAgentJobDefId() {
     const selectedAgentIds = Object.keys(this.selectedAgentCopies);
-    let sharedId = '';
+    let sharedId = "";
 
-    if(selectedAgentIds.length > 0){
-      const firstInactiveJob = this.selectedAgentCopies[selectedAgentIds[0]].propertyOverrides['inactiveAgentJob'];
-    
-      if(selectedAgentIds.length === 1){
-        if(firstInactiveJob && firstInactiveJob.id){
+    if (selectedAgentIds.length > 0) {
+      const firstInactiveJob = this.selectedAgentCopies[selectedAgentIds[0]].propertyOverrides["inactiveAgentJob"];
+
+      if (selectedAgentIds.length === 1) {
+        if (firstInactiveJob && firstInactiveJob.id) {
           sharedId = firstInactiveJob.id;
         }
-      }
-      else if(firstInactiveJob && firstInactiveJob.id) {
-        if( selectedAgentIds.splice(1).map((agentId: string) => {
-              return this.selectedAgentCopies[agentId].propertyOverrides['inactiveAgentJob'];
-            }).every((inactiveAgentJob: any) => {
-              return  _.isEqual(inactiveAgentJob && inactiveAgentJob.id, firstInactiveJob.id);
-            })){
+      } else if (firstInactiveJob && firstInactiveJob.id) {
+        if (
+          selectedAgentIds
+            .splice(1)
+            .map((agentId: string) => {
+              return this.selectedAgentCopies[agentId].propertyOverrides["inactiveAgentJob"];
+            })
+            .every((inactiveAgentJob: any) => {
+              return _.isEqual(inactiveAgentJob && inactiveAgentJob.id, firstInactiveJob.id);
+            })
+        ) {
           sharedId = firstInactiveJob.id;
         }
       }
@@ -536,77 +594,78 @@ export default class AgentMonitor extends Vue {
     this.selectedInactiveAgentJobDefId = sharedId;
   }
 
-  private onJobDefPicked(jobDef: JobDef|undefined){
-    this.selectedInactiveAgentJobDefId = jobDef ? jobDef.id : '';
+  private onJobDefPicked(jobDef: JobDef | undefined) {
+    this.selectedInactiveAgentJobDefId = jobDef ? jobDef.id : "";
 
     const selectedAgentIds = Object.keys(this.selectedAgentCopies);
     selectedAgentIds.map((selectedAgentId: string) => {
       const selectedAgentCopy = this.selectedAgentCopies[selectedAgentId];
-      if(!selectedAgentCopy.propertyOverrides['inactiveAgentJob']){
-        selectedAgentCopy.propertyOverrides['inactiveAgentJob'] = {
+      if (!selectedAgentCopy.propertyOverrides["inactiveAgentJob"]) {
+        selectedAgentCopy.propertyOverrides["inactiveAgentJob"] = {
           id: this.selectedInactiveAgentJobDefId,
-          runtimeVars: {}
+          runtimeVars: {},
         };
-      }
-      else {
-        selectedAgentCopy.propertyOverrides['inactiveAgentJob'].id = this.selectedInactiveAgentJobDefId
+      } else {
+        selectedAgentCopy.propertyOverrides["inactiveAgentJob"].id = this.selectedInactiveAgentJobDefId;
       }
     });
   }
 
-  private selectedInactiveAgentJobDefRuntimeVars = '';
+  private selectedInactiveAgentJobDefRuntimeVars = "";
 
-  private recomputeSelectedInactiveAgentJobDefRuntimeVars(){
+  private recomputeSelectedInactiveAgentJobDefRuntimeVars() {
     const selectedAgentIds = Object.keys(this.selectedAgentCopies);
     let firstRuntimeVars;
 
-    if(selectedAgentIds.length > 0){
-      const firstInactiveJob = this.selectedAgentCopies[selectedAgentIds[0]].propertyOverrides['inactiveAgentJob'];
-    
-      if(firstInactiveJob && firstInactiveJob.runtimeVars){
-        if(selectedAgentIds.length === 1){
+    if (selectedAgentIds.length > 0) {
+      const firstInactiveJob = this.selectedAgentCopies[selectedAgentIds[0]].propertyOverrides["inactiveAgentJob"];
+
+      if (firstInactiveJob && firstInactiveJob.runtimeVars) {
+        if (selectedAgentIds.length === 1) {
           firstRuntimeVars = firstInactiveJob.runtimeVars;
-        }
-        else {
-          if( selectedAgentIds.splice(1).map((agentId: string) => {
-                return this.selectedAgentCopies[agentId].propertyOverrides['inactiveAgentJob'];
-              }).every((inactiveAgentJob: any) => {
-                return  _.isEqual(inactiveAgentJob && inactiveAgentJob.runtimeVars, firstInactiveJob.runtimeVars);
-              })){
+        } else {
+          if (
+            selectedAgentIds
+              .splice(1)
+              .map((agentId: string) => {
+                return this.selectedAgentCopies[agentId].propertyOverrides["inactiveAgentJob"];
+              })
+              .every((inactiveAgentJob: any) => {
+                return _.isEqual(inactiveAgentJob && inactiveAgentJob.runtimeVars, firstInactiveJob.runtimeVars);
+              })
+          ) {
             firstRuntimeVars = firstInactiveJob.runtimeVars;
           }
         }
       }
     }
 
-    if(firstRuntimeVars){
+    if (firstRuntimeVars) {
       this.selectedInactiveAgentJobDefRuntimeVars = tagsMapToString(firstRuntimeVars);
-    }
-    else {
-      this.selectedInactiveAgentJobDefRuntimeVars = '<>';
+    } else {
+      this.selectedInactiveAgentJobDefRuntimeVars = "<>";
     }
   }
 
-  private selectedInactiveAgentJobDefRuntimeVarsChanged(){
+  private selectedInactiveAgentJobDefRuntimeVarsChanged() {
     let newVariablesMap;
     try {
       newVariablesMap = tagsStringToMap(this.selectedInactiveAgentJobDefRuntimeVars);
-    }
-    catch(err){
-      console.log('variables not well formed', err);
+    } catch (err) {
+      console.log("variables not well formed", err);
       return;
     }
 
     const selectedAgentIds = Object.keys(this.selectedAgentCopies);
-    for(const selectedAgentId of selectedAgentIds){
+    for (const selectedAgentId of selectedAgentIds) {
       const agentCopy = this.selectedAgentCopies[selectedAgentId];
-      if(!agentCopy.propertyOverrides['inactiveAgentJob']){
-        agentCopy.propertyOverrides['inactiveAgentJob'] = {
-          id: ''
-        }
+      if (!agentCopy.propertyOverrides["inactiveAgentJob"]) {
+        agentCopy.propertyOverrides["inactiveAgentJob"] = {
+          id: "",
+        };
       }
 
-      agentCopy.propertyOverrides['inactiveAgentJob'].runtimeVars = newVariablesMap;
+      agentCopy.propertyOverrides["inactiveAgentJob"].runtimeVars = newVariablesMap;
     }
   }
 
@@ -615,10 +674,10 @@ export default class AgentMonitor extends Vue {
     const selectedAgentTags: string[][] = [];
 
     const selectedAgentIds = Object.keys(this.selectedAgentCopies);
-    for(let agentId of selectedAgentIds){
+    for (let agentId of selectedAgentIds) {
       const tags = this.selectedAgentCopies[agentId].tags;
       const tagKeyValues: string[] = [];
-      for(let tagKey of Object.keys(tags)){
+      for (let tagKey of Object.keys(tags)) {
         tagKeyValues.push(`${tagKey}=${tags[tagKey]}`);
       }
 
@@ -628,52 +687,63 @@ export default class AgentMonitor extends Vue {
     return _.intersection(...selectedAgentTags);
   }
 
-  private async onSaveSettingsClicked(){
+  private async onSaveSettingsClicked() {
     try {
-      if( ! await (<any>this.$refs.agentSettingsValidationObserver).validate()){
+      if (!(await (<any>this.$refs.agentSettingsValidationObserver).validate())) {
         return;
       }
 
       const savePromises = [];
 
       const selectedAgentIds = Object.keys(this.selectedAgentCopies);
-      for(const selectedAgentId of selectedAgentIds){
+      for (const selectedAgentId of selectedAgentIds) {
         const selectedAgent = this.selectedAgentCopies[selectedAgentId];
         const properties = {
           maxActiveTasks: selectedAgent.propertyOverrides.maxActiveTasks,
           handleGeneralTasks: selectedAgent.propertyOverrides.handleGeneralTasks,
-          inactiveAgentTask: selectedAgent.propertyOverrides.inactiveAgentTask,
           inactivePeriodWaitTime: selectedAgent.propertyOverrides.inactivePeriodWaitTime,
-          inactiveAgentJob: selectedAgent.propertyOverrides.inactiveAgentJob
+          inactiveAgentJob: selectedAgent.propertyOverrides.inactiveAgentJob,
         };
 
         // If there is only a single agent selected and the name has changed, update the name
-        if(selectedAgentIds.length === 1 && this.selectedAgent){
-          if(this.selectedAgent.name !== selectedAgent.name){
-            savePromises.push(this.$store.dispatch(`${StoreType.AgentStore}/saveName`, {id: this.selectedAgent.id, name: selectedAgent.name}));
+        if (selectedAgentIds.length === 1 && this.selectedAgent) {
+          if (this.selectedAgent.name !== selectedAgent.name) {
+            savePromises.push(
+              this.$store.dispatch(`${StoreType.AgentStore}/saveName`, {
+                id: this.selectedAgent.id,
+                name: selectedAgent.name,
+              })
+            );
           }
         }
 
-        savePromises.push(this.$store.dispatch(`${StoreType.AgentStore}/saveSettings`, {id: selectedAgentId, properties}));
+        savePromises.push(
+          this.$store.dispatch(`${StoreType.AgentStore}/saveSettings`, { id: selectedAgentId, properties })
+        );
       }
       await Promise.all(savePromises);
       this.refreshSelectedAgentCopies();
 
-      this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert('Saved agent settings.', AlertPlacement.WINDOW, AlertCategory.INFO));
-      this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert('Saved agent settings.', AlertPlacement.FOOTER, AlertCategory.INFO));
-    }
-    catch(err) {
+      this.$store.dispatch(
+        `${StoreType.AlertStore}/addAlert`,
+        new SgAlert("Saved agent settings.", AlertPlacement.WINDOW, AlertCategory.INFO)
+      );
+      this.$store.dispatch(
+        `${StoreType.AlertStore}/addAlert`,
+        new SgAlert("Saved agent settings.", AlertPlacement.FOOTER, AlertCategory.INFO)
+      );
+    } catch (err) {
       console.error(err);
-      showErrors('Error saving agent settings.', err);
+      showErrors("Error saving agent settings.", err);
     }
   }
 
-  private onCancelSettingsClicked(){
+  private onCancelSettingsClicked() {
     // Need to update the copies used for mutations
     const newCopies = {};
 
     // Add new fresh copies
-    for(const agent of this.selectedAgents){
+    for (const agent of this.selectedAgents) {
       newCopies[agent.id] = _.cloneDeep(agent);
     }
 
@@ -681,39 +751,37 @@ export default class AgentMonitor extends Vue {
     this.selectedAgentCopies = newCopies;
   }
 
-  private newTagKey = '';
-  private newTagValue = '';
+  private newTagKey = "";
+  private newTagValue = "";
 
-  private async onAddTagClicked(){
-    if (this.newTagKey.trim() && this.newTagValue.trim()){
+  private async onAddTagClicked() {
+    if (this.newTagKey.trim() && this.newTagValue.trim()) {
       this.updateSelectedAgentTags(UpdateTagType.ADD, this.newTagKey, this.newTagValue);
     }
   }
 
   private onDeleteTagClicked(tag: string) {
     // the tag should be in key=value format because it will come from the template above
-    this.updateSelectedAgentTags(UpdateTagType.DELETE, tag.split('=')[0]);
+    this.updateSelectedAgentTags(UpdateTagType.DELETE, tag.split("=")[0]);
   }
 
-  private async updateSelectedAgentTags(updateType: UpdateTagType, tagKey: string, tagValue?: string){
+  private async updateSelectedAgentTags(updateType: UpdateTagType, tagKey: string, tagValue?: string) {
     try {
       const agentIds = Object.keys(this.selectedAgentCopies);
       const savePromises: Promise<any>[] = [];
 
-      for(let agentId of agentIds){
+      for (let agentId of agentIds) {
         const agentCopy: Agent = this.selectedAgentCopies[agentId];
-        
-        if(updateType === UpdateTagType.ADD){  
+
+        if (updateType === UpdateTagType.ADD) {
           agentCopy.tags[tagKey] = tagValue;
-          savePromises.push(this.$store.dispatch('agentStore/saveTags', {id: agentId, tags: agentCopy.tags}));
-        }
-        else {
-          if(agentCopy.tags[tagKey]){
+          savePromises.push(this.$store.dispatch("agentStore/saveTags", { id: agentId, tags: agentCopy.tags }));
+        } else {
+          if (agentCopy.tags[tagKey]) {
             delete agentCopy.tags[tagKey];
-            savePromises.push(this.$store.dispatch('agentStore/saveTags', {id: agentId, tags: agentCopy.tags}));
-          }
-          else {
-            console.error('Tried to remove a tag that did not exist on agent', tagKey, agentCopy.name);
+            savePromises.push(this.$store.dispatch("agentStore/saveTags", { id: agentId, tags: agentCopy.tags }));
+          } else {
+            console.error("Tried to remove a tag that did not exist on agent", tagKey, agentCopy.name);
           }
         }
       }
@@ -721,69 +789,74 @@ export default class AgentMonitor extends Vue {
       await Promise.all(savePromises);
       this.refreshSelectedAgentCopies();
 
-      this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert('Saved agent tags.', AlertPlacement.FOOTER, AlertCategory.INFO));
-      
-      if(updateType === UpdateTagType.ADD){
-        this.newTagKey = this.newTagValue = '';
+      this.$store.dispatch(
+        `${StoreType.AlertStore}/addAlert`,
+        new SgAlert("Saved agent tags.", AlertPlacement.FOOTER, AlertCategory.INFO)
+      );
+
+      if (updateType === UpdateTagType.ADD) {
+        this.newTagKey = this.newTagValue = "";
       }
-    }
-    catch(err) {
+    } catch (err) {
       console.error(err);
-      showErrors('Error saving agent tags.', err);
+      showErrors("Error saving agent tags.", err);
     }
   }
 
-  private selectedAgentForCronImport: Agent|null = null;
+  private selectedAgentForCronImport: Agent | null = null;
   private rawCronJobs = [];
   private rawCronEnvVars = {};
 
-  private onImportCronClicked(agent: Agent){
-    if(agent.cron){
+  private onImportCronClicked(agent: Agent) {
+    if (agent.cron) {
       // Split and show non-empty rows
       this.selectedAgentForCronImport = agent;
-      
-      const tmpCronEntries = agent.cron.split('\n').filter(entry => entry.trim());
+
+      const tmpCronEntries = agent.cron.split("\n").filter((entry) => entry.trim());
       for (let i = 0; i < tmpCronEntries.length; i++) {
         const cronEntry = tmpCronEntries[i];
-        if (cronEntry.startsWith('#'))
-          continue;
-        if (cronEntry.split(' ').length > 5) {
+        if (cronEntry.startsWith("#")) continue;
+        if (cronEntry.split(" ").length > 5) {
           this.rawCronJobs.push(cronEntry);
         } else if (cronEntry.match(/[A-Za-z]=.+/g)) {
-          const ev = cronEntry.split('=');
+          const ev = cronEntry.split("=");
           this.rawCronEnvVars[ev[0]] = ev[1];
         }
       }
-      this.$modal.show('import-cron-modal');
+      this.$modal.show("import-cron-modal");
     }
   }
 
-  private async onImportRawCronClicked(index: number){
+  private async onImportRawCronClicked(index: number) {
     try {
       const rawCronJob = this.rawCronJobs[index];
-      
-      const {data: {data}} = await axios.post('/api/v0/jobdef/cron', {
-        cronString: rawCronJob, 
+
+      const {
+        data: { data },
+      } = await axios.post("/api/v0/jobdef/cron", {
+        cronString: rawCronJob,
         envVars: this.rawCronEnvVars,
-        _agentId: this.selectedAgentForCronImport.id
+        _agentId: this.selectedAgentForCronImport.id,
       });
 
       // Result will be the newly created jobDef
-      const jobDef = <JobDef> data;
+      const jobDef = <JobDef>data;
 
       window.open(`${window.location.origin}/#/jobDesigner/${jobDef.id}`);
 
       const alertMessage = `Cron Job imported to a new SaaSGlue Job "${jobDef.name}".<br><br>Remember to remove this cron job from the Agent machine "${this.selectedAgentForCronImport.name}"<br>`;
-      this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(alertMessage, AlertPlacement.WINDOW, AlertCategory.INFO));      
-    }
-    catch(err) {
+      this.$store.dispatch(
+        `${StoreType.AlertStore}/addAlert`,
+        new SgAlert(alertMessage, AlertPlacement.WINDOW, AlertCategory.INFO)
+      );
+    } catch (err) {
       console.error(err);
-      showErrors('Error importing the cron job.', err);
+      showErrors("Error importing the cron job.", err);
     }
   }
 
-  private onCloseImportCronClicked(){
-    this.$modal.hide('import-cron-modal');
+  private onCloseImportCronClicked() {
+    this.$modal.hide("import-cron-modal");
   }
 }
 </script>
@@ -792,40 +865,42 @@ export default class AgentMonitor extends Vue {
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped lang="scss">
+table {
+  border-width: 0;
+}
 
-  table {
-    border-width: 0;
-  }
+td {
+  border-width: 0 !important;
+}
 
-  td {
-    border-width: 0 !important;
-  }
+select {
+  margin-left: 8px;
+  margin-right: 8px;
+}
 
-  select {
-    margin-left: 8px;
-    margin-right: 8px;
-  }
+.activeAgent {
+  color: green;
+}
 
-  .activeAgent {
-    color: green;
-  }
+table,
+th,
+td {
+  border-collapse: collapse;
+}
+th,
+td {
+  padding: 10px;
+}
+th {
+  text-align: left;
+}
 
-  table, th, td {
-    border-collapse: collapse;
-  }
-  th, td {
-    padding: 10px;
-  }
-  th {
-    text-align: left;
-  }
+ul {
+  list-style: none;
+  padding-left: 0.25rem;
+}
 
-  ul {
-     list-style: none;
-     padding-left: .25rem;
-  }
-
-  /deep/ .vue-tablist {
-    padding: 0 64px;
-  }
+:deep(.vue-tablist) {
+  padding: 0 64px;
+}
 </style>

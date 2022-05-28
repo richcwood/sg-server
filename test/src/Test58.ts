@@ -149,7 +149,7 @@ export default class Test58 extends TestBase.WorkflowTestBase {
         };
         self.bpMessagesExpected.push(jobCompletedBP);
 
-        result = await self.WaitForTestToComplete();
+        result = await self.WaitForTestToComplete(60000);
         if (!result)
             return result;
 

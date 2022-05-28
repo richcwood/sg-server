@@ -7,21 +7,21 @@ import * as _ from 'lodash';
 
 const script1 = `
 import time
-print 'start'
+print('start')
 time.sleep(5)
-print 'done'
-print '@sgo{"route": "ok"}'
+print('done')
+print('@sgo{"route": "ok"}')
 `;
 const script1_b64 = SGUtils.btoa(script1);
 
 const script2 = `
 import time
-print 'start'
+print('start')
 time.sleep(2)
-print 'done'
-print '@sgo{"rtKey": "@sgg("rtKey")"}'
-print '@sgo{"agentId": "@sgg("_agentId")"}'
-print '@sgo{"outVal": "val"}'
+print('done')
+print('@sgo{"rtKey": "@sgg("rtKey")"}')
+print('@sgo{"agentId": "@sgg("_agentId")"}')
+print('@sgo{"outVal": "val"}')
 `;
 const script2_b64 = SGUtils.btoa(script2);
 

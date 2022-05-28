@@ -7,10 +7,10 @@ import * as _ from 'lodash';
 
 const script1 = `
 import time
-print 'start'
+print('start')
 time.sleep(5)
-print 'done'
-print '@sgg("sensitiveRuntimeVar")'
+print('done')
+print('@sgg("sensitiveRuntimeVar")')
 `;
 const script1_b64 = SGUtils.btoa(script1);
 

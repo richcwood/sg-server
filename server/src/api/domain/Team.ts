@@ -1,4 +1,4 @@
-import { modelOptions, prop, getModelForClass } from '@typegoose/typegoose';
+import { modelOptions, prop, getModelForClass, Severity } from '@typegoose/typegoose';
 import { FilterOperator } from '../utils/BulkGet';
 import { TeamPaymentStatus } from '../../shared/Enums';
 import { TeamPricingTier } from '../../shared/Enums';
@@ -6,7 +6,7 @@ import * as mongodb from 'mongodb';
 
 /// TODO: change some of these to required like ownerId and inviteLink
 // Example of a schema / domain in Mongoose
-@modelOptions({ schemaOptions: { collection: 'team' } })
+@modelOptions({ schemaOptions: { collection: 'team' }, options: { allowMixed: Severity.ALLOW } })
 export class TeamSchema {
 
   _id?: mongodb.ObjectId;
@@ -153,7 +153,7 @@ export class TeamSchema {
     toDB: {
       _id: (data) => {
         if(data && data._id){
-          return new mongodb.ObjectID(data._id);
+          return new mongodb.ObjectId(data._id);
         }
         else {
           return undefined;

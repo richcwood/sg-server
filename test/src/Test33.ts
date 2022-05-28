@@ -11,21 +11,21 @@ import { ScriptSchema } from '../../server/src/api/domain/Script';
 
 const script1 = `
 import time
-print 'start'
+print('start')
 time.sleep(2)
-print '@sgo{"GLOBAL_PARAM_1": "globalParam1_val"}'
-print 'done'
-print '@sgo{"route": "ok"}'
+print('@sgo{"GLOBAL_PARAM_1": "globalParam1_val"}')
+print('done')
+print('@sgo{"route": "ok"}')
 `;
 const script1_b64 = SGUtils.btoa(script1);
 
 const script2 = `
 import time
 import os
-print 'start'
+print('start')
 time.sleep(2)
-print '@sgo{{"globalParam1": "{0}"}}'.format(os.environ['GLOBAL_PARAM_1'])
-print 'done'
+print('@sgo{{"globalParam1": "{0}"}}'.format(os.environ['GLOBAL_PARAM_1']))
+print('done')
 `;
 const script2_b64 = SGUtils.btoa(script2);
 

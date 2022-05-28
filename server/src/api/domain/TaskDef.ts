@@ -1,11 +1,11 @@
-import { modelOptions, prop, getModelForClass } from '@typegoose/typegoose';
+import { modelOptions, prop, getModelForClass, Severity } from '@typegoose/typegoose';
 import { FilterOperator } from '../utils/BulkGet';
 import { TaskDefTarget } from '../../shared/Enums';
 import * as mongodb from 'mongodb';
 
 
 // Example of a schema / domain in Mongoose
-@modelOptions({schemaOptions: {collection: 'taskDef', minimize: false}})
+@modelOptions({ schemaOptions: { collection: 'taskDef', minimize: false }, options: { allowMixed: Severity.ALLOW } })
 export class TaskDefSchema {
 
   _id?: mongodb.ObjectId;
@@ -69,13 +69,13 @@ export class TaskDefSchema {
     // This isn't hooked up yet until needed - if it does, then call this in the controller layer on data before passing to service
     toDB: {
       _id: (data) => {
-        return new mongodb.ObjectID(data._id);
+        return new mongodb.ObjectId(data._id);
       },
       _teamId: (data) => {
-        return new mongodb.ObjectID(data._teamId);
+        return new mongodb.ObjectId(data._teamId);
       },
       _jobDefId: (data) => {
-        return new mongodb.ObjectID(data._jobDefId);
+        return new mongodb.ObjectId(data._jobDefId);
       }
     },
 

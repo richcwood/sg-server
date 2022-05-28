@@ -50,7 +50,7 @@ let LoadMongoData = async (path: string) => {
         throw new Error('Attempted to load to production')
 
     console.log(`Loading data to ${config.get('mongoUrl')}`);
-    mongoose.connect(config.get('mongoUrl'), { useNewUrlParser: true });
+    mongoose.connect(config.get('mongoUrl'), {});
 
     const mongoUrl = config.get('mongoUrl');
     const mongoDbname = config.get('mongoDbName');

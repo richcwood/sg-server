@@ -50,7 +50,7 @@ export class StepService {
             for (let i = 0; i < stepsQuery.length; i++) {
                 const step: any = stepsQuery[i];
                 let deleted = await StepModel.deleteOne({_id: step._id});
-                if (deleted.ok) {
+                if (deleted.acknowledged) {
                     res.deletedCount += deleted.deletedCount;
                     await rabbitMQPublisher.publish(_teamId, "Step", correlationId, PayloadOperation.DELETE, { id: step._id });
                 }

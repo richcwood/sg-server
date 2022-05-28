@@ -1,11 +1,11 @@
-import { modelOptions, prop, getModelForClass } from '@typegoose/typegoose';
+import { modelOptions, prop, getModelForClass, Severity } from '@typegoose/typegoose';
 import { FilterOperator } from '../utils/BulkGet';
 import { TaskSource } from '../../shared/Enums';
 import * as mongodb from 'mongodb';
 
 
 // Example of a schema / domain in Mongoose
-@modelOptions({ schemaOptions: { collection: 'stepOutcome' } })
+@modelOptions({ schemaOptions: { collection: 'stepOutcome' }, options: { allowMixed: Severity.ALLOW } })
 export class StepOutcomeSchema {
 
     _id?: mongodb.ObjectId;
@@ -117,13 +117,13 @@ export class StepOutcomeSchema {
         // This isn't hooked up yet until needed - if it does, then call this in the controller layer on data before passing to service
         toDB: {
             _id: (data) => {
-                return new mongodb.ObjectID(data._id);
+                return new mongodb.ObjectId(data._id);
             },
             _stepId: (data) => {
-                return new mongodb.ObjectID(data._stepId);
+                return new mongodb.ObjectId(data._stepId);
             },
             _taskOutcomeId: (data) => {
-                return new mongodb.ObjectID(data._taskOutcomeId);
+                return new mongodb.ObjectId(data._taskOutcomeId);
             }
         },
 

@@ -1,11 +1,11 @@
-import { modelOptions, prop, getModelForClass } from '@typegoose/typegoose';
+import { modelOptions, prop, getModelForClass, Severity } from '@typegoose/typegoose';
 import { FilterOperator } from '../utils/BulkGet';
 import * as mongodb from 'mongodb';
 import { MongoDbSettings } from 'aws-sdk/clients/dms';
 
 
 // Example of a schema / domain in Mongoose
-@modelOptions({ schemaOptions: { collection: 'job', minimize: false } })
+@modelOptions({ schemaOptions: { collection: 'job', minimize: false }, options: { allowMixed: Severity.ALLOW } })
 export class JobSchema {
 
     _id?: mongodb.ObjectId;
@@ -95,13 +95,13 @@ export class JobSchema {
         // This isn't hooked up yet until needed - if it does, then call this in the controller layer on data before passing to service
         toDB: {
             _id: (data) => {
-                return new mongodb.ObjectID(data._id);
+                return new mongodb.ObjectId(data._id);
             },
             _teamId: (data) => {
-                return new mongodb.ObjectID(data._teamId);
+                return new mongodb.ObjectId(data._teamId);
             },
             _jobDefId: (data) => {
-                return new mongodb.ObjectID(data._jobDefId);
+                return new mongodb.ObjectId(data._jobDefId);
             }
         },
 

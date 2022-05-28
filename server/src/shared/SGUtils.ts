@@ -24,6 +24,7 @@ import * as _ from 'lodash';
 import * as Enums from './Enums';
 import axios from 'axios';
 import { scriptService } from '../api/services/ScriptService';
+import { TaskOutcomeSchema } from '../api/domain/TaskOutcome';
 
 
 const ascii2utf8: any = {
@@ -1052,10 +1053,8 @@ export class SGUtils {
 
 
     static OnStepFailed = async (_teamId: mongodb.ObjectId, updatedStepOutcome: any, logger: BaseLogger) => {
-        const taskOutcomeQuery: any[] = await taskOutcomeService.findTaskOutcome(_teamId, updatedStepOutcome._taskOutcomeId, '_id _jobId _taskId');
-        if ((_.isArray(taskOutcomeQuery) && taskOutcomeQuery.length > 0)) {
-            const taskOutcome = taskOutcomeQuery[0];
-
+        const taskOutcome: TaskOutcomeSchema = await taskOutcomeService.findTaskOutcome(_teamId, updatedStepOutcome._taskOutcomeId, '_id _jobId _taskId');
+        if (taskOutcome) {
             let taskName: string = taskOutcome._id.toHexString();
             const taskQuery: any[] = await taskService.findTask(_teamId, taskOutcome._taskId, 'name');
             if ((_.isArray(taskQuery) && taskQuery.length > 0)) {
@@ -1063,9 +1062,8 @@ export class SGUtils {
 
                 let taskFailAlertEmail: string = undefined;
                 let taskFailAlertSlackURL: string = undefined;
-                const jobQuery: JobSchema[] = await jobService.findJob(_teamId, taskOutcome._jobId, 'name runId onJobTaskFailAlertEmail onJobTaskFailAlertSlackURL');
-                if ((_.isArray(jobQuery) && jobQuery.length > 0)) {
-                    const job = jobQuery[0];
+                const job: JobSchema = await jobService.findJob(_teamId, taskOutcome._jobId, 'name runId onJobTaskFailAlertEmail onJobTaskFailAlertSlackURL');
+                if (job) {
                     if (job.onJobTaskFailAlertEmail)
                         taskFailAlertEmail = job.onJobTaskFailAlertEmail;
                     if (job.onJobTaskFailAlertSlackURL)
@@ -1105,9 +1103,8 @@ export class SGUtils {
     static OnTaskFailed = async (_teamId: mongodb.ObjectId, task: any, error: string, logger: BaseLogger) => {
         let taskFailAlertEmail: string = undefined;
         let taskFailAlertSlackURL: string = undefined;
-        const jobQuery: JobSchema[] = await jobService.findJob(_teamId, task._jobId, 'name runId onJobTaskFailAlertEmail onJobTaskFailAlertSlackURL');
-        if ((_.isArray(jobQuery) && jobQuery.length > 0)) {
-            const job = jobQuery[0];
+        const job: JobSchema = await jobService.findJob(_teamId, task._jobId, 'name runId onJobTaskFailAlertEmail onJobTaskFailAlertSlackURL');
+        if (job) {
             if (job.onJobTaskFailAlertEmail)
                 taskFailAlertEmail = job.onJobTaskFailAlertEmail;
             if (job.onJobTaskFailAlertSlackURL)

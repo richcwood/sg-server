@@ -16,20 +16,20 @@ import { TaskStatus } from '../../server/dist/shared/Enums';
 const script1 = `
 import time
 import sys
-print 'start'
+print('start')
 time.sleep(2)
-print 'done'
-print '@sgo{"route": "ok"}'
+print('done')
+print('@sgo{"route": "ok"}')
 sys.exit(1)
 `;
 const script1_b64 = SGUtils.btoa(script1);
 
 const script2 = `
 import time
-print 'start'
+print('start')
 time.sleep(2)
-print 'done'
-print '@sgo{"route": "ok"}'
+print('done')
+print('@sgo{"route": "ok"}')
 `;
 const script2_b64 = SGUtils.btoa(script2);
 
