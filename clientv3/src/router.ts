@@ -23,6 +23,7 @@ import AccessKeys from '@/views/AccessKeys.vue';
 import AuthCallback from '@/views/AuthCallback.vue';
 import _ from 'lodash';
 import { SgAlert, AlertPlacement, AlertCategory } from "@/store/alert/types";
+import LambdaScript from '@/components/pageGuides/LambdaScript.vue';
 
 Vue.use(Router);
 
@@ -122,6 +123,8 @@ const router = new Router({
       component: JobDesigner,
       meta: {
         beforeEnter: async (to: Route, from: Route) => {
+          store.dispatch(`${StoreType.PageGuideStore}/select`, LambdaScript);
+
           if(to.params.jobId){
             try {
               const job = await store.dispatch(`${StoreType.JobDefStore}/fetchModel`, to.params.jobId);
@@ -145,6 +148,8 @@ const router = new Router({
           }
         },
         async beforeLeave(to: Route, from: Route, next: (options?: any) => {}){
+          store.dispatch(`${StoreType.PageGuideStore}/select`, null);
+
           tryToSaveScriptEdits(next);
         }
       }

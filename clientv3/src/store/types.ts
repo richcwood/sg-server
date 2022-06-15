@@ -66,7 +66,8 @@ export enum StoreType {
   UserStore = 'userStore',
   PaymentMethodStore = 'paymentMethodStore',
   AccessKeyStore = 'accessKeyStore',
-  AccessRightStore = 'accessRightStore'
+  AccessRightStore = 'accessRightStore',
+  PageGuideStore = 'pageGuideStore',
 }
 
 export enum ModelBaseUrlType {
