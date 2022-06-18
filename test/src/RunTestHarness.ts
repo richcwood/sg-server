@@ -589,6 +589,26 @@ let DeleteNotStartedJobs = async () => {
   process.exit();
 };
 
+let FixAccessKeyDbRecords = async () => {
+  mongoose.connect(config.get("mongoUrl"), {});
+
+  let accessKeys: any = await accessKeyService.findAllAccessKeysInternal();
+
+  for (let i = 0; i < accessKeys.length; i++) {
+    let accessKey: any = accessKeys[i];
+
+    let data: any = {};
+    data._teamId = new mongodb.ObjectId(accessKey._teamId);
+
+    const filter = { _id: accessKey._id };
+
+    const updatedAccessKey = await AccessKeyModel.findOneAndUpdate(filter, data, { new: true });
+    console.log(updatedAccessKey);
+  }
+
+  process.exit();
+};
+
 let FixScriptDBRecords = async () => {
   mongoose.connect(config.get("mongoUrl"), {});
 
@@ -2481,8 +2501,9 @@ let SendTestBrowserAlert = async () => {
 // FixTeamDBRecords();
 // CancelFailedJobs();
 // DeleteNotStartedJobs();
+FixAccessKeyDbRecords();
 // FixScriptDBRecords();
-FixRuntimeVarsDBRecords();
+// FixRuntimeVarsDBRecords();
 // SendTestBrowserAlert();
 // ConfigNewRabbitMQServer();
 // ProcessOrphanedTasks();

@@ -13,7 +13,7 @@ export class AccessKeySchema {
   id?: mongodb.ObjectId;
 
   @prop({ required: true })
-  _teamId: string;
+  _teamId: mongodb.ObjectId;
 
   @prop({ required: true })
   createdBy: mongodb.ObjectId;
