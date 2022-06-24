@@ -504,7 +504,7 @@ def main():
     cml_adapter = logging.LoggerAdapter(cm_logger, {'build': 'debug', 'app_name': 'pika_test'})
 
     num_threads = 1
-    start_async_consumer_multithreaded('amqps://bartSpikeUser:RocketDog99!@funny-finch.rmq.cloudamqp.com/bartsVHost', cml_adapter, {
+    start_async_consumer_multithreaded('amqps://erpbwfab:2Y6n7quHHysEiRauCLD2O9bNex0h8zLJ@grand-silver-bat.rmq4.cloudamqp.com/sgProd', cml_adapter, {
         'exch': 'mission',
         'exch_type': 'topic',
         'durable': True,
