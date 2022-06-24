@@ -2518,9 +2518,9 @@ let SendTestBrowserAlert = async () => {
 // LoadSettingsToMongo();
 // TestForEach();
 // UpdateAgentVersion();
-RabbitMQSetup();
+// RabbitMQSetup();
 // RabbitMQAdminTest();
-// AMQPTest();
+AMQPTest();
 // StompTest();
 // ScheduleScript();
 // DownloadAgent();

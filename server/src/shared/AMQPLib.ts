@@ -60,6 +60,7 @@ export class AMQPConnector {
         try {
             this.conn = await this.amqp.connect(this.url);
         } catch (e) {
+            console.log("error ---------------------------> ", e)
             this.LogError('Error starting AMQP connection to RabbitMQ', '', {error: e});
             await this.OnDisconnect();
             return false;
