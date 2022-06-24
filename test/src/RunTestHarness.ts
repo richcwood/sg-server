@@ -2501,7 +2501,7 @@ let SendTestBrowserAlert = async () => {
 // FixTeamDBRecords();
 // CancelFailedJobs();
 // DeleteNotStartedJobs();
-FixAccessKeyDbRecords();
+// FixAccessKeyDbRecords();
 // FixScriptDBRecords();
 // FixRuntimeVarsDBRecords();
 // SendTestBrowserAlert();
@@ -2518,7 +2518,7 @@ FixAccessKeyDbRecords();
 // LoadSettingsToMongo();
 // TestForEach();
 // UpdateAgentVersion();
-// RabbitMQSetup();
+RabbitMQSetup();
 // RabbitMQAdminTest();
 // AMQPTest();
 // StompTest();
