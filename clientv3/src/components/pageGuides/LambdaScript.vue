@@ -20,25 +20,31 @@
                 </div>
             </div>
         </div>
-        <div class="column is-narrow">
-            <div class="box">
-                <p>Awesome! Now that you have the script created, let's run it. Click the "Run Script" button.</p>
-                <button class="button is-primary">Run Script</button>
-                <div class="step">
-                    <span class="step-number">2</span>
-                    <div class="triangle"></div>
+
+        <transition name="fade-left">
+            <div v-if="currentStep > 1" class="column is-narrow">
+                <div class="box">
+                    <p>Awesome! Now that you have the script created, let's run it. Click the "Run Script" button.</p>
+                    <button @click="onScriptRun" class="button is-primary">Run Script</button>
+                    <div class="step">
+                        <span class="step-number">2</span>
+                        <div class="triangle"></div>
+                    </div>
                 </div>
             </div>
-        </div>
-        <div class="column is-narrow">
-            <div class="box">
-                <p>Awesome! The script is now running in AWS Lambda. Check out the script output in "Output" tab.</p>
-                <div class="step">
-                    <span class="step-number">3</span>
-                    <div class="triangle"></div>
+        </transition>
+
+        <transition name="fade-left">
+            <div v-if="currentStep > 2" class="column is-narrow">
+                <div class="box">
+                    <p>Awesome! The script is now running in AWS Lambda. Check out the script output in "Output" tab.</p>
+                    <div class="step">
+                        <span class="step-number">3</span>
+                        <div class="triangle"></div>
+                    </div>
                 </div>
             </div>
-        </div>
+        </transition>
     </section>
 </template>
 
@@ -55,6 +61,7 @@
     export default class LambdaScript extends Vue {
         public newScriptType: ScriptType = null;
         public creatingScript = false;
+        public currentStep = 1;
 
         public static getTitle () {
             return 'Lambda Script Guide';
@@ -69,30 +76,32 @@
 
         public async onScriptSelect (): Promise<void> {
             this.creatingScript = true;
+            this.currentStep = 2;
 
-            try {
-                const script = await this.$store.dispatch(`${StoreType.ScriptStore}/save`, {
-                    script: {
-                        name: `Guide_${scriptTypesForMonaco[this.newScriptType]}_${Math.random().toFixed(8).substring(2, 6)}`,
-                        scriptType: this.newScriptType,
-                        // create pool of code templates
-                        code: btoa('console.log("Hello, World!");'),
-                        lastEditedDate: new Date().toISOString()
-                    }
-                });
+            // try {
+            //     const script = await this.$store.dispatch(`${StoreType.ScriptStore}/save`, {
+            //         script: {
+            //             name: `Guide_${scriptTypesForMonaco[this.newScriptType]}_${Math.random().toFixed(8).substring(2, 6)}`,
+            //             scriptType: this.newScriptType,
+            //             // create pool of code templates
+            //             code: btoa('console.log("Hello, World!");'),
+            //             lastEditedDate: new Date().toISOString()
+            //         }
+            //     });
 
-                this.$store.dispatch(`${StoreType.ScriptStore}/select`, script);
-            } catch (e) {
-                console.error(e);
-            } finally {
-                this.creatingScript = false;
-            }
+            //     this.$store.dispatch(`${StoreType.ScriptStore}/select`, script);
+            // } catch (e) {
+            //     console.error(e);
+            // } finally {
+            //     this.creatingScript = false;
+            // }
 
             // Move lambda settings to the vuex
             // this.$store.dispatch(`${StoreType.ICSettings}/select, icSettings);
         }
 
         public async onScriptRun (): Promise<void> {
+            this.currentStep = 3;
             // const scriptShadowCopy = this.$store[StoreType.ScriptShadowStore].selectedCopy;
 
             // if (!scriptShadowCopy) {
@@ -164,6 +173,7 @@
 <style lang="scss" scoped>
     .box {
         position: relative;
+        z-index: 2;
         width: 300px;
         height: 192px;
         overflow: auto;
@@ -191,5 +201,18 @@
         height: 0;
         border-top: 40px solid deepskyblue;
         border-right: 40px solid transparent;
+    }
+
+    .fade-left-leave-active,
+    .fade-left-enter-active {
+        transition: .5s;
+    }
+    .fade-left-enter {
+        transform: translate(-100%, 0);
+        opacity: 0;
+    }
+    .fade-left-leave-to {
+        transform: translate(0, 0);
+        opacity: 1;
     }
 </style>
