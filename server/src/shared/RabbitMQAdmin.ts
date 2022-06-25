@@ -20,6 +20,23 @@
          });
      }
  
+     async getConnections(): Promise<any[]> {
+        return new Promise((resolve, reject) => {
+            this.instance.get(`vhosts/${this.vhost}/connections`)
+                .then((response) => {
+                    if (!response.data) resolve([]);
+                    let connections: any[] = [];
+                    for (let i = 0; i < response.data.length; i++) {
+                        connections.push(response.data[i]);
+                    }
+                    resolve(connections);
+                })
+                .catch((err) => {
+                    reject(new Error(`Error getting connections: ${err}`));
+                })
+        });
+    }
+
      async getQueues(matchStr: string) {
          return new Promise((resolve, reject) => {
              this.instance.get(`queues/${this.vhost}`)
@@ -68,6 +85,18 @@
          });
      }
  
+     async closeConnection(name: string) {
+        return new Promise((resolve, reject) => {
+            this.instance.delete(`connections/${name}`)
+                .then((response) => {
+                    resolve(response.status);
+                })
+                .catch((err) => {
+                    reject(err);
+                })
+        });
+    }
+
      async purgeQueue(queue: string) {
          return new Promise((resolve, reject) => {
              this.instance.delete(`queues/${this.vhost}/${queue}/contents`)

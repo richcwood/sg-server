@@ -315,6 +315,30 @@ let AMQPTest = async () => {
   while (true) await SGUtils.sleep(5000);
 };
 
+let CloseRabbitMQConnections= async (user: string) => {
+  const rmqAdminUrl = config.get("rmqAdminUrl");
+  let rmqVhost = config.get("rmqVhost");
+
+  try {
+    const rmqAdmin = new RabbitMQAdmin(rmqAdminUrl, rmqVhost);
+    
+    const connections: any[] = await rmqAdmin.getConnections()
+
+    for (let i = 0; i < connections.length; ++i) {
+      let connection: any = connections[i];
+      if (connection["user"] == user) {
+        console.log("closing ", connection["name"]);
+        const res = await rmqAdmin.closeConnection(connection["name"]);
+        console.log("res --------------> ", res);
+      }
+    }
+
+    // console.log(connections);
+  } catch (e) {
+    console.error(e);
+  }
+}
+
 let RabbitMQAdminTest = async () => {
   const rmqAdminUrl = config.get("rmqAdminUrl");
   let rmqVhost = config.get("rmqVhost");
@@ -2520,6 +2544,7 @@ let SendTestBrowserAlert = async () => {
 // UpdateAgentVersion();
 // RabbitMQSetup();
 // RabbitMQAdminTest();
+// CloseRabbitMQConnections("bartSpikeUser");
 AMQPTest();
 // StompTest();
 // ScheduleScript();
