@@ -103,7 +103,7 @@
 
         .page-guide {
             --control-height: 25px;
-            --guide-body-height: 200px;
+            --guide-body-height: 33vh;
 
             position: fixed;
             z-index: 1;

@@ -123,8 +123,6 @@ const router = new Router({
       component: JobDesigner,
       meta: {
         beforeEnter: async (to: Route, from: Route) => {
-          store.dispatch(`${StoreType.PageGuideStore}/select`, LambdaScript);
-
           if(to.params.jobId){
             try {
               const job = await store.dispatch(`${StoreType.JobDefStore}/fetchModel`, to.params.jobId);
@@ -148,7 +146,6 @@ const router = new Router({
           }
         },
         async beforeLeave(to: Route, from: Route, next: (options?: any) => {}){
-          store.dispatch(`${StoreType.PageGuideStore}/select`, null);
 
           tryToSaveScriptEdits(next);
         }
@@ -165,6 +162,8 @@ const router = new Router({
       component: InteractiveConsole,
       meta: {
         beforeEnter: async (to: Route, from: Route) => {
+          store.dispatch(`${StoreType.PageGuideStore}/select`, LambdaScript);
+
           if(to.params.scriptId){
             try {
               if(store.state[StoreType.ScriptStore].selected && store.state[StoreType.ScriptStore].selected.id === to.params.scriptId){
@@ -185,6 +184,8 @@ const router = new Router({
           }
         },
         async beforeLeave(to: Route, from: Route, next: (options?: any) => {}){
+          store.dispatch(`${StoreType.PageGuideStore}/select`, null);
+
           tryToSaveScriptEdits(next);
         }
       } 
