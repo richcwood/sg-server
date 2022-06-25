@@ -7,7 +7,7 @@
   "API_PORT": "",
   "API_VERSION": "v0",
   "stompUrl": "wss://@funny-finch.rmq.cloudamqp.com/ws/stomp",
-  "amqpUrl": "amqps://bartSpikeUser:RocketDog99!@funny-finch.rmq.cloudamqp.com/bartsVHost",
+  "amqpUrl": "amqps://bartSpikeUser:RocketDog99!@funny-finch.rmq.cloudamqp.com//bartsVHost",
   "rmqAdminUrl": "https://bartSpikeUser:RocketDog99!@funny-finch.rmq.cloudamqp.com/api/",
   "rmqUrl": "funny-finch.rmq.cloudamqp.com",
   "rmqStompPort": "15674",

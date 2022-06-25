@@ -192,7 +192,7 @@ $ sudo ./sg-agent-installer-mac -c install -i [agent access key id] -s [agent ac
               <ol>
                 <li>Download the SaaSGlue Agent launcher</li>
                   <code class="p-5 ml-5 my-5 has-text-black code-snippet">
-$ sudo ./sg-agent-installer-linux -c install -i [agent access key id] -s [agent access secret] -t [tags]
+$ sudo ./sg-agent-installer-linux -c download -i [agent access key id] -s [agent access secret] -t [tags]
                   </code>
                 <li>Run the SaaSGlue Agent launcher</li>
                   <code class="p-5 ml-5 my-5 has-text-black code-snippet">
@@ -208,7 +208,7 @@ $ sudo ./sg-agent-installer-linux -c install -i [agent access key id] -s [agent 
               <ol>
                 <li>Download the SaaSGlue Agent launcher</li>
                   <code class="p-5 ml-5 my-5 has-text-black code-snippet">
-$ sudo ./sg-agent-installer-mac -c install -i [agent access key id] -s [agent access secret] -t [tags]
+$ sudo ./sg-agent-installer-mac -c download -i [agent access key id] -s [agent access secret] -t [tags]
                   </code>
                 <li>Run the SaaSGlue Agent launcher</li>
                   <code class="p-5 ml-5 my-5 has-text-black code-snippet">
@@ -239,13 +239,13 @@ $ sudo ./sg-agent-installer-mac -c install -i [agent access key id] -s [agent ac
           <div v-show="tabSelInstallAsService == 'LinuxInstallAsService'">
             <h2 class="has-text-weight-normal">To stop the agent service:</h2>
             <code class="p-5 ml-5 my-5 has-text-black code-snippet">
-$ sudo sg-agent-installer-linux -c stop
+$ sudo ./sg-agent-installer-linux -c stop
             </code>
           </div>
           <div v-show="tabSelInstallAsService == 'MacInstallAsService'">
             <h2 class="has-text-weight-normal">To stop the agent service:</h2>
             <code class="p-5 ml-5 my-5 has-text-black code-snippet">
-$ sg-agent-installer-mac -c stop
+$ ./sg-agent-installer-mac -c stop
             </code>
           </div>
         </div>
@@ -269,13 +269,13 @@ $ sg-agent-installer-mac -c stop
           <div v-show="tabSelInstallAsService == 'LinuxInstallAsService'">
             <h2 class="has-text-weight-normal">To start the agent service:</h2>
             <code class="p-5 ml-5 my-5 has-text-black code-snippet">
-$ sudo sg-agent-installer-linux -c start
+$ sudo ./sg-agent-installer-linux -c start
             </code>
           </div>
           <div v-show="tabSelInstallAsService == 'MacInstallAsService'">
             <h2 class="has-text-weight-normal">To start the agent service:</h2>
             <code class="p-5 ml-5 my-5 has-text-black code-snippet">
-$ sg-agent-installer-mac -c start
+$ ./sg-agent-installer-mac -c start
             </code>
           </div>
         </div>
@@ -299,13 +299,13 @@ $ sg-agent-installer-mac -c start
           <div v-show="tabSelInstallAsService == 'LinuxInstallAsService'">
             <h2 class="has-text-weight-normal">To uninstall the agent service:</h2>
             <code class="p-5 ml-5 my-5 has-text-black code-snippet">
-$ sudo sg-agent-installer-linux -c uninstall
+$ sudo ./sg-agent-installer-linux -c uninstall
             </code>
           </div>
           <div v-show="tabSelInstallAsService == 'MacInstallAsService'">
             <h2 class="has-text-weight-normal">To uninstall the agent service:</h2>
             <code class="p-5 ml-5 my-5 has-text-black code-snippet">
-$ sg-agent-installer-mac -c uninstall
+$ ./sg-agent-installer-mac -c uninstall
             </code>
           </div>
         </div>
