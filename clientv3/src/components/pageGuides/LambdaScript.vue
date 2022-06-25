@@ -3,7 +3,7 @@
         <div class="column is-narrow">
             <div class="box">
                 <p>Let's run a script right now on AWS Lambda with SaasGlue. First click what language you want the script to be in.</p>
-                <div class="select is-fullwidth">
+                <div class="select is-fullwidth" :class="{'is-loading': creatingScript}">
                     <select
                         @change="onScriptSelect"
                         v-model="newScriptType"
@@ -14,17 +14,29 @@
                         :value="key">{{ value }}</option>
                     </select>
                 </div>
+                <div class="step">
+                    <span class="step-number">1</span>
+                    <div class="triangle"></div>
+                </div>
             </div>
         </div>
         <div class="column is-narrow">
             <div class="box">
                 <p>Awesome! Now that you have the script created, let's run it. Click the "Run Script" button.</p>
                 <button class="button is-primary">Run Script</button>
+                <div class="step">
+                    <span class="step-number">2</span>
+                    <div class="triangle"></div>
+                </div>
             </div>
         </div>
         <div class="column is-narrow">
             <div class="box">
-                Awesome! The script is now running in AWS Lambda. Check out the script output in "Output" tab.
+                <p>Awesome! The script is now running in AWS Lambda. Check out the script output in "Output" tab.</p>
+                <div class="step">
+                    <span class="step-number">3</span>
+                    <div class="triangle"></div>
+                </div>
             </div>
         </div>
     </section>
@@ -32,13 +44,17 @@
 
 <script lang="ts">
     import { Component, Vue } from 'vue-property-decorator';
+    import moment from 'moment';
+    import axios from 'axios';
 
     import { ScriptType, scriptTypesForMonaco } from '@/store/script/types';
+    import { TaskDefTarget } from '@/store/taskDef/types';
     import { StoreType } from '@/store/types';
 
     @Component
     export default class LambdaScript extends Vue {
-        public newScriptType: ScriptType = undefined;
+        public newScriptType: ScriptType = null;
+        public creatingScript = false;
 
         public static getTitle () {
             return 'Lambda Script Guide';
@@ -46,34 +62,134 @@
 
         public get scriptTypes (): Record<string, string> {
             return {
-                undefined: 'Please Select',
+                null: 'Please Select',
                 ...scriptTypesForMonaco
             };
         }
 
         public async onScriptSelect (): Promise<void> {
-            const newScript = {
-                name: `Guide_${scriptTypesForMonaco[this.newScriptType]}_${Math.random().toFixed(8).substring(2, 6)}`,
-                scriptType: this.newScriptType,
-                // create pool of code templates
-                code: btoa('console.log("Hello, World!");'),
-                lastEditedDate: new Date().toISOString()
-            };
+            this.creatingScript = true;
 
-            const script = await this.$store.dispatch(`${StoreType.ScriptStore}/save`, {script: newScript});
+            try {
+                const script = await this.$store.dispatch(`${StoreType.ScriptStore}/save`, {
+                    script: {
+                        name: `Guide_${scriptTypesForMonaco[this.newScriptType]}_${Math.random().toFixed(8).substring(2, 6)}`,
+                        scriptType: this.newScriptType,
+                        // create pool of code templates
+                        code: btoa('console.log("Hello, World!");'),
+                        lastEditedDate: new Date().toISOString()
+                    }
+                });
 
-            this.$store.dispatch(`${StoreType.ScriptStore}/select`, script);
+                this.$store.dispatch(`${StoreType.ScriptStore}/select`, script);
+            } catch (e) {
+                console.error(e);
+            } finally {
+                this.creatingScript = false;
+            }
 
             // Move lambda settings to the vuex
             // this.$store.dispatch(`${StoreType.ICSettings}/select, icSettings);
+        }
+
+        public async onScriptRun (): Promise<void> {
+            // const scriptShadowCopy = this.$store[StoreType.ScriptShadowStore].selectedCopy;
+
+            // if (!scriptShadowCopy) {
+            //     console.error("Script shadow was not loaded so it could not be run.");
+            //     return;
+            // }
+
+            // const currentTeamId = this.$store.state[StoreType.TeamStore].selected.id;
+
+            // try {
+            //     const newStep: any = {
+            //         name: 'Console Step',
+            //         script: {
+            //             scriptType: this.newScriptType,
+            //             code: scriptShadowCopy.shadowCopyCode,
+            //         },
+            //         order: 0,
+            //         command: this.runScriptCommand,
+            //         arguments: this.runScriptArguments,
+            //         variables: this.envVarsAsMap,
+            //     };
+
+            //     const runAgentTarget = TaskDefTarget.AWS_LAMBDA;
+            //     newStep.lambdaRuntime = this.lambdaConfig.lambdaRuntime;
+            //     newStep.lambdaMemorySize = this.lambdaConfig.lambdaMemorySize;
+            //     newStep.lambdaTimeout = this.lambdaConfig.lambdaTimeout;
+            //     newStep.lambdaDependencies = this.lambdaConfig.lambdaDependencies;
+
+            // const newJob = {
+            //     job: {
+            //     name: `IC-${moment().format("dddd MMM DD h:mm a")}`,
+            //     dateCreated: new Date().toISOString(),
+            //     runtimeVars: this.runtimeVarsAsMap,
+            //     tasks: [
+            //         {
+            //         _teamId: currentTeamId,
+            //         name: `Task1`,
+            //         source: 0,
+            //         requiredTags: tagsStringToMap(this.runAgentTargetTags_string),
+            //         target: runAgentTarget,
+            //         targetAgentId: this.runAgentTargetAgentId,
+            //         fromRoutes: [],
+            //         steps: [newStep],
+            //         correlationId: Math.random()
+            //             .toString()
+            //             .substring(3, 12),
+            //         },
+            //     ],
+            //     },
+            // };
+
+            // const {
+            //     data: { data },
+            // } = await axios.post("/api/v0/job/ic/", newJob);
+            // // make sure to use the same object in the store or it won't be reactive to browser push events
+            // this.runningJobs.push(await this.$store.dispatch(`${StoreType.JobStore}/fetchModel`, data.id));
+
+            // this.expandScriptEditor = false;
+            // } catch (err) {
+            // console.error(err);
+            // showErrors("Error running the script", err);
+            // } finally {
+            // this.$modal.hide("run-script-options");
+            // }
         }
     }
 </script>
 
 <style lang="scss" scoped>
     .box {
+        position: relative;
         width: 300px;
         height: 192px;
         overflow: auto;
+    }
+
+    .step {
+        position: absolute;
+        left: 0;
+        top: 0;
+    }
+
+    .step-number {
+        position: relative;
+        z-index: 1;
+        padding-left: 7px;
+        font-weight: bold;
+        color: white;
+    }
+
+    .triangle {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 0;
+        height: 0;
+        border-top: 40px solid deepskyblue;
+        border-right: 40px solid transparent;
     }
 </style>

@@ -160,6 +160,21 @@
             </tr>
           </table>
         </tab>
+        <tab v-if="runningJobs.length > 0 && selectedJob" class="sg-container-p" title="Script Results">
+          <div class="is-flex is-align-items-center">
+            <span class="mr-3">{{ selectedJob.name }}</span>
+            <button
+              class="button is-ghost mr-3"
+              :disabled="selectedJob.status !== JobStatus.RUNNING && selectedJob.status !== JobStatus.INTERRUPTED"
+              @click="onCancelJobClicked"
+            >
+              Cancel
+            </button>
+            <span class="mr-3">{{ enumKeyToPretty(JobStatus, selectedJob.status) }}</span>
+            <span class="mr-3">{{ momentToStringV1(selectedJob.dateStarted) }}</span>
+          </div>
+          <task-monitor-details :selectedJobId="selectedJob.id" />
+        </tab>
       </tabs>
 
       <hr class="divider" />
@@ -214,27 +229,6 @@
         </table>
       </div>
     </validation-observer>
-
-    <div v-if="runningJobs.length > 0" class="sg-container-px">
-      <template v-if="selectedJob">
-        <div class="is-flex is-align-items-center">
-          <span class="mr-3">{{ selectedJob.name }}</span>
-          <button
-            class="button is-ghost mr-3"
-            :disabled="selectedJob.status !== JobStatus.RUNNING && selectedJob.status !== JobStatus.INTERRUPTED"
-            @click="onCancelJobClicked"
-          >
-            Cancel
-          </button>
-          <span class="mr-3">{{ enumKeyToPretty(JobStatus, selectedJob.status) }}</span>
-          <span class="mr-3">{{ momentToStringV1(selectedJob.dateStarted) }}</span>
-        </div>
-        <task-monitor-details :selectedJobId="selectedJob.id" />
-      </template>
-    </div>
-    <p v-else class="py-4 is-size-4 has-text-centered">
-      No scripts have ran yet
-    </p>
   </div>
 </template>
 
