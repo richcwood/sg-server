@@ -229,7 +229,7 @@ class AppBuilder {
 
   private setUpAmqp() {
     this.app.use((req, res, next) => {
-        req.amqp = amqp;
+      req.amqp = amqp;
       next();
     });
   }
