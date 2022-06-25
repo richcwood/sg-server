@@ -92,6 +92,15 @@ var options = {
 mongoose.connect(config.get('mongoUrl'), options);
 
 const redisClient = redis.createClient(config.get('redisUrl'), { no_ready_check: true });
+
+let logger: BaseLogger = new BaseLogger(appName);
+logger.Start();
+
+const amqpUrl = config.get('amqpUrl');
+const rmqVhost = config.get('rmqVhost');
+let amqp: AMQPConnector = new AMQPConnector(appName, '', amqpUrl, rmqVhost, 1, (activeMessages) => { }, logger);
+amqp.Start();
+
 const expressSessionOptions: any = {
   store: new RedisStore({ client: redisClient }),
   saveUninitialized: false,
@@ -212,8 +221,6 @@ class AppBuilder {
   }
 
   private setUpLogger() {
-    let logger: BaseLogger = new BaseLogger(appName);
-    logger.Start();
     this.app.use((req, res, next) => {
       req.logger = logger;
       next();
@@ -222,11 +229,7 @@ class AppBuilder {
 
   private setUpAmqp() {
     this.app.use((req, res, next) => {
-        const amqpUrl = config.get('amqpUrl');
-        const rmqVhost = config.get('rmqVhost');
-        let amqp: AMQPConnector = new AMQPConnector(appName, '', amqpUrl, rmqVhost, 1, (activeMessages) => { }, req.logger);
-        amqp.Start();
-        req.amqp = amqp;
+      req.amqp = amqp;
       next();
     });
   }
