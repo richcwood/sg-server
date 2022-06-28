@@ -10,6 +10,7 @@ import { SGStrings } from "../../server/src/shared/SGStrings";
 import { BaseLogger } from "../../server/src/shared/SGLogger";
 import { AMQPConnector } from "../../server/src/shared/AMQPLib";
 import { StompConnector } from "../../server/src/shared/StompLib";
+import { Client, Message } from '@stomp/stompjs';
 import { RabbitMQAdmin } from "../../server/src/shared/RabbitMQAdmin";
 import { S3Access } from "../../server/src/shared/S3Access";
 import * as Enums from "../../server/src/shared/Enums";
@@ -230,6 +231,38 @@ let DownloadAgent_Download = async (url) => {
   });
 };
 
+let RawStompTest = async () => {
+  const client = new Client({
+    brokerURL: 'wss://grand-silver-bat.rmq4.cloudamqp.com/ws/stomp',
+    connectHeaders: {
+      login: 'erpbwfab',
+      passcode: '2Y6n7quHHysEiRauCLD2O9bNex0h8zLJ',
+      host: 'sgProd'
+    },
+    debug: function(str) {
+      console.log(str);
+    },
+    reconnectDelay: 5000,
+    heartbeatIncoming: 4000,
+    heartbeatOutgoing: 4000,
+  });
+
+  client.onConnect = function (frame) {
+    console.log("connected!");
+  }
+
+  client.onStompError = function (frame) {
+    // Will be invoked in case of error encountered at Broker
+    // Bad login/passcode typically will cause an error
+    // Complaint brokers will set `message` header with a brief message. Body may contain details.
+    // Compliant brokers will terminate the connection after any error
+    console.log('Broker reported error: ' + frame.headers['message']);
+    console.log('Additional details: ' + frame.body);
+  };
+
+  client.activate();
+}
+
 let StompTest = async () => {
   const rmqUsername = config.get("rmqUsername");
   const rmqPassword = config.get("rmqPassword");
@@ -254,9 +287,9 @@ let StompTest = async () => {
   );
   await connector.Start();
 
-  // await connector.ConsumeQueue('temp_queue_1', false, true, false, true, (msg, msgKey, cb) => {console.log(`received message 1 - ${util.inspect(msg, false, null)}`)}, 'job', 60000);
+  await connector.ConsumeQueue('temp_queue_1', false, true, false, true, (msg, msgKey, cb) => {console.log(`received message 1 - ${util.inspect(msg, false, null)}`)}, 'job', 60000);
 
-  // await connector.Publish('job', 'temp_queue_1', { 'key1': 'val1' }, { 'expiration': 30000 });
+  await connector.Publish('job', 'temp_queue_1', { 'key1': 'val1' }, { 'expiration': 30000 });
   // await connector_pub.Publish('job', 'temp_queue_2', { 'key2': 'val2' });
   // await connector_pub.Publish('job', 'temp_route', { 'key2': 'val2' });
 
@@ -2545,8 +2578,9 @@ let SendTestBrowserAlert = async () => {
 // RabbitMQSetup();
 // RabbitMQAdminTest();
 // CloseRabbitMQConnections("bartSpikeUser");
-AMQPTest();
+// AMQPTest();
 // StompTest();
+RawStompTest();
 // ScheduleScript();
 // DownloadAgent();
 // CreateUser(process.argv[2], process.argv[3], process.argv[4] ? process.argv[4].split(',') : []);
