@@ -18,6 +18,11 @@
                     <span class="step-number">1</span>
                     <div class="triangle"></div>
                 </div>
+
+                <div v-if="currentStep > 1" class="is-overlay is-step-ready">
+                    <div class="is-overlay"></div>
+                    <SuccessTick class="is-relative" />
+                </div>
             </div>
         </div>
 
@@ -29,6 +34,11 @@
                     <div class="step">
                         <span class="step-number">2</span>
                         <div class="triangle"></div>
+                    </div>
+
+                    <div v-if="currentStep > 2" class="is-overlay is-step-ready">
+                        <div class="is-overlay"></div>
+                        <SuccessTick class="is-relative" />
                     </div>
                 </div>
             </div>
@@ -54,10 +64,13 @@
     import axios from 'axios';
 
     import { ScriptType, scriptTypesForMonaco } from '@/store/script/types';
+    import SuccessTick from '@/components/pageGuides/SuccessTick.vue';
     import { TaskDefTarget } from '@/store/taskDef/types';
     import { StoreType } from '@/store/types';
 
-    @Component
+    @Component({
+        components: { SuccessTick }
+    })
     export default class LambdaScript extends Vue {
         public newScriptType: ScriptType = null;
         public creatingScript = false;
@@ -201,6 +214,18 @@
         height: 0;
         border-top: 40px solid deepskyblue;
         border-right: 40px solid transparent;
+    }
+
+    .is-step-ready {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 2;
+    }
+
+    .is-step-ready .is-overlay {
+        background: white;
+        opacity: .8;
     }
 
     .fade-left-leave-active,
