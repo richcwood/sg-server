@@ -127,6 +127,10 @@
                 color: var(--link-color);
             }
 
+            .guide-control:hover {
+                color: #8CC3F2;
+            }
+
             .guide-body {
                 height: var(--guide-body-height);
             }
