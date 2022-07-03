@@ -26,6 +26,7 @@ import { paymentMethodStore } from '@/store/paymentMethod/index';
 import { accessKeyStore } from '@/store/accessKey/index';
 import { accessRightStore } from '@/store/accessRight/index';
 import { pageGuideStore } from '@/store/pageGuide';
+import { interactiveConsole } from '@/store/interactiveConsole';
 
 Vue.use(Vuex);
 
@@ -61,7 +62,8 @@ const store: StoreOptions<RootState> = {
         paymentMethodStore,
         accessKeyStore,
         accessRightStore,
-        pageGuideStore
+        pageGuideStore,
+        interactiveConsole
     }
 };
 

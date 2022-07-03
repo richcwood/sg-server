@@ -68,6 +68,7 @@ export enum StoreType {
   AccessKeyStore = 'accessKeyStore',
   AccessRightStore = 'accessRightStore',
   PageGuideStore = 'pageGuideStore',
+  InteractiveConsole = 'interactiveConsole',
 }
 
 export enum ModelBaseUrlType {
