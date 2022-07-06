@@ -829,7 +829,6 @@ export class JobService {
               }
             }
 
-            console.log("44444444444444444444444444444");
             let publishRes = await taskOutcomeService.PublishTask(_teamId, task, logger, amqp);
             // console.log('LaunchReadyTasks -> publishRes -> ', publishRes);
             if (publishRes.success) {
