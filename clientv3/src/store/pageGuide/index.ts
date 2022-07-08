@@ -6,7 +6,8 @@ import { mutations } from './mutations';
 import { actions } from './actions';
 
 export const state: PageGuideState = {
-    selected: null
+    selected: null,
+    isGuideOpen: false,
 };
 
 export const pageGuideStore: Module<PageGuideState, RootState> = {
