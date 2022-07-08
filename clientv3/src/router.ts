@@ -162,7 +162,9 @@ const router = new Router({
       component: InteractiveConsole,
       meta: {
         beforeEnter: async (to: Route, from: Route) => {
-          store.dispatch(`${StoreType.PageGuideStore}/select`, LambdaScript);
+          if (from.name !== 'interactiveConsole') {
+            store.dispatch(`${StoreType.PageGuideStore}/select`, LambdaScript);
+          }
 
           if(to.params.scriptId){
             try {
@@ -184,7 +186,9 @@ const router = new Router({
           }
         },
         async beforeLeave(to: Route, from: Route, next: (options?: any) => {}){
-          store.dispatch(`${StoreType.PageGuideStore}/select`, null);
+          if (to.name !== 'interactiveConsole') {
+            store.dispatch(`${StoreType.PageGuideStore}/select`, null);
+          }
 
           tryToSaveScriptEdits(next);
         }

@@ -6,7 +6,7 @@
                 <div class="select is-fullwidth" :class="{'is-loading': creatingScript}">
                     <select
                         @change="onScriptSelect"
-                        v-model="newScriptType"
+                        v-model="selectedScriptType"
                     >
                         <option
                         v-for="(value, key) in scriptTypes"
@@ -73,9 +73,22 @@
         components: { SuccessTick }
     })
     export default class LambdaScript extends Vue {
-        public newScriptType: ScriptType = null;
+        public selectedScriptType: ScriptType = null;
         public creatingScript = false;
         public currentStep = 1;
+
+        private codeTemplate: Record<ScriptType, string> = {
+            [ScriptType.PYTHON]: 'print("Hello World")',
+            [ScriptType.NODE]: 'console.log("Hello World")',
+            [ScriptType.SH]: 'echo "Hello World"',
+            [ScriptType.CMD]: 'echo "Hello World"',
+            [ScriptType.RUBY]: 'puts "Hello World"',
+            [ScriptType.LUA]: 'print("Hello World")',
+            [ScriptType.PERL]: "say 'Hello World'", 
+            [ScriptType.PHP]: '<?php echo("Hello World") ?>',
+            [ScriptType.POWERSHELL]: "Write-Host 'Hello World'",
+            [ScriptType.JAVASCRIPT]: 'console.log("Hello World")',
+        };
 
         public static getTitle () {
             return 'Lambda Script Guide';
@@ -92,41 +105,36 @@
             this.creatingScript = true;
             this.currentStep = 2;
 
-            // try {
-            //     const script = await this.$store.dispatch(`${StoreType.ScriptStore}/save`, {
-            //         script: {
-            //             name: `Guide_${scriptTypesForMonaco[this.newScriptType]}_${Math.random().toFixed(8).substring(2, 6)}`,
-            //             scriptType: this.newScriptType,
-            //             // create pool of code templates
-            //             code: btoa('console.log("Hello, World!");'),
-            //             lastEditedDate: new Date().toISOString()
-            //         }
-            //     });
+            try {
+                const script = await this.$store.dispatch(`${StoreType.ScriptStore}/save`, {
+                    script: {
+                        name: `Guide_${scriptTypesForMonaco[this.selectedScriptType]}_${Math.random().toFixed(8).substring(2, 6)}`,
+                        scriptType: this.selectedScriptType,
+                        code: btoa(this.codeTemplate[this.selectedScriptType]),
+                        lastEditedDate: new Date().toISOString()
+                    }
+                });
 
-            //     this.$store.dispatch(`${StoreType.ScriptStore}/select`, script);
-            // } catch (e) {
-            //     console.error(e);
-            // } finally {
-            //     this.creatingScript = false;
-            // }
-
-            this.$store.dispatch(`${StoreType.InteractiveConsole}/updateSelectedCopy`, {
-                runAgentTarget: TaskDefTarget.SINGLE_AGENT,
-                runAgentTargetAgentId: null,
-                runAgentTargetTags_string: '',
-                runScriptCommand: '',
-                runScriptArguments: '',
-                runScriptEnvVars: '',
-                runScriptRuntimeVars: '',
-                lambdaDependencies: '',
-                lambdaRuntime: '',
-                lambdaMemory: 128,
-                lambdaTimeout: 3,
-                activeTab: ICTab.LAMBDA
-            });
-            // TODO set code template
-
-            // TODO select lambda tab by default
+                this.$store.dispatch(`${StoreType.ScriptStore}/select`, script);
+                this.$store.dispatch(`${StoreType.InteractiveConsole}/updateSelectedCopy`, {
+                    runAgentTarget: TaskDefTarget.SINGLE_AGENT,
+                    runAgentTargetAgentId: null,
+                    runAgentTargetTags_string: '',
+                    runScriptCommand: '',
+                    runScriptArguments: '',
+                    runScriptEnvVars: '',
+                    runScriptRuntimeVars: '',
+                    lambdaDependencies: '',
+                    lambdaRuntime: '',
+                    lambdaMemory: 128,
+                    lambdaTimeout: 3,
+                    activeTab: ICTab.LAMBDA
+                });
+            } catch (e) {
+                console.error(e);
+            } finally {
+                this.creatingScript = false;
+            }
         }
 
         public async onScriptRun (): Promise<void> {
@@ -144,7 +152,7 @@
                 // const newStep: any = {
                 //     name: 'Console Step',
                 //     script: {
-                //         scriptType: this.newScriptType,
+                //         scriptType: this.selectedScriptType,
                 //         code: scriptShadowCopy.shadowCopyCode, // use script type template
                 //     },
                 //     order: 0,

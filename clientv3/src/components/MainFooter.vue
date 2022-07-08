@@ -43,7 +43,6 @@
     @Component
     export default class MainFooter extends Vue {
         public readonly AlertCategory = AlertCategory;
-        public isGuideOpen = false;
 
         @BindSelected({ storeType: StoreType.PageGuideStore })
         public component: VueConstructor;
@@ -54,8 +53,12 @@
         @BindStoreModel({storeType: StoreType.AlertStore, selectedModelName: 'currentFooterRight'})
         public alertFooterRight: SgAlert;
 
+        public get isGuideOpen (): boolean {
+            return this.$store.state[StoreType.PageGuideStore].isGuideOpen;
+        }
+
         public onTogglePageGuide (): void {
-            this.isGuideOpen = !this.isGuideOpen;
+            this.$store.dispatch(`${StoreType.PageGuideStore}/togglePageGuide`, !this.isGuideOpen);
         }
     }
 </script>
