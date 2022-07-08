@@ -180,7 +180,6 @@ const router = new Router({
             }
           }
           else {
-            store.dispatch(`${StoreType.InteractiveConsole}/selectEmptyModel`);
             store.dispatch(`${StoreType.ScriptStore}/select`, null);
           }
         },

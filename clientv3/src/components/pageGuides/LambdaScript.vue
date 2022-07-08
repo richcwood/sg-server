@@ -65,6 +65,7 @@
 
     import { ScriptType, scriptTypesForMonaco } from '@/store/script/types';
     import SuccessTick from '@/components/pageGuides/SuccessTick.vue';
+    import { ICTab } from '@/store/interactiveConsole/types';
     import { TaskDefTarget } from '@/store/taskDef/types';
     import { StoreType } from '@/store/types';
 
@@ -109,8 +110,23 @@
             //     this.creatingScript = false;
             // }
 
-            // Move lambda settings to the vuex
-            // this.$store.dispatch(`${StoreType.ICSettings}/select, icSettings);
+            this.$store.dispatch(`${StoreType.InteractiveConsole}/updateSelectedCopy`, {
+                runAgentTarget: TaskDefTarget.SINGLE_AGENT,
+                runAgentTargetAgentId: null,
+                runAgentTargetTags_string: '',
+                runScriptCommand: '',
+                runScriptArguments: '',
+                runScriptEnvVars: '',
+                runScriptRuntimeVars: '',
+                lambdaDependencies: '',
+                lambdaRuntime: '',
+                lambdaMemory: 128,
+                lambdaTimeout: 3,
+                activeTab: ICTab.LAMBDA
+            });
+            // TODO set code template
+
+            // TODO select lambda tab by default
         }
 
         public async onScriptRun (): Promise<void> {
@@ -125,17 +141,17 @@
             // const currentTeamId = this.$store.state[StoreType.TeamStore].selected.id;
 
             // try {
-            //     const newStep: any = {
-            //         name: 'Console Step',
-            //         script: {
-            //             scriptType: this.newScriptType,
-            //             code: scriptShadowCopy.shadowCopyCode,
-            //         },
-            //         order: 0,
-            //         command: this.runScriptCommand,
-            //         arguments: this.runScriptArguments,
-            //         variables: this.envVarsAsMap,
-            //     };
+                // const newStep: any = {
+                //     name: 'Console Step',
+                //     script: {
+                //         scriptType: this.newScriptType,
+                //         code: scriptShadowCopy.shadowCopyCode, // use script type template
+                //     },
+                //     order: 0,
+                //     command: this.runScriptCommand,
+                //     arguments: this.runScriptArguments,
+                //     variables: this.envVarsAsMap,
+                // };
 
             //     const runAgentTarget = TaskDefTarget.AWS_LAMBDA;
             //     newStep.lambdaRuntime = this.lambdaConfig.lambdaRuntime;

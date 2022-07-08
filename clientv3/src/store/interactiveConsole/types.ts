@@ -1,8 +1,26 @@
+import { TaskDefTarget } from '@/store/taskDef/types';
+
+export enum ICTab {
+  AGENT = 0,
+  LAMBDA = 1,
+  OUTPUT = 2
+}
+
 export interface InteractiveConsole {
   lambdaRuntime?: string;
   lambdaMemory?: number;
-  lambdaTimeout?: string;
+  lambdaTimeout?: number;
   lambdaDependencies?: string;
+
+  runAgentTarget: TaskDefTarget;
+  runAgentTargetAgentId?: string;
+  runAgentTargetTags_string?: string;
+
+  runScriptCommand?: string;
+  runScriptArguments?: string;
+  runScriptEnvVars?: string;
+  runScriptRuntimeVars?: string;
+  activeTab: ICTab;
 }
 
 export interface InteractiveConsoleState {

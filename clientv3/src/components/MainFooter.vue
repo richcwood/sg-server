@@ -99,6 +99,7 @@
 
         .guide-body {
             box-shadow: 0 1px 3px rgba(34, 25, 25, .4);
+            overflow: auto;
         }
 
         .page-guide {

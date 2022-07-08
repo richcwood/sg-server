@@ -41,7 +41,7 @@
     </div>
 
     <validation-observer v-if="expandScriptEditor" tag="div" ref="runScriptValidationObserver">
-      <tabs ref="runSettingsTabs">
+      <tabs ref="runSettingsTabs" :defaultIndex="activeTab" :onSelect="onTabSelect">
         <tab class="sg-container-p" title="Run on Agent(s)">
           <table class="table is-fullwidth">
             <tr>
@@ -106,7 +106,7 @@
               <td>
                 <div class="select">
                   <validation-provider name="Lambda Runtime" rules="required" v-slot="{ errors }">
-                    <select v-model="lambdaConfig.lambdaRuntime" style="width: 350px;">
+                    <select v-model="lambdaRuntime" style="width: 350px;">
                       <option v-for="runtime in LambaRuntimes" :key="runtime" :value="runtime">
                         {{ runtime }}
                       </option>
@@ -124,7 +124,7 @@
               </td>
               <td>
                 <div class="select">
-                  <select v-model="lambdaConfig.lambdaMemorySize" style="width: 350px;">
+                  <select v-model="lambdaMemory" style="width: 350px;">
                     <option v-for="memSize in LambdaMemorySizes" :key="memSize" :value="memSize">
                       {{ memSize }} mb
                     </option>
@@ -138,7 +138,7 @@
               </td>
               <td>
                 <validation-provider name="Lambda Timeout" rules="required|lambdaTimeout" v-slot="{ errors }">
-                  <input class="input" style="width: 350px;" v-model="lambdaConfig.lambdaTimeout" />
+                  <input class="input" style="width: 350px;" v-model="lambdaTimeout" />
                   <div v-if="errors && errors.length > 0" class="message validation-error is-danger">
                     {{ errors[0] }}
                   </div>
@@ -153,7 +153,7 @@
                 <input
                   class="input"
                   style="width: 350px;"
-                  v-model="lambdaConfig.lambdaDependencies"
+                  v-model="lambdaDependencies"
                   placeholder="compression;axios"
                 />
               </td>
@@ -258,6 +258,7 @@ import TaskMonitorDetails from "../components/TaskMonitorDetails.vue";
 import ScriptSearchWithCreate from "../components/ScriptSearchWithCreate.vue";
 import moment from "moment";
 import { Tabs, Tab } from "vue-slim-tabs";
+import { ICTab } from "@/store/interactiveConsole/types";
 
 @Component({
   components: {
@@ -283,6 +284,7 @@ export default class InteractiveConsole extends Vue {
   private readonly enumKeyToPretty = enumKeyToPretty;
   private readonly LambaRuntimes = LambaRuntimes;
   private readonly LambdaMemorySizes = LambdaMemorySizes;
+  public readonly ICTab = ICTab;
   private readonly TargetAgentChoices = {
     "Any Available Agent": TaskDefTarget.SINGLE_AGENT,
     "A Specific Agent": TaskDefTarget.SINGLE_SPECIFIC_AGENT,
@@ -291,47 +293,64 @@ export default class InteractiveConsole extends Vue {
     "All Active Agents With Tags": TaskDefTarget.ALL_AGENTS_WITH_TAGS,
   };
 
-  private runAgentTarget = TaskDefTarget.SINGLE_AGENT;
-  private runAgentTargetAgentId = "";
-  private runAgentTargetTags = {};
-  private runAgentTargetTags_string = "";
-
-  private runScriptCommand = "";
-  private runScriptArguments = "";
-  private runScriptEnvVars = "";
-  private runScriptRuntimeVars = "";
-
   private expandScriptEditor = true;
-  private expand;
-
-  private lambdaConfig: any = {
-    lambdaMemorySize: 128,
-    lambdaTimeout: 3,
-  };
-
-  private displayedText = "";
-
   private scriptId = null;
 
-  @BindSelected({ storeType: <any>StoreType.ScriptStore.toString() })
-  private script!: Script | null;
+  @BindSelected({ storeType: StoreType.ScriptStore })
+  private script: Script;
 
   @BindSelectedCopy({ storeType: StoreType.ScriptStore })
-  private scriptCopy!: Script | null;
+  private scriptCopy: Script;
 
   @BindSelected({ storeType: StoreType.ScriptShadowStore })
-  private scriptShadow!: ScriptShadow | null;
+  private scriptShadow: ScriptShadow;
 
   @BindSelectedCopy({ storeType: StoreType.ScriptShadowStore })
-  private scriptShadowCopy!: ScriptShadow | null;
+  private scriptShadowCopy: ScriptShadow;
 
   @BindSelected({ storeType: StoreType.JobStore })
-  private selectedJob!: Job | null;
+  private selectedJob: Job;
 
   private runningJobs: Job[] = [];
 
   @BindProp({ storeType: StoreType.SecurityStore, selectedModelName: "user", propName: "id" })
-  private loggedInUserId!: string;
+  public loggedInUserId: string;
+
+  @BindProp({ storeType: StoreType.InteractiveConsole })
+  public activeTab: ICTab;
+
+  @BindProp({ storeType: StoreType.InteractiveConsole })
+  public runScriptCommand: string;
+
+  @BindProp({ storeType: StoreType.InteractiveConsole })
+  public runScriptArguments: string;
+
+  @BindProp({ storeType: StoreType.InteractiveConsole })
+  public runScriptEnvVars: string;
+
+  @BindProp({ storeType: StoreType.InteractiveConsole })
+  public runScriptRuntimeVars: string;
+
+  @BindProp({ storeType: StoreType.InteractiveConsole })
+  public runAgentTarget: TaskDefTarget;
+
+  @BindProp({ storeType: StoreType.InteractiveConsole })
+  private runAgentTargetAgentId: string;
+
+  @BindProp({ storeType: StoreType.InteractiveConsole })
+  private runAgentTargetTags_string: string;
+
+  @BindProp({ storeType: StoreType.InteractiveConsole })
+  public lambdaDependencies: string;
+
+  @BindProp({ storeType: StoreType.InteractiveConsole })
+  public lambdaRuntime: string;
+
+  @BindProp({ storeType: StoreType.InteractiveConsole })
+  public lambdaMemory: number;
+
+  @BindProp({ storeType: StoreType.InteractiveConsole })
+  public lambdaTimeout: number;
 
   private async mounted() {
     if (this.script) {
@@ -349,6 +368,12 @@ export default class InteractiveConsole extends Vue {
     }
   }
 
+  public onTabSelect (e: MouseEvent, index: number) {
+    // "Script Results" tab only exist after script was run,
+    // so it can't be selected, when user opens IC page
+    this.activeTab = index > 1 ? 0 : index;
+  }
+
   private onTargetAgentPicked(agent: Agent) {
     if (agent) {
       this.runAgentTargetAgentId = agent.id;
@@ -356,6 +381,11 @@ export default class InteractiveConsole extends Vue {
       console.log("reset target agent id to null");
       this.runAgentTargetAgentId = null;
     }
+  }
+
+  @Watch('activeTab')
+  private onActiveTabChange (index: number) {
+    (<any>this.$refs.runSettingsTabs).selectedIndex = index;
   }
 
   @Watch("runningJobs")
@@ -474,10 +504,10 @@ export default class InteractiveConsole extends Vue {
 
       if (runInLambda) {
         this.runAgentTarget = TaskDefTarget.AWS_LAMBDA;
-        newStep.lambdaRuntime = this.lambdaConfig.lambdaRuntime;
-        newStep.lambdaMemorySize = this.lambdaConfig.lambdaMemorySize;
-        newStep.lambdaTimeout = this.lambdaConfig.lambdaTimeout;
-        newStep.lambdaDependencies = this.lambdaConfig.lambdaDependencies;
+        newStep.lambdaRuntime = this.lambdaRuntime;
+        newStep.lambdaMemorySize = this.lambdaMemory;
+        newStep.lambdaTimeout = this.lambdaTimeout;
+        newStep.lambdaDependencies = this.lambdaDependencies;
       }
 
       const newJob = {
@@ -507,6 +537,7 @@ export default class InteractiveConsole extends Vue {
         data: { data },
       } = await axios.post("/api/v0/job/ic/", newJob);
       // make sure to use the same object in the store or it won't be reactive to browser push events
+      // TODO after job run, select Output tab and scroll to it
       this.runningJobs.push(await this.$store.dispatch(`${StoreType.JobStore}/fetchModel`, data.id));
 
       this.expandScriptEditor = false;
