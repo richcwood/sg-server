@@ -369,7 +369,7 @@ export default class InteractiveConsole extends Vue {
   }
 
   public onTabSelect (e: MouseEvent, index: number) {
-    // "Script Results" tab only exist after script was run,
+    // "Script Results" tab shows up only after script was run,
     // so it can't be selected, when user opens IC page
     this.activeTab = index > 1 ? 0 : index;
   }

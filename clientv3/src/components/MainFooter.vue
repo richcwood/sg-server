@@ -2,10 +2,10 @@
     <footer class="main-footer">
         <transition name="guide-button">
             <section v-if="component" class="page-guide">
-                <a href="#" class="guide-control px-2" @click.prevent="onTogglePageGuide">
-                    <font-awesome-icon icon="angle-up" />
+                <a href="#" class="guide-control is-unselectable px-2" @click.prevent="onTogglePageGuide">
+                    <font-awesome-icon icon="angle-up" :class="{'rotate-180': isGuideOpen}" class="angle-icon" />
                     <span class="mx-2">{{ component.getTitle() }}</span>
-                    <font-awesome-icon icon="angle-up" />
+                    <font-awesome-icon icon="angle-up" :class="{'rotate-180': isGuideOpen}" class="angle-icon" />
                 </a>
                 <transition name="guide-body">
                     <section v-if="isGuideOpen" class="guide-body sg-container-px">
@@ -168,6 +168,14 @@
         .guide-button-enter,
         .guide-button-leave-to {
             bottom: 0;
+        }
+
+        .angle-icon {
+            transition: transform .3s linear;
+
+            &.rotate-180 {
+                transform: rotate(180deg);
+            }
         }
     }
 </style>
