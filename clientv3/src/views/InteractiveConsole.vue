@@ -246,7 +246,7 @@ import { BindSelected, BindProp, BindSelectedCopy } from "../decorator";
 import { ValidationProvider, ValidationObserver } from "vee-validate";
 import _ from "lodash";
 import { momentToStringV1 } from "../utils/DateTime";
-import { Job } from "../store/job/types";
+import { ICJobSettings, Job } from "../store/job/types";
 import { TaskOutcome } from "../store/taskOutcome/types";
 import { LambaRuntimes, LambdaMemorySizes } from "../store/stepDef/types";
 import { JobStatus, TaskStatus, StepStatus, TaskFailureCode, enumKeyToPretty } from "../utils/Enums";
@@ -481,61 +481,37 @@ export default class InteractiveConsole extends Vue {
     if (!(await (<any>this.$refs.runScriptValidationObserver).validate())) {
       return;
     }
+
     if (!this.scriptShadow) {
       console.error("Script shadow was not loaded so it could not be run.");
       return;
     }
 
-    const runInLambda = (<any>this.$refs.runSettingsTabs).selectedIndex === 1;
-    const currentTeamId = this.$store.state[StoreType.TeamStore].selected.id;
+    const icJobSettings: ICJobSettings = {
+      scriptType: ScriptType[this.scriptCopy.scriptType] as unknown as ScriptType,
+      code: this.scriptShadowCopy.shadowCopyCode,
+      runScriptCommand: this.runScriptCommand,
+      runScriptArguments: this.runScriptArguments,
+      runScriptEnvVars: this.runScriptEnvVars,
+      runAgentTarget: this.runAgentTarget,
+      runScriptRuntimeVars: this.runScriptRuntimeVars,
+      runAgentTargetTags_string: this.runAgentTargetTags_string,
+      runAgentTargetAgentId: this.runAgentTargetAgentId,
+    };
+
+    if (this.activeTab === ICTab.LAMBDA) {
+      Object.assign(icJobSettings, {
+        runAgentTarget: TaskDefTarget.AWS_LAMBDA,
+        lambdaDependencies: this.lambdaDependencies,
+        lambdaMemory: this.lambdaMemory,
+        lambdaRuntime: this.lambdaRuntime,
+        lambdaTimeout: this.lambdaTimeout,
+      });
+    }
 
     try {
-      const newStep: any = {
-        name: "Console Step",
-        script: {
-          scriptType: ScriptType[this.scriptCopy.scriptType],
-          code: this.scriptShadowCopy.shadowCopyCode,
-        },
-        order: 0,
-        command: this.runScriptCommand,
-        arguments: this.runScriptArguments,
-        variables: this.envVarsAsMap,
-      };
+      const data = await this.$store.dispatch(`${StoreType.JobStore}/runICJob`, icJobSettings);
 
-      if (runInLambda) {
-        this.runAgentTarget = TaskDefTarget.AWS_LAMBDA;
-        newStep.lambdaRuntime = this.lambdaRuntime;
-        newStep.lambdaMemorySize = this.lambdaMemory;
-        newStep.lambdaTimeout = this.lambdaTimeout;
-        newStep.lambdaDependencies = this.lambdaDependencies;
-      }
-
-      const newJob = {
-        job: {
-          name: `IC-${moment().format("dddd MMM DD h:mm a")}`,
-          dateCreated: new Date().toISOString(),
-          runtimeVars: this.runtimeVarsAsMap,
-          tasks: [
-            {
-              _teamId: currentTeamId,
-              name: `Task1`,
-              source: 0,
-              requiredTags: tagsStringToMap(this.runAgentTargetTags_string),
-              target: this.runAgentTarget,
-              targetAgentId: this.runAgentTargetAgentId,
-              fromRoutes: [],
-              steps: [newStep],
-              correlationId: Math.random()
-                .toString()
-                .substring(3, 12),
-            },
-          ],
-        },
-      };
-
-      const {
-        data: { data },
-      } = await axios.post("/api/v0/job/ic/", newJob);
       // make sure to use the same object in the store or it won't be reactive to browser push events
       // TODO after job run, select Output tab and scroll to it
       this.runningJobs.push(await this.$store.dispatch(`${StoreType.JobStore}/fetchModel`, data.id));
@@ -543,9 +519,9 @@ export default class InteractiveConsole extends Vue {
       this.expandScriptEditor = false;
     } catch (err) {
       console.error(err);
-      showErrors("Error running the script", err);
+      showErrors('Error running the script', err);
     } finally {
-      this.$modal.hide("run-script-options");
+      this.$modal.hide('run-script-options');
     }
   }
 
