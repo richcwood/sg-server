@@ -526,8 +526,11 @@ export class TaskOutcomeService {
                 if (job.runtimeVars[eKey]) {
                   runtimeVarsTask[eKey] = job.runtimeVars[eKey];
                 } else {
-                  const teamVar = await teamVariableService.findTeamVariableByName(_teamId, eKey, "value");
-                  if (_.isArray(teamVar) && teamVar.length > 0) runtimeVarsTask[eKey] = teamVar[0].value;
+                  const teamVar = await teamVariableService.findTeamVariableByName(_teamId, eKey, "value sensitive");
+                  if (_.isArray(teamVar) && teamVar.length > 0) {
+                    runtimeVarsTask[eKey]["value"] = teamVar[0].value;
+                    runtimeVarsTask[eKey]["sensitive"] = teamVar[0].sensitive;
+                  }
                 }
               }
             }
