@@ -1,6 +1,6 @@
 <template>
   <div class="py-5">
-    <div class="sg-container-px">
+    <div class="sg-container-px mb-5">
       <script-search-with-create class="block" width="400px" :scriptId="scriptId" @scriptPicked="onScriptPicked" />
 
       <div class="is-flex block">
@@ -33,14 +33,10 @@
           </template>
         </div>
       </div>
-
-      <div v-if="!expandScriptEditor">
-        <a href="#" class="button is-ghost" @click.prevent="expandScriptEditor = true"> >> Expand script editor</a>
-      </div>
-      <script-editor v-else :script="scriptCopy" />
+      <script-editor :script="scriptCopy" />
     </div>
 
-    <validation-observer v-if="expandScriptEditor" tag="div" ref="runScriptValidationObserver">
+    <validation-observer tag="div" ref="runScriptValidationObserver">
       <tabs ref="runSettingsTabs" :defaultIndex="activeTab" :onSelect="onTabSelect">
         <tab class="sg-container-p" title="Run on Agent(s)">
           <table class="table is-fullwidth">
@@ -160,7 +156,7 @@
             </tr>
           </table>
         </tab>
-        <tab v-if="runningJobs.length > 0 && selectedJob" class="sg-container-p" title="Script Results">
+        <tab v-if="runningJobs.length > 0 && selectedJob" class="sg-container-p" titleSlot="results-title">
           <div class="is-flex is-align-items-center">
             <span class="mr-3">{{ selectedJob.name }}</span>
             <button
@@ -175,6 +171,9 @@
           </div>
           <task-monitor-details :selectedJobId="selectedJob.id" />
         </tab>
+        <template #results-title>
+          <span ref="resultsTab">Script Results</span>
+        </template>
       </tabs>
 
       <hr class="divider" />
@@ -222,7 +221,12 @@
           <tr>
             <td></td>
             <td>
-              <button class="button is-primary mr-3" @click="onRunScript" :disabled="!scriptCopy">Run Script</button>
+              <button @click="onRunScript"
+                :disabled="!scriptCopy || isJobRunning"
+                :class="{'is-loading': isJobRunning}"
+                class="button is-primary mr-3">
+                Run Script
+              </button>
               <button class="button" @click="onScheduleScriptClicked" :disabled="!scriptCopy">Schedule Script</button>
             </td>
           </tr>
@@ -250,13 +254,12 @@ import { ICJobSettings, Job } from "../store/job/types";
 import { TaskOutcome } from "../store/taskOutcome/types";
 import { LambaRuntimes, LambdaMemorySizes } from "../store/stepDef/types";
 import { JobStatus, TaskStatus, StepStatus, TaskFailureCode, enumKeyToPretty } from "../utils/Enums";
-import { tagsStringToMap, stringToMap } from "../utils/Shared";
+import { stringToMap } from "../utils/Shared";
 import AgentSearch from "../components/AgentSearch.vue";
 import ScriptEditor from "../components/ScriptEditor.vue";
 import { showErrors } from "../utils/ErrorHandler";
 import TaskMonitorDetails from "../components/TaskMonitorDetails.vue";
 import ScriptSearchWithCreate from "../components/ScriptSearchWithCreate.vue";
-import moment from "moment";
 import { Tabs, Tab } from "vue-slim-tabs";
 import { ICTab } from "@/store/interactiveConsole/types";
 
@@ -293,14 +296,14 @@ export default class InteractiveConsole extends Vue {
     "All Active Agents With Tags": TaskDefTarget.ALL_AGENTS_WITH_TAGS,
   };
 
-  private expandScriptEditor = true;
+  public isJobRunning = false;
   private scriptId = null;
 
   @BindSelected({ storeType: StoreType.ScriptStore })
   private script: Script;
 
   @BindSelectedCopy({ storeType: StoreType.ScriptStore })
-  private scriptCopy: Script;
+  public scriptCopy: Script;
 
   @BindSelected({ storeType: StoreType.ScriptShadowStore })
   private scriptShadow: ScriptShadow;
@@ -366,12 +369,14 @@ export default class InteractiveConsole extends Vue {
       this.script = null;
       this.script = script;
     }
+
+    this.$store.dispatch(`${StoreType.InteractiveConsole}/updateSelectedCopy`, {
+      activeTab: ICTab.AGENT
+    });
   }
 
   public onTabSelect (e: MouseEvent, index: number) {
-    // "Script Results" tab shows up only after script was run,
-    // so it can't be selected, when user opens IC page
-    this.activeTab = index > 1 ? 0 : index;
+    this.activeTab = index;
   }
 
   private onTargetAgentPicked(agent: Agent) {
@@ -510,18 +515,22 @@ export default class InteractiveConsole extends Vue {
     }
 
     try {
+      this.isJobRunning = true;
       const data = await this.$store.dispatch(`${StoreType.JobStore}/runICJob`, icJobSettings);
 
       // make sure to use the same object in the store or it won't be reactive to browser push events
-      // TODO after job run, select Output tab and scroll to it
       this.runningJobs.push(await this.$store.dispatch(`${StoreType.JobStore}/fetchModel`, data.id));
 
-      this.expandScriptEditor = false;
+      await this.$nextTick();
+
+      (<Element>this.$refs.resultsTab).scrollIntoView({ behavior: 'smooth' });
+      this.onActiveTabChange(ICTab.RESULTS);
     } catch (err) {
       console.error(err);
       showErrors('Error running the script', err);
     } finally {
       this.$modal.hide('run-script-options');
+      this.isJobRunning = false;
     }
   }
 

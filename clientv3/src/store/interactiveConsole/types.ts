@@ -3,7 +3,7 @@ import { TaskDefTarget } from '@/store/taskDef/types';
 export enum ICTab {
   AGENT = 0,
   LAMBDA = 1,
-  OUTPUT = 2
+  RESULTS = 2
 }
 
 export interface InteractiveConsole {

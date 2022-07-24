@@ -47,7 +47,7 @@
         <transition name="fade-left">
             <div v-if="currentStep > 2" class="column is-narrow">
                 <div class="box">
-                    <p>Awesome! The script is now running in AWS Lambda. Check out the script output in "Output" tab.</p>
+                    <p>Awesome! The script is now running in AWS Lambda. Check out the script output in "Script Results" tab.</p>
                     <div class="step">
                         <span class="step-number">3</span>
                         <div class="triangle"></div>
