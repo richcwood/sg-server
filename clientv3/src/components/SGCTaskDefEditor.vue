@@ -50,12 +50,7 @@
               <td class="td">
                 <div class="select">
                   <validation-provider name="Lambda Runtime" rules="required" v-slot="{ errors }">
-                    <select v-model="stepDefCopy.lambdaRuntime" style="width: 250px;">
-                      <option v-for="runtime in LambaRuntimes" :key="runtime" :value="runtime">
-                        {{runtime}}
-                      </option>
-                    </select>
-                    
+                    <LambdaRuntimeSelect v-model="stepDefCopy.lambdaRuntime" :scriptType="selectedScript.scriptType" style="width: 250px;" />
                     <div v-if="errors && errors.length > 0" class="message validation-error is-danger">{{ errors[0] }}</div>
                   </validation-provider>
                 </div>
@@ -170,7 +165,7 @@ import { StoreType } from '../store/types';
 import { SgAlert, AlertPlacement, AlertCategory } from '../store/alert/types';
 import { showErrors } from '../utils/ErrorHandler'; 
 import { TaskDef, TaskDefTarget } from '../store/taskDef/types';
-import { StepDef, LambaRuntimes, LambdaMemorySizes, getLambdaRuntimesForScriptType } from '../store/stepDef/types';
+import { StepDef, LambdaMemorySizes, getLambdaRuntimesForScriptType } from '../store/stepDef/types';
 import { Script, scriptTypesForMonaco } from '../store/script/types';
 import { Artifact } from '../store/artifact/types';
 import { BindSelected, BindSelectedCopy } from '../decorator';
@@ -179,17 +174,22 @@ import ArtifactSearch from '../components/ArtifactSearch.vue';
 import { ValidationProvider, ValidationObserver } from 'vee-validate';
 import { JobDef } from '../store/jobDef/types';
 import ScriptEditor from '../components/ScriptEditor.vue';
+import LambdaRuntimeSelect from '@/components/LambdaRuntimeSelect.vue';
 
 @Component({
   components: {
-    ScriptSearchWithCreate, ScriptEditor, ArtifactSearch, ValidationProvider, ValidationObserver
+    ScriptSearchWithCreate,
+    ScriptEditor,
+    ArtifactSearch,
+    ValidationProvider,
+    ValidationObserver,
+    LambdaRuntimeSelect
   }
 })
 export default class SGCTaskDef extends Vue {
 
   // Expose to template
   private readonly TaskDefTarget = TaskDefTarget;
-  private readonly LambaRuntimes = LambaRuntimes;
   private readonly LambdaMemorySizes = LambdaMemorySizes;
   private readonly scriptTypesForMonaco = scriptTypesForMonaco;
 

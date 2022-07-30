@@ -102,11 +102,7 @@
               <td>
                 <div class="select">
                   <validation-provider name="Lambda Runtime" rules="required" v-slot="{ errors }">
-                    <select v-model="lambdaRuntime" style="width: 350px;">
-                      <option v-for="runtime in LambaRuntimes" :key="runtime" :value="runtime">
-                        {{ runtime }}
-                      </option>
-                    </select>
+                    <LambdaRuntimeSelect v-model="lambdaRuntime" :scriptType="scriptType" style="width: 350px;" />
                     <div v-if="errors && errors.length > 0" class="message validation-error is-danger">
                       {{ errors[0] }}
                     </div>
@@ -156,7 +152,7 @@
             </tr>
           </table>
         </tab>
-        <tab v-if="runningJobs.length > 0 && selectedJob" class="sg-container-p" titleSlot="results-title">
+        <tab v-if="latestRanJob && selectedJob" class="sg-container-p" titleSlot="results-title">
           <div class="is-flex is-align-items-center">
             <span class="mr-3">{{ selectedJob.name }}</span>
             <button
@@ -172,7 +168,7 @@
           <task-monitor-details :selectedJobId="selectedJob.id" />
         </tab>
         <template #results-title>
-          <span ref="resultsTab">Script Results</span>
+          <span id="ic-results-tab">Script Results</span>
         </template>
       </tabs>
 
@@ -252,7 +248,7 @@ import _ from "lodash";
 import { momentToStringV1 } from "../utils/DateTime";
 import { ICJobSettings, Job } from "../store/job/types";
 import { TaskOutcome } from "../store/taskOutcome/types";
-import { LambaRuntimes, LambdaMemorySizes } from "../store/stepDef/types";
+import { LambdaMemorySizes } from "@/store/stepDef/types";
 import { JobStatus, TaskStatus, StepStatus, TaskFailureCode, enumKeyToPretty } from "../utils/Enums";
 import { stringToMap } from "../utils/Shared";
 import AgentSearch from "../components/AgentSearch.vue";
@@ -262,6 +258,7 @@ import TaskMonitorDetails from "../components/TaskMonitorDetails.vue";
 import ScriptSearchWithCreate from "../components/ScriptSearchWithCreate.vue";
 import { Tabs, Tab } from "vue-slim-tabs";
 import { ICTab } from "@/store/interactiveConsole/types";
+import LambdaRuntimeSelect from "@/components/LambdaRuntimeSelect.vue";
 
 @Component({
   components: {
@@ -273,6 +270,7 @@ import { ICTab } from "@/store/interactiveConsole/types";
     ValidationProvider,
     ValidationObserver,
     TaskMonitorDetails,
+    LambdaRuntimeSelect
   },
 })
 export default class InteractiveConsole extends Vue {
@@ -285,7 +283,6 @@ export default class InteractiveConsole extends Vue {
   private readonly StepStatus = StepStatus;
   private readonly TaskFailureCode = TaskFailureCode;
   private readonly enumKeyToPretty = enumKeyToPretty;
-  private readonly LambaRuntimes = LambaRuntimes;
   private readonly LambdaMemorySizes = LambdaMemorySizes;
   public readonly ICTab = ICTab;
   private readonly TargetAgentChoices = {
@@ -305,6 +302,9 @@ export default class InteractiveConsole extends Vue {
   @BindSelectedCopy({ storeType: StoreType.ScriptStore })
   public scriptCopy: Script;
 
+  @BindProp({ storeType: StoreType.ScriptStore })
+  public scriptType: ScriptType;
+
   @BindSelected({ storeType: StoreType.ScriptShadowStore })
   private scriptShadow: ScriptShadow;
 
@@ -314,7 +314,7 @@ export default class InteractiveConsole extends Vue {
   @BindSelected({ storeType: StoreType.JobStore })
   private selectedJob: Job;
 
-  private runningJobs: Job[] = [];
+  private latestRanJob: Job = null;
 
   @BindProp({ storeType: StoreType.SecurityStore, selectedModelName: "user", propName: "id" })
   public loggedInUserId: string;
@@ -393,15 +393,6 @@ export default class InteractiveConsole extends Vue {
     (<any>this.$refs.runSettingsTabs).selectedIndex = index;
   }
 
-  @Watch("runningJobs")
-  private onRunningJobsChanged() {
-    if (this.runningJobs.length > 0) {
-      this.$store.dispatch(`${StoreType.JobStore}/select`, this.runningJobs[this.runningJobs.length - 1]);
-    } else {
-      this.$store.dispatch(`${StoreType.JobStore}/select`, null);
-    }
-  }
-
   // a reactive map
   private loadedAgents: { [key: string]: Agent } = {}; // need a reactive prop
 
@@ -431,17 +422,6 @@ export default class InteractiveConsole extends Vue {
     }
 
     return this.loadedUsers[userId];
-  }
-
-  private get olderRunningJobs(): Job[] {
-    if (this.runningJobs.length > 1) {
-      const jobClone = _.clone(this.runningJobs); // shallow reference clone
-      const olderJobs = jobClone.splice(0, jobClone.length - 1);
-      olderJobs.reverse();
-      return olderJobs;
-    } else {
-      return [];
-    }
   }
 
   private async onTeamEditableChanged(script: Script) {
@@ -517,13 +497,13 @@ export default class InteractiveConsole extends Vue {
     try {
       this.isJobRunning = true;
       const data = await this.$store.dispatch(`${StoreType.JobStore}/runICJob`, icJobSettings);
+      this.latestRanJob = await this.$store.dispatch(`${StoreType.JobStore}/fetchModel`, data.id);
 
-      // make sure to use the same object in the store or it won't be reactive to browser push events
-      this.runningJobs.push(await this.$store.dispatch(`${StoreType.JobStore}/fetchModel`, data.id));
+      this.$store.dispatch(`${StoreType.JobStore}/select`, this.latestRanJob);
 
       await this.$nextTick();
 
-      (<Element>this.$refs.resultsTab).scrollIntoView({ behavior: 'smooth' });
+      document.getElementById('ic-results-tab').scrollIntoView({ behavior: 'smooth' });
       this.onActiveTabChange(ICTab.RESULTS);
     } catch (err) {
       console.error(err);
