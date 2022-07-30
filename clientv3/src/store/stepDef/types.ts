@@ -1,22 +1,21 @@
-import { Model, LinkedModel } from '@/store/types';
+import { Model } from '@/store/types';
 import { ScriptType } from '@/store/script/types';
 
-export const LambaRuntimes: string[] = [
-  'dotnetcore3.1',
-  'dotnetcore2.1',
-  'go1.x',
-  'java11',
-  'java8',
-  'java8.al2',
-  'nodejs12.x',
-  'nodejs14.x',
-  'python3.6',
-  'python3.7',
-  'python3.8',
-  'python3.9',
-  'ruby2.7'
-];
-
+export enum LambdaRuntimes {
+  'DOTNET_3_1' = 'dotnetcore3.1',
+  'DOTNET_2_1' = 'dotnetcore2.1',
+  'GO_1' = 'go1.x',
+  'JAVA_11' = 'java11',
+  'JAVA_8' = 'java8',
+  'JAVA_8_AL2' = 'java8.al2',
+  'NODEJS_12' = 'nodejs12.x',
+  'NODEJS_14' = 'nodejs14.x',
+  'PYTHON_3_6' = 'python3.6',
+  'PYTHON_3_7' = 'python3.7',
+  'PYTHON_3_8' = 'python3.8',
+  'PYTHON_3_9' = 'python3.9',
+  'RUBY_2_7' = 'ruby2.7',
+};
 
 export const LambdaMemorySizes: number[] = [];
 // 128 MB to 3008 MB in 64 MB increments
