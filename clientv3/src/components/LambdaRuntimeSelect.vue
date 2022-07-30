@@ -1,5 +1,5 @@
 <template>
-    <select @change="onChange" :selected="value">
+    <select @change="onChange" :selected="value" ref="select">
         <option v-for="runtime in runtimes" :key="runtime" :value="runtime">
             {{ runtime }}
         </option>
@@ -18,6 +18,16 @@
         @Prop() scriptType: ScriptType;
         @Prop() value: LambdaRuntimes;
 
+        $refs: {
+            select: HTMLSelectElement;
+        };
+
+        private mounted (): void {
+            if (!this.value) {
+                this.$emit('input', this.$refs.select.value);
+            }
+        }
+
         public get runtimes (): LambdaRuntimes[] {
             switch (this.scriptType) {
                 case ScriptType.JAVASCRIPT:
@@ -32,7 +42,7 @@
             }
         }
 
-        public onChange (e: HTMLInputElement & { target: HTMLInputElement }): void {
+        public onChange (e: InputEvent & { target: HTMLSelectElement }): void {
             this.$emit('input', e.target.value);
         }
     }
