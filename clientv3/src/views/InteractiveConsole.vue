@@ -168,7 +168,10 @@
           <task-monitor-details :selectedJobId="selectedJob.id" />
         </tab>
         <template #results-title>
-          <span id="ic-results-tab">Script Results</span>
+          <span id="ic-results-tab">
+            <span class="script-run-spinner" v-if="selectedJob.status === TaskStatus.RUNNING"></span>
+            Script Results
+          </span>
         </template>
       </tabs>
 
@@ -587,5 +590,11 @@ td {
 :deep(.vue-tablist) {
   padding-left: 64px;
   padding-right: 64px;
+}
+
+.script-run-spinner {
+  @include loader;
+
+  display: inline-block;
 }
 </style>
