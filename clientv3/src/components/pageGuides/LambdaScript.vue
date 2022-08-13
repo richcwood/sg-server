@@ -132,7 +132,7 @@
                     lambdaDependencies: '',
                     lambdaMemory: 128,
                     lambdaTimeout: 3,
-                    scriptTarget: this.interactiveConsole.scriptTarget
+                    scriptTarget: ScriptTarget.LAMBDA
                 });
             } catch (e) {
                 console.error(e);
