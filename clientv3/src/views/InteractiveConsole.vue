@@ -37,7 +37,7 @@
     </div>
 
     <validation-observer tag="div" ref="runScriptValidationObserver">
-      <tabs ref="runSettingsTabs" :defaultIndex="activeTab" :onSelect="onTabSelect">
+      <tabs ref="runSettingsTabs" :onSelect="onTabSelect">
         <tab class="sg-container-p" title="Run on Agent(s)">
           <table class="table is-fullwidth">
             <tr>
@@ -152,7 +152,7 @@
             </tr>
           </table>
         </tab>
-        <tab v-if="latestRanJob && selectedJob" class="sg-container-p" titleSlot="results-title">
+        <tab v-if="latestRanJobId && selectedJob" class="sg-container-p" titleSlot="results-title">
           <div class="is-flex is-align-items-center">
             <span class="mr-3">{{ selectedJob.name }}</span>
             <button
@@ -169,7 +169,7 @@
         </tab>
         <template #results-title>
           <span id="ic-results-tab">
-            <span class="script-run-spinner" v-if="selectedJob.status === TaskStatus.RUNNING"></span>
+            <span class="script-run-spinner" v-if="isScriptRunning"></span>
             Script Results
           </span>
         </template>
@@ -251,16 +251,15 @@ import _ from "lodash";
 import { momentToStringV1 } from "../utils/DateTime";
 import { ICJobSettings, Job } from "../store/job/types";
 import { TaskOutcome } from "../store/taskOutcome/types";
-import { LambdaMemorySizes } from "@/store/stepDef/types";
-import { JobStatus, TaskStatus, StepStatus, TaskFailureCode, enumKeyToPretty } from "../utils/Enums";
-import { stringToMap } from "../utils/Shared";
+import { LambdaMemorySizes, LambdaRuntimes } from "@/store/stepDef/types";
+import { JobStatus, StepStatus, TaskFailureCode, enumKeyToPretty } from "../utils/Enums";
 import AgentSearch from "../components/AgentSearch.vue";
 import ScriptEditor from "../components/ScriptEditor.vue";
 import { showErrors } from "../utils/ErrorHandler";
 import TaskMonitorDetails from "../components/TaskMonitorDetails.vue";
 import ScriptSearchWithCreate from "../components/ScriptSearchWithCreate.vue";
 import { Tabs, Tab } from "vue-slim-tabs";
-import { ICTab } from "@/store/interactiveConsole/types";
+import { ScriptTarget, ICTab } from "@/store/interactiveConsole/types";
 import LambdaRuntimeSelect from "@/components/LambdaRuntimeSelect.vue";
 
 @Component({
@@ -282,12 +281,11 @@ export default class InteractiveConsole extends Vue {
   private readonly TaskDefTarget = TaskDefTarget;
   private readonly momentToStringV1 = momentToStringV1;
   private readonly JobStatus = JobStatus;
-  private readonly TaskStatus = TaskStatus;
   private readonly StepStatus = StepStatus;
   private readonly TaskFailureCode = TaskFailureCode;
   private readonly enumKeyToPretty = enumKeyToPretty;
   private readonly LambdaMemorySizes = LambdaMemorySizes;
-  public readonly ICTab = ICTab;
+  public readonly ScriptTarget = ScriptTarget;
   private readonly TargetAgentChoices = {
     "Any Available Agent": TaskDefTarget.SINGLE_AGENT,
     "A Specific Agent": TaskDefTarget.SINGLE_SPECIFIC_AGENT,
@@ -296,6 +294,7 @@ export default class InteractiveConsole extends Vue {
     "All Active Agents With Tags": TaskDefTarget.ALL_AGENTS_WITH_TAGS,
   };
 
+  public isScriptRunning = false;
   public isJobRunning = false;
   private scriptId = null;
 
@@ -317,13 +316,11 @@ export default class InteractiveConsole extends Vue {
   @BindSelected({ storeType: StoreType.JobStore })
   private selectedJob: Job;
 
-  private latestRanJob: Job = null;
-
   @BindProp({ storeType: StoreType.SecurityStore, selectedModelName: "user", propName: "id" })
   public loggedInUserId: string;
 
   @BindProp({ storeType: StoreType.InteractiveConsole })
-  public activeTab: ICTab;
+  public scriptTarget: ScriptTarget;
 
   @BindProp({ storeType: StoreType.InteractiveConsole })
   public runScriptCommand: string;
@@ -350,13 +347,16 @@ export default class InteractiveConsole extends Vue {
   public lambdaDependencies: string;
 
   @BindProp({ storeType: StoreType.InteractiveConsole })
-  public lambdaRuntime: string;
+  public lambdaRuntime: LambdaRuntimes;
 
   @BindProp({ storeType: StoreType.InteractiveConsole })
   public lambdaMemory: number;
 
   @BindProp({ storeType: StoreType.InteractiveConsole })
   public lambdaTimeout: number;
+
+  @BindProp({ storeType: StoreType.InteractiveConsole })
+  public latestRanJobId: string;
 
   private async mounted() {
     if (this.script) {
@@ -374,12 +374,8 @@ export default class InteractiveConsole extends Vue {
     }
 
     this.$store.dispatch(`${StoreType.InteractiveConsole}/updateSelectedCopy`, {
-      activeTab: ICTab.AGENT
+      latestRanJobId: null
     });
-  }
-
-  public onTabSelect (e: MouseEvent, index: number) {
-    this.activeTab = index;
   }
 
   private onTargetAgentPicked(agent: Agent) {
@@ -391,8 +387,28 @@ export default class InteractiveConsole extends Vue {
     }
   }
 
-  @Watch('activeTab')
-  private onActiveTabChange (index: number) {
+  @Watch('selectedJob.status')
+  public onJobStatusChange (status: JobStatus): void {
+    const isRunning = status === JobStatus.RUNNING;
+
+    if (isRunning) {
+      this.selectTab(ICTab.RESULTS);
+    }
+
+    this.isScriptRunning = isRunning;
+  }
+
+  public onTabSelect (e: MouseEvent, index: ICTab): void {
+    switch (index) {
+      case ICTab.LAMBDA:
+        this.scriptTarget = ScriptTarget.LAMBDA
+        break;
+      default:
+        this.scriptTarget = ScriptTarget.AGENT;
+    }
+  }
+
+  private selectTab (index: ICTab): void {
     (<any>this.$refs.runSettingsTabs).selectedIndex = index;
   }
 
@@ -457,12 +473,22 @@ export default class InteractiveConsole extends Vue {
     }
   }
 
-  private get envVarsAsMap(): { [key: string]: {} } {
-    return stringToMap(this.runScriptEnvVars);
-  }
+  @Watch('latestRanJobId')
+  private async onICJobRun (id: string): Promise<void> {
+    this.isJobRunning = true;
+    const job = await this.$store.dispatch(`${StoreType.JobStore}/fetchModel`, id);
+    this.$store.dispatch(`${StoreType.JobStore}/select`, job);
 
-  private get runtimeVarsAsMap(): { [key: string]: {} } {
-    return stringToMap(this.runScriptRuntimeVars);
+    await this.$nextTick();
+
+    try {
+      document.getElementById('ic-results-tab').scrollIntoView({ behavior: 'smooth' });
+    } catch (err) {
+      console.error(err);
+      showErrors('Error showing the "Script Results" tab', err);
+    } finally {
+      this.isJobRunning = false;
+    }
   }
 
   private async onRunScript() {
@@ -476,7 +502,7 @@ export default class InteractiveConsole extends Vue {
     }
 
     const icJobSettings: ICJobSettings = {
-      scriptType: ScriptType[this.scriptCopy.scriptType] as unknown as ScriptType,
+      scriptType: ScriptType[this.scriptCopy.scriptType] as any as ScriptType,
       code: this.scriptShadowCopy.shadowCopyCode,
       runScriptCommand: this.runScriptCommand,
       runScriptArguments: this.runScriptArguments,
@@ -487,7 +513,7 @@ export default class InteractiveConsole extends Vue {
       runAgentTargetAgentId: this.runAgentTargetAgentId,
     };
 
-    if (this.activeTab === ICTab.LAMBDA) {
+    if (this.scriptTarget === ScriptTarget.LAMBDA) {
       Object.assign(icJobSettings, {
         runAgentTarget: TaskDefTarget.AWS_LAMBDA,
         lambdaDependencies: this.lambdaDependencies,
@@ -500,20 +526,14 @@ export default class InteractiveConsole extends Vue {
     try {
       this.isJobRunning = true;
       const data = await this.$store.dispatch(`${StoreType.JobStore}/runICJob`, icJobSettings);
-      this.latestRanJob = await this.$store.dispatch(`${StoreType.JobStore}/fetchModel`, data.id);
-
-      this.$store.dispatch(`${StoreType.JobStore}/select`, this.latestRanJob);
-
-      await this.$nextTick();
-
-      document.getElementById('ic-results-tab').scrollIntoView({ behavior: 'smooth' });
-      this.onActiveTabChange(ICTab.RESULTS);
+      this.latestRanJobId = data.id;
     } catch (err) {
+      this.isJobRunning = false;
+
       console.error(err);
       showErrors('Error running the script', err);
     } finally {
       this.$modal.hide('run-script-options');
-      this.isJobRunning = false;
     }
   }
 

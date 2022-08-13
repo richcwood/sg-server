@@ -10,7 +10,6 @@ export enum LambdaRuntimes {
   'JAVA_8_AL2' = 'java8.al2',
   'NODEJS_12' = 'nodejs12.x',
   'NODEJS_14' = 'nodejs14.x',
-  'PYTHON_3_6' = 'python3.6',
   'PYTHON_3_7' = 'python3.7',
   'PYTHON_3_8' = 'python3.8',
   'PYTHON_3_9' = 'python3.9',
@@ -31,7 +30,7 @@ export const getLambdaRuntimesForScriptType = (scriptType: ScriptType) => {
     return ['ruby2.7'];
   }
   else if(scriptType == ScriptType.PYTHON){
-    return ['python3.6', 'python3.7', 'python3.8', 'python3.9'];
+    return ['python3.9', 'python3.8', 'python3.7'];
   }
   else {
     return []; // no other script types have runtimes

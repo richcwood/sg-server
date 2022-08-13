@@ -30,7 +30,10 @@
             <div v-if="currentStep > 1" class="column is-narrow">
                 <div class="box">
                     <p>Awesome! Now that you have the script created, let's run it. Click the "Run Script" button.</p>
-                    <button @click="onScriptRun" class="button is-primary">Run Script</button>
+                    <button @click="onScriptRun"
+                        :disabled="isScriptRunning"
+                        :class="{'is-loading': isScriptRunning}"
+                        class="button is-primary">Run Script</button>
                     <div class="step">
                         <span class="step-number">2</span>
                         <div class="triangle"></div>
@@ -60,13 +63,16 @@
 
 <script lang="ts">
     import { Component, Vue } from 'vue-property-decorator';
-    import moment from 'moment';
-    import axios from 'axios';
 
+    import { InteractiveConsole, ScriptTarget } from '@/store/interactiveConsole/types';
     import { ScriptType, scriptTypesForMonaco } from '@/store/script/types';
+    import { getLambdaRuntimesForScriptType } from '@/store/stepDef/types';
     import SuccessTick from '@/components/pageGuides/SuccessTick.vue';
-    import { ICTab } from '@/store/interactiveConsole/types';
+    import { ScriptShadow } from '@/store/scriptShadow/types';
+    import { BindSelectedCopy } from '@/decorator/bindable';
     import { TaskDefTarget } from '@/store/taskDef/types';
+    import { ICJobSettings } from '@/store/job/types';
+    import { showErrors } from '@/utils/ErrorHandler';
     import { StoreType } from '@/store/types';
 
     @Component({
@@ -74,6 +80,7 @@
     })
     export default class LambdaScript extends Vue {
         public selectedScriptType: ScriptType = null;
+        public isScriptRunning = false;
         public creatingScript = false;
         public currentStep = 1;
 
@@ -81,14 +88,12 @@
             [ScriptType.PYTHON]: 'print("Hello World")',
             [ScriptType.NODE]: 'console.log("Hello World")',
             [ScriptType.SH]: 'echo "Hello World"',
-            [ScriptType.CMD]: 'echo "Hello World"',
             [ScriptType.RUBY]: 'puts "Hello World"',
-            [ScriptType.LUA]: 'print("Hello World")',
-            [ScriptType.PERL]: "say 'Hello World'", 
-            [ScriptType.PHP]: '<?php echo("Hello World") ?>',
-            [ScriptType.POWERSHELL]: "Write-Host 'Hello World'",
             [ScriptType.JAVASCRIPT]: 'console.log("Hello World")',
         };
+
+        @BindSelectedCopy({ storeType: StoreType.InteractiveConsole })
+        public readonly interactiveConsole: InteractiveConsole;
 
         public static getTitle () {
             return 'Lambda Script Guide';
@@ -103,7 +108,6 @@
 
         public async onScriptSelect (): Promise<void> {
             this.creatingScript = true;
-            this.currentStep = 2;
 
             try {
                 const script = await this.$store.dispatch(`${StoreType.ScriptStore}/save`, {
@@ -124,85 +128,58 @@
                     runScriptArguments: '',
                     runScriptEnvVars: '',
                     runScriptRuntimeVars: '',
+                    lambdaRuntime: getLambdaRuntimesForScriptType(this.selectedScriptType).shift(),
                     lambdaDependencies: '',
-                    lambdaRuntime: '',
                     lambdaMemory: 128,
                     lambdaTimeout: 3,
-                    activeTab: ICTab.LAMBDA
+                    scriptTarget: this.interactiveConsole.scriptTarget
                 });
             } catch (e) {
                 console.error(e);
             } finally {
+                this.currentStep = 2;
                 this.creatingScript = false;
             }
         }
 
         public async onScriptRun (): Promise<void> {
-            this.currentStep = 3;
-            // const scriptShadowCopy = this.$store[StoreType.ScriptShadowStore].selectedCopy;
+            try {
+                this.isScriptRunning = true;
 
-            // if (!scriptShadowCopy) {
-            //     console.error("Script shadow was not loaded so it could not be run.");
-            //     return;
-            // }
+                const scriptShadowCopy: ScriptShadow = this.$store.state[StoreType.ScriptShadowStore].selectedCopy;
+                const icJobSettings: ICJobSettings = {
+                    scriptType: ScriptType[this.selectedScriptType] as any as ScriptType,
+                    code: scriptShadowCopy.shadowCopyCode,
+                    runScriptCommand: this.interactiveConsole.runScriptCommand,
+                    runScriptArguments: this.interactiveConsole.runScriptArguments,
+                    runScriptEnvVars: this.interactiveConsole.runScriptEnvVars,
+                    runAgentTarget: this.interactiveConsole.runAgentTarget,
+                    runScriptRuntimeVars: this.interactiveConsole.runScriptRuntimeVars,
+                    runAgentTargetTags_string: this.interactiveConsole.runAgentTargetTags_string,
+                    runAgentTargetAgentId: this.interactiveConsole.runAgentTargetAgentId,
+                };
 
-            // const currentTeamId = this.$store.state[StoreType.TeamStore].selected.id;
+                if (this.interactiveConsole.scriptTarget === ScriptTarget.LAMBDA) {
+                    Object.assign(icJobSettings, {
+                        runAgentTarget: TaskDefTarget.AWS_LAMBDA,
+                        lambdaDependencies: this.interactiveConsole.lambdaDependencies,
+                        lambdaMemory: this.interactiveConsole.lambdaMemory,
+                        lambdaRuntime: this.interactiveConsole.lambdaRuntime,
+                        lambdaTimeout: this.interactiveConsole.lambdaTimeout,
+                    });
+                }
 
-            // try {
-                // const newStep: any = {
-                //     name: 'Console Step',
-                //     script: {
-                //         scriptType: this.selectedScriptType,
-                //         code: scriptShadowCopy.shadowCopyCode, // use script type template
-                //     },
-                //     order: 0,
-                //     command: this.runScriptCommand,
-                //     arguments: this.runScriptArguments,
-                //     variables: this.envVarsAsMap,
-                // };
-
-            //     const runAgentTarget = TaskDefTarget.AWS_LAMBDA;
-            //     newStep.lambdaRuntime = this.lambdaConfig.lambdaRuntime;
-            //     newStep.lambdaMemorySize = this.lambdaConfig.lambdaMemorySize;
-            //     newStep.lambdaTimeout = this.lambdaConfig.lambdaTimeout;
-            //     newStep.lambdaDependencies = this.lambdaConfig.lambdaDependencies;
-
-            // const newJob = {
-            //     job: {
-            //     name: `IC-${moment().format("dddd MMM DD h:mm a")}`,
-            //     dateCreated: new Date().toISOString(),
-            //     runtimeVars: this.runtimeVarsAsMap,
-            //     tasks: [
-            //         {
-            //         _teamId: currentTeamId,
-            //         name: `Task1`,
-            //         source: 0,
-            //         requiredTags: tagsStringToMap(this.runAgentTargetTags_string),
-            //         target: runAgentTarget,
-            //         targetAgentId: this.runAgentTargetAgentId,
-            //         fromRoutes: [],
-            //         steps: [newStep],
-            //         correlationId: Math.random()
-            //             .toString()
-            //             .substring(3, 12),
-            //         },
-            //     ],
-            //     },
-            // };
-
-            // const {
-            //     data: { data },
-            // } = await axios.post("/api/v0/job/ic/", newJob);
-            // // make sure to use the same object in the store or it won't be reactive to browser push events
-            // this.runningJobs.push(await this.$store.dispatch(`${StoreType.JobStore}/fetchModel`, data.id));
-
-            // this.expandScriptEditor = false;
-            // } catch (err) {
-            // console.error(err);
-            // showErrors("Error running the script", err);
-            // } finally {
-            // this.$modal.hide("run-script-options");
-            // }
+                const data = await this.$store.dispatch(`${StoreType.JobStore}/runICJob`, icJobSettings);
+                this.$store.dispatch(`${StoreType.InteractiveConsole}/updateSelectedCopy`, {
+                    latestRanJobId: data.id
+                });
+            } catch (err) {
+                console.error(err);
+                showErrors('Error running the script', err);
+            } finally {
+                this.currentStep = 3;
+                this.isScriptRunning = false;
+            }
         }
     }
 </script>

@@ -50,7 +50,7 @@
               <td class="td">
                 <div class="select">
                   <validation-provider name="Lambda Runtime" rules="required" v-slot="{ errors }">
-                    <LambdaRuntimeSelect v-model="stepDefCopy.lambdaRuntime" :scriptType="selectedScript.scriptType" style="width: 250px;" />
+                    <LambdaRuntimeSelect v-model="stepDefCopy.lambdaRuntime" style="width: 250px;" />
                     <div v-if="errors && errors.length > 0" class="message validation-error is-danger">{{ errors[0] }}</div>
                   </validation-provider>
                 </div>

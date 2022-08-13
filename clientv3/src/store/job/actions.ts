@@ -96,7 +96,6 @@ export const actions: ActionTree<JobCoreState, RootState> = {
       command: settings.runScriptCommand,
       arguments: settings.runScriptArguments,
       variables: stringToMap(settings.runScriptEnvVars),
-      runAgentTarget: settings.runAgentTarget,
       lambdaDependencies: settings.lambdaDependencies,
       lambdaMemorySize: settings.lambdaMemory,
       lambdaRuntime: settings.lambdaRuntime,

@@ -1495,7 +1495,7 @@ import { StoreType } from "../store/types";
 import { JobDef, JobDefStatus } from "../store/jobDef/types";
 import { TaskDef, TaskDefTarget } from "../store/taskDef/types";
 import { StepDef } from "../store/stepDef/types";
-import { Script, ScriptType, scriptTypesForMonaco } from "../store/script/types";
+import { Script, ScriptType } from "../store/script/types";
 import { BindStoreModel, BindSelected, BindSelectedCopy, BindProp } from "../decorator";
 import { JobStatus, enumKeyToPretty, enumKeys } from "../utils/Enums";
 import { SgAlert, AlertPlacement, AlertCategory } from "../store/alert/types";
@@ -1553,7 +1553,6 @@ export default class JobDesigner extends Vue {
   private readonly TaskDefTarget = TaskDefTarget;
   private readonly enumKeyToPretty = enumKeyToPretty;
   private readonly enumKeys = enumKeys;
-  private readonly scriptTypesForMonaco = scriptTypesForMonaco;
   private readonly ScheduleTriggerType = ScheduleTriggerType;
   private readonly JobDefStatus = JobDefStatus;
   private readonly timeZones = timeZones;

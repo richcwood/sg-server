@@ -30,7 +30,7 @@ export enum JobFetchType {
   //LAST_YEAR
 };
 
-export interface ICJobSettings extends Omit<InteractiveConsole, 'activeTab'> {
+export interface ICJobSettings extends Omit<InteractiveConsole, 'scriptTarget'> {
   scriptType: ScriptType;
   code: string;
 }

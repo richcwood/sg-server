@@ -3,7 +3,12 @@ import { TaskDefTarget } from '@/store/taskDef/types';
 export enum ICTab {
   AGENT = 0,
   LAMBDA = 1,
-  RESULTS = 2
+  RESULTS = 2,
+}
+
+export enum ScriptTarget {
+  LAMBDA = 'lambda',
+  AGENT = 'agent',
 }
 
 export interface InteractiveConsole {
@@ -20,7 +25,8 @@ export interface InteractiveConsole {
   runScriptArguments?: string;
   runScriptEnvVars?: string;
   runScriptRuntimeVars?: string;
-  activeTab: ICTab;
+  latestRanJobId?: string;
+  scriptTarget: ScriptTarget;
 }
 
 export interface InteractiveConsoleState {

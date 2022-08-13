@@ -1,6 +1,6 @@
 import { Module } from 'vuex';
 
-import { ICTab, InteractiveConsoleState } from './types';
+import { ScriptTarget, InteractiveConsoleState } from './types';
 import { TaskDefTarget } from '@/store/taskDef/types';
 import { RootState } from '@/store/types';
 import { mutations } from './mutations';
@@ -20,7 +20,7 @@ export const state: InteractiveConsoleState = {
       lambdaRuntime: '',
       lambdaMemory: 128,
       lambdaTimeout: 3,
-      activeTab: ICTab.AGENT
+      scriptTarget: ScriptTarget.AGENT
   },
 
   selectedCopy: {
@@ -35,7 +35,7 @@ export const state: InteractiveConsoleState = {
     lambdaRuntime: '',
     lambdaMemory: 128,
     lambdaTimeout: 3,
-    activeTab: ICTab.AGENT
+    scriptTarget: ScriptTarget.AGENT
   }
 };
 
