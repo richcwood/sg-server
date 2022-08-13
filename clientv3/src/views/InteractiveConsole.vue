@@ -1,6 +1,6 @@
 <template>
   <div class="py-5">
-    <div class="sg-container-px">
+    <div class="sg-container-px mb-5">
       <script-search-with-create class="block" width="400px" :scriptId="scriptId" @scriptPicked="onScriptPicked" />
 
       <div class="is-flex block">
@@ -33,15 +33,11 @@
           </template>
         </div>
       </div>
-
-      <div v-if="!expandScriptEditor">
-        <a href="#" class="button is-ghost" @click.prevent="expandScriptEditor = true"> >> Expand script editor</a>
-      </div>
-      <script-editor v-else :script="scriptCopy" />
+      <script-editor :script="scriptCopy" />
     </div>
 
-    <validation-observer v-if="expandScriptEditor" tag="div" ref="runScriptValidationObserver">
-      <tabs ref="runSettingsTabs">
+    <validation-observer tag="div" ref="runScriptValidationObserver">
+      <tabs ref="runSettingsTabs" :onSelect="onTabSelect">
         <tab class="sg-container-p" title="Run on Agent(s)">
           <table class="table is-fullwidth">
             <tr>
@@ -106,11 +102,7 @@
               <td>
                 <div class="select">
                   <validation-provider name="Lambda Runtime" rules="required" v-slot="{ errors }">
-                    <select v-model="lambdaConfig.lambdaRuntime" style="width: 350px;">
-                      <option v-for="runtime in LambaRuntimes" :key="runtime" :value="runtime">
-                        {{ runtime }}
-                      </option>
-                    </select>
+                    <LambdaRuntimeSelect v-model="lambdaRuntime" :scriptType="scriptType" style="width: 350px;" />
                     <div v-if="errors && errors.length > 0" class="message validation-error is-danger">
                       {{ errors[0] }}
                     </div>
@@ -124,7 +116,7 @@
               </td>
               <td>
                 <div class="select">
-                  <select v-model="lambdaConfig.lambdaMemorySize" style="width: 350px;">
+                  <select v-model="lambdaMemory" style="width: 350px;">
                     <option v-for="memSize in LambdaMemorySizes" :key="memSize" :value="memSize">
                       {{ memSize }} mb
                     </option>
@@ -138,7 +130,7 @@
               </td>
               <td>
                 <validation-provider name="Lambda Timeout" rules="required|lambdaTimeout" v-slot="{ errors }">
-                  <input class="input" style="width: 350px;" v-model="lambdaConfig.lambdaTimeout" />
+                  <input class="input" style="width: 350px;" v-model="lambdaTimeout" />
                   <div v-if="errors && errors.length > 0" class="message validation-error is-danger">
                     {{ errors[0] }}
                   </div>
@@ -153,13 +145,34 @@
                 <input
                   class="input"
                   style="width: 350px;"
-                  v-model="lambdaConfig.lambdaDependencies"
+                  v-model="lambdaDependencies"
                   placeholder="compression;axios"
                 />
               </td>
             </tr>
           </table>
         </tab>
+        <tab v-if="latestRanJobId && selectedJob" class="sg-container-p" titleSlot="results-title">
+          <div class="is-flex is-align-items-center">
+            <span class="mr-3">{{ selectedJob.name }}</span>
+            <button
+              class="button is-ghost mr-3"
+              :disabled="selectedJob.status !== JobStatus.RUNNING && selectedJob.status !== JobStatus.INTERRUPTED"
+              @click="onCancelJobClicked"
+            >
+              Cancel
+            </button>
+            <span class="mr-3">{{ enumKeyToPretty(JobStatus, selectedJob.status) }}</span>
+            <span class="mr-3">{{ momentToStringV1(selectedJob.dateStarted) }}</span>
+          </div>
+          <task-monitor-details :selectedJobId="selectedJob.id" />
+        </tab>
+        <template #results-title>
+          <span id="ic-results-tab">
+            <span class="script-run-spinner" v-if="isScriptRunning"></span>
+            Script Results
+          </span>
+        </template>
       </tabs>
 
       <hr class="divider" />
@@ -207,34 +220,18 @@
           <tr>
             <td></td>
             <td>
-              <button class="button is-primary mr-3" @click="onRunScript" :disabled="!scriptCopy">Run Script</button>
+              <button @click="onRunScript"
+                :disabled="!scriptCopy || isJobRunning"
+                :class="{'is-loading': isJobRunning}"
+                class="button is-primary mr-3">
+                Run Script
+              </button>
               <button class="button" @click="onScheduleScriptClicked" :disabled="!scriptCopy">Schedule Script</button>
             </td>
           </tr>
         </table>
       </div>
     </validation-observer>
-
-    <div v-if="runningJobs.length > 0" class="sg-container-px">
-      <template v-if="selectedJob">
-        <div class="is-flex is-align-items-center">
-          <span class="mr-3">{{ selectedJob.name }}</span>
-          <button
-            class="button is-ghost mr-3"
-            :disabled="selectedJob.status !== JobStatus.RUNNING && selectedJob.status !== JobStatus.INTERRUPTED"
-            @click="onCancelJobClicked"
-          >
-            Cancel
-          </button>
-          <span class="mr-3">{{ enumKeyToPretty(JobStatus, selectedJob.status) }}</span>
-          <span class="mr-3">{{ momentToStringV1(selectedJob.dateStarted) }}</span>
-        </div>
-        <task-monitor-details :selectedJobId="selectedJob.id" />
-      </template>
-    </div>
-    <p v-else class="py-4 is-size-4 has-text-centered">
-      No scripts have ran yet
-    </p>
   </div>
 </template>
 
@@ -252,18 +249,18 @@ import { BindSelected, BindProp, BindSelectedCopy } from "../decorator";
 import { ValidationProvider, ValidationObserver } from "vee-validate";
 import _ from "lodash";
 import { momentToStringV1 } from "../utils/DateTime";
-import { Job } from "../store/job/types";
+import { ICJobSettings, Job } from "../store/job/types";
 import { TaskOutcome } from "../store/taskOutcome/types";
-import { LambaRuntimes, LambdaMemorySizes } from "../store/stepDef/types";
-import { JobStatus, TaskStatus, StepStatus, TaskFailureCode, enumKeyToPretty } from "../utils/Enums";
-import { tagsStringToMap, stringToMap } from "../utils/Shared";
+import { LambdaMemorySizes, LambdaRuntimes } from "@/store/stepDef/types";
+import { JobStatus, StepStatus, TaskFailureCode, enumKeyToPretty } from "../utils/Enums";
 import AgentSearch from "../components/AgentSearch.vue";
 import ScriptEditor from "../components/ScriptEditor.vue";
 import { showErrors } from "../utils/ErrorHandler";
 import TaskMonitorDetails from "../components/TaskMonitorDetails.vue";
 import ScriptSearchWithCreate from "../components/ScriptSearchWithCreate.vue";
-import moment from "moment";
 import { Tabs, Tab } from "vue-slim-tabs";
+import { ScriptTarget, ICTab } from "@/store/interactiveConsole/types";
+import LambdaRuntimeSelect from "@/components/LambdaRuntimeSelect.vue";
 
 @Component({
   components: {
@@ -275,6 +272,7 @@ import { Tabs, Tab } from "vue-slim-tabs";
     ValidationProvider,
     ValidationObserver,
     TaskMonitorDetails,
+    LambdaRuntimeSelect
   },
 })
 export default class InteractiveConsole extends Vue {
@@ -283,12 +281,11 @@ export default class InteractiveConsole extends Vue {
   private readonly TaskDefTarget = TaskDefTarget;
   private readonly momentToStringV1 = momentToStringV1;
   private readonly JobStatus = JobStatus;
-  private readonly TaskStatus = TaskStatus;
   private readonly StepStatus = StepStatus;
   private readonly TaskFailureCode = TaskFailureCode;
   private readonly enumKeyToPretty = enumKeyToPretty;
-  private readonly LambaRuntimes = LambaRuntimes;
   private readonly LambdaMemorySizes = LambdaMemorySizes;
+  public readonly ScriptTarget = ScriptTarget;
   private readonly TargetAgentChoices = {
     "Any Available Agent": TaskDefTarget.SINGLE_AGENT,
     "A Specific Agent": TaskDefTarget.SINGLE_SPECIFIC_AGENT,
@@ -297,47 +294,69 @@ export default class InteractiveConsole extends Vue {
     "All Active Agents With Tags": TaskDefTarget.ALL_AGENTS_WITH_TAGS,
   };
 
-  private runAgentTarget = TaskDefTarget.SINGLE_AGENT;
-  private runAgentTargetAgentId = "";
-  private runAgentTargetTags = {};
-  private runAgentTargetTags_string = "";
-
-  private runScriptCommand = "";
-  private runScriptArguments = "";
-  private runScriptEnvVars = "";
-  private runScriptRuntimeVars = "";
-
-  private expandScriptEditor = true;
-  private expand;
-
-  private lambdaConfig: any = {
-    lambdaMemorySize: 128,
-    lambdaTimeout: 3,
-  };
-
-  private displayedText = "";
-
+  public isScriptRunning = false;
+  public isJobRunning = false;
   private scriptId = null;
 
-  @BindSelected({ storeType: <any>StoreType.ScriptStore.toString() })
-  private script!: Script | null;
+  @BindSelected({ storeType: StoreType.ScriptStore })
+  private script: Script;
 
   @BindSelectedCopy({ storeType: StoreType.ScriptStore })
-  private scriptCopy!: Script | null;
+  public scriptCopy: Script;
+
+  @BindProp({ storeType: StoreType.ScriptStore })
+  public scriptType: ScriptType;
 
   @BindSelected({ storeType: StoreType.ScriptShadowStore })
-  private scriptShadow!: ScriptShadow | null;
+  private scriptShadow: ScriptShadow;
 
   @BindSelectedCopy({ storeType: StoreType.ScriptShadowStore })
-  private scriptShadowCopy!: ScriptShadow | null;
+  private scriptShadowCopy: ScriptShadow;
 
   @BindSelected({ storeType: StoreType.JobStore })
-  private selectedJob!: Job | null;
-
-  private runningJobs: Job[] = [];
+  private selectedJob: Job;
 
   @BindProp({ storeType: StoreType.SecurityStore, selectedModelName: "user", propName: "id" })
-  private loggedInUserId!: string;
+  public loggedInUserId: string;
+
+  @BindProp({ storeType: StoreType.InteractiveConsole })
+  public scriptTarget: ScriptTarget;
+
+  @BindProp({ storeType: StoreType.InteractiveConsole })
+  public runScriptCommand: string;
+
+  @BindProp({ storeType: StoreType.InteractiveConsole })
+  public runScriptArguments: string;
+
+  @BindProp({ storeType: StoreType.InteractiveConsole })
+  public runScriptEnvVars: string;
+
+  @BindProp({ storeType: StoreType.InteractiveConsole })
+  public runScriptRuntimeVars: string;
+
+  @BindProp({ storeType: StoreType.InteractiveConsole })
+  public runAgentTarget: TaskDefTarget;
+
+  @BindProp({ storeType: StoreType.InteractiveConsole })
+  private runAgentTargetAgentId: string;
+
+  @BindProp({ storeType: StoreType.InteractiveConsole })
+  private runAgentTargetTags_string: string;
+
+  @BindProp({ storeType: StoreType.InteractiveConsole })
+  public lambdaDependencies: string;
+
+  @BindProp({ storeType: StoreType.InteractiveConsole })
+  public lambdaRuntime: LambdaRuntimes;
+
+  @BindProp({ storeType: StoreType.InteractiveConsole })
+  public lambdaMemory: number;
+
+  @BindProp({ storeType: StoreType.InteractiveConsole })
+  public lambdaTimeout: number;
+
+  @BindProp({ storeType: StoreType.InteractiveConsole })
+  public latestRanJobId: string;
 
   private async mounted() {
     if (this.script) {
@@ -353,6 +372,10 @@ export default class InteractiveConsole extends Vue {
       this.script = null;
       this.script = script;
     }
+
+    this.$store.dispatch(`${StoreType.InteractiveConsole}/updateSelectedCopy`, {
+      latestRanJobId: null
+    });
   }
 
   private onTargetAgentPicked(agent: Agent) {
@@ -364,13 +387,29 @@ export default class InteractiveConsole extends Vue {
     }
   }
 
-  @Watch("runningJobs")
-  private onRunningJobsChanged() {
-    if (this.runningJobs.length > 0) {
-      this.$store.dispatch(`${StoreType.JobStore}/select`, this.runningJobs[this.runningJobs.length - 1]);
-    } else {
-      this.$store.dispatch(`${StoreType.JobStore}/select`, null);
+  @Watch('selectedJob.status')
+  public onJobStatusChange (status: JobStatus): void {
+    const isRunning = status === JobStatus.RUNNING;
+
+    if (isRunning) {
+      this.selectTab(ICTab.RESULTS);
     }
+
+    this.isScriptRunning = isRunning;
+  }
+
+  public onTabSelect (e: MouseEvent, index: ICTab): void {
+    switch (index) {
+      case ICTab.LAMBDA:
+        this.scriptTarget = ScriptTarget.LAMBDA
+        break;
+      default:
+        this.scriptTarget = ScriptTarget.AGENT;
+    }
+  }
+
+  private selectTab (index: ICTab): void {
+    (<any>this.$refs.runSettingsTabs).selectedIndex = index;
   }
 
   // a reactive map
@@ -404,17 +443,6 @@ export default class InteractiveConsole extends Vue {
     return this.loadedUsers[userId];
   }
 
-  private get olderRunningJobs(): Job[] {
-    if (this.runningJobs.length > 1) {
-      const jobClone = _.clone(this.runningJobs); // shallow reference clone
-      const olderJobs = jobClone.splice(0, jobClone.length - 1);
-      olderJobs.reverse();
-      return olderJobs;
-    } else {
-      return [];
-    }
-  }
-
   private async onTeamEditableChanged(script: Script) {
     try {
       await this.$store.dispatch(`${StoreType.ScriptStore}/save`, {
@@ -445,82 +473,67 @@ export default class InteractiveConsole extends Vue {
     }
   }
 
-  private get envVarsAsMap(): { [key: string]: {} } {
-    return stringToMap(this.runScriptEnvVars);
-  }
+  @Watch('latestRanJobId')
+  private async onICJobRun (id: string): Promise<void> {
+    this.isJobRunning = true;
+    const job = await this.$store.dispatch(`${StoreType.JobStore}/fetchModel`, id);
+    this.$store.dispatch(`${StoreType.JobStore}/select`, job);
 
-  private get runtimeVarsAsMap(): { [key: string]: {} } {
-    return stringToMap(this.runScriptRuntimeVars);
+    await this.$nextTick();
+
+    try {
+      document.getElementById('ic-results-tab').scrollIntoView({ behavior: 'smooth' });
+    } catch (err) {
+      console.error(err);
+      showErrors('Error showing the "Script Results" tab', err);
+    } finally {
+      this.isJobRunning = false;
+    }
   }
 
   private async onRunScript() {
     if (!(await (<any>this.$refs.runScriptValidationObserver).validate())) {
       return;
     }
+
     if (!this.scriptShadow) {
       console.error("Script shadow was not loaded so it could not be run.");
       return;
     }
 
-    const runInLambda = (<any>this.$refs.runSettingsTabs).selectedIndex === 1;
-    const currentTeamId = this.$store.state[StoreType.TeamStore].selected.id;
+    const icJobSettings: ICJobSettings = {
+      scriptType: ScriptType[this.scriptCopy.scriptType] as any as ScriptType,
+      code: this.scriptShadowCopy.shadowCopyCode,
+      runScriptCommand: this.runScriptCommand,
+      runScriptArguments: this.runScriptArguments,
+      runScriptEnvVars: this.runScriptEnvVars,
+      runAgentTarget: this.runAgentTarget,
+      runScriptRuntimeVars: this.runScriptRuntimeVars,
+      runAgentTargetTags_string: this.runAgentTargetTags_string,
+      runAgentTargetAgentId: this.runAgentTargetAgentId,
+    };
+
+    if (this.scriptTarget === ScriptTarget.LAMBDA) {
+      Object.assign(icJobSettings, {
+        runAgentTarget: TaskDefTarget.AWS_LAMBDA,
+        lambdaDependencies: this.lambdaDependencies,
+        lambdaMemory: this.lambdaMemory,
+        lambdaRuntime: this.lambdaRuntime,
+        lambdaTimeout: this.lambdaTimeout,
+      });
+    }
 
     try {
-      const newStep: any = {
-        name: "Console Step",
-        script: {
-          scriptType: ScriptType[this.scriptCopy.scriptType],
-          code: this.scriptShadowCopy.shadowCopyCode,
-        },
-        order: 0,
-        command: this.runScriptCommand,
-        arguments: this.runScriptArguments,
-        variables: this.envVarsAsMap,
-      };
-
-      if (runInLambda) {
-        this.runAgentTarget = TaskDefTarget.AWS_LAMBDA;
-        newStep.lambdaRuntime = this.lambdaConfig.lambdaRuntime;
-        newStep.lambdaMemorySize = this.lambdaConfig.lambdaMemorySize;
-        newStep.lambdaTimeout = this.lambdaConfig.lambdaTimeout;
-        newStep.lambdaDependencies = this.lambdaConfig.lambdaDependencies;
-      }
-
-      const newJob = {
-        job: {
-          name: `IC-${moment().format("dddd MMM DD h:mm a")}`,
-          dateCreated: new Date().toISOString(),
-          runtimeVars: this.runtimeVarsAsMap,
-          tasks: [
-            {
-              _teamId: currentTeamId,
-              name: `Task1`,
-              source: 0,
-              requiredTags: tagsStringToMap(this.runAgentTargetTags_string),
-              target: this.runAgentTarget,
-              targetAgentId: this.runAgentTargetAgentId,
-              fromRoutes: [],
-              steps: [newStep],
-              correlationId: Math.random()
-                .toString()
-                .substring(3, 12),
-            },
-          ],
-        },
-      };
-
-      const {
-        data: { data },
-      } = await axios.post("/api/v0/job/ic/", newJob);
-      // make sure to use the same object in the store or it won't be reactive to browser push events
-      this.runningJobs.push(await this.$store.dispatch(`${StoreType.JobStore}/fetchModel`, data.id));
-
-      this.expandScriptEditor = false;
+      this.isJobRunning = true;
+      const data = await this.$store.dispatch(`${StoreType.JobStore}/runICJob`, icJobSettings);
+      this.latestRanJobId = data.id;
     } catch (err) {
+      this.isJobRunning = false;
+
       console.error(err);
-      showErrors("Error running the script", err);
+      showErrors('Error running the script', err);
     } finally {
-      this.$modal.hide("run-script-options");
+      this.$modal.hide('run-script-options');
     }
   }
 
@@ -597,5 +610,11 @@ td {
 :deep(.vue-tablist) {
   padding-left: 64px;
   padding-right: 64px;
+}
+
+.script-run-spinner {
+  @include loader;
+
+  display: inline-block;
 }
 </style>

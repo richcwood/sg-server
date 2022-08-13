@@ -1,11 +1,15 @@
 import { ActionTree } from 'vuex';
+import moment from 'moment';
+import axios from 'axios';
+
+import { JobCoreState, Job, JobFetchType, getJobFetchTypeFilter, ICJobSettings } from './types';
 import { actions as coreActions } from '@/store/core/actions';
 import { RootState, Model, StoreType } from '@/store/types';
-import { JobCoreState, Job, JobFetchType, getJobFetchTypeFilter } from './types';
+import { stringToMap, tagsStringToMap } from '@/utils/Shared';
 import { Task } from '@/store/task/types';
 import { Step } from '@/store/step/types';
+
 export const actions: ActionTree<JobCoreState, RootState> = {
-  
   triggerFetchByType({dispatch, state}): Promise<Model[]> {
     return dispatch('fetchModelByType', {jobFetchType: state.selectedJobFetchType});
   },
@@ -79,6 +83,44 @@ export const actions: ActionTree<JobCoreState, RootState> = {
 
   updateSelectedCopy({commit, state}, updated: Model): Promise<Model|undefined> {
     return coreActions.updateSelectedCopy({commit, state}, updated);
+  },
+
+  async runICJob ({ rootState }, settings: ICJobSettings): Promise<void> {
+    const newStep: Partial<Step> = {
+      name: 'Console Step',
+      script: {
+        scriptType: settings.scriptType,
+        code: settings.code,
+      },
+      order: 0,
+      command: settings.runScriptCommand,
+      arguments: settings.runScriptArguments,
+      variables: stringToMap(settings.runScriptEnvVars),
+      lambdaDependencies: settings.lambdaDependencies,
+      lambdaMemorySize: settings.lambdaMemory,
+      lambdaRuntime: settings.lambdaRuntime,
+      lambdaTimeout: settings.lambdaTimeout,
+    };
+
+    const { data: { data } } = await axios.post('/api/v0/job/ic/', {
+      job: {
+        name: `IC-${moment().format("dddd MMM DD h:mm a")}`,
+        dateCreated: new Date().toISOString(),
+        runtimeVars: stringToMap(settings.runScriptRuntimeVars),
+        tasks: [{
+          _teamId: rootState[StoreType.TeamStore].selected.id,
+          name: `Task1`,
+          source: 0,
+          requiredTags: tagsStringToMap(settings.runAgentTargetTags_string),
+          target: settings.runAgentTarget,
+          targetAgentId: settings.runAgentTargetAgentId,
+          fromRoutes: [],
+          steps: [newStep],
+          correlationId: Math.random().toString().substring(3, 12),
+        }],
+      },
+    });
+
+    return data;
   }
-  
 };

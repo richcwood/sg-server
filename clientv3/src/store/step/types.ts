@@ -11,6 +11,6 @@ export interface Step extends Model {
   command?: string,
   arguments: string,
   variables: {[key: string]: string},
-  script: {id: string, name: string, scriptType: number, code: string},
+  script: {id?: string, name?: string, scriptType: number, code: string},
   version: number
 };

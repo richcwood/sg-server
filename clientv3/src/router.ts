@@ -23,6 +23,7 @@ import AccessKeys from '@/views/AccessKeys.vue';
 import AuthCallback from '@/views/AuthCallback.vue';
 import _ from 'lodash';
 import { SgAlert, AlertPlacement, AlertCategory } from "@/store/alert/types";
+import LambdaScript from '@/components/pageGuides/LambdaScript.vue';
 
 Vue.use(Router);
 
@@ -145,6 +146,7 @@ const router = new Router({
           }
         },
         async beforeLeave(to: Route, from: Route, next: (options?: any) => {}){
+
           tryToSaveScriptEdits(next);
         }
       }
@@ -160,6 +162,10 @@ const router = new Router({
       component: InteractiveConsole,
       meta: {
         beforeEnter: async (to: Route, from: Route) => {
+          if (from.name !== 'interactiveConsole') {
+            store.dispatch(`${StoreType.PageGuideStore}/select`, LambdaScript);
+          }
+
           if(to.params.scriptId){
             try {
               if(store.state[StoreType.ScriptStore].selected && store.state[StoreType.ScriptStore].selected.id === to.params.scriptId){
@@ -180,6 +186,10 @@ const router = new Router({
           }
         },
         async beforeLeave(to: Route, from: Route, next: (options?: any) => {}){
+          if (to.name !== 'interactiveConsole') {
+            store.dispatch(`${StoreType.PageGuideStore}/select`, null);
+          }
+
           tryToSaveScriptEdits(next);
         }
       } 

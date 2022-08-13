@@ -25,6 +25,8 @@ import { userStore } from '@/store/user/index';
 import { paymentMethodStore } from '@/store/paymentMethod/index';
 import { accessKeyStore } from '@/store/accessKey/index';
 import { accessRightStore } from '@/store/accessRight/index';
+import { pageGuideStore } from '@/store/pageGuide';
+import { interactiveConsole } from '@/store/interactiveConsole';
 
 Vue.use(Vuex);
 
@@ -35,7 +37,7 @@ const store: StoreOptions<RootState> = {
         version: '1.0.0'
     },
 
-    modules: {       
+    modules: {
         securityStore,
         jobStore,
         taskStore,
@@ -59,7 +61,9 @@ const store: StoreOptions<RootState> = {
         userStore,
         paymentMethodStore,
         accessKeyStore,
-        accessRightStore
+        accessRightStore,
+        pageGuideStore,
+        interactiveConsole
     }
 };
 

@@ -397,7 +397,7 @@ export default class ScriptEditor extends Vue {
     if(this.scriptShadow){
       this.scriptEditor = monaco.editor.create(scriptEditor, {
         value: atob(this.scriptShadow.shadowCopyCode),
-        language: (<any>scriptTypesForMonaco)[this.script.scriptType],
+        language: this.getMonacoLanguage(this.script.scriptType),
         theme: this.theme,
         automaticLayout: true,
         readOnly: !this.isScriptEditable(this.script),
@@ -518,13 +518,21 @@ export default class ScriptEditor extends Vue {
 
         this.fullScreenEditor = monaco.editor.create(scriptEditorFullScreenEl, {
           value: atob(this.scriptShadow.shadowCopyCode),
-          language: (<any>scriptTypesForMonaco)[this.script.scriptType],
+          language: this.getMonacoLanguage(this.script.scriptType),
           theme: this.theme,    
           automaticLayout: true,
           readOnly: !this.isScriptEditable(this.script)
         });
       }, 100);
     }
+  }
+
+  private getMonacoLanguage (scriptType: ScriptType): string {
+    if (scriptType === ScriptType.NODE) {
+      return scriptTypesForMonaco[ScriptType.JAVASCRIPT];
+    }
+
+    return scriptTypesForMonaco[scriptType];
   }
 
   private onClickedExitFullScreen(){
@@ -548,7 +556,7 @@ export default class ScriptEditor extends Vue {
           automaticLayout: true,
           readOnly: true,
         });
-        const scriptLanguage = (<any>scriptTypesForMonaco)[this.script.scriptType];
+        const scriptLanguage = this.getMonacoLanguage(this.script.scriptType);
 
         this.scriptDiffEditor.setModel({
           original: monaco.editor.createModel(atob(this.script.code), scriptLanguage),

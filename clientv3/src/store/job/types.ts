@@ -1,12 +1,15 @@
-import { Model, CoreState } from '@/store/types'
-import { JobStatus } from '@/utils/Enums';
 import moment from 'moment';
+
+import { InteractiveConsole } from '@/store/interactiveConsole/types';
+import { ScriptType } from '@/store/script/types';
+import { Model, CoreState } from '@/store/types';
+import { JobStatus } from '@/utils/Enums';
 
 export interface JobCoreState extends CoreState {
   selectedJobFetchType: JobFetchType
 }
 
-export interface Job extends Model {    
+export interface Job extends Model {
   dateCreated: string;
   _teamId: string,
   _jobDefId: string,
@@ -26,6 +29,11 @@ export enum JobFetchType {
   LAST_TWO_MONTHS,
   //LAST_YEAR
 };
+
+export interface ICJobSettings extends Omit<InteractiveConsole, 'scriptTarget'> {
+  scriptType: ScriptType;
+  code: string;
+}
 
 export const getJobFetchTypeDescription = function(jobFetchType: JobFetchType): string {
   const today = moment();

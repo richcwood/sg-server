@@ -20,7 +20,7 @@ export const focusElement = function(elementName: string){
 };
 
 // try to convert a string in form key1=val1, key2=val2, <<key3>>=sensitive_val etc. to a map
-export const stringToMap = (input: string): {[key: string]: {}} =>  {
+export const stringToMap = (input: string): Record<string, string> =>  {
   const map = {};
 
   if( _.isString(input) && input.trim()){
@@ -57,7 +57,7 @@ export const stringToMap = (input: string): {[key: string]: {}} =>  {
 }
 
 // try to convert a string in form key1=val1, key2=val2 etc. to a map
-export const tagsStringToMap = (input: string): {[key: string]: string} =>  {
+export const tagsStringToMap = (input: string): Record<string, string> => {
   const map = {};
 
   if( _.isString(input) && input.trim()){
