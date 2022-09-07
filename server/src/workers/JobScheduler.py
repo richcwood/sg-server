@@ -222,11 +222,13 @@ def RestAPICall(url, method, _teamId, headers, data={}):
         json_data = json.dumps(data, default=json_serial)
 
         if method == "POST":
-            res = requests.post(url=url, headers=headers, data=json_data)
+            res = requests.post(url=url, headers=headers, data=json_data, verify=False)
         elif method == "PUT":
-            res = requests.put(url=url, headers=headers, data=json_data)
+            res = requests.put(url=url, headers=headers, data=json_data, verify=False)
         elif method == "DELETE":
-            res = requests.delete(url=url, headers=headers, data=json_data)
+            res = requests.delete(
+                url=url, headers=headers, data=json_data, verify=False
+            )
         else:
             raise Exception("{} method not supported".format(method))
         httpResponseCode = res.status_code
