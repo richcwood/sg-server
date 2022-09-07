@@ -1,8 +1,8 @@
-import { MetricsLogger } from "./utils/MetricsLogger";
+import {MetricsLogger} from "./utils/MetricsLogger";
 MetricsLogger.init();
 
 import express = require("express");
-import { NextFunction, Request, Response } from "express";
+import {NextFunction, Request, Response} from "express";
 const enforce = require("express-sslify");
 const cors = require("cors");
 import path = require("path");
@@ -13,62 +13,62 @@ const compression = require("compression");
 const multer = require("multer");
 import * as config from "config";
 import * as mongodb from "mongodb";
-import { BaseLogger } from "../shared/SGLogger";
+import {BaseLogger} from "../shared/SGLogger";
 import LoginRouter from "./routes/LoginRouter";
 const jwt = require("jsonwebtoken");
 import * as mongoose from "mongoose";
-import { teamRouter } from "./routes/TeamRouter";
-import { agentRouter } from "./routes/AgentRouter";
-import { agentDownloadRouter } from "./routes/AgentDownloadRouter";
-import { agentLogRouter } from "./routes/AgentLogRouter";
-import { scriptRouter } from "./routes/ScriptRouter";
-import { scheduleRouter } from "./routes/ScheduleRouter";
-import { jobRouter } from "./routes/JobRouter";
-import { jobDefRouter } from "./routes/JobDefRouter";
-import { taskDefRouter } from "./routes/TaskDefRouter";
-import { stepDefRouter } from "./routes/StepDefRouter";
-import { taskRouter } from "./routes/TaskRouter";
-import { taskOutcomeRouter } from "./routes/TaskOutcomeRouter";
-import { stepOutcomeRouter } from "./routes/StepOutcomeRouter";
-import { userRouter } from "./routes/UserRouter";
+import {teamRouter} from "./routes/TeamRouter";
+import {agentRouter} from "./routes/AgentRouter";
+import {agentDownloadRouter} from "./routes/AgentDownloadRouter";
+import {agentLogRouter} from "./routes/AgentLogRouter";
+import {scriptRouter} from "./routes/ScriptRouter";
+import {scheduleRouter} from "./routes/ScheduleRouter";
+import {jobRouter} from "./routes/JobRouter";
+import {jobDefRouter} from "./routes/JobDefRouter";
+import {taskDefRouter} from "./routes/TaskDefRouter";
+import {stepDefRouter} from "./routes/StepDefRouter";
+import {taskRouter} from "./routes/TaskRouter";
+import {taskOutcomeRouter} from "./routes/TaskOutcomeRouter";
+import {stepOutcomeRouter} from "./routes/StepOutcomeRouter";
+import {userRouter} from "./routes/UserRouter";
 import GitHookRouter from "./routes/GitHookRouter";
 import StripeWebhookRouter from "./routes/StripeWebhookRouter";
-import { handleErrors } from "./utils/ErrorMiddleware";
-import { handleBuildResponseWrapper, handleResponse, handleStartTimer } from "./utils/ResponseMiddleware";
-import { stepRouter } from "./routes/StepRouter";
-import { teamStorageRouter } from "./routes/TeamStorageRouter";
-import { paymentTransactionRouter } from "./routes/PaymentTransactionRouter";
-import { invoiceRouter } from "./routes/InvoiceRouter";
-import { signupRouter } from "./routes/SignupRouter";
-import { teamInviteRouter } from "./routes/TeamInviteRouter";
-import { joinTeamRouter } from "./routes/JoinTeamRouter";
-import { passwordResetRouter } from "./routes/PasswordResetRouter";
-import { forgotPasswordRouter } from "./routes/ForgotPasswordRouter";
-import { taskActionRouter } from "./routes/TaskActionRouter";
-import { taskOutcomeActionRouter } from "./routes/TaskOutcomeActionRouter";
-import { jobActionRouter } from "./routes/JobActionRouter";
-import { teamVariableRouter } from "./routes/TeamVariableRouter";
-import { artifactRouter } from "./routes/ArtifactRouter";
-import { payInvoiceAutoRouter } from "./routes/PayInvoiceAutoRouter";
-import { payInvoiceManualRouter } from "./routes/PayInvoiceManualRouter";
-import { createInvoiceRouter } from "./routes/CreateInvoiceRouter";
-import { updateTeamStorageUsageRouter } from "./routes/UpdateTeamStorageUsageRouter";
-import { userScriptShadowCopyRouter } from "./routes/UserScriptShadowCopyRouter";
-import { paymentMethodRouter } from "./routes/PaymentMethodRouter";
-import { accessKeyRouter } from "./routes/AccessKeyRouter";
-import { accessRightRouter } from "./routes/AccessRightRouter";
-import { settingsRouter } from "./routes/SettingsRouter";
-import { teamAdminAccessRouter } from "./routes/TeamAdminAccessRouter";
-import { AMQPConnector } from "../shared/AMQPLib";
+import {handleErrors} from "./utils/ErrorMiddleware";
+import {handleBuildResponseWrapper, handleResponse, handleStartTimer} from "./utils/ResponseMiddleware";
+import {stepRouter} from "./routes/StepRouter";
+import {teamStorageRouter} from "./routes/TeamStorageRouter";
+import {paymentTransactionRouter} from "./routes/PaymentTransactionRouter";
+import {invoiceRouter} from "./routes/InvoiceRouter";
+import {signupRouter} from "./routes/SignupRouter";
+import {teamInviteRouter} from "./routes/TeamInviteRouter";
+import {joinTeamRouter} from "./routes/JoinTeamRouter";
+import {passwordResetRouter} from "./routes/PasswordResetRouter";
+import {forgotPasswordRouter} from "./routes/ForgotPasswordRouter";
+import {taskActionRouter} from "./routes/TaskActionRouter";
+import {taskOutcomeActionRouter} from "./routes/TaskOutcomeActionRouter";
+import {jobActionRouter} from "./routes/JobActionRouter";
+import {teamVariableRouter} from "./routes/TeamVariableRouter";
+import {artifactRouter} from "./routes/ArtifactRouter";
+import {payInvoiceAutoRouter} from "./routes/PayInvoiceAutoRouter";
+import {payInvoiceManualRouter} from "./routes/PayInvoiceManualRouter";
+import {createInvoiceRouter} from "./routes/CreateInvoiceRouter";
+import {updateTeamStorageUsageRouter} from "./routes/UpdateTeamStorageUsageRouter";
+import {userScriptShadowCopyRouter} from "./routes/UserScriptShadowCopyRouter";
+import {paymentMethodRouter} from "./routes/PaymentMethodRouter";
+import {accessKeyRouter} from "./routes/AccessKeyRouter";
+import {accessRightRouter} from "./routes/AccessRightRouter";
+import {settingsRouter} from "./routes/SettingsRouter";
+import {teamAdminAccessRouter} from "./routes/TeamAdminAccessRouter";
+import {AMQPConnector} from "../shared/AMQPLib";
 const IPCIDR = require("ip-cidr");
-import { read } from "fs";
-import { AuthTokenType } from "../shared/Enums";
-import { UserSchema } from "./domain/User";
-import { userService } from "./services/UserService";
-import { ValidationError } from "./utils/Errors";
+import {read} from "fs";
+import {AuthTokenType} from "../shared/Enums";
+import {UserSchema} from "./domain/User";
+import {userService} from "./services/UserService";
+import {ValidationError} from "./utils/Errors";
 import * as morgan from "morgan";
 import * as fs from "fs";
-import { stripeClientTokenRouter } from "./routes/StripClientTokenRouter";
+import {stripeClientTokenRouter} from "./routes/StripClientTokenRouter";
 const redis = require("redis");
 const session = require("express-session");
 const RedisStore = require("connect-redis")(session);
@@ -91,7 +91,7 @@ var options = {
 };
 mongoose.connect(config.get("mongoUrl"), options);
 
-const redisClient = redis.createClient(config.get("redisUrl"), { no_ready_check: true });
+const redisClient = redis.createClient(config.get("redisUrl"), {no_ready_check: true});
 
 let logger: BaseLogger = new BaseLogger(appName);
 logger.Start();
@@ -102,7 +102,7 @@ let amqp: AMQPConnector = new AMQPConnector(appName, "", amqpUrl, rmqVhost, 1, (
 amqp.Start();
 
 const expressSessionOptions: any = {
-  store: new RedisStore({ client: redisClient }),
+  store: new RedisStore({client: redisClient}),
   saveUninitialized: false,
   secret: config.get("sessionSecret"),
   resave: false,
@@ -113,10 +113,10 @@ if (environment === "production") {
 }
 app.use(session(expressSessionOptions));
 
-app.use(`/api/v0/stripewebhook`, bodyParser.raw({ type: "*/*" }), new StripeWebhookRouter().router);
+app.use(`/api/v0/stripewebhook`, bodyParser.raw({type: "*/*"}), new StripeWebhookRouter().router);
 
 app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.urlencoded({extended: true}));
 app.use(cookieParser());
 
 class AppBuilder {
@@ -131,7 +131,7 @@ class AppBuilder {
     app.disable("etag");
 
     if (environment != "debug" && environment !== "bartdev") {
-      this.app.use(enforce.HTTPS({ trustProtoHeader: true }));
+      this.app.use(enforce.HTTPS({trustProtoHeader: true}));
     }
 
     const validOrigins = [
@@ -272,7 +272,7 @@ class AppBuilder {
         secret
       ); //KeysUtil.getPrivate()); // todo - create a public / private key
 
-      res.cookie("Auth", token, { secure: false, expires: new Date(jwtExpiration) });
+      res.cookie("Auth", token, {secure: false, expires: new Date(jwtExpiration)});
       res.send("OK");
     });
 
