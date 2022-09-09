@@ -396,8 +396,8 @@ export class JobDefService {
       // get the schedule
       const schedules: any = await scheduleService.findAllSchedulesInternal({_teamId, _jobDefId: jobDef._id});
 
-      for (let scheduleCount = 0; scheduleCount < schedules.length; scheduleCount++) {
-        const schedule = schedules[scheduleCount];
+      for (let scheduleIndex = 0; scheduleIndex < schedules.length; scheduleIndex++) {
+        const schedule = schedules[scheduleIndex];
         const scheduleJson: any = {
           TriggerType: schedule.TriggerType,
           name: schedule.name,
@@ -406,6 +406,7 @@ export class JobDefService {
           coalesce: schedule.coalesce,
           max_instances: schedule.max_instances,
           RunDate: schedule.RunDate,
+          runtimeVars: schedule.FunctionKwargs.runtimeVars || {},
         };
 
         if (schedule.cron) {
@@ -691,8 +692,11 @@ export class JobDefService {
       const createdJobDef: JobDefSchema = await jobDefService.createJobDef(_teamId, newJobDefData, correlationId);
 
       // now create the schedules for the new jobDef
-      for (let scheduleCount = 0; scheduleCount < jobDefJSON.schedules.length; scheduleCount++) {
-        const scheduleJSON = jobDefJSON.schedules[scheduleCount];
+      for (let scheduleIndex = 0; scheduleIndex < jobDefJSON.schedules.length; scheduleIndex++) {
+        const scheduleJSON = jobDefJSON.schedules[scheduleIndex];
+
+        let scheduleRuntimeVars: any = {};
+        if (scheduleJSON.runtimeVars) scheduleRuntimeVars = scheduleJSON.runtimeVars;
 
         const newScheduleData: any = {
           _jobDefId: createdJobDef._id,
@@ -708,6 +712,7 @@ export class JobDefService {
           FunctionKwargs: {
             _teamId,
             targetId: createdJobDef._id,
+            runtimeVars: scheduleRuntimeVars,
           },
         };
 
