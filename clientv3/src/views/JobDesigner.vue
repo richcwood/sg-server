@@ -904,46 +904,50 @@
           </tr>
           <tr class="tr">
             <td class="td">
-              <input
-                style="margin-left: 10px; margin-top: 10px;"
-                type="checkbox"
-                v-model="newRunJobVarValue.sensitive"
-                :checked="false"
-              />
-              <span style="margin-left: 10px; margin-right: 20px;">Sensitive</span>
+              <div class="is-flex is-align-items-center">
+                <input
+                  style="margin-left: 10px;"
+                  type="checkbox"
+                  v-model="newRunJobVarValue.sensitive"
+                  :checked="false"
+                />
+                <span style="margin-left: 10px; margin-right: 20px;">Sensitive</span>
 
-              <validation-observer ref="addRunJobVarsValidationObserver">
-                <validation-provider name="Variable Key" rules="required" v-slot="{ errors }">
-                  <input
-                    class="input"
-                    ref="newRunJobVarKeyInput"
-                    type="text"
-                    style="width: 250px;"
-                    v-model="newRunJobVarKey"
-                    placeholder="key"
-                  />
-                  <span v-if="errors && errors.length > 0" class="message validation-error is-danger">{{
-                    errors[0]
-                  }}</span>
-                </validation-provider>
+                <validation-observer ref="addRunJobVarsValidationObserver" slim v-slot="{ invalid }">
+                    <validation-provider name="Variable Key" rules="required" v-slot="{ errors }">
+                      <div class="is-relative is-inline-block">
+                        <input
+                          class="input"
+                          ref="newRunJobVarKeyInput"
+                          type="text"
+                          style="width: 250px;"
+                          v-model="newRunJobVarKey"
+                          placeholder="key"
+                        />
+                        <span v-if="errors && errors.length > 0" class="is-absolute error-message-left message validation-error is-danger">{{
+                          errors[0]
+                        }}</span>
+                    </div>
+                  </validation-provider>
 
-                <span style="font-weight: 700; margin-left: 4px; margin-right: 4px;">=</span>
+                  <span class="has-text-weight-bold mx-1" style="vertical-align: -webkit-baseline-middle;">=</span>
 
-                <validation-provider name="Variable Value" rules="required" v-slot="{ errors }">
-                  <input
-                    class="input"
-                    type="text"
-                    style="width: 250px;"
-                    v-model="newRunJobVarValue.value"
-                    placeholder="value"
-                  />
-                  <span v-if="errors && errors.length > 0" class="message validation-error is-danger">{{
-                    errors[0]
-                  }}</span>
-                </validation-provider>
-              </validation-observer>
+                  <validation-provider name="Variable Value" rules="required" v-slot="{ errors }" slim>
+                    <div class="is-inline-block is-relative">
+                      <ValueInput v-model="newRunJobVarValue.value"
+                        :key="Object.keys(runJobVars).length"
+                        class="mb-0"
+                        style="width: 250px;"
+                        placeholder="value" />
+                      <span v-if="errors && errors.length > 0" class="is-absolute error-message-left message validation-error is-danger">{{
+                        errors[0]
+                      }}</span>
+                    </div>
+                  </validation-provider>
 
-              <button class="button button-spaced" @click="onAddRunJobVarClicked">Add Runtime Variable</button>
+                  <button class="button button-spaced" :disabled="invalid" @click="onAddRunJobVarClicked">Add Runtime Variable</button>
+                </validation-observer>
+              </div>
             </td>
           </tr>
           <tr class="tr">
@@ -1518,6 +1522,7 @@ import ScriptSearchWithCreate from "../components/ScriptSearchWithCreate.vue";
 import TaskDefEditor from "../components/TaskDefEditor.vue";
 import SGCTaskDefEditor from "../components/SGCTaskDefEditor.vue";
 import { stringToMap, mapToString } from "../utils/Shared";
+import ValueInput from '@/components/runtimeVariable/ValueInput.vue';
 
 enum JobTab {
   VARIABLES = "RuntimeVariables",
@@ -1542,6 +1547,7 @@ enum JobTab {
     ValidationProvider,
     ValidationObserver,
     ArtifactSearch,
+    ValueInput,
   },
   directives: { ClickOutside },
 })
@@ -2838,5 +2844,11 @@ table {
 
 .text-nowrap {
   white-space: nowrap;
+}
+
+.error-message-left {
+  width: 100%;
+  top: 100%;
+  left: 0;
 }
 </style>
