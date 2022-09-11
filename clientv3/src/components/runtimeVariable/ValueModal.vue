@@ -1,18 +1,22 @@
 <template>
   <modal-card>
     <template #title>
-        <select v-model="syntaxCopy">
-            <option :value="LangSyntax.TEXT">text</option>
-            <option :value="LangSyntax.YAML">yaml</option>
-            <option :value="LangSyntax.JSON">json</option>
-        </select>
+        <span class="mr-3">Language</span>
+        <div class="select is-size-6">
+            <select v-model="syntaxCopy">
+                <option :value="LangSyntax.TEXT">text</option>
+                <option :value="LangSyntax.YAML">yaml</option>
+                <option :value="LangSyntax.JSON">json</option>
+            </select>
+        </div>
+        <button class="format-button button mr-3" @click="onFormat">Format</button>
     </template>
     <template #body>
         <div ref="scriptEditor" class="editor"></div>
     </template>
     <template #footer>
         <div class="buttons">
-            <button class="button" @click="onApply">Apply</button>
+            <button class="button is-primary" @click="onApply">Apply</button>
             <button class="button" @click="$emit('close')">Cancel</button>
         </div>
     </template>
@@ -57,9 +61,7 @@
                 }
             });
 
-            setTimeout(() => {
-                this.scriptEditor.getAction('editor.action.formatDocument').run();
-            }, 0);
+            setTimeout(() => this.onFormat(), 0);
         }
 
         private beforeDestroy (): void {
@@ -69,6 +71,10 @@
         @Watch('syntaxCopy')
         private onSyntaxCopyChange (syntax) {
             monaco.editor.setModelLanguage(this.scriptEditor.getModel(), syntax);
+        }
+
+        public onFormat (): void {
+            this.scriptEditor.getAction('editor.action.formatDocument').run();
         }
 
         public onApply (): void {
@@ -84,5 +90,21 @@
         width: 100%;
         height: 450px;
         background: hsl(0, 0%, 98%);
+    }
+
+    .format-button {
+        margin-left: auto;
+    }
+
+    ::v-deep {
+        .modal-card-head {
+            padding-bottom: 10px;
+            padding-top: 10px;
+        }
+
+        .modal-card-title {
+            display: flex;
+            align-items: center;
+        }
     }
 </style>
