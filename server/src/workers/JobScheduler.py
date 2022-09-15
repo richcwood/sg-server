@@ -253,7 +253,7 @@ def RestAPICall(url, method, _teamId, headers, data={}):
 
 
 def on_launch_job(scheduled_time, job_id, _teamId, targetId, runtimeVars):
-    runtimeVars["scheduled_time"] = scheduled_time
+    runtimeVars["scheduled_time"] = {"value": scheduled_time, "sensitive": False}
     data = {"dateScheduled": scheduled_time, "runtimeVars": runtimeVars}
     logInfo(
         {
