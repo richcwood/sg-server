@@ -3,3 +3,9 @@ export enum LangSyntax {
     YAML = 'yaml',
     JSON = 'json',
 }
+
+export interface Variable {
+    sensitive: boolean;
+    value: string;
+    key: string;
+}

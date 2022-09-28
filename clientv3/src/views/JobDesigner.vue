@@ -327,6 +327,18 @@
                             {{ errors[0] }}
                           </div>
                         </validation-provider>
+                        <validation-provider name="Variable Value" rules="required" v-slot="{ errors }" slim>
+                          <div class="is-inline-block is-relative">
+                            <ValueInput v-model="newRunJobVarValue.value"
+                              :key="Object.keys(runJobVars).length"
+                              class="mb-0"
+                              style="width: 250px;"
+                              placeholder="value" />
+                            <span v-if="errors && errors.length > 0" class="is-absolute error-message-left message validation-error is-danger">{{
+                              errors[0]
+                            }}</span>
+                          </div>
+                        </validation-provider>
                       </td>
                     </tr>
 
@@ -1221,6 +1233,7 @@
               </td>
             </tr>
           </table>
+          <VariableList />
 
           <table class="table striped-table" style="width: 800px;">
             <tr class="tr" v-if="Object.keys(jobDefForEdit.runtimeVars).length === 0">
@@ -1523,6 +1536,7 @@ import TaskDefEditor from "../components/TaskDefEditor.vue";
 import SGCTaskDefEditor from "../components/SGCTaskDefEditor.vue";
 import { stringToMap, mapToString } from "../utils/Shared";
 import ValueInput from '@/components/runtimeVariable/ValueInput.vue';
+import { VariableList } from '@/components/runtimeVariable';
 
 enum JobTab {
   VARIABLES = "RuntimeVariables",
@@ -1548,6 +1562,7 @@ enum JobTab {
     ValidationObserver,
     ArtifactSearch,
     ValueInput,
+    VariableList
   },
   directives: { ClickOutside },
 })
@@ -2223,7 +2238,7 @@ export default class JobDesigner extends Vue {
     if (schedule.FunctionKwargs.runtimeVars) runtimeVars = mapToString(schedule.FunctionKwargs.runtimeVars);
     this.editSchedule = <any>{
       id: schedule.id,
-      runtimeVars,
+      runtimeVars, // TODO
       TriggerType: schedule.TriggerType,
       name: schedule.name,
       RunDate: schedule.RunDate,
@@ -2236,6 +2251,9 @@ export default class JobDesigner extends Vue {
   }
 
   private async onCreateSchedule() {
+    console.log(stringToMap(this.editSchedule.runtimeVars));
+    return;
+
     if (this.jobDefForEdit) {
       if (!(await (<any>this.$refs.editScheduleValidationObserver).validate())) {
         return;

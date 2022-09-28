@@ -61,6 +61,15 @@
                 }
             });
 
+            // monaco.editor.onDidChangeModelDecorations(() => {
+            //     const model = editor.getModel();
+            //     const markers = monaco.editor.getModelMarkers(model);
+
+            //     console.log({ markers })
+            // });
+
+            // monaco.editor.onDidChangeMar
+
             setTimeout(() => this.onFormat(), 0);
         }
 
@@ -75,6 +84,8 @@
 
         public onFormat (): void {
             this.scriptEditor.getAction('editor.action.formatDocument').run();
+
+            this.scriptEditor.getModel().
         }
 
         public onApply (): void {
