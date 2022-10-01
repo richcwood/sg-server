@@ -16,7 +16,9 @@
     </template>
     <template #footer>
         <div class="buttons">
-            <button class="button is-primary" @click="onApply">Apply</button>
+            <button :disabled="isContentInvalid" class="button is-primary" @click="onApply">
+                Apply
+            </button>
             <button class="button" @click="$emit('close')">Cancel</button>
         </div>
     </template>
@@ -41,6 +43,7 @@
         private scriptEditor: monaco.editor.IStandaloneCodeEditor;
         private syntaxCopy: LangSyntax = null;
         private LangSyntax = LangSyntax;
+        public isContentInvalid = true;
 
         $refs: {
             scriptEditor: HTMLDivElement;
@@ -61,14 +64,12 @@
                 }
             });
 
-            // monaco.editor.onDidChangeModelDecorations(() => {
-            //     const model = editor.getModel();
-            //     const markers = monaco.editor.getModelMarkers(model);
+            this.scriptEditor.onDidChangeModelDecorations(() => {
+                const model = this.scriptEditor.getModel();
+                const owner = model.getLanguageId();
 
-            //     console.log({ markers })
-            // });
-
-            // monaco.editor.onDidChangeMar
+                this.isContentInvalid = !!monaco.editor.getModelMarkers({ owner }).length;
+            });
 
             setTimeout(() => this.onFormat(), 0);
         }
@@ -84,13 +85,11 @@
 
         public onFormat (): void {
             this.scriptEditor.getAction('editor.action.formatDocument').run();
-
-            this.scriptEditor.getModel().
         }
 
         public onApply (): void {
-            this.$parent.$emit('update:value', this.scriptEditor.getModel().getValue());
             this.$parent.$emit('update:syntax', this.syntaxCopy);
+            this.$parent.$emit('update:value', this.scriptEditor.getModel().getValue());
             this.$emit('close');
         }
     }

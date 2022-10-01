@@ -17,22 +17,22 @@
     "@types/lodash": "4.14.139",
     "@types/moment": "2.13.0",
     "@types/moment-timezone": "0.5.12",
-    "@vue/cli-plugin-babel": "3.11.0",
-    "@vue/cli-plugin-typescript": "3.11.0",
-    "@vue/cli-service": "3.11.0",
+    "@vue/cli-plugin-babel": "~5.0.8",
+    "@vue/cli-plugin-typescript": "~5.0.8",
+    "@vue/cli-service": "~5.0.8",
     "axios": "0.19.0",
     "bitset": "5.1.1",
     "braintree-web": "3.62.0",
     "braintree-web-drop-in": "1.22.1",
     "bulma": "0.9.3",
     "bulma-divider": "0.2.0",
-    "core-js": "2.6.5",
+    "core-js": "^3.8.3",
     "js-cookie": "2.2.1",
     "lodash": "4.17.15",
     "moment": "2.24.0",
     "moment-timezone": "0.5.26",
-    "monaco-editor": "0.19.3",
-    "monaco-editor-webpack-plugin": "1.8.2",
+    "monaco-editor": "0.34.0",
+    "monaco-editor-webpack-plugin": "7.0.1",
     "open": "8.4.0",
     "sass-loader": "10.2.1",
     "typescript": "4.5.5",
@@ -51,6 +51,7 @@
     "vuex": "3.0.1"
   },
   "devDependencies": {
-    "sass": "1.51.0"
+    "sass": "1.51.0",
+    "typescript": "~4.5.5"
   }
 }

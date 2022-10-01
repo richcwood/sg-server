@@ -9,3 +9,7 @@ export interface Variable {
     value: string;
     key: string;
 }
+
+export interface VariableMap {
+    [key: string]: Pick<Variable, 'sensitive' | 'value'>;
+}

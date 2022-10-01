@@ -8,8 +8,8 @@
                 <a href="#">
                     <font-awesome-icon icon="question-circle" />
                 </a>
-                <span slot="popover">
-                Description text
+                <span slot="popover" class="is-inline-block" style="max-width:300px;">
+                    Runtime variables marked as sensitive are hidden by default in the console and redacted in job logs.
                 </span>
             </v-popover>
         </div>
@@ -43,7 +43,7 @@
 
 <script lang="ts">
     import { ValidationProvider, ValidationObserver } from "vee-validate";
-    import { Component, Vue, Prop } from 'vue-property-decorator';
+    import { Component, Vue, Prop, Watch } from 'vue-property-decorator';
     import { VPopover } from 'v-tooltip';
 
     import ValueInput from './ValueInput.vue';
@@ -65,8 +65,13 @@
             observer: any;
         };
 
-        public created () {
-            this.variableCopy = { ...this.variable };
+        public created (): void {
+            this.copyVariable(this.variable);
+        }
+
+        @Watch('variable')
+        private copyVariable (variable: Variable): void {
+            this.variableCopy = Object.assign({}, variable);
         }
 
         public onAdd (): void {

@@ -1,7 +1,13 @@
 <template>
     <div class="field">
         <p class="control has-icons-right">
-            <input v-model="valueCopy" :readonly="sensitive && isMasked" ref="input" class="input" type="text" placeholder="Value">
+            <input :readonly="sensitive && isMasked"
+                v-model="valueCopy"
+                @change="$emit('change', $event.target.value)"
+                placeholder="Value"
+                class="input"
+                type="text"
+                ref="input" />
             <span class="icon is-small is-right px-2">
                 <a v-if="sensitive" class="mr-2" href="#" @click.prevent="onToggleMask">
                     <font-awesome-icon v-if="isMasked" class="action-icon" icon="eye" />

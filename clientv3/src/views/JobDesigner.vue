@@ -1233,98 +1233,9 @@
               </td>
             </tr>
           </table>
-          <VariableList />
-
-          <table class="table striped-table" style="width: 800px;">
-            <tr class="tr" v-if="Object.keys(jobDefForEdit.runtimeVars).length === 0">
-              <td class="td" colspan="4">
-                No runtime vars yet
-              </td>
-            </tr>
-            <template v-else>
-              <validation-observer ref="editRuntimeVarValidationObserver">
-                <tr class="tr" v-for="(tagValue, tagKey) in jobDefForEdit.runtimeVars" v-bind:key="tagKey">
-                  <td class="td">{{ tagKey }}</td>
-                  <td class="td"><span style="font-weight: 700; size: 20px;"> = </span></td>
-                  <td class="td">
-                    <template v-if="isVarMasked(tagKey)">
-                      &lt;masked&gt;
-                    </template>
-                    <template v-else>
-                      <validation-provider name="Variable Value" rules="required" v-slot="{ errors }">
-                        <input
-                          class="input"
-                          type="text"
-                          v-model.lazy="jobDefForEdit.runtimeVars[tagKey].value"
-                          @change="onJobDefRuntimeVarsChanged"
-                        />
-                        <span v-if="errors && errors.length > 0" class="message validation-error is-danger">{{
-                          errors[0]
-                        }}</span>
-                      </validation-provider>
-                    </template>
-                  </td>
-                  <td class="td">
-                    <a v-if="isVarMasked(tagKey)" class="button-spaced" @click.prevent="onUnmaskClicked(tagKey)"
-                      >unmask</a
-                    >
-                  </td>
-                  <td class="td" style="text-align: center; padding: 10px">
-                    <input
-                      type="checkbox"
-                      v-model.lazy="tagValue.sensitive"
-                      @change="onJobDefRuntimeVarsChanged"
-                      :checked="isChecked(tagValue.sensitive)"
-                    />
-                    <label style="margin-left: 10px;">sensitive</label>
-                  </td>
-                  <td class="td"><a @click.prevent="onDeleteRuntimeVarClicked(tagKey)">Delete</a></td>
-                </tr>
-              </validation-observer>
-            </template>
-            <tr class="tr">
-              <td class="td" colspan="2"></td>
-            </tr>
-          </table>
-        </div>
-        <div>
-          <input
-            style="margin-left: 10px; margin-top: 10px;"
-            type="checkbox"
-            v-model="newRuntimeVarValue.sensitive"
-            :checked="false"
-          />
-          <span style="margin-left: 10px; margin-right: 20px;">Sensitive</span>
-
-          <validation-observer ref="addRuntimeVarValidationObserver">
-            <validation-provider name="Variable Key" rules="required" v-slot="{ errors }">
-              <input
-                class="input"
-                ref="newRuntimeVarKeyInput"
-                type="text"
-                style="width: 250px;"
-                v-model="newRuntimeVarKey"
-                placeholder="key"
-              />
-              <span v-if="errors && errors.length > 0" class="message validation-error is-danger">{{ errors[0] }}</span>
-            </validation-provider>
-
-            <span style="font-weight: 700; margin-left: 4px; margin-right: 4px;">=</span>
-
-            <validation-provider name="Variable Value" rules="required" v-slot="{ errors }">
-              <input
-                class="input"
-                type="text"
-                style="width: 250px;"
-                v-model="newRuntimeVarValue.value"
-                placeholder="value"
-              />
-              <span v-if="errors && errors.length > 0" class="message validation-error is-danger">{{ errors[0] }}</span>
-            </validation-provider>
-          </validation-observer>
-
-          <button class="button button-spaced" @click="onAddRuntimeVarClicked">Add Runtime Variable</button>
-          <br /><br />&nbsp;
+          <VariableList @input="onJobDefRuntimeVarsChanged"
+            :value="jobDefForEdit.runtimeVars"
+            :variable="jobDefRuntimeVariable" />
         </div>
       </div>
 
@@ -1537,6 +1448,7 @@ import SGCTaskDefEditor from "../components/SGCTaskDefEditor.vue";
 import { stringToMap, mapToString } from "../utils/Shared";
 import ValueInput from '@/components/runtimeVariable/ValueInput.vue';
 import { VariableList } from '@/components/runtimeVariable';
+import { Variable, VariableMap } from '@/components/runtimeVariable/types';
 
 enum JobTab {
   VARIABLES = "RuntimeVariables",
@@ -1617,6 +1529,7 @@ export default class JobDesigner extends Vue {
   private inboundTaskPaths: InboundPaths = null;
   private illegalLoopTasks: null | TaskDef[] = null;
   private inboundHighlightPath: any = null;
+  private jobDefRuntimeVariable: Variable = null;
 
   @BindStoreModel({ storeType: StoreType.TaskDefStore })
   private selectedTaskDef!: null | TaskDef;
@@ -2115,78 +2028,19 @@ export default class JobDesigner extends Vue {
     this.onSelectedStepDefForEditChanged();
   }
 
-  private async onJobDefRuntimeVarsChanged() {
-    console.log("changgeed", this.jobDefForEdit.runtimeVars);
+  private async onJobDefRuntimeVarsChanged(runtimeVars: VariableMap) {
+    this.jobDefForEdit.runtimeVars = runtimeVars;
 
     try {
-      if (!(await (<any>this.$refs.editRuntimeVarValidationObserver).validate())) {
-        return;
-      }
-
       await this.$store.dispatch(`${StoreType.JobDefStore}/save`, {
         id: this.jobDefForEdit.id,
-        runtimeVars: this.jobDefForEdit.runtimeVars,
+        runtimeVars,
       });
 
       this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Saved job`, AlertPlacement.FOOTER));
-      (<any>this).$refs.addRuntimeVarValidationObserver.reset();
     } catch (err) {
       console.error(err);
       showErrors("Error saving the job runtime variables", err);
-    }
-  }
-
-  private newRuntimeVarKey = "";
-  private newRuntimeVarValue = { value: "", sensitive: false };
-  private async onAddRuntimeVarClicked() {
-    if (this.jobDefForEdit) {
-      try {
-        if (!(await (<any>this.$refs.addRuntimeVarValidationObserver).validate())) {
-          return;
-        }
-
-        await this.$store.dispatch(`${StoreType.JobDefStore}/save`, {
-          id: this.jobDefForEdit.id,
-          runtimeVars: _.extend(
-            {
-              [this.newRuntimeVarKey]: {
-                value: this.newRuntimeVarValue.value,
-                sensitive: this.newRuntimeVarValue.sensitive,
-              },
-            },
-            this.jobDefForEdit.runtimeVars
-          ),
-        });
-        this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Saved job`, AlertPlacement.FOOTER));
-
-        (<any>this).$refs.addRuntimeVarValidationObserver.reset();
-
-        this.newRuntimeVarKey = "";
-        this.newRuntimeVarValue = { value: "", sensitive: false };
-      } catch (err) {
-        console.error(err);
-        showErrors("Error saving the job", err);
-      }
-    }
-  }
-
-  private isChecked(val: any) {
-    return val == true;
-  }
-
-  private async onDeleteRuntimeVarClicked(tagKey: string) {
-    if (this.jobDefForEdit) {
-      try {
-        const newVars = _.clone(this.jobDefForEdit.runtimeVars);
-        delete newVars[tagKey];
-        this.jobDefForEdit.runtimeVars = newVars;
-
-        await this.$store.dispatch(`${StoreType.JobDefStore}/save`, this.jobDefForEdit);
-        this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Saved job`, AlertPlacement.FOOTER));
-      } catch (err) {
-        showErrors("Error saving the job", err);
-        console.error(err);
-      }
     }
   }
 
@@ -2655,15 +2509,20 @@ export default class JobDesigner extends Vue {
     this.$modal.show("select-script-vars-modal");
   }
 
-  private onClickedAddSggAsVar(sgg: string) {
+  private onClickedAddSggAsVar(key: string) {
     this.$modal.hide("select-script-vars-modal");
 
     if (this.selectScriptsType === "runtime-vars") {
-      this.newRuntimeVarKey = sgg;
-      (<any>this.$refs.newRuntimeVarKeyInput).focus();
-      (<any>this.$refs.newRuntimeVarKeyInput).scrollIntoView();
+      this.jobDefRuntimeVariable = {
+        sensitive: false,
+        value: '',
+        key
+      };
+      // TODO
+      // (<any>this.$refs.newRuntimeVarKeyInput).focus();
+      // (<any>this.$refs.newRuntimeVarKeyInput).scrollIntoView();
     } else {
-      this.newRunJobVarKey = sgg;
+      this.newRunJobVarKey = key;
       (<any>this.$refs.newRunJobVarKeyInput).focus();
       (<any>this.$refs.newRunJobVarKeyInput).scrollIntoView();
     }
@@ -2671,16 +2530,6 @@ export default class JobDesigner extends Vue {
 
   private onCloseSelectScriptVarsClicked() {
     this.$modal.hide("select-script-vars-modal");
-  }
-
-  private unMaskedVars = {};
-
-  private isVarMasked(varName: string): boolean {
-    return !this.unMaskedVars[varName];
-  }
-
-  private onUnmaskClicked(varName: string) {
-    Vue.set(this.unMaskedVars, varName, true);
   }
 }
 </script>

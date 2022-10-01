@@ -1,7 +1,12 @@
 <template>
     <div class="field">
-        <VariableForm class="ml-2" @create="onVariableCreate" />
-        <table v-if="variables.length" class="table">
+        <VariableForm @create="onVariableCreate"
+            :variable="variable"
+            class="ml-2" />
+        <h3 v-if="!variables.length" class="is-size-4 py-3 align-middle has-text-centered">
+            No runtime vars yet
+        </h3>
+        <table v-else class="table">
             <thead>
                 <tr>
                     <th></th>
@@ -20,14 +25,15 @@
                                 <a href="#">
                                     <font-awesome-icon icon="question-circle" />
                                 </a>
-                                <span slot="popover">
-                                Description text
+                                <span slot="popover" class="is-inline-block" style="max-width:300px;">
+                                    Runtime variables marked as sensitive are hidden by default in the console and redacted in job logs.
                                 </span>
                             </v-popover>
                         </div>
                     </td>
                     <td>
                         <input v-model="runVar.key"
+                            readonly
                             class="input"
                             type="text"
                             style="width: 250px;"
@@ -37,12 +43,13 @@
                     <td>
                         <ValueInput v-model="runVar.value"
                             :sensitive="runVar.sensitive"
+                            @change="onChange"
                             class="mb-0"
                             style="width: 250px;"
                             placeholder="Value" />
                     </td>
                     <td class="align-middle">
-                        <a href="#" @click.prevent="onRemove(index)">
+                        <a href="#" @change="onChange" @click.prevent="onRemove(index)">
                             <font-awesome-icon icon="minus-square" />
                         </a>
                     </td>
@@ -53,25 +60,57 @@
 </template>
 
 <script lang="ts">
-    import { Component, Vue } from 'vue-property-decorator';
+    import { Component, Vue, Prop } from 'vue-property-decorator';
     import { VPopover } from 'v-tooltip';
 
+    import { Variable, VariableMap } from './types';
     import VariableForm from './VariableForm.vue';
     import ValueInput from './ValueInput.vue';
-    import { Variable } from './types';
 
     @Component({
         components: { VariableForm, ValueInput, VPopover }
     })
     export default class VariablesList extends Vue {
+        @Prop({ default: () => ({}) }) public readonly value: VariableMap;
+        @Prop({ default: null }) public readonly variable: Variable;
+
         public variables: Variable[] = [];
+
+        private created (): void {
+            for (let key in this.value) {
+                this.variables.push({
+                    sensitive: this.value[key].sensitive,
+                    value: this.value[key].value,
+                    key
+                });
+            }
+        }
 
         public onVariableCreate (variable: Variable): void {
             this.variables.push(variable);
+            this.$emit('create', variable);
+            this.onChange();
         }
 
         public onRemove (index: number): void {
+            this.$emit('remove', this.variables[index]);
             this.variables.splice(index, 1);
+            this.onChange();
+        }
+
+        public onChange (): void {
+            this.$emit('input', this.toMap());
+        }
+
+        private toMap (): VariableMap {
+            return this.variables.reduce((map: VariableMap, variable: Variable) => {
+                map[variable.key] = {
+                    sensitive: variable.sensitive,
+                    value: variable.value
+                };
+
+                return map;
+            }, {});
         }
     }
 </script>
