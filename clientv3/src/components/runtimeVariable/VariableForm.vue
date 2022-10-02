@@ -15,7 +15,7 @@
         </div>
         <validation-provider name="Variable Key" rules="required" v-slot="{ errors }" tag="div" class="control is-relative">
             <input v-model="variableCopy.key"
-                class="input"
+                class="input runtime-variable-input"
                 type="text"
                 style="width: 250px;"
                 placeholder="Key"

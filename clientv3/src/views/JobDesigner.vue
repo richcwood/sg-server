@@ -2518,9 +2518,13 @@ export default class JobDesigner extends Vue {
         value: '',
         key
       };
-      // TODO
-      // (<any>this.$refs.newRuntimeVarKeyInput).focus();
-      // (<any>this.$refs.newRuntimeVarKeyInput).scrollIntoView();
+
+      this.$nextTick(() => {
+        const keyInput: HTMLInputElement = this.$el.querySelector('.runtime-variable-input');
+
+        keyInput.scrollIntoView();
+        keyInput.focus();
+      });
     } else {
       this.newRunJobVarKey = key;
       (<any>this.$refs.newRunJobVarKeyInput).focus();
