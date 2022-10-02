@@ -3,7 +3,7 @@
         <p class="control has-icons-right">
             <input :readonly="sensitive && isMasked"
                 v-model="valueCopy"
-                @change="$emit('change', $event.target.value)"
+                @change="onChange($event.target.value)"
                 placeholder="Value"
                 class="input"
                 type="text"
@@ -51,6 +51,10 @@
             this.$emit('input', val);
         }
 
+        private onChange (val: string): void {
+            this.$emit('change', val);
+        }
+
         @Watch('sensitive')
         private onSensitiveChange (val: boolean): void {
             this.isMasked = val;
@@ -66,6 +70,8 @@
                     this.valueCopy = this.syntax === LangSyntax.JSON
                         ? val.replace(/\r?\n|\r/g, '').replace(/\s/g, '')
                         : val;
+
+                    this.onChange(this.valueCopy);
                 }
             });
         }

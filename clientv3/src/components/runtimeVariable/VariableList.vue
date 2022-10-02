@@ -19,7 +19,7 @@
                     <td class="align-middle">
                         <div class="control">
                             <label class="checkbox">
-                                <input type="checkbox" v-model="runVar.sensitive"> Sensitive
+                                <input type="checkbox" @change="onChange" v-model="runVar.sensitive"> Sensitive
                             </label>
                             <v-popover class="is-inline ml-2">
                                 <a href="#">
@@ -49,7 +49,7 @@
                             placeholder="Value" />
                     </td>
                     <td class="align-middle">
-                        <a href="#" @change="onChange" @click.prevent="onRemove(index)">
+                        <a href="#" @click.prevent="onRemove(index)">
                             <font-awesome-icon icon="minus-square" />
                         </a>
                     </td>
