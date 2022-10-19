@@ -422,13 +422,6 @@ def on_message(delivery_tag, body, async_consumer):
             next_run_time = None
             if "next_run_time" in msg and msg["next_run_time"] != "":
                 useNextRunTime = True
-                if msg["next_run_time"] != "None":
-                    next_run_time = msg["next_run_time"]
-
-            useNextRunTime = False
-            next_run_time = None
-            if "next_run_time" in msg and msg["next_run_time"] != "":
-                useNextRunTime = True
                 if "next_run_time" == "None":
                     next_run_time = None
                 else:
