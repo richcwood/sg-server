@@ -350,27 +350,27 @@
                     <label class="label">Weeks</label>
                   </div>
                   <div class="field-body">
-                    <ValidationProvider tag="div" class="field is-narrow" name="Weeks" rules="required" v-slot="{ errors }">
+                    <ValidationProvider tag="div" class="field is-narrow" name="Weeks" rules="required_if_empty:@Days,@Hours,@Minutes" v-slot="{ errors }">
                       <div class="control" style="width: 250px;">
                         <input v-model="editSchedule_interval.Weeks" type="text" class="input" />
                         <p v-if="errors.length" class="help is-danger">{{ errors[0] }}</p>
                       </div>
                     </ValidationProvider>
-                    <ValidationProvider tag="div" name="Days" class="field is-narrow" style="margin-top: -32px;" rules="required" v-slot="{ errors }">
+                    <ValidationProvider tag="div" name="Days" class="field is-narrow" style="margin-top: -32px;" rules="required_if_empty:@Weeks,@Hours,@Minutes" v-slot="{ errors }">
                       <label class="label">Days</label>
                       <div class="control" style="width: 60px;">
                         <input v-model="editSchedule_interval.Days" type="text" class="input" placeholder="1-7" />
                         <p v-if="errors.length" class="help is-danger">{{ errors[0] }}</p>
                       </div>
                     </ValidationProvider>
-                    <ValidationProvider tag="div" name="Hours" class="field is-narrow" style="margin-top: -32px;" rules="required" v-slot="{ errors }">
+                    <ValidationProvider tag="div" name="Hours" class="field is-narrow" style="margin-top: -32px;" rules="required_if_empty:@Days,@Weeks,@Minutes" v-slot="{ errors }">
                       <label class="label">Hours</label>
                       <div class="control" style="width: 60px;">
                         <input class="input" type="text" v-model="editSchedule_interval.Hours" placeholder="0-23" />
                         <p v-if="errors.length" class="help is-danger">{{ errors[0] }}</p>
                       </div>
                     </ValidationProvider>
-                    <ValidationProvider name="Minutes" tag="div" class="field is-narrow" style="margin-top: -32px;" rules="required" v-slot="{ errors }">
+                    <ValidationProvider name="Minutes" tag="div" class="field is-narrow" style="margin-top: -32px;" rules="required_if_empty:@Days,@Hours,@Weeks" v-slot="{ errors }">
                       <label class="label">Minutes</label>
                       <div class="control" style="width: 60px;">
                         <input class="input" type="text" v-model="editSchedule_interval.Minutes" placeholder="0-59" />

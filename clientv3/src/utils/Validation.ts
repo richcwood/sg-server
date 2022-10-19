@@ -1,6 +1,13 @@
 import { extend as vee_validate_extend } from 'vee-validate';
 import _ from 'lodash';
 
+function isTruthy (val: unknown): boolean {
+  if (Array.isArray(val) || _.isObject(val)) {
+    return !_.isEmpty(val);
+  } else {
+    return Boolean(val);
+  }
+}
 
 vee_validate_extend('required', {
   validate (value) {
@@ -149,12 +156,28 @@ const initValidation = function(){
     }
   });
 
+  // Validates if object has a specific property
+  // <ValidationProvider rules="required_field:myKey" /> - this will check if object under validation has 'myKey' property
   vee_validate_extend('required_field', {
     validate (value: Record<string, any>, { field }: any): boolean {
       return Boolean(value && value[field]);
     },
     computesRequired: true,
     params: ['field']
+  });
+
+  // This validator does cross-field validation,
+  // it validates if at least one field is set
+  //
+  // <ValidationProvider rules="required_if_empty:@name,@email" />
+  // Makes field under validation required if <ValidationProvider name="name" /> or <ValidationProvider name="email" />
+  // have empty values
+  vee_validate_extend('required_if_empty', {
+    validate (value: any, values: any[]) {
+      return values.some(isTruthy) ? true : isTruthy(value);
+    },
+    computesRequired: true,
+    message: 'At least one field is required'
   });
 }
 
