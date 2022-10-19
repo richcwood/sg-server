@@ -372,7 +372,7 @@
                     </ValidationProvider>
                   </div>
                 </div>
-                <ValidationProvider tag="div" name="Start Date" class="field is-horizontal" rules="required" v-slot="{ errors }">
+                <div class="field is-horizontal">
                   <div class="field-label is-normal">
                     <label class="label">Start Date</label>
                   </div>
@@ -380,12 +380,11 @@
                     <div class="field">
                       <div class="control" style="width: 250px;">
                         <input class="input" type="date" v-model="editSchedule_interval.Start_Date" />
-                        <p v-if="errors.length" class="help is-danger">{{ errors[0] }}</p>
                       </div>
                     </div>
                   </div>
-                </ValidationProvider>
-                <ValidationProvider tag="div" name="End Date" class="field is-horizontal" rules="required" v-slot="{ errors }">
+                </div>
+                <div class="field is-horizontal">
                   <div class="field-label is-normal">
                     <label class="label">End Date</label>
                   </div>
@@ -393,11 +392,10 @@
                     <div class="field">
                       <div class="control" style="width: 250px;">
                         <input class="input" type="date" v-model="editSchedule_interval.End_Date" />
-                        <p v-if="errors.length" class="help is-danger">{{ errors[0] }}</p>
                       </div>
                     </div>
                   </div>
-                </ValidationProvider>
+                </div>
                 <div class="field is-horizontal">
                   <div class="field-label is-normal">
                     <div class="label">Jitter</div>
@@ -468,7 +466,7 @@
                   </ValidationProvider>
                 </div>
               </div>
-              <ValidationProvider tag="div" name="Start Date" class="field is-horizontal" rules="required" v-slot="{ errors }">
+              <div class="field is-horizontal">
                 <div class="field-label is-normal">
                   <label class="label">Start Date</label>
                 </div>
@@ -476,12 +474,11 @@
                   <div class="field">
                     <div class="control" style="width: 250px;">
                       <input class="input" type="date" v-model="editSchedule_cron.Start_Date" />
-                      <p v-if="errors.length" class="help is-danger">{{ errors[0] }}</p>
                     </div>
                   </div>
                 </div>
-              </ValidationProvider>
-              <ValidationProvider tag="div" name="End Date" class="field is-horizontal" rules="required" v-slot="{ errors }">
+              </div>
+              <div class="field is-horizontal">
                 <div class="field-label is-normal">
                   <label class="label">End Date</label>
                 </div>
@@ -489,11 +486,10 @@
                   <div class="field">
                     <div class="control" style="width: 250px;">
                       <input class="input" type="date" v-model="editSchedule_cron.End_Date" />
-                      <p v-if="errors.length" class="help is-danger">{{ errors[0] }}</p>
                     </div>
                   </div>
                 </div>
-              </ValidationProvider>
+              </div>
               <ValidationProvider tag="div" class="field is-horizontal" name="Timezone" rules="required" v-slot="{ errors }">
                 <div class="field-label is-normal">
                   <label class="label">Timezone</label>
