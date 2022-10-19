@@ -423,52 +423,60 @@
                   <div class="label"></div>
                 </div>
                 <div class="field-body">
-                  <ValidationProvider tag="div" class="field is-narrow">
+                  <ValidationProvider rules="required_if_empty:@Month,@Day,@Week,@WeekDay,@Hour,@Minute,@Second" name="Year" tag="div" class="field is-narrow" v-slot="{ errors }">
                     <label class="label">Year</label>
                     <div class="control" style="width: 65px;">
                       <input v-model="editSchedule_cron.Year" type="text" class="input" placeholder="YYYY" />
+                      <p v-if="errors.length" class="help is-danger">{{ errors[0] }}</p>
                     </div>
                   </ValidationProvider>
-                  <ValidationProvider tag="div" class="field is-narrow">
+                  <ValidationProvider rules="required_if_empty:@Year,@Day,@Week,@WeekDay,@Hour,@Minute,@Second" name="Month" tag="div" class="field is-narrow" v-slot="{ errors }">
                     <label class="label">Month</label>
                     <div class="control" style="width: 55px;">
                       <input v-model="editSchedule_cron.Month" type="text" class="input" placeholder="1-12" />
+                      <p v-if="errors.length" class="help is-danger">{{ errors[0] }}</p>
                     </div>
                   </ValidationProvider>
-                  <ValidationProvider tag="div" class="field is-narrow">
+                  <ValidationProvider rules="required_if_empty:@Year,@Month,@Week,@WeekDay,@Hour,@Minute,@Second" name="Day" tag="div" class="field is-narrow" v-slot="{ errors }">
                     <label class="label">Day</label>
                     <div class="control" style="width: 55px;">
                       <input v-model="editSchedule_cron.Day" type="text" class="input" placeholder="1-31" />
+                      <p v-if="errors.length" class="help is-danger">{{ errors[0] }}</p>
                     </div>
                   </ValidationProvider>
-                  <ValidationProvider tag="div" class="field is-narrow">
+                  <ValidationProvider rules="required_if_empty:@Year,@Month,@Day,@WeekDay,@Hour,@Minute,@Second" name="Week" tag="div" class="field is-narrow" v-slot="{ errors }">
                     <label class="label">Week</label>
                     <div class="control" style="width: 60px;">
                       <input v-model="editSchedule_cron.Week" type="text" class="input" placeholder="1-53" />
+                      <p v-if="errors.length" class="help is-danger">{{ errors[0] }}</p>
                     </div>
                   </ValidationProvider>
-                  <ValidationProvider tag="div" class="field is-narrow">
+                  <ValidationProvider rules="required_if_empty:@Year,@Month,@Day,@Week,@Hour,@Minute,@Second" name="WeekDay" tag="div" class="field is-narrow" v-slot="{ errors }">
                     <label class="label">Day of Week</label>
                     <div class="control" style="width: 140px;">
                       <input v-model="editSchedule_cron.Day_Of_Week" type="text" class="input" placeholder="0-6 or mon-sun" />
+                      <p v-if="errors.length" class="help is-danger">{{ errors[0] }}</p>
                     </div>
                   </ValidationProvider>
-                  <ValidationProvider tag="div" class="field is-narrow">
+                  <ValidationProvider rules="required_if_empty:@Year,@Month,@Day,@Week,@WeekDay,@Minute,@Second" name="Hour" tag="div" class="field is-narrow" v-slot="{ errors }">
                     <label class="label">Hour</label>
                     <div class="control" style="width: 60px;">
                       <input v-model="editSchedule_cron.Hour" type="text" class="input" placeholder="0-23" />
+                      <p v-if="errors.length" class="help is-danger">{{ errors[0] }}</p>
                     </div>
                   </ValidationProvider>
-                  <ValidationProvider tag="div" class="field is-narrow">
+                  <ValidationProvider rules="required_if_empty:@Year,@Month,@Day,@Week,@WeekDay,@Hour,@Second" name="Minute" tag="div" class="field is-narrow" v-slot="{ errors }">
                     <label class="label">Minute</label>
                     <div class="control" style="width: 60px;">
                       <input v-model="editSchedule_cron.Minute" type="text" class="input" placeholder="0-59" />
+                      <p v-if="errors.length" class="help is-danger">{{ errors[0] }}</p>
                     </div>
                   </ValidationProvider>
-                  <ValidationProvider tag="div" class="field is-narrow">
+                  <ValidationProvider rules="required_if_empty:@Year,@Month,@Day,@Week,@WeekDay,@Hour,@Minute" name="Second" tag="div" class="field is-narrow" v-slot="{ errors }">
                     <label class="label">Second</label>
                     <div class="control" style="width: 60px;">
                       <input v-model="editSchedule_cron.Second" type="text" class="input" placeholder="0-59" />
+                      <p v-if="errors.length" class="help is-danger">{{ errors[0] }}</p>
                     </div>
                   </ValidationProvider>
                 </div>
