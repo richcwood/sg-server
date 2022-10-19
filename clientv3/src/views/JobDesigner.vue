@@ -442,8 +442,8 @@
                   </ValidationProvider>
                   <ValidationProvider tag="div" class="field is-narrow">
                     <label class="label">Day of Week</label>
-                    <div class="control" style="width: 95px;">
-                      <input v-model="editSchedule_cron.Day_Of_Week" type="text" class="input" placeholder="0-6" />
+                    <div class="control" style="width: 140px;">
+                      <input v-model="editSchedule_cron.Day_Of_Week" type="text" class="input" placeholder="0-6 or mon-sun" />
                     </div>
                   </ValidationProvider>
                   <ValidationProvider tag="div" class="field is-narrow">
