@@ -1,28 +1,30 @@
-import sys
-import os
-import traceback
-import time
-from datetime import datetime, date
-import socket
-import logging
-from logging.handlers import TimedRotatingFileHandler
-from threading import Event
-from threading import Thread
-from pytz import utc
 import json
+import logging
+import os
 import requests
 import sendgrid
+import socket
+import sys
+import traceback
+
+from datetime import datetime, date, timedelta
+from logging.handlers import TimedRotatingFileHandler
+from pytz import utc
 from sendgrid.helpers.mail import *
+from threading import Event
+from threading import Thread
+
+from apscheduler.executors.pool import ProcessPoolExecutor
+from apscheduler.executors.pool import ThreadPoolExecutor
+from apscheduler.jobstores.mongodb import MongoDBJobStore
+from apscheduler.schedulers.blocking import BlockingScheduler
+from apscheduler.triggers.cron import CronTrigger
+from apscheduler.triggers.date import DateTrigger
+from apscheduler.triggers.interval import IntervalTrigger
+from apscheduler.util import timedelta_seconds
 
 from rmq_comm import *
 
-from apscheduler.schedulers.blocking import BlockingScheduler
-from apscheduler.jobstores.mongodb import MongoDBJobStore
-from apscheduler.executors.pool import ThreadPoolExecutor
-from apscheduler.executors.pool import ProcessPoolExecutor
-from apscheduler.triggers.date import DateTrigger
-from apscheduler.triggers.interval import IntervalTrigger
-from apscheduler.triggers.cron import CronTrigger
 
 logging.basicConfig()
 
@@ -322,17 +324,83 @@ def on_launch_job(scheduled_time, job_id, _teamId, targetId, runtimeVars):
             res = RestAPICall("schedule/{}".format(job_id), "DELETE", _teamId, {}, {})
 
 
+def parse_job_interval(job):
+    weeks = job["weeks"] if "weeks" in job else 0
+    days = job["days"] if "days" in job else 0
+    hours = job["hours"] if "hours" in job else 0
+    minutes = job["minutes"] if "minutes" in job else 0
+    seconds = job["seconds"] if "seconds" in job else 0
+    interval = timedelta_seconds(
+        timedelta(weeks=weeks, days=days, hours=hours, minutes=minutes, seconds=seconds)
+    )
+    return interval
+
+
+def interval_schedule_changed(existing_job, job):
+    interval = parse_job_interval(job)
+    if existing_job.trigger.interval_length != interval:
+        return True
+    if (
+        existing_job.trigger.start_date != job["start_date"]
+        if "start_date" in job
+        else ""
+    ):
+        return True
+    if existing_job.trigger.end_date != job["end_date"] if "end_date" in job else "":
+        return True
+    if existing_job.trigger.tzinfo != job["tzinfo"] if "tzinfo" in job else "":
+        return True
+    if existing_job.trigger.jitter != job["jitter"] if "jitter" in job else "":
+        return True
+    return False
+
+
+def cron_schedule_changed(existing_job, job):
+    for i in range(len(existing_job.trigger.FIELD_NAMES)):
+        current_value = existing_job.trigger.fields[i]
+        field_name = existing_job.trigger.FIELD_NAMES[i]
+        schedule_value = None
+        if field_name in job:
+            schedule_value = job[field_name]
+        if not current_value.is_default and schedule_value != None:
+            if str(current_value) != str(schedule_value):
+                return True
+        elif not current_value.is_default or schedule_value != None:
+            return True
+    return False
+
+
+def date_schedule_changed(existing_job, job):
+    if existing_job.trigger.run_date != job["run_date"] if "run_date" in job else "":
+        return True
+    return False
+
+
+def schedule_changed(existing_job, job):
+    if scheduleTriggerType2String[type(existing_job.trigger)] != job["TriggerType"]:
+        return True
+
+    if not existing_job.next_run_time and job["isActive"]:
+        return True
+
+    if scheduleTriggerType2String[type(existing_job.trigger)] == "cron":
+        if cron_schedule_changed(existing_job, job):
+            return True
+    elif scheduleTriggerType2String[type(existing_job.trigger)] == "interval":
+        if interval_schedule_changed(existing_job, job):
+            return True
+    elif scheduleTriggerType2String[type(existing_job.trigger)] == "date":
+        if date_schedule_changed(existing_job, job):
+            return True
+
+    return False
+
+
 def on_message(delivery_tag, body, async_consumer):
     global cml_adapter
     global job_scheduler
 
     try:
-        # async_consumer.stop_consuming()
-
-        # while async_consumer._actively_consuming:
-        #     time.sleep(1)
-        # async_consumer.acknowledge_message(delivery_tag)
-
         msg = json.loads(body)
 
         # job_scheduler.print_jobs()
@@ -351,7 +419,19 @@ def on_message(delivery_tag, body, async_consumer):
                 max_instances = msg["max_instances"]
 
             useNextRunTime = False
+<<<<<<< Updated upstream
             if "next_run_time" in msg and msg["next_run_time"] != "":
+=======
+            next_run_time = None
+            if "next_run_time" in msg and msg["next_run_time"] != "":
+                useNextRunTime = True
+                if msg["next_run_time"] != "None":
+                    next_run_time = msg["next_run_time"]
+
+            useNextRunTime = False
+            next_run_time = None
+            if 'next_run_time' in msg and msg['next_run_time'] != '':
+>>>>>>> Stashed changes
                 useNextRunTime = True
                 if "next_run_time" == "None":
                     next_run_time = None
@@ -439,9 +519,13 @@ def on_message(delivery_tag, body, async_consumer):
             job = job_scheduler.get_job(msg["id"])
             if job:
                 changeTypes = []
+<<<<<<< Updated upstream
                 if scheduleTriggerType2String[type(job.trigger)] != msg[
                     "TriggerType"
                 ] or ((not job.next_run_time) and isActive):
+=======
+                if schedule_changed(job, msg):
+>>>>>>> Stashed changes
                     changeTypes.append("schedule")
                 if (
                     job.misfire_grace_time != misfire_grace_time
@@ -449,7 +533,11 @@ def on_message(delivery_tag, body, async_consumer):
                     or job.next_run_time != next_run_time
                 ):
                     changeTypes.append("job")
+<<<<<<< Updated upstream
                 if not useNextRunTime and "schedule" in changeTypes:
+=======
+                if not useNextRunTime and 'schedule' in changeTypes:
+>>>>>>> Stashed changes
                     # print('schedule change')
                     if msg["TriggerType"] == "cron":
                         job_scheduler.reschedule_job(
