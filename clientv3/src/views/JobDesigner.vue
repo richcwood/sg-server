@@ -1419,7 +1419,7 @@ import TaskDefEditor from "../components/TaskDefEditor.vue";
 import SGCTaskDefEditor from "../components/SGCTaskDefEditor.vue";
 import ValueInput from '@/components/runtimeVariable/ValueInput.vue';
 import { VariableList } from '@/components/runtimeVariable';
-import { Variable, VariableMap } from '@/components/runtimeVariable/types';
+import { ValueFormat, Variable, VariableMap } from '@/components/runtimeVariable/types';
 import ModalCard from '@/components/core/ModalCard.vue';
 
 enum JobTab {
@@ -2491,6 +2491,7 @@ export default class JobDesigner extends Vue {
 
     if (this.selectScriptsType === "runtime-vars") {
       this.jobDefRuntimeVariable = {
+        format: ValueFormat.TEXT,
         sensitive: false,
         value: '',
         key

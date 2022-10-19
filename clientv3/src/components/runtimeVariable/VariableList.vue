@@ -41,17 +41,26 @@
                         />
                     </td>
                     <td>
-                        <ValueInput v-model="runVar.value"
-                            :sensitive="runVar.sensitive"
-                            @change="onChange"
+                        <ValueInput
+                            :value="runVar"
+                            @change="onValueInputChange(index, $event)"
                             class="mb-0"
                             style="width: 250px;"
                             placeholder="Value" />
                     </td>
                     <td class="align-middle">
-                        <a href="#" @click.prevent="onRemove(index)">
-                            <font-awesome-icon icon="minus-square" />
-                        </a>
+                        <div class="field is-grouped">
+                            <p class="control">
+                                <a href="#" @click.prevent="onRemove(index)">
+                                    <font-awesome-icon icon="minus-square" />
+                                </a>
+                            </p>
+                            <p v-if="updateOnClick" class="control">
+                                <a href="#" title="Save Changes" @click.prevent="onTriggerUpdate">
+                                    <font-awesome-icon icon="save" />
+                                </a>
+                            </p>
+                        </div>
                     </td>
                 </tr>
             </tbody>
@@ -63,7 +72,7 @@
     import { Component, Vue, Prop } from 'vue-property-decorator';
     import { VPopover } from 'v-tooltip';
 
-    import { Variable, VariableMap } from './types';
+    import { KeylessVariable, Variable, VariableMap } from './types';
     import VariableForm from './VariableForm.vue';
     import ValueInput from './ValueInput.vue';
 
@@ -72,14 +81,17 @@
     })
     export default class VariablesList extends Vue {
         @Prop({ default: () => ({}) }) public readonly value: VariableMap;
-        @Prop({ default: null }) public readonly variable: Variable;
+        @Prop({ default: false }) public readonly updateOnClick: boolean;
+        @Prop() public readonly variable: Variable;
 
+        private updatedVars: string[] = [];
         public variables: Variable[] = [];
 
         private created (): void {
             for (let key in this.value) {
                 this.variables.push({
                     sensitive: this.value[key].sensitive,
+                    format: this.value[key].format,
                     value: this.value[key].value,
                     key
                 });
@@ -88,13 +100,23 @@
 
         public onVariableCreate (variable: Variable): void {
             this.variables.push(variable);
-            this.$emit('create', variable);
             this.onChange();
         }
 
         public onRemove (index: number): void {
-            this.$emit('remove', this.variables[index]);
             this.variables.splice(index, 1);
+            this.onChange();
+        }
+
+        private onValueInputChange (index: number, payload: KeylessVariable): void {
+            this.variables = this.variables.map((variable, i) => {
+                if (index === i) {
+                    return Object.assign({}, variable, payload);
+                }
+
+                return variable;
+            });
+
             this.onChange();
         }
 
@@ -106,6 +128,7 @@
             return this.variables.reduce((map: VariableMap, variable: Variable) => {
                 map[variable.key] = {
                     sensitive: variable.sensitive,
+                    format: variable.format,
                     value: variable.value
                 };
 

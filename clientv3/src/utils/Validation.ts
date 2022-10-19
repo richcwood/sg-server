@@ -149,6 +149,13 @@ const initValidation = function(){
     }
   });
 
+  vee_validate_extend('required_field', {
+    validate (value: Record<string, any>, { field }: any): boolean {
+      return Boolean(value && value[field]);
+    },
+    computesRequired: true,
+    params: ['field']
+  });
 }
 
 export { initValidation };

@@ -13,7 +13,7 @@
                 </span>
             </v-popover>
         </div>
-        <validation-provider name="Variable Key" rules="required" v-slot="{ errors }" tag="div" class="control is-relative">
+        <ValidationProvider name="Variable Key" rules="required" v-slot="{ errors }" tag="div" class="control is-relative">
             <input v-model="variableCopy.key"
                 class="input runtime-variable-input"
                 type="text"
@@ -23,19 +23,19 @@
             <span v-if="errors && errors.length > 0" class="is-absolute error-text has-text-danger">
                 {{ errors[0] }}
             </span>
-        </validation-provider>
+        </ValidationProvider>
 
         <div class="control has-text-weight-bold">=</div>
 
-        <validation-provider name="Variable Value" rules="required" v-slot="{ errors }" tag="div" class="control is-relative">
-            <ValueInput v-model="variableCopy.value"
+        <ValidationProvider name="Variable Value" rules="required_field:value" v-slot="{ errors }" tag="div" class="control is-relative">
+            <ValueInput v-model="variableInputValue"
                 class="mb-0"
                 style="width: 250px;"
                 placeholder="value" />
             <span v-if="errors && errors.length > 0" class="is-absolute error-text has-text-danger">
                 {{ errors[0]}}
             </span>
-        </validation-provider>
+        </ValidationProvider>
 
         <button class="button" :disabled="invalid" @click="onAdd">Add Runtime Variable</button>
     </validation-observer>
@@ -46,19 +46,16 @@
     import { Component, Vue, Prop, Watch } from 'vue-property-decorator';
     import { VPopover } from 'v-tooltip';
 
+    import { Variable, ValueFormat, KeylessVariable } from './types';
     import ValueInput from './ValueInput.vue';
-    import { Variable } from './types';
 
     @Component({
         components: { ValidationProvider, ValidationObserver, ValueInput, VPopover }
     })
     export default class VariableForm extends Vue {
-        @Prop({ default: () => ({
-            sensitive: false,
-            value: '',
-            key: '',
-        }) })
+        @Prop({ default: () => ({}) })
         public readonly variable: Variable;
+
         private variableCopy: Variable = null;
 
         $refs: {
@@ -66,23 +63,46 @@
         };
 
         public created (): void {
-            this.copyVariable(this.variable);
+            this.variableCopy = Object.assign({
+                format: ValueFormat.TEXT,
+                sensitive: false,
+                value: '',
+                key: '',
+            }, this.variable);
         }
 
         @Watch('variable')
         private copyVariable (variable: Variable): void {
             this.variableCopy = Object.assign({}, variable);
+            this.resetValidation();
+        }
+
+        public get variableInputValue (): KeylessVariable {
+            return {
+                sensitive: this.variableCopy.sensitive,
+                format: this.variableCopy.format,
+                value: this.variableCopy.value,
+            };
+        }
+
+        public set variableInputValue (variable: KeylessVariable) {
+            this.variableCopy = Object.assign({}, this.variableCopy, variable);
         }
 
         public onAdd (): void {
             this.$emit('create', this.variableCopy);
 
             this.variableCopy = {
+                format: ValueFormat.TEXT,
                 sensitive: false,
                 value: '',
                 key: ''
             };
 
+            this.resetValidation();
+        }
+
+        private resetValidation (): void {
             requestAnimationFrame(() => {
                 this.$refs.observer.reset();
             });

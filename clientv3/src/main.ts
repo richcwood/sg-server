@@ -29,7 +29,8 @@ import {
   faCode,
   faMinusSquare,
   faEye,
-  faEyeSlash
+  faEyeSlash,
+  faSave
 } from '@fortawesome/free-solid-svg-icons';
 
 library.add(faSearch);
@@ -47,6 +48,7 @@ library.add(faCode);
 library.add(faMinusSquare);
 library.add(faEye);
 library.add(faEyeSlash);
+library.add(faSave);
 
 Vue.component('font-awesome-icon', FontAwesomeIcon);
 

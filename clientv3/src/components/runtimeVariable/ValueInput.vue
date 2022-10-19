@@ -1,15 +1,16 @@
 <template>
     <div class="field">
         <p class="control has-icons-right">
-            <input :readonly="sensitive && isMasked"
-                v-model="valueCopy"
-                @change="onChange($event.target.value)"
+            <input :readonly="isReadonly"
+                v-model="inputValue"
+                @change="onChange"
+                @click="onClick"
                 placeholder="Value"
                 class="input"
                 type="text"
                 ref="input" />
             <span class="icon is-small is-right px-2">
-                <a v-if="sensitive" class="mr-2" href="#" @click.prevent="onToggleMask">
+                <a v-if="value.sensitive" class="mr-2" href="#" @click.prevent="onToggleMask">
                     <font-awesome-icon v-if="isMasked" class="action-icon" icon="eye" />
                     <font-awesome-icon v-else class="action-icon" icon="eye-slash" />
                 </a>
@@ -24,15 +25,15 @@
 <script lang="ts">
     import { Component, Vue, Prop, Watch } from 'vue-property-decorator';
 
+    import { ValueFormat, KeylessVariable } from './types';
     import ValueModal from './ValueModal.vue';
-    import { LangSyntax } from './types';
 
     @Component
     export default class ValueInput extends Vue {
-        @Prop({ default: false }) public readonly sensitive: boolean;
-        @Prop({ default: '' }) public readonly value: string;
+        @Prop({ default: () => ({}) })
+        public readonly value: KeylessVariable;
 
-        public syntax: LangSyntax = LangSyntax.TEXT;
+        public valueCopy: KeylessVariable = null;
         public isMasked: boolean = false;
 
         $refs: {
@@ -40,38 +41,68 @@
         };
 
         private created (): void {
-            this.isMasked = this.sensitive;
+            this.isMasked = this.value.sensitive;
+            this.valueCopy = Object.assign({
+                format: ValueFormat.TEXT,
+                sensitive: false,
+                value: '',
+            }, this.value);
         }
 
-        public get valueCopy (): string {
-            return this.isMasked ? '******' : this.value;
+        public get inputValue (): string {
+            return this.isMasked ? '******' : this.valueCopy.value;
         }
 
-        private set valueCopy (val: string) {
-            this.$emit('input', val);
+        private set inputValue (value: string) {
+            this.valueCopy.value = value;
+            this.emitUpdate({ value });
         }
 
-        private onChange (val: string): void {
-            this.$emit('change', val);
+        private get hasTextFormat (): boolean {
+            return this.valueCopy.format === ValueFormat.TEXT;
         }
 
-        @Watch('sensitive')
-        private onSensitiveChange (val: boolean): void {
-            this.isMasked = val;
+        public get isReadonly (): boolean {
+            return this.isMasked || !this.hasTextFormat;
+        }
+
+        private emitUpdate (variable: Partial<KeylessVariable> = {}): void {
+            this.$emit('input', Object.assign({}, this.valueCopy, variable));
+        }
+
+        private onChange (): void {
+            this.$emit('change', this.valueCopy);
+        }
+
+        @Watch('value')
+        private onValueChange (variable: KeylessVariable): void {
+            this.valueCopy = Object.assign({}, this.valueCopy, variable);
+        }
+
+        @Watch('value.sensitive')
+        private onSensitiveChange (sensitive: boolean): void {
+            this.isMasked = sensitive;
+        }
+
+        public onClick (): void {
+            if (!this.hasTextFormat) {
+                this.onEditorOpen();
+            }
         }
 
         private onEditorOpen (): void {
             this.$modal.show(ValueModal, {
-                syntax: this.syntax,
-                value: this.value
+                format: this.valueCopy.format,
+                value: this.valueCopy.value
             }, { height: 'auto' }, {
-                'update:syntax': syntax => this.syntax = syntax,
-                'update:value': val => {
-                    this.valueCopy = this.syntax === LangSyntax.JSON
-                        ? val.replace(/\r?\n|\r/g, '').replace(/\s/g, '')
-                        : val;
+                'update:value': ({ value, format }: { value: string; format: ValueFormat }) => {
+                    this.valueCopy.format = format;
+                    this.valueCopy.value = format === ValueFormat.JSON
+                        ? value.replace(/\r?\n|\r/g, '').replace(/\s/g, '')
+                        : value;
 
-                    this.onChange(this.valueCopy);
+                    this.emitUpdate();
+                    this.onChange();
                 }
             });
         }

@@ -3,10 +3,10 @@
     <template #title>
         <span class="mr-3">Language</span>
         <div class="select is-size-6">
-            <select v-model="syntaxCopy">
-                <option :value="LangSyntax.TEXT">text</option>
-                <option :value="LangSyntax.YAML">yaml</option>
-                <option :value="LangSyntax.JSON">json</option>
+            <select v-model="formatCopy">
+                <option :value="ValueFormat.TEXT">text</option>
+                <option :value="ValueFormat.YAML">yaml</option>
+                <option :value="ValueFormat.JSON">json</option>
             </select>
         </div>
         <button class="format-button button mr-3" @click="onFormat">Format</button>
@@ -30,19 +30,19 @@
     import * as monaco from 'monaco-editor';
 
     import ModalCard from '@/components/core/ModalCard.vue';
-    import { LangSyntax } from './types';
+    import { ValueFormat } from './types';
 
     @Component({
         name: 'ValueModal',
         components: { ModalCard },
     })
     export default class ValueModal extends Vue {
-        @Prop() public readonly syntax: LangSyntax;
+        @Prop() public readonly format: ValueFormat;
         @Prop() public readonly value: string;
 
         private scriptEditor: monaco.editor.IStandaloneCodeEditor;
-        private syntaxCopy: LangSyntax = null;
-        private LangSyntax = LangSyntax;
+        private formatCopy: ValueFormat = null;
+        private ValueFormat = ValueFormat;
         public isContentInvalid = true;
 
         $refs: {
@@ -50,13 +50,13 @@
         };
 
         private created (): void {
-            this.syntaxCopy = this.syntax;
+            this.formatCopy = this.format;
         }
 
         private mounted (): void {
             this.scriptEditor = monaco.editor.create(this.$refs.scriptEditor, {
                 value: this.value,
-                language: this.syntax,
+                language: this.format,
                 automaticLayout: true,
                 formatOnPaste: true,
                 minimap: {
@@ -78,9 +78,9 @@
             this.scriptEditor.dispose();
         }
 
-        @Watch('syntaxCopy')
-        private onSyntaxCopyChange (syntax) {
-            monaco.editor.setModelLanguage(this.scriptEditor.getModel(), syntax);
+        @Watch('formatCopy')
+        private onFormatCopyChange (format) {
+            monaco.editor.setModelLanguage(this.scriptEditor.getModel(), format);
         }
 
         public onFormat (): void {
@@ -88,8 +88,10 @@
         }
 
         public onApply (): void {
-            this.$parent.$emit('update:syntax', this.syntaxCopy);
-            this.$parent.$emit('update:value', this.scriptEditor.getModel().getValue());
+            this.$parent.$emit('update:value', {
+                value: this.scriptEditor.getModel().getValue(),
+                format: this.formatCopy,
+            });
             this.$emit('close');
         }
     }
