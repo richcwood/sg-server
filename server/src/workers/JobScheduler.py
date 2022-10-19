@@ -679,7 +679,9 @@ def on_message(delivery_tag, body, async_consumer):
         elif msg["Action"] == "ResumeJob":
             job_scheduler.resume_job(msg["id"])
         elif msg["Action"] == "RemoveJob":
-            job_scheduler.remove_job(msg["id"])
+            job = job_scheduler.get_job(msg["id"])
+            if job:
+                job_scheduler.remove_job(job.id)
 
         job = job_scheduler.get_job(msg["id"])
         if job:
@@ -704,8 +706,9 @@ def on_message(delivery_tag, body, async_consumer):
         # job_scheduler.print_jobs()
     except Exception as ex:
         async_consumer.acknowledge_message(delivery_tag)
-        url = "schedule/fromscheduler/{}".format(msg["id"])
-        RestAPICall(url, "PUT", msg["_teamId"], {}, {"scheduleError": ex.message})
+        if "_teamId" in msg:
+            url = "schedule/fromscheduler/{}".format(msg["id"])
+            RestAPICall(url, "PUT", msg["_teamId"], {}, {"scheduleError": ex.message})
         logError({"msg": str(ex), "Method": "on_message", "body": body})
     # finally:
     #     async_consumer.start_consuming()
