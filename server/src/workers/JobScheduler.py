@@ -419,9 +419,6 @@ def on_message(delivery_tag, body, async_consumer):
                 max_instances = msg["max_instances"]
 
             useNextRunTime = False
-<<<<<<< Updated upstream
-            if "next_run_time" in msg and msg["next_run_time"] != "":
-=======
             next_run_time = None
             if "next_run_time" in msg and msg["next_run_time"] != "":
                 useNextRunTime = True
@@ -430,8 +427,7 @@ def on_message(delivery_tag, body, async_consumer):
 
             useNextRunTime = False
             next_run_time = None
-            if 'next_run_time' in msg and msg['next_run_time'] != '':
->>>>>>> Stashed changes
+            if "next_run_time" in msg and msg["next_run_time"] != "":
                 useNextRunTime = True
                 if "next_run_time" == "None":
                     next_run_time = None
@@ -519,13 +515,7 @@ def on_message(delivery_tag, body, async_consumer):
             job = job_scheduler.get_job(msg["id"])
             if job:
                 changeTypes = []
-<<<<<<< Updated upstream
-                if scheduleTriggerType2String[type(job.trigger)] != msg[
-                    "TriggerType"
-                ] or ((not job.next_run_time) and isActive):
-=======
                 if schedule_changed(job, msg):
->>>>>>> Stashed changes
                     changeTypes.append("schedule")
                 if (
                     job.misfire_grace_time != misfire_grace_time
@@ -533,11 +523,7 @@ def on_message(delivery_tag, body, async_consumer):
                     or job.next_run_time != next_run_time
                 ):
                     changeTypes.append("job")
-<<<<<<< Updated upstream
                 if not useNextRunTime and "schedule" in changeTypes:
-=======
-                if not useNextRunTime and 'schedule' in changeTypes:
->>>>>>> Stashed changes
                     # print('schedule change')
                     if msg["TriggerType"] == "cron":
                         job_scheduler.reschedule_job(
