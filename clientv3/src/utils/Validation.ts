@@ -1,13 +1,25 @@
 import { extend as vee_validate_extend } from 'vee-validate';
+import { between, min_value } from 'vee-validate/dist/rules';
+import { messages } from 'vee-validate/dist/locale/en.json';
 import _ from 'lodash';
 
-function isTruthy (val: unknown): boolean {
-  if (Array.isArray(val) || _.isObject(val)) {
+function isValueDefined (val: unknown): boolean {
+  if (_.isString(val)) {
     return !_.isEmpty(val);
-  } else {
-    return Boolean(val);
   }
+
+  return !_.isNull(val) && !_.isUndefined(val);
 }
+
+vee_validate_extend('between', {
+  ...between,
+  message: messages['between']
+});
+
+vee_validate_extend('min_value', {
+  ...min_value,
+  message: messages['min_value']
+});
 
 vee_validate_extend('required', {
   validate (value) {
@@ -174,7 +186,7 @@ const initValidation = function(){
   // have empty values
   vee_validate_extend('required_if_empty', {
     validate (value: any, values: any[]) {
-      return values.some(isTruthy) ? true : isTruthy(value);
+      return values.some(isValueDefined) ? true : isValueDefined(value);
     },
     computesRequired: true,
     message: 'At least one field is required'
