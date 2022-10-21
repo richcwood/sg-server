@@ -69,10 +69,10 @@
 </template>
 
 <script lang="ts">
-    import { Component, Vue, Prop } from 'vue-property-decorator';
+    import { Component, Vue, Prop, Watch } from 'vue-property-decorator';
     import { VPopover } from 'v-tooltip';
 
-    import { KeylessVariable, Variable, VariableMap } from './types';
+    import { KeylessVariable, ValueFormat, Variable, VariableMap } from './types';
     import VariableForm from './VariableForm.vue';
     import ValueInput from './ValueInput.vue';
 
@@ -88,10 +88,17 @@
         public variables: Variable[] = [];
 
         private created (): void {
+            this.readVariables();
+        }
+
+        @Watch('value')
+        private readVariables (): void {
+            this.variables = [];
+
             for (let key in this.value) {
-                this.variables.push({
+                this.variables.unshift({
                     sensitive: this.value[key].sensitive,
-                    format: this.value[key].format,
+                    format: this.value[key].format ?? ValueFormat.TEXT,
                     value: this.value[key].value,
                     key
                 });
@@ -100,11 +107,13 @@
 
         public onVariableCreate (variable: Variable): void {
             this.variables.push(variable);
+            this.$emit('create', variable);
             this.onChange();
         }
 
         public onRemove (index: number): void {
-            this.variables.splice(index, 1);
+            const removed = this.variables.splice(index, 1);
+            this.$emit('remove', removed.pop());
             this.onChange();
         }
 
