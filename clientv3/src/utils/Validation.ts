@@ -1,6 +1,6 @@
 import { extend as vee_validate_extend } from 'vee-validate';
 import { between, min_value } from 'vee-validate/dist/rules';
-import { messages } from 'vee-validate/dist/locale/en.json';
+import enMessages from 'vee-validate/dist/locale/en.json';
 import _ from 'lodash';
 
 function isValueDefined (val: unknown): boolean {
@@ -13,12 +13,12 @@ function isValueDefined (val: unknown): boolean {
 
 vee_validate_extend('between', {
   ...between,
-  message: messages['between']
+  message: enMessages.messages['between']
 });
 
 vee_validate_extend('min_value', {
   ...min_value,
-  message: messages['min_value']
+  message: enMessages.messages['min_value']
 });
 
 vee_validate_extend('required', {

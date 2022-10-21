@@ -850,7 +850,7 @@
         </table>
       </div>
 
-      <div class="tabs-container-item" v-else-if="activeTab === JobTab.RUN">
+      <div class="tabs-container-item job-run-tab" v-else-if="activeTab === JobTab.RUN">
         <table class="table" style="background-color: inherit;">
           <tr class="tr">
             <td class="td"></td>
@@ -888,62 +888,7 @@
           </tr>
           <tr class="tr">
             <td class="td">
-              <table class="table striped-table" style="width: 720px;">
-                <tr class="tr" v-for="(value, key) in runJobVars" v-bind:key="'runJobVar_' + key">
-                  <td class="td">{{ key }}</td>
-                  <td class="td"><span style="font-weight: 700; size: 20px;"> = </span></td>
-                  <td class="td">{{ value.value }}</td>
-                  <td class="td"><a @click.prevent="onDeleteRunJobVarClicked(key)">Delete</a></td>
-                </tr>
-              </table>
-            </td>
-          </tr>
-          <tr class="tr">
-            <td class="td">
-              <div class="is-flex is-align-items-center">
-                <input
-                  style="margin-left: 10px;"
-                  type="checkbox"
-                  v-model="newRunJobVarValue.sensitive"
-                  :checked="false"
-                />
-                <span style="margin-left: 10px; margin-right: 20px;">Sensitive</span>
-
-                <validation-observer ref="addRunJobVarsValidationObserver" slim v-slot="{ invalid }">
-                    <validation-provider name="Variable Key" rules="required" v-slot="{ errors }">
-                      <div class="is-relative is-inline-block">
-                        <input
-                          class="input"
-                          ref="newRunJobVarKeyInput"
-                          type="text"
-                          style="width: 250px;"
-                          v-model="newRunJobVarKey"
-                          placeholder="key"
-                        />
-                        <span v-if="errors && errors.length > 0" class="is-absolute error-message-left message validation-error is-danger">{{
-                          errors[0]
-                        }}</span>
-                    </div>
-                  </validation-provider>
-
-                  <span class="has-text-weight-bold mx-1" style="vertical-align: -webkit-baseline-middle;">=</span>
-
-                  <validation-provider name="Variable Value" rules="required" v-slot="{ errors }" slim>
-                    <div class="is-inline-block is-relative">
-                      <ValueInput v-model="newRunJobVarValue.value"
-                        :key="Object.keys(runJobVars).length"
-                        class="mb-0"
-                        style="width: 250px;"
-                        placeholder="value" />
-                      <span v-if="errors && errors.length > 0" class="is-absolute error-message-left message validation-error is-danger">{{
-                        errors[0]
-                      }}</span>
-                    </div>
-                  </validation-provider>
-
-                  <button class="button button-spaced" :disabled="invalid" @click="onAddRunJobVarClicked">Add Runtime Variable</button>
-                </validation-observer>
-              </div>
+              <VariableList v-model="runJobVars" :variable="runJobVariable" />
             </td>
           </tr>
           <tr class="tr">
@@ -1208,7 +1153,7 @@
         </validation-observer>
       </div>
 
-      <div class="tabs-container-item" v-else-if="activeTab === JobTab.VARIABLES">
+      <div class="tabs-container-item variables-tab" v-else-if="activeTab === JobTab.VARIABLES">
         <div>
           <table class="table mt-4" style="width: 800px; background-color: inherit;">
             <tr class="tr">
@@ -2265,9 +2210,8 @@ export default class JobDesigner extends Vue {
     this.$modal.hide("route-all-to-taskdef-modal");
   }
 
-  private runJobVars: { [key: string]: {} } = {};
-  private newRunJobVarKey = "";
-  private newRunJobVarValue = { value: "", sensitive: false };
+  private runJobVariable: Variable = null;
+  private runJobVars: VariableMap = {};
   private runJobId = null;
 
   @Watch("jobDefForEdit")
@@ -2291,23 +2235,6 @@ export default class JobDesigner extends Vue {
     if (this.jobDefForEdit) {
       localStorage.setItem(`jobDesigner_runJobVars_${this.jobDefForEdit.id}`, JSON.stringify(this.runJobVars));
     }
-  }
-
-  private async onAddRunJobVarClicked() {
-    if (await (<any>this).$refs.addRunJobVarsValidationObserver.validate()) {
-      const runJobVarsClone = _.clone(this.runJobVars);
-      runJobVarsClone[this.newRunJobVarKey] = this.newRunJobVarValue;
-      this.runJobVars = runJobVarsClone;
-      this.newRunJobVarKey = "";
-      this.newRunJobVarValue = { value: "", sensitive: false };
-      (<any>this).$refs.addRunJobVarsValidationObserver.reset();
-    }
-  }
-
-  private onDeleteRunJobVarClicked(key) {
-    const runJobVarsClone = _.clone(this.runJobVars);
-    delete runJobVarsClone[key];
-    this.runJobVars = runJobVarsClone;
   }
 
   private async onRunJobClicked() {
@@ -2510,15 +2437,25 @@ export default class JobDesigner extends Vue {
       };
 
       this.$nextTick(() => {
-        const keyInput: HTMLInputElement = this.$el.querySelector('.runtime-variable-input');
+        const keyInput: HTMLInputElement = this.$el.querySelector('.variables-tab .runtime-variable-input');
 
         keyInput.scrollIntoView();
         keyInput.focus();
       });
     } else {
-      this.newRunJobVarKey = key;
-      (<any>this.$refs.newRunJobVarKeyInput).focus();
-      (<any>this.$refs.newRunJobVarKeyInput).scrollIntoView();
+      this.runJobVariable = {
+        format: ValueFormat.TEXT,
+        sensitive: false,
+        value: '',
+        key
+      };
+
+      this.$nextTick(() => {
+        const keyInput: HTMLInputElement = this.$el.querySelector('.job-run-tab .runtime-variable-input');
+
+        keyInput.scrollIntoView();
+        keyInput.focus();
+      });
     }
   }
 
