@@ -96,7 +96,7 @@
             this.variables = [];
 
             for (let key in this.value) {
-                this.variables.unshift({
+                this.variables.push({
                     sensitive: this.value[key].sensitive,
                     format: this.value[key].format ?? ValueFormat.TEXT,
                     value: this.value[key].value,
@@ -106,7 +106,7 @@
         }
 
         public onVariableCreate (variable: Variable): void {
-            this.variables.push(variable);
+            this.variables.unshift(variable);
             this.$emit('create', variable);
             this.onChange();
         }

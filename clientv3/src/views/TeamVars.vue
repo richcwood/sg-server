@@ -30,7 +30,7 @@ export default class TeamVars extends Vue {
   }
 
   private get variableMap (): VariableMap {
-    return this.teamVars.reduce((map: VariableMap, teamVar: TeamVar) => {
+    return this.teamVars.reduceRight((map: VariableMap, teamVar: TeamVar) => {
       map[teamVar.name] = {
         sensitive: teamVar.sensitive,
         format: teamVar.format,
