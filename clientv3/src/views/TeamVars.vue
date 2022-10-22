@@ -2,6 +2,7 @@
   <div class="sg-container-p">
     <h2 class="is-size-4 subtitle">Shared variables for your team</h2>
     <VariableList :value="variableMap"
+      @update:variable="onVariableUpdate"
       @create="onVariableCreate"
       @remove="onVariableRemove" />
   </div>
@@ -55,7 +56,24 @@ export default class TeamVars extends Vue {
     } catch(err){
       console.error(err);
       showErrors(`Error saving the team variable`, err);
-    } finally {
+    }
+  }
+
+  private async onVariableUpdate (variable: Variable): Promise<void> {
+    try {
+      this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Updating team variable`, AlertPlacement.FOOTER));
+      const teamVar = this.teamVars.find(teamVar => teamVar.name === variable.key);
+
+      await this.$store.dispatch(`${StoreType.TeamVariableStore}/save`, Object.assign({}, teamVar, {
+        sensitive: variable.sensitive,
+        format: variable.format,
+        value: variable.value,
+      }));
+
+      this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Team variable updated`, AlertPlacement.FOOTER));
+    } catch(err){
+      console.error(err);
+      showErrors(`Error saving the team variable`, err);
     }
   }
 
@@ -73,20 +91,3 @@ export default class TeamVars extends Vue {
   }
 }
 </script>
-
-<!-- Add "scoped" attribute to limit CSS to this component only -->
-<style scoped lang="scss">
-
-  table {
-    border-width: 0;
-    tr:nth-child(odd) {background: hsl(0, 0%, 98%)} // no idea why the bulma is-striped didn't work
-  }
-
-  td {
-    border-width: 0 !important;
-  }
-
-  .button-spaced {
-    margin-left: 12px;
-  }
-</style>

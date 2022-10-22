@@ -19,7 +19,7 @@
                     <td class="align-middle">
                         <div class="control">
                             <label class="checkbox">
-                                <input type="checkbox" @change="onChange" v-model="runVar.sensitive"> Sensitive
+                                <input type="checkbox" @change="onSensitiveChange(runVar)" v-model="runVar.sensitive"> Sensitive
                             </label>
                             <v-popover class="is-inline ml-2">
                                 <a href="#">
@@ -108,13 +108,13 @@
         public onVariableCreate (variable: Variable): void {
             this.variables.unshift(variable);
             this.$emit('create', variable);
-            this.onChange();
+            this.emitInput();
         }
 
         public onRemove (index: number): void {
             const removed = this.variables.splice(index, 1);
             this.$emit('remove', removed.pop());
-            this.onChange();
+            this.emitInput();
         }
 
         private onValueInputChange (index: number, payload: KeylessVariable): void {
@@ -126,11 +126,21 @@
                 return variable;
             });
 
-            this.onChange();
+            this.emitUpdate(this.variables[index]);
+            this.emitInput();
         }
 
-        public onChange (): void {
+        public onSensitiveChange (variable: Variable): void {
+            this.emitUpdate(variable);
+            this.emitInput();
+        }
+
+        public emitInput (): void {
             this.$emit('input', this.toMap());
+        }
+
+        public emitUpdate (variable: Variable): void {
+            this.$emit('update:variable', variable);
         }
 
         private toMap (): VariableMap {
