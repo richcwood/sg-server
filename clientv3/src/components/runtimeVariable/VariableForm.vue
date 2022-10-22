@@ -2,7 +2,7 @@
     <validation-observer ref="observer" v-slot="{ invalid }" tag="div" class="field is-grouped is-align-items-center">
         <div class="control mr-5">
             <label class="checkbox">
-                <input type="checkbox" v-model="variableCopy.sensitive"> Sensitive
+                <input type="checkbox" v-model="isSensitive"> Sensitive
             </label>
             <v-popover class="is-inline ml-2">
                 <a href="#">
@@ -57,6 +57,7 @@
         public readonly variable: Variable;
 
         private variableCopy: Variable = null;
+        public isSensitive: boolean = false;
 
         $refs: {
             observer: any;
@@ -69,17 +70,24 @@
                 value: '',
                 key: '',
             }, this.variable);
+
+            this.isSensitive = Boolean(this.variableCopy.sensitive);
         }
 
         @Watch('variable')
         private copyVariable (variable: Variable): void {
             this.variableCopy = Object.assign({}, variable);
+
+            if (variable.hasOwnProperty('sensitive')) {
+                this.isSensitive = Boolean(variable.sensitive);
+            }
+
             this.resetValidation();
         }
 
         public get variableInputValue (): KeylessVariable {
             return {
-                sensitive: this.variableCopy.sensitive,
+                sensitive: false,
                 format: this.variableCopy.format,
                 value: this.variableCopy.value,
             };
@@ -90,8 +98,11 @@
         }
 
         public onAdd (): void {
-            this.$emit('create', this.variableCopy);
+            this.$emit('create', Object.assign({}, this.variableCopy, {
+                sensitive: this.isSensitive
+            }));
 
+            this.isSensitive = false;
             this.variableCopy = {
                 format: ValueFormat.TEXT,
                 sensitive: false,
