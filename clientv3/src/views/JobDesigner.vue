@@ -2241,32 +2241,13 @@ export default class JobDesigner extends Vue {
     try {
       this.runJobId = null;
 
-      let rtVars = {};
-      let keys = Object.keys(this.runJobVars);
-      for (let i = 0; i < keys.length; ++i) {
-        let key = keys[i];
-        const val: any = this.runJobVars[key];
-        if (key.startsWith("<<") && key.endsWith(">>")) {
-          key = key.substring(2, key.length - 2);
-          rtVars[key] = {};
-          rtVars[key]["value"] = val.value;
-          rtVars[key]["sensitive"] = true;
-        } else {
-          rtVars[key] = {};
-          rtVars[key]["value"] = val.value;
-          rtVars[key]["sensitive"] = false;
-        }
-      }
-
       const {
         data: { data },
-      } = await axios.post(
-        `/api/v0/job`,
-        {
-          runtimeVars: rtVars,
-        },
-        { headers: { _jobDefId: this.jobDef.id } }
-      );
+      } = await axios.post('/api/v0/job', {
+        runtimeVars: this.runJobVars,
+      }, {
+        headers: { _jobDefId: this.jobDef.id }
+      });
 
       this.runJobId = data.id;
     } catch (err) {
