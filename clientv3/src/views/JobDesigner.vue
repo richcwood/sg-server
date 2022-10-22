@@ -1996,23 +1996,10 @@ export default class JobDesigner extends Vue {
 
   private onCreateScheduleClicked() {
     this.editSchedule = <any>{ TriggerType: ScheduleTriggerType.date };
-    this.editSchedule_cron = {};
+    this.editSchedule_cron = {
+      Timezone: 'Etc/Greenwich'
+    };
     this.editSchedule_interval = {};
-
-    // Try to set the default timezone
-    try {
-      const computerTZ = Intl.DateTimeFormat().resolvedOptions().timeZone;
-      if (timeZones.findIndex((zone) => zone.value === computerTZ) === -1) {
-        console.log("Unable to recognize computers timezone", computerTZ);
-      } else {
-        this.editSchedule_cron.Timezone = computerTZ;
-      }
-    } catch (err) {
-      console.error("Unable to compute computers timezone");
-    }
-
-    // select schedule type by default
-    this.editSchedule.TriggerType = ScheduleTriggerType.date;
 
     this.$modal.show("edit-schedule-modal");
   }
