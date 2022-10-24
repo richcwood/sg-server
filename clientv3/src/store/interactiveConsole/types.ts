@@ -1,3 +1,4 @@
+import { VariableMap } from '@/components/runtimeVariable/types';
 import { TaskDefTarget } from '@/store/taskDef/types';
 
 export enum ICTab {
@@ -24,7 +25,7 @@ export interface InteractiveConsole {
   runScriptCommand?: string;
   runScriptArguments?: string;
   runScriptEnvVars?: string;
-  runScriptRuntimeVars?: string;
+  runScriptRuntimeVars?: VariableMap;
   latestRanJobId?: string;
   scriptTarget: ScriptTarget;
 }

@@ -106,7 +106,7 @@ export const actions: ActionTree<JobCoreState, RootState> = {
       job: {
         name: `IC-${moment().format("dddd MMM DD h:mm a")}`,
         dateCreated: new Date().toISOString(),
-        runtimeVars: stringToMap(settings.runScriptRuntimeVars),
+        runtimeVars: settings.runScriptRuntimeVars,
         tasks: [{
           _teamId: rootState[StoreType.TeamStore].selected.id,
           name: `Task1`,
