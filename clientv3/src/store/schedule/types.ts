@@ -16,7 +16,7 @@ export interface Schedule extends Model {
   lastScheduledRunDate?: Date;
   nextScheduledRunDate?: Date;
   isActive?: boolean; 
-  TriggerType: string;
+  TriggerType: ScheduleTriggerType;
   misfire_grace_time?: number;
   coalesce?: boolean;
   max_instances?: number;

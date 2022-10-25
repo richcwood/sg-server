@@ -207,14 +207,11 @@
             </td>
           </tr>
           <tr>
-            <td>
-              <label class="label" style="width: 150px;">Runtime Variables</label>
-            </td>
-            <td>
-              <validation-provider name="Runtime Vars" rules="variable-map" v-slot="{ errors }">
-                <input class="input" style="width: 350px;" type="text" v-model="runScriptRuntimeVars" />
-                <div v-if="errors && errors.length > 0" class="message validation-error is-danger">{{ errors[0] }}</div>
-              </validation-provider>
+            <td colspan="2">
+              <p class="has-text-left">
+                <label class="label">Runtime Variables</label>
+              </p>
+              <VariableList class="my-3" v-model="runScriptRuntimeVars" />
             </td>
           </tr>
           <tr>
@@ -261,6 +258,8 @@ import ScriptSearchWithCreate from "../components/ScriptSearchWithCreate.vue";
 import { Tabs, Tab } from "vue-slim-tabs";
 import { ScriptTarget, ICTab } from "@/store/interactiveConsole/types";
 import LambdaRuntimeSelect from "@/components/LambdaRuntimeSelect.vue";
+import { VariableMap } from "@/components/runtimeVariable/types";
+import { VariableList } from '@/components/runtimeVariable';
 
 @Component({
   components: {
@@ -272,7 +271,8 @@ import LambdaRuntimeSelect from "@/components/LambdaRuntimeSelect.vue";
     ValidationProvider,
     ValidationObserver,
     TaskMonitorDetails,
-    LambdaRuntimeSelect
+    LambdaRuntimeSelect,
+    VariableList
   },
 })
 export default class InteractiveConsole extends Vue {
@@ -332,7 +332,7 @@ export default class InteractiveConsole extends Vue {
   public runScriptEnvVars: string;
 
   @BindProp({ storeType: StoreType.InteractiveConsole })
-  public runScriptRuntimeVars: string;
+  public runScriptRuntimeVars: VariableMap;
 
   @BindProp({ storeType: StoreType.InteractiveConsole })
   public runAgentTarget: TaskDefTarget;

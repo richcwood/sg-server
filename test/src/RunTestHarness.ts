@@ -3,61 +3,61 @@ import * as fs from "fs";
 import * as util from "util";
 import * as config from "config";
 import axios from "axios";
-import { exec } from "child_process";
-import { MongoRepo } from "../../server/src/shared/MongoLib";
-import { SGUtils } from "../../server/src/shared/SGUtils";
-import { SGStrings } from "../../server/src/shared/SGStrings";
-import { BaseLogger } from "../../server/src/shared/SGLogger";
-import { AMQPConnector } from "../../server/src/shared/AMQPLib";
-import { StompConnector } from "../../server/src/shared/StompLib";
-import { Client, Message } from '@stomp/stompjs';
-import { RabbitMQAdmin } from "../../server/src/shared/RabbitMQAdmin";
-import { S3Access } from "../../server/src/shared/S3Access";
+import {exec} from "child_process";
+import {MongoRepo} from "../../server/src/shared/MongoLib";
+import {SGUtils} from "../../server/src/shared/SGUtils";
+import {SGStrings} from "../../server/src/shared/SGStrings";
+import {BaseLogger} from "../../server/src/shared/SGLogger";
+import {AMQPConnector} from "../../server/src/shared/AMQPLib";
+import {StompConnector} from "../../server/src/shared/StompLib";
+import {Client, Message} from "@stomp/stompjs";
+import {RabbitMQAdmin} from "../../server/src/shared/RabbitMQAdmin";
+import {S3Access} from "../../server/src/shared/S3Access";
 import * as Enums from "../../server/src/shared/Enums";
-import { agentService } from "../../server/src/api/services/AgentService";
-import { jobDefService } from "../../server/src/api/services/JobDefService";
-import { jobService } from "../../server/src/api/services/JobService";
-import { jobActionService } from "../../server/src/api/services/JobActionService";
-import { teamService } from "../../server/src/api/services/TeamService";
-import { scheduleService } from "../../server/src/api/services/ScheduleService";
-import { scriptService } from "../../server/src/api/services/ScriptService";
-import { settingsService } from "../../server/src/api/services/SettingsService";
-import { stepDefService } from "../../server/src/api/services/StepDefService";
-import { stepOutcomeService } from "../../server/src/api/services/StepOutcomeService";
-import { stepService } from "../../server/src/api/services/StepService";
-import { taskDefService } from "../../server/src/api/services/TaskDefService";
-import { taskOutcomeService } from "../../server/src/api/services/TaskOutcomeService";
-import { taskService } from "../../server/src/api/services/TaskService";
-import { userService } from "../../server/src/api/services/UserService";
-import { invoiceService } from "../../server/src/api/services/InvoiceService";
-import { paymentMethodService } from "../../server/src/api/services/PaymentMethodService";
-import { paymentTransactionService } from "../../server/src/api/services/PaymentTransactionService";
-import { accessKeyService } from "../../server/src/api/services/AccessKeyService";
-import { AgentSchema } from "../../server/src/api/domain/Agent";
-import { JobDefSchema, JobDefModel } from "../../server/src/api/domain/JobDef";
-import { JobSchema, JobModel } from "../../server/src/api/domain/Job";
-import { TeamSchema, TeamModel } from "../../server/src/api/domain/Team";
-import { ScheduleSchema } from "../../server/src/api/domain/Schedule";
-import { ScriptSchema, ScriptModel } from "../../server/src/api/domain/Script";
-import { SettingsSchema } from "../../server/src/api/domain/Settings";
-import { StepDefSchema } from "../../server/src/api/domain/StepDef";
-import { StepOutcomeSchema, StepOutcomeModel } from "../../server/src/api/domain/StepOutcome";
-import { StepSchema } from "../../server/src/api/domain/Step";
-import { TaskDefSchema } from "../../server/src/api/domain/TaskDef";
-import { TaskOutcomeSchema, TaskOutcomeModel } from "../../server/src/api/domain/TaskOutcome";
-import { TaskSchema, TaskModel } from "../../server/src/api/domain/Task";
-import { UserSchema } from "../../server/src/api/domain/User";
-import { InvoiceSchema } from "../../server/src/api/domain/Invoice";
-import { PaymentMethodSchema } from "../../server/src/api/domain/PaymentMethod";
-import { PaymentTransactionSchema } from "../../server/src/api/domain/PaymentTransaction";
-import { AccessRightModel } from "../../server/src/api/domain/AccessRight";
-import { UserModel } from "../../server/src/api/domain/User";
-import { convertData as convertRequestData } from "../../server/src/api/utils/RequestConverters";
-import { rabbitMQPublisher } from "../../server/src/api/utils/RabbitMQPublisher";
-import { braintreeClientTokenService } from "../../server/src/api/services/BraintreeClientTokenService";
-import { stripeClientTokenService } from "../../server/src/api/services/StripeClientTokenService";
-import { createInvoiceService } from "../../server/src/api/services/CreateInvoiceService";
-import { MissingObjectError, ValidationError, FreeTierLimitExceededError } from "../../server/src/api/utils/Errors";
+import {agentService} from "../../server/src/api/services/AgentService";
+import {jobDefService} from "../../server/src/api/services/JobDefService";
+import {jobService} from "../../server/src/api/services/JobService";
+import {jobActionService} from "../../server/src/api/services/JobActionService";
+import {teamService} from "../../server/src/api/services/TeamService";
+import {scheduleService} from "../../server/src/api/services/ScheduleService";
+import {scriptService} from "../../server/src/api/services/ScriptService";
+import {settingsService} from "../../server/src/api/services/SettingsService";
+import {stepDefService} from "../../server/src/api/services/StepDefService";
+import {stepOutcomeService} from "../../server/src/api/services/StepOutcomeService";
+import {stepService} from "../../server/src/api/services/StepService";
+import {taskDefService} from "../../server/src/api/services/TaskDefService";
+import {taskOutcomeService} from "../../server/src/api/services/TaskOutcomeService";
+import {taskService} from "../../server/src/api/services/TaskService";
+import {userService} from "../../server/src/api/services/UserService";
+import {invoiceService} from "../../server/src/api/services/InvoiceService";
+import {paymentMethodService} from "../../server/src/api/services/PaymentMethodService";
+import {paymentTransactionService} from "../../server/src/api/services/PaymentTransactionService";
+import {accessKeyService} from "../../server/src/api/services/AccessKeyService";
+import {AgentSchema} from "../../server/src/api/domain/Agent";
+import {JobDefSchema, JobDefModel} from "../../server/src/api/domain/JobDef";
+import {JobSchema, JobModel} from "../../server/src/api/domain/Job";
+import {TeamSchema, TeamModel} from "../../server/src/api/domain/Team";
+import {ScheduleSchema} from "../../server/src/api/domain/Schedule";
+import {ScriptSchema, ScriptModel} from "../../server/src/api/domain/Script";
+import {SettingsSchema} from "../../server/src/api/domain/Settings";
+import {StepDefSchema} from "../../server/src/api/domain/StepDef";
+import {StepOutcomeSchema, StepOutcomeModel} from "../../server/src/api/domain/StepOutcome";
+import {StepSchema} from "../../server/src/api/domain/Step";
+import {TaskDefSchema} from "../../server/src/api/domain/TaskDef";
+import {TaskOutcomeSchema, TaskOutcomeModel} from "../../server/src/api/domain/TaskOutcome";
+import {TaskSchema, TaskModel} from "../../server/src/api/domain/Task";
+import {UserSchema} from "../../server/src/api/domain/User";
+import {InvoiceSchema} from "../../server/src/api/domain/Invoice";
+import {PaymentMethodSchema} from "../../server/src/api/domain/PaymentMethod";
+import {PaymentTransactionSchema} from "../../server/src/api/domain/PaymentTransaction";
+import {AccessRightModel} from "../../server/src/api/domain/AccessRight";
+import {UserModel} from "../../server/src/api/domain/User";
+import {convertData as convertRequestData} from "../../server/src/api/utils/RequestConverters";
+import {rabbitMQPublisher} from "../../server/src/api/utils/RabbitMQPublisher";
+import {braintreeClientTokenService} from "../../server/src/api/services/BraintreeClientTokenService";
+import {stripeClientTokenService} from "../../server/src/api/services/StripeClientTokenService";
+import {createInvoiceService} from "../../server/src/api/services/CreateInvoiceService";
+import {MissingObjectError, ValidationError, FreeTierLimitExceededError} from "../../server/src/api/utils/Errors";
 import {
   RepublishTasksWaitingForAgent,
   GetAccessRightIdsForTeamAdmin,
@@ -69,16 +69,16 @@ import * as truncate from "truncate-utf8-bytes";
 const bcrypt = require("bcrypt");
 import * as mongodb from "mongodb";
 import * as mongoose from "mongoose";
-import { exec as pkg_exec } from "pkg";
+import {exec as pkg_exec} from "pkg";
 const jwt = require("jsonwebtoken");
 import * as _ from "lodash";
 import * as pdf from "html-pdf";
 import * as bson from "bson";
-import { TaskStatus } from "../../server/dist/shared/Enums";
+import {TaskStatus} from "../../server/dist/shared/Enums";
 import Bitset from "bitset";
-import { AccessKeyModel } from "../../server/src/api/domain/AccessKey";
-import { teamVariableService } from "../../server/src/api/services/TeamVariableService";
-import { TeamVariableModel } from "../../server/src/api/domain/TeamVariable";
+import {AccessKeyModel} from "../../server/src/api/domain/AccessKey";
+import {teamVariableService} from "../../server/src/api/services/TeamVariableService";
+import {TeamVariableModel} from "../../server/src/api/domain/TeamVariable";
 
 const waitForAgentCreateInterval = 15000;
 const waitForAgentCreateMaxRetries = 12;
@@ -167,7 +167,7 @@ let ParseScriptStdout = async (filePath: string, saveOutput: boolean) => {
               reject(new Error(`Error reading stdout file '${filePath}' on line ${lineCount}: ${err}`));
             })
             .on("end", function () {
-              resolve({ output: output, runtimeVars: runtimeVars });
+              resolve({output: output, runtimeVars: runtimeVars});
             })
         );
     } catch (e) {
@@ -233,13 +233,13 @@ let DownloadAgent_Download = async (url) => {
 
 let RawStompTest = async () => {
   const client = new Client({
-    brokerURL: 'wss://grand-silver-bat.rmq4.cloudamqp.com/ws/stomp',
+    brokerURL: "wss://grand-silver-bat.rmq4.cloudamqp.com/ws/stomp",
     connectHeaders: {
-      login: 'erpbwfab',
-      passcode: '2Y6n7quHHysEiRauCLD2O9bNex0h8zLJ',
-      host: 'sgProd'
+      login: "erpbwfab",
+      passcode: "2Y6n7quHHysEiRauCLD2O9bNex0h8zLJ",
+      host: "sgProd",
     },
-    debug: function(str) {
+    debug: function (str) {
       console.log(str);
     },
     reconnectDelay: 5000,
@@ -249,19 +249,19 @@ let RawStompTest = async () => {
 
   client.onConnect = function (frame) {
     console.log("connected!");
-  }
+  };
 
   client.onStompError = function (frame) {
     // Will be invoked in case of error encountered at Broker
     // Bad login/passcode typically will cause an error
     // Complaint brokers will set `message` header with a brief message. Body may contain details.
     // Compliant brokers will terminate the connection after any error
-    console.log('Broker reported error: ' + frame.headers['message']);
-    console.log('Additional details: ' + frame.body);
+    console.log("Broker reported error: " + frame.headers["message"]);
+    console.log("Additional details: " + frame.body);
   };
 
   client.activate();
-}
+};
 
 let StompTest = async () => {
   const rmqUsername = config.get("rmqUsername");
@@ -287,9 +287,20 @@ let StompTest = async () => {
   );
   await connector.Start();
 
-  await connector.ConsumeQueue('temp_queue_1', false, true, false, true, (msg, msgKey, cb) => {console.log(`received message 1 - ${util.inspect(msg, false, null)}`)}, 'job', 60000);
+  await connector.ConsumeQueue(
+    "temp_queue_1",
+    false,
+    true,
+    false,
+    true,
+    (msg, msgKey, cb) => {
+      console.log(`received message 1 - ${util.inspect(msg, false, null)}`);
+    },
+    "job",
+    60000
+  );
 
-  await connector.Publish('job', 'temp_queue_1', { 'key1': 'val1' }, { 'expiration': 30000 });
+  await connector.Publish("job", "temp_queue_1", {key1: "val1"}, {expiration: 30000});
   // await connector_pub.Publish('job', 'temp_queue_2', { 'key2': 'val2' });
   // await connector_pub.Publish('job', 'temp_route', { 'key2': 'val2' });
 
@@ -348,14 +359,14 @@ let AMQPTest = async () => {
   while (true) await SGUtils.sleep(5000);
 };
 
-let CloseRabbitMQConnections= async (user: string) => {
+let CloseRabbitMQConnections = async (user: string) => {
   const rmqAdminUrl = config.get("rmqAdminUrl");
   let rmqVhost = config.get("rmqVhost");
 
   try {
     const rmqAdmin = new RabbitMQAdmin(rmqAdminUrl, rmqVhost);
-    
-    const connections: any[] = await rmqAdmin.getConnections()
+
+    const connections: any[] = await rmqAdmin.getConnections();
 
     for (let i = 0; i < connections.length; ++i) {
       let connection: any = connections[i];
@@ -370,7 +381,7 @@ let CloseRabbitMQConnections= async (user: string) => {
   } catch (e) {
     console.error(e);
   }
-}
+};
 
 let RabbitMQAdminTest = async () => {
   const rmqAdminUrl = config.get("rmqAdminUrl");
@@ -382,7 +393,7 @@ let RabbitMQAdminTest = async () => {
     let res = await rmqAdmin.setPolicy(
       "DLX-Agent",
       "^team-.*.agent.*",
-      { "dead-letter-exchange": "dlx-agent" },
+      {"dead-letter-exchange": "dlx-agent"},
       "queues"
     );
     console.log(res);
@@ -436,7 +447,7 @@ let RabbitMQSetup = async () => {
     res = await rmqAdmin.setPolicy(
       "DLX-Agent",
       "^team-.*.agent.*",
-      { "dead-letter-exchange": deadLetterExchangeAgent },
+      {"dead-letter-exchange": deadLetterExchangeAgent},
       "queues"
     );
     console.log(res);
@@ -464,8 +475,8 @@ let UpdateAgentVersion = async () => {
   let mongoRepo = new MongoRepo("RunTestHarness", mongoUrl, mongoDbname, logger);
   let res = await mongoRepo.UpdateMany(
     "agent",
-    { _teamId: mongoRepo.ObjectIdFromString(_teamId) },
-    { $set: { targetVersion: version } }
+    {_teamId: mongoRepo.ObjectIdFromString(_teamId)},
+    {$set: {targetVersion: version}}
   );
   console.log(res);
 };
@@ -526,19 +537,19 @@ let DeleteMongoData = async () => {
 
   let usersToKeep = ["scheduler@saasglue.com", "admin@saasglue.com"];
 
-  await mongoRepo.DeleteByQuery({ _teamId: { $nin: teamsToKeep } }, "agent");
-  await mongoRepo.DeleteByQuery({ _teamId: { $nin: teamsToKeep } }, "job");
-  await mongoRepo.DeleteByQuery({ _teamId: { $nin: teamsToKeep } }, "jobDef");
-  await mongoRepo.DeleteByQuery({ _teamId: { $nin: teamsToKeep } }, "script");
-  await mongoRepo.DeleteByQuery({ _teamId: { $nin: teamsToKeep } }, "step");
-  await mongoRepo.DeleteByQuery({ _teamId: { $nin: teamsToKeep } }, "stepDef");
-  await mongoRepo.DeleteByQuery({ _teamId: { $nin: teamsToKeep } }, "stepOutcome");
-  await mongoRepo.DeleteByQuery({ _teamId: { $nin: teamsToKeep } }, "task");
-  await mongoRepo.DeleteByQuery({ _teamId: { $nin: teamsToKeep } }, "taskDef");
-  await mongoRepo.DeleteByQuery({ _teamId: { $nin: teamsToKeep } }, "taskOutcome");
-  await mongoRepo.DeleteByQuery({ _teamId: { $nin: teamsToKeep } }, "schedule");
-  await mongoRepo.DeleteByQuery({ _id: { $nin: teamsToKeep } }, "team");
-  await mongoRepo.DeleteByQuery({ email: { $nin: usersToKeep } }, "user");
+  await mongoRepo.DeleteByQuery({_teamId: {$nin: teamsToKeep}}, "agent");
+  await mongoRepo.DeleteByQuery({_teamId: {$nin: teamsToKeep}}, "job");
+  await mongoRepo.DeleteByQuery({_teamId: {$nin: teamsToKeep}}, "jobDef");
+  await mongoRepo.DeleteByQuery({_teamId: {$nin: teamsToKeep}}, "script");
+  await mongoRepo.DeleteByQuery({_teamId: {$nin: teamsToKeep}}, "step");
+  await mongoRepo.DeleteByQuery({_teamId: {$nin: teamsToKeep}}, "stepDef");
+  await mongoRepo.DeleteByQuery({_teamId: {$nin: teamsToKeep}}, "stepOutcome");
+  await mongoRepo.DeleteByQuery({_teamId: {$nin: teamsToKeep}}, "task");
+  await mongoRepo.DeleteByQuery({_teamId: {$nin: teamsToKeep}}, "taskDef");
+  await mongoRepo.DeleteByQuery({_teamId: {$nin: teamsToKeep}}, "taskOutcome");
+  await mongoRepo.DeleteByQuery({_teamId: {$nin: teamsToKeep}}, "schedule");
+  await mongoRepo.DeleteByQuery({_id: {$nin: teamsToKeep}}, "team");
+  await mongoRepo.DeleteByQuery({email: {$nin: usersToKeep}}, "user");
 
   process.exit();
 };
@@ -569,7 +580,7 @@ let RunRepublishTasksWaitingForAgent = async (_teamId: string) => {
 let FixTeamDBRecords = async () => {
   mongoose.connect(config.get("mongoUrl"), {});
 
-  let teams: any = await teamService.findAllTeamsInternal({ userAssigned: { $exists: false } });
+  let teams: any = await teamService.findAllTeamsInternal({userAssigned: {$exists: false}});
 
   for (let i = 0; i < teams.length; i++) {
     let team: any = teams[i];
@@ -577,9 +588,9 @@ let FixTeamDBRecords = async () => {
     let data: any = {};
     data.userAssigned = true;
 
-    const filter = { _id: team._id };
+    const filter = {_id: team._id};
 
-    const updatedTeam = await TeamModel.findOneAndUpdate(filter, data, { new: true });
+    const updatedTeam = await TeamModel.findOneAndUpdate(filter, data, {new: true});
     console.log(updatedTeam);
   }
 
@@ -657,9 +668,9 @@ let FixAccessKeyDbRecords = async () => {
     let data: any = {};
     data._teamId = new mongodb.ObjectId(accessKey._teamId);
 
-    const filter = { _id: accessKey._id };
+    const filter = {_id: accessKey._id};
 
-    const updatedAccessKey = await AccessKeyModel.findOneAndUpdate(filter, data, { new: true });
+    const updatedAccessKey = await AccessKeyModel.findOneAndUpdate(filter, data, {new: true});
     console.log(updatedAccessKey);
   }
 
@@ -678,9 +689,9 @@ let FixScriptDBRecords = async () => {
     data._originalAuthorUserId = new mongodb.ObjectId(script._originalAuthorUserId);
     data._lastEditedUserId = new mongodb.ObjectId(script._lastEditedUserId);
 
-    const filter = { _id: script._id };
+    const filter = {_id: script._id};
 
-    const updatedScript = await ScriptModel.findOneAndUpdate(filter, data, { new: true });
+    const updatedScript = await ScriptModel.findOneAndUpdate(filter, data, {new: true});
     console.log(updatedScript);
   }
 
@@ -698,9 +709,9 @@ let FixRuntimeVarsDBRecords = async () => {
     let data: any = {};
     data.sensitive = false;
 
-    const filter = { _id: teamVar._id };
+    const filter = {_id: teamVar._id};
 
-    const updatedTeamVar = await TeamVariableModel.findOneAndUpdate(filter, data, { new: true });
+    const updatedTeamVar = await TeamVariableModel.findOneAndUpdate(filter, data, {new: true});
     console.log(updatedTeamVar);
   }
 
@@ -720,9 +731,9 @@ let FixRuntimeVarsDBRecords = async () => {
     let data: any = {};
     data["runtimeVars"] = rtVars;
 
-    const filter = { _id: jobDef._id };
+    const filter = {_id: jobDef._id};
 
-    const updatedJobDef = await JobDefModel.findOneAndUpdate(filter, data, { new: true });
+    const updatedJobDef = await JobDefModel.findOneAndUpdate(filter, data, {new: true});
     console.log(updatedJobDef);
   }
 
@@ -742,9 +753,9 @@ let FixRuntimeVarsDBRecords = async () => {
     let data: any = {};
     data["runtimeVars"] = rtVars;
 
-    const filter = { _id: job._id };
+    const filter = {_id: job._id};
 
-    const udpatedJob = await JobModel.findOneAndUpdate(filter, data, { new: true });
+    const udpatedJob = await JobModel.findOneAndUpdate(filter, data, {new: true});
     console.log(udpatedJob);
   }
 
@@ -764,9 +775,9 @@ let FixRuntimeVarsDBRecords = async () => {
     let data: any = {};
     data["runtimeVars"] = rtVars;
 
-    const filter = { _id: stepOutcome._id };
+    const filter = {_id: stepOutcome._id};
 
-    const udpatedStepOutcome = await StepOutcomeModel.findOneAndUpdate(filter, data, { new: true });
+    const udpatedStepOutcome = await StepOutcomeModel.findOneAndUpdate(filter, data, {new: true});
     console.log(udpatedStepOutcome);
   }
 
@@ -786,9 +797,9 @@ let FixRuntimeVarsDBRecords = async () => {
     let data: any = {};
     data["runtimeVars"] = rtVars;
 
-    const filter = { _id: task._id };
+    const filter = {_id: task._id};
 
-    const udpatedTask = await TaskModel.findOneAndUpdate(filter, data, { new: true });
+    const udpatedTask = await TaskModel.findOneAndUpdate(filter, data, {new: true});
     console.log(udpatedTask);
   }
 
@@ -808,9 +819,9 @@ let FixRuntimeVarsDBRecords = async () => {
     let data: any = {};
     data["runtimeVars"] = rtVars;
 
-    const filter = { _id: taskOutcome._id };
+    const filter = {_id: taskOutcome._id};
 
-    const udpatedTaskOutcome = await TaskOutcomeModel.findOneAndUpdate(filter, data, { new: true });
+    const udpatedTaskOutcome = await TaskOutcomeModel.findOneAndUpdate(filter, data, {new: true});
     console.log(udpatedTaskOutcome);
   }
 
@@ -1097,13 +1108,13 @@ let TestBraintreeWebhook = async () => {
 let CreateInvoiceReports = async () => {
   mongoose.connect(config.get("mongoUrl"), {});
 
-  let teams = await teamService.findAllTeamsInternal({ userAssigned: true }, "id scriptRate jobStoragePerMBRate");
+  let teams = await teamService.findAllTeamsInternal({userAssigned: true}, "id scriptRate jobStoragePerMBRate");
   console.log("teams -> ", teams);
 
   let reports: any[] = [];
   for (let i = 0; i < teams.length; i++) {
     const team: any = teams[i];
-    const invoice: any = await createInvoiceService.createInvoiceReport({ _teamId: team._id, month: 6, year: 2021 });
+    const invoice: any = await createInvoiceService.createInvoiceReport({_teamId: team._id, month: 6, year: 2021});
     let report: any = {};
     report._teamId = team._id;
     report.owner = invoice.owner;
@@ -1146,7 +1157,7 @@ let CreateInvoices = async () => {
         "POST",
         lastTeam.id.toHexString(),
         null,
-        { startDate: "2020-05-01", endDate: "2020-05-31", scriptRate: lastTeam.scriptRate },
+        {startDate: "2020-05-01", endDate: "2020-05-31", scriptRate: lastTeam.scriptRate},
         auth
       );
       console.log(createInvoice.data);
@@ -1172,7 +1183,7 @@ let CreateInvoicePDF = async (_invoiceId) => {
   // invoice_html = invoice_html.replace('{customer_info}', customer_info);
   // console.log(invoice_html);
 
-  var options = { format: "Letter" };
+  var options = {format: "Letter"};
 
   pdf.create(invoice_html, options).toFile("./invoice.pdf", function (err, res) {
     if (err) return console.log(err);
@@ -1211,7 +1222,7 @@ let SubmitInvoicesForPayment = async () => {
           "POST",
           lastInvoice._teamId.toHexString(),
           null,
-          { _invoiceId: lastInvoice.id },
+          {_invoiceId: lastInvoice.id},
           auth
         );
         console.log(createPaymentTransaction.data);
@@ -1237,7 +1248,7 @@ let CreateTeam = async (teamName, ownerId) => {
 
   mongoose.connect(config.get("mongoUrl"), {});
 
-  let team = await teamService.createTeam({ name: teamName, ownerId: new mongodb.ObjectId(ownerId) }, logger);
+  let team = await teamService.createTeam({name: teamName, ownerId: new mongodb.ObjectId(ownerId)}, logger);
 
   console.log(team);
   process.exit();
@@ -1289,63 +1300,63 @@ let LoadAccessRightIdsToProd = async () => {
   const mongoose = require("mongoose");
 
   const accessRights = [
-    { _id: "601aea57b0da974904990e6c", rightId: 1, name: "TEAM_READ_ALL" },
-    { _id: "601aea57b0da974904990e6d", rightId: 2, name: "TEAM_CREATE_UNASSIGNED" },
-    { _id: "601aea57b0da974904990e6e", rightId: 3, name: "TEAM_READ" },
-    { _id: "601aea57b0da974904990e6f", rightId: 4, name: "TEAM_WRITE" },
-    { _id: "601aea57b0da974904990e70", rightId: 5, name: "AGENT_DOWNLOAD_CREATE" },
-    { _id: "601aea57b0da974904990e71", rightId: 6, name: "AGENT_DOWNLOAD" },
-    { _id: "601aea57b0da974904990e72", rightId: 7, name: "AGENT_STUB_DOWNLOAD" },
-    { _id: "601aea57b0da974904990e73", rightId: 8, name: "AGENT_READ" },
-    { _id: "601aea57b0da974904990e74", rightId: 9, name: "AGENT_CREATE" },
-    { _id: "601aea57b0da974904990e75", rightId: 10, name: "AGENT_UPDATE_TARGET_VERSION" },
-    { _id: "601aea57b0da974904990e76", rightId: 11, name: "AGENT_UPDATE_HEARTBEAT" },
-    { _id: "601aea57b0da974904990e77", rightId: 12, name: "AGENT_WRITE" },
-    { _id: "601aea57b0da974904990e78", rightId: 13, name: "AGENT_CANCEL_ORPHANED_TASKS" },
-    { _id: "601aea57b0da974904990e79", rightId: 14, name: "AGENT_DELETE" },
-    { _id: "601aea57b0da974904990e7a", rightId: 15, name: "AGENT_LOG_WRITE" },
-    { _id: "601aea57b0da974904990e7b", rightId: 16, name: "SCRIPT_READ" },
-    { _id: "601aea57b0da974904990e7c", rightId: 17, name: "SCRIPT_WRITE" },
-    { _id: "601aea57b0da974904990e7d", rightId: 18, name: "SCHEDULE_READ" },
-    { _id: "601aea57b0da974904990e7e", rightId: 19, name: "SCHEDULE_WRITE" },
-    { _id: "601aea57b0da974904990e7f", rightId: 20, name: "SCHEDULE_UPDATE_BY_SCHEDULER" },
-    { _id: "601aea57b0da974904990e80", rightId: 21, name: "JOB_READ" },
-    { _id: "601aea57b0da974904990e81", rightId: 22, name: "JOB_CREATE" },
-    { _id: "601aea57b0da974904990e82", rightId: 23, name: "JOB_WRITE" },
-    { _id: "601aea57b0da974904990e83", rightId: 24, name: "JOB_DELETE" },
-    { _id: "601aea57b0da974904990e84", rightId: 25, name: "TASK_OUTCOME_WRITE" },
-    { _id: "601aea57b0da974904990e85", rightId: 26, name: "STEP_OUTCOME_WRITE" },
-    { _id: "601aea57b0da974904990e86", rightId: 27, name: "JOB_DEF_READ" },
-    { _id: "601aea57b0da974904990e87", rightId: 28, name: "JOB_DEF_WRITE" },
-    { _id: "601aea57b0da974904990e88", rightId: 29, name: "USER_READ" },
-    { _id: "601aea57b0da974904990e89", rightId: 30, name: "USER_WRITE" },
-    { _id: "601aea57b0da974904990e8a", rightId: 31, name: "PAYMENT_METHOD_READ" },
-    { _id: "601aea57b0da974904990e8b", rightId: 32, name: "PAYMENT_METHOD_WRITE" },
-    { _id: "601aea57b0da974904990e8c", rightId: 33, name: "PAYMENT_TRANSACTION_READ" },
-    { _id: "601aea57b0da974904990e8d", rightId: 34, name: "PAYMENT_TRANSACTION_WRITE" },
-    { _id: "601aea57b0da974904990e8e", rightId: 35, name: "PAY_INVOICE_AUTO" },
-    { _id: "601aea57b0da974904990e8f", rightId: 36, name: "PAY_INVOICE_MANUAL" },
-    { _id: "601aea57b0da974904990e90", rightId: 37, name: "PAYMENT_TOKEN_CREATE" },
-    { _id: "601aea57b0da974904990e91", rightId: 38, name: "INVOICE_READ" },
-    { _id: "601aea57b0da974904990e92", rightId: 39, name: "INVOICE_WRITE" },
-    { _id: "601aea57b0da974904990e93", rightId: 40, name: "TEAM_INVITE" },
-    { _id: "601aea57b0da974904990e94", rightId: 41, name: "TEAM_JOIN" },
-    { _id: "601aea57b0da974904990e95", rightId: 42, name: "TASK_ACTION" },
-    { _id: "601aea57b0da974904990e96", rightId: 43, name: "JOB_ACTION" },
-    { _id: "601aea57b0da974904990e97", rightId: 44, name: "TEAM_VAR_READ" },
-    { _id: "601aea57b0da974904990e98", rightId: 45, name: "TEAM_VAR_WRITE" },
-    { _id: "601aea57b0da974904990e99", rightId: 46, name: "TEAM_STORAGE_READ" },
-    { _id: "601aea57b0da974904990e9a", rightId: 47, name: "TEAM_STORAGE_WRITE" },
-    { _id: "601aea57b0da974904990e9b", rightId: 48, name: "ARTIFACT_READ" },
-    { _id: "601aea57b0da974904990e9c", rightId: 49, name: "ARTIFACT_WRITE" },
-    { _id: "601aea57b0da974904990e9d", rightId: 50, name: "SCRIPT_SHADOW_READ" },
-    { _id: "601aea57b0da974904990e9e", rightId: 51, name: "SCRIPT_SHADOW_WRITE" },
-    { _id: "601aea57b0da974904990e9f", rightId: 52, name: "ACCESSKEY_READ" },
-    { _id: "601aea57b0da974904990ea0", rightId: 53, name: "ACCESSKEY_WRITE" },
-    { _id: "601aea57b0da974904990ea1", rightId: 54, name: "SETTINGS_READ" },
-    { _id: "601aea57b0da974904990ea2", rightId: 55, name: "SETTINGS_WRITE" },
-    { _id: "601aea57b0da974904990ea3", rightId: 56, name: "TEAM_GLOBAL" },
-    { _id: "601aea57b0da974904990ea4", rightId: 57, name: "GLOBAL" },
+    {_id: "601aea57b0da974904990e6c", rightId: 1, name: "TEAM_READ_ALL"},
+    {_id: "601aea57b0da974904990e6d", rightId: 2, name: "TEAM_CREATE_UNASSIGNED"},
+    {_id: "601aea57b0da974904990e6e", rightId: 3, name: "TEAM_READ"},
+    {_id: "601aea57b0da974904990e6f", rightId: 4, name: "TEAM_WRITE"},
+    {_id: "601aea57b0da974904990e70", rightId: 5, name: "AGENT_DOWNLOAD_CREATE"},
+    {_id: "601aea57b0da974904990e71", rightId: 6, name: "AGENT_DOWNLOAD"},
+    {_id: "601aea57b0da974904990e72", rightId: 7, name: "AGENT_STUB_DOWNLOAD"},
+    {_id: "601aea57b0da974904990e73", rightId: 8, name: "AGENT_READ"},
+    {_id: "601aea57b0da974904990e74", rightId: 9, name: "AGENT_CREATE"},
+    {_id: "601aea57b0da974904990e75", rightId: 10, name: "AGENT_UPDATE_TARGET_VERSION"},
+    {_id: "601aea57b0da974904990e76", rightId: 11, name: "AGENT_UPDATE_HEARTBEAT"},
+    {_id: "601aea57b0da974904990e77", rightId: 12, name: "AGENT_WRITE"},
+    {_id: "601aea57b0da974904990e78", rightId: 13, name: "AGENT_CANCEL_ORPHANED_TASKS"},
+    {_id: "601aea57b0da974904990e79", rightId: 14, name: "AGENT_DELETE"},
+    {_id: "601aea57b0da974904990e7a", rightId: 15, name: "AGENT_LOG_WRITE"},
+    {_id: "601aea57b0da974904990e7b", rightId: 16, name: "SCRIPT_READ"},
+    {_id: "601aea57b0da974904990e7c", rightId: 17, name: "SCRIPT_WRITE"},
+    {_id: "601aea57b0da974904990e7d", rightId: 18, name: "SCHEDULE_READ"},
+    {_id: "601aea57b0da974904990e7e", rightId: 19, name: "SCHEDULE_WRITE"},
+    {_id: "601aea57b0da974904990e7f", rightId: 20, name: "SCHEDULE_UPDATE_BY_SCHEDULER"},
+    {_id: "601aea57b0da974904990e80", rightId: 21, name: "JOB_READ"},
+    {_id: "601aea57b0da974904990e81", rightId: 22, name: "JOB_CREATE"},
+    {_id: "601aea57b0da974904990e82", rightId: 23, name: "JOB_WRITE"},
+    {_id: "601aea57b0da974904990e83", rightId: 24, name: "JOB_DELETE"},
+    {_id: "601aea57b0da974904990e84", rightId: 25, name: "TASK_OUTCOME_WRITE"},
+    {_id: "601aea57b0da974904990e85", rightId: 26, name: "STEP_OUTCOME_WRITE"},
+    {_id: "601aea57b0da974904990e86", rightId: 27, name: "JOB_DEF_READ"},
+    {_id: "601aea57b0da974904990e87", rightId: 28, name: "JOB_DEF_WRITE"},
+    {_id: "601aea57b0da974904990e88", rightId: 29, name: "USER_READ"},
+    {_id: "601aea57b0da974904990e89", rightId: 30, name: "USER_WRITE"},
+    {_id: "601aea57b0da974904990e8a", rightId: 31, name: "PAYMENT_METHOD_READ"},
+    {_id: "601aea57b0da974904990e8b", rightId: 32, name: "PAYMENT_METHOD_WRITE"},
+    {_id: "601aea57b0da974904990e8c", rightId: 33, name: "PAYMENT_TRANSACTION_READ"},
+    {_id: "601aea57b0da974904990e8d", rightId: 34, name: "PAYMENT_TRANSACTION_WRITE"},
+    {_id: "601aea57b0da974904990e8e", rightId: 35, name: "PAY_INVOICE_AUTO"},
+    {_id: "601aea57b0da974904990e8f", rightId: 36, name: "PAY_INVOICE_MANUAL"},
+    {_id: "601aea57b0da974904990e90", rightId: 37, name: "PAYMENT_TOKEN_CREATE"},
+    {_id: "601aea57b0da974904990e91", rightId: 38, name: "INVOICE_READ"},
+    {_id: "601aea57b0da974904990e92", rightId: 39, name: "INVOICE_WRITE"},
+    {_id: "601aea57b0da974904990e93", rightId: 40, name: "TEAM_INVITE"},
+    {_id: "601aea57b0da974904990e94", rightId: 41, name: "TEAM_JOIN"},
+    {_id: "601aea57b0da974904990e95", rightId: 42, name: "TASK_ACTION"},
+    {_id: "601aea57b0da974904990e96", rightId: 43, name: "JOB_ACTION"},
+    {_id: "601aea57b0da974904990e97", rightId: 44, name: "TEAM_VAR_READ"},
+    {_id: "601aea57b0da974904990e98", rightId: 45, name: "TEAM_VAR_WRITE"},
+    {_id: "601aea57b0da974904990e99", rightId: 46, name: "TEAM_STORAGE_READ"},
+    {_id: "601aea57b0da974904990e9a", rightId: 47, name: "TEAM_STORAGE_WRITE"},
+    {_id: "601aea57b0da974904990e9b", rightId: 48, name: "ARTIFACT_READ"},
+    {_id: "601aea57b0da974904990e9c", rightId: 49, name: "ARTIFACT_WRITE"},
+    {_id: "601aea57b0da974904990e9d", rightId: 50, name: "SCRIPT_SHADOW_READ"},
+    {_id: "601aea57b0da974904990e9e", rightId: 51, name: "SCRIPT_SHADOW_WRITE"},
+    {_id: "601aea57b0da974904990e9f", rightId: 52, name: "ACCESSKEY_READ"},
+    {_id: "601aea57b0da974904990ea0", rightId: 53, name: "ACCESSKEY_WRITE"},
+    {_id: "601aea57b0da974904990ea1", rightId: 54, name: "SETTINGS_READ"},
+    {_id: "601aea57b0da974904990ea2", rightId: 55, name: "SETTINGS_WRITE"},
+    {_id: "601aea57b0da974904990ea3", rightId: 56, name: "TEAM_GLOBAL"},
+    {_id: "601aea57b0da974904990ea4", rightId: 57, name: "GLOBAL"},
   ];
 
   console.log('mongoUrl -> @sgg("mongoUrl")');
@@ -1353,7 +1364,7 @@ let LoadAccessRightIdsToProd = async () => {
   await AccessRightModel.deleteMany();
 
   for (let i = 0; i < accessRights.length; i++) {
-    const accessRightData = { rightId: accessRights[i].rightId, name: accessRights[i].name };
+    const accessRightData = {rightId: accessRights[i].rightId, name: accessRights[i].name};
     const accessRightsModel = new AccessRightModel(accessRightData);
     const newAccessRight = await accessRightsModel.save();
     console.log(`newAccessRight -> ${JSON.stringify(newAccessRight, null, 4)}`);
@@ -1364,63 +1375,63 @@ let CreateAccessRightIds = async () => {
   const mongoose = require("mongoose");
 
   const accessRights = [
-    { name: "TEAM_READ_ALL" },
-    { name: "TEAM_CREATE_UNASSIGNED" },
-    { name: "TEAM_READ" },
-    { name: "TEAM_WRITE" },
-    { name: "AGENT_DOWNLOAD_CREATE" },
-    { name: "AGENT_DOWNLOAD" },
-    { name: "AGENT_STUB_DOWNLOAD" },
-    { name: "AGENT_READ" },
-    { name: "AGENT_CREATE" },
-    { name: "AGENT_UPDATE_TARGET_VERSION" },
-    { name: "AGENT_UPDATE_HEARTBEAT" },
-    { name: "AGENT_WRITE" },
-    { name: "AGENT_CANCEL_ORPHANED_TASKS" },
-    { name: "AGENT_DELETE" },
-    { name: "AGENT_LOG_WRITE" },
-    { name: "SCRIPT_READ" },
-    { name: "SCRIPT_WRITE" },
-    { name: "SCHEDULE_READ" },
-    { name: "SCHEDULE_WRITE" },
-    { name: "SCHEDULE_UPDATE_BY_SCHEDULER" },
-    { name: "JOB_READ" },
-    { name: "JOB_CREATE" },
-    { name: "JOB_WRITE" },
-    { name: "JOB_DELETE" },
-    { name: "TASK_OUTCOME_WRITE" },
-    { name: "STEP_OUTCOME_WRITE" },
-    { name: "JOB_DEF_READ" },
-    { name: "JOB_DEF_WRITE" },
-    { name: "USER_READ" },
-    { name: "USER_WRITE" },
-    { name: "PAYMENT_METHOD_READ" },
-    { name: "PAYMENT_METHOD_WRITE" },
-    { name: "PAYMENT_TRANSACTION_READ" },
-    { name: "PAYMENT_TRANSACTION_WRITE" },
-    { name: "PAY_INVOICE_AUTO" },
-    { name: "PAY_INVOICE_MANUAL" },
-    { name: "PAYMENT_TOKEN_CREATE" },
-    { name: "INVOICE_READ" },
-    { name: "INVOICE_WRITE" },
-    { name: "TEAM_INVITE" },
-    { name: "TEAM_JOIN" },
-    { name: "TASK_ACTION" },
-    { name: "JOB_ACTION" },
-    { name: "TEAM_VAR_READ" },
-    { name: "TEAM_VAR_WRITE" },
-    { name: "TEAM_STORAGE_READ" },
-    { name: "TEAM_STORAGE_WRITE" },
-    { name: "ARTIFACT_READ" },
-    { name: "ARTIFACT_WRITE" },
-    { name: "SCRIPT_SHADOW_READ" },
-    { name: "SCRIPT_SHADOW_WRITE" },
-    { name: "ACCESSKEY_READ" },
-    { name: "ACCESSKEY_WRITE" },
-    { name: "SETTINGS_READ" },
-    { name: "SETTINGS_WRITE" },
-    { name: "TEAM_GLOBAL" },
-    { name: "GLOBAL" },
+    {name: "TEAM_READ_ALL"},
+    {name: "TEAM_CREATE_UNASSIGNED"},
+    {name: "TEAM_READ"},
+    {name: "TEAM_WRITE"},
+    {name: "AGENT_DOWNLOAD_CREATE"},
+    {name: "AGENT_DOWNLOAD"},
+    {name: "AGENT_STUB_DOWNLOAD"},
+    {name: "AGENT_READ"},
+    {name: "AGENT_CREATE"},
+    {name: "AGENT_UPDATE_TARGET_VERSION"},
+    {name: "AGENT_UPDATE_HEARTBEAT"},
+    {name: "AGENT_WRITE"},
+    {name: "AGENT_CANCEL_ORPHANED_TASKS"},
+    {name: "AGENT_DELETE"},
+    {name: "AGENT_LOG_WRITE"},
+    {name: "SCRIPT_READ"},
+    {name: "SCRIPT_WRITE"},
+    {name: "SCHEDULE_READ"},
+    {name: "SCHEDULE_WRITE"},
+    {name: "SCHEDULE_UPDATE_BY_SCHEDULER"},
+    {name: "JOB_READ"},
+    {name: "JOB_CREATE"},
+    {name: "JOB_WRITE"},
+    {name: "JOB_DELETE"},
+    {name: "TASK_OUTCOME_WRITE"},
+    {name: "STEP_OUTCOME_WRITE"},
+    {name: "JOB_DEF_READ"},
+    {name: "JOB_DEF_WRITE"},
+    {name: "USER_READ"},
+    {name: "USER_WRITE"},
+    {name: "PAYMENT_METHOD_READ"},
+    {name: "PAYMENT_METHOD_WRITE"},
+    {name: "PAYMENT_TRANSACTION_READ"},
+    {name: "PAYMENT_TRANSACTION_WRITE"},
+    {name: "PAY_INVOICE_AUTO"},
+    {name: "PAY_INVOICE_MANUAL"},
+    {name: "PAYMENT_TOKEN_CREATE"},
+    {name: "INVOICE_READ"},
+    {name: "INVOICE_WRITE"},
+    {name: "TEAM_INVITE"},
+    {name: "TEAM_JOIN"},
+    {name: "TASK_ACTION"},
+    {name: "JOB_ACTION"},
+    {name: "TEAM_VAR_READ"},
+    {name: "TEAM_VAR_WRITE"},
+    {name: "TEAM_STORAGE_READ"},
+    {name: "TEAM_STORAGE_WRITE"},
+    {name: "ARTIFACT_READ"},
+    {name: "ARTIFACT_WRITE"},
+    {name: "SCRIPT_SHADOW_READ"},
+    {name: "SCRIPT_SHADOW_WRITE"},
+    {name: "ACCESSKEY_READ"},
+    {name: "ACCESSKEY_WRITE"},
+    {name: "SETTINGS_READ"},
+    {name: "SETTINGS_WRITE"},
+    {name: "TEAM_GLOBAL"},
+    {name: "GLOBAL"},
   ];
 
   console.log('mongoUrl -> @sgg("mongoUrl")');
@@ -1429,7 +1440,7 @@ let CreateAccessRightIds = async () => {
 
   let rightId = 1;
   for (let i = 0; i < accessRights.length; i++) {
-    const accessRightData = { rightId, name: accessRights[i].name };
+    const accessRightData = {rightId, name: accessRights[i].name};
     const accessRightsModel = new AccessRightModel(accessRightData);
     const newAccessRight = await accessRightsModel.save();
     console.log(`newAccessRight -> ${JSON.stringify(newAccessRight, null, 4)}`);
@@ -1457,7 +1468,7 @@ let GetAllAccessRights = async () => {
 let GetAccessRightIds = async (accessRightNames) => {
   let lstAccessRights: string[] = [];
 
-  const accessRights = await AccessRightModel.find({ name: { $in: accessRightNames } }).select("rightId");
+  const accessRights = await AccessRightModel.find({name: {$in: accessRightNames}}).select("rightId");
 
   for (let i = 0; i < accessRights.length; i++) {
     lstAccessRights.push(accessRights[i].rightId.toString());
@@ -1471,7 +1482,7 @@ let CreateProdAccessKeys = async () => {
 
   console.log('mongoUrl -> @sgg("mongoUrl")');
   mongoose.connect(config.get("mongoUrl"), {});
-  await AccessKeyModel.deleteMany({ accessKeyType: Enums.AccessKeyType.AGENT });
+  await AccessKeyModel.deleteMany({accessKeyType: Enums.AccessKeyType.AGENT});
 
   let teams = await teamService.findAllTeamsInternal({}, "ownerId");
 
@@ -1520,7 +1531,7 @@ let UpdateUserTeamAccessRights = async () => {
         teamAccessRightIds[teamId] = accessRightIds;
       }
 
-      const userUpdated = await UserModel.updateOne({ _id: new mongodb.ObjectId(user._id) }, { teamAccessRightIds });
+      const userUpdated = await UserModel.updateOne({_id: new mongodb.ObjectId(user._id)}, {teamAccessRightIds});
 
       console.log(`user -> ${JSON.stringify(userUpdated, null, 4)}`);
     }
@@ -1610,12 +1621,12 @@ let TestForEach = async () => {
 
 let GenerateInvoice = async (mongoRepo: MongoRepo, team: any, start: Date, end: Date) => {
   return new Promise(async (resolve, reject) => {
-    let invoice: any = { start: start, end: end, status: "created", scriptRate: team.billing.scriptRate };
+    let invoice: any = {start: start, end: end, status: "created", scriptRate: team.billing.scriptRate};
     let numScripts: number = 0;
     const tasks: any = await mongoRepo.GetManyByQuery(
       {
         _teamId: mongoRepo.ObjectIdFromString(team.id),
-        dateCompleted: { $gte: start.toISOString(), $lt: end.toISOString() },
+        dateCompleted: {$gte: start.toISOString(), $lt: end.toISOString()},
         invoiceId: null,
       },
       "taskOutcome"
@@ -1626,16 +1637,16 @@ let GenerateInvoice = async (mongoRepo: MongoRepo, team: any, start: Date, end: 
       numScripts += task.stepDefs.length;
       await mongoRepo.Update(
         "taskOutcome",
-        { _id: mongoRepo.ObjectIdFromString(task.id) },
-        { $set: { invoiceId: invoice.id } }
+        {_id: mongoRepo.ObjectIdFromString(task.id)},
+        {$set: {invoiceId: invoice.id}}
       );
     }
     invoice.numScripts = numScripts;
     invoice.billAmount = numScripts * parseFloat(invoice.scriptRate);
     await mongoRepo.Update(
       "invoice",
-      { _id: mongoRepo.ObjectIdFromString(invoice.id) },
-      { $set: { numScripts: numScripts } }
+      {_id: mongoRepo.ObjectIdFromString(invoice.id)},
+      {$set: {numScripts: numScripts}}
     );
     resolve(invoice);
   });
@@ -2071,7 +2082,7 @@ let CreateAgentInstall = async (_teamId: string, agentVersion: string, nodeRange
 
   let mongoRepo = new MongoRepo(appName, mongoUrl, mongoDbName, logger);
 
-  let queryRes: any = await mongoRepo.GetOneByQuery({ Type: "APIVersion" }, "settings", { "Values.agentLogs": 1 });
+  let queryRes: any = await mongoRepo.GetOneByQuery({Type: "APIVersion"}, "settings", {"Values.agentLogs": 1});
   let agentLogsAPIVersion = queryRes.Values.agentLogs;
 
   let pkg_json = {
@@ -2153,8 +2164,8 @@ const script_type = "python";
 const script_env_vars = {};
 
 let steps: any[] = [];
-steps.push({ script: script2_json, arguments: "hello", variables: script_env_vars, type: script_type });
-steps.push({ script: script2_json, arguments: "there", variables: script_env_vars, type: script_type });
+steps.push({script: script2_json, arguments: "hello", variables: script_env_vars, type: script_type});
+steps.push({script: script2_json, arguments: "there", variables: script_env_vars, type: script_type});
 
 // SendTask(steps);
 // for (let i = 0; i < 30; i++) {
@@ -2217,7 +2228,7 @@ let PublishJobTask = async () => {
 let CreateStripeCompanyForTeams = async () => {
   mongoose.connect(config.get("mongoUrl"), {});
 
-  const teams = await teamService.findAllTeamsInternal({ userAssigned: true });
+  const teams = await teamService.findAllTeamsInternal({userAssigned: true});
 
   if (_.isArray(teams) && teams.length > 0) {
     for (let i = 0; i < teams.length; i++) {
@@ -2226,7 +2237,7 @@ let CreateStripeCompanyForTeams = async () => {
       let res: any = await stripeClientTokenService.createStripeCustomer(team);
       console.log("res -> ", JSON.stringify(res, null, 4));
 
-      let updateRes = await teamService.updateTeam(team.id, { stripe_id: res.customer.id });
+      let updateRes = await teamService.updateTeam(team.id, {stripe_id: res.customer.id});
       console.log("updateRes -> ", JSON.stringify(updateRes, null, 4));
     }
   }
@@ -2284,7 +2295,7 @@ let ProcessOrphanedTasks = async () => {
 
         cntOfflineAgentsProcessed += 1;
         if (cntOfflineAgentsProcessed >= maxOfflineAgentsToProcess) {
-          console.log(`Reached max number of offline agents - exiting`, { maxOfflineAgentsToProcess });
+          console.log(`Reached max number of offline agents - exiting`, {maxOfflineAgentsToProcess});
           process.exit(-1);
         }
       }
@@ -2310,11 +2321,11 @@ let DeleteJobs = async (filter: any) => {
   if (_.isArray(jobs) && jobs.length > 0) {
     for (let i = 0; i < jobs.length; i++) {
       const job = jobs[i];
-      await mongoRepo.DeleteByQuery({ _jobId: job._id }, "stepOutcome");
-      await mongoRepo.DeleteByQuery({ _jobId: job._id }, "taskOutcome");
-      await mongoRepo.DeleteByQuery({ _jobId: job._id }, "step");
-      await mongoRepo.DeleteByQuery({ _jobId: job._id }, "task");
-      await mongoRepo.DeleteByQuery({ _id: job._id }, "job");
+      await mongoRepo.DeleteByQuery({_jobId: job._id}, "stepOutcome");
+      await mongoRepo.DeleteByQuery({_jobId: job._id}, "taskOutcome");
+      await mongoRepo.DeleteByQuery({_jobId: job._id}, "step");
+      await mongoRepo.DeleteByQuery({_jobId: job._id}, "task");
+      await mongoRepo.DeleteByQuery({_id: job._id}, "job");
     }
   }
 };
@@ -2334,9 +2345,9 @@ let DeleteJobDefs = async (filter: any) => {
   if (_.isArray(jobDefs) && jobDefs.length > 0) {
     for (let i = 0; i < jobDefs.length; i++) {
       const jobDef = jobDefs[i];
-      await mongoRepo.DeleteByQuery({ _jobDefId: jobDef._id }, "stepDef");
-      await mongoRepo.DeleteByQuery({ _jobDefId: jobDef._id }, "taskDef");
-      await mongoRepo.DeleteByQuery({ _id: jobDef._id }, "jobDef");
+      await mongoRepo.DeleteByQuery({_jobDefId: jobDef._id}, "stepDef");
+      await mongoRepo.DeleteByQuery({_jobDefId: jobDef._id}, "taskDef");
+      await mongoRepo.DeleteByQuery({_id: jobDef._id}, "jobDef");
     }
   }
 };
@@ -2350,10 +2361,6 @@ let DeleteJobDefs = async (filter: any) => {
 ///   until all are done. Maybe better to do it with ec2 instances and a custom scaling solution
 ///   where idle agents automatically shut themselves down with an "inactive" script.
 let PruneJobs = async (teamId: string) => {
-  const auth = `${config.get("adminToken")};`;
-
-  mongoose.connect(config.get("mongoUrl"), {});
-
   const mongoUrl = config.get("mongoUrl");
   const mongoDbname = config.get("mongoDbName");
 
@@ -2366,24 +2373,30 @@ let PruneJobs = async (teamId: string) => {
   let mongoRepo = new MongoRepo("RunTestHarness", mongoUrl, mongoDbname, logger);
 
   const _teamId = mongoRepo.ObjectIdFromString(teamId);
-  let team: TeamSchema = <TeamSchema>(
-    await teamService.findTeam(_teamId, "paidStorageMB jobIdHighWatermark jobStorageSpaceHighWatermark")
-  );
+  let team: TeamSchema = <TeamSchema>await mongoRepo.GetById(_teamId, "team", {
+    paidStorageMB: 1,
+    jobIdHighWatermark: 1,
+    jobStorageSpaceHighWatermark: 1,
+  });
 
-  const freeTierSettings = await settingsService.findSettings("FreeTierLimits");
+  const freeTierSettings: any = await mongoRepo.GetOneByQuery({Type: "FreeTierLimits"}, "Settings", {Values: 1});
   const dateCutoff = new Date();
   dateCutoff.setDate(dateCutoff.getDate() - freeTierSettings.freeDaysJobStorage);
   let totalSpaceUsed = 0;
   let jobIdHighWatermark = undefined;
   let paidStorageBytes = team.paidStorageMB * 1024 * 1024;
-  // let url = `job?filter=dateCreated>${Number(dateCutoff)}&limit=1`;
-  let url = `job`;
 
   console.log(`dateCutoff -> ${dateCutoff}`);
 
   // If this team is not paying for additional storage, prune data for all completed jobs older than the free job data cutoff date
   if (paidStorageBytes == 0) {
-    let jobs: any = await RestAPICall(url, "GET", teamId, null, null, auth);
+    let jobs: any = await mongoRepo.GetManyByQuery(
+      {teamId: _teamId},
+      "job",
+      {_id: 1, status: 1, dateStarted: 1},
+      {},
+      100
+    );
     while (true) {
       let lastJob: JobSchema = undefined;
 
@@ -2394,16 +2407,16 @@ let PruneJobs = async (teamId: string) => {
 
         if (lastJob.status != Enums.JobStatus.RUNNING) {
           console.log(`deleting job -> ${JSON.stringify(lastJob)}`);
-          const jobId = mongoRepo.ObjectIdFromString(lastJob.id);
+          const jobId = mongoRepo.ObjectIdFromString(lastJob._id);
           await mongoRepo.UpdateMany(
             "stepOutcome",
-            { _jobId: jobId },
-            { $set: { runCode: "", stderr: "", stdout: "", archived: true } }
+            {_jobId: jobId},
+            {$set: {runCode: "", stderr: "", stdout: "", archived: true}}
           );
-          await mongoRepo.DeleteByQuery({ _jobId: jobId }, "taskOutcome");
-          await mongoRepo.DeleteByQuery({ _jobId: jobId }, "step");
-          await mongoRepo.DeleteByQuery({ _jobId: jobId }, "task");
-          await mongoRepo.DeleteByQuery({ _id: jobId }, "job");
+          await mongoRepo.DeleteByQuery({_jobId: jobId}, "taskOutcome");
+          await mongoRepo.DeleteByQuery({_jobId: jobId}, "step");
+          await mongoRepo.DeleteByQuery({_jobId: jobId}, "task");
+          await mongoRepo.DeleteByQuery({_id: jobId}, "job");
         }
 
         if (lastJob.dateStarted > dateCutoff) {
@@ -2414,8 +2427,13 @@ let PruneJobs = async (teamId: string) => {
       }
 
       if (lastJob) {
-        url = `job?lastId=${lastJob.id}`;
-        jobs = await RestAPICall(url, "GET", teamId, null, null, auth);
+        jobs = await mongoRepo.GetManyByQuery(
+          {teamId: _teamId, _id: {$gt: mongoRepo.ObjectIdFromString(lastJob._id)}},
+          "job",
+          {_id: 1, status: 1, dateStarted: 1},
+          {},
+          100
+        );
       } else {
         break;
       }
@@ -2426,8 +2444,13 @@ let PruneJobs = async (teamId: string) => {
     //    the amount the user is paying for
   } else {
     // Get the most recent completed job past the free tier cutoff date
-    url = `job?filter=dateStarted>${Number(dateCutoff)}&limit=1`;
-    let jobsQuery: any = await RestAPICall(url, "GET", teamId, null, null, auth);
+    let jobsQuery: any = await mongoRepo.GetManyByQuery(
+      {teamId: _teamId, dateStarted: {$gt: Number(dateCutoff)}},
+      "job",
+      {},
+      {},
+      1
+    );
     if (jobsQuery.data.data.length < 1) return;
     const oldestJobBeforeCutoff = jobsQuery.data.data[0];
 
@@ -2438,10 +2461,10 @@ let PruneJobs = async (teamId: string) => {
 
     let queryFilter: any = {};
     queryFilter["_teamId"] = _teamId;
-    queryFilter["_jobId"] = { $lt: oldestJobBeforeCutoff.id };
-    if (jobIdHighWatermark) queryFilter["_jobId"] = { $gt: jobIdHighWatermark };
+    queryFilter["_jobId"] = {$lt: oldestJobBeforeCutoff._id};
+    if (jobIdHighWatermark) queryFilter["_jobId"] = {$gt: jobIdHighWatermark};
 
-    let stepOutcomes = await mongoRepo.GetManyByQuery(queryFilter, "stepOutcome", { runCode: 1, stderr: 1, stdout: 1 });
+    let stepOutcomes = await mongoRepo.GetManyByQuery(queryFilter, "stepOutcome", {runCode: 1, stderr: 1, stdout: 1});
     newSpaceUsed += bson.calculateObjectSize(stepOutcomes);
 
     let taskOutcomes = await mongoRepo.GetManyByQuery(queryFilter, "taskOutcome");
@@ -2458,14 +2481,13 @@ let PruneJobs = async (teamId: string) => {
 
     totalSpaceUsed = newSpaceUsed + previousSpaceUsed;
 
-    const sortedJobs = _.sortBy(jobs, ["id"]);
-    const jobIdNewHighWatermark = sortedJobs[sortedJobs.length - 1].id;
+    const sortedJobs = _.sortBy(jobs, ["_id"]);
+    const jobIdNewHighWatermark = sortedJobs[sortedJobs.length - 1]._id;
 
     if (totalSpaceUsed > paidStorageBytes) {
       let spaceToDelete = totalSpaceUsed - paidStorageBytes;
 
-      let url = `job`;
-      let jobs: any = await RestAPICall(url, "GET", teamId, null, null, auth);
+      let jobs: any = await mongoRepo.GetManyByQuery({teamId: _teamId}, "job", {}, {}, 100);
       while (true) {
         let lastJob: JobSchema = undefined;
         for (let i = 0; i < jobs.data.data.length; i++) {
@@ -2478,25 +2500,25 @@ let PruneJobs = async (teamId: string) => {
             );
 
           jobTotalSpaceUsed += bson.calculateObjectSize(lastJob);
-          let jobStepOutcomes = _.filter(taskOutcomes, (x) => x._jobId == lastJob.id);
+          let jobStepOutcomes = _.filter(taskOutcomes, (x) => x._jobId == lastJob._id);
           jobTotalSpaceUsed += bson.calculateObjectSize(jobStepOutcomes);
-          let jobTaskOutcomes = _.filter(taskOutcomes, (x) => x._jobId == lastJob.id);
+          let jobTaskOutcomes = _.filter(taskOutcomes, (x) => x._jobId == lastJob._id);
           jobTotalSpaceUsed += bson.calculateObjectSize(jobTaskOutcomes);
-          let jobSteps = _.filter(steps, (x) => x._jobId == lastJob.id);
+          let jobSteps = _.filter(steps, (x) => x._jobId == lastJob._id);
           jobTotalSpaceUsed += bson.calculateObjectSize(jobSteps);
-          let jobTasks = _.filter(tasks, (x) => x._jobId == lastJob.id);
+          let jobTasks = _.filter(tasks, (x) => x._jobId == lastJob._id);
           jobTotalSpaceUsed += bson.calculateObjectSize(jobTasks);
 
-          const jobId = mongoRepo.ObjectIdFromString(lastJob.id);
+          const jobId = mongoRepo.ObjectIdFromString(lastJob._id);
           await mongoRepo.UpdateMany(
             "stepOutcome",
-            { _jobId: jobId },
-            { $set: { runCode: "", stderr: "", stdout: "", archived: true } }
+            {_jobId: jobId},
+            {$set: {runCode: "", stderr: "", stdout: "", archived: true}}
           );
-          await mongoRepo.DeleteByQuery({ _jobId: jobId }, "taskOutcome");
-          await mongoRepo.DeleteByQuery({ _jobId: jobId }, "step");
-          await mongoRepo.DeleteByQuery({ _jobId: jobId }, "task");
-          await mongoRepo.DeleteByQuery({ _id: jobId }, "job");
+          await mongoRepo.DeleteByQuery({_jobId: jobId}, "taskOutcome");
+          await mongoRepo.DeleteByQuery({_jobId: jobId}, "step");
+          await mongoRepo.DeleteByQuery({_jobId: jobId}, "task");
+          await mongoRepo.DeleteByQuery({_id: jobId}, "job");
 
           totalSpaceUsed -= jobTotalSpaceUsed;
           spaceToDelete -= jobTotalSpaceUsed;
@@ -2507,15 +2529,14 @@ let PruneJobs = async (teamId: string) => {
         }
 
         if (lastJob) {
-          url = `job?lastId=${lastJob.id}`;
-          jobs = await RestAPICall(url, "GET", teamId, null, null, auth);
+          jobs = await mongoRepo.GetManyByQuery({teamId: _teamId, _id: {$gt: lastJob._id}}, "job", {}, {}, 100);
         } else {
           break;
         }
       }
 
-      const teamUpdate = { jobIdHighWatermark: jobIdNewHighWatermark, jobStorageSpaceHighWatermark: totalSpaceUsed };
-      await teamService.updateTeam(_teamId, teamUpdate);
+      const teamUpdate = {jobIdHighWatermark: jobIdNewHighWatermark, jobStorageSpaceHighWatermark: totalSpaceUsed};
+      await mongoRepo.Update("team", {_id: _teamId}, teamUpdate);
     }
 
     console.log("totalSpaceUsed -> ", totalSpaceUsed);
@@ -2544,7 +2565,7 @@ let ConfigNewRabbitMQServer = async () => {
     // await rmqAdmin.bindQueueToExchange('worker', rmqNoAgentForTaskQueue, rmqNoAgentForTaskQueue);
     await rmqAdmin.bindQueueToExchange("worker", rmqScheduleUpdatesQueue, rmqScheduleUpdatesQueue);
   } catch (e) {
-    logger.LogError("Error initializing test: " + e.message, { Stack: e.stack });
+    logger.LogError("Error initializing test: " + e.message, {Stack: e.stack});
   }
 };
 
@@ -2552,6 +2573,39 @@ let SendTestBrowserAlert = async () => {
   rabbitMQPublisher.publishBrowserAlert(config.get("sgTestTeam"), `This is a test message`);
 };
 
+let MongoTest = async () => {
+  const mongoUrl = config.get("mongoUrl");
+  const mongoDbname = config.get("mongoDbName");
+
+  console.log("mongoUrl -> ", mongoUrl);
+  console.log("mongoDbname -> ", mongoDbname);
+
+  let logger = new BaseLogger("RunTestHarness");
+  logger.Start();
+
+  let mongoRepo = new MongoRepo("RunTestHarness", mongoUrl, mongoDbname, logger);
+
+  const _teamId = mongoRepo.ObjectIdFromString("5de95c0453162e8891f5a830");
+
+  // const freeTierSettings: any = await mongoRepo.GetOneByQuery({Type: "FreeTierLimits"}, "settings", {Values: 1});
+  // console.log(`value -----> '${JSON.stringify(freeTierSettings)}'`);
+
+  // let filter = {};
+  // filter["_teamId"] = _teamId;
+  // let queyResult = await mongoRepo.Aggregate([{$match: filter}, {$count: "num_new_agents"}], "agent");
+  // console.log(`value -----> '${JSON.stringify(queyResult)}'`);
+
+  // let team: any = await mongoRepo.GetOneByQuery({_id: _teamId}, "team", {jobStorageSpaceHighWatermark: 1});
+  // console.log(`team -----> '${JSON.stringify(team)}'`);
+
+  // const result = await mongoRepo.GetManyByQuery({_teamId: _teamId}, "agent");
+  // console.log("result ---------> ", result);
+
+  const result = await mongoRepo.UpdateMany("stepOutcome", {_teamId: _teamId}, {$unset: {_invoiceId: ""}});
+  console.log("result ---------> ", result);
+};
+
+MongoTest();
 // RunRepublishTasksWaitingForAgent('5f57b2f14b5da00017df0d4f');
 // CreateBrainTreeCompanyForTeams();
 // CreateStripeCompanyForTeams();
@@ -2580,7 +2634,7 @@ let SendTestBrowserAlert = async () => {
 // CloseRabbitMQConnections("bartSpikeUser");
 // AMQPTest();
 // StompTest();
-RawStompTest();
+// RawStompTest();
 // ScheduleScript();
 // DownloadAgent();
 // CreateUser(process.argv[2], process.argv[3], process.argv[4] ? process.argv[4].split(',') : []);

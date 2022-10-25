@@ -262,308 +262,304 @@
       </validation-observer>
     </modal>
 
-    <modal name="edit-schedule-modal" :classes="'round-popup'" :width="700" :height="900">
-      <div style="overflow: scroll;">
-        <table class="table" width="100%" height="100%">
-          <tbody class="tbody">
-            <tr class="tr">
-              <td class="td">
-                <span v-if="editSchedule.id"> Edit the schedule {{ editSchedule.name }} </span>
-                <span v-else> Create a new schedule {{ editSchedule.name }} </span>
-              </td>
-              <td class="td"></td>
-            </tr>
-            <tr class="tr">
-              <td class="td">
-                <validation-observer ref="editScheduleValidationObserver">
-                  <table class="table">
-                    <tr class="tr">
-                      <td class="td">
-                        Name
-                      </td>
-                      <td class="td">
-                        <validation-provider name="Schedule Name" rules="required|object-name" v-slot="{ errors }">
-                          <input class="input" type="text" v-model="editSchedule.name" />
-                          <div v-if="errors && errors.length > 0" class="message validation-error is-danger">
-                            {{ errors[0] }}
-                          </div>
-                        </validation-provider>
-                      </td>
-                    </tr>
-                    <tr class="tr">
-                      <td class="td">
-                        Type
-                      </td>
-                      <td class="td">
-                        <validation-provider name="Trigger Type" rules="required" v-slot="{ errors }">
-                          <select
-                            class="input select"
-                            style="width: 250px; margin-top: 10px;"
-                            v-model="editSchedule.TriggerType"
-                          >
-                            <option
-                              v-for="(value, key) in ScheduleTriggerType"
-                              v-bind:key="`triggerType${key}-${value}`"
-                              :value="key"
-                            >
-                              {{ value }}
-                            </option>
-                          </select>
-                          <div v-if="errors && errors.length > 0" class="message validation-error is-danger">
-                            {{ errors[0] }}
-                          </div>
-                        </validation-provider>
-                      </td>
-                    </tr>
+    <modal name="edit-schedule-modal" classes="round-popup edit-schedule-modal" :width="700" :height="900">
+      <ModalCard>
+        <template #title>
+          <span v-if="editSchedule.id"> Edit the schedule {{ editSchedule.name }} </span>
+          <span v-else> Create a new schedule {{ editSchedule.name }} </span>
+        </template>
+        <template #body>
+          <ValidationObserver ref="editScheduleValidationObserver" tag="div">
+            <div class="field is-horizontal">
+              <div class="field-label is-normal">
+                <label class="label">Name</label>
+              </div>
+              <div class="field-body">
+                <ValidationProvider tag="div" class="field" name="Schedule Name" rules="required|object-name" v-slot="{ errors }">
+                  <div class="control">
+                    <input class="input" style="width: 250px;" type="text" v-model="editSchedule.name" />
+                    <p v-if="errors.length" class="help is-danger">{{ errors[0] }}</p>
+                  </div>
+                </ValidationProvider>
+              </div>
+            </div>
 
-                    <tr class="tr">
-                      <td class="td">
-                        Runtime Variables
-                      </td>
-                      <td class="td">
-                        <validation-provider name="Runtime Vars" rules="variable-map" v-slot="{ errors }">
-                          <input class="input" style="width: 350px;" type="text" v-model="editSchedule.runtimeVars" />
-                          <div v-if="errors && errors.length > 0" class="message validation-error is-danger">
-                            {{ errors[0] }}
-                          </div>
-                        </validation-provider>
-                      </td>
-                    </tr>
+            <div class="field is-horizontal">
+              <div class="field-label is-normal">
+                <label class="label">Type</label>
+              </div>
+              <div class="field-body">
+                <ValidationProvider tag="div" class="field is-narrow" name="Trigger Type" rules="required" v-slot="{ errors }">
+                  <div class="control">
+                    <div class="select">
+                      <select v-model="editSchedule.TriggerType" style="width: 250px;">
+                        <option
+                          v-for="(value, key) in ScheduleTriggerType"
+                          v-bind:key="`triggerType${key}-${value}`"
+                          :value="key">
+                          {{ value }}
+                        </option>
+                      </select>
+                    </div>
+                  </div>
+                  <div v-if="errors && errors.length > 0" class="message validation-error is-danger">
+                    {{ errors[0] }}
+                  </div>
+                </ValidationProvider>
+              </div>
+            </div>
 
-                    <tr class="tr">
-                      <td class="td">
-                        Is Active
-                      </td>
-                      <td class="td">
-                        <input type="checkbox" v-model="editSchedule.isActive" />
-                      </td>
-                    </tr>
-                  </table>
-                </validation-observer>
-              </td>
-              <td class="td"></td>
-            </tr>
-            <tr class="tr" v-if="editSchedule.TriggerType === ScheduleTriggerType.date">
-              <td class="td" colspan="2">
-                <validation-observer ref="editSchedule_RunDate_ValidationObserver">
-                  <table class="table">
-                    <tr class="tr">
-                      <td class="td">
-                        Run Date
-                      </td>
-                      <td class="td">
-                        <validation-provider name="Run Date" rules="required|datetime" v-slot="{ errors }">
-                          <input
-                            class="input"
-                            type="text"
-                            style="width: 250px;"
-                            v-model="editSchedule.RunDate"
-                            placeholder="yyyy-MM-dd HH:mm:ss"
-                          />
-                          <div v-if="errors && errors.length > 0" class="message validation-error is-danger">
-                            {{ errors[0] }}
-                          </div>
-                        </validation-provider>
-                      </td>
-                    </tr>
-                  </table>
-                </validation-observer>
-              </td>
-            </tr>
-            <tr class="tr" v-if="editSchedule.TriggerType === ScheduleTriggerType.cron">
-              <td class="td" colspan="2">
-                <validation-observer ref="editSchedule_cron_ValidationObserver">
-                  <table class="table cron-options-table">
-                    <tr class="tr">
-                      <td class="td">
-                        Year
-                      </td>
-                      <td class="td">
-                        <input class="input" type="text" v-model="editSchedule_cron.Year" />
-                      </td>
-                    </tr>
-                    <tr class="tr">
-                      <td class="td">
-                        Month
-                      </td>
-                      <td class="td">
-                        <input class="input" type="text" v-model="editSchedule_cron.Month" />
-                      </td>
-                    </tr>
-                    <tr class="tr">
-                      <td class="td">
-                        Day
-                      </td>
-                      <td class="td">
-                        <input class="input" type="text" v-model="editSchedule_cron.Day" />
-                      </td>
-                    </tr>
-                    <tr class="tr">
-                      <td class="td">
-                        Week
-                      </td>
-                      <td class="td">
-                        <input class="input" type="text" v-model="editSchedule_cron.Week" />
-                      </td>
-                    </tr>
-                    <tr class="tr">
-                      <td class="td">
-                        Day of Week
-                      </td>
-                      <td class="td">
-                        <input class="input" type="text" v-model="editSchedule_cron.Day_Of_Week" />
-                      </td>
-                    </tr>
-                    <tr class="tr">
-                      <td class="td">
-                        Hour
-                      </td>
-                      <td class="td">
-                        <input class="input" type="text" v-model="editSchedule_cron.Hour" />
-                      </td>
-                    </tr>
-                    <tr class="tr">
-                      <td class="td">
-                        Minute
-                      </td>
-                      <td class="td">
-                        <input class="input" type="text" v-model="editSchedule_cron.Minute" />
-                      </td>
-                    </tr>
-                    <tr class="tr">
-                      <td class="td">
-                        Second
-                      </td>
-                      <td class="td">
-                        <input class="input" type="text" v-model="editSchedule_cron.Second" />
-                      </td>
-                    </tr>
-                    <tr class="tr">
-                      <td class="td">
-                        Start Date
-                      </td>
-                      <td class="td">
-                        <input class="input" type="text" v-model="editSchedule_cron.Start_Date" />
-                      </td>
-                    </tr>
-                    <tr class="tr">
-                      <td class="td">
-                        End Date
-                      </td>
-                      <td class="td">
-                        <input class="input" type="text" v-model="editSchedule_cron.End_Date" />
-                      </td>
-                    </tr>
-                    <tr class="tr">
-                      <td class="td">
-                        Timezone
-                      </td>
-                      <td class="td">
-                        <select class="select" style="width: 300px;" v-model="editSchedule_cron.Timezone">
+            <div class="field is-horizontal">
+              <div class="field-label is-normal">
+                <label class="label">Is Active</label>
+              </div>
+              <div class="field-body is-align-items-center">
+                <div class="field">
+                  <div class="control">
+                    <label class="checkbox">
+                      <input type="checkbox" v-model="editSchedule.isActive" />
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div v-if="editSchedule.TriggerType === ScheduleTriggerType.date"
+              class="field is-horizontal">
+                <div class="field-label is-normal">
+                  <label class="label">Run Date</label>
+                </div>
+                <div class="field-body">
+                  <ValidationProvider tag="div" class="field" name="Run Date" rules="required|datetime" v-slot="{ errors }">
+                    <p class="control">
+                      <input
+                        class="input"
+                        type="datetime-local"
+                        style="width: 250px;"
+                        v-model="editSchedule.RunDate"
+                      />
+                    </p>
+                    <p v-if="errors.length" class="help is-danger">{{ errors[0] }}</p>
+                  </ValidationProvider>
+                </div>
+            </div>
+
+            <template v-if="editSchedule.TriggerType === ScheduleTriggerType.interval">
+                <div class="field is-horizontal">
+                  <div class="field-label is-normal">
+                    <label class="label"></label>
+                  </div>
+                  <div class="field-body">
+                    <ValidationProvider tag="div" class="field is-narrow" name="Weeks" rules="positiveNumber|required_if_empty:@Days,@Hours,@Minutes" v-slot="{ errors }">
+                      <label class="label">Weeks</label>
+                      <div class="control" style="width: 60px;">
+                        <input v-model.number="editSchedule_interval.Weeks" type="text" class="input" />
+                        <p v-if="errors.length" class="help is-danger">{{ errors[0] }}</p>
+                      </div>
+                    </ValidationProvider>
+                    <ValidationProvider tag="div" name="Days" class="field is-narrow" rules="positiveNumber|required_if_empty:@Weeks,@Hours,@Minutes" v-slot="{ errors }">
+                      <label class="label">Days</label>
+                      <div class="control" style="width: 60px;">
+                        <input v-model.number="editSchedule_interval.Days" type="text" class="input" />
+                        <p v-if="errors.length" class="help is-danger">{{ errors[0] }}</p>
+                      </div>
+                    </ValidationProvider>
+                    <ValidationProvider tag="div" name="Hours" class="field is-narrow" rules="positiveNumber|required_if_empty:@Days,@Weeks,@Minutes" v-slot="{ errors }">
+                      <label class="label">Hours</label>
+                      <div class="control" style="width: 60px;">
+                        <input class="input" type="text" v-model.number="editSchedule_interval.Hours" />
+                        <p v-if="errors.length" class="help is-danger">{{ errors[0] }}</p>
+                      </div>
+                    </ValidationProvider>
+                    <ValidationProvider name="Minutes" tag="div" class="field is-narrow" rules="positiveNumber|required_if_empty:@Days,@Hours,@Weeks" v-slot="{ errors }">
+                      <label class="label">Minutes</label>
+                      <div class="control" style="width: 60px;">
+                        <input class="input" type="text" v-model.number="editSchedule_interval.Minutes" />
+                        <p v-if="errors.length" class="help is-danger">{{ errors[0] }}</p>
+                      </div>
+                    </ValidationProvider>
+                  </div>
+                </div>
+                <div class="field is-horizontal">
+                  <div class="field-label is-normal">
+                    <label class="label">Start Date</label>
+                  </div>
+                  <div class="field-body">
+                    <div class="field">
+                      <div class="control" style="width: 250px;">
+                        <input class="input" type="date" v-model="editSchedule_interval.Start_Date" />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="field is-horizontal">
+                  <div class="field-label is-normal">
+                    <label class="label">End Date</label>
+                  </div>
+                  <div class="field-body">
+                    <div class="field">
+                      <div class="control" style="width: 250px;">
+                        <input class="input" type="date" v-model="editSchedule_interval.End_Date" />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="field is-horizontal">
+                  <div class="field-label is-normal">
+                    <div class="label">Jitter</div>
+                  </div>
+                  <div class="field-body">
+                    <div class="field">
+                      <div class="control" style="width: 250px;">
+                        <input class="input" type="text" v-model="editSchedule_interval.Jitter" />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+            </template>
+
+            <template v-if="editSchedule.TriggerType === ScheduleTriggerType.cron">
+              <div class="field is-horizontal">
+                <div class="field-label is-normal">
+                  <div class="label"></div>
+                </div>
+                <div class="field-body">
+                  <ValidationProvider rules="min_value:2022|required_if_empty:@Month,@Day,@Week,@WeekDay,@Hour,@Minute,@Second" name="Year" tag="div" class="field is-narrow" v-slot="{ errors }">
+                    <label class="label">Year</label>
+                    <div class="control" style="width: 65px;">
+                      <input v-model.number="editSchedule_cron.Year" type="text" class="input" placeholder="YYYY" />
+                      <p v-if="errors.length" class="help is-danger">{{ errors[0] }}</p>
+                    </div>
+                  </ValidationProvider>
+                  <ValidationProvider rules="between:1,12|required_if_empty:@Year,@Day,@Week,@WeekDay,@Hour,@Minute,@Second" name="Month" tag="div" class="field is-narrow" v-slot="{ errors }">
+                    <label class="label">Month</label>
+                    <div class="control" style="width: 55px;">
+                      <input v-model.number="editSchedule_cron.Month" type="text" class="input" placeholder="1-12" />
+                      <p v-if="errors.length" class="help is-danger">{{ errors[0] }}</p>
+                    </div>
+                  </ValidationProvider>
+                  <ValidationProvider rules="between:1,31|required_if_empty:@Year,@Month,@Week,@WeekDay,@Hour,@Minute,@Second" name="Day" tag="div" class="field is-narrow" v-slot="{ errors }">
+                    <label class="label">Day</label>
+                    <div class="control" style="width: 55px;">
+                      <input v-model.number="editSchedule_cron.Day" type="text" class="input" placeholder="1-31" />
+                      <p v-if="errors.length" class="help is-danger">{{ errors[0] }}</p>
+                    </div>
+                  </ValidationProvider>
+                  <ValidationProvider rules="between:1,53|required_if_empty:@Year,@Month,@Day,@WeekDay,@Hour,@Minute,@Second" name="Week" tag="div" class="field is-narrow" v-slot="{ errors }">
+                    <label class="label">Week</label>
+                    <div class="control" style="width: 60px;">
+                      <input v-model.number="editSchedule_cron.Week" type="text" class="input" placeholder="1-53" />
+                      <p v-if="errors.length" class="help is-danger">{{ errors[0] }}</p>
+                    </div>
+                  </ValidationProvider>
+                  <ValidationProvider rules="required_if_empty:@Year,@Month,@Day,@Week,@Hour,@Minute,@Second" name="WeekDay" tag="div" class="field is-narrow" v-slot="{ errors }">
+                    <label class="label">Day of Week</label>
+                    <div class="control" style="width: 140px;">
+                      <input v-model="editSchedule_cron.Day_Of_Week" type="text" class="input" placeholder="0-6 or mon-sun" />
+                      <p v-if="errors.length" class="help is-danger">{{ errors[0] }}</p>
+                    </div>
+                  </ValidationProvider>
+                  <ValidationProvider rules="between:0,23|required_if_empty:@Year,@Month,@Day,@Week,@WeekDay,@Minute,@Second" name="Hour" tag="div" class="field is-narrow" v-slot="{ errors }">
+                    <label class="label">Hour</label>
+                    <div class="control" style="width: 60px;">
+                      <input v-model.number="editSchedule_cron.Hour" type="text" class="input" placeholder="0-23" />
+                      <p v-if="errors.length" class="help is-danger">{{ errors[0] }}</p>
+                    </div>
+                  </ValidationProvider>
+                  <ValidationProvider rules="between:0,59|required_if_empty:@Year,@Month,@Day,@Week,@WeekDay,@Hour,@Second" name="Minute" tag="div" class="field is-narrow" v-slot="{ errors }">
+                    <label class="label">Minute</label>
+                    <div class="control" style="width: 60px;">
+                      <input v-model.number="editSchedule_cron.Minute" type="text" class="input" placeholder="0-59" />
+                      <p v-if="errors.length" class="help is-danger">{{ errors[0] }}</p>
+                    </div>
+                  </ValidationProvider>
+                  <ValidationProvider rules="between:0,59|required_if_empty:@Year,@Month,@Day,@Week,@WeekDay,@Hour,@Minute" name="Second" tag="div" class="field is-narrow" v-slot="{ errors }">
+                    <label class="label">Second</label>
+                    <div class="control" style="width: 60px;">
+                      <input v-model.number="editSchedule_cron.Second" type="text" class="input" placeholder="0-59" />
+                      <p v-if="errors.length" class="help is-danger">{{ errors[0] }}</p>
+                    </div>
+                  </ValidationProvider>
+                </div>
+              </div>
+              <div class="field is-horizontal">
+                <div class="field-label is-normal">
+                  <label class="label">Start Date</label>
+                </div>
+                <div class="field-body">
+                  <div class="field">
+                    <div class="control" style="width: 250px;">
+                      <input class="input" type="date" v-model="editSchedule_cron.Start_Date" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="field is-horizontal">
+                <div class="field-label is-normal">
+                  <label class="label">End Date</label>
+                </div>
+                <div class="field-body">
+                  <div class="field">
+                    <div class="control" style="width: 250px;">
+                      <input class="input" type="date" v-model="editSchedule_cron.End_Date" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <ValidationProvider tag="div" class="field is-horizontal" name="Timezone" rules="required" v-slot="{ errors }">
+                <div class="field-label is-normal">
+                  <label class="label">Timezone</label>
+                </div>
+                <div class="field-body">
+                  <div class="fiel">
+                    <div class="control">
+                      <div class="select" style="width: 300px;">
+                        <select class="select" v-model="editSchedule_cron.Timezone">
                           <option
                             class="option"
                             v-for="zone in timeZones"
-                            v-bind:key="zone.value"
+                            :key="zone.value"
                             :value="zone.value"
                             >{{ zone.label }}</option
                           >
                         </select>
-                      </td>
-                    </tr>
-                    <tr class="tr">
-                      <td class="td">
-                        Jitter
-                      </td>
-                      <td class="td">
-                        <input class="input" type="text" v-model="editSchedule_cron.Jitter" />
-                      </td>
-                    </tr>
-                  </table>
-                </validation-observer>
-              </td>
-            </tr>
-            <tr class="tr" v-if="editSchedule.TriggerType === ScheduleTriggerType.interval">
-              <td class="td" colspan="2">
-                <validation-observer ref="editSchedule_interval_ValidationObserver">
-                  <table class="table">
-                    <tr class="tr">
-                      <td class="td">
-                        Weeks
-                      </td>
-                      <td class="td">
-                        <input class="input" type="text" v-model="editSchedule_interval.Weeks" />
-                      </td>
-                    </tr>
-                    <tr class="tr">
-                      <td class="td">
-                        Days
-                      </td>
-                      <td class="td">
-                        <input class="input" type="text" v-model="editSchedule_interval.Days" />
-                      </td>
-                    </tr>
-                    <tr class="tr">
-                      <td class="td">
-                        Hours
-                      </td>
-                      <td class="td">
-                        <input class="input" type="text" v-model="editSchedule_interval.Hours" />
-                      </td>
-                    </tr>
-                    <tr class="tr">
-                      <td class="td">
-                        Minutes
-                      </td>
-                      <td class="td">
-                        <input class="input" type="text" v-model="editSchedule_interval.Minutes" />
-                      </td>
-                    </tr>
-                    <tr class="tr">
-                      <td class="td">
-                        Start Date
-                      </td>
-                      <td class="td">
-                        <input class="input" type="text" v-model="editSchedule_interval.Start_Date" />
-                      </td>
-                    </tr>
-                    <tr class="tr">
-                      <td class="td">
-                        End Date
-                      </td>
-                      <td class="td">
-                        <input class="input" type="text" v-model="editSchedule_interval.End_Date" />
-                      </td>
-                    </tr>
-                    <tr class="tr">
-                      <td class="td">
-                        Jitter
-                      </td>
-                      <td class="td">
-                        <input class="input" type="text" v-model="editSchedule_interval.Jitter" />
-                      </td>
-                    </tr>
-                  </table>
-                </validation-observer>
-              </td>
-            </tr>
-            <tr class="tr">
-              <td class="td">
-                <button class="button is-primary" @click="onCreateSchedule">
-                  <template v-if="editSchedule.id">
-                    Save schedule
-                  </template>
-                  <template v-else>
-                    Create new schedule
-                  </template>
-                </button>
-                <button class="button button-spaced" @click="onCancelCreateSchedule">Cancel</button>
-              </td>
-              <td class="td"></td>
-              <td class="td"></td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+                      </div>
+                      <p v-if="errors.length" class="help is-danger">{{ errors[0] }}</p>
+                    </div>
+                  </div>
+                </div>
+              </ValidationProvider>
+              <div class="field is-horizontal">
+                <div class="field-label is-normal">
+                  <div class="label">Jitter</div>
+                </div>
+                <div class="field-body">
+                  <div class="field">
+                    <div class="control" style="width: 250px;">
+                      <input class="input" type="text" v-model="editSchedule_cron.Jitter" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </template>
+          </ValidationObserver>
+
+          <VariableList v-model="editSchedule.runtimeVars" class="mt-5" />
+        </template>
+        <template #footer>
+          <div class="buttons">
+            <button class="button is-primary" @click="onCreateSchedule">
+              <template v-if="editSchedule.id">
+                Save schedule
+              </template>
+              <template v-else>
+                Create new schedule
+              </template>
+            </button>
+            <button class="button" @click="onCancelCreateSchedule">Cancel</button>
+          </div>
+        </template>
+      </ModalCard>
     </modal>
 
     <modal name="delete-schedule-modal" :classes="'round-popup'" :width="200" :height="200">
@@ -854,7 +850,7 @@
         </table>
       </div>
 
-      <div class="tabs-container-item" v-else-if="activeTab === JobTab.RUN">
+      <div class="tabs-container-item job-run-tab" v-else-if="activeTab === JobTab.RUN">
         <table class="table" style="background-color: inherit;">
           <tr class="tr">
             <td class="td"></td>
@@ -892,58 +888,7 @@
           </tr>
           <tr class="tr">
             <td class="td">
-              <table class="table striped-table" style="width: 720px;">
-                <tr class="tr" v-for="(value, key) in runJobVars" v-bind:key="'runJobVar_' + key">
-                  <td class="td">{{ key }}</td>
-                  <td class="td"><span style="font-weight: 700; size: 20px;"> = </span></td>
-                  <td class="td">{{ value.value }}</td>
-                  <td class="td"><a @click.prevent="onDeleteRunJobVarClicked(key)">Delete</a></td>
-                </tr>
-              </table>
-            </td>
-          </tr>
-          <tr class="tr">
-            <td class="td">
-              <input
-                style="margin-left: 10px; margin-top: 10px;"
-                type="checkbox"
-                v-model="newRunJobVarValue.sensitive"
-                :checked="false"
-              />
-              <span style="margin-left: 10px; margin-right: 20px;">Sensitive</span>
-
-              <validation-observer ref="addRunJobVarsValidationObserver">
-                <validation-provider name="Variable Key" rules="required" v-slot="{ errors }">
-                  <input
-                    class="input"
-                    ref="newRunJobVarKeyInput"
-                    type="text"
-                    style="width: 250px;"
-                    v-model="newRunJobVarKey"
-                    placeholder="key"
-                  />
-                  <span v-if="errors && errors.length > 0" class="message validation-error is-danger">{{
-                    errors[0]
-                  }}</span>
-                </validation-provider>
-
-                <span style="font-weight: 700; margin-left: 4px; margin-right: 4px;">=</span>
-
-                <validation-provider name="Variable Value" rules="required" v-slot="{ errors }">
-                  <input
-                    class="input"
-                    type="text"
-                    style="width: 250px;"
-                    v-model="newRunJobVarValue.value"
-                    placeholder="value"
-                  />
-                  <span v-if="errors && errors.length > 0" class="message validation-error is-danger">{{
-                    errors[0]
-                  }}</span>
-                </validation-provider>
-              </validation-observer>
-
-              <button class="button button-spaced" @click="onAddRunJobVarClicked">Add Runtime Variable</button>
+              <VariableList v-model="runJobVars" :variable="runJobVariable" />
             </td>
           </tr>
           <tr class="tr">
@@ -1208,7 +1153,7 @@
         </validation-observer>
       </div>
 
-      <div class="tabs-container-item" v-else-if="activeTab === JobTab.VARIABLES">
+      <div class="tabs-container-item variables-tab" v-else-if="activeTab === JobTab.VARIABLES">
         <div>
           <table class="table mt-4" style="width: 800px; background-color: inherit;">
             <tr class="tr">
@@ -1217,97 +1162,9 @@
               </td>
             </tr>
           </table>
-
-          <table class="table striped-table" style="width: 800px;">
-            <tr class="tr" v-if="Object.keys(jobDefForEdit.runtimeVars).length === 0">
-              <td class="td" colspan="4">
-                No runtime vars yet
-              </td>
-            </tr>
-            <template v-else>
-              <validation-observer ref="editRuntimeVarValidationObserver">
-                <tr class="tr" v-for="(tagValue, tagKey) in jobDefForEdit.runtimeVars" v-bind:key="tagKey">
-                  <td class="td">{{ tagKey }}</td>
-                  <td class="td"><span style="font-weight: 700; size: 20px;"> = </span></td>
-                  <td class="td">
-                    <template v-if="isVarMasked(tagKey)">
-                      &lt;masked&gt;
-                    </template>
-                    <template v-else>
-                      <validation-provider name="Variable Value" rules="required" v-slot="{ errors }">
-                        <input
-                          class="input"
-                          type="text"
-                          v-model.lazy="jobDefForEdit.runtimeVars[tagKey].value"
-                          @change="onJobDefRuntimeVarsChanged"
-                        />
-                        <span v-if="errors && errors.length > 0" class="message validation-error is-danger">{{
-                          errors[0]
-                        }}</span>
-                      </validation-provider>
-                    </template>
-                  </td>
-                  <td class="td">
-                    <a v-if="isVarMasked(tagKey)" class="button-spaced" @click.prevent="onUnmaskClicked(tagKey)"
-                      >unmask</a
-                    >
-                  </td>
-                  <td class="td" style="text-align: center; padding: 10px">
-                    <input
-                      type="checkbox"
-                      v-model.lazy="tagValue.sensitive"
-                      @change="onJobDefRuntimeVarsChanged"
-                      :checked="isChecked(tagValue.sensitive)"
-                    />
-                    <label style="margin-left: 10px;">sensitive</label>
-                  </td>
-                  <td class="td"><a @click.prevent="onDeleteRuntimeVarClicked(tagKey)">Delete</a></td>
-                </tr>
-              </validation-observer>
-            </template>
-            <tr class="tr">
-              <td class="td" colspan="2"></td>
-            </tr>
-          </table>
-        </div>
-        <div>
-          <input
-            style="margin-left: 10px; margin-top: 10px;"
-            type="checkbox"
-            v-model="newRuntimeVarValue.sensitive"
-            :checked="false"
-          />
-          <span style="margin-left: 10px; margin-right: 20px;">Sensitive</span>
-
-          <validation-observer ref="addRuntimeVarValidationObserver">
-            <validation-provider name="Variable Key" rules="required" v-slot="{ errors }">
-              <input
-                class="input"
-                ref="newRuntimeVarKeyInput"
-                type="text"
-                style="width: 250px;"
-                v-model="newRuntimeVarKey"
-                placeholder="key"
-              />
-              <span v-if="errors && errors.length > 0" class="message validation-error is-danger">{{ errors[0] }}</span>
-            </validation-provider>
-
-            <span style="font-weight: 700; margin-left: 4px; margin-right: 4px;">=</span>
-
-            <validation-provider name="Variable Value" rules="required" v-slot="{ errors }">
-              <input
-                class="input"
-                type="text"
-                style="width: 250px;"
-                v-model="newRuntimeVarValue.value"
-                placeholder="value"
-              />
-              <span v-if="errors && errors.length > 0" class="message validation-error is-danger">{{ errors[0] }}</span>
-            </validation-provider>
-          </validation-observer>
-
-          <button class="button button-spaced" @click="onAddRuntimeVarClicked">Add Runtime Variable</button>
-          <br /><br />&nbsp;
+          <VariableList @input="onJobDefRuntimeVarsChanged"
+            :value="jobDefForEdit.runtimeVars"
+            :variable="jobDefRuntimeVariable" />
         </div>
       </div>
 
@@ -1500,7 +1357,7 @@ import { BindStoreModel, BindSelected, BindSelectedCopy, BindProp } from "../dec
 import { JobStatus, enumKeyToPretty, enumKeys } from "../utils/Enums";
 import { SgAlert, AlertPlacement, AlertCategory } from "../store/alert/types";
 import { ValidationProvider, ValidationObserver } from "vee-validate";
-import { focusElement, truncateString } from "../utils/Shared";
+import { focusElement } from "../utils/Shared";
 import AgentSearch from "../components/AgentSearch.vue";
 import { Tabs, Tab } from "vue-slim-tabs";
 import { Schedule, ScheduleTriggerType } from "../store/schedule/types";
@@ -1517,7 +1374,10 @@ import { showErrors } from "../utils/ErrorHandler";
 import ScriptSearchWithCreate from "../components/ScriptSearchWithCreate.vue";
 import TaskDefEditor from "../components/TaskDefEditor.vue";
 import SGCTaskDefEditor from "../components/SGCTaskDefEditor.vue";
-import { stringToMap, mapToString } from "../utils/Shared";
+import ValueInput from '@/components/runtimeVariable/ValueInput.vue';
+import { VariableList } from '@/components/runtimeVariable';
+import { ValueFormat, Variable, VariableMap } from '@/components/runtimeVariable/types';
+import ModalCard from '@/components/core/ModalCard.vue';
 
 enum JobTab {
   VARIABLES = "RuntimeVariables",
@@ -1542,6 +1402,9 @@ enum JobTab {
     ValidationProvider,
     ValidationObserver,
     ArtifactSearch,
+    ValueInput,
+    VariableList,
+    ModalCard,
   },
   directives: { ClickOutside },
 })
@@ -1596,6 +1459,7 @@ export default class JobDesigner extends Vue {
   private inboundTaskPaths: InboundPaths = null;
   private illegalLoopTasks: null | TaskDef[] = null;
   private inboundHighlightPath: any = null;
+  private jobDefRuntimeVariable: Variable = null;
 
   @BindStoreModel({ storeType: StoreType.TaskDefStore })
   private selectedTaskDef!: null | TaskDef;
@@ -2094,78 +1958,19 @@ export default class JobDesigner extends Vue {
     this.onSelectedStepDefForEditChanged();
   }
 
-  private async onJobDefRuntimeVarsChanged() {
-    console.log("changgeed", this.jobDefForEdit.runtimeVars);
+  private async onJobDefRuntimeVarsChanged(runtimeVars: VariableMap) {
+    this.jobDefForEdit.runtimeVars = runtimeVars;
 
     try {
-      if (!(await (<any>this.$refs.editRuntimeVarValidationObserver).validate())) {
-        return;
-      }
-
       await this.$store.dispatch(`${StoreType.JobDefStore}/save`, {
         id: this.jobDefForEdit.id,
-        runtimeVars: this.jobDefForEdit.runtimeVars,
+        runtimeVars,
       });
 
       this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Saved job`, AlertPlacement.FOOTER));
-      (<any>this).$refs.addRuntimeVarValidationObserver.reset();
     } catch (err) {
       console.error(err);
       showErrors("Error saving the job runtime variables", err);
-    }
-  }
-
-  private newRuntimeVarKey = "";
-  private newRuntimeVarValue = { value: "", sensitive: false };
-  private async onAddRuntimeVarClicked() {
-    if (this.jobDefForEdit) {
-      try {
-        if (!(await (<any>this.$refs.addRuntimeVarValidationObserver).validate())) {
-          return;
-        }
-
-        await this.$store.dispatch(`${StoreType.JobDefStore}/save`, {
-          id: this.jobDefForEdit.id,
-          runtimeVars: _.extend(
-            {
-              [this.newRuntimeVarKey]: {
-                value: this.newRuntimeVarValue.value,
-                sensitive: this.newRuntimeVarValue.sensitive,
-              },
-            },
-            this.jobDefForEdit.runtimeVars
-          ),
-        });
-        this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Saved job`, AlertPlacement.FOOTER));
-
-        (<any>this).$refs.addRuntimeVarValidationObserver.reset();
-
-        this.newRuntimeVarKey = "";
-        this.newRuntimeVarValue = { value: "", sensitive: false };
-      } catch (err) {
-        console.error(err);
-        showErrors("Error saving the job", err);
-      }
-    }
-  }
-
-  private isChecked(val: any) {
-    return val == true;
-  }
-
-  private async onDeleteRuntimeVarClicked(tagKey: string) {
-    if (this.jobDefForEdit) {
-      try {
-        const newVars = _.clone(this.jobDefForEdit.runtimeVars);
-        delete newVars[tagKey];
-        this.jobDefForEdit.runtimeVars = newVars;
-
-        await this.$store.dispatch(`${StoreType.JobDefStore}/save`, this.jobDefForEdit);
-        this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Saved job`, AlertPlacement.FOOTER));
-      } catch (err) {
-        showErrors("Error saving the job", err);
-        console.error(err);
-      }
     }
   }
 
@@ -2191,38 +1996,32 @@ export default class JobDesigner extends Vue {
 
   private onCreateScheduleClicked() {
     this.editSchedule = <any>{ TriggerType: ScheduleTriggerType.date };
-    this.editSchedule_cron = {};
+    this.editSchedule_cron = {
+      Timezone: 'Etc/Greenwich'
+    };
     this.editSchedule_interval = {};
-
-    // Try to set the default timezone
-    try {
-      const computerTZ = Intl.DateTimeFormat().resolvedOptions().timeZone;
-      if (timeZones.findIndex((zone) => zone.value === computerTZ) === -1) {
-        console.log("Unable to recognize computers timezone", computerTZ);
-      } else {
-        this.editSchedule_cron.Timezone = computerTZ;
-      }
-    } catch (err) {
-      console.error("Unable to compute computers timezone");
-    }
-
-    // select schedule type by default
-    this.editSchedule.TriggerType = ScheduleTriggerType.date;
 
     this.$modal.show("edit-schedule-modal");
   }
 
   private onEditScheduleClicked(schedule: Schedule) {
-    let runtimeVars: any | undefined = undefined;
-    if (schedule.FunctionKwargs.runtimeVars) runtimeVars = mapToString(schedule.FunctionKwargs.runtimeVars);
     this.editSchedule = <any>{
       id: schedule.id,
-      runtimeVars,
+      runtimeVars: schedule.FunctionKwargs.runtimeVars,
       TriggerType: schedule.TriggerType,
       name: schedule.name,
-      RunDate: schedule.RunDate,
       isActive: schedule.isActive,
     };
+
+    if (schedule.TriggerType === ScheduleTriggerType.date) {
+      const offset = new Date().getTimezoneOffset() * 1000 * 60;
+      const offsetDate = new Date(schedule.RunDate).valueOf() - offset;
+
+      Object.assign(this.editSchedule, {
+        RunDate: new Date(offsetDate).toISOString().substring(0, 16),
+      });
+    }
+
     this.editSchedule_cron = _.clone(schedule.cron);
     this.editSchedule_interval = _.clone(schedule.interval);
 
@@ -2247,7 +2046,7 @@ export default class JobDesigner extends Vue {
         scheduleToSave["FunctionKwargs"] = {
           _teamId: this.selectedTeamId,
           targetId: this.jobDefForEdit.id,
-          runtimeVars: stringToMap(this.editSchedule.runtimeVars),
+          runtimeVars: this.editSchedule.runtimeVars,
         };
 
         if (this.editSchedule.TriggerType === ScheduleTriggerType.date) {
@@ -2398,9 +2197,8 @@ export default class JobDesigner extends Vue {
     this.$modal.hide("route-all-to-taskdef-modal");
   }
 
-  private runJobVars: { [key: string]: {} } = {};
-  private newRunJobVarKey = "";
-  private newRunJobVarValue = { value: "", sensitive: false };
+  private runJobVariable: Variable = null;
+  private runJobVars: VariableMap = {};
   private runJobId = null;
 
   @Watch("jobDefForEdit")
@@ -2426,53 +2224,17 @@ export default class JobDesigner extends Vue {
     }
   }
 
-  private async onAddRunJobVarClicked() {
-    if (await (<any>this).$refs.addRunJobVarsValidationObserver.validate()) {
-      const runJobVarsClone = _.clone(this.runJobVars);
-      runJobVarsClone[this.newRunJobVarKey] = this.newRunJobVarValue;
-      this.runJobVars = runJobVarsClone;
-      this.newRunJobVarKey = "";
-      this.newRunJobVarValue = { value: "", sensitive: false };
-      (<any>this).$refs.addRunJobVarsValidationObserver.reset();
-    }
-  }
-
-  private onDeleteRunJobVarClicked(key) {
-    const runJobVarsClone = _.clone(this.runJobVars);
-    delete runJobVarsClone[key];
-    this.runJobVars = runJobVarsClone;
-  }
-
   private async onRunJobClicked() {
     try {
       this.runJobId = null;
 
-      let rtVars = {};
-      let keys = Object.keys(this.runJobVars);
-      for (let i = 0; i < keys.length; ++i) {
-        let key = keys[i];
-        const val: any = this.runJobVars[key];
-        if (key.startsWith("<<") && key.endsWith(">>")) {
-          key = key.substring(2, key.length - 2);
-          rtVars[key] = {};
-          rtVars[key]["value"] = val.value;
-          rtVars[key]["sensitive"] = true;
-        } else {
-          rtVars[key] = {};
-          rtVars[key]["value"] = val.value;
-          rtVars[key]["sensitive"] = false;
-        }
-      }
-
       const {
         data: { data },
-      } = await axios.post(
-        `/api/v0/job`,
-        {
-          runtimeVars: rtVars,
-        },
-        { headers: { _jobDefId: this.jobDef.id } }
-      );
+      } = await axios.post('/api/v0/job', {
+        runtimeVars: this.runJobVars,
+      }, {
+        headers: { _jobDefId: this.jobDef.id }
+      });
 
       this.runJobId = data.id;
     } catch (err) {
@@ -2631,32 +2393,42 @@ export default class JobDesigner extends Vue {
     this.$modal.show("select-script-vars-modal");
   }
 
-  private onClickedAddSggAsVar(sgg: string) {
+  private onClickedAddSggAsVar(key: string) {
     this.$modal.hide("select-script-vars-modal");
 
     if (this.selectScriptsType === "runtime-vars") {
-      this.newRuntimeVarKey = sgg;
-      (<any>this.$refs.newRuntimeVarKeyInput).focus();
-      (<any>this.$refs.newRuntimeVarKeyInput).scrollIntoView();
+      this.jobDefRuntimeVariable = {
+        format: ValueFormat.TEXT,
+        sensitive: false,
+        value: '',
+        key
+      };
+
+      this.$nextTick(() => {
+        const keyInput: HTMLInputElement = this.$el.querySelector('.variables-tab .runtime-variable-input');
+
+        keyInput.scrollIntoView();
+        keyInput.focus();
+      });
     } else {
-      this.newRunJobVarKey = sgg;
-      (<any>this.$refs.newRunJobVarKeyInput).focus();
-      (<any>this.$refs.newRunJobVarKeyInput).scrollIntoView();
+      this.runJobVariable = {
+        format: ValueFormat.TEXT,
+        sensitive: false,
+        value: '',
+        key
+      };
+
+      this.$nextTick(() => {
+        const keyInput: HTMLInputElement = this.$el.querySelector('.job-run-tab .runtime-variable-input');
+
+        keyInput.scrollIntoView();
+        keyInput.focus();
+      });
     }
   }
 
   private onCloseSelectScriptVarsClicked() {
     this.$modal.hide("select-script-vars-modal");
-  }
-
-  private unMaskedVars = {};
-
-  private isVarMasked(varName: string): boolean {
-    return !this.unMaskedVars[varName];
-  }
-
-  private onUnmaskClicked(varName: string) {
-    Vue.set(this.unMaskedVars, varName, true);
   }
 }
 </script>
@@ -2839,4 +2611,16 @@ table {
 .text-nowrap {
   white-space: nowrap;
 }
+
+.error-message-left {
+  width: 100%;
+  top: 100%;
+  left: 0;
+}
+</style>
+
+<style lang="scss">
+  .edit-schedule-modal .modal .modal-card {
+    width: auto;
+  }
 </style>

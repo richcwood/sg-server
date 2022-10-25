@@ -1,6 +1,25 @@
 import { extend as vee_validate_extend } from 'vee-validate';
+import { between, min_value } from 'vee-validate/dist/rules';
+import enMessages from 'vee-validate/dist/locale/en.json';
 import _ from 'lodash';
 
+function isValueDefined (val: unknown): boolean {
+  if (_.isString(val)) {
+    return !_.isEmpty(val);
+  }
+
+  return !_.isNull(val) && !_.isUndefined(val);
+}
+
+vee_validate_extend('between', {
+  ...between,
+  message: enMessages.messages['between']
+});
+
+vee_validate_extend('min_value', {
+  ...min_value,
+  message: enMessages.messages['min_value']
+});
 
 vee_validate_extend('required', {
   validate (value) {
@@ -149,6 +168,29 @@ const initValidation = function(){
     }
   });
 
+  // Validates if object has a specific property
+  // <ValidationProvider rules="required_field:myKey" /> - this will check if object under validation has 'myKey' property
+  vee_validate_extend('required_field', {
+    validate (value: Record<string, any>, { field }: any): boolean {
+      return Boolean(value && value[field]);
+    },
+    computesRequired: true,
+    params: ['field']
+  });
+
+  // This validator does cross-field validation,
+  // it validates if at least one field is set
+  //
+  // <ValidationProvider rules="required_if_empty:@name,@email" />
+  // Makes field under validation required if <ValidationProvider name="name" /> or <ValidationProvider name="email" />
+  // have empty values
+  vee_validate_extend('required_if_empty', {
+    validate (value: any, values: any[]) {
+      return values.some(isValueDefined) ? true : isValueDefined(value);
+    },
+    computesRequired: true,
+    message: 'At least one field is required'
+  });
 }
 
 export { initValidation };

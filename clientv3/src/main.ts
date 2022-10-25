@@ -9,12 +9,29 @@ import { StoreType } from './store/types';
 import { isUserReadyToUseApp } from '@/store/security';
 import VModal from 'vue-js-modal';
 import { library } from '@fortawesome/fontawesome-svg-core';
-import { faSearch, faSpinner, faEllipsisH, faQuestionCircle, faAngleDown, faCalendarAlt, faCog, faUsers, faSignOutAlt, faAngleUp, faTimes } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 import { initValidation } from './utils/Validation';
 import VueSplit from 'vue-split-panel';
 import bitset from 'bitset';
 import VTooltip from 'v-tooltip';
+import {
+  faSearch,
+  faSpinner,
+  faEllipsisH,
+  faQuestionCircle,
+  faAngleDown,
+  faCalendarAlt,
+  faCog,
+  faUsers,
+  faSignOutAlt,
+  faAngleUp,
+  faTimes,
+  faCode,
+  faMinusSquare,
+  faEye,
+  faEyeSlash,
+  faSave
+} from '@fortawesome/free-solid-svg-icons';
 
 library.add(faSearch);
 library.add(faSpinner);
@@ -27,6 +44,11 @@ library.add(faUsers);
 library.add(faSignOutAlt);
 library.add(faAngleUp);
 library.add(faTimes);
+library.add(faCode);
+library.add(faMinusSquare);
+library.add(faEye);
+library.add(faEyeSlash);
+library.add(faSave);
 
 Vue.component('font-awesome-icon', FontAwesomeIcon);
 
