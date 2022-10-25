@@ -1,28 +1,28 @@
-import { int } from "aws-sdk/clients/datapipeline";
+import {int} from "aws-sdk/clients/datapipeline";
 
 import BitSet from "bitset";
 import * as config from "config";
 const jwt = require("jsonwebtoken");
 import * as _ from "lodash";
 import * as mongodb from "mongodb";
-import { hasUncaughtExceptionCaptureCallback } from "process";
+import {hasUncaughtExceptionCaptureCallback} from "process";
 
-import { AgentSchema } from "../domain/Agent";
-import { JobSchema } from "../domain/Job";
-import { TaskSchema, TaskModel } from "../domain/Task";
+import {AgentSchema} from "../domain/Agent";
+import {JobSchema} from "../domain/Job";
+import {TaskSchema, TaskModel} from "../domain/Task";
 
-import { agentService } from "../services/AgentService";
-import { taskService } from "../services/TaskService";
-import { taskOutcomeService } from "../services/TaskOutcomeService";
-import { teamVariableService } from "../services/TeamVariableService";
+import {agentService} from "../services/AgentService";
+import {taskService} from "../services/TaskService";
+import {taskOutcomeService} from "../services/TaskOutcomeService";
+import {teamVariableService} from "../services/TeamVariableService";
 
-import { AMQPConnector } from "../../shared/AMQPLib";
+import {AMQPConnector} from "../../shared/AMQPLib";
 import * as Enums from "../../shared/Enums";
-import { SGStrings } from "../../shared/SGStrings";
-import { BaseLogger } from "../../shared/SGLogger";
-import { SGUtils } from "../../shared/SGUtils";
+import {SGStrings} from "../../shared/SGStrings";
+import {BaseLogger} from "../../shared/SGLogger";
+import {SGUtils} from "../../shared/SGUtils";
 
-import { LaunchTaskError, ValidationError } from "../utils/Errors";
+import {LaunchTaskError, ValidationError} from "../utils/Errors";
 
 const __ACTIVE_AGENT_TIMEOUT_SECONDS = config.get("activeAgentTimeoutSeconds");
 
@@ -50,7 +50,7 @@ interface IGetTaskRouteResult {
 let TaskReadyToPublish = async (_teamId: mongodb.ObjectId, task: TaskSchema, logger: BaseLogger): Promise<boolean> => {
   if (!_.isObject(task) || !("_jobId" in task) || !("up_dep" in task) || !("name" in task)) {
     const msg = "Invalid task object";
-    logger.LogError(msg, { _teamId: _teamId, task: task });
+    logger.LogError(msg, {_teamId: _teamId, task: task});
     throw new Error(msg);
   }
   const tasks = await taskService.findAllJobTasks(_teamId, task._jobId, "toRoutes");
@@ -67,10 +67,7 @@ let TaskReadyToPublish = async (_teamId: mongodb.ObjectId, task: TaskSchema, log
  */
 let ConstructGeneralTaskHandlerAgentsMongoFilter = async (): Promise<any> => {
   return {
-    $or: [
-      { "propertyOverrides.handleGeneralTasks": { $exists: false } },
-      { "propertyOverrides.handleGeneralTasks": true },
-    ],
+    $or: [{"propertyOverrides.handleGeneralTasks": {$exists: false}}, {"propertyOverrides.handleGeneralTasks": true}],
     offline: false,
     lastHeartbeatTime: {
       $gte: new Date().getTime() - parseInt(__ACTIVE_AGENT_TIMEOUT_SECONDS) * 1000,
@@ -254,9 +251,9 @@ let CreateTaskRouteForSingleAgent = async (
       throw new LaunchTaskError("Route missing targetAgentId", Enums.TaskFailureCode.TARGET_AGENT_NOT_SPECIFIED, task);
     const targetAgentId = routes[0].targetAgentId;
     updatedTask = await TaskModel.findOneAndUpdate(
-      { _id: task._id, _teamId },
-      { $addToSet: { attemptedRunAgentIds: targetAgentId } },
-      { new: true }
+      {_id: task._id, _teamId},
+      {$addToSet: {attemptedRunAgentIds: targetAgentId}},
+      {new: true}
     );
     await agentService.updateAgentLastTaskAssignedTime(_teamId, targetAgentId, Date.now(), null, "_id");
   }
@@ -434,7 +431,7 @@ let GetTaskRoutes = async (
     }
   }
 
-  return { routes: routes, task: updatedTask };
+  return {routes: routes, task: updatedTask};
 };
 
 /**
@@ -510,19 +507,19 @@ let RepublishTask = async (
     updatedTask = await taskService.updateTask(
       teamIdTask,
       noAgentTask._id,
-      { $pull: { attemptedRunAgentIds: _agentId } },
+      {$pull: {attemptedRunAgentIds: _agentId}},
       logger
     );
-  else updatedTask = await taskService.updateTask(teamIdTask, noAgentTask._id, { attemptedRunAgentIds: [] }, logger);
+  else updatedTask = await taskService.updateTask(teamIdTask, noAgentTask._id, {attemptedRunAgentIds: []}, logger);
 
   if (await TaskReadyToPublish(teamIdTask, updatedTask, logger)) {
     if (updatedTask.status == Enums.TaskStatus.WAITING_FOR_AGENT) {
       updatedTask = await taskService.updateTask(
         teamIdTask,
         updatedTask._id,
-        { status: Enums.TaskStatus.NOT_STARTED },
+        {status: Enums.TaskStatus.NOT_STARTED},
         logger,
-        { status: Enums.TaskStatus.WAITING_FOR_AGENT },
+        {status: Enums.TaskStatus.WAITING_FOR_AGENT},
         null,
         null
       );
@@ -536,13 +533,13 @@ let RepublishTask = async (
  * @param _teamId
  * @returns {TaskSchema[]}
  */
-let GetWaitingForAgentTasks = async (_teamId: mongodb.ObjectId): Promise<TaskSchema[]> => {
+let GetWaitingForAgentTasks = async (_teamId: mongodb.ObjectId, limit: number = 0): Promise<TaskSchema[]> => {
   let noAgentTasksFilter = {};
   noAgentTasksFilter["_teamId"] = _teamId;
-  noAgentTasksFilter["status"] = { $eq: Enums.TaskStatus.WAITING_FOR_AGENT };
-  noAgentTasksFilter["target"] = { $ne: Enums.TaskDefTarget.AWS_LAMBDA };
+  noAgentTasksFilter["status"] = {$eq: Enums.TaskStatus.WAITING_FOR_AGENT};
+  noAgentTasksFilter["target"] = {$ne: Enums.TaskDefTarget.AWS_LAMBDA};
   // noAgentTasksFilter['failureCode'] = { $eq: TaskFailureCode.NO_AGENT_AVAILABLE };
-  return await taskService.findAllTasksInternal(noAgentTasksFilter, "_id _teamId");
+  return await taskService.findAllTasksInternal(noAgentTasksFilter, "_id _teamId", limit);
 };
 
 let RepublishTasksWaitingForAgent = async (
@@ -551,7 +548,7 @@ let RepublishTasksWaitingForAgent = async (
   logger: BaseLogger,
   amqp: AMQPConnector
 ) => {
-  const noAgentTasks: TaskSchema[] = await GetWaitingForAgentTasks(_teamId);
+  const noAgentTasks: TaskSchema[] = await GetWaitingForAgentTasks(_teamId, 10);
   if (_.isArray(noAgentTasks) && noAgentTasks.length > 0) {
     for (let i = 0; i < noAgentTasks.length; i++) {
       await RepublishTask(_agentId, logger, amqp, noAgentTasks[i]);
@@ -563,10 +560,10 @@ let RepublishTasksWaitingForAgent = async (
  * Gets an array of all tasks waiting for a lambda agent.
  * @returns {TaskSchema[]}
  */
-let GetWaitingForLambdaRunnerTasks = async (): Promise<TaskSchema[]> => {
+let GetWaitingForLambdaRunnerTasks = async (limit: number = 0): Promise<TaskSchema[]> => {
   let noAgentTasksFilter = {};
-  noAgentTasksFilter["status"] = { $eq: Enums.TaskStatus.WAITING_FOR_AGENT };
-  noAgentTasksFilter["target"] = { $eq: Enums.TaskDefTarget.AWS_LAMBDA };
+  noAgentTasksFilter["status"] = {$eq: Enums.TaskStatus.WAITING_FOR_AGENT};
+  noAgentTasksFilter["target"] = {$eq: Enums.TaskDefTarget.AWS_LAMBDA};
   // noAgentTasksFilter['failureCode'] = { $eq: TaskFailureCode.NO_AGENT_AVAILABLE };
   return await taskService.findAllTasksInternal(noAgentTasksFilter, "_id _teamId", 10);
 };
@@ -583,7 +580,7 @@ let RepublishTasksWaitingForLambdaRunner = async (
   logger: BaseLogger,
   amqp: AMQPConnector
 ) => {
-  const noAgentTasks: TaskSchema[] = await GetWaitingForLambdaRunnerTasks();
+  const noAgentTasks: TaskSchema[] = await GetWaitingForLambdaRunnerTasks(10);
   if (_.isArray(noAgentTasks) && noAgentTasks.length > 0) {
     for (let i = 0; i < noAgentTasks.length; i++) {
       await RepublishTask(_agentId, logger, amqp, noAgentTasks[i]);
@@ -641,23 +638,23 @@ let convertTeamAccessRightsToBitset = (accessRightIds: number[]) => {
   return bitset.toString(16); // more efficient as hex
 };
 
-export { ActiveAgentSortFunction };
-export { ActiveLambdaRunnerAgentSortFunction };
-export { convertTeamAccessRightsToBitset };
-export { CreateTaskRoutesForAgents };
-export { CreateTaskRouteForSingleAgent };
-export { GetAccessRightIdsForTeamUser };
-export { GetAccessRightIdsForTeamAdmin };
-export { GetAccessRightIdsForSGAdmin };
-export { GetAccessRightIdsForSGAgent };
-export { GetGlobalAccessRightId };
-export { GetSingleAgentTaskRoute };
-export { GetTargetAgentId };
-export { GetTaskRoutes };
-export { GetWaitingForLambdaRunnerTasks };
-export { GetWaitingForAgentTasks };
-export { IGetTaskRouteResult };
-export { NumNotStartedTasks };
-export { RepublishTasksWaitingForAgent };
-export { RepublishTasksWaitingForLambdaRunner };
-export { TaskReadyToPublish };
+export {ActiveAgentSortFunction};
+export {ActiveLambdaRunnerAgentSortFunction};
+export {convertTeamAccessRightsToBitset};
+export {CreateTaskRoutesForAgents};
+export {CreateTaskRouteForSingleAgent};
+export {GetAccessRightIdsForTeamUser};
+export {GetAccessRightIdsForTeamAdmin};
+export {GetAccessRightIdsForSGAdmin};
+export {GetAccessRightIdsForSGAgent};
+export {GetGlobalAccessRightId};
+export {GetSingleAgentTaskRoute};
+export {GetTargetAgentId};
+export {GetTaskRoutes};
+export {GetWaitingForLambdaRunnerTasks};
+export {GetWaitingForAgentTasks};
+export {IGetTaskRouteResult};
+export {NumNotStartedTasks};
+export {RepublishTasksWaitingForAgent};
+export {RepublishTasksWaitingForLambdaRunner};
+export {TaskReadyToPublish};
