@@ -13,7 +13,7 @@
                 </span>
             </v-popover>
         </div>
-        <ValidationProvider name="Variable Key" :mode="validationMode" rules="required" v-slot="{ errors }" tag="div" class="control is-relative">
+        <ValidationProvider name="Variable Key" disabled :mode="validationMode" rules="required" v-slot="{ errors }" tag="div" class="control is-relative">
             <input v-model="variableCopy.key"
                 class="input runtime-variable-input"
                 type="text"
@@ -27,7 +27,7 @@
 
         <div class="control has-text-weight-bold">=</div>
 
-        <ValidationProvider name="Variable Value" :mode="validationMode" rules="required_field:value" v-slot="{ errors }" tag="div" class="control is-relative">
+        <ValidationProvider name="Variable Value" disabled :mode="validationMode" rules="required_field:value" v-slot="{ errors }" tag="div" class="control is-relative">
             <ValueInput v-model="variableInputValue"
                 class="mb-0"
                 style="width: 250px;"
