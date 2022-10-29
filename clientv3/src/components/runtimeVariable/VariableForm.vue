@@ -1,11 +1,11 @@
 <template>
-    <validation-observer ref="observer" v-slot="{ invalid }" tag="div" class="field is-grouped is-align-items-center">
+    <ValidationObserver ref="observer" disabled tag="div" class="field is-grouped is-align-items-center">
         <div class="control mr-5">
             <label class="checkbox">
                 <input type="checkbox" v-model="isSensitive"> Sensitive
             </label>
             <v-popover class="is-inline ml-2">
-                <a href="#">
+                <a @click.prevent href="#">
                     <font-awesome-icon icon="question-circle" />
                 </a>
                 <span slot="popover" class="is-inline-block" style="max-width:300px;">
@@ -13,7 +13,7 @@
                 </span>
             </v-popover>
         </div>
-        <ValidationProvider name="Variable Key" disabled :mode="validationMode" rules="required" v-slot="{ errors }" tag="div" class="control is-relative">
+        <ValidationProvider name="Variable Key" mode="passive" rules="required" v-slot="{ errors }" tag="div" class="control is-relative">
             <input v-model="variableCopy.key"
                 class="input runtime-variable-input"
                 type="text"
@@ -27,7 +27,7 @@
 
         <div class="control has-text-weight-bold">=</div>
 
-        <ValidationProvider name="Variable Value" disabled :mode="validationMode" rules="required_field:value" v-slot="{ errors }" tag="div" class="control is-relative">
+        <ValidationProvider name="Variable Value" mode="passive" rules="required_field:value" v-slot="{ errors }" tag="div" class="control is-relative">
             <ValueInput v-model="variableInputValue"
                 class="mb-0"
                 style="width: 250px;"
@@ -37,8 +37,8 @@
             </span>
         </ValidationProvider>
 
-        <button class="button" :disabled="invalid" @click="onAdd">Add Runtime Variable</button>
-    </validation-observer>
+        <button class="button" @click="onAdd">Add Runtime Variable</button>
+    </ValidationObserver>
 </template>
 
 <script lang="ts">
@@ -60,7 +60,7 @@
         public isSensitive: boolean = false;
 
         $refs: {
-            observer: any;
+            observer: InstanceType<typeof ValidationObserver>;
         };
 
         public created (): void {
@@ -72,10 +72,6 @@
             }, this.variable);
 
             this.isSensitive = Boolean(this.variableCopy.sensitive);
-        }
-
-        public validationMode (): { on: ['change'] } {
-            return { on: ['change'] };
         }
 
         @Watch('variable')
@@ -101,7 +97,11 @@
             this.variableCopy = Object.assign({}, this.variableCopy, variable);
         }
 
-        public onAdd (): void {
+        public async onAdd (): Promise<void> {
+            if (!await this.$refs.observer.validate()) {
+                return;
+            }
+
             this.$emit('create', Object.assign({}, this.variableCopy, {
                 sensitive: this.isSensitive
             }));
