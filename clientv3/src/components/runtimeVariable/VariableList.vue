@@ -3,7 +3,7 @@
         <VariableForm @create="onVariableCreate"
             :variable="variable"
             class="ml-2" />
-        <h3 v-if="!Object.keys(variables).length" class="is-size-4 py-3 align-middle has-text-centered">
+        <h3 v-if="!hasVariables" class="is-size-4 py-3 align-middle has-text-centered">
             No runtime vars yet
         </h3>
         <table v-else class="table">
@@ -72,7 +72,7 @@
 
 <script lang="ts">
     import { Component, Vue, Prop, Watch } from 'vue-property-decorator';
-    import { cloneDeep, isEqual, cloneDeepWith } from 'lodash';
+    import { cloneDeep, isEqual, cloneDeepWith, isEmpty } from 'lodash';
     import { VPopover } from 'v-tooltip';
 
     import { KeylessVariable, ValueFormat, Variable, VariableMap } from './types';
@@ -96,8 +96,13 @@
                 }
             };
 
+
             this.changedVariables = cloneDeepWith(this.value, customizer);
             this.variables = cloneDeepWith(this.value, customizer);
+        }
+
+        public get hasVariables (): boolean {
+            return !isEmpty(this.changedVariables);
         }
 
         public hasChanges (key: string): boolean {
