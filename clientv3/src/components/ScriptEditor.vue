@@ -262,7 +262,10 @@
         <span style="flex-grow: 1"> </span>
         <button class="button button-spaced" :disabled="!isScriptShadowDifferentThanScript" @click="onClickedScriptDiff">Diff</button>
         <button class="button button-spaced" :disabled="!isScriptShadowDifferentThanScript" @click="warnRevertScriptChanges">Revert</button>
-        <button class="button is-primary button-spaced" :disabled="!isScriptShadowDifferentThanScript" @click="onPublishScriptClicked">Publish</button>
+        <button class="button is-primary button-spaced"
+          :class="{'is-loading': isScriptPublishing}"
+          :disabled="!isScriptShadowDifferentThanScript"
+          @click="onPublishScriptClicked">Publish</button>
       </div>
         
       <div ref="scriptEditor" style="width: 100%; height: 450px; background: hsl(0, 0%, 98%);"></div>
@@ -291,44 +294,22 @@ import { VPopover } from 'v-tooltip';
   components: { VPopover }
 })
 export default class ScriptEditor extends Vue {
-
   // Expose to templates
   private readonly scriptTypesForMonaco = scriptTypesForMonaco;
 
   private theme = 'vs';
-  
   private scriptEditor: monaco.editor.IStandaloneCodeEditor; 
-
   private scriptShadowCopySaveInterval: any;
-  
-  private monacoModelListener;
+  private isScriptPublishing: boolean = false;
+
+  $refs: {
+    scriptEditorFullScreen: HTMLDivElement;
+    scriptEditor: HTMLDivElement;
+  };
 
   private mounted(){
     // load all team vars when the component is mounted - they are small objects
     this.$store.dispatch(`${StoreType.TeamVariableStore}/fetchModelsByFilter`);
-
-    this.monacoModelListener = monaco.editor.onDidCreateModel((model: monaco.editor.ITextModel) => {
-      model.onDidChangeContent((e: monaco.editor.IModelContentChangedEvent) => {
-        if (this.scriptShadow) {
-          const newCode = model.getLinesContent().join('\n');
-          const newCodeInBase64 = btoa(newCode); // models always store code in base 64
-          
-          if(this.scriptShadow.shadowCopyCode !== newCodeInBase64){
-            this.$store.commit(`${StoreType.ScriptShadowStore}/updateSelectedCopy`, {
-              id: this.scriptShadow.id, 
-              shadowCopyCode: newCodeInBase64
-              });
-          }
-
-          // If the change was made in the full screen editor then we need to copy the changes to the regular editor
-          if(this.scriptEditor && this.fullScreenEditor && model.id === this.fullScreenEditor.getModel().id){
-            this.scriptEditor.setValue(this.fullScreenEditor.getValue());
-          }
-        }
-      });
-
-      model.dispose
-    });
 
     if(localStorage.getItem('scriptEditor_theme')){
       this.theme = localStorage.getItem('scriptEditor_theme');
@@ -347,9 +328,7 @@ export default class ScriptEditor extends Vue {
       clearInterval(this.scriptShadowCopySaveInterval);
     }
 
-    if(this.monacoModelListener){
-      this.monacoModelListener.dispose();
-    }
+    this.disposeEditor();
   }
 
   private async tryToSaveScriptShadowCopy(){
@@ -389,13 +368,10 @@ export default class ScriptEditor extends Vue {
       return;
     }
 
-    const scriptEditor = (<any>this.$refs).scriptEditor;
-    if(scriptEditor){
-      scriptEditor.innerHTML = ''; // clear old stuff out
-    }
+    this.disposeEditor();
 
-    if(this.scriptShadow){
-      this.scriptEditor = monaco.editor.create(scriptEditor, {
+    if (this.scriptShadow) {
+      this.scriptEditor = monaco.editor.create(this.$refs.scriptEditor, {
         value: atob(this.scriptShadow.shadowCopyCode),
         language: this.getMonacoLanguage(this.script.scriptType),
         theme: this.theme,
@@ -406,6 +382,10 @@ export default class ScriptEditor extends Vue {
         }
       });
 
+      this.scriptEditor.onDidChangeModelContent(() => {
+        this.onScriptEditorContentChange();
+      });
+
       if(this.scriptShadowCopySaveInterval){
         clearInterval(this.scriptShadowCopySaveInterval);
       }
@@ -413,6 +393,27 @@ export default class ScriptEditor extends Vue {
       this.scriptShadowCopySaveInterval = setInterval(() => {
         this.tryToSaveScriptShadowCopy();
       }, 20*1000); // try to save shadow copy every n milliseconds
+    }
+  }
+
+  private onScriptEditorContentChange (): void {
+    if (this.scriptShadow) {
+      const model = this.scriptEditor.getModel();
+      const newCode = model.getLinesContent().join('\n');
+      const newCodeInBase64 = btoa(newCode); // models always store code in base 64
+
+      if (this.scriptShadow.shadowCopyCode !== newCodeInBase64) {
+        this.$store.commit(`${StoreType.ScriptShadowStore}/updateSelectedCopy`, {
+          id: this.scriptShadow.id,
+          shadowCopyCode: newCodeInBase64
+        });
+      }
+    }
+  }
+
+  private disposeEditor (): void {
+    if (this.scriptEditor) {
+      this.scriptEditor.dispose();
     }
   }
 
@@ -484,44 +485,55 @@ export default class ScriptEditor extends Vue {
     }
   }
 
-  private async onPublishScriptClicked(){ 
+  private async onPublishScriptClicked () { 
     try {
       if(this.script && this.scriptShadow){
-        this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Saving script - ${this.script.name}`, AlertPlacement.FOOTER));   
-        
+        this.isScriptPublishing = true;
+
+        this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Saving script - ${this.script.name}`, AlertPlacement.FOOTER));
+
         // Update the shadow copy fist, otherwise the script is selected when it's saved and it overwrites
         // the shadow's changes
         await this.$store.dispatch(`${StoreType.ScriptShadowStore}/save`);
         this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Script published`, AlertPlacement.FOOTER));
-        
+
         // Update the original script
-        await this.$store.dispatch(`${StoreType.ScriptStore}/save`, {script: {
-          id: this.script.id,
-          code: this.scriptShadow.shadowCopyCode
-        }});
+        await this.$store.dispatch(`${StoreType.ScriptStore}/save`, {
+          script: {
+            id: this.script.id,
+            code: this.scriptShadow.shadowCopyCode
+          }
+        });
       }
-    }
-    catch(err){
+    } catch(err){
       console.error(err);
       showErrors('Error publishing script', err);
+    } finally {
+      this.isScriptPublishing = false;
     }
   }
 
   private fullScreenEditor: monaco.editor.IStandaloneCodeEditor;
 
-  private onClickedScriptFullScreen(){
-    if(this.script){
+  private onClickedScriptFullScreen (): void {
+    if (this.script) {
       this.$modal.show('script-editor-fullscreen');
-      setTimeout(() => {
-        const scriptEditorFullScreenEl = (<any>this.$refs).scriptEditorFullScreen;
-        scriptEditorFullScreenEl.innerHTML = ''; // clear old stuff out
 
-        this.fullScreenEditor = monaco.editor.create(scriptEditorFullScreenEl, {
+      setTimeout(() => {
+        this.fullScreenEditor = monaco.editor.create(this.$refs.scriptEditorFullScreen, {
           value: atob(this.scriptShadow.shadowCopyCode),
           language: this.getMonacoLanguage(this.script.scriptType),
-          theme: this.theme,    
+          theme: this.theme,
           automaticLayout: true,
           readOnly: !this.isScriptEditable(this.script)
+        });
+
+        this.fullScreenEditor.onDidChangeModelContent(() => {
+          this.onScriptEditorContentChange();
+
+          if (this.scriptShadow && this.scriptEditor) {
+            this.scriptEditor.setValue(this.fullScreenEditor.getValue());
+          }
         });
       }, 100);
     }
@@ -535,10 +547,10 @@ export default class ScriptEditor extends Vue {
     return scriptTypesForMonaco[scriptType];
   }
 
-  private onClickedExitFullScreen(){
-    const scriptEditorFullScreenEl = (<any>this.$refs).scriptEditorFullScreen;
-    scriptEditorFullScreenEl.innerHTML = ''; // clear old stuff out
+  private onClickedExitFullScreen (): void {
     this.$modal.hide('script-editor-fullscreen');
+    this.fullScreenEditor.dispose();
+
     this.fullScreenEditor = null;
   }
 
@@ -552,10 +564,11 @@ export default class ScriptEditor extends Vue {
         scriptDiffEl.innerHTML = ""; // clear old stuff out
 
         this.scriptDiffEditor = monaco.editor.createDiffEditor(scriptDiffEl, {
-          theme: this.theme,    
+          theme: this.theme,
           automaticLayout: true,
           readOnly: true,
         });
+
         const scriptLanguage = this.getMonacoLanguage(this.script.scriptType);
 
         this.scriptDiffEditor.setModel({
