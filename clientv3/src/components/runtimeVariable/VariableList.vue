@@ -3,7 +3,7 @@
         <VariableForm @create="onVariableCreate"
             :variable="variable"
             class="ml-2" />
-        <h3 v-if="!variables.length" class="is-size-4 py-3 align-middle has-text-centered">
+        <h3 v-if="!hasVariables" class="is-size-4 py-3 align-middle has-text-centered">
             No runtime vars yet
         </h3>
         <table v-else class="table">
@@ -15,11 +15,13 @@
                 </tr>
             </thead>
             <tbody>
-                <tr v-for="(runVar, index) in variables" :key="runVar.key">
+                <tr v-for="(runtimeVariable, key) in changedVariables" :key="key">
                     <td class="align-middle">
                         <div class="control">
                             <label class="checkbox">
-                                <input type="checkbox" @change="onSensitiveChange(runVar)" v-model="runVar.sensitive"> Sensitive
+                                <input @change="runtimeVariable.sensitive = $event.target.checked"
+                                    :checked="runtimeVariable.sensitive"
+                                    type="checkbox" /> Sensitive
                             </label>
                             <v-popover class="is-inline ml-2">
                                 <a href="#">
@@ -32,7 +34,7 @@
                         </div>
                     </td>
                     <td>
-                        <input v-model="runVar.key"
+                        <input :value="key"
                             readonly
                             class="input"
                             type="text"
@@ -42,8 +44,8 @@
                     </td>
                     <td>
                         <ValueInput
-                            :value="runVar"
-                            @change="onValueInputChange(index, $event)"
+                            :value="runtimeVariable"
+                            @change="onValueInputChange(key, $event)"
                             class="mb-0"
                             style="width: 250px;"
                             placeholder="Value" />
@@ -51,12 +53,12 @@
                     <td class="align-middle">
                         <div class="field is-grouped">
                             <p class="control">
-                                <a href="#" @click.prevent="onRemove(index)">
+                                <a href="#" @click.prevent="onRemove(key)">
                                     <font-awesome-icon icon="minus-square" />
                                 </a>
                             </p>
-                            <p v-if="updateOnClick" class="control">
-                                <a href="#" title="Save Changes" @click.prevent="onTriggerUpdate">
+                            <p v-if="hasChanges(key)" class="control">
+                                <a href="#" title="Apply Changes" @click.prevent="onApplyChanges(key)">
                                     <font-awesome-icon icon="save" />
                                 </a>
                             </p>
@@ -70,6 +72,7 @@
 
 <script lang="ts">
     import { Component, Vue, Prop, Watch } from 'vue-property-decorator';
+    import { cloneDeep, isEqual, cloneDeepWith, isEmpty } from 'lodash';
     import { VPopover } from 'v-tooltip';
 
     import { KeylessVariable, ValueFormat, Variable, VariableMap } from './types';
@@ -81,78 +84,106 @@
     })
     export default class VariablesList extends Vue {
         @Prop({ default: () => ({}) }) public readonly value: VariableMap;
-        @Prop({ default: false }) public readonly updateOnClick: boolean;
         @Prop() public readonly variable: Variable;
 
-        private updatedVars: string[] = [];
-        public variables: Variable[] = [];
+        private changedVariables: VariableMap = {};
+        public variables: VariableMap = {};
 
         private created (): void {
-            this.readVariables();
+            const customizer = (value, key) => {
+                if (key === 'format') {
+                    return value ?? ValueFormat.TEXT;
+                }
+            };
+
+
+            this.changedVariables = cloneDeepWith(this.value, customizer);
+            this.variables = cloneDeepWith(this.value, customizer);
+        }
+
+        public get hasVariables (): boolean {
+            return !isEmpty(this.changedVariables);
+        }
+
+        public hasChanges (key: string): boolean {
+            return !isEqual(this.variables[key], this.changedVariables[key]);
         }
 
         @Watch('value')
         private readVariables (): void {
-            this.variables = [];
+            const customizer = (value, key) => {
+                if (key === 'format') {
+                    return value ?? ValueFormat.TEXT;
+                }
+            };
+
+            this.variables = cloneDeepWith(this.value, customizer);
 
             for (let key in this.value) {
-                this.variables.push({
-                    sensitive: this.value[key].sensitive,
-                    format: this.value[key].format ?? ValueFormat.TEXT,
-                    value: this.value[key].value,
-                    key
-                });
+                if (!this.changedVariables[key]) {
+                    Vue.set(this.changedVariables, key, {
+                        format: this.value[key].format ?? ValueFormat.TEXT,
+                        sensitive: this.value[key].sensitive,
+                        value: this.value[key].value,
+                    });
+                }
             }
         }
 
         public onVariableCreate (variable: Variable): void {
-            this.variables.unshift(variable);
+            this.variables = Object.assign({}, {
+                [variable.key]: {
+                    sensitive: variable.sensitive,
+                    format: variable.format,
+                    value: variable.value,
+                }
+            }, this.variables);
+
+            this.changedVariables = Object.assign({}, {
+                [variable.key]: {
+                    sensitive: variable.sensitive,
+                    format: variable.format,
+                    value: variable.value,
+                }
+            }, this.changedVariables);
+
             this.$emit('create', variable);
             this.emitInput();
         }
 
-        public onRemove (index: number): void {
-            const removed = this.variables.splice(index, 1);
-            this.$emit('remove', removed.pop());
+        public onRemove (key: string): void {
+            const removed = this.variables[key];
+
+            Vue.delete(this.changedVariables, key);
+            Vue.delete(this.variables, key);
+
+            this.$emit('remove', { ...removed, key });
             this.emitInput();
         }
 
-        private onValueInputChange (index: number, payload: KeylessVariable): void {
-            this.variables = this.variables.map((variable, i) => {
-                if (index === i) {
-                    return Object.assign({}, variable, payload);
-                }
-
-                return variable;
+        private onValueInputChange (key: string, variable: KeylessVariable): void {
+            Vue.set(this.changedVariables, key, {
+                sensitive: this.changedVariables[key].sensitive,
+                format: variable.format,
+                value: variable.value,
             });
-
-            this.emitUpdate(this.variables[index]);
-            this.emitInput();
         }
 
-        public onSensitiveChange (variable: Variable): void {
-            this.emitUpdate(variable);
+        private onApplyChanges (key: string): void {
+            const variable = this.changedVariables[key];
+
+            Vue.set(this.variables, key, variable);
+
+            this.emitUpdate({ ...variable, key });
             this.emitInput();
         }
 
         public emitInput (): void {
-            this.$emit('input', this.toMap());
+            this.$emit('input', cloneDeep(this.variables));
         }
 
         public emitUpdate (variable: Variable): void {
             this.$emit('update:variable', variable);
-        }
-
-        private toMap (): VariableMap {
-            return this.variables.reduce((map: VariableMap, variable: Variable) => {
-                map[variable.key] = {
-                    sensitive: variable.sensitive,
-                    format: variable.format,
-                    value: variable.value
-                };
-
-                return map;
-            }, {});
         }
     }
 </script>
