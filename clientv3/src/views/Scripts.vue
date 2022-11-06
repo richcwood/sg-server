@@ -204,9 +204,10 @@ export default class Scripts extends Vue {
       }
       else {
         return filterUCaseItems.some((filter: string) => {
-          if(scriptTypesForMonaco[script.scriptType].toUpperCase().indexOf(filter) !== -1){
+          if (scriptTypesForMonaco[script.scriptType]?.toUpperCase().includes(filter)) {
             return true;
           }
+
           if(script.name.toUpperCase().indexOf(filter) !== -1){
             return true;
           }
