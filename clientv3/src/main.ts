@@ -32,6 +32,7 @@ import {
   faEyeSlash,
   faSave
 } from '@fortawesome/free-solid-svg-icons';
+import '@/sass/index.scss';
 
 library.add(faSearch);
 library.add(faSpinner);
