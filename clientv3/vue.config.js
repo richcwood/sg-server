@@ -21,8 +21,13 @@ module.exports = {
   css: {
     loaderOptions: {
       sass: {
+        // These files will be included into each vue component,
+        // so they should contain sass which doesn't output any css code,
+        // like variables and mixins.
+        // Order here is important.
         additionalData: `
-          @import "@/sass/index.scss";
+          @import "@/sass/_variables.scss";
+          @import "~bulma/sass/utilities/mixins.sass";
         `,
       },
     },
