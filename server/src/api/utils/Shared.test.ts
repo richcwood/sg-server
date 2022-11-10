@@ -2,18 +2,18 @@ import * as config from "config";
 import * as mongodb from "mongodb";
 import * as _ from "lodash";
 
-import { AgentSchema } from "../domain/Agent";
-import { JobSchema } from "../domain/Job";
-import { TaskSchema } from "../domain/Task";
-import { TeamVariableSchema } from "../domain/TeamVariable";
+import {AgentSchema} from "../domain/Agent";
+import {JobSchema} from "../domain/Job";
+import {TaskSchema} from "../domain/Task";
+import {TeamVariableSchema} from "../domain/TeamVariable";
 
-import { jobService } from "../services/JobService";
-import { taskService } from "../services/TaskService";
+import {jobService} from "../services/JobService";
+import {taskService} from "../services/TaskService";
 
-import { AMQPConnector } from "../../shared/AMQPLib";
+import {AMQPConnector} from "../../shared/AMQPLib";
 import * as Enums from "../../shared/Enums";
-import { BaseLogger } from "../../shared/SGLogger";
-import { SGStrings } from "../../shared/SGStrings";
+import {BaseLogger} from "../../shared/SGLogger";
+import {SGStrings} from "../../shared/SGStrings";
 import {
   ActiveAgentSortFunction,
   ActiveLambdaRunnerAgentSortFunction,
@@ -29,7 +29,7 @@ import {
   TaskReadyToPublish,
 } from "./Shared";
 
-import { convertData as convertResponseData } from "../utils/ResponseConverters";
+import {convertData as convertResponseData} from "../utils/ResponseConverters";
 import db from "../../test_helpers/DB";
 
 import {
@@ -38,8 +38,8 @@ import {
   CreateTasks,
   CreateTeamVariables,
 } from "../../test_helpers/TestArtifacts";
-import { validateArrayLength, validateEquality } from "../../test_helpers/Validators";
-import { teamVariableService } from "../services/TeamVariableService";
+import {validateArrayLength, validateEquality} from "../../test_helpers/Validators";
+import {teamVariableService} from "../services/TeamVariableService";
 
 const testName = "Shared";
 
@@ -221,9 +221,9 @@ describe("Test task routing", () => {
   let job: Partial<JobSchema> = null;
   let tasks: Array<Partial<TaskSchema>> = [];
   let teamVars: Array<Partial<TeamVariableSchema>>;
-  const tags1: any = { tag1: "val1" };
-  const tags2: any = { tag1: "val1", tag2: "val2" };
-  const tags3: any = { tag3: "val3" };
+  const tags1: any = {tag1: "val1"};
+  const tags2: any = {tag1: "val1", tag2: "val2"};
+  const tags3: any = {tag3: "val3"};
 
   beforeAll(async () => {
     // await db.open();
@@ -541,6 +541,7 @@ describe("Test task routing", () => {
       {
         name: "testAgent1",
         value: new mongodb.ObjectId().toHexString(),
+        format: "string",
       },
     ];
     await CreateTeamVariables(_teamId, teamVars);

@@ -2,34 +2,38 @@ import * as _ from "lodash";
 import * as moment from "moment";
 import * as mongodb from "mongodb";
 
-import { AgentSchema } from "../api/domain/Agent";
-import { JobSchema } from "../api/domain/Job";
-import { JobDefSchema } from "../api/domain/JobDef";
-import { ScriptSchema } from "../api/domain/Script";
-import { StepDefSchema } from "../api/domain/StepDef";
-import { TaskSchema } from "../api/domain/Task";
-import { TaskDefSchema } from "../api/domain/TaskDef";
-import { TeamVariableSchema } from "../api/domain/TeamVariable";
+import {AgentSchema} from "../api/domain/Agent";
+import {JobSchema} from "../api/domain/Job";
+import {JobDefSchema} from "../api/domain/JobDef";
+import {SaascipeSchema} from "../api/domain/Saascipe";
+import {SaascipeVersionSchema} from "../api/domain/SaascipeVersion";
+import {ScriptSchema} from "../api/domain/Script";
+import {StepDefSchema} from "../api/domain/StepDef";
+import {TaskSchema} from "../api/domain/Task";
+import {TaskDefSchema} from "../api/domain/TaskDef";
+import {TeamVariableSchema} from "../api/domain/TeamVariable";
 
-import { agentService } from "../api/services/AgentService";
-import { jobService } from "../api/services/JobService";
-import { jobDefService } from "../api/services/JobDefService";
-import { scriptService } from "../api/services/ScriptService";
-import { stepDefService } from "../api/services/StepDefService";
-import { taskService } from "../api/services/TaskService";
-import { taskDefService } from "../api/services/TaskDefService";
-import { teamVariableService } from "../api/services/TeamVariableService";
+import {agentService} from "../api/services/AgentService";
+import {jobService} from "../api/services/JobService";
+import {jobDefService} from "../api/services/JobDefService";
+import {saascipeService} from "../api/services/SaascipeService";
+import {saascipeVersionService} from "../api/services/SaascipeVersionService";
+import {scriptService} from "../api/services/ScriptService";
+import {stepDefService} from "../api/services/StepDefService";
+import {taskService} from "../api/services/TaskService";
+import {taskDefService} from "../api/services/TaskDefService";
+import {teamVariableService} from "../api/services/TeamVariableService";
 
-import { convertData as convertResponseData } from "../api/utils/ResponseConverters";
+import {convertData as convertResponseData} from "../api/utils/ResponseConverters";
 
-import { AMQPConnector } from "../shared/AMQPLib";
-import { SGUtils } from "../shared/SGUtils";
+import {AMQPConnector} from "../shared/AMQPLib";
+import {SGUtils} from "../shared/SGUtils";
 
-import { validateArrayLengthLessThanOrEqual } from "./Validators";
+import {validateArrayLengthLessThanOrEqual} from "./Validators";
 
 import * as config from "config";
-import { TaskSource } from "../shared/Enums";
-import { BaseLogger } from "../shared/SGLogger";
+import {TaskSource} from "../shared/Enums";
+import {BaseLogger} from "../shared/SGLogger";
 
 let LongRunningJob: any = {
   job: {
@@ -59,7 +63,7 @@ let LongRunningJob: any = {
     ],
   },
 };
-export { LongRunningJob };
+export {LongRunningJob};
 
 let InteractiveConsoleJob: any = {
   job: {
@@ -90,7 +94,7 @@ let InteractiveConsoleJob: any = {
     ],
   },
 };
-export { InteractiveConsoleJob };
+export {InteractiveConsoleJob};
 
 let ScriptTemplate: any = {
   name: "Script 1",
@@ -98,14 +102,14 @@ let ScriptTemplate: any = {
   code: "ZWNobyAiSGVsbG8gV29ybGQi",
   shadowCopyCode: "ZWNobyAiSGVsbG8gV29ybGQi",
 };
-export { ScriptTemplate };
+export {ScriptTemplate};
 
 let JobDefTemplate: any = {
   Name: "Job 1",
   createdBy: mongodb.ObjectId(),
   runtimeVars: {},
 };
-export { JobDefTemplate };
+export {JobDefTemplate};
 
 let TaskDefTemplate: any = {
   name: "Task 1",
@@ -113,7 +117,7 @@ let TaskDefTemplate: any = {
   dependsOn: [],
   target: 1,
 };
-export { TaskDefTemplate };
+export {TaskDefTemplate};
 
 let StepDefTemplate: any = {
   name: "Step 1",
@@ -121,7 +125,7 @@ let StepDefTemplate: any = {
   arguments: "",
   variables: "",
 };
-export { StepDefTemplate };
+export {StepDefTemplate};
 
 /**
  * Creates a script schema with the given json formatted properties
@@ -189,7 +193,7 @@ let CreateJobDefsFromTemplates = async (
   _teamId: mongodb.ObjectId,
   _userId: mongodb.ObjectId,
   properties: any
-): Promise<{ scripts: ScriptSchema[]; jobDefs: JobDefSchema[] }> => {
+): Promise<{scripts: ScriptSchema[]; jobDefs: JobDefSchema[]}> => {
   let scripts: ScriptSchema[] = [];
   for (let scriptProperties of properties.scripts) {
     const script = await CreateScriptFromTemplate(_teamId, _userId, scriptProperties);
@@ -226,9 +230,9 @@ let CreateJobDefsFromTemplates = async (
 
     jobDefs[jobDef.name] = jobDef;
   }
-  return { scripts, jobDefs };
+  return {scripts, jobDefs};
 };
-export { CreateJobDefsFromTemplates };
+export {CreateJobDefsFromTemplates};
 /**
  *
  * @param job
@@ -236,7 +240,7 @@ export { CreateJobDefsFromTemplates };
 let CreateJob = async (_teamId: mongodb.ObjectId, job: Partial<JobSchema>, logger: BaseLogger, amqp: AMQPConnector) => {
   await jobService.createJob(_teamId, job, null, TaskSource.CONSOLE, logger, amqp);
 };
-export { CreateJob };
+export {CreateJob};
 
 /**
  *
@@ -247,14 +251,14 @@ let CreateTasks = async (_teamId: mongodb.ObjectId, tasks: Partial<TaskSchema>[]
     await taskService.createTask(_teamId, t, null);
   }
 };
-export { CreateTasks };
+export {CreateTasks};
 
 let CreateTeamVariables = async (_teamId: mongodb.ObjectId, teamVars: Partial<TeamVariableSchema>[]) => {
   for (let t of teamVars) {
     await teamVariableService.createTeamVariable(_teamId, t, null);
   }
 };
-export { CreateTeamVariables };
+export {CreateTeamVariables};
 
 /**
  *
@@ -265,4 +269,38 @@ let CreateAgents = async (_teamId: mongodb.ObjectId, agents: Partial<AgentSchema
     await agentService.createAgent(_teamId, a, null);
   }
 };
-export { CreateAgents };
+export {CreateAgents};
+
+/**
+ *
+ * @param saascipes
+ */
+let CreateSaascipes = async (
+  _teamId: mongodb.ObjectId,
+  saascipes: Partial<SaascipeSchema>[]
+): Promise<{id: mongodb.ObjectId; data: SaascipeSchema}[]> => {
+  const results: {id: mongodb.ObjectId; data: SaascipeSchema}[] = [];
+  for (let s of saascipes) {
+    const saascipe: SaascipeSchema = await saascipeService.createSaascipe(_teamId, s, null);
+    results.push({id: saascipe._id.toHexString(), data: saascipe});
+  }
+  return results;
+};
+export {CreateSaascipes};
+
+/**
+ *
+ * @param saascipeversions
+ */
+let CreateSaascipeVersions = async (
+  _teamId: mongodb.ObjectId,
+  saascipeversions: Partial<SaascipeVersionSchema>[]
+): Promise<{id: mongodb.ObjectId; data: SaascipeVersionSchema}[]> => {
+  const results: {id: mongodb.ObjectId; data: SaascipeVersionSchema}[] = [];
+  for (let s of saascipeversions) {
+    const saascipeVersion: SaascipeVersionSchema = await saascipeVersionService.createSaascipeVersion(_teamId, s, null);
+    results.push({id: saascipeVersion._id.toHexString(), data: saascipeVersion});
+  }
+  return results;
+};
+export {CreateSaascipeVersions};
