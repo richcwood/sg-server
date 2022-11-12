@@ -1432,6 +1432,7 @@ let CreateAccessRightIds = async () => {
     {name: "SETTINGS_WRITE"},
     {name: "TEAM_GLOBAL"},
     {name: "GLOBAL"},
+    {name: "SAASCIPE_WRITE"},
   ];
 
   console.log('mongoUrl -> @sgg("mongoUrl")');
