@@ -1,6 +1,6 @@
 import {convertData} from "../utils/ResponseConverters";
 import {SaascipeVersionSchema, SaascipeVersionModel} from "../domain/SaascipeVersion";
-import {SaascipeSchema} from "../domain/Saascipe";
+import {SaascipeModel, SaascipeSchema} from "../domain/Saascipe";
 import {saascipeService} from "./SaascipeService";
 import {rabbitMQPublisher, PayloadOperation} from "../utils/RabbitMQPublisher";
 import {MissingObjectError, ValidationError} from "../utils/Errors";
@@ -26,18 +26,14 @@ export class SaascipeVersionService {
     responseFields?: string
   ): Promise<SaascipeVersionSchema> {
     if (!data.hasOwnProperty("_saascipeId")) throw new ValidationError(`Missing required field "_saascipeId"`);
-    if (!data.hasOwnProperty("version")) throw new ValidationError(`Missing required field "version"`);
-    const existingSaascipeVersionQuery: any = await this.findAllSaascipeVersionsInternal({
-      _publisherTeamId: _teamId,
-      _saascipeId: data._saascipeId,
-      version: data.version,
-    });
-    if (_.isArray(existingSaascipeVersionQuery) && existingSaascipeVersionQuery.length > 0) {
-      const saascipe: SaascipeSchema = await saascipeService.findSaascipe(data._saascipeId, "name");
-      if (!saascipe) throw new MissingObjectError(`Saascipe "${data._saascipeId} not found`);
-      throw new ValidationError(`Saascipe "${saascipe.name}" version "${data.version}" already exists`);
-    }
 
+    const updatedSaascipe: SaascipeSchema = await SaascipeModel.findOneAndUpdate(
+      {_id: data._saascipeId},
+      {$inc: {currentVersion: 1}}
+    ).select("currentVersion");
+    if (!updatedSaascipe) throw new MissingObjectError(`Saascipe '${data._saascipeId.toHexString()}" not found`);
+
+    data.version = updatedSaascipe.currentVersion;
     data._publisherTeamId = _teamId;
     const saascipeVersionModel = new SaascipeVersionModel(data);
     const newSaascipeVersion = await saascipeVersionModel.save();

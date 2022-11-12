@@ -55,7 +55,6 @@ describe("SaascipeVersion service tests", () => {
         name: "Saascipe1",
         saascipeType: SaascipeType.JOB,
         description: "The first Saascipe",
-        currentVersion: "v0.0.1",
       },
       {
         _id: existingSaascipeId2,
@@ -65,7 +64,6 @@ describe("SaascipeVersion service tests", () => {
         name: "Saascipe2",
         saascipeType: SaascipeType.JOB,
         description: "A new Saascipe",
-        currentVersion: "v0.0.1",
       },
     ];
     saascipes = await CreateSaascipes(_teamId, saascipeDefs);
@@ -76,7 +74,6 @@ describe("SaascipeVersion service tests", () => {
         _publisherTeamId: publisherTeamId1,
         _publisherUserId: mongodb.ObjectId(),
         _saascipeId: existingSaascipeId1,
-        version: "v0.0.1",
         description: "Version 1",
         runtimeVarDescriptions: [],
       },
@@ -85,46 +82,53 @@ describe("SaascipeVersion service tests", () => {
   });
 
   test("Create Saascipe Version test", async () => {
-    const data: any = {
+    const data1: any = {
       _id: mongodb.ObjectId(),
       _publisherTeamId: publisherTeamId1,
       _publisherUserId: mongodb.ObjectId(),
       _saascipeId: existingSaascipeId1,
-      version: "v0.0.2",
+      description: "Version 1",
+      runtimeVarDescriptions: [],
+    };
+    const saascipeVersion1: SaascipeVersionSchema = await saascipeVersionService.createSaascipeVersion(
+      _teamId,
+      data1,
+      "saascipe_v1_correlation_id"
+    );
+    await expect(saascipeVersion1).toEqual(
+      expect.objectContaining({
+        version: 1,
+        description: data1.description,
+      })
+    );
+    await validateEquality(saascipeVersion1._id.toHexString(), data1._id.toHexString());
+    await validateEquality(saascipeVersion1._publisherTeamId.toHexString(), data1._publisherTeamId.toHexString());
+    await validateEquality(saascipeVersion1._publisherUserId.toHexString(), data1._publisherUserId.toHexString());
+    await validateEquality(saascipeVersion1._saascipeId.toHexString(), data1._saascipeId.toHexString());
+
+    const data2: any = {
+      _id: mongodb.ObjectId(),
+      _publisherTeamId: publisherTeamId1,
+      _publisherUserId: mongodb.ObjectId(),
+      _saascipeId: existingSaascipeId1,
       description: "Version 2",
       runtimeVarDescriptions: [],
     };
-    const saascipeVersion: SaascipeVersionSchema = await saascipeVersionService.createSaascipeVersion(
+    const saascipeVersion2: SaascipeVersionSchema = await saascipeVersionService.createSaascipeVersion(
       _teamId,
-      data,
-      "test1_correlation_id"
+      data2,
+      "saascipe_v2_correlation_id"
     );
-    await expect(saascipeVersion).toEqual(
+    await expect(saascipeVersion2).toEqual(
       expect.objectContaining({
-        version: data.version,
-        description: data.description,
+        version: 2,
+        description: data2.description,
       })
     );
-    await validateEquality(saascipeVersion._id.toHexString(), data._id.toHexString());
-    await validateEquality(saascipeVersion._publisherTeamId.toHexString(), data._publisherTeamId.toHexString());
-    await validateEquality(saascipeVersion._publisherUserId.toHexString(), data._publisherUserId.toHexString());
-    await validateEquality(saascipeVersion._saascipeId.toHexString(), data._saascipeId.toHexString());
-  });
-
-  test("Create Saascipe Version test duplicate fail", async () => {
-    const data: any = {
-      _id: mongodb.ObjectId(),
-      _publisherTeamId: publisherTeamId1,
-      _publisherUserId: mongodb.ObjectId(),
-      _saascipeId: existingSaascipeId1,
-      version: "v0.0.1",
-      description: "Version 1 duplicate",
-      runtimeVarDescriptions: [],
-    };
-    const saascipe: SaascipeSchema = _.filter(saascipes, (s) => s.id == existingSaascipeId1)[0].data;
-    await expect(saascipeVersionService.createSaascipeVersion(_teamId, data, "test2_correlation_id")).rejects.toThrow(
-      `Saascipe "${saascipe.name}" version "${data.version}" already exists`
-    );
+    await validateEquality(saascipeVersion2._id.toHexString(), data2._id.toHexString());
+    await validateEquality(saascipeVersion2._publisherTeamId.toHexString(), data2._publisherTeamId.toHexString());
+    await validateEquality(saascipeVersion2._publisherUserId.toHexString(), data2._publisherUserId.toHexString());
+    await validateEquality(saascipeVersion2._saascipeId.toHexString(), data2._saascipeId.toHexString());
   });
 
   afterAll(async () => await db.clearDatabase());

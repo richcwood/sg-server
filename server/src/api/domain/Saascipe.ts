@@ -29,8 +29,8 @@ export class SaascipeSchema {
   @prop({required: true})
   description: string;
 
-  @prop({required: true})
-  currentVersion: string;
+  @prop({default: 0})
+  currentVersion: number;
 
   // Define which filters are legal for which props (including nested props (not sure about nested arrays))
   public static readonly validFilters = {

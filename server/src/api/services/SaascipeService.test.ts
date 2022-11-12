@@ -47,7 +47,6 @@ describe("Saascipe service tests", () => {
         name: "Saascipe1",
         saascipeType: SaascipeType.JOB,
         description: "The first Saascipe",
-        currentVersion: "v0.0.1",
       },
       {
         _id: existingSaascipeId2,
@@ -57,7 +56,6 @@ describe("Saascipe service tests", () => {
         name: "Saascipe2",
         saascipeType: SaascipeType.JOB,
         description: "A new Saascipe",
-        currentVersion: "v0.0.1",
       },
     ];
     await CreateSaascipes(_teamId, saascipes);
@@ -72,7 +70,6 @@ describe("Saascipe service tests", () => {
       name: "New Saascipe",
       saascipeType: SaascipeType.JOB,
       description: "A really sweet Saascipe",
-      currentVersion: "v0.0.1",
     };
     const saascipe: SaascipeSchema = await saascipeService.createSaascipe(_teamId, data, "test1_correlation_id");
     await expect(saascipe).toEqual(
@@ -80,7 +77,7 @@ describe("Saascipe service tests", () => {
         name: data.name,
         saascipeType: data.saascipeType,
         description: data.description,
-        currentVersion: data.currentVersion,
+        currentVersion: 0,
       })
     );
     await validateEquality(saascipe._id.toHexString(), data._id.toHexString());
@@ -98,7 +95,6 @@ describe("Saascipe service tests", () => {
       name: "Saascipe1",
       saascipeType: SaascipeType.JOB,
       description: "Saascipe1 duplicate",
-      currentVersion: "v0.0.1",
     };
     await expect(saascipeService.createSaascipe(_teamId, data, "test2_correlation_id")).rejects.toThrow(
       `Saascipe "${data.name}" already exists`

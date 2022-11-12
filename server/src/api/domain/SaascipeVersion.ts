@@ -24,8 +24,8 @@ export class SaascipeVersionSchema {
   @prop({required: true})
   _saascipeId: mongodb.ObjectId;
 
-  @prop({required: true})
-  version: string;
+  @prop({default: 0})
+  version: number;
 
   @prop({required: true})
   description: string;

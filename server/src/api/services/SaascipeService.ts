@@ -67,6 +67,9 @@ export class SaascipeService {
     if (filter) filter = Object.assign(defaultFilter, filter);
     else filter = defaultFilter;
 
+    // don't allow updating the currentVersion manually
+    delete data.currentVersion;
+
     const saascipe = await SaascipeModel.findOneAndUpdate(filter, data);
 
     if (!saascipe) throw new MissingObjectError(`Saascipe with id '${id}' not found.`);
