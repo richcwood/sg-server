@@ -1,17 +1,17 @@
 import * as mongodb from "mongodb";
 import * as _ from "lodash";
 
+import {BaseLogger} from "../../shared/SGLogger";
 import {SaascipeSchema} from "../domain/Saascipe";
 import {saascipeService} from "./SaascipeService";
 import {SaascipeType} from "../../shared/Enums";
-import {BaseLogger} from "../../shared/SGLogger";
 
 import db from "../../test_helpers/DB";
 
 import {CreateSaascipes} from "../../test_helpers/TestArtifacts";
 import {validateEquality} from "../../test_helpers/Validators";
 
-const testName = "AgentService";
+const testName = "SaascipeServiceTest";
 
 let logger;
 

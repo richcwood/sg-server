@@ -27,7 +27,7 @@ export class SaascipeVersionSchema {
   @prop({default: 0})
   version: number;
 
-  @prop({required: true})
+  @prop({default: ""})
   description: string;
 
   @prop({default: []})

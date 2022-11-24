@@ -66,7 +66,7 @@ describe("SaascipeVersion service tests", () => {
         description: "A new Saascipe",
       },
     ];
-    saascipes = await CreateSaascipes(_teamId, saascipeDefs);
+    await CreateSaascipes(_teamId, saascipeDefs);
 
     saascipeVersionDefs = [
       {

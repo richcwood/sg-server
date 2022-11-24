@@ -144,8 +144,10 @@ let CreateScriptFromTemplate = async (
   scriptTemplate.code = scriptCodeB64;
   scriptTemplate.shadowCopyCode = scriptCodeB64;
   Object.assign(scriptTemplate, properties);
-  return await scriptService.createScript(_teamId, scriptTemplate, _userId, "");
+  const script: ScriptSchema = await scriptService.createScript(_teamId, scriptTemplate, _userId, "");
+  return convertResponseData(ScriptSchema, script);
 };
+export {CreateScriptFromTemplate};
 
 /**
  * Creates a jobdef schema with the given json formatted properties
@@ -197,7 +199,7 @@ let CreateJobDefsFromTemplates = async (
   let scripts: ScriptSchema[] = [];
   for (let scriptProperties of properties.scripts) {
     const script = await CreateScriptFromTemplate(_teamId, _userId, scriptProperties);
-    scripts[script.name] = convertResponseData(ScriptSchema, script);
+    scripts[script.name] = script;
   }
 
   let jobDefs: any = {};
@@ -282,7 +284,7 @@ let CreateSaascipes = async (
   const results: {id: mongodb.ObjectId; data: SaascipeSchema}[] = [];
   for (let s of saascipes) {
     const saascipe: SaascipeSchema = await saascipeService.createSaascipe(_teamId, s, null);
-    results.push({id: saascipe._id.toHexString(), data: saascipe});
+    results.push({id: saascipe._id, data: convertResponseData(SaascipeSchema, saascipe)});
   }
   return results;
 };
