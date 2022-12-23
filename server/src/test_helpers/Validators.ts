@@ -10,6 +10,11 @@ let validateUndefined = (received) => {
   expect(received).toBeUndefined();
 };
 
+let validateDeepEquality = (received, expected) => {
+  expect(received).not.toBe("dummydummy");
+  expect(received).toStrictEqual(expected);
+};
+
 let validateEquality = (received, expected) => {
   expect(received).not.toBe("dummydummy");
   expect(received).toBe(expected);
@@ -31,6 +36,12 @@ let validateArrayLengthLessThanOrEqual = (received, expected) => {
   expect(received.length).toBeLessThanOrEqual(expected);
 };
 
+let validateArrayLengthGreaterThanOrEqual = (received, expected) => {
+  expect(received).not.toHaveLength(10000000000);
+  expect(_.isArray(received)).toBe(true);
+  expect(received.length).toBeGreaterThanOrEqual(expected);
+};
+
 let validateArrayContaining = (received, expected) => {
   expect(received).not.toEqual(expect.arrayContaining(["dummyData"]));
   expect(received).toEqual(expect.arrayContaining(expected));
@@ -47,7 +58,7 @@ let validateControllerUsed = (received, controller) => {
 };
 
 let validateObjectMatch = (received, expected) => {
-  expect(received).not.toMatchObject({ dfsdaf: 905 });
+  expect(received).not.toMatchObject({dfsdaf: 905});
   expect(received).toMatchObject(expected);
 };
 
@@ -72,4 +83,11 @@ let validateInstanceOf = (received, expected) => {
   expect(received instanceof expected).toBe(true);
 };
 
-export { validateArrayLength, validateArrayLengthLessThanOrEqual, validateEquality };
+export {
+  validateArrayLength,
+  validateArrayLengthLessThanOrEqual,
+  validateArrayLengthGreaterThanOrEqual,
+  validateEquality,
+  validateDeepEquality,
+  validateObjectMatch,
+};

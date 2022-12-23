@@ -197,3 +197,10 @@ enum SaascipeType {
   SCRIPT = 1,
 }
 export {SaascipeType};
+
+enum RuntimeVariableFormat {
+  TEXT = "plaintext",
+  YAML = "yaml",
+  JSON = "json",
+}
+export {RuntimeVariableFormat};

@@ -1,16 +1,18 @@
-import { convertData } from "../utils/ResponseConverters";
-import { TeamModel, TeamSchema } from "../domain/Team";
-import { MissingObjectError, ValidationError } from "../utils/Errors";
-import { RabbitMQAdmin } from "../../shared/RabbitMQAdmin";
-import { BaseLogger } from "../../shared/SGLogger";
-import { SGStrings } from "../../shared/SGStrings";
-import { SGUtils } from "../../shared/SGUtils";
-import { rabbitMQPublisher, PayloadOperation } from "../utils/RabbitMQPublisher";
-import { stripeClientTokenService } from "../services/StripeClientTokenService";
+import {convertData} from "../utils/ResponseConverters";
+import {TeamModel, TeamSchema} from "../domain/Team";
+import {MissingObjectError, ValidationError} from "../utils/Errors";
+import {RabbitMQAdmin} from "../../shared/RabbitMQAdmin";
+import {BaseLogger} from "../../shared/SGLogger";
+import {SGStrings} from "../../shared/SGStrings";
+import {SGUtils} from "../../shared/SGUtils";
+import {rabbitMQPublisher, PayloadOperation} from "../utils/RabbitMQPublisher";
+import {stripeClientTokenService} from "../services/StripeClientTokenService";
 import * as mongodb from "mongodb";
 import * as config from "config";
 import * as _ from "lodash";
 const jwt = require("jsonwebtoken");
+
+const env = config.get("environment");
 
 export class TeamService {
   // Some services might need to add additional restrictions to bulk queries
@@ -47,12 +49,12 @@ export class TeamService {
     }
   }
 
-  public async createTeam(data: any, logger: BaseLogger, responseFields?: string): Promise<object> {
+  public async createTeam(data: any, logger: BaseLogger, responseFields?: string): Promise<TeamSchema> {
     if (!data.name) throw new ValidationError(`Request body missing "name" parameter`);
 
     let newTeam: TeamSchema;
     /// Check if we already have an team with this name
-    const existingTeamQuery: any = await this.findAllTeamsInternal({ name: data.name });
+    const existingTeamQuery: any = await this.findAllTeamsInternal({name: data.name});
     if (_.isArray(existingTeamQuery) && existingTeamQuery.length > 0) {
       newTeam = existingTeamQuery[0];
       if (newTeam.ownerId.toHexString() != data.ownerId.toHexString())
@@ -61,7 +63,7 @@ export class TeamService {
       data.userAssigned = true;
       data.activationDate = new Date().getTime();
       // const unassignedTeamQuery: any = await this.findAllTeamsInternal({ userAssigned: false });
-      newTeam = await TeamModel.findOneAndUpdate({ userAssigned: false }, data, { new: true });
+      newTeam = await TeamModel.findOneAndUpdate({userAssigned: false}, data, {new: true});
       // const unassignedTeamQuery: any = await TeamModel.find({ userAssigned: false }).limit(1)
       if (!newTeam) {
         const teamModel = new TeamModel(data);
@@ -69,13 +71,16 @@ export class TeamService {
       }
 
       let dataUpdates: any = {};
+
       /// Create company in stripe for billing
-      let res: any = await stripeClientTokenService.createStripeCustomer(newTeam);
-      if (!res.success) {
-        logger.LogError(`Error creating stripe customer`, { error: res.err });
-      } else {
-        logger.LogDebug(`Created stripe customer`, { customer: res.customer });
-        dataUpdates.stripe_id = res.customer.id;
+      if (env == "production") {
+        let res: any = await stripeClientTokenService.createStripeCustomer(newTeam);
+        if (!res.success) {
+          logger.LogError(`Error creating stripe customer`, {error: res.err});
+        } else {
+          logger.LogDebug(`Created stripe customer`, {customer: res.customer});
+          dataUpdates.stripe_id = res.customer.id;
+        }
       }
 
       /// Create general team invite link
@@ -100,8 +105,8 @@ export class TeamService {
       dataUpdates.isActive = true;
       dataUpdates.rmqPassword = SGUtils.makeid(10);
 
-      const filter = { _id: newTeam._id };
-      newTeam = await TeamModel.findOneAndUpdate(filter, dataUpdates, { new: true });
+      const filter = {_id: newTeam._id};
+      newTeam = await TeamModel.findOneAndUpdate(filter, dataUpdates, {new: true});
     }
 
     /// Create rabbitmq artifacts for this team
@@ -128,13 +133,13 @@ export class TeamService {
     correlationId?: string,
     responseFields?: string
   ): Promise<object> {
-    const filter = { _id: id };
+    const filter = {_id: id};
 
-    const updatedTeam = await TeamModel.findOneAndUpdate(filter, data, { new: true }).select(responseFields);
+    const updatedTeam = await TeamModel.findOneAndUpdate(filter, data, {new: true}).select(responseFields);
 
     if (!updatedTeam) throw new MissingObjectError(`Team with id '${id}' not found.`);
 
-    const deltas = Object.assign({ _id: id }, data);
+    const deltas = Object.assign({_id: id}, data);
     await rabbitMQPublisher.publish(
       id,
       "Team",

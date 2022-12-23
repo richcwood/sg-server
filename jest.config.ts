@@ -156,14 +156,10 @@ export default {
   // testLocationInResults: false,
 
   // The glob patterns Jest uses to detect test files
-  testMatch: [
-    "**/?(*.)+(spec|test).[tj]s?(x)"
-  ],
+  testMatch: ["**/?(*.)+(spec|test).[tj]s?(x)"],
 
   // An array of regexp pattern strings that are matched against all test paths, matched tests are skipped
-  testPathIgnorePatterns: [
-    "/node_modules/"
-  ],
+  testPathIgnorePatterns: ["/node_modules/"],
 
   // The regexp pattern or array of patterns that Jest uses to detect test files
   // testRegex: [],
@@ -178,7 +174,8 @@ export default {
   // testURL: "http://localhost",
 
   // Setting this value to "fake" allows the use of fake timers for functions such as "setTimeout"
-  // timers: "real",
+  // timers: "fake",
+  testTimeout: 60000,
 
   // A map from regular expressions to paths to transformers
   transform: {

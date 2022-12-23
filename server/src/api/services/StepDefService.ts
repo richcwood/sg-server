@@ -1,7 +1,7 @@
-import { convertData } from "../utils/ResponseConverters";
-import { StepDefSchema, StepDefModel } from "../domain/StepDef";
-import { rabbitMQPublisher, PayloadOperation } from "../utils/RabbitMQPublisher";
-import { MissingObjectError, ValidationError } from "../utils/Errors";
+import {convertData} from "../utils/ResponseConverters";
+import {StepDefSchema, StepDefModel} from "../domain/StepDef";
+import {rabbitMQPublisher, PayloadOperation} from "../utils/RabbitMQPublisher";
+import {MissingObjectError, ValidationError} from "../utils/Errors";
 import * as mongodb from "mongodb";
 import * as _ from "lodash";
 
@@ -13,16 +13,16 @@ export class StepDefService {
   //   return query;
   // }
 
-  public async findAllStepDefsInternal(filter?: any, responseFields?: string) {
+  public async findAllStepDefsInternal(filter?: any, responseFields?: string): Promise<Array<StepDefSchema>> {
     return StepDefModel.find(filter).select(responseFields);
   }
 
   public async findAllStepDefs(_teamId: mongodb.ObjectId, _taskDefId: mongodb.ObjectId, responseFields?: string) {
-    return StepDefModel.find({ _taskDefId, _teamId }).select(responseFields);
+    return StepDefModel.find({_taskDefId, _teamId}).select(responseFields);
   }
 
   public async findTaskDefStepDefs(_teamId: mongodb.ObjectId, _taskDefId: mongodb.ObjectId, responseFields?: string) {
-    return StepDefModel.find({ _taskDefId, _teamId }).select(responseFields);
+    return StepDefModel.find({_taskDefId, _teamId}).select(responseFields);
   }
 
   public async findStepDef(
@@ -30,7 +30,7 @@ export class StepDefService {
     stepDefId: mongodb.ObjectId,
     responseFields?: string
   ): Promise<StepDefSchema | null> {
-    const result: StepDefSchema[] = await StepDefModel.findById(stepDefId).find({ _teamId }).select(responseFields);
+    const result: StepDefSchema[] = await StepDefModel.findById(stepDefId).find({_teamId}).select(responseFields);
     if (_.isArray(result) && result.length > 0) return result[0];
     return null;
   }
@@ -41,7 +41,7 @@ export class StepDefService {
     stepDefName: string,
     responseFields?: string
   ) {
-    let stepDef = await StepDefModel.find({ _teamId, _taskDefId, name: stepDefName }).select(responseFields);
+    let stepDef = await StepDefModel.find({_teamId, _taskDefId, name: stepDefName}).select(responseFields);
     return convertData(StepDefSchema, stepDef);
   }
 
@@ -96,7 +96,7 @@ export class StepDefService {
     correlationId: string,
     responseFields?: string
   ): Promise<object> {
-    const filter = { _id: id, _teamId };
+    const filter = {_id: id, _teamId};
     const origStepDef = await StepDefModel.findOne(filter);
     if (!origStepDef)
       throw new MissingObjectError(`StepDef '${id}" not found with filter "${JSON.stringify(filter, null, 4)}'.`);
@@ -118,9 +118,9 @@ export class StepDefService {
       } else {
         // Swap the orders of the existing step and the newly updated step
         const updatedSameOrder = await StepDefModel.findOneAndUpdate(
-          { _id: sameOrderStepDef._id, _teamId },
-          { order: origStepDef.order },
-          { new: true }
+          {_id: sameOrderStepDef._id, _teamId},
+          {order: origStepDef.order},
+          {new: true}
         );
         await rabbitMQPublisher.publish(
           _teamId,
@@ -132,7 +132,7 @@ export class StepDefService {
       }
     }
 
-    const updatedStepDef = await StepDefModel.findOneAndUpdate({ _id: id, _teamId }, data, { new: true }).select(
+    const updatedStepDef = await StepDefModel.findOneAndUpdate({_id: id, _teamId}, data, {new: true}).select(
       responseFields
     );
     await rabbitMQPublisher.publish(
@@ -147,13 +147,13 @@ export class StepDefService {
   }
 
   public async deleteStepDef(_teamId: mongodb.ObjectId, id: mongodb.ObjectId, correlationId?: string): Promise<object> {
-    const filter = { _id: id, _teamId };
+    const filter = {_id: id, _teamId};
     const origStepDef = await StepDefModel.findOne(filter);
     if (!origStepDef)
       throw new MissingObjectError(`StepDef '${id}" not found with filter "${JSON.stringify(filter, null, 4)}'.`);
 
-    const deleted = await StepDefModel.deleteOne({ _id: id });
-    await rabbitMQPublisher.publish(_teamId, "StepDef", correlationId, PayloadOperation.DELETE, { id, correlationId });
+    const deleted = await StepDefModel.deleteOne({_id: id});
+    await rabbitMQPublisher.publish(_teamId, "StepDef", correlationId, PayloadOperation.DELETE, {id, correlationId});
 
     const steps = await this.findAllStepDefs(_teamId, origStepDef._taskDefId, "order");
     if (_.isArray(steps) && steps.length > 0) {
@@ -162,7 +162,7 @@ export class StepDefService {
         const step = steps[i];
         if (step.order != i + 1) {
           step.order = i + 1;
-          const updatedStepDef = await StepDefModel.findOneAndUpdate({ _id: step._id, _teamId }, step, {
+          const updatedStepDef = await StepDefModel.findOneAndUpdate({_id: step._id, _teamId}, step, {
             new: true,
           }).select("order");
           await rabbitMQPublisher.publish(

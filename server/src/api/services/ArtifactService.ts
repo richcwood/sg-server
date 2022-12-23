@@ -20,18 +20,18 @@ export class ArtifactService {
   }
 
   public async findArtifact(_teamId: mongodb.ObjectId, id: mongodb.ObjectId) {
-    const artifactQuery = await ArtifactModel.findById(id).find({_teamId}).select("prefix name type");
+    const artifactQuery = await ArtifactModel.findById(id).find({_teamId}).select("prefix name type s3Path");
     if (!artifactQuery || (_.isArray(artifactQuery) && artifactQuery.length === 0))
       throw new MissingObjectError(`No artifact with id "${id.toHexString()}"`);
     const artifact: ArtifactSchema = artifactQuery[0];
 
     let s3Access = new S3Access();
-    let s3Path = "";
-    if (config.get("environment") != "production") s3Path += `${config.get("environment")}/`;
-    s3Path += `${_teamId.toHexString()}/`;
-    if (artifact.prefix) s3Path += `${artifact.prefix}`;
-    s3Path += artifact.name;
-    let url = await s3Access.getSignedS3URL(s3Path, config.get("S3_BUCKET_TEAM_ARTIFACTS"));
+    // let s3Path = "";
+    // if (config.get("environment") != "production") s3Path += `${config.get("environment")}/`;
+    // s3Path += `${_teamId.toHexString()}/`;
+    // if (artifact.prefix) s3Path += `${artifact.prefix}`;
+    // s3Path += artifact.name;
+    let url = await s3Access.getSignedS3URL(artifact.s3Path, config.get("S3_BUCKET_TEAM_ARTIFACTS"));
 
     return Object.assign(artifact, {url});
   }
@@ -54,7 +54,7 @@ export class ArtifactService {
   /// Artifacts meta data is stored in mongodb - the actual object is stored in s3 - a temporary secure url is returned when a new
   ///     artifact is created via POST which can then be used by the browser to upload the artifact directly to s3 - the url
   ///     is returned with the artifact object but is not saved to the database since it's temporary anyway
-  public async createArtifact(_teamId: mongodb.ObjectId, data: any, correlationId: string): Promise<object> {
+  public async createArtifact(_teamId: mongodb.ObjectId, data: any, correlationId: string): Promise<ArtifactSchema> {
     if (!data.name) throw new ValidationError(`Request body missing "name" parameter`);
     let filter = {_teamId, name: data.name};
 
@@ -76,7 +76,7 @@ export class ArtifactService {
     data._teamId = _teamId;
     data.s3Path = s3Path;
 
-    let newArtifact: any;
+    let newArtifact: ArtifactSchema;
     const existingArtifact = await this.findAllArtifactsInternal(filter, "_id");
     if (_.isArray(existingArtifact) && existingArtifact.length > 0) {
       newArtifact = await this.updateArtifact(_teamId, existingArtifact[0]._id, data, correlationId);
@@ -89,6 +89,8 @@ export class ArtifactService {
       const artifactModel = new ArtifactModel(data);
       newArtifact = await artifactModel.save();
     }
+
+    const artifactQuery = await ArtifactModel.findById(newArtifact._id).find({_teamId});
 
     let url = await s3Access.putSignedS3URL(s3Path, config.get("S3_BUCKET_TEAM_ARTIFACTS"), newArtifact.type);
     newArtifact.url = url;
@@ -110,7 +112,7 @@ export class ArtifactService {
     id: mongodb.ObjectId,
     data: any,
     correlationId: string
-  ): Promise<object> {
+  ): Promise<ArtifactSchema> {
     if (!data.name) throw new ValidationError(`Request body missing "name" parameter`);
 
     if (data.prefix) data.prefix = this.formatArtifactPrefix(data.prefix);

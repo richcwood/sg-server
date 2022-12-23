@@ -1,27 +1,36 @@
+import axios from "axios";
+import {readFile} from "fs";
+
 import * as _ from "lodash";
 import * as moment from "moment";
 import * as mongodb from "mongodb";
 
 import {AgentSchema} from "../api/domain/Agent";
+import {ArtifactSchema} from "../api/domain/Artifact";
 import {JobSchema} from "../api/domain/Job";
 import {JobDefSchema} from "../api/domain/JobDef";
 import {SaascipeSchema} from "../api/domain/Saascipe";
 import {SaascipeVersionSchema} from "../api/domain/SaascipeVersion";
 import {ScriptSchema} from "../api/domain/Script";
+import {SettingsSchema} from "../api/domain/Settings";
 import {StepDefSchema} from "../api/domain/StepDef";
 import {TaskSchema} from "../api/domain/Task";
 import {TaskDefSchema} from "../api/domain/TaskDef";
+import {TeamSchema} from "../api/domain/Team";
 import {TeamVariableSchema} from "../api/domain/TeamVariable";
 
 import {agentService} from "../api/services/AgentService";
+import {artifactService} from "../api/services/ArtifactService";
 import {jobService} from "../api/services/JobService";
 import {jobDefService} from "../api/services/JobDefService";
 import {saascipeService} from "../api/services/SaascipeService";
 import {saascipeVersionService} from "../api/services/SaascipeVersionService";
 import {scriptService} from "../api/services/ScriptService";
+import {settingsService} from "../api/services/SettingsService";
 import {stepDefService} from "../api/services/StepDefService";
 import {taskService} from "../api/services/TaskService";
 import {taskDefService} from "../api/services/TaskDefService";
+import {teamService} from "../api/services/TeamService";
 import {teamVariableService} from "../api/services/TeamVariableService";
 
 import {convertData as convertResponseData} from "../api/utils/ResponseConverters";
@@ -96,6 +105,45 @@ let InteractiveConsoleJob: any = {
 };
 export {InteractiveConsoleJob};
 
+let SettingsTemplate: any[] = [
+  {
+    Type: "Billing",
+    Values: {
+      defaultScriptPricing: {
+        tiers: [
+          {
+            count: null,
+            rate: 0.01,
+          },
+        ],
+      },
+      defaultJobStoragePerMBRate: 0.015,
+      defaultNewAgentRate: 0.00176,
+      defaultArtifactsDownloadedPerGBRate: 0.09,
+      defaultArtifactsStoragePerGBRate: 0.023,
+      defaultAwsLambdaComputeGbSecondsRate: 0.0000166667,
+      defaultAwsLambdaRequestsRate: 2.0000000000000002e-7,
+      invoiceDueGracePeriodDays: 14,
+    },
+  },
+  {
+    Type: "FreeTierLimits",
+    Values: {
+      maxScriptsPerBillingCycle: 500,
+      maxAgents: 10,
+      freeDaysJobStorage: 60,
+      freeArtifactsDownloadBytes: 0,
+      freeArtifactsStorageBytes: 0,
+    },
+    __v: 0,
+  },
+];
+
+let TeamTemplate: any = {
+  name: "Test Team",
+};
+export {TeamTemplate};
+
 let ScriptTemplate: any = {
   name: "Script 1",
   scriptType: "2",
@@ -128,6 +176,40 @@ let StepDefTemplate: any = {
 export {StepDefTemplate};
 
 /**
+ * Creates a settings schema based on the template
+ * @returns {Promise<SettingsSchema>}
+ */
+let CreateSettingsFromTemplate = async (): Promise<SettingsSchema[]> => {
+  let settingsTemplate: SettingsSchema[] = _.clone(SettingsTemplate);
+  let settings: SettingsSchema[] = [];
+  for (let template of settingsTemplate) {
+    settings.push(convertResponseData(SettingsSchema, await settingsService.createSettings(template)));
+  }
+  return settings;
+};
+export {CreateSettingsFromTemplate};
+
+/**
+ * Creates a team schema from the template with the given json formatted properties
+ * @param _userId
+ * @param properties
+ * @returns {Promise<SettingsSchema>}
+ */
+let CreateTeamFromTemplate = async (
+  _userId: mongodb.ObjectId,
+  properties: any,
+  logger: BaseLogger
+): Promise<TeamSchema> => {
+  let teamTemplate: TeamSchema = _.clone(TeamTemplate);
+  teamTemplate.ownerId = _userId;
+  teamTemplate.userAssigned = true;
+  Object.assign(teamTemplate, properties);
+  const team: TeamSchema = await teamService.createTeam(teamTemplate, logger);
+  return convertResponseData(TeamSchema, team);
+};
+export {CreateTeamFromTemplate};
+
+/**
  * Creates a script schema with the given json formatted properties
  * @param _teamId
  * @param _userId
@@ -148,6 +230,35 @@ let CreateScriptFromTemplate = async (
   return convertResponseData(ScriptSchema, script);
 };
 export {CreateScriptFromTemplate};
+
+/**
+ * Creates an artifact schema with the given json formatted data
+ * @param _teamId
+ * @param data
+ * @param artifactPath
+ * @returns {Promise<ArtifactSchema>}
+ */
+let CreateArtifact = async (
+  _teamId: mongodb.ObjectId,
+  data: Partial<ArtifactSchema>,
+  artifactPath: string
+): Promise<ArtifactSchema> => {
+  const artifact: ArtifactSchema = await artifactService.createArtifact(_teamId, data, "");
+
+  const readFileAsync = require("util").promisify(readFile);
+  const fileData = await readFileAsync(artifactPath);
+
+  var options = {
+    headers: {
+      "Content-Type": artifact.type,
+    },
+  };
+
+  await axios.put(artifact.url, fileData, options);
+
+  return convertResponseData(ArtifactSchema, artifact);
+};
+export {CreateArtifact};
 
 /**
  * Creates a jobdef schema with the given json formatted properties
@@ -195,14 +306,14 @@ let CreateJobDefsFromTemplates = async (
   _teamId: mongodb.ObjectId,
   _userId: mongodb.ObjectId,
   properties: any
-): Promise<{scripts: ScriptSchema[]; jobDefs: JobDefSchema[]}> => {
-  let scripts: ScriptSchema[] = [];
+): Promise<{scripts: Array<ScriptSchema>; jobDefs: Map<string, JobDefSchema>}> => {
+  let scripts: Array<ScriptSchema> = [];
   for (let scriptProperties of properties.scripts) {
     const script = await CreateScriptFromTemplate(_teamId, _userId, scriptProperties);
     scripts[script.name] = script;
   }
 
-  let jobDefs: any = {};
+  let jobDefs: Map<string, JobDefSchema> = new Map([]);
   for (let jobDefProperties of properties.jobDefs) {
     const jobDef = convertResponseData(JobDefSchema, await CreateJobDefFromTemplate(_teamId, jobDefProperties));
     jobDef.taskDefs = {};
@@ -228,9 +339,9 @@ let CreateJobDefsFromTemplates = async (
       validateArrayLengthLessThanOrEqual(awsLambdaStepDefs, 1);
 
       jobDef.taskDefs[taskDef.name] = taskDef;
-    }
 
-    jobDefs[jobDef.name] = jobDef;
+      jobDefs[jobDef.name] = jobDef;
+    }
   }
   return {scripts, jobDefs};
 };
@@ -280,11 +391,11 @@ export {CreateAgents};
 let CreateSaascipes = async (
   _teamId: mongodb.ObjectId,
   saascipes: Partial<SaascipeSchema>[]
-): Promise<{id: mongodb.ObjectId; data: SaascipeSchema}[]> => {
-  const results: {id: mongodb.ObjectId; data: SaascipeSchema}[] = [];
+): Promise<{[key: string]: SaascipeSchema}> => {
+  const results: {[key: string]: SaascipeSchema} = {};
   for (let s of saascipes) {
     const saascipe: SaascipeSchema = await saascipeService.createSaascipe(_teamId, s, null);
-    results.push({id: saascipe._id, data: convertResponseData(SaascipeSchema, saascipe)});
+    results[saascipe._id.toHexString()] = convertResponseData(SaascipeSchema, saascipe);
   }
   return results;
 };
@@ -297,11 +408,11 @@ export {CreateSaascipes};
 let CreateSaascipeVersions = async (
   _teamId: mongodb.ObjectId,
   saascipeversions: Partial<SaascipeVersionSchema>[]
-): Promise<{id: mongodb.ObjectId; data: SaascipeVersionSchema}[]> => {
-  const results: {id: mongodb.ObjectId; data: SaascipeVersionSchema}[] = [];
+): Promise<{[key: string]: SaascipeVersionSchema}> => {
+  const results: {[key: string]: SaascipeVersionSchema} = {};
   for (let s of saascipeversions) {
     const saascipeVersion: SaascipeVersionSchema = await saascipeVersionService.createSaascipeVersion(_teamId, s, null);
-    results.push({id: saascipeVersion._id.toHexString(), data: saascipeVersion});
+    results[saascipeVersion._id.toHexString()] = saascipeVersion;
   }
   return results;
 };

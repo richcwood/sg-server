@@ -43,7 +43,7 @@ describe("SaascipeVersion service tests", () => {
   let saascipeDefs: Array<Partial<SaascipeSchema>> = [];
   let saascipeVersionDefs: Array<Partial<SaascipeVersionSchema>> = [];
   let saascipes: {id: mongodb.ObjectId; data: SaascipeSchema}[] = [];
-  let saascipeVersions: {id: mongodb.ObjectId; data: SaascipeVersionSchema}[] = [];
+  let saascipeVersions: {[key: string]: SaascipeVersionSchema} = {};
 
   beforeAll(async () => {
     saascipeDefs = [
@@ -74,6 +74,7 @@ describe("SaascipeVersion service tests", () => {
         _publisherTeamId: publisherTeamId1,
         _publisherUserId: mongodb.ObjectId(),
         _saascipeId: existingSaascipeId1,
+        saascipeDef: {},
         description: "Version 1",
         runtimeVarDescriptions: [],
       },
@@ -87,6 +88,7 @@ describe("SaascipeVersion service tests", () => {
       _publisherTeamId: publisherTeamId1,
       _publisherUserId: mongodb.ObjectId(),
       _saascipeId: existingSaascipeId1,
+      saascipeDef: {},
       description: "Version 1",
       runtimeVarDescriptions: [],
     };
@@ -111,6 +113,7 @@ describe("SaascipeVersion service tests", () => {
       _publisherTeamId: publisherTeamId1,
       _publisherUserId: mongodb.ObjectId(),
       _saascipeId: existingSaascipeId1,
+      saascipeDef: {},
       description: "Version 2",
       runtimeVarDescriptions: [],
     };

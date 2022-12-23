@@ -24,11 +24,17 @@ export class SaascipeVersionSchema {
   @prop({required: true})
   _saascipeId: mongodb.ObjectId;
 
+  @prop({required: true})
+  saascipeDef: any;
+
   @prop({default: 0})
   version: number;
 
   @prop({default: ""})
   description: string;
+
+  @prop()
+  s3Path?: string;
 
   @prop({default: []})
   runtimeVarDescriptions?: Array<IRuntimeVariable>;

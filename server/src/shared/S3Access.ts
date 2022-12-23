@@ -34,8 +34,6 @@ export class S3Access {
       fs.readFile(filePath, (err, data) => {
         if (err) reject(err);
 
-        // const s3Path = `${uniqueId}/${path.basename(filePath)}`;
-
         const params = {
           Bucket: bucket,
           Key: s3Path,
@@ -49,6 +47,22 @@ export class S3Access {
           console.log(`File uploaded successfully to ${data.Location}`);
           resolve(true);
         });
+      });
+    });
+  }
+
+  async copyObject(srcPath: string, destPath: string, bucket: string) {
+    return new Promise((resolve, reject) => {
+      const params = {
+        Bucket: bucket,
+        CopySource: srcPath,
+        Key: destPath,
+      };
+
+      s3.copyObject(params, (s3Err, data) => {
+        if (s3Err) reject(s3Err);
+        console.log(`Object successfully copied from ${srcPath} to ${destPath}`);
+        resolve(data);
       });
     });
   }
@@ -70,6 +84,30 @@ export class S3Access {
         resolve();
       });
     });
+  }
+
+  async emptyS3Folder(prefix: string, bucket: string) {
+    const listParams = {
+      Bucket: bucket,
+      Prefix: prefix,
+    };
+
+    const listedObjects = await s3.listObjectsV2(listParams).promise();
+
+    if (listedObjects.Contents.length === 0) return;
+
+    const deleteParams = {
+      Bucket: bucket,
+      Delete: {Objects: []},
+    };
+
+    listedObjects.Contents.forEach(({Key}) => {
+      deleteParams.Delete.Objects.push({Key});
+    });
+
+    await s3.deleteObjects(deleteParams).promise();
+
+    if (listedObjects.IsTruncated) await this.emptyS3Folder(prefix, bucket);
   }
 
   async getSignedS3URL(s3FilePath: string, bucket: string) {

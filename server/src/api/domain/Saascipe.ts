@@ -29,9 +29,6 @@ export class SaascipeSchema {
   @prop({required: true})
   description: string;
 
-  @prop({required: true})
-  s3Path: string;
-
   @prop({default: 0})
   currentVersion: number;
 

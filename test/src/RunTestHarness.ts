@@ -1559,7 +1559,11 @@ let UpdateUserTeamAccessRights = async () => {
 let UploadFileToS3 = async (filePath: string) => {
   await new Promise(async (resolve, reject) => {
     try {
-      const fileType = "application/octet-stream";
+      const fs = require("fs");
+      const readFile = require("util").promisify(fs.readFile);
+      const fileData = await readFile(filePath);
+
+      const fileType = "multipart/form-data";
       let s3Access = new S3Access();
 
       let url = await s3Access.putSignedS3URL(
@@ -1575,7 +1579,7 @@ let UploadFileToS3 = async (filePath: string) => {
         },
       };
 
-      let res = await axios.put(url, filePath, options);
+      let res = await axios.put(url, fileData, options);
       // console.log(`${Object.keys(res)}`);
       // console.log(`${Object.keys(res.request)}\n\n\n${util.inspect(res.request, false, null)}`);
       console.log(`status\n\n${res.status}\n\n\n`);
@@ -2606,7 +2610,7 @@ let MongoTest = async () => {
   console.log("result ---------> ", result);
 };
 
-MongoTest();
+// MongoTest();
 // RunRepublishTasksWaitingForAgent('5f57b2f14b5da00017df0d4f');
 // CreateBrainTreeCompanyForTeams();
 // CreateStripeCompanyForTeams();
@@ -2621,7 +2625,7 @@ MongoTest();
 // ProcessOrphanedTasks();
 // PublishJobTask();
 // PruneJobs('605366d1d26030001713b1cc');
-// UploadFileToS3(process.argv[2]);
+UploadFileToS3(process.argv[2]);
 // GetS3PrefixSize('production/5de95c0453162e8891f5a830/');
 // CreateTeam("saas glue admin", "5ef125b4fb07e500150507ca");
 // DumpMongoData('./production_20200615.json');
