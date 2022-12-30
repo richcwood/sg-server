@@ -1,4 +1,4 @@
-import {existsSync, mkdirSync, readFileSync, rmdirSync, unlinkSync, writeFileSync} from "fs";
+import {existsSync, mkdirSync, unlinkSync, writeFileSync} from "fs";
 
 import * as config from "config";
 import * as mongodb from "mongodb";
@@ -11,10 +11,13 @@ import {SaascipeVersionSchema} from "../domain/SaascipeVersion";
 import {ScriptSchema} from "../domain/Script";
 import {TeamSchema} from "../domain/Team";
 
+import {scriptService} from "../services/ScriptService";
+
 import {RuntimeVariableFormat, SaascipeType, TaskDefTarget} from "../../shared/Enums";
 import {
   ExportJobDefArtifacts,
   IJobDefExport,
+  ImportScriptSaascipe,
   PrepareJobDefForExport,
   PrepareScriptForExport,
 } from "./SaascipeImportExport";
@@ -33,12 +36,7 @@ import {
   CreateSettingsFromTemplate,
   CreateTeamFromTemplate,
 } from "../../test_helpers/TestArtifacts";
-import {
-  validateArrayLength,
-  validateEquality,
-  validateDeepEquality,
-  validateObjectMatch,
-} from "../../test_helpers/Validators";
+import {validateArrayLength, validateEquality} from "../../test_helpers/Validators";
 
 import * as Enums from "../../shared/Enums";
 
@@ -60,16 +58,19 @@ let OnBrowserPush = async (params: any, msgKey: string, ch: any) => {
   logger.LogInfo("OnBrowserPush message", params);
 };
 
-describe("SaaScipe Script exporter tests", () => {
-  const _teamId: mongodb.ObjectId = new mongodb.ObjectId();
+describe("SaaScipe Script export/import tests", () => {
+  const _exportTeamId: mongodb.ObjectId = new mongodb.ObjectId();
+  const _importTeamId: mongodb.ObjectId = new mongodb.ObjectId();
   const _userId: mongodb.ObjectId = new mongodb.ObjectId();
+  const _importUserId: mongodb.ObjectId = new mongodb.ObjectId();
   const _saascipeId: mongodb.ObjectId = new mongodb.ObjectId();
   const _saascipeVersionId: mongodb.ObjectId = new mongodb.ObjectId();
   const saascipeDescription: string = "Version 0.1 - the first version";
-  const scriptName: string = "Script 1";
+  const script1Name: string = "Script 1";
+  const script2Name: string = "Script 2";
 
   const environment = config.get("environment");
-  let s3Path: string = `${_teamId.toHexString()}/script/${_saascipeId.toHexString()}`;
+  let s3Path: string = `${_exportTeamId.toHexString()}/script/${_saascipeId.toHexString()}`;
   if (environment != "production") s3Path = environment + "/" + s3Path;
 
   let scripts: any = {};
@@ -81,39 +82,59 @@ describe("SaaScipe Script exporter tests", () => {
 
   beforeAll(async () => {
     const script1 = `
-      console.log('Hello World!');
+      console.log('Hello from Script 1!');
       `;
-    const scriptCodeB64: string = SGUtils.btoa(script1);
+    const script1CodeB64: string = SGUtils.btoa(script1);
+    const script2 = `
+      @sgs("${script1Name}")
+      console.log('Hello from Script 2!');
+      `;
+    const script2CodeB64: string = SGUtils.btoa(script2);
     scriptTemplates = [
       {
-        name: scriptName,
+        name: script1Name,
         scriptType: Enums.ScriptType.NODE,
-        code: scriptCodeB64,
-        shadowCopyCode: scriptCodeB64,
+        code: script1CodeB64,
+      },
+      {
+        name: script2Name,
+        scriptType: Enums.ScriptType.NODE,
+        code: script2CodeB64,
       },
     ];
     for (let scriptTemplate of scriptTemplates) {
-      const script: ScriptSchema = await CreateScriptFromTemplate(_teamId, _userId, scriptTemplate);
+      const script: ScriptSchema = await CreateScriptFromTemplate(_exportTeamId, _userId, scriptTemplate);
       scripts[script.name] = script;
     }
+
+    const importTeamScript = `
+      console.log('Hello World!');
+      `;
+    const importTeamScriptCodeB64: string = SGUtils.btoa(importTeamScript);
+    const importTeamScriptTemplate: any = {
+      name: script1Name,
+      scriptType: Enums.ScriptType.NODE,
+      code: importTeamScriptCodeB64,
+    };
+    await CreateScriptFromTemplate(_importTeamId, _importUserId, importTeamScriptTemplate);
 
     saascipeTemplates = [
       {
         _id: _saascipeId,
-        _publisherTeamId: _teamId,
+        _publisherTeamId: _exportTeamId,
         _publisherUserId: _userId,
-        _sourceId: scripts[scriptName].id,
+        _sourceId: scripts[script2Name].id,
         name: "Hello World",
         saascipeType: SaascipeType.SCRIPT,
         description: "Hello World Script Saascipe",
       },
     ];
-    saascipes = await CreateSaascipes(_teamId, saascipeTemplates);
+    saascipes = await CreateSaascipes(_exportTeamId, saascipeTemplates);
 
     saascipeVersionTemplates = [
       {
         _id: _saascipeVersionId,
-        _publisherTeamId: _teamId,
+        _publisherTeamId: _exportTeamId,
         _publisherUserId: _userId,
         _saascipeId: _saascipeId,
         description: saascipeDescription,
@@ -121,13 +142,16 @@ describe("SaaScipe Script exporter tests", () => {
     ];
   });
 
-  test("Export saascipe script test", async () => {
+  test("Export/import saascipe script test", async () => {
     const saascipe: SaascipeSchema = saascipes[_saascipeId.toHexString()];
 
-    const saascipeDef: Partial<ScriptSchema>[] = await PrepareScriptForExport(_teamId, saascipe._sourceId);
+    const saascipeDef: Partial<ScriptSchema>[] = await PrepareScriptForExport(_exportTeamId, saascipe._sourceId);
     const templates: any[] = _.cloneDeep(saascipeVersionTemplates);
     templates[0]["saascipeDef"] = saascipeDef;
-    const saascipeVersions: {[key: string]: SaascipeVersionSchema} = await CreateSaascipeVersions(_teamId, templates);
+    const saascipeVersions: {[key: string]: SaascipeVersionSchema} = await CreateSaascipeVersions(
+      _exportTeamId,
+      templates
+    );
 
     const saascipeTemplate: any = _.cloneDeep(saascipeTemplates)[0];
     validateEquality(saascipeTemplate["_publisherTeamId"].toHexString(), saascipe._publisherTeamId.toHexString());
@@ -138,20 +162,28 @@ describe("SaaScipe Script exporter tests", () => {
     validateEquality(saascipeTemplate["saascipeType"], saascipe.saascipeType);
     validateEquality(saascipe["currentVersion"], 0);
 
-    for (let template of saascipeVersionTemplates) {
-      const saascipeVersionMatch: SaascipeVersionSchema = saascipeVersions[template["_id"].toHexString()];
-      validateEquality(template["_publisherTeamId"].toHexString(), saascipeVersionMatch._publisherTeamId.toHexString());
-      validateEquality(template["_publisherUserId"].toHexString(), saascipeVersionMatch._publisherUserId.toHexString());
-      validateEquality(template["_saascipeId"].toHexString(), saascipeVersionMatch._saascipeId.toHexString());
-      validateEquality(saascipeVersionMatch["version"], 0);
-      validateEquality(template["description"], saascipeVersionMatch.description);
+    const template: any = templates[0];
+    const saascipeVersionMatch: SaascipeVersionSchema = saascipeVersions[template["_id"].toHexString()];
+    validateEquality(template["_publisherTeamId"].toHexString(), saascipeVersionMatch._publisherTeamId.toHexString());
+    validateEquality(template["_publisherUserId"].toHexString(), saascipeVersionMatch._publisherUserId.toHexString());
+    validateEquality(template["_saascipeId"].toHexString(), saascipeVersionMatch._saascipeId.toHexString());
+    validateEquality(saascipeVersionMatch["version"], 0);
+    validateEquality(template["description"], saascipeVersionMatch.description);
 
-      const scriptMatch: any = saascipeVersionMatch.saascipeDef;
-      const scriptTemplate: any = scriptTemplates[0];
-      validateEquality(scriptMatch[0]["name"], scriptTemplate["name"]);
-      validateEquality(scriptMatch[0]["scriptType"], scriptTemplate["scriptType"]);
-      validateEquality(scriptMatch[0]["code"], scriptTemplate["code"]);
-    }
+    const scriptMatch: any = saascipeVersionMatch.saascipeDef;
+    const scriptTemplate: any = scriptTemplates[1];
+    validateEquality(scriptMatch[0]["name"], scriptTemplate["name"]);
+    validateEquality(scriptMatch[0]["scriptType"], scriptTemplate["scriptType"]);
+    validateEquality(scriptMatch[0]["code"], scriptTemplate["code"]);
+
+    await ImportScriptSaascipe(_importTeamId, _importUserId, saascipeVersionMatch);
+    const importTeamScripts: Array<ScriptSchema> = await scriptService.findAllScriptsInternal({
+      _teamId: _importTeamId,
+    });
+    validateArrayLength(importTeamScripts, 3);
+    validateEquality(importTeamScripts[0].name, script1Name);
+    validateEquality(importTeamScripts[1].name, script2Name);
+    validateEquality(importTeamScripts[2].name, `${script1Name}_import_1`);
   });
 
   afterAll(async () => await db.clearDatabase());
@@ -170,7 +202,6 @@ describe("SaaScipe JobDef exporter tests", () => {
   const environment = config.get("environment");
   let s3Path: string;
   let team: TeamSchema;
-  let scripts: Array<ScriptSchema> = [];
   let jobDefs: Map<string, JobDefSchema>;
   let saascipes: {[key: string]: SaascipeSchema} = {};
   let saascipeTemplates: any[];
@@ -269,7 +300,6 @@ describe("SaaScipe JobDef exporter tests", () => {
 
     const createJobDefsResult: {scripts: Array<ScriptSchema>; jobDefs: Map<string, JobDefSchema>} =
       await CreateJobDefsFromTemplates(_teamId, _userId, templates);
-    scripts = createJobDefsResult.scripts;
     jobDefs = createJobDefsResult.jobDefs;
 
     saascipeTemplates = [

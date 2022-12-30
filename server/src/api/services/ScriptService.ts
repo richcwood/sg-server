@@ -1,11 +1,11 @@
-import { convertData } from "../utils/ResponseConverters";
-import { ScriptSchema, ScriptModel } from "../domain/Script";
-import { rabbitMQPublisher, PayloadOperation } from "../utils/RabbitMQPublisher";
-import { MissingObjectError, ValidationError } from "../utils/Errors";
-import { StepDefModel } from "../domain/StepDef";
+import {convertData} from "../utils/ResponseConverters";
+import {ScriptSchema, ScriptModel} from "../domain/Script";
+import {rabbitMQPublisher, PayloadOperation} from "../utils/RabbitMQPublisher";
+import {MissingObjectError, ValidationError} from "../utils/Errors";
+import {StepDefModel} from "../domain/StepDef";
 import * as mongodb from "mongodb";
 import * as _ from "lodash";
-import { SGUtils } from "../../shared/SGUtils";
+import {SGUtils} from "../../shared/SGUtils";
 
 export class ScriptService {
   // Some services might need to add additional restrictions to bulk queries
@@ -28,7 +28,7 @@ export class ScriptService {
     scriptId: mongodb.ObjectId,
     responseFields?: string
   ): Promise<ScriptSchema | null> {
-    const result: ScriptSchema[] = await ScriptModel.findById(scriptId).find({ _teamId }).select(responseFields);
+    const result: ScriptSchema[] = await ScriptModel.findById(scriptId).find({_teamId}).select(responseFields);
     if (_.isArray(result) && result.length > 0) return result[0];
     return null;
   }
@@ -96,7 +96,7 @@ export class ScriptService {
   ): Promise<ScriptSchema> {
     data._teamId = _teamId;
 
-    const existingScriptQuery: any = await this.findAllScriptsInternal({ _teamId, name: data.name });
+    const existingScriptQuery: any = await this.findAllScriptsInternal({_teamId, name: data.name});
     if (_.isArray(existingScriptQuery) && existingScriptQuery.length > 0)
       throw new ValidationError(`Script with name "${data.name}" already exists`);
 
@@ -132,9 +132,9 @@ export class ScriptService {
     _userId: mongodb.ObjectId,
     correlationId: string,
     responseFields?: string
-  ): Promise<object> {
+  ): Promise<ScriptSchema> {
     if (data.name) {
-      const existingScriptQuery: any = await this.findAllScriptsInternal({ _teamId, name: data.name });
+      const existingScriptQuery: any = await this.findAllScriptsInternal({_teamId, name: data.name});
       if (_.isArray(existingScriptQuery) && existingScriptQuery.length > 0)
         if (existingScriptQuery[0]._id.toHexString() != id.toHexString())
           throw new ValidationError(`Script with name "${data.name}" already exists`);
@@ -144,15 +144,15 @@ export class ScriptService {
       this.extractInjectionElems(data);
     }
 
-    const filter = { _id: id, _teamId, $or: [{ teamEditable: true }, { _originalAuthorUserId: _userId }] };
+    const filter = {_id: id, _teamId, $or: [{teamEditable: true}, {_originalAuthorUserId: _userId}]};
 
     data._lastEditedUserId = _userId;
-    const updatedScript = await ScriptModel.findOneAndUpdate(filter, data, { new: true }).select(responseFields);
+    const updatedScript = await ScriptModel.findOneAndUpdate(filter, data, {new: true}).select(responseFields);
 
     if (!updatedScript)
       throw new ValidationError(`Script '${id}" not found with filter "${JSON.stringify(filter, null, 4)}'.`);
 
-    const deltas = Object.assign({ _id: id }, data);
+    const deltas = Object.assign({_id: id}, data);
     await rabbitMQPublisher.publish(
       _teamId,
       "Script",
@@ -165,13 +165,13 @@ export class ScriptService {
   }
 
   public async deleteScript(_teamId: mongodb.ObjectId, id: mongodb.ObjectId, correlationId?: string): Promise<object> {
-    let cntStepDefsTargetingThisAgent = await StepDefModel.count({ _teamId, _scriptId: id.toHexString() });
+    let cntStepDefsTargetingThisAgent = await StepDefModel.count({_teamId, _scriptId: id.toHexString()});
     if (cntStepDefsTargetingThisAgent > 0)
       throw new ValidationError(`There are ${cntStepDefsTargetingThisAgent} job steps that are using this script`);
 
-    const deleted = await ScriptModel.deleteOne({ _id: id, _teamId });
+    const deleted = await ScriptModel.deleteOne({_id: id, _teamId});
 
-    await rabbitMQPublisher.publish(_teamId, "Script", correlationId, PayloadOperation.DELETE, { _id: id });
+    await rabbitMQPublisher.publish(_teamId, "Script", correlationId, PayloadOperation.DELETE, {_id: id});
 
     return deleted;
   }

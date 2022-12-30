@@ -15,15 +15,19 @@ import {TaskDefSchema} from "../domain/TaskDef";
 
 import {artifactService} from "../services/ArtifactService";
 import {jobDefService} from "../services/JobDefService";
+import {saascipeService} from "../services/SaascipeService";
+import {saascipeVersionService} from "../services/SaascipeVersionService";
 import {scriptService} from "../services/ScriptService";
 import {scheduleService} from "../services/ScheduleService";
 import {stepDefService} from "../services/StepDefService";
 import {taskDefService} from "../services/TaskDefService";
 
 import {RuntimeVariableFormat} from "../../shared/Enums";
-import {MissingObjectError, ValidationError} from "../utils/Errors";
+import {MissingObjectError, ValidationError, SaascipeImportError} from "../utils/Errors";
 import {S3Access} from "../../shared/S3Access";
+import {SGUtils} from "../../shared/SGUtils";
 import {bool} from "aws-sdk/clients/signer";
+import {MongoDbSettings} from "aws-sdk/clients/dms";
 
 interface IJobDefExport {
   jobDef: Partial<JobDefSchema>;
@@ -105,36 +109,6 @@ let PrepareScriptForExport = async (
   return scripts;
 };
 export {PrepareScriptForExport};
-
-// /**
-//  * Exports the script SaaScipe with the given id.
-//  * @param _teamId
-//  * @param saascipe
-//  * Returns the SaaScipe in json format.
-//  */
-// let ExportScript = async (
-//   _teamId: mongodb.ObjectId,
-//   saascipeVersion: SaascipeVersionSchema
-// ): Promise<Partial<ScriptSchema>[]> => {
-//   const scriptsForExport: Partial<ScriptSchema>[] = await PrepareScriptForExport(_teamId, saascipe._sourceId);
-
-//   const tmpOutDir: string = `/tmp/saascipes/${saascipe.id.toHexString()}`;
-//   if (!fs.existsSync(tmpOutDir)) {
-//     fs.mkdirSync(tmpOutDir, {recursive: true});
-//   }
-//   const scriptFileName: string = "scripts.json";
-//   const tmpOutPath: string = `${tmpOutDir}/${scriptFileName}`;
-//   fs.writeFileSync(tmpOutPath, JSON.stringify(scriptsForExport, null, 4), "utf-8");
-
-//   let s3Path = `${saascipe.s3Path}/${scriptFileName}`;
-//   const s3Access = new S3Access();
-//   await s3Access.uploadFile(tmpOutPath, s3Path, config.get("S3_BUCKET_SAASCIPES"));
-
-//   if (fs.existsSync(tmpOutDir)) fs.rmdirSync(tmpOutDir, {recursive: true});
-
-//   return scriptsForExport;
-// };
-// export {ExportScript};
 
 /**
  * Returns an array of runtime vars formatted for export to Saascipes
@@ -348,10 +322,7 @@ let PrepareJobDefForExport = async (_teamId: mongodb.ObjectId, _jobDefId: mongod
   );
   if (!jobDefToExport) throw new MissingObjectError(`JobDef with id '${_jobDefId.toHexString()}" not found`);
 
-  console.log("jobDefToExport ------------> ", jobDefToExport);
-
   const rtVars: Map<string, string> = PrepareRuntimeVarsForExport(jobDefToExport.runtimeVars);
-  console.log("rtVars ------------> ", rtVars);
 
   const jobDef: Partial<JobDefSchema> = {
     name: jobDefToExport.name,
@@ -403,22 +374,123 @@ let ExportJobDefArtifacts = async (
     const srcPath: string = path.join("/", artifactsBucket, artifact.s3Path);
     const res = await s3Access.copyObject(srcPath, destPath, saascipesS3Bucket);
   }
-
-  // const tmpOutDir: string = `/tmp/saascipes/${saascipe.id.toHexString()}`;
-  // if (!fs.existsSync(tmpOutDir)) {
-  //   fs.mkdirSync(tmpOutDir, {recursive: true});
-  // }
-  // const jobDefFileName: string = "jobdef.json";
-  // const tmpOutPath: string = `${tmpOutDir}/${jobDefFileName}`;
-  // fs.writeFileSync(tmpOutPath, JSON.stringify(jobDefForExport, null, 4), "utf-8");
-
-  // let s3Path = `${saascipe.s3Path}/${jobDefFileName}`;
-  // const s3Access = new S3Access();
-  // await s3Access.uploadFile(tmpOutPath, s3Path, config.get("S3_BUCKET_SAASCIPES"));
-
-  // if (fs.existsSync(tmpOutDir)) fs.rmdirSync(tmpOutDir, {recursive: true});
 };
 export {ExportJobDefArtifacts};
 
+/**
+ * Import the given script to the given team
+ * @param _teamId
+ * @param script
+ * @param _userId
+ * @param correlationId
+ */
+let ImportScript = async (
+  _teamId: mongodb.ObjectId,
+  _userId: mongodb.ObjectId,
+  scriptToImport: Partial<ScriptSchema>,
+  correlationId: string
+): Promise<ScriptSchema> => {
+  // Try to reuse existing scripts
+  let newScriptName: string = scriptToImport.name;
+  const scripts = await scriptService.findAllScriptsInternal({_teamId, name: scriptToImport.name});
+
+  if (scripts.length > 0) {
+    if (scripts[0].code === scriptToImport.code) {
+      console.log("code matches");
+      return scripts[0];
+    }
+
+    // generate a unique script name from what's found in the db for the team
+    newScriptName = undefined;
+    const nameRegex = new RegExp("^" + scriptToImport.name + "_import_\\d+$");
+    const existingScripts = await scriptService.findAllScriptsInternal(
+      {_teamId, name: {$regex: nameRegex}},
+      "_id name"
+    );
+
+    // convert to names to a map for quick lookup
+    const existingNames = {};
+    for (let existing of existingScripts) {
+      existingNames[existing.name] = true;
+    }
+
+    for (let i = 1; i < 100; i++) {
+      const proposedNewScriptName: string = scriptToImport.name + "_import_" + i;
+      if (existingNames[proposedNewScriptName] === undefined) {
+        newScriptName = proposedNewScriptName;
+        break; // now newScriptName is unique
+      }
+    }
+
+    if (newScriptName === undefined)
+      throw new SaascipeImportError(
+        `Error importing script "${scriptToImport.name}" - this script has already been imported 100 times`
+      );
+  }
+
+  // create the new script
+  const newScriptData = {
+    name: newScriptName,
+    scriptType: scriptToImport.scriptType,
+    code: scriptToImport.code,
+    teamUsable: scriptToImport.teamUsable,
+    teamEditable: scriptToImport.teamEditable,
+    isActive: scriptToImport.isActive,
+  };
+
+  return await scriptService.createScript(_teamId, newScriptData, _userId, correlationId);
+};
+
+/**
+ * Imports a script type Saascipe into the given team
+ * @param _teamId
+ * @param _saascipeId
+ */
+let ImportScriptSaascipe = async (
+  _teamId: mongodb.ObjectId,
+  _userId: mongodb.ObjectId,
+  _saascipeVersionId: mongodb.ObjectId,
+  correlationId?: string
+) => {
+  const saascipeVersion: SaascipeVersionSchema = await saascipeVersionService.findSaascipeVersion(_saascipeVersionId);
+  if (!saascipeVersion) throw new MissingObjectError(`SaascipeVersion ${_saascipeVersionId.toHexString()} not found.`);
+
+  const saascipeDef: any = saascipeVersion.saascipeDef;
+  const scriptsImported: Array<ScriptSchema> = [];
+  const scriptIdsByOriginalName: any = {};
+  const mapRenamedScripts: Array<Array<string>> = [];
+  for (let script of saascipeDef) {
+    const scriptImported: ScriptSchema = await ImportScript(_teamId, _userId, script, correlationId);
+    scriptsImported.push(scriptImported);
+    scriptIdsByOriginalName[script.name] = scriptImported._id;
+    if (script.name != scriptIdsByOriginalName.name) mapRenamedScripts.push([script.name, scriptImported.name]);
+  }
+
+  for (let mapRenamedScript of mapRenamedScripts) {
+    const oldName: string = mapRenamedScript[0];
+    const newName: string = mapRenamedScript[1];
+    for (let script of scriptsImported) {
+      if (script.sgsElems.includes(oldName)) {
+        const scriptStr: string = SGUtils.atob(script.code);
+        const find: string = `@sgs\\("${oldName}"\\)`;
+        const re = new RegExp(find, "g");
+        const newSGSStr: string = `@sgs("${newName}")`;
+        const scriptStrNew: string = scriptStr.replace(re, newSGSStr);
+        const scriptStrNewB64: string = SGUtils.btoa(scriptStrNew);
+        const updateData: any = {code: scriptStrNewB64};
+        const scriptUpdated: ScriptSchema = await scriptService.updateScript(
+          _teamId,
+          script._id,
+          updateData,
+          _userId,
+          correlationId
+        );
+      }
+    }
+  }
+};
+export {ImportScriptSaascipe};
+
+// TODO: target agents for tasks
 // TODO: when importing scripts with @sgs references, if the referenced script already exists in the new team and it is different than
 //        the existing script, rename the imported script AND update the @sgs references with the new name
