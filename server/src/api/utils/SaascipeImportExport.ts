@@ -22,12 +22,13 @@ import {scheduleService} from "../services/ScheduleService";
 import {stepDefService} from "../services/StepDefService";
 import {taskDefService} from "../services/TaskDefService";
 
-import {RuntimeVariableFormat} from "../../shared/Enums";
+import {RuntimeVariableFormat, TaskDefTarget} from "../../shared/Enums";
 import {MissingObjectError, ValidationError, SaascipeImportError} from "../utils/Errors";
 import {S3Access} from "../../shared/S3Access";
 import {SGUtils} from "../../shared/SGUtils";
 import {bool} from "aws-sdk/clients/signer";
 import {MongoDbSettings} from "aws-sdk/clients/dms";
+import {isExpressionWithTypeArguments} from "typescript";
 
 interface IJobDefExport {
   jobDef: Partial<JobDefSchema>;
@@ -37,6 +38,15 @@ interface IJobDefExport {
   artifacts: Array<Partial<ArtifactSchema>>;
 }
 export {IJobDefExport};
+
+interface IJobDefImport {
+  jobDef: JobDefSchema;
+  schedules: Array<ScheduleSchema>;
+  taskDefs: Array<TaskDefSchema>;
+  scripts: Array<any>;
+  artifacts: Array<ArtifactSchema>;
+}
+export {IJobDefImport};
 
 const saascipesS3Bucket = config.get("S3_BUCKET_SAASCIPES");
 const artifactsBucket = config.get("S3_BUCKET_TEAM_ARTIFACTS");
@@ -172,17 +182,16 @@ let PrepareSchedulesForExport = async (
     schedulePartial.runtimeVars = [];
 
     if (scheduleToExport.FunctionKwargs.runtimeVars) {
-      const scheduleRuntimeVars: any[] = [];
+      const scheduleRuntimeVars: any = {};
       for (let runtimeVarKey of Object.keys(scheduleToExport.FunctionKwargs.runtimeVars)) {
         const runtimeVar: any = scheduleToExport.FunctionKwargs.runtimeVars[runtimeVarKey];
-        scheduleRuntimeVars.push({
-          key: runtimeVarKey,
+        scheduleRuntimeVars[runtimeVarKey] = {
           value: "*",
           sensitive: false,
           format: runtimeVar.format || RuntimeVariableFormat.TEXT,
-        });
+        };
       }
-      schedulePartial.runtimeVars.push(scheduleRuntimeVars);
+      schedulePartial.runtimeVars = scheduleRuntimeVars;
     }
 
     if (scheduleToExport.cron) {
@@ -209,7 +218,7 @@ export {PrepareSchedulesForExport};
 let PrepareStepDefsForExport = async (
   _teamId: mongodb.ObjectId,
   _taskDefId: Array<mongodb.ObjectId>
-): Promise<{stepDefs: Array<Partial<StepDefSchema>>; scripts: Array<mongodb.Objectid>}> => {
+): Promise<{stepDefs: Array<any>; scripts: Array<mongodb.Objectid>}> => {
   const stepDefs: Array<Partial<StepDefSchema>> = [];
   const scripts: Array<mongodb.Objectid> = [];
 
@@ -220,10 +229,14 @@ let PrepareStepDefsForExport = async (
 
   for (let index = 0; index < stepDefsToExport.length; index++) {
     const stepDefToExport: StepDefSchema = stepDefsToExport[index];
-    const stepDefPartial: Partial<StepDefSchema> = {
+    const scriptToExport: ScriptSchema = await scriptService.findScript(_teamId, stepDefToExport._scriptId, "name");
+    if (!scriptToExport)
+      throw new MissingObjectError(`Script with id '${stepDefToExport._scriptId.toHexString()}" not found`);
+    const stepDefPartial: any = {
       name: stepDefToExport.name,
       order: stepDefToExport.order,
       command: stepDefToExport.command,
+      scriptName: scriptToExport.name,
       arguments: stepDefToExport.arguments,
       variables: PrepareRuntimeVarsForExport(stepDefToExport.variables),
       lambdaCodeSource: stepDefToExport.lambdaCodeSource,
@@ -235,6 +248,7 @@ let PrepareStepDefsForExport = async (
       lambdaDependencies: stepDefToExport.lambdaDependencies,
       lambdaZipfile: stepDefToExport.lambdaZipfile, // todo - this is an artifact :(
     };
+
     stepDefs.push(stepDefPartial);
     if (!scripts.includes(stepDefToExport._scriptId)) scripts.push(stepDefToExport._scriptId);
   }
@@ -257,7 +271,6 @@ let PrepareTaskDefsForExport = async (
   scripts: Array<mongodb.Objectid>;
   artifacts: Array<Partial<ArtifactSchema>>;
 }> => {
-  console.log("PrepareTaskDefsForExport starting");
   const taskDefs: Array<Partial<TaskDefSchema>> = [];
   const scripts: Array<mongodb.Objectid> = [];
   const artifacts: Array<Partial<ArtifactSchema>> = [];
@@ -285,7 +298,7 @@ let PrepareTaskDefsForExport = async (
     if (taskDefToExport.artifacts) {
       for (let artifactId of taskDefToExport.artifacts) {
         const artifact: ArtifactSchema = await artifactService.findArtifact(_teamId, artifactId);
-        taskDefPartial.artifacts.push(artifact.name);
+        taskDefPartial.artifacts.push({prefix: artifact.prefix, name: artifact.name});
         artifacts.push({prefix: artifact.prefix, name: artifact.name, s3Path: artifact.s3Path});
       }
     }
@@ -357,7 +370,7 @@ let PrepareJobDefForExport = async (_teamId: mongodb.ObjectId, _jobDefId: mongod
 export {PrepareJobDefForExport};
 
 /**
- * Exports the Job SaaScipe with the given id.
+ * Exports the artifacts to the s3 folder for the given Saascipe Version.
  * @param _teamId
  * @param saascipe
  */
@@ -378,10 +391,76 @@ let ExportJobDefArtifacts = async (
 export {ExportJobDefArtifacts};
 
 /**
+ * Exports the artifacts to the s3 folder for the given Saascipe Version.
+ * @param _teamId
+ * @param _saascipeVersionId
+ * @param artifactToImport
+ * @param correlationId
+ */
+let ImportArtifact = async (
+  _teamId: mongodb.ObjectId,
+  _saascipeVersionId: mongodb.ObjectId,
+  artifactToImport: Partial<ArtifactSchema>,
+  correlationId?: string
+): Promise<ArtifactSchema> => {
+  let newArtifactName: string = artifactToImport.name;
+  const artifacts = await artifactService.findAllArtifactsInternal({
+    _teamId,
+    name: artifactToImport.name,
+    prefix: artifactToImport.prefix,
+  });
+
+  if (artifacts.length > 0) {
+    // generate a unique artifact name from what's found in the db for the team
+    newArtifactName = undefined;
+    const nameRegex = new RegExp("^" + artifactToImport.name + "_import_\\d+$");
+    const existingArtifacts = await artifactService.findAllArtifactsInternal(
+      {_teamId, name: {$regex: nameRegex}},
+      "_id name"
+    );
+
+    // convert to names to a map for quick lookup
+    const existingNames = {};
+    for (let existing of existingArtifacts) {
+      existingNames[existing.name] = true;
+    }
+
+    for (let i = 1; i < 100; i++) {
+      const proposedNewArtifactName: string = artifactToImport.name + "_import_" + i;
+      if (existingNames[proposedNewArtifactName] === undefined) {
+        newArtifactName = proposedNewArtifactName;
+        break; // now newArtifactName is unique
+      }
+    }
+
+    if (newArtifactName === undefined)
+      throw new SaascipeImportError(
+        `Error importing Artifact "${artifactToImport.name}" - this Artifact has already been imported 100 times`
+      );
+  }
+
+  const newArtifactData: any = {
+    name: newArtifactName,
+    prefix: artifactToImport.prefix,
+  };
+
+  const newArtifact: ArtifactSchema = await artifactService.createArtifact(_teamId, newArtifactData, correlationId);
+
+  const environment = config.get("environment");
+  const s3Access = new S3Access();
+  let srcPath: string = `${_saascipeVersionId.toHexString()}/${artifactToImport.name}`;
+  if (environment != "production") srcPath = environment + "/" + srcPath;
+  srcPath = saascipesS3Bucket + "/" + srcPath;
+  const res = await s3Access.copyObject(srcPath, newArtifact.s3Path, artifactsBucket);
+  return newArtifact;
+};
+export {ImportArtifact};
+
+/**
  * Import the given script to the given team
  * @param _teamId
- * @param script
  * @param _userId
+ * @param script
  * @param correlationId
  */
 let ImportScript = async (
@@ -442,24 +521,22 @@ let ImportScript = async (
 };
 
 /**
- * Imports a script type Saascipe into the given team
+ * Imports the given scripts into the given team
  * @param _teamId
- * @param _saascipeId
+ * @param _userId
+ * @param scripts
+ * @param correlationId?
  */
-let ImportScriptSaascipe = async (
+let ImportScripts = async (
   _teamId: mongodb.ObjectId,
   _userId: mongodb.ObjectId,
-  _saascipeVersionId: mongodb.ObjectId,
+  scripts: Array<Partial<ScriptSchema>>,
   correlationId?: string
-) => {
-  const saascipeVersion: SaascipeVersionSchema = await saascipeVersionService.findSaascipeVersion(_saascipeVersionId);
-  if (!saascipeVersion) throw new MissingObjectError(`SaascipeVersion ${_saascipeVersionId.toHexString()} not found.`);
-
-  const saascipeDef: any = saascipeVersion.saascipeDef;
+): Promise<any> => {
   const scriptsImported: Array<ScriptSchema> = [];
   const scriptIdsByOriginalName: any = {};
   const mapRenamedScripts: Array<Array<string>> = [];
-  for (let script of saascipeDef) {
+  for (let script of scripts) {
     const scriptImported: ScriptSchema = await ImportScript(_teamId, _userId, script, correlationId);
     scriptsImported.push(scriptImported);
     scriptIdsByOriginalName[script.name] = scriptImported._id;
@@ -488,9 +565,320 @@ let ImportScriptSaascipe = async (
       }
     }
   }
+
+  return scriptIdsByOriginalName;
+};
+
+/**
+ * Imports a script type Saascipe into the given team
+ * @param _teamId
+ * @param _userId
+ * @param _saascipeId
+ * @param correlationId
+ */
+let ImportScriptSaascipe = async (
+  _teamId: mongodb.ObjectId,
+  _userId: mongodb.ObjectId,
+  _saascipeVersionId: mongodb.ObjectId,
+  correlationId?: string
+) => {
+  const saascipeVersion: SaascipeVersionSchema = await saascipeVersionService.findSaascipeVersion(_saascipeVersionId);
+  if (!saascipeVersion) throw new MissingObjectError(`SaascipeVersion ${_saascipeVersionId.toHexString()} not found.`);
+
+  const saascipeDef: any = saascipeVersion.saascipeDef;
+  await ImportScripts(_teamId, _userId, saascipeDef, correlationId);
 };
 export {ImportScriptSaascipe};
 
+/**
+ * Import the given JobDef to the given team.
+ * @param _teamId
+ * @param jobDef
+ * @param _userId
+ * @param correlationId
+ */
+let ImportJobDef = async (
+  _teamId: mongodb.ObjectId,
+  _userId: mongodb.ObjectId,
+  jobDef: Partial<JobDefSchema>,
+  correlationId?: string
+) => {
+  let newJobDefName: string = jobDef.name;
+  const jobDefs = await jobDefService.findAllJobDefsInternal({_teamId, name: jobDef.name});
+
+  if (jobDefs.length > 0) {
+    // generate a unique jobDef name from what's found in the db for the team
+    newJobDefName = undefined;
+    const nameRegex = new RegExp("^" + jobDef.name + "_import_\\d+$");
+    const existingJobDefs = await jobDefService.findAllJobDefsInternal(
+      {_teamId, name: {$regex: nameRegex}},
+      "_id name"
+    );
+
+    // convert to names to a map for quick lookup
+    const existingNames = {};
+    for (let existing of existingJobDefs) {
+      existingNames[existing.name] = true;
+    }
+
+    for (let i = 1; i < 100; i++) {
+      const proposedNewJobDefName: string = jobDef.name + "_import_" + i;
+      if (existingNames[proposedNewJobDefName] === undefined) {
+        newJobDefName = proposedNewJobDefName;
+        break; // now newJobDefName is unique
+      }
+    }
+
+    if (newJobDefName === undefined)
+      throw new SaascipeImportError(
+        `Error importing JobDef "${jobDef.name}" - this JobDef has already been imported 100 times`
+      );
+  }
+
+  // now that the name is unique (case senstive) you can create the new job def
+  const newJobDefData: any = {
+    name: newJobDefName,
+    createdBy: _userId,
+    version: "0.0",
+    maxInstances: jobDef.maxInstances,
+    misFireGraceTime: jobDef.misfireGraceTime,
+    coalesce: jobDef.coalesce,
+    pauseOnFailedJob: jobDef.pauseOnFailedJob,
+    runtimeVars: jobDef.runtimeVars,
+  };
+
+  return await jobDefService.createJobDef(_teamId, newJobDefData, correlationId);
+};
+
+/**
+ * Import the given schedules to the given team.
+ * @param _teamId
+ * @param _userId
+ * @param _jobDefId
+ * @param schedulesToImport
+ * @param correlationId
+ * @returns
+ */
+let ImportSchedules = async (
+  _teamId: mongodb.ObjectId,
+  _userId: mongodb.ObjectId,
+  _jobDefId: mongodb.ObjectId,
+  schedulesToImport: Array<any>,
+  correlationId?: string
+): Promise<Array<ScheduleSchema>> => {
+  const schedules: Array<ScheduleSchema> = [];
+  for (let schedule of schedulesToImport) {
+    const newScheduleData: any = {
+      _jobDefId,
+      createdBy: _userId,
+      lastUpdatedBy: _userId,
+      TriggerType: schedule.TriggerType,
+      name: schedule.name,
+      isActive: schedule.isActive,
+      misfire_grace_time: schedule.misfire_grace_time,
+      coalesce: schedule.coalesce,
+      max_instances: schedule.max_instances,
+      RunDate: schedule.RunDate,
+      FunctionKwargs: {
+        _teamId,
+        targetId: _jobDefId,
+        runtimeVars: schedule.runtimeVars,
+      },
+    };
+
+    if (schedule.cron) newScheduleData.cron = schedule.cron;
+    if (schedule.interval) newScheduleData.interval = schedule.interval;
+
+    const newSchedule: ScheduleSchema = await scheduleService.createSchedule(_teamId, newScheduleData, correlationId);
+    schedules.push(newSchedule);
+  }
+
+  return schedules;
+};
+
+/**
+ * Import the given TaskDefs to the given team.
+ * @param _teamId
+ * @param _userId
+ * @param _jobDefId
+ * @param taskDefsToImport
+ * @param correlationId
+ * @returns
+ */
+let ImportTaskDefs = async (
+  _teamId: mongodb.ObjectId,
+  _userId: mongodb.ObjectId,
+  _jobDefId: mongodb.ObjectId,
+  taskDefsToImport: Array<any>,
+  scriptIdsByOriginalName: any,
+  correlationId?: string
+): Promise<[Array<TaskDefSchema>, Array<StepDefSchema>]> => {
+  const taskDefs: Array<TaskDefSchema> = [];
+  const stepDefs: Array<StepDefSchema> = [];
+
+  for (let taskDefToImport of taskDefsToImport) {
+    const artifactIds: Array<mongodb.ObjectId> = [];
+    for (let artifact of taskDefToImport.artifacts) {
+      const artifactsExisting: Array<ArtifactSchema> = await artifactService.findAllArtifactsInternal(
+        {
+          _teamId,
+          prefix: artifact.prefix,
+          name: artifact.name,
+        },
+        "_id"
+      );
+      if (artifactsExisting.length > 0) artifactIds.push(artifactsExisting[0]._id.toHexString());
+    }
+    const newTaskDefData: any = {
+      _jobDefId,
+      target: taskDefToImport.target,
+      name: taskDefToImport.name,
+      order: taskDefToImport.order,
+      requiredTags: taskDefToImport.requiredTags,
+      fromRoutes: taskDefToImport.fromRoutes,
+      toRoutes: taskDefToImport.toRoutes,
+      expectedValues: taskDefToImport.expectedValues,
+      autoRestart: taskDefToImport.autoRestart,
+      exportWarnings: [],
+      artifacts: artifactIds,
+    };
+
+    const newTaskDef: TaskDefSchema = await taskDefService.createTaskDef(_teamId, newTaskDefData, correlationId);
+    taskDefs.push(newTaskDef);
+
+    if (taskDefToImport.target == TaskDefTarget.AWS_LAMBDA) {
+      if (taskDefToImport.stepDefs.length < 1) {
+        // TODO: better error handling
+        console.error(`Error, for some reason the importer was passed an aws lambda task without a step def`);
+      } else {
+        const stepDefToImport: any = taskDefToImport.stepDefs[0];
+        const stepDefs: StepDefSchema[] = await stepDefService.findAllStepDefsInternal({_taskDefId: newTaskDef._id});
+        if (stepDefs.length > 0) {
+          const stepDef: StepDefSchema = stepDefs[0];
+          const newStepDefData: any = {
+            name: stepDefToImport.name,
+            order: stepDefToImport.order,
+            command: stepDefToImport.command,
+            arguments: stepDefToImport.arguments,
+            variables: stepDefToImport.variables,
+
+            lambdaCodeSource: stepDefToImport.lambdaCodeSource,
+
+            lambdaRuntime: stepDefToImport.lambdaRuntime,
+            lambdaMemorySize: stepDefToImport.lambdaMemorySize,
+            lambdaTimeout: stepDefToImport.lambdaTimeout,
+            lambdaFunctionHandler: stepDefToImport.lambdaFunctionHandler,
+            lambdaAWSRegion: stepDefToImport.lambdaAWSRegion,
+            lambdaDependencies: stepDefToImport.lambdaDependencies,
+
+            lambdaZipfile: stepDefToImport.lambdaZipfile, // todo - this won't work right now across teams coz artifacts and blah blah blah
+          };
+
+          if (stepDefToImport.scriptName) {
+            if (scriptIdsByOriginalName[stepDefToImport.scriptName]) {
+              newStepDefData._scriptId = scriptIdsByOriginalName[stepDefToImport.scriptName];
+            } else {
+              // TODO: better error handling
+              console.error(
+                `Error, when importing a lambda stepDef that referenced script name "${stepDefToImport.scriptName}" the script was not found on import!!`
+              );
+            }
+          }
+
+          const newStepDef: StepDefSchema = await stepDefService.updateStepDef(
+            _teamId,
+            stepDef._id,
+            newStepDefData,
+            correlationId
+          );
+          stepDefs.push(newStepDef);
+        } else {
+          // TODO: better error handling
+          console.error(`Error, Unable to locate the AWS Lambda step def on import for task def id ${newTaskDef._id}`);
+        }
+      }
+    } else {
+      for (let stepDefToImport of taskDefToImport.stepDefs) {
+        const newStepDefData: any = {
+          _taskDefId: newTaskDef._id,
+          name: stepDefToImport.name,
+          order: stepDefToImport.order,
+          command: stepDefToImport.command,
+          arguments: stepDefToImport.arguments,
+          variables: stepDefToImport.variables,
+        };
+
+        if (stepDefToImport.scriptName) {
+          if (scriptIdsByOriginalName[stepDefToImport.scriptName]) {
+            newStepDefData._scriptId = scriptIdsByOriginalName[stepDefToImport.scriptName];
+          } else {
+            // TODO: better error handling
+            console.error(
+              `Error, when importing a lambda stepDef that referenced script name "${stepDefToImport.scriptName}" the script was not found on import!!`
+            );
+          }
+        }
+
+        const newStepDef: StepDefSchema = await stepDefService.createStepDef(_teamId, newStepDefData, correlationId);
+        stepDefs.push(newStepDef);
+      }
+    }
+  }
+
+  return [taskDefs, stepDefs];
+};
+
+/**
+ * Imports a script type Saascipe into the given team
+ * @param _teamId
+ * @param _userId
+ * @param _saascipeId
+ * @param correlationId
+ */
+let ImportJobSaascipe = async (
+  _teamId: mongodb.ObjectId,
+  _userId: mongodb.ObjectId,
+  _saascipeVersionId: mongodb.ObjectId,
+  correlationId?: string
+): Promise<IJobDefImport> => {
+  const saascipeVersion: SaascipeVersionSchema = await saascipeVersionService.findSaascipeVersion(_saascipeVersionId);
+  if (!saascipeVersion) throw new MissingObjectError(`SaascipeVersion ${_saascipeVersionId.toHexString()} not found.`);
+
+  const saascipeDef: any = saascipeVersion.saascipeDef;
+  const scriptIdsByOriginalName: any = await ImportScripts(_teamId, _userId, saascipeDef.scripts, correlationId);
+
+  const createdJobDef: JobDefSchema = await ImportJobDef(_teamId, _userId, saascipeDef.jobDef, correlationId);
+
+  const createdSchedules: Array<ScheduleSchema> = await ImportSchedules(
+    _teamId,
+    _userId,
+    createdJobDef._id,
+    saascipeDef.schedules
+  );
+
+  const artifactsImported: Array<ArtifactSchema> = [];
+  for (let artifact of saascipeDef.artifacts) {
+    const res: ArtifactSchema = await ImportArtifact(_teamId, _saascipeVersionId, artifact, correlationId);
+    artifactsImported.push(res);
+  }
+
+  const importTaskDefResults: [Array<TaskDefSchema>, Array<StepDefSchema>] = await ImportTaskDefs(
+    _teamId,
+    _userId,
+    createdJobDef._id,
+    saascipeDef.taskDefs,
+    scriptIdsByOriginalName,
+    correlationId
+  );
+
+  return {
+    jobDef: createdJobDef,
+    schedules: createdSchedules,
+    taskDefs: importTaskDefResults[0],
+    scripts: scriptIdsByOriginalName,
+    artifacts: artifactsImported,
+  };
+};
+export {ImportJobSaascipe};
+
 // TODO: target agents for tasks
-// TODO: when importing scripts with @sgs references, if the referenced script already exists in the new team and it is different than
-//        the existing script, rename the imported script AND update the @sgs references with the new name

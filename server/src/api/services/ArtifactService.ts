@@ -11,7 +11,7 @@ import * as config from "config";
 import {FreeTierChecks} from "../../shared/FreeTierChecks";
 
 export class ArtifactService {
-  public async findAllArtifactsInternal(filter?: any, responseFields?: string) {
+  public async findAllArtifactsInternal(filter?: any, responseFields?: string): Promise<Array<ArtifactSchema>> {
     return ArtifactModel.find(filter).select(responseFields);
   }
 

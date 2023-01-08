@@ -11,6 +11,7 @@ import {JobSchema} from "../api/domain/Job";
 import {JobDefSchema} from "../api/domain/JobDef";
 import {SaascipeSchema} from "../api/domain/Saascipe";
 import {SaascipeVersionSchema} from "../api/domain/SaascipeVersion";
+import {ScheduleSchema} from "../api/domain/Schedule";
 import {ScriptSchema} from "../api/domain/Script";
 import {SettingsSchema} from "../api/domain/Settings";
 import {StepDefSchema} from "../api/domain/StepDef";
@@ -25,6 +26,7 @@ import {jobService} from "../api/services/JobService";
 import {jobDefService} from "../api/services/JobDefService";
 import {saascipeService} from "../api/services/SaascipeService";
 import {saascipeVersionService} from "../api/services/SaascipeVersionService";
+import {scheduleService} from "../api/services/ScheduleService";
 import {scriptService} from "../api/services/ScriptService";
 import {settingsService} from "../api/services/SettingsService";
 import {stepDefService} from "../api/services/StepDefService";
@@ -175,6 +177,15 @@ let StepDefTemplate: any = {
 };
 export {StepDefTemplate};
 
+let ScheduleTemplate: any = {
+  name: "Schedule 1",
+  TriggerType: "cron",
+  cron: {
+    Hour: "1",
+  },
+};
+export {ScheduleTemplate};
+
 /**
  * Creates a settings schema based on the template
  * @returns {Promise<SettingsSchema>}
@@ -273,10 +284,22 @@ let CreateJobDefFromTemplate = async (_teamId: mongodb.ObjectId, properties: any
 };
 
 /**
+ * Creates a schedule schema with the given json formatted properties
+ * @param _teamId
+ * @param properties
+ * @returns {Promise<ScheduleSchema>}
+ */
+let CreateScheduleFromTemplate = async (_teamId: mongodb.ObjectId, properties: any): Promise<ScheduleSchema> => {
+  let scheduleTemplate: ScheduleSchema = _.clone(ScheduleTemplate);
+  Object.assign(scheduleTemplate, properties);
+  return await scheduleService.createSchedule(_teamId, scheduleTemplate, "");
+};
+
+/**
  * Creates a taskdef schema with the given json formatted properties
  * @param _teamId
  * @param properties
- * @returns {Promise<JobDefSchema>}
+ * @returns {Promise<TaskDefSchema>}
  */
 let CreateTaskDefFromTemplate = async (_teamId: mongodb.ObjectId, properties: any): Promise<TaskDefSchema> => {
   let taskDefTemplate: TaskDefSchema = _.clone(TaskDefTemplate);
@@ -288,7 +311,7 @@ let CreateTaskDefFromTemplate = async (_teamId: mongodb.ObjectId, properties: an
  * Creates a stepdef schema with the given json formatted properties
  * @param _teamId
  * @param properties
- * @returns {Promise<JobDefSchema>}
+ * @returns {Promise<StepDefSchema>}
  */
 let CreateStepDefFromTemplate = async (_teamId: mongodb.ObjectId, properties: any): Promise<StepDefSchema> => {
   let stepDefTemplate: StepDefSchema = _.clone(StepDefTemplate);
@@ -300,20 +323,25 @@ let CreateStepDefFromTemplate = async (_teamId: mongodb.ObjectId, properties: an
  * Creates job defs using the given json formatted properties
  * @param _teamId
  * @param properties
- * @returns { scripts: ScriptSchema[]; jobDefs: JobDefSchema[] }
+ * @returns { scripts: ScriptSchema[]; jobDefs: Map<string, JobDefSchema>[]; schedules: ScheduleSchema }
  */
 let CreateJobDefsFromTemplates = async (
   _teamId: mongodb.ObjectId,
   _userId: mongodb.ObjectId,
   properties: any
-): Promise<{scripts: Array<ScriptSchema>; jobDefs: Map<string, JobDefSchema>}> => {
-  let scripts: Array<ScriptSchema> = [];
+): Promise<{
+  scripts: Map<string, ScriptSchema>;
+  jobDefs: Map<string, JobDefSchema>;
+  schedules: Array<ScheduleSchema>;
+}> => {
+  let scripts: Map<string, ScriptSchema> = new Map([]);
   for (let scriptProperties of properties.scripts) {
     const script = await CreateScriptFromTemplate(_teamId, _userId, scriptProperties);
     scripts[script.name] = script;
   }
 
   let jobDefs: Map<string, JobDefSchema> = new Map([]);
+  let schedules: Array<ScheduleSchema> = [];
   for (let jobDefProperties of properties.jobDefs) {
     const jobDef = convertResponseData(JobDefSchema, await CreateJobDefFromTemplate(_teamId, jobDefProperties));
     jobDef.taskDefs = {};
@@ -342,8 +370,18 @@ let CreateJobDefsFromTemplates = async (
 
       jobDefs[jobDef.name] = jobDef;
     }
+
+    for (let scheduleProperties of properties.schedules) {
+      scheduleProperties._jobDefId = jobDef.id;
+      scheduleProperties.lastUpdatedBy = _userId;
+      scheduleProperties.createdBy = _userId;
+      scheduleProperties.FunctionKwargs._teamId = _teamId;
+      scheduleProperties.FunctionKwargs.targetId = jobDef.id;
+      let schedule: ScheduleSchema = await CreateScheduleFromTemplate(_teamId, scheduleProperties);
+      schedules.push(schedule);
+    }
   }
-  return {scripts, jobDefs};
+  return {scripts, jobDefs, schedules};
 };
 export {CreateJobDefsFromTemplates};
 /**

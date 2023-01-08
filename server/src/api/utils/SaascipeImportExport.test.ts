@@ -9,15 +9,22 @@ import {JobDefSchema} from "../domain/JobDef";
 import {SaascipeSchema} from "../domain/Saascipe";
 import {SaascipeVersionSchema} from "../domain/SaascipeVersion";
 import {ScriptSchema} from "../domain/Script";
+import {StepDefSchema} from "../domain/StepDef";
+import {ScheduleSchema} from "../domain/Schedule";
+import {TaskDefSchema} from "../domain/TaskDef";
 import {TeamSchema} from "../domain/Team";
 
 import {scriptService} from "../services/ScriptService";
+import {scheduleService} from "../services/ScheduleService";
+import {stepDefService} from "../services/StepDefService";
+import {taskDefService} from "../services/TaskDefService";
 
 import {RuntimeVariableFormat, SaascipeType, TaskDefTarget} from "../../shared/Enums";
 import {
   ExportJobDefArtifacts,
   IJobDefExport,
   ImportScriptSaascipe,
+  ImportJobSaascipe,
   PrepareJobDefForExport,
   PrepareScriptForExport,
 } from "./SaascipeImportExport";
@@ -36,12 +43,19 @@ import {
   CreateSettingsFromTemplate,
   CreateTeamFromTemplate,
 } from "../../test_helpers/TestArtifacts";
-import {validateArrayLength, validateEquality} from "../../test_helpers/Validators";
+import {
+  validateArrayLength,
+  validateDeepEquality,
+  validateEquality,
+  validateObjectMatch,
+} from "../../test_helpers/Validators";
 
 import * as Enums from "../../shared/Enums";
+import {jobDefService} from "../services/JobDefService";
 
 const testName = "SaascipeImportExportTest";
 const saascipesS3Bucket = config.get("S3_BUCKET_SAASCIPES");
+const artifactsBucket = config.get("S3_BUCKET_TEAM_ARTIFACTS");
 
 let logger;
 
@@ -190,8 +204,10 @@ describe("SaaScipe Script export/import tests", () => {
 });
 
 describe("SaaScipe JobDef exporter tests", () => {
-  let _teamId: mongodb.ObjectId;
-  const _userId: mongodb.ObjectId = new mongodb.ObjectId();
+  let _exportTeamId: mongodb.ObjectId = new mongodb.ObjectId();
+  let _importTeamId: mongodb.ObjectId = new mongodb.ObjectId();
+  const _exportUserId: mongodb.ObjectId = new mongodb.ObjectId();
+  const _importUserId: mongodb.ObjectId = new mongodb.ObjectId();
   const _saascipeId: mongodb.ObjectId = new mongodb.ObjectId();
   const _saascipeVersionId: mongodb.ObjectId = new mongodb.ObjectId();
   const saascipeDescription: string = "Version 0.1 - the first version";
@@ -201,17 +217,26 @@ describe("SaaScipe JobDef exporter tests", () => {
   let artifacts: ArtifactSchema[] = [];
   const environment = config.get("environment");
   let s3Path: string;
-  let team: TeamSchema;
+  let exportTeam: TeamSchema;
+  let importTeam: TeamSchema;
   let jobDefs: Map<string, JobDefSchema>;
+  let scripts: Map<string, ScriptSchema>;
+  let schedules: Array<ScheduleSchema>;
   let saascipes: {[key: string]: SaascipeSchema} = {};
   let saascipeTemplates: any[];
+  let scriptTemplates: any[];
   let saascipeVersionTemplates: any[];
+  let scheduleTemplates: any[];
+  let jobDefTemplates: any;
+  const correlationId: string = "";
 
   beforeAll(async () => {
     await CreateSettingsFromTemplate();
-    team = await CreateTeamFromTemplate(_userId, {}, logger);
-    _teamId = team.id;
-    s3Path = `${_teamId.toHexString()}/jobdef/${_saascipeId.toHexString()}`;
+    exportTeam = await CreateTeamFromTemplate(_exportUserId, {name: "Test Team 1"}, logger);
+    _exportTeamId = exportTeam.id;
+    importTeam = await CreateTeamFromTemplate(_importUserId, {name: "Test Team 2"}, logger);
+    _importTeamId = importTeam.id;
+    s3Path = `${_exportTeamId.toHexString()}/jobdef/${_saascipeId.toHexString()}`;
     if (environment != "production") s3Path = environment + "/" + s3Path;
 
     const script1 = `
@@ -223,7 +248,7 @@ describe("SaaScipe JobDef exporter tests", () => {
         console.log('Hello Again!');
         `;
     const scriptCodeB64_2: string = SGUtils.btoa(script2);
-    const scriptTemplates: any[] = [
+    scriptTemplates = [
       {
         name: scriptName_1,
         scriptType: Enums.ScriptType.NODE,
@@ -250,15 +275,30 @@ describe("SaaScipe JobDef exporter tests", () => {
     const artifactPath: string = `${workingDir}/${artifactTemplate.name}`;
     writeFileSync(artifactPath, "hello world");
     const compressedArtifactPath = await SGUtils.GzipFile(artifactPath);
-    const artifact: ArtifactSchema = await CreateArtifact(_teamId, artifactTemplate, compressedArtifactPath);
+    const artifact: ArtifactSchema = await CreateArtifact(_exportTeamId, artifactTemplate, compressedArtifactPath);
     artifacts.push(artifact);
     unlinkSync(artifactPath);
 
-    const templates: any = {
+    scheduleTemplates = [
+      {
+        FunctionKwargs: {
+          runtimeVars: {
+            rtVar1: {
+              value: "schedule_param_1",
+              sensitive: true,
+              format: RuntimeVariableFormat.YAML,
+            },
+          },
+        },
+      },
+    ];
+
+    jobDefTemplates = {
       scripts: scriptTemplates,
+      schedules: scheduleTemplates,
       jobDefs: [
         {
-          _teamId,
+          _teamId: _exportTeamId,
           name: jobDefName,
           maxInstances: 10,
           misfireGraceTime: 60,
@@ -298,28 +338,33 @@ describe("SaaScipe JobDef exporter tests", () => {
       ],
     };
 
-    const createJobDefsResult: {scripts: Array<ScriptSchema>; jobDefs: Map<string, JobDefSchema>} =
-      await CreateJobDefsFromTemplates(_teamId, _userId, templates);
+    const createJobDefsResult: {
+      scripts: Map<string, ScriptSchema>;
+      jobDefs: Map<string, JobDefSchema>;
+      schedules: Array<ScheduleSchema>;
+    } = await CreateJobDefsFromTemplates(_exportTeamId, _exportUserId, jobDefTemplates);
     jobDefs = createJobDefsResult.jobDefs;
+    scripts = createJobDefsResult.scripts;
+    schedules = createJobDefsResult.schedules;
 
     saascipeTemplates = [
       {
         _id: _saascipeId,
-        _publisherTeamId: _teamId,
-        _publisherUserId: _userId,
+        _publisherTeamId: _exportTeamId,
+        _publisherUserId: _exportUserId,
         _sourceId: jobDefs[jobDefName].id,
         name: "Job 1",
         saascipeType: SaascipeType.JOB,
         description: "Job for unit test",
       },
     ];
-    saascipes = await CreateSaascipes(_teamId, saascipeTemplates);
+    saascipes = await CreateSaascipes(_exportTeamId, saascipeTemplates);
 
     saascipeVersionTemplates = [
       {
         _id: _saascipeVersionId,
-        _publisherTeamId: _teamId,
-        _publisherUserId: _userId,
+        _publisherTeamId: _exportTeamId,
+        _publisherUserId: _exportUserId,
         _saascipeId: _saascipeId,
         description: saascipeDescription,
       },
@@ -329,13 +374,16 @@ describe("SaaScipe JobDef exporter tests", () => {
   test("Export saascipe JobDef test", async () => {
     const saascipe: SaascipeSchema = saascipes[_saascipeId.toHexString()];
 
-    const saascipeDef: IJobDefExport = await PrepareJobDefForExport(_teamId, saascipe._sourceId);
-    const templates: any[] = _.cloneDeep(saascipeVersionTemplates);
-    templates[0]["saascipeDef"] = saascipeDef;
+    const saascipeDef: IJobDefExport = await PrepareJobDefForExport(_exportTeamId, saascipe._sourceId);
+    const saascipeVersionTemplatesCopy: any[] = _.cloneDeep(saascipeVersionTemplates);
+    saascipeVersionTemplatesCopy[0]["saascipeDef"] = saascipeDef;
 
-    const saascipeVersions: {[key: string]: SaascipeVersionSchema} = await CreateSaascipeVersions(_teamId, templates);
+    const saascipeVersions: {[key: string]: SaascipeVersionSchema} = await CreateSaascipeVersions(
+      _exportTeamId,
+      saascipeVersionTemplatesCopy
+    );
 
-    await ExportJobDefArtifacts(_teamId, saascipeDef.artifacts, templates[0]);
+    await ExportJobDefArtifacts(_exportTeamId, saascipeDef.artifacts, saascipeVersionTemplatesCopy[0]);
 
     const s3Access = new S3Access();
     const saascipeTemplate: any = _.cloneDeep(saascipeTemplates)[0];
@@ -378,7 +426,103 @@ describe("SaaScipe JobDef exporter tests", () => {
         if (environment != "production") destPath = environment + "/" + destPath;
         validateEquality(await s3Access.objectExists(destPath, saascipesS3Bucket), true);
       }
+
+      await ImportJobSaascipe(_importTeamId, _importUserId, _saascipeVersionId, correlationId);
+
+      const importScripts: Array<ScriptSchema> = await scriptService.findAllScriptsInternal({
+        _teamId: _importTeamId,
+      });
+      validateArrayLength(importScripts, scriptTemplates.length);
+      for (let scriptTemplate of scriptTemplates) {
+        const importScriptMatch = _.filter(importScripts, (s) => s.name == scriptTemplate.name);
+        validateArrayLength(importScriptMatch, 1);
+        const importScript: ScriptSchema = importScriptMatch[0];
+        validateEquality(importScript._teamId.toHexString(), _importTeamId.toHexString());
+        validateEquality(importScript.scriptType, scriptTemplate.scriptType);
+        validateEquality(importScript.code, scriptTemplate.code);
+        validateEquality(importScript._originalAuthorUserId.toHexString(), _importUserId.toHexString());
+        validateEquality(importScript._lastEditedUserId.toHexString(), _importUserId.toHexString());
+      }
+
+      const importJobDefs: Array<JobDefSchema> = await jobDefService.findAllJobDefsInternal({
+        _teamId: _importTeamId,
+      });
+      validateArrayLength(importJobDefs, 1);
+      validateEquality(importJobDefs[0].name, jobDefName);
+      validateEquality(importJobDefs[0]._teamId.toHexString(), _importTeamId.toHexString());
+      validateEquality(importJobDefs[0].createdBy.toHexString(), _importUserId.toHexString());
+      validateEquality(importJobDefs[0].lastRunId, 0);
+      validateEquality(importJobDefs[0].maxInstances, jobDefTemplates.jobDefs[0].maxInstances);
+      validateEquality(importJobDefs[0].coalesce, jobDefTemplates.jobDefs[0].coalesce);
+      validateEquality(importJobDefs[0].pauseOnFailedJob, jobDefTemplates.jobDefs[0].pauseOnFailedJob);
+      validateArrayLength(Object.keys(importJobDefs[0].runtimeVars), 1);
+      validateEquality(importJobDefs[0].runtimeVars.rtVar1.value, "*");
+      validateEquality(importJobDefs[0].runtimeVars.rtVar1.sensitive, false);
+      validateEquality(importJobDefs[0].runtimeVars.rtVar1.format, "plaintext");
+
+      const importTaskDefs: Array<TaskDefSchema> = await taskDefService.findAllTaskDefsInternal({
+        _teamId: _importTeamId,
+      });
+      validateArrayLength(importTaskDefs, 1);
+      validateEquality(importTaskDefs[0]._teamId.toHexString(), _importTeamId.toHexString());
+      validateEquality(importTaskDefs[0]._jobDefId.toHexString(), importJobDefs[0]._id.toHexString());
+      validateEquality(importTaskDefs[0].name, jobDefTemplates.jobDefs[0].taskDefs[0].name);
+      validateEquality(importTaskDefs[0].order, jobDefTemplates.jobDefs[0].taskDefs[0].order);
+      validateEquality(
+        importTaskDefs[0].requiredTags.tagKey,
+        jobDefTemplates.jobDefs[0].taskDefs[0].requiredTags.tagKey
+      );
+      validateDeepEquality(importTaskDefs[0].fromRoutes, jobDefTemplates.jobDefs[0].taskDefs[0].fromRoutes);
+      validateDeepEquality(importTaskDefs[0].toRoutes, jobDefTemplates.jobDefs[0].taskDefs[0].toRoutes);
+
+      const importStepDefs: Array<StepDefSchema> = await stepDefService.findAllStepDefsInternal({
+        _teamId: _importTeamId,
+      });
+      validateArrayLength(importStepDefs, 1);
+      validateEquality(importStepDefs[0]._teamId.toHexString(), _importTeamId.toHexString());
+      validateEquality(importStepDefs[0]._taskDefId.toHexString(), importTaskDefs[0]._id.toHexString());
+      validateEquality(importStepDefs[0].name, jobDefTemplates.jobDefs[0].taskDefs[0].stepDefs[0].name);
+      validateEquality(importStepDefs[0].order, jobDefTemplates.jobDefs[0].taskDefs[0].stepDefs[0].order);
+      validateEquality(importStepDefs[0].command, jobDefTemplates.jobDefs[0].taskDefs[0].stepDefs[0].command);
+      validateEquality(importStepDefs[0].arguments, jobDefTemplates.jobDefs[0].taskDefs[0].stepDefs[0].arguments);
+
+      const importSchedules: Array<ScheduleSchema> = await scheduleService.findAllSchedulesInternal({
+        _teamId: _importTeamId,
+      });
+      validateArrayLength(importSchedules, scheduleTemplates.length);
+      for (let schedule of schedules) {
+        const importScheduleMatch = _.filter(importSchedules, (s) => s.name == schedule.name);
+        validateArrayLength(importScheduleMatch, 1);
+        const importSchedule: ScheduleSchema = importScheduleMatch[0];
+        validateEquality(importSchedule._teamId.toHexString(), _importTeamId.toHexString());
+        validateEquality(importSchedule._jobDefId.toHexString(), importJobDefs[0]._id.toHexString());
+        validateEquality(importSchedule.isActive, schedule.isActive);
+        validateEquality(importSchedule.TriggerType, schedule.TriggerType);
+        validateDeepEquality(importSchedule.cron, schedule.cron);
+        validateEquality(importSchedule.createdBy.toHexString(), _importUserId.toHexString());
+        validateEquality(importSchedule.lastUpdatedBy.toHexString(), _importUserId.toHexString());
+        validateEquality(importSchedule.FunctionKwargs._teamId.toHexString(), _importTeamId.toHexString());
+        validateEquality(importSchedule.FunctionKwargs.targetId.toHexString(), importJobDefs[0]._id.toHexString());
+        for (let rtVar of Object.keys(schedule.FunctionKwargs.runtimeVars)) {
+          expect(Object.keys(importSchedule.FunctionKwargs.runtimeVars)).toEqual(expect.arrayContaining([rtVar]));
+          validateEquality(importSchedule.FunctionKwargs.runtimeVars[rtVar].value, "*");
+          validateEquality(importSchedule.FunctionKwargs.runtimeVars[rtVar].sensitive, false);
+          validateEquality(
+            importSchedule.FunctionKwargs.runtimeVars[rtVar].format,
+            schedule.FunctionKwargs.runtimeVars[rtVar].format
+          );
+        }
+      }
+
       await s3Access.emptyS3Folder(saascipeVersionMatch.s3Path, saascipesS3Bucket);
+
+      let exportArtifactsPath = `${_exportTeamId.toHexString()}/`;
+      if (environment != "production") exportArtifactsPath = environment + "/" + exportArtifactsPath;
+      await s3Access.emptyS3Folder(exportArtifactsPath, artifactsBucket);
+
+      let importArtifactsPath = `${_importTeamId.toHexString()}/`;
+      if (environment != "production") importArtifactsPath = environment + "/" + importArtifactsPath;
+      await s3Access.emptyS3Folder(importArtifactsPath, artifactsBucket);
     }
   });
 

@@ -95,7 +95,7 @@ export class StepDefService {
     data: any,
     correlationId: string,
     responseFields?: string
-  ): Promise<object> {
+  ): Promise<StepDefSchema> {
     const filter = {_id: id, _teamId};
     const origStepDef = await StepDefModel.findOne(filter);
     if (!origStepDef)

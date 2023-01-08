@@ -20,8 +20,11 @@ export class S3Access {
         Bucket: bucket,
         Key: s3Path,
       };
-      s3.getObject(params, (err, data) => {
-        if (err) console.error(err);
+      s3.getObject(params, (s3Err, data) => {
+        if (s3Err) {
+          reject(s3Err);
+          return;
+        }
         fs.writeFileSync(filePath, data.Body.toString());
         console.log(`${filePath} successfully downloaded`);
         resolve(true);
@@ -31,8 +34,11 @@ export class S3Access {
 
   async uploadFile(filePath: string, s3Path: string, bucket: string) {
     return new Promise((resolve, reject) => {
-      fs.readFile(filePath, (err, data) => {
-        if (err) reject(err);
+      fs.readFile(filePath, (s3Err, data) => {
+        if (s3Err) {
+          reject(s3Err);
+          return;
+        }
 
         const params = {
           Bucket: bucket,
@@ -43,7 +49,10 @@ export class S3Access {
         // let options = {partSize: 10 * 1024 * 1024, queueSize: 1};
         let options = {};
         s3.upload(params, options, (s3Err, data) => {
-          if (s3Err) reject(s3Err);
+          if (s3Err) {
+            reject(s3Err);
+            return;
+          }
           console.log(`File uploaded successfully to ${data.Location}`);
           resolve(true);
         });
@@ -51,17 +60,22 @@ export class S3Access {
     });
   }
 
-  async copyObject(srcPath: string, destPath: string, bucket: string) {
+  async copyObject(srcPath: string, destPath: string, destBucket: string) {
     return new Promise((resolve, reject) => {
       const params = {
-        Bucket: bucket,
+        Bucket: destBucket,
         CopySource: srcPath,
         Key: destPath,
       };
 
       s3.copyObject(params, (s3Err, data) => {
-        if (s3Err) reject(s3Err);
+        if (s3Err) {
+          console.log("s3Err -----------> ", s3Err);
+          reject(s3Err);
+          return;
+        }
         console.log(`Object successfully copied from ${srcPath} to ${destPath}`);
+        console.log("data -----------> ", data);
         resolve(data);
       });
     });
@@ -80,7 +94,10 @@ export class S3Access {
       };
 
       s3.deleteObject(params, (s3Err, data) => {
-        if (s3Err) reject(s3Err);
+        if (s3Err) {
+          reject(s3Err);
+          return;
+        }
         resolve();
       });
     });
@@ -159,6 +176,7 @@ export class S3Access {
       s3.listObjectsV2(params, async (err, data) => {
         if (err) {
           reject(err);
+          return;
         } else {
           // console.log(JSON.stringify(data, null, 4));
 

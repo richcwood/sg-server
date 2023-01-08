@@ -149,8 +149,10 @@ export class ScriptService {
     data._lastEditedUserId = _userId;
     const updatedScript = await ScriptModel.findOneAndUpdate(filter, data, {new: true}).select(responseFields);
 
-    if (!updatedScript)
+    if (!updatedScript) {
+      const existingScriptQuery: any = await this.findAllScriptsInternal({_teamId});
       throw new ValidationError(`Script '${id}" not found with filter "${JSON.stringify(filter, null, 4)}'.`);
+    }
 
     const deltas = Object.assign({_id: id}, data);
     await rabbitMQPublisher.publish(
