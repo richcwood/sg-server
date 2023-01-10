@@ -246,7 +246,7 @@ let PrepareStepDefsForExport = async (
       lambdaFunctionHandler: stepDefToExport.lambdaFunctionHandler,
       lambdaAWSRegion: stepDefToExport.lambdaAWSRegion,
       lambdaDependencies: stepDefToExport.lambdaDependencies,
-      lambdaZipfile: stepDefToExport.lambdaZipfile, // todo - this is an artifact :(
+      lambdaZipfile: stepDefToExport.lambdaZipfile,
     };
 
     stepDefs.push(stepDefPartial);
@@ -298,8 +298,10 @@ let PrepareTaskDefsForExport = async (
     if (taskDefToExport.artifacts) {
       for (let artifactId of taskDefToExport.artifacts) {
         const artifact: ArtifactSchema = await artifactService.findArtifact(_teamId, artifactId);
-        taskDefPartial.artifacts.push({prefix: artifact.prefix, name: artifact.name});
-        artifacts.push({prefix: artifact.prefix, name: artifact.name, s3Path: artifact.s3Path});
+        if (artifact) {
+          taskDefPartial.artifacts.push({prefix: artifact.prefix, name: artifact.name});
+          artifacts.push({prefix: artifact.prefix, name: artifact.name, s3Path: artifact.s3Path});
+        }
       }
     }
 
@@ -307,11 +309,25 @@ let PrepareTaskDefsForExport = async (
       // todo - add an export warning for the agent
     }
 
-    const getStepDefsResults: {stepDefs: Array<Partial<StepDefSchema>>; scripts: Array<mongodb.Objectid>} =
-      await PrepareStepDefsForExport(_teamId, taskDefToExport._id);
+    const getStepDefsResults: {stepDefs: Array<any>; scripts: Array<mongodb.Objectid>} = await PrepareStepDefsForExport(
+      _teamId,
+      taskDefToExport._id
+    );
     taskDefPartial.stepDefs = getStepDefsResults.stepDefs;
 
     for (let scriptId of getStepDefsResults.scripts) if (!scripts.includes(scriptId)) scripts.push(scriptId);
+
+    // handle lambda zip file artifacts
+    for (let stepDef of getStepDefsResults.stepDefs) {
+      if (stepDef.lambdaZipfile) {
+        const artifactId: mongodb.ObjectId = new mongodb.ObjectId(stepDef.lambdaZipfile);
+        const artifact: ArtifactSchema = await artifactService.findArtifact(_teamId, artifactId);
+        if (artifact) {
+          stepDef.lambdaZipfile = {prefix: artifact.prefix, name: artifact.name};
+          artifacts.push({prefix: artifact.prefix, name: artifact.name, s3Path: artifact.s3Path});
+        }
+      }
+    }
 
     taskDefs.push(taskDefPartial);
   }
@@ -755,6 +771,18 @@ let ImportTaskDefs = async (
         const stepDefs: StepDefSchema[] = await stepDefService.findAllStepDefsInternal({_taskDefId: newTaskDef._id});
         if (stepDefs.length > 0) {
           const stepDef: StepDefSchema = stepDefs[0];
+          let lambdaZipFile = undefined;
+          if (stepDefToImport.lambdaZipfile) {
+            const artifactsExisting: Array<ArtifactSchema> = await artifactService.findAllArtifactsInternal(
+              {
+                _teamId,
+                prefix: stepDefToImport.lambdaZipfile.prefix,
+                name: stepDefToImport.lambdaZipfile.name,
+              },
+              "_id"
+            );
+            if (artifactsExisting.length > 0) lambdaZipFile = artifactsExisting[0]._id.toHexString();
+          }
           const newStepDefData: any = {
             name: stepDefToImport.name,
             order: stepDefToImport.order,
@@ -771,7 +799,7 @@ let ImportTaskDefs = async (
             lambdaAWSRegion: stepDefToImport.lambdaAWSRegion,
             lambdaDependencies: stepDefToImport.lambdaDependencies,
 
-            lambdaZipfile: stepDefToImport.lambdaZipfile, // todo - this won't work right now across teams coz artifacts and blah blah blah
+            lambdaZipfile: lambdaZipFile,
           };
 
           if (stepDefToImport.scriptName) {
