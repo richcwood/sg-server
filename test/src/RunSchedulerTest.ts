@@ -3,10 +3,10 @@
 import * as fs from "fs";
 import * as util from "util";
 import * as config from "config";
-import { BaseLogger } from "../../server/src/shared/SGLogger";
+import {BaseLogger} from "../../server/src/shared/SGLogger";
 import TestSetup from "./Setup";
-import { AMQPConnector } from "../../server/src/shared/AMQPLib";
-import { SGUtils } from "../../server/src/shared/SGUtils";
+import {AMQPConnector} from "../../server/src/shared/AMQPLib";
+import {SGUtils} from "../../server/src/shared/SGUtils";
 
 let appName: string = "RunSchedulerTest";
 
@@ -82,7 +82,7 @@ let amqpConnector = new AMQPConnector("SchedulerTest", "", amqpUrl, rmqVhost, 1,
             await SGUtils.sleep(5000);
           }
         } catch (e) {
-          logger.LogError(`Error in test ${f}: ${e}`, { Stack: e.stack });
+          logger.LogError(`Error in test ${f}: ${e}`, {Stack: e.stack});
         }
       }
 
@@ -111,6 +111,6 @@ let amqpConnector = new AMQPConnector("SchedulerTest", "", amqpUrl, rmqVhost, 1,
       }, 3000);
     });
   } catch (e) {
-    logger.LogError("Error occurred in RunSchedulerTest.js: " + e.message, { Stack: e.stack });
+    logger.LogError("Error occurred in RunSchedulerTest.js: " + e.message, {Stack: e.stack});
   }
 })();
