@@ -1,31 +1,27 @@
-import { Request, Response, NextFunction } from "express";
-import { ResponseWrapper, ResponseCode } from "../utils/Types";
-import { AgentSchema, AgentModel } from "../domain/Agent";
-import { defaultBulkGet } from "../utils/BulkGet";
-import { agentService } from "../services/AgentService";
-import { taskOutcomeService } from "../services/TaskOutcomeService";
-import { MissingObjectError, ValidationError } from "../utils/Errors";
-import { Error } from "mongoose";
-import { convertData as convertResponseData } from "../utils/ResponseConverters";
-import { convertData as convertRequestData } from "../utils/RequestConverters";
+import {Request, Response, NextFunction} from "express";
+import {ResponseWrapper, ResponseCode} from "../utils/Types";
+import {AgentSchema, AgentModel} from "../domain/Agent";
+import {defaultBulkGet} from "../utils/BulkGet";
+import {agentService} from "../services/AgentService";
+import {taskOutcomeService} from "../services/TaskOutcomeService";
+import {MissingObjectError, ValidationError} from "../utils/Errors";
+import {Error} from "mongoose";
+import {convertData as convertResponseData} from "../utils/ResponseConverters";
+import {convertData as convertRequestData} from "../utils/RequestConverters";
 import * as mongodb from "mongodb";
 import * as _ from "lodash";
 import * as config from "config";
-import { TeamSchema } from "../domain/Team";
-import { teamService } from "../services/TeamService";
-import { SGStrings } from "../../shared/SGStrings";
-import { BaseLogger } from "../../shared/SGLogger";
-import { RabbitMQAdmin } from "../../shared/RabbitMQAdmin";
-import { TaskStatus } from "../../shared/Enums";
-import { TaskFailureCode } from "../../shared/Enums";
-import { AMQPConnector } from "../../shared/AMQPLib";
-import { rabbitMQPublisher } from "../utils/RabbitMQPublisher";
-import {
-  RepublishTasksWaitingForAgent,
-  RepublishTasksWaitingForLambdaRunner,
-  NumNotStartedTasks,
-} from "../utils/Shared";
-import { SGUtils } from "../../shared/SGUtils";
+import {TeamSchema} from "../domain/Team";
+import {teamService} from "../services/TeamService";
+import {SGStrings} from "../../shared/SGStrings";
+import {BaseLogger} from "../../shared/SGLogger";
+import {RabbitMQAdmin} from "../../shared/RabbitMQAdmin";
+import {TaskStatus} from "../../shared/Enums";
+import {TaskFailureCode} from "../../shared/Enums";
+import {AMQPConnector} from "../../shared/AMQPLib";
+import {rabbitMQPublisher} from "../utils/RabbitMQPublisher";
+import {RepublishTasksWaitingForAgent, RepublishTasksWaitingForLambdaRunner, NumNotStartedTasks} from "../utils/Shared";
+import {SGUtils} from "../../shared/SGUtils";
 
 const stompUrl = config.get("stompUrl");
 const rmqVhost = config.get("rmqVhost");
@@ -80,7 +76,7 @@ let addServerPropertiesToAgent = async (agent: any) => {
 export class AgentController {
   public async getManyAgents(req: Request, resp: Response, next: NextFunction): Promise<void> {
     const _teamId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._teamid);
-    defaultBulkGet({ _teamId }, req, resp, next, AgentSchema, AgentModel, agentService);
+    defaultBulkGet({_teamId}, req, resp, next, AgentSchema, AgentModel, agentService);
   }
 
   public async getAgent(req: Request, resp: Response, next: NextFunction): Promise<void> {
@@ -257,7 +253,7 @@ export class AgentController {
     const version: string = req.params.targetVersion;
     const response: ResponseWrapper = resp["body"];
     try {
-      const res = await agentService.updateTeamAgentsTargetVersion(_teamId, { targetVersion: version });
+      const res = await agentService.updateTeamAgentsTargetVersion(_teamId, {targetVersion: version});
 
       response.data = res;
       response.statusCode = ResponseCode.OK;
@@ -325,8 +321,8 @@ export class AgentController {
           let orphanedTasksFilter = {};
           orphanedTasksFilter["_teamId"] = _teamId;
           orphanedTasksFilter["_agentId"] = new mongodb.ObjectId(agent._id);
-          orphanedTasksFilter["status"] = { $eq: TaskStatus.CANCELLED };
-          orphanedTasksFilter["failureCode"] = { $eq: TaskFailureCode.AGENT_CRASHED_OR_LOST_CONNECTIVITY };
+          orphanedTasksFilter["status"] = {$eq: TaskStatus.CANCELLED};
+          orphanedTasksFilter["failureCode"] = {$eq: TaskFailureCode.AGENT_CRASHED_OR_LOST_CONNECTIVITY};
           const orphanedTasks = await taskOutcomeService.findAllTaskOutcomesInternal(orphanedTasksFilter, "_id");
           if (_.isArray(orphanedTasks) && orphanedTasks.length > 0) {
             for (let i = 0; i < orphanedTasks.length; i++) {
@@ -549,7 +545,7 @@ export class AgentController {
     const _agentId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.params.agentId);
     const response: ResponseWrapper = resp["body"];
     try {
-      await rabbitMQPublisher.publishToAgent(_teamId, _agentId, { stopAgent: 1 });
+      await rabbitMQPublisher.publishToAgent(_teamId, _agentId, {stopAgent: 1});
       response.data = {};
       response.statusCode = ResponseCode.OK;
       next();

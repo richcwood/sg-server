@@ -70,12 +70,10 @@ export class S3Access {
 
       s3.copyObject(params, (s3Err, data) => {
         if (s3Err) {
-          console.log("s3Err -----------> ", s3Err);
           reject(s3Err);
           return;
         }
         console.log(`Object successfully copied from ${srcPath} to ${destPath}`);
-        console.log("data -----------> ", data);
         resolve(data);
       });
     });

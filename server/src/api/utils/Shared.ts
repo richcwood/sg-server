@@ -18,8 +18,8 @@ import {teamVariableService} from "../services/TeamVariableService";
 
 import {AMQPConnector} from "../../shared/AMQPLib";
 import * as Enums from "../../shared/Enums";
-import {SGStrings} from "../../shared/SGStrings";
 import {BaseLogger} from "../../shared/SGLogger";
+import {SGStrings} from "../../shared/SGStrings";
 import {SGUtils} from "../../shared/SGUtils";
 
 import {LaunchTaskError, ValidationError} from "../utils/Errors";
@@ -101,15 +101,16 @@ let GetSingleSpecificAgentTaskRoute = async (
     return null;
   }
 
+  const filter: any = {
+    _id: task.targetAgentId,
+    offline: false,
+    lastHeartbeatTime: {
+      $gte: new Date().getTime() - parseInt(__ACTIVE_AGENT_TIMEOUT_SECONDS) * 1000,
+    },
+  };
   const targetAgentQuery = await agentService.findAllAgents(
     _teamId,
-    {
-      _id: task.targetAgentId,
-      offline: false,
-      lastHeartbeatTime: {
-        $gte: new Date().getTime() - parseInt(__ACTIVE_AGENT_TIMEOUT_SECONDS) * 1000,
-      },
-    },
+    filter,
     "lastHeartbeatTime tags propertyOverrides numActiveTasks attemptedRunAgentIds"
   );
   if (!targetAgentQuery || (_.isArray(targetAgentQuery) && targetAgentQuery.length === 0)) {
@@ -533,13 +534,18 @@ let RepublishTask = async (
  * @param _teamId
  * @returns {TaskSchema[]}
  */
-let GetWaitingForAgentTasks = async (_teamId: mongodb.ObjectId, limit: number = 0): Promise<TaskSchema[]> => {
+let GetWaitingForAgentTasks = async (_teamId: mongodb.ObjectId, limit: number = 100): Promise<TaskSchema[]> => {
   let noAgentTasksFilter = {};
   noAgentTasksFilter["_teamId"] = _teamId;
   noAgentTasksFilter["status"] = {$eq: Enums.TaskStatus.WAITING_FOR_AGENT};
   noAgentTasksFilter["target"] = {$ne: Enums.TaskDefTarget.AWS_LAMBDA};
   // noAgentTasksFilter['failureCode'] = { $eq: TaskFailureCode.NO_AGENT_AVAILABLE };
-  return await taskService.findAllTasksInternal(noAgentTasksFilter, "_id _teamId", limit);
+  return await taskService.findAllTasksInternal({
+    filter: noAgentTasksFilter,
+    responseFields: "_id _teamId",
+    sortBy: "_id",
+    limit: limit,
+  });
 };
 
 let RepublishTasksWaitingForAgent = async (
@@ -560,12 +566,17 @@ let RepublishTasksWaitingForAgent = async (
  * Gets an array of all tasks waiting for a lambda agent.
  * @returns {TaskSchema[]}
  */
-let GetWaitingForLambdaRunnerTasks = async (limit: number = 0): Promise<TaskSchema[]> => {
+let GetWaitingForLambdaRunnerTasks = async (limit: number = 1000): Promise<TaskSchema[]> => {
   let noAgentTasksFilter = {};
   noAgentTasksFilter["status"] = {$eq: Enums.TaskStatus.WAITING_FOR_AGENT};
   noAgentTasksFilter["target"] = {$eq: Enums.TaskDefTarget.AWS_LAMBDA};
   // noAgentTasksFilter['failureCode'] = { $eq: TaskFailureCode.NO_AGENT_AVAILABLE };
-  return await taskService.findAllTasksInternal(noAgentTasksFilter, "_id _teamId", 10);
+  return await taskService.findAllTasksInternal({
+    filter: noAgentTasksFilter,
+    responseFields: "_id _teamId",
+    sortBy: "_id",
+    limit: limit,
+  });
 };
 
 /**
@@ -601,7 +612,9 @@ let NumNotStartedTasks = async (_teamId: mongodb.ObjectId): Promise<int> => {
     $in: [Enums.TaskStatus.WAITING_FOR_AGENT, Enums.TaskStatus.NOT_STARTED],
   };
   // noAgentTasksFilter['failureCode'] = { $eq: TaskFailureCode.NO_AGENT_AVAILABLE };
-  const noAgentTasks = await taskService.findAllTasksInternal(noAgentTasksFilter);
+  const noAgentTasks = await taskService.findAllTasksInternal({
+    filter: noAgentTasksFilter,
+  });
   if (_.isArray(noAgentTasks)) numNotStartedTasks = noAgentTasks.length;
 
   return numNotStartedTasks;

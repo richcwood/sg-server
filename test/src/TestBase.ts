@@ -1,30 +1,30 @@
 import * as util from "util";
 import * as config from "config";
-import { BaseLogger } from "../../server/src/shared/SGLogger";
-import { AMQPConnector } from "../../server/src/shared/AMQPLib";
-import { MongoRepo } from "../../server/src/shared/MongoLib";
-import { SGStrings } from "../../server/src/shared/SGStrings";
-import { SGUtils } from "../../server/src/shared/SGUtils";
+import {BaseLogger} from "../../server/src/shared/SGLogger";
+import {AMQPConnector} from "../../server/src/shared/AMQPLib";
+import {MongoRepo} from "../../server/src/shared/MongoLib";
+import {SGStrings} from "../../server/src/shared/SGStrings";
+import {SGUtils} from "../../server/src/shared/SGUtils";
 // import { TeamSchema } from '../../server/src/api/domain/Team';
-import { ScriptSchema } from "../../server/src/api/domain/Script";
-import { JobDefSchema } from "../../server/src/api/domain/JobDef";
-import { TaskDefSchema } from "../../server/src/api/domain/TaskDef";
-import { StepDefSchema } from "../../server/src/api/domain/StepDef";
-import { TaskOutcomeSchema } from "../../server/src/api/domain/TaskOutcome";
-import { StepOutcomeSchema } from "../../server/src/api/domain/StepOutcome";
-import { JobSchema } from "../../server/src/api/domain/Job";
+import {ScriptSchema} from "../../server/src/api/domain/Script";
+import {JobDefSchema} from "../../server/src/api/domain/JobDef";
+import {TaskDefSchema} from "../../server/src/api/domain/TaskDef";
+import {StepDefSchema} from "../../server/src/api/domain/StepDef";
+import {TaskOutcomeSchema} from "../../server/src/api/domain/TaskOutcome";
+import {StepOutcomeSchema} from "../../server/src/api/domain/StepOutcome";
+import {JobSchema} from "../../server/src/api/domain/Job";
 import * as Enums from "../../server/src/shared/Enums";
-import { PayloadOperation } from "../../server/src/api/utils/RabbitMQPublisher";
-import { TaskSchema } from "../../server/src/api/domain/Task";
+import {PayloadOperation} from "../../server/src/api/utils/RabbitMQPublisher";
+import {TaskSchema} from "../../server/src/api/domain/Task";
 import * as _ from "lodash";
 import axios from "axios";
-import { fstat } from "fs";
+import {fstat} from "fs";
 import * as fs from "fs";
 import * as bcrypt from "bcrypt";
 import * as mongodb from "mongodb";
-import { TeamVariableSchema } from "../../server/src/api/domain/TeamVariable";
-import { basename } from "path";
-import { ScriptTemplate, JobDefTemplate, TaskDefTemplate, StepDefTemplate } from "./TestArtifacts";
+import {TeamVariableSchema} from "../../server/src/api/domain/TeamVariable";
+import {basename} from "path";
+import {ScriptTemplate, JobDefTemplate, TaskDefTemplate, StepDefTemplate} from "./TestArtifacts";
 
 let self: TestBase;
 
@@ -121,7 +121,7 @@ export default abstract class TestBase {
 
       console.log(this.sgUser);
     } catch (e) {
-      this.logger.LogError("Error getting test user: " + e.message, { Stack: e.stack });
+      this.logger.LogError("Error getting test user: " + e.message, {Stack: e.stack});
     }
   }
 
@@ -130,7 +130,7 @@ export default abstract class TestBase {
       this.token = config.get("adminToken") + ";";
       // this.adminToken = this.token;
 
-      this.sgUser = { id: "5e1fac8a7e501cfd86cee31d", email: config.get("sgTestUser") };
+      this.sgUser = {id: "5e1fac8a7e501cfd86cee31d", email: config.get("sgTestUser")};
 
       // const email = `${SGUtils.makeid(20)}@saasglue.com`;
       // const password = config.get('sgTestUserPassword');
@@ -147,7 +147,7 @@ export default abstract class TestBase {
       // auth = auth.substring(5) + ';';
       // this.token = auth;
     } catch (e) {
-      this.logger.LogError("Error creating test user: " + e.message, { Stack: e.stack });
+      this.logger.LogError("Error creating test user: " + e.message, {Stack: e.stack});
     }
   }
 
@@ -338,7 +338,7 @@ export default abstract class TestBase {
         });
       }
       if (taskPassed) {
-        self.logger.LogWarning("Task passed", { Description: self.description, Task: util.inspect(task, false, null) });
+        self.logger.LogWarning("Task passed", {Description: self.description, Task: util.inspect(task, false, null)});
       }
 
       if (!taskPassed) testPassed = false;
@@ -521,7 +521,7 @@ export default abstract class TestBase {
       {}
     );
     const task = getTask.data.data;
-    taskOutcome = Object.assign(taskOutcome, { source: task.source, name: task.name });
+    taskOutcome = Object.assign(taskOutcome, {source: task.source, name: task.name});
     console.log("CompletedTaskHandler -> task -> ", util.inspect(task, false, null));
     if (task.name == "InactiveTask") {
       const taskDef: any = _.filter(self.taskDefs, (x) => x.name == "InactiveAgentTask");
@@ -552,7 +552,7 @@ export default abstract class TestBase {
       await this.CompareTaskOutcomeToExpectedValues(ev, taskOutcome);
 
       if (taskDef.requiredTags) {
-        const executingAgent = await self.mongoRepo.GetById(taskOutcome._agentId, "agent", { tags: 1, _id: 0 });
+        const executingAgent = await self.mongoRepo.GetById(taskOutcome._agentId, "agent", {tags: 1, _id: 0});
         for (let i = 0; i < Object.keys(taskDef.requiredTags).length; i++) {
           const key: string = Object.keys(taskDef.requiredTags)[i];
           if (!(key in executingAgent["tags"]) || taskDef.requiredTags[key] != executingAgent["tags"][key]) {
@@ -850,7 +850,7 @@ export abstract class AdhocTaskTestBase extends TestBase {
     );
     const task = getTask.data.data;
 
-    taskOutcome = Object.assign(taskOutcome, { source: task.source, name: task.name });
+    taskOutcome = Object.assign(taskOutcome, {source: task.source, name: task.name});
 
     const taskLocal: TaskSchema = _.filter(adhocTaskTestBaseInstance.tasks, (x) => x.name == task.name)[0];
     await adhocTaskTestBaseInstance.CompareTaskOutcomeToExpectedValues((<any>taskLocal).expectedValues, taskOutcome);
@@ -872,7 +872,7 @@ export abstract class AdhocTaskTestBase extends TestBase {
         `job`,
         "POST",
         task._teamId,
-        { correlationId: task.correlationId },
+        {correlationId: task.correlationId},
         data
       );
     });
@@ -1050,7 +1050,7 @@ export abstract class WorkflowTestBase extends TestBase {
             // console.log('Unmatched bp -> \n', JSON.stringify(unmatchedBp, null, 4));
             // console.log('Unmatched dlq -> \n', JSON.stringify(unmatchedDlq, null, 4));
 
-            wftInst.logger.LogError("Failed - timeout", { date: Date.now() });
+            wftInst.logger.LogError("Failed - timeout", {date: Date.now()});
             resolve();
             break;
           }
@@ -1077,7 +1077,7 @@ export abstract class WorkflowTestBase extends TestBase {
           wftInst.bpMessages,
           (x) => !x.matched && x.operation == ev.operation && x.domainType == ev.domainType
         );
-        wftInst.logger.LogError("Failed", Object.assign(ev, { PossibleMatches: matches }));
+        wftInst.logger.LogError("Failed", Object.assign(ev, {PossibleMatches: matches}));
         testPassed = false;
       }
     }
@@ -1096,7 +1096,7 @@ export abstract class WorkflowTestBase extends TestBase {
           wftInst.dlqMessages,
           (x) => !x.matched && x.type == ev.type && x.reason == ev.reason
         );
-        wftInst.logger.LogError("Failed", Object.assign(ev, { PossibleMatches: matches }));
+        wftInst.logger.LogError("Failed", Object.assign(ev, {PossibleMatches: matches}));
         testPassed = false;
       }
     }
@@ -1219,6 +1219,6 @@ export abstract class WorkflowTestBase extends TestBase {
 
       jobDefs[jobDefTemplate.name] = jobDefTemplate;
     }
-    return { scripts, jobDefs };
+    return {scripts, jobDefs};
   }
 }

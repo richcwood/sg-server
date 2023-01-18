@@ -782,7 +782,7 @@ let FixRuntimeVarsDBRecords = async () => {
   }
 
   // Update tasks
-  let tasks: any = await taskService.findAllTasksInternal();
+  let tasks: any = await taskService.findAllTasksInternal({});
   for (let i = 0; i < tasks.length; i++) {
     let task: any = tasks[i];
 
@@ -840,7 +840,7 @@ let DumpMongoData = async (path: string) => {
   let step: any = await stepService.findAllStepsInternal();
   let stepDef: any = await stepDefService.findAllStepDefsInternal();
   let stepOutcome: any = await stepOutcomeService.findAllStepOutcomesInternal();
-  let task: any = await taskService.findAllTasksInternal();
+  let task: any = await taskService.findAllTasksInternal({});
   let taskDef: any = await taskDefService.findAllTaskDefsInternal();
   let taskOutcome: any = await taskOutcomeService.findAllTaskOutcomesInternal();
   let schedule: any = await scheduleService.findAllSchedulesInternal();

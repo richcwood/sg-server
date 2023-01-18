@@ -54,7 +54,7 @@ let DumpMongoData = async (path: string) => {
   let step: any = await stepService.findAllStepsInternal();
   let stepDef: any = await stepDefService.findAllStepDefsInternal();
   let stepOutcome: any = await stepOutcomeService.findAllStepOutcomesInternal();
-  let task: any = await taskService.findAllTasksInternal();
+  let task: any = await taskService.findAllTasksInternal({});
   let taskDef: any = await taskDefService.findAllTaskDefsInternal();
   let taskOutcome: any = await taskOutcomeService.findAllTaskOutcomesInternal();
   let schedule: any = await scheduleService.findAllSchedulesInternal();
