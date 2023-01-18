@@ -1,35 +1,32 @@
-import { NextFunction, Request, Response, Router, response } from 'express';
-import { MongoRepo } from '../../shared/MongoLib';
-import { S3Access } from '../../shared/S3Access';
-import { SGUtils } from '../../shared/SGUtils';
-import { BaseLogger } from '../../shared/SGLogger';
-import { ValidationError, MissingObjectError } from '../utils/Errors';
-import { ResponseWrapper, ResponseCode } from '../utils/Types';
-import { localRestAccess } from '../utils/LocalRestAccess';
-import { TeamPricingTier } from '../../shared/Enums';
-import { AgentModel } from '../domain/Agent';
-import { teamService } from '../services/TeamService';
-import { settingsService } from '../services/SettingsService';
-import { exec } from 'pkg'; 
-import * as config from 'config';
-const jwt = require('jsonwebtoken');
-import * as _ from 'lodash';
-import * as mongodb from 'mongodb';
-import { verifyAccessRights } from '../utils/AccessRightsVerifier';
+import {NextFunction, Request, Response, Router, response} from "express";
+import {MongoRepo} from "../../shared/MongoLib";
+import {S3Access} from "../../shared/S3Access";
+import {SGUtils} from "../../shared/SGUtils";
+import {BaseLogger} from "../../shared/SGLogger";
+import {ValidationError, MissingObjectError} from "../utils/Errors";
+import {ResponseWrapper, ResponseCode} from "../utils/Types";
+import {localRestAccess} from "../utils/LocalRestAccess";
+import {TeamPricingTier} from "../../shared/Enums";
+import {AgentModel} from "../domain/Agent";
+import {teamService} from "../services/TeamService";
+import {settingsService} from "../services/SettingsService";
+import {exec} from "pkg";
+import * as config from "config";
+const jwt = require("jsonwebtoken");
+import * as _ from "lodash";
+import * as mongodb from "mongodb";
+import {verifyAccessRights} from "../utils/AccessRightsVerifier";
 
+const mongoUrl = config.get("mongoUrl");
+const mongoDbName = config.get("mongoDbName");
+const environment = config.get("environment");
 
-const mongoUrl = config.get('mongoUrl');
-const mongoDbName = config.get('mongoDbName');
-const environment = config.get('environment');
-
-
-let appName: string = 'AgentDownloadRouter';
+let appName: string = "AgentDownloadRouter";
 let mongoLogger: BaseLogger = new BaseLogger(appName);
 mongoLogger.Start();
 
-
-const validPlatforms: string[] = ['freebsd', 'linux', 'alpine', 'macos', 'win'];
-const validArchitectures: string[] = ['x64', 'x86', 'armv6', 'armv7'];
+const validPlatforms: string[] = ["freebsd", "linux", "alpine", "macos", "win"];
+const validArchitectures: string[] = ["x64", "x86", "armv6", "armv7"];
 
 export class AgentDownloadRouter {
   public readonly router: Router;
@@ -45,27 +42,40 @@ export class AgentDownloadRouter {
   }
 
   setRoutes() {
-    this.router.post('/agent/:version/:platform/:arch?', verifyAccessRights(['AGENT_DOWNLOAD_CREATE', 'GLOBAL']), this.createAgent.bind(this));
-    this.router.post('/agentstub/:platform/:arch?', verifyAccessRights(['AGENT_DOWNLOAD_CREATE', 'GLOBAL']), this.createAgentStub.bind(this));
-    this.router.get('/agent/:machineId/:platform/:arch?', verifyAccessRights(['AGENT_DOWNLOAD', 'GLOBAL']), this.downloadAgent.bind(this));
-    this.router.get('/agentstub/:platform/:arch?', this.downloadAgentStub.bind(this));
-    this.router.get('/agentdownloadscript', this.downloadAgentDownloaderScript.bind(this));
-    this.router.get('/nssm/:arch', this.downloadNSSM.bind(this));
+    this.router.post(
+      "/agent/:version/:platform/:arch?",
+      verifyAccessRights(["AGENT_DOWNLOAD_CREATE", "GLOBAL"]),
+      this.createAgent.bind(this)
+    );
+    this.router.post(
+      "/agentstub/:platform/:arch?",
+      verifyAccessRights(["AGENT_DOWNLOAD_CREATE", "GLOBAL"]),
+      this.createAgentStub.bind(this)
+    );
+    this.router.get(
+      "/agent/:machineId/:platform/:arch?",
+      verifyAccessRights(["AGENT_DOWNLOAD", "GLOBAL"]),
+      this.downloadAgent.bind(this)
+    );
+    this.router.get("/agentstub/:platform/:arch?", this.downloadAgentStub.bind(this));
+    this.router.get("/agentdownloadscript", this.downloadAgentDownloaderScript.bind(this));
+    this.router.get("/nssm/:arch", this.downloadNSSM.bind(this));
   }
-
 
   verifyIsAgentStub(req: Request, res: Response, next: NextFunction) {
     // todo - check JWT for if it's an agent
     next();
   }
 
-
   async downloadAgentDownloaderScript(req: Request, res: Response, next: NextFunction) {
     const response: ResponseWrapper = (res as any).body;
 
     try {
-      const agentDownloaderS3Path = 'agent-stub/download_sg_agent.py';
-      const signedUrl = await this.s3Access.getSignedS3URL(agentDownloaderS3Path, config.get('S3_BUCKET_AGENT_BINARIES'));
+      const agentDownloaderS3Path = "agent-stub/download_sg_agent.py";
+      const signedUrl = await this.s3Access.getSignedS3URL(
+        agentDownloaderS3Path,
+        config.get("S3_BUCKET_AGENT_BINARIES")
+      );
       response.data = signedUrl;
       response.statusCode = ResponseCode.OK;
       next();
@@ -75,17 +85,15 @@ export class AgentDownloadRouter {
       return;
     }
   }
-
 
   async downloadNSSM(req: Request, res: Response, next: NextFunction) {
     const response: ResponseWrapper = (res as any).body;
 
     try {
       let arch: string = <string>req.params.arch;
-      if (arch != 'x64' && arch != 'x86')
-        throw new Error(`Invalid arch param - must be "x64" or "x86"`);
+      if (arch != "x64" && arch != "x86") throw new Error(`Invalid arch param - must be "x64" or "x86"`);
       const nssmPath = `nssm/${arch}/nssm.zip`;
-      const signedUrl = await this.s3Access.getSignedS3URL(nssmPath, config.get('S3_BUCKET_SHARED_FILES'));
+      const signedUrl = await this.s3Access.getSignedS3URL(nssmPath, config.get("S3_BUCKET_SHARED_FILES"));
       response.data = signedUrl;
       response.statusCode = ResponseCode.OK;
       next();
@@ -95,7 +103,6 @@ export class AgentDownloadRouter {
       return;
     }
   }
-
 
   // Returns 303 if agent stub install does not exist - otherwise returns 200 plus a signed url for direct s3 download
   async downloadAgentStub(req: Request, res: Response, next: NextFunction) {
@@ -105,20 +112,20 @@ export class AgentDownloadRouter {
 
     const platform: string = <string>req.params.platform;
     if (validPlatforms.indexOf(platform) < 0) {
-      next(new ValidationError('Missing or invalid platform param'));
+      next(new ValidationError("Missing or invalid platform param"));
       // res.status(422).send('Missing or invalid platform param');
       return;
     }
 
     let arch: string = <string>req.params.arch;
     if (!arch) {
-      arch = '';
+      arch = "";
     } else {
-      if ((platform == 'macos' || platform == 'linux') && arch == 'x64') {
-        arch = ''
+      if ((platform == "macos" || platform == "linux") && arch == "x64") {
+        arch = "";
       } else {
         if (validArchitectures.indexOf(arch) < 0) {
-          next(new ValidationError('Invalid arch param'));
+          next(new ValidationError("Invalid arch param"));
           // res.status(422).send('Invalid arch param');
           return;
         }
@@ -129,39 +136,43 @@ export class AgentDownloadRouter {
     const platformKey = `Values.agent_stub_install.${platform}${arch}`;
 
     let queryPlatform = {};
-    queryPlatform[platformKey] = { $exists: true }
+    queryPlatform[platformKey] = {$exists: true};
 
     let queryStatus = {};
     const statusKey = `Values.agent_stub_install.${platform}${arch}.status`;
-    queryStatus[statusKey] = { $eq: 'ready' };
+    queryStatus[statusKey] = {$eq: "ready"};
 
     let projectionDoc = {};
     const locationKey = `Values.agent_stub_install.${platform}${arch}.location`;
     projectionDoc[locationKey] = 1;
-    projectionDoc['_id'] = 1;
+    projectionDoc["_id"] = 1;
 
-    const stub_install_details = await this.mongoRepo.GetOneByQuery({
-      $and: [
-        { 'Type': 'AgentBuild' },
-        queryPlatform,
-        queryStatus
-      ]
-    }, 'settings', projectionDoc);
+    const stub_install_details = await this.mongoRepo.GetOneByQuery(
+      {
+        $and: [{Type: "AgentBuild"}, queryPlatform, queryStatus],
+      },
+      "settings",
+      projectionDoc
+    );
 
     // Now check if the install exists in the specified s3 path
     if (stub_install_details != null) {
       try {
-        let stubS3Path = stub_install_details['Values']['agent_stub_install'][`${platform}${arch}`]['location'];
+        let stubS3Path = stub_install_details["Values"]["agent_stub_install"][`${platform}${arch}`]["location"];
         // if (platform == 'win')
         //   stubS3Path += '.exe';
-        let stubInstallExists = await this.s3Access.objectExists(stubS3Path, config.get('S3_BUCKET_AGENT_BINARIES'));
+        let stubInstallExists = await this.s3Access.objectExists(stubS3Path, config.get("S3_BUCKET_AGENT_BINARIES"));
         if (!stubInstallExists) {
-          logger.LogWarning('Path to agent stub from mongo does not exist in s3', { 'Platform': platform, 'Arch': arch, 'S3Path': stubS3Path });
-          let queryCreateEmpty = {}
+          logger.LogWarning("Path to agent stub from mongo does not exist in s3", {
+            Platform: platform,
+            Arch: arch,
+            S3Path: stubS3Path,
+          });
+          let queryCreateEmpty = {};
           queryCreateEmpty[platformKey] = {};
-          await this.mongoRepo.Update('settings', { '_id': stub_install_details['_id'] }, { $set: queryCreateEmpty });
+          await this.mongoRepo.Update("settings", {_id: stub_install_details["_id"]}, {$set: queryCreateEmpty});
         } else {
-          const signedUrl = await this.s3Access.getSignedS3URL(stubS3Path, config.get('S3_BUCKET_AGENT_BINARIES'));
+          const signedUrl = await this.s3Access.getSignedS3URL(stubS3Path, config.get("S3_BUCKET_AGENT_BINARIES"));
           response.data = signedUrl;
           response.statusCode = ResponseCode.OK;
           next();
@@ -173,47 +184,45 @@ export class AgentDownloadRouter {
       }
     }
 
-    response.data = '';
+    response.data = "";
     response.statusCode = ResponseCode.NOT_AVAILABLE;
     next();
 
     let createAgentStubUrl = `agentDownload/agentstub/${platform}`;
-    if (arch)
-      createAgentStubUrl += `/${arch}`;
+    if (arch) createAgentStubUrl += `/${arch}`;
 
-    await localRestAccess.RestAPICall(createAgentStubUrl, 'POST', _teamId, null, null, req.cookies.Auth);
+    await localRestAccess.RestAPICall(createAgentStubUrl, "POST", _teamId, null, null, req.cookies.Auth);
   }
-
 
   // Create an agent download stub
   async createAgentStub(req: Request, res: Response, next: NextFunction) {
     const _teamId: string = <string>req.headers._teamid;
     const logger: BaseLogger = (<any>req).logger;
-    const response: ResponseWrapper = res['body'];
+    const response: ResponseWrapper = res["body"];
 
     const platform: string = <string>req.params.platform;
     if (validPlatforms.indexOf(platform) < 0) {
-      next(new ValidationError('Missing or invalid platform param'));
+      next(new ValidationError("Missing or invalid platform param"));
       return;
     }
 
     let arch: string = <string>req.params.arch;
     if (!arch) {
-      arch = '';
+      arch = "";
     } else {
       if (validArchitectures.indexOf(arch) < 0) {
-        next(new ValidationError('Invalid arch param'));
+        next(new ValidationError("Invalid arch param"));
         return;
       }
     }
 
-    const agentVersionSettings = await settingsService.findSettings('AgentVersion');
+    const agentVersionSettings = await settingsService.findSettings("AgentVersion");
     let agentStubVersion = agentVersionSettings.agentStub;
 
     // logger.LogInfo('Create agent stub called', { '_teamId': _teamId, 'Platform': platform, 'Arch': arch });
 
-    // Run a query which will return null if we have an active agent stub or create information for the requested agent 
-    //  stub with the status defaulted to "creating" in a single atomic operation - if the current status is "creating" and 
+    // Run a query which will return null if we have an active agent stub or create information for the requested agent
+    //  stub with the status defaulted to "creating" in a single atomic operation - if the current status is "creating" and
     //  the AGENT_CREATE_TIMEOUT period is exceeded a new agent will be created
     const platformKey = `Values.agent_stub_install.${platform}${arch}`;
     const statusKey = `Values.agent_stub_install.${platform}${arch}.status`;
@@ -225,22 +234,22 @@ export class AgentDownloadRouter {
     // next();
 
     let queryPlatformNotExists = {};
-    queryPlatformNotExists[platformKey] = { $exists: false }
+    queryPlatformNotExists[platformKey] = {$exists: false};
 
     let queryStatusNotExists = {};
-    queryStatusNotExists[statusKey] = { $exists: false }
+    queryStatusNotExists[statusKey] = {$exists: false};
 
     let queryLastUpdateTimeNotExists = {};
-    queryLastUpdateTimeNotExists[lastUpdateTimeKey] = { $exists: false }
+    queryLastUpdateTimeNotExists[lastUpdateTimeKey] = {$exists: false};
 
     // let queryStatusCreating = {};
     // queryStatusCreating[statusKey] = { $eq: 'creating' };
 
     let queryStatusError = {};
-    queryStatusError[statusKey] = { $eq: 'error' };
+    queryStatusError[statusKey] = {$eq: "error"};
 
     let queryCurrentAgentStubVersion = {};
-    queryCurrentAgentStubVersion[versionKey] = { $ne: agentStubVersion };
+    queryCurrentAgentStubVersion[versionKey] = {$ne: agentStubVersion};
 
     // let queryAgentCreateTimeout = {};
     // const agentCreateTimeout = new Date().getTime() - parseInt(config.get('AGENT_CREATE_TIMEOUT'), 10) * 1000;
@@ -252,48 +261,57 @@ export class AgentDownloadRouter {
     // s3Path += '.gz';
     let queryUpdate = {};
     const lastUpdateTime = new Date().getTime();
-    queryUpdate[platformKey] = { 'status': 'creating', 'lastUpdateTime': lastUpdateTime, 'message': '', version: agentStubVersion };
+    queryUpdate[platformKey] = {
+      status: "creating",
+      lastUpdateTime: lastUpdateTime,
+      message: "",
+      version: agentStubVersion,
+    };
 
-    const agentBuildUpdate: any = await this.mongoRepo.Update('settings', {
-      $and: [
-        { 'Type': 'AgentBuild' },
-        {
-          $or: [
-            { agent_stub_install: { $exists: false } },
-            queryPlatformNotExists,
-            queryStatusNotExists,
-            queryLastUpdateTimeNotExists,
-            queryStatusError,
-            queryCurrentAgentStubVersion
-          ]
-        }
-      ]
-    }, { $set: queryUpdate }, { _id: 1 });
+    const agentBuildUpdate: any = await this.mongoRepo.Update(
+      "settings",
+      {
+        $and: [
+          {Type: "AgentBuild"},
+          {
+            $or: [
+              {agent_stub_install: {$exists: false}},
+              queryPlatformNotExists,
+              queryStatusNotExists,
+              queryLastUpdateTimeNotExists,
+              queryStatusError,
+              queryCurrentAgentStubVersion,
+            ],
+          },
+        ],
+      },
+      {$set: queryUpdate},
+      {_id: 1}
+    );
 
-    if ((agentBuildUpdate != null) && (agentBuildUpdate.lastErrorObject.updatedExisting)) {
-      // Create the agent stub install and upload it to s3
-      // let out_path = `/tmp/sg-agent-stub-install/`;
-      // let createAgentStubRes;
+    if (agentBuildUpdate != null && agentBuildUpdate.lastErrorObject.updatedExisting) {
       try {
-        // createAgentStubRes = await this.CreateAgentStubInstall(_teamId, agentStubVersion, 'node10', platform, arch, out_path, logger);
         let data = {
           name: `BuildAgentStub - ${platform}${arch} - ${agentStubVersion}`,
           runtimeVars: {
             agentVersion: agentStubVersion,
             platform: platform,
-            arch: arch
-          }
+            arch: arch,
+          },
         };
-        let jobDefId = config.get('buildAgentStubJobDefId');
-        if (platform == 'win')
-          jobDefId = config.get('buildAgentStubWinx64JobDefId');
-        await localRestAccess.RestAPICall('job', 'POST', config.get("sgAdminTeam"), { _jobDefId: jobDefId }, data);
+        let jobDefId = config.get("buildAgentStubJobDefId");
+        if (platform == "win") jobDefId = config.get("buildAgentStubWinx64JobDefId");
+        await localRestAccess.RestAPICall("job", "POST", config.get("sgAdminTeam"), {_jobDefId: jobDefId}, data);
       } catch (err) {
-        logger.LogInfo(`Error creating agent stub: ${err}`, { 'Platform': platform, 'Arch': arch, Version: agentStubVersion });
-        queryUpdate[platformKey]['status'] = 'error';
-        queryUpdate[platformKey]['location'] = '';
-        queryUpdate[platformKey]['message'] = err.message;
-        await this.mongoRepo.Update('settings', { '_id': agentBuildUpdate['_id'] }, { $set: queryUpdate }, { _id: 1 });
+        logger.LogInfo(`Error creating agent stub: ${err}`, {
+          Platform: platform,
+          Arch: arch,
+          Version: agentStubVersion,
+        });
+        queryUpdate[platformKey]["status"] = "error";
+        queryUpdate[platformKey]["location"] = "";
+        queryUpdate[platformKey]["message"] = err.message;
+        await this.mongoRepo.Update("settings", {_id: agentBuildUpdate["_id"]}, {$set: queryUpdate}, {_id: 1});
 
         // if (fs.existsSync(out_path))
         //   fse.removeSync(out_path);
@@ -303,7 +321,7 @@ export class AgentDownloadRouter {
 
       // let stubPath = createAgentStubRes;
       // let compressedStubPath = await SGUtils.GzipFile(stubPath);
-      // let ret = await this.s3Access.uploadFileToS3(compressedStubPath, s3Path, config.get('S3_BUCKET_AGENT_BINARIES'));
+      // let ret = await this.s3Access.uploadFile(compressedStubPath, s3Path, config.get('S3_BUCKET_AGENT_BINARIES'));
       // logger.LogInfo(`AgentStub ${agentStubVersion} loaded from ${stubPath} to ${s3Path}`, {});
       // // todo: delete local agent install files after upload to s3
 
@@ -313,7 +331,7 @@ export class AgentDownloadRouter {
       // await this.mongoRepo.Update('team', { _id: this.mongoRepo.ObjectIdFromString(_teamId) }, { $set: queryStatus });
       // logger.LogInfo('Create agent stub success', { '_teamId': _teamId, 'Platform': platform, 'Arch': arch, 'version': agentStubVersion });
 
-      response.data = '';
+      response.data = "";
       response.statusCode = ResponseCode.NOT_AVAILABLE;
       next();
     } else {
@@ -321,193 +339,52 @@ export class AgentDownloadRouter {
 
       const queryProjection: any = {};
       queryProjection[platformKey] = 1;
-      const agentBuild = await this.mongoRepo.GetById(agentBuildUpdate['_id'], 'settings', queryProjection);
-      if (agentBuild['Values.agent_stub_install'][platform+arch]['status'] == 'creating') {
-        response.data = '';
+      const agentBuild = await this.mongoRepo.GetById(agentBuildUpdate["_id"], "settings", queryProjection);
+      if (agentBuild["Values.agent_stub_install"][platform + arch]["status"] == "creating") {
+        response.data = "";
         response.statusCode = ResponseCode.NOT_AVAILABLE;
-        next();  
+        next();
       } else {
-        response.data = '';
+        response.data = "";
         response.statusCode = ResponseCode.OK;
         next();
       }
     }
   }
 
-
-  /// ******************** Create agent installer for team ******************** ////
-  async CreateAgentStubInstall(_teamId: string, agentStubVersion: string, nodeRange: string, platform: string, arch: string, out_path: string, logger: BaseLogger) {
-    let apiUrl = config.get('API_BASE_URL');
-    const apiPort = config.get('API_PORT');
-    let logDest = config.get('logDest');
-
-    let queryRes: any = await this.mongoRepo.GetOneByQuery({ 'Type': 'APIVersion' }, 'settings', { 'Values.agentLogs': 1 });
-    let agentLogsAPIVersion = queryRes.Values.agentLogs;
-
-    let pkg_json = {
-      "name": "sg-agent-launcher",
-      "version": "1.0.0",
-      "description": "Saas glue agent launcher",
-      "keywords": [],
-      "author": "",
-      "license": "ISC",
-      "pkg": {
-        "assets": [
-          "default.json"
-        ]
-      }
-    };
-
-    let cfg_json = {
-      "apiUrl": apiUrl,
-      "apiPort": apiPort,
-      "agentLogsAPIVersion": agentLogsAPIVersion,
-      "agentPlatform": platform,
-      "agentArch": arch,
-      "logDest": logDest,
-      "env": environment
-    };
-
-    const fse = require("fs-extra");
-    const fs = require("fs");
-
-    // let out_path = `.`;
-    await fse.ensureDir(out_path);
-    out_path += SGUtils.makeid(10);
-
-    const url = `https://${config.get('SG_GIT_USERNAME')}:${config.get('SG_GIT_PASSWORD')}@${config.get('SG_GIT_URL')}`;
-
-    await fse.remove(out_path);
-    const cmdClone = `git clone --branch ${agentStubVersion} --depth 1 ${url} ${out_path}/`;
-    logger.LogInfo(`Cloning git repo`, { 'Method': 'CreateAgentInstall', 'Command': cmdClone });
-    let cloneRes: any = await SGUtils.RunCommand(cmdClone, {});
-    if (cloneRes.code != 0)
-      throw new Error(cloneRes.stderr);
-
-    await SGUtils.RunCommand(`npm i`, { cwd: out_path + '/agent' });
-
-    out_path += '/agent/dist';
-    const pkg_path = `${out_path}/pkg_agent_stub`;
-    await fse.ensureDir(pkg_path);
-    fs.writeFileSync(pkg_path + '/package.json', JSON.stringify(pkg_json, null, 4), 'utf-8');
-    fs.writeFileSync(pkg_path + '/default.json', JSON.stringify(cfg_json, null, 4), 'utf-8');
-
-    let target = `${nodeRange}-${platform}`;
-    if (arch != '')
-      target += `-${arch}`;
-
-    let res = await exec([`${out_path}/LaunchAgentStub.js`, '--config', pkg_path + '/package.json', '--targets', target, '--out-path', pkg_path]);
-
-    let outFileName = `${pkg_path}/sg-agent-launcher`;
-    if (platform == 'win')
-      outFileName += '.exe';
-
-    return outFileName;
-  }
-
-
-  /// ******************** Create agent for team ******************** ////
-  async CreateAgentInstall(_teamId: string, agentVersion: string, nodeRange: string, platform: string, arch: string, out_path: string, logger: BaseLogger) {
-    let apiUrl = config.get('API_BASE_URL');
-    const apiPort = config.get('API_PORT');
-    let logDest = config.get('logDest');
-
-    let queryRes: any = await this.mongoRepo.GetOneByQuery({ 'Type': 'APIVersion' }, 'settings', { 'Values.agentLogs': 1 });
-    let agentLogsAPIVersion = queryRes.Values.agentLogs;
-
-    let pkg_json = {
-      "name": "sg-agent",
-      "version": "1.0.0",
-      "description": "Saas glue agent",
-      "keywords": [],
-      "author": "",
-      "license": "ISC",
-      "pkg": {
-        "assets": [
-          "default.json"
-        ]
-      }
-    };
-
-    let cfg_json = {
-      "apiUrl": apiUrl,
-      "apiPort": apiPort,
-      "agentLogsAPIVersion": agentLogsAPIVersion,
-      "env": environment,
-      logDest: logDest
-    };
-
-    const fse = require("fs-extra");
-    const fs = require("fs");
-
-    // let out_path = `.`;
-    await fse.ensureDir(out_path);
-    out_path += SGUtils.makeid();
-
-    const url = `https://${config.get('SG_GIT_USERNAME')}:${config.get('SG_GIT_PASSWORD')}@${config.get('SG_GIT_URL')}`;
-
-    await fse.remove(out_path);
-    const cmdClone = `git clone --branch ${agentVersion} --depth 1 ${url} ${out_path}/`;
-    logger.LogInfo(`Cloning git repo`, { 'Method': 'CreateAgentInstall', 'Command': cmdClone });
-    let cloneRes: any = await SGUtils.RunCommand(cmdClone, {});
-    if (cloneRes.code != 0)
-      throw new Error(cloneRes.stderr);
-
-    await SGUtils.RunCommand(`npm i`, { cwd: out_path + '/agent' });
-
-    out_path += '/agent/dist';
-    const pkg_path = `${out_path}/pkg_agent`;
-    await fse.ensureDir(pkg_path);
-    fs.writeFileSync(pkg_path + '/package.json', JSON.stringify(pkg_json, null, 4), 'utf-8');
-    fs.writeFileSync(pkg_path + '/default.json', JSON.stringify(cfg_json, null, 4), 'utf-8');
-
-    let target = `${nodeRange}-${platform}`;
-    if (arch != '')
-      target += `-${arch}`;
-
-    let res = await exec([`${out_path}/LaunchAgent.js`, '--config', pkg_path + '/package.json', '--targets', target, '--out-path', pkg_path]);
-
-    let outFileName = `${pkg_path}/sg-agent`;
-    if (platform == 'win')
-      outFileName += '.exe';
-
-    return outFileName;
-  };
-
-
   // Create an agent download
   async createAgent(req: Request, res: Response, next: NextFunction) {
     // const _teamId: string = <string>req.headers._teamid;
     const logger: BaseLogger = (<any>req).logger;
-    const response: ResponseWrapper = res['body'];
+    const response: ResponseWrapper = res["body"];
 
     const agentVersion: string = <string>req.params.version;
-    if (!(agentVersion.match(/v\d+\.\d+\.\d+\.\d+/g))) {
+    if (!agentVersion.match(/v\d+\.\d+\.\d+\.\d+/g)) {
       next(new ValidationError(`Invalid version param "${agentVersion}" - should be formatted as "vx.x.x.x"`));
       return;
     }
-    const agentVersionMongo = agentVersion.split('.').join('_');
+    const agentVersionMongo = agentVersion.split(".").join("_");
 
     const platform: string = <string>req.params.platform;
     if (validPlatforms.indexOf(platform) < 0) {
-      next(new ValidationError('Missing or invalid platform param'));
+      next(new ValidationError("Missing or invalid platform param"));
       return;
     }
 
     let arch: string = <string>req.params.arch;
     if (!arch) {
-      arch = '';
+      arch = "";
     } else {
       if (validArchitectures.indexOf(arch) < 0) {
-        next(new ValidationError('Invalid arch param'));
+        next(new ValidationError("Invalid arch param"));
         return;
       }
     }
 
     // logger.LogInfo('Create agent called', { '_teamId': _teamId, 'Platform': platform, 'Arch': arch, 'AgentVersion': agentVersion });
 
-    // Run a query which will return null if we have an active agent install or create information for the requested agent 
-    //  install with the status defaulted to "creating" in a single atomic operation - if the current status is "creating" and 
+    // Run a query which will return null if we have an active agent install or create information for the requested agent
+    //  install with the status defaulted to "creating" in a single atomic operation - if the current status is "creating" and
     //  the AGENT_CREATE_TIMEOUT period is exceeded a new agent will be created
     const platformKey = `Values.agent_install.${agentVersionMongo}.${platform}${arch}`;
     const statusKey = `Values.agent_install.${agentVersionMongo}.${platform}${arch}.status`;
@@ -518,19 +395,19 @@ export class AgentDownloadRouter {
     // next();
 
     let queryPlatformNotExists = {};
-    queryPlatformNotExists[platformKey] = { $exists: false }
+    queryPlatformNotExists[platformKey] = {$exists: false};
 
     let queryStatusNotExists = {};
-    queryStatusNotExists[statusKey] = { $exists: false }
+    queryStatusNotExists[statusKey] = {$exists: false};
 
     let queryLastUpdateTimeNotExists = {};
-    queryLastUpdateTimeNotExists[lastUpdateTimeKey] = { $exists: false }
+    queryLastUpdateTimeNotExists[lastUpdateTimeKey] = {$exists: false};
 
     // let queryStatusCreating = {};
     // queryStatusCreating[statusKey] = { $eq: 'creating' };
 
     let queryStatusError = {};
-    queryStatusError[statusKey] = { $eq: 'error' };
+    queryStatusError[statusKey] = {$eq: "error"};
 
     // let queryAgentCreateTimeout = {};
     // const agentCreateTimeout = new Date().getTime() - parseInt(config.get('AGENT_CREATE_TIMEOUT'), 10) * 1000;
@@ -542,47 +419,47 @@ export class AgentDownloadRouter {
     // s3Path += '.gz';
     let queryUpdate = {};
     const lastUpdateTime = new Date().getTime();
-    queryUpdate[platformKey] = { 'status': 'creating', 'lastUpdateTime': lastUpdateTime, 'message': '' };
+    queryUpdate[platformKey] = {status: "creating", lastUpdateTime: lastUpdateTime, message: ""};
 
-    const agentBuildUpdate: any = await this.mongoRepo.Update('settings', {
-      $and: [
-        { 'Type': 'AgentBuild' },
-        {
-          $or: [
-            { agent_install: { $exists: false } },
-            queryPlatformNotExists,
-            queryStatusNotExists,
-            queryLastUpdateTimeNotExists,
-            queryStatusError
-          ]
-        }
-      ]
-    }, { $set: queryUpdate }, { _id: 1 });
+    const agentBuildUpdate: any = await this.mongoRepo.Update(
+      "settings",
+      {
+        $and: [
+          {Type: "AgentBuild"},
+          {
+            $or: [
+              {agent_install: {$exists: false}},
+              queryPlatformNotExists,
+              queryStatusNotExists,
+              queryLastUpdateTimeNotExists,
+              queryStatusError,
+            ],
+          },
+        ],
+      },
+      {$set: queryUpdate},
+      {_id: 1}
+    );
 
-    if ((agentBuildUpdate != null) && (agentBuildUpdate.lastErrorObject.updatedExisting)) {
-      // Create the agent install and upload it to s3
-      // let out_path = `/tmp/sg-agent-install/`;
-      // let createAgentRes;
+    if (agentBuildUpdate != null && agentBuildUpdate.lastErrorObject.updatedExisting) {
       try {
-        // createAgentRes = await this.CreateAgentInstall(_teamId, agentVersion, 'node10', platform, arch, req.cookies.Auth, out_path, logger);
         let data = {
           name: `BuildAgent - ${platform}${arch} - ${agentVersion}`,
           runtimeVars: {
             agentVersion: agentVersion,
             platform: platform,
-            arch: arch
-          }
+            arch: arch,
+          },
         };
-        let jobDefId = config.get('buildAgentJobDefId');
-        if (platform == 'win')
-          jobDefId = config.get('buildAgentWinx64JobDefId');
-        await localRestAccess.RestAPICall('job', 'POST', config.get("sgAdminTeam"), { _jobDefId: jobDefId }, data);
+        let jobDefId = config.get("buildAgentJobDefId");
+        if (platform == "win") jobDefId = config.get("buildAgentWinx64JobDefId");
+        await localRestAccess.RestAPICall("job", "POST", config.get("sgAdminTeam"), {_jobDefId: jobDefId}, data);
       } catch (err) {
-        logger.LogInfo(`Error creating agent: ${err}`, { 'Platform': platform, 'Arch': arch, Version: agentVersion });
-        queryUpdate[platformKey]['status'] = 'error';
-        queryUpdate[platformKey]['location'] = '';
-        queryUpdate[platformKey]['message'] = err.message;
-        await this.mongoRepo.Update('settings', { '_id': agentBuildUpdate['_id'] }, { $set: queryUpdate }, { _id: 1 });
+        logger.LogInfo(`Error creating agent: ${err}`, {Platform: platform, Arch: arch, Version: agentVersion});
+        queryUpdate[platformKey]["status"] = "error";
+        queryUpdate[platformKey]["location"] = "";
+        queryUpdate[platformKey]["message"] = err.message;
+        await this.mongoRepo.Update("settings", {_id: agentBuildUpdate["_id"]}, {$set: queryUpdate}, {_id: 1});
 
         // if (fs.existsSync(out_path))
         //   fse.removeSync(out_path);
@@ -593,11 +470,10 @@ export class AgentDownloadRouter {
       // let agentPath = createAgentRes;
 
       // let compressedStubPath = await SGUtils.GzipFile(agentPath);
-      // let ret = await this.s3Access.uploadFileToS3(compressedStubPath, s3Path, config.get('S3_BUCKET_AGENT_BINARIES'));
+      // let ret = await this.s3Access.uploadFile(compressedStubPath, s3Path, config.get('S3_BUCKET_AGENT_BINARIES'));
       // logger.LogInfo(`Agent ${agentVersion} loaded from ${agentPath} to ${s3Path}`, {});
       // if (fs.existsSync(out_path))
       //   fse.removeSync(out_path);
-
 
       // // Update the agent status in mongo to "ready"
       // let queryStatus = {};
@@ -605,7 +481,7 @@ export class AgentDownloadRouter {
       // await this.mongoRepo.Update('team', { _id: this.mongoRepo.ObjectIdFromString(_teamId) }, { $set: queryStatus });
       // logger.LogInfo('Build agent started', { '_teamId': _teamId, 'Platform': platform, 'Arch': arch, 'version': agentVersion });
 
-      response.data = '';
+      response.data = "";
       response.statusCode = ResponseCode.NOT_AVAILABLE;
       next();
     } else {
@@ -613,19 +489,18 @@ export class AgentDownloadRouter {
 
       const queryProjection: any = {};
       queryProjection[platformKey] = 1;
-      const agentBuild = await this.mongoRepo.GetById(agentBuildUpdate['_id'], 'settings', queryProjection);
-      if (agentBuild['Values.agent_install'][agentVersionMongo][platform+arch]['status'] == 'creating') {
-        response.data = '';
+      const agentBuild = await this.mongoRepo.GetById(agentBuildUpdate["_id"], "settings", queryProjection);
+      if (agentBuild["Values.agent_install"][agentVersionMongo][platform + arch]["status"] == "creating") {
+        response.data = "";
         response.statusCode = ResponseCode.NOT_AVAILABLE;
-        next();  
+        next();
       } else {
-        response.data = '';
+        response.data = "";
         response.statusCode = ResponseCode.OK;
         next();
       }
     }
   }
-
 
   // Returns 303 if agent install does not exist - otherwise returns 200 plus a signed url for direct s3 download
   async downloadAgent(req: Request, res: Response, next: NextFunction) {
@@ -634,9 +509,9 @@ export class AgentDownloadRouter {
     const machineId: string = <string>req.params.machineId;
     const response: ResponseWrapper = (res as any).body;
 
-    const existingTeam = await teamService.findTeam(_teamId, 'pricingTier');
+    const existingTeam = await teamService.findTeam(_teamId, "pricingTier");
     if (!existingTeam) {
-      response.data = '';
+      response.data = "";
       response.statusCode = ResponseCode.NOT_FOUND;
       next(new ValidationError(`Invalid team`));
       return;
@@ -644,93 +519,98 @@ export class AgentDownloadRouter {
 
     const platform: string = <string>req.params.platform;
     if (validPlatforms.indexOf(platform) < 0) {
-      next(new ValidationError('Missing or invalid platform param'));
+      next(new ValidationError("Missing or invalid platform param"));
       // res.status(422).send('Missing or invalid platform param');
       return;
     }
 
     let arch: string = <string>req.params.arch;
     if (!arch) {
-      arch = '';
+      arch = "";
     } else {
-      if ((platform == 'macos' || platform == 'linux') && arch == 'x64') {
-        arch = ''
+      if ((platform == "macos" || platform == "linux") && arch == "x64") {
+        arch = "";
       } else {
         if (validArchitectures.indexOf(arch) < 0) {
-          next(new ValidationError('Invalid arch param'));
+          next(new ValidationError("Invalid arch param"));
           // res.status(422).send('Invalid arch param');
           return;
         }
       }
     }
 
-    const agentVersionSettings = await settingsService.findSettings('AgentVersion');
+    const agentVersionSettings = await settingsService.findSettings("AgentVersion");
     let agentVersion = agentVersionSettings.agent;
 
-    let agent_info = await this.mongoRepo.GetOneByQuery({ '_teamId': this.mongoRepo.ObjectIdFromString(_teamId), 'machineId': machineId }, 'agent', {});
+    let agent_info = await this.mongoRepo.GetOneByQuery(
+      {_teamId: this.mongoRepo.ObjectIdFromString(_teamId), machineId: machineId},
+      "agent",
+      {}
+    );
     if (agent_info) {
-      agentVersion = agent_info['targetVersion'];
+      agentVersion = agent_info["targetVersion"];
     } else {
       if (existingTeam.pricingTier == TeamPricingTier.FREE) {
         let numAgents = 0;
         let agentsFilter: any = {};
-        agentsFilter['_teamId'] = new mongodb.ObjectId(_teamId);
+        agentsFilter["_teamId"] = new mongodb.ObjectId(_teamId);
 
-        let numAgentsQuery = await AgentModel.aggregate([
-          { $match: agentsFilter },
-          { $count: 'num_agents' }
-        ]);
-        if (_.isArray(numAgentsQuery) && numAgentsQuery.length > 0)
-          numAgents = numAgentsQuery[0].num_agents;
+        let numAgentsQuery = await AgentModel.aggregate([{$match: agentsFilter}, {$count: "num_agents"}]);
+        if (_.isArray(numAgentsQuery) && numAgentsQuery.length > 0) numAgents = numAgentsQuery[0].num_agents;
 
-        const freeTierSettings = await settingsService.findSettings('FreeTierLimits');
+        const freeTierSettings = await settingsService.findSettings("FreeTierLimits");
         if (numAgents >= freeTierSettings.maxAgents) {
-          response.data = '';
+          response.data = "";
           response.statusCode = ResponseCode.FORBIDDEN;
           next();
           return;
         }
       }
     }
-    const agentVersionMongo = agentVersion.split('.').join('_');
+    const agentVersionMongo = agentVersion.split(".").join("_");
 
     // First check if we have information in mongo for this team/platform/arch agent install
     const platformKey = `Values.agent_install.${agentVersionMongo}.${platform}${arch}`;
 
     let queryPlatform = {};
-    queryPlatform[platformKey] = { $exists: true }
+    queryPlatform[platformKey] = {$exists: true};
 
     let queryStatus = {};
     const statusKey = `Values.agent_install.${agentVersionMongo}.${platform}${arch}.status`;
-    queryStatus[statusKey] = { $eq: 'ready' };
+    queryStatus[statusKey] = {$eq: "ready"};
 
     let projectionDoc = {};
     const locationKey = `Values.agent_install.${agentVersionMongo}.${platform}${arch}.location`;
     projectionDoc[locationKey] = 1;
-    projectionDoc['_id'] = 1;
+    projectionDoc["_id"] = 1;
 
-    const agent_install_details = await this.mongoRepo.GetOneByQuery({
-      $and: [
-        { 'Type': 'AgentBuild' },
-        queryPlatform,
-        queryStatus
-      ]
-    }, 'settings', projectionDoc);
+    const agent_install_details = await this.mongoRepo.GetOneByQuery(
+      {
+        $and: [{Type: "AgentBuild"}, queryPlatform, queryStatus],
+      },
+      "settings",
+      projectionDoc
+    );
 
     // Now check if the install exists in the specified s3 path
     if (agent_install_details != null) {
       try {
-        let agentS3Path = agent_install_details['Values']['agent_install'][agentVersionMongo][`${platform}${arch}`]['location'];
+        let agentS3Path =
+          agent_install_details["Values"]["agent_install"][agentVersionMongo][`${platform}${arch}`]["location"];
         // if (platform == 'win')
         //   agentS3Path += '.exe';
-        let agentInstallExists = await this.s3Access.objectExists(agentS3Path, config.get('S3_BUCKET_AGENT_BINARIES'));
+        let agentInstallExists = await this.s3Access.objectExists(agentS3Path, config.get("S3_BUCKET_AGENT_BINARIES"));
         if (!agentInstallExists) {
-          logger.LogWarning('Path to agent from mongo does not exist in s3', { 'Platform': platform, 'Arch': arch, 'S3Path': agentS3Path });
-          let queryCreateEmpty = {}
+          logger.LogWarning("Path to agent from mongo does not exist in s3", {
+            Platform: platform,
+            Arch: arch,
+            S3Path: agentS3Path,
+          });
+          let queryCreateEmpty = {};
           queryCreateEmpty[platformKey] = {};
-          await this.mongoRepo.Update('settings', { '_id': agent_install_details['_id'] }, { $set: queryCreateEmpty });
+          await this.mongoRepo.Update("settings", {_id: agent_install_details["_id"]}, {$set: queryCreateEmpty});
         } else {
-          const signedUrl = await this.s3Access.getSignedS3URL(agentS3Path, config.get('S3_BUCKET_AGENT_BINARIES'));
+          const signedUrl = await this.s3Access.getSignedS3URL(agentS3Path, config.get("S3_BUCKET_AGENT_BINARIES"));
           response.data = signedUrl;
           response.statusCode = ResponseCode.OK;
           next();
@@ -742,15 +622,14 @@ export class AgentDownloadRouter {
       }
     }
 
-    response.data = '';
+    response.data = "";
     response.statusCode = ResponseCode.NOT_AVAILABLE;
     next();
 
     let createAgentUrl = `agentDownload/agent/${agentVersion}/${platform}`;
-    if (arch)
-      createAgentUrl += `/${arch}`;
+    if (arch) createAgentUrl += `/${arch}`;
 
-    await localRestAccess.RestAPICall(createAgentUrl, 'POST', _teamId.toHexString(), null, null, req.cookies.Auth);
+    await localRestAccess.RestAPICall(createAgentUrl, "POST", _teamId.toHexString(), null, null, req.cookies.Auth);
   }
 }
 

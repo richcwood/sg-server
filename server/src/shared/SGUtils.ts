@@ -1,30 +1,30 @@
 import * as os from "os";
-import { exec } from "child_process";
-import { SGStrings } from "./SGStrings";
-import { TaskDefSchema } from "../api/domain/TaskDef";
-import { teamService } from "../api/services/TeamService";
-import { jobService } from "../api/services/JobService";
-import { taskService } from "../api/services/TaskService";
-import { taskOutcomeService } from "../api/services/TaskOutcomeService";
-import { TeamSchema } from "../api/domain/Team";
-import { InvoiceSchema } from "../api/domain/Invoice";
-import { JobSchema } from "../api/domain/Job";
-import { teamVariableService } from "../api/services/TeamVariableService";
-import { AccessRightModel, AccessRightSchema } from "../api/domain/AccessRight";
-import { BaseLogger } from "./SGLogger";
-import { S3Access } from "./S3Access";
+import {exec} from "child_process";
+import {SGStrings} from "./SGStrings";
+import {TaskDefSchema} from "../api/domain/TaskDef";
+import {teamService} from "../api/services/TeamService";
+import {jobService} from "../api/services/JobService";
+import {taskService} from "../api/services/TaskService";
+import {taskOutcomeService} from "../api/services/TaskOutcomeService";
+import {TeamSchema} from "../api/domain/Team";
+import {InvoiceSchema} from "../api/domain/Invoice";
+import {JobSchema} from "../api/domain/Job";
+import {teamVariableService} from "../api/services/TeamVariableService";
+import {AccessRightModel, AccessRightSchema} from "../api/domain/AccessRight";
+import {BaseLogger} from "./SGLogger";
+import {S3Access} from "./S3Access";
 import * as mongodb from "mongodb";
 import * as fs from "fs";
 import * as pdf from "html-pdf";
 import * as moment from "moment";
 import * as compressing from "compressing";
 import * as config from "config";
-import { MissingObjectError, ValidationError } from "../api/utils/Errors";
+import {MissingObjectError, ValidationError} from "../api/utils/Errors";
 import * as _ from "lodash";
 import * as Enums from "./Enums";
 import axios from "axios";
-import { scriptService } from "../api/services/ScriptService";
-import { TaskOutcomeSchema } from "../api/domain/TaskOutcome";
+import {scriptService} from "../api/services/ScriptService";
+import {TaskOutcomeSchema} from "../api/domain/TaskOutcome";
 
 const ascii2utf8: any = {
   "0": "30",
@@ -261,7 +261,7 @@ export class SGUtils {
           if (scriptKey.substr(0, 1) === '"' && scriptKey.substr(scriptKey.length - 1, 1) === '"')
             scriptKey = scriptKey.slice(1, -1);
           // let scriptQuery: ScriptSchema[] = await scriptService.findScript(_teamId, new mongodb.ObjectId(scriptKey), 'code')
-          const scriptQuery: any = await scriptService.findAllScriptsInternal({ _teamId, name: scriptKey });
+          const scriptQuery: any = await scriptService.findAllScriptsInternal({_teamId, name: scriptKey});
           if (!scriptQuery || (_.isArray(scriptQuery) && scriptQuery.length === 0))
             throw new MissingObjectError(`Script ${scriptKey} not found.`);
           const injectedScriptCode = SGUtils.atob(scriptQuery[0].code);
@@ -304,7 +304,7 @@ export class SGUtils {
 
         cmd.on("exit", (code) => {
           try {
-            resolve({ code: code, stdout: stdout, stderr: stderr });
+            resolve({code: code, stdout: stdout, stderr: stderr});
           } catch (e) {
             throw e;
           }
@@ -524,7 +524,7 @@ export class SGUtils {
   };
 
   static GenerateInvoicePDF = async (invoice_html: string, pdfPath: string) => {
-    var options = { format: "Letter" };
+    var options = {format: "Letter"};
 
     await new Promise((resolve, reject) => {
       pdf.create(invoice_html, options).toFile(pdfPath, function (err, res) {
@@ -555,7 +555,7 @@ export class SGUtils {
     const environment = config.get("environment");
     if (environment != "production") s3Path = environment + "/" + s3Path;
     const s3Access = new S3Access();
-    await s3Access.uploadFileToS3(localInvoicePDFPath, s3Path, config.get("S3_BUCKET_INVOICES"));
+    await s3Access.uploadFile(localInvoicePDFPath, s3Path, config.get("S3_BUCKET_INVOICES"));
 
     invoiceModel.pdfLocation = s3Path;
     invoiceModel.save();
@@ -588,7 +588,7 @@ export class SGUtils {
             resolve();
           }
         } catch (e) {
-          logger.LogError(`Error sending invoice: ${e}`, Object.assign({ _teamId: team._id }, invoiceModel));
+          logger.LogError(`Error sending invoice: ${e}`, Object.assign({_teamId: team._id}, invoiceModel));
           resolve();
         }
       });
@@ -660,7 +660,7 @@ export class SGUtils {
     let start = moment(date).startOf("month");
     let end = moment(date).endOf("month");
 
-    return { start, end };
+    return {start, end};
   };
 
   static SendTaskErrorAlertSlack = async (
@@ -720,12 +720,12 @@ export class SGUtils {
         const response = await axios({
           url,
           method: "POST",
-          headers: { "Content-Type": "application/json" },
-          data: { text: rawMessage },
+          headers: {"Content-Type": "application/json"},
+          data: {text: rawMessage},
         });
         resolve(response);
       } catch (err) {
-        logger.LogError(`Error sending slack notification: ${err}`, { url: url, rawMessage: rawMessage });
+        logger.LogError(`Error sending slack notification: ${err}`, {url: url, rawMessage: rawMessage});
       }
     });
   };
@@ -1304,7 +1304,7 @@ export class SGUtils {
       smtpTransport.close();
 
       if (error) {
-        logger.LogError(`Error sending email: ${error}`, { recipientAddress: recipientAddress, subject: subject });
+        logger.LogError(`Error sending email: ${error}`, {recipientAddress: recipientAddress, subject: subject});
       }
     });
   };
@@ -1358,7 +1358,7 @@ export class SGUtils {
       smtpTransport.close();
 
       if (error) {
-        logger.LogError(`Error sending email: ${error}`, { recipientAddress: recipientAddress, subject: subject });
+        logger.LogError(`Error sending email: ${error}`, {recipientAddress: recipientAddress, subject: subject});
       }
     });
   };

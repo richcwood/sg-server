@@ -1,18 +1,21 @@
-import { convertData } from "../utils/ResponseConverters";
-import { TaskSchema, TaskModel } from "../domain/Task";
-import { taskService } from "../services/TaskService";
-import { taskOutcomeService } from "../services/TaskOutcomeService";
-import { rabbitMQPublisher, PayloadOperation } from "../utils/RabbitMQPublisher";
-import { MissingObjectError, ValidationError } from "../utils/Errors";
-import { TaskStatus, TaskFailureCode, TaskDefTarget } from "../../shared/Enums";
-import { GetTaskRoutes, IGetTaskRouteResult } from "../utils/Shared";
-import * as mongodb from "mongodb";
-import * as _ from "lodash";
-import { BaseLogger } from "../../shared/SGLogger";
 import * as config from "config";
-import { AMQPConnector } from "../../shared/AMQPLib";
-import { SGUtils } from "../../shared/SGUtils";
-import { SGStrings } from "../../shared/SGStrings";
+import * as _ from "lodash";
+import * as mongodb from "mongodb";
+
+import {TaskSchema, TaskModel} from "../domain/Task";
+
+import {taskService} from "../services/TaskService";
+import {taskOutcomeService} from "../services/TaskOutcomeService";
+
+import {AMQPConnector} from "../../shared/AMQPLib";
+import {TaskStatus, TaskFailureCode, TaskDefTarget} from "../../shared/Enums";
+import {BaseLogger} from "../../shared/SGLogger";
+import {SGUtils} from "../../shared/SGUtils";
+import {SGStrings} from "../../shared/SGStrings";
+
+import {rabbitMQPublisher, PayloadOperation} from "../utils/RabbitMQPublisher";
+import {convertData} from "../utils/ResponseConverters";
+import {GetTaskRoutes, IGetTaskRouteResult} from "../utils/Shared";
 
 export class TaskActionService {
   public async republishTask(
@@ -23,7 +26,7 @@ export class TaskActionService {
     correlationId?: string,
     responseFields?: string
   ): Promise<object> {
-    const filter = { _id: _taskId, _teamId, status: { $lte: TaskStatus.PUBLISHED } };
+    const filter = {_id: _taskId, _teamId, status: {$lte: TaskStatus.PUBLISHED}};
 
     // let taskUpdateQuery = {};
     // taskUpdateQuery['$unset'] = { 'runtimeVars.route': '' };
@@ -48,8 +51,8 @@ export class TaskActionService {
 
     try {
       let taskUpdateQuery = {};
-      taskUpdateQuery["$unset"] = { "runtimeVars.route": "" };
-      taskUpdateQuery["$set"] = { status: TaskStatus.NOT_STARTED, failureCode: "" };
+      taskUpdateQuery["$unset"] = {"runtimeVars.route": ""};
+      taskUpdateQuery["$set"] = {status: TaskStatus.NOT_STARTED, failureCode: ""};
 
       let updatedTask: any = await taskService.updateTask(
         _teamId,
@@ -73,7 +76,7 @@ export class TaskActionService {
         Method: "republishTask",
         _taskId,
       });
-      return { success: false };
+      return {success: false};
     }
   }
 
@@ -86,12 +89,12 @@ export class TaskActionService {
     correlationId?: string,
     responseFields?: string
   ): Promise<object> {
-    const filter = { _id: _taskId, _teamId, status: TaskStatus.PUBLISHED };
+    const filter = {_id: _taskId, _teamId, status: TaskStatus.PUBLISHED};
 
     let taskUpdateQuery = {};
-    taskUpdateQuery["$unset"] = { "runtimeVars.route": "" };
-    taskUpdateQuery["$set"] = { route: "", status: null, failureCode: null };
-    let updatedTask: any = await TaskModel.findOneAndUpdate(filter, taskUpdateQuery, { new: true });
+    taskUpdateQuery["$unset"] = {"runtimeVars.route": ""};
+    taskUpdateQuery["$set"] = {route: "", status: null, failureCode: null};
+    let updatedTask: any = await TaskModel.findOneAndUpdate(filter, taskUpdateQuery, {new: true});
     if (!updatedTask) return {};
 
     const task: any = data.task;
@@ -107,20 +110,25 @@ export class TaskActionService {
       targetAgentId: agentId,
       _jobId: task._jobId,
     };
-    let getTaskRoutesRes: IGetTaskRouteResult = await GetTaskRoutes(_teamId, routeTaskInfo, logger);
+
+    let _teamIdAgent: mongodb.ObjectId = _teamId;
+    const sgAdminTeam = new mongodb.ObjectId(config.get("sgAdminTeam"));
+    if (task.target == TaskDefTarget.AWS_LAMBDA) _teamIdAgent = sgAdminTeam;
+
+    let getTaskRoutesRes: IGetTaskRouteResult = await GetTaskRoutes(_teamIdAgent, routeTaskInfo, logger);
     if (!getTaskRoutesRes.routes) {
       let deltas: any;
       let taskFailed: boolean = false;
       if (getTaskRoutesRes.failureCode == TaskFailureCode.TARGET_AGENT_NOT_SPECIFIED) {
         taskFailed = true;
-        deltas = { status: TaskStatus.FAILED, failureCode: getTaskRoutesRes.failureCode, route: "fail" };
+        deltas = {status: TaskStatus.FAILED, failureCode: getTaskRoutesRes.failureCode, route: "fail"};
         updatedTask = await taskService.updateTask(_teamId, _taskId, deltas, logger);
       } else if (getTaskRoutesRes.failureCode == TaskFailureCode.NO_AGENT_AVAILABLE) {
-        deltas = { status: TaskStatus.WAITING_FOR_AGENT, failureCode: getTaskRoutesRes.failureCode, route: "fail" };
+        deltas = {status: TaskStatus.WAITING_FOR_AGENT, failureCode: getTaskRoutesRes.failureCode, route: "fail"};
         updatedTask = await taskService.updateTask(_teamId, _taskId, deltas, logger);
       } else {
         taskFailed = true;
-        deltas = { status: TaskStatus.FAILED, failureCode: getTaskRoutesRes.failureCode, route: "fail" };
+        deltas = {status: TaskStatus.FAILED, failureCode: getTaskRoutesRes.failureCode, route: "fail"};
         updatedTask = await taskService.updateTask(_teamId, _taskId, deltas, logger);
         logger.LogError(`Unhandled failure code: ${getTaskRoutesRes.failureCode}`, {
           Class: "TaskOutcomeService",
@@ -144,9 +152,10 @@ export class TaskActionService {
             routes[i]["route"],
             task,
             routes[i]["queueAssertArgs"],
-            { expiration: ttl }
+            {expiration: ttl}
           );
         } else {
+          // This would be used for tasks not targeting specific agents - we do not currently route any tasks this way
           await amqp.PublishRoute(SGStrings.GetTeamExchangeName(_teamId.toHexString()), routes[i]["route"], task);
         }
       }
@@ -154,7 +163,7 @@ export class TaskActionService {
       updatedTask = await taskService.updateTask(
         _teamId,
         _taskId,
-        { status: TaskStatus.PUBLISHED, failureCode: "" },
+        {status: TaskStatus.PUBLISHED, failureCode: ""},
         logger
       );
     }

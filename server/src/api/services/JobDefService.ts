@@ -333,6 +333,9 @@ export class JobDefService {
     if (filter) filter = Object.assign(defaultFilter, filter);
     else filter = defaultFilter;
 
+    // don't allow updating the currentVersion manually
+    delete data.lastRunId;
+
     const jobDef = await JobDefModel.findOneAndUpdate(filter, data);
 
     if (!jobDef) throw new MissingObjectError(`Job template with id '${id}' not found.`);

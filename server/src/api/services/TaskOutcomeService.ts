@@ -1,30 +1,30 @@
-import { JobSchema, JobModel } from "../domain/Job";
-import { StepSchema } from "../domain/Step";
-import { StepOutcomeModel } from "../domain/StepOutcome";
-import { TaskSchema, TaskModel } from "../domain/Task";
-import { TaskOutcomeSchema, TaskOutcomeModel } from "../domain/TaskOutcome";
+import {JobSchema, JobModel} from "../domain/Job";
+import {StepSchema} from "../domain/Step";
+import {StepOutcomeModel} from "../domain/StepOutcome";
+import {TaskSchema, TaskModel} from "../domain/Task";
+import {TaskOutcomeSchema, TaskOutcomeModel} from "../domain/TaskOutcome";
 
-import { jobDefService } from "./JobDefService";
-import { jobService } from "./JobService";
-import { stepOutcomeService } from "./StepOutcomeService";
-import { stepService } from "./StepService";
-import { taskOutcomeActionService } from "./TaskOutcomeActionService";
-import { taskService } from "./TaskService";
-import { teamVariableService } from "./TeamVariableService";
+import {jobDefService} from "./JobDefService";
+import {jobService} from "./JobService";
+import {stepOutcomeService} from "./StepOutcomeService";
+import {stepService} from "./StepService";
+import {taskOutcomeActionService} from "./TaskOutcomeActionService";
+import {taskService} from "./TaskService";
+import {teamVariableService} from "./TeamVariableService";
 
-import { MissingObjectError, ValidationError } from "../utils/Errors";
-import { rabbitMQPublisher, PayloadOperation } from "../utils/RabbitMQPublisher";
-import { convertData } from "../utils/ResponseConverters";
+import {MissingObjectError, ValidationError} from "../utils/Errors";
+import {rabbitMQPublisher, PayloadOperation} from "../utils/RabbitMQPublisher";
+import {convertData} from "../utils/ResponseConverters";
 
-import { AMQPConnector } from "../../shared/AMQPLib";
-import { JobStatus, JobDefStatus, StepStatus, TaskDefTarget, TaskFailureCode, TaskStatus } from "../../shared/Enums";
-import { FreeTierChecks } from "../../shared/FreeTierChecks";
-import { BaseLogger } from "../../shared/SGLogger";
-import { SGStrings } from "../../shared/SGStrings";
-import { SGUtils } from "../../shared/SGUtils";
+import {AMQPConnector} from "../../shared/AMQPLib";
+import {JobStatus, JobDefStatus, StepStatus, TaskDefTarget, TaskFailureCode, TaskStatus} from "../../shared/Enums";
+import {FreeTierChecks} from "../../shared/FreeTierChecks";
+import {BaseLogger} from "../../shared/SGLogger";
+import {SGStrings} from "../../shared/SGStrings";
+import {SGUtils} from "../../shared/SGUtils";
 
-import { localRestAccess } from "../utils/LocalRestAccess";
-import { GetTargetAgentId, GetTaskRoutes, IGetTaskRouteResult, RepublishTasksWaitingForAgent } from "../utils/Shared";
+import {localRestAccess} from "../utils/LocalRestAccess";
+import {GetTargetAgentId, GetTaskRoutes, IGetTaskRouteResult, RepublishTasksWaitingForAgent} from "../utils/Shared";
 
 import * as config from "config";
 import * as mongodb from "mongodb";
@@ -36,7 +36,7 @@ export class TaskOutcomeService {
   }
 
   public async findTaskOutcomes(_teamId: mongodb.ObjectId, filter: any, responseFields?: string) {
-    filter = Object.assign({ _teamId }, filter);
+    filter = Object.assign({_teamId}, filter);
     return TaskOutcomeModel.find(filter).select(responseFields);
   }
 
@@ -46,7 +46,7 @@ export class TaskOutcomeService {
     responseFields?: string
   ): Promise<TaskOutcomeSchema | null> {
     const result: TaskOutcomeSchema[] = await TaskOutcomeModel.findById(taskOutcomeId)
-      .find({ _teamId })
+      .find({_teamId})
       .select(responseFields);
     if (_.isArray(result) && result.length > 0) return result[0];
     return null;
@@ -57,9 +57,9 @@ export class TaskOutcomeService {
     _jobId: mongodb.ObjectId,
     correlationId?: string
   ): Promise<object> {
-    const filter = { _jobId, _teamId };
+    const filter = {_jobId, _teamId};
 
-    let res: any = { ok: 1, deletedCount: 0 };
+    let res: any = {ok: 1, deletedCount: 0};
 
     const taskOutcomesQuery = await TaskOutcomeModel.find(filter).select("id");
     if (_.isArray(taskOutcomesQuery) && taskOutcomesQuery.length === 0) {
@@ -68,7 +68,7 @@ export class TaskOutcomeService {
       res.n = taskOutcomesQuery.length;
       for (let i = 0; i < taskOutcomesQuery.length; i++) {
         const taskOutcome: any = taskOutcomesQuery[i];
-        let deleted = await TaskOutcomeModel.deleteOne({ _id: taskOutcome._id });
+        let deleted = await TaskOutcomeModel.deleteOne({_id: taskOutcome._id});
         if (deleted.acknowledged) {
           res.deletedCount += deleted.deletedCount;
           await rabbitMQPublisher.publish(_teamId, "TaskOutcome", correlationId, PayloadOperation.DELETE, {
@@ -150,12 +150,12 @@ export class TaskOutcomeService {
             }'`
           );
 
-      const defaultFilter = { _id: id, _teamId };
+      const defaultFilter = {_id: id, _teamId};
       if (filter) filter = Object.assign(defaultFilter, filter);
       else filter = defaultFilter;
 
       if (data.runtimeVars && data.runtimeVars.route) data.route = data.runtimeVars.route.value;
-      let updatedTaskOutcome: TaskOutcomeSchema = await TaskOutcomeModel.findOneAndUpdate(filter, data, { new: true });
+      let updatedTaskOutcome: TaskOutcomeSchema = await TaskOutcomeModel.findOneAndUpdate(filter, data, {new: true});
       if (!updatedTaskOutcome)
         throw new MissingObjectError(`TaskOutcome not found with filter "${JSON.stringify(filter, null, 4)}"`);
 
@@ -186,7 +186,7 @@ export class TaskOutcomeService {
             const resTaskQuery = await taskService.updateTask(
               _teamId,
               updatedTaskOutcome._taskId,
-              { runtimeVars: updatedTaskOutcome.runtimeVars },
+              {runtimeVars: updatedTaskOutcome.runtimeVars},
               logger
             );
             if (!resTaskQuery)
@@ -202,9 +202,9 @@ export class TaskOutcomeService {
               const stepOutcome: any = taskStepOutcomesQuery[i];
               let stepOutcomeUpdate: any = {};
               stepOutcomeUpdate["status"] = StepStatus.INTERRUPTED;
-              stepOutcomeUpdate["runtimeVars"] = { route: { value: "interrupt" } };
+              stepOutcomeUpdate["runtimeVars"] = {route: {value: "interrupt"}};
               await StepOutcomeModel.findOneAndUpdate(
-                { _id: stepOutcome._id, _teamId, status: { $lt: StepStatus.INTERRUPTED } },
+                {_id: stepOutcome._id, _teamId, status: {$lt: StepStatus.INTERRUPTED}},
                 stepOutcomeUpdate
               );
               // await stepOutcomeService.updateStepOutcome(_teamId, stepOutcome._id, stepOutcomeUpdate, null, { status: { $lt: StepStatus.INTERRUPTED } }, null, '_id');
@@ -212,15 +212,16 @@ export class TaskOutcomeService {
           }
         }
 
-        /// Handles the case where a user canceled a running task - the agent interrupts the task initially - now the task status (and step statuses) are updated to canceled
+        /// Handles the case where a user canceled a running task - the agent interrupts the task initially -
+        ///   now the task status (and step statuses) are updated to canceled
         if (
           data.status == TaskStatus.INTERRUPTED &&
           (currentTaskOutcome.status == TaskStatus.CANCELLED || currentTaskOutcome.status == TaskStatus.CANCELING)
         ) {
           updatedTaskOutcome = await TaskOutcomeModel.findOneAndUpdate(
             filter,
-            { status: TaskStatus.CANCELLED },
-            { new: true }
+            {status: TaskStatus.CANCELLED},
+            {new: true}
           );
           if (updatedTaskOutcome) data.status = updatedTaskOutcome.status;
           const taskStepOutcomesQuery = await stepOutcomeService.findStepOutcomesForTask(_teamId, id, null, "_id");
@@ -228,8 +229,8 @@ export class TaskOutcomeService {
             for (let i = 0; i < taskStepOutcomesQuery.length; i++) {
               const stepOutcome: any = taskStepOutcomesQuery[i];
               await StepOutcomeModel.findOneAndUpdate(
-                { _id: stepOutcome._id, _teamId, status: { $lte: StepStatus.INTERRUPTED } },
-                { status: StepStatus.INTERRUPTED }
+                {_id: stepOutcome._id, _teamId, status: {$lte: StepStatus.INTERRUPTED}},
+                {status: StepStatus.INTERRUPTED}
               );
               // await stepOutcomeService.updateStepOutcome(_teamId, stepOutcome._id, { status: StepStatus.CANCELLED }, null, { status: { $lte: StepStatus.INTERRUPTED } }, null, '_id');
             }
@@ -254,14 +255,10 @@ export class TaskOutcomeService {
           if (job._jobDefId) {
             if (job.status == JobStatus.INTERRUPTED || job.status == JobStatus.FAILED) {
               try {
-                await jobDefService.updateJobDef(
-                  _teamId,
-                  job._jobDefId,
-                  { status: JobDefStatus.PAUSED },
-                  logger,
-                  amqp,
-                  { status: JobDefStatus.RUNNING, pauseOnFailedJob: true }
-                );
+                await jobDefService.updateJobDef(_teamId, job._jobDefId, {status: JobDefStatus.PAUSED}, logger, amqp, {
+                  status: JobDefStatus.RUNNING,
+                  pauseOnFailedJob: true,
+                });
               } catch (e) {
                 if (!(e instanceof MissingObjectError)) throw e;
               }
@@ -287,8 +284,8 @@ export class TaskOutcomeService {
               if (taskQuery[0].autoRestart) {
                 updatedTaskOutcome = await TaskOutcomeModel.findOneAndUpdate(
                   filter,
-                  { status: TaskStatus.CANCELLED },
-                  { new: true }
+                  {status: TaskStatus.CANCELLED},
+                  {new: true}
                 ).select(responseFields);
                 if (updatedTaskOutcome) data.status = updatedTaskOutcome.status;
                 await localRestAccess.RestAPICall(
@@ -304,7 +301,7 @@ export class TaskOutcomeService {
         }
       }
 
-      const deltas = Object.assign({ _id: id }, data);
+      const deltas = Object.assign({_id: id}, data);
       await rabbitMQPublisher.publish(
         _teamId,
         "TaskOutcome",
@@ -317,7 +314,7 @@ export class TaskOutcomeService {
 
       return updatedTaskOutcome; // fully populated model
     } catch (err) {
-      logger.LogError(err, { Class: "TaskOutcomeService", Method: "updateTaskOutcome", _teamId, taskOutcome: data });
+      logger.LogError(err, {Class: "TaskOutcomeService", Method: "updateTaskOutcome", _teamId, taskOutcome: data});
       throw err;
     }
   }
@@ -332,7 +329,7 @@ export class TaskOutcomeService {
     let tasksToLaunch = [];
     let toRouteTasks = [];
 
-    const filter: any = { _teamId, _id: taskOutcome._taskId };
+    const filter: any = {_teamId, _id: taskOutcome._taskId};
     const task: TaskSchema = await TaskModel.findById(filter).select("name down_dep up_dep toRoutes _jobId");
     if (!task) throw new MissingObjectError(`Task not found with filter "${JSON.stringify(filter)}"`);
 
@@ -351,7 +348,7 @@ export class TaskOutcomeService {
               toRouteTasks.push(downstreamTask._id.toHexString());
             tasksToLaunch.push({
               taskId: downstreamTask._id,
-              sourceTaskRoute: { sourceTaskOutcomeId: taskOutcome._id, sourceRoute: route },
+              sourceTaskRoute: {sourceTaskOutcomeId: taskOutcome._id, sourceRoute: route},
             });
           } else {
             logger.LogError(`Unable to find Task with _jobId "${task._jobId}" and name "${downStreamTaskName}"`, {
@@ -388,10 +385,8 @@ export class TaskOutcomeService {
             if (downstreamTask) {
               let queryUpdate: any = {};
               queryUpdate[`up_dep.${task.name}`] = "";
-              const taskFilter = { _teamId, _id: downstreamTask._id.toHexString() };
-              downstreamTask = await TaskModel.findOneAndUpdate(taskFilter, { $unset: queryUpdate }).select(
-                "_id up_dep"
-              );
+              const taskFilter = {_teamId, _id: downstreamTask._id.toHexString()};
+              downstreamTask = await TaskModel.findOneAndUpdate(taskFilter, {$unset: queryUpdate}).select("_id up_dep");
               if (
                 downstreamTask.up_dep &&
                 _.isPlainObject(downstreamTask.up_dep) &&
@@ -399,7 +394,7 @@ export class TaskOutcomeService {
                 task.name in downstreamTask.up_dep
               ) {
                 if (toRouteTasks.indexOf(downstreamTask._id.toHexString) < 0)
-                  tasksToLaunch.push({ taskId: downstreamTask._id });
+                  tasksToLaunch.push({taskId: downstreamTask._id});
               }
             } else {
               logger.LogError(`Unable to find Task with _jobId "${task._jobId}" and name "${downStreamTaskName}"`, {
@@ -446,9 +441,9 @@ export class TaskOutcomeService {
         task = await taskService.updateTask(
           _teamId,
           _taskId,
-          { status: TaskStatus.NOT_STARTED },
+          {status: TaskStatus.NOT_STARTED},
           logger,
-          { status: null },
+          {status: null},
           null,
           null
         );
@@ -456,7 +451,7 @@ export class TaskOutcomeService {
       await this.PublishTask(_teamId, task, logger, amqp);
     } catch (err) {
       if (err instanceof MissingObjectError) {
-        logger.LogWarning(err.message, { Error: err, Class: "TaskOutcomeService", Method: "LaunchTask" });
+        logger.LogWarning(err.message, {Error: err, Class: "TaskOutcomeService", Method: "LaunchTask"});
       } else {
         logger.LogError(err.message, {
           Error: err,
@@ -486,14 +481,14 @@ export class TaskOutcomeService {
         let taskFailed: boolean = false;
         if (getTaskRoutesRes.failureCode == TaskFailureCode.TARGET_AGENT_NOT_SPECIFIED) {
           taskFailed = true;
-          deltas = { status: TaskStatus.FAILED, failureCode: getTaskRoutesRes.failureCode, route: "" };
+          deltas = {status: TaskStatus.FAILED, failureCode: getTaskRoutesRes.failureCode, route: ""};
           await taskService.updateTask(_teamId, task._id, deltas, logger);
         } else if (getTaskRoutesRes.failureCode == TaskFailureCode.NO_AGENT_AVAILABLE) {
-          deltas = { status: TaskStatus.WAITING_FOR_AGENT, failureCode: getTaskRoutesRes.failureCode, route: "" };
+          deltas = {status: TaskStatus.WAITING_FOR_AGENT, failureCode: getTaskRoutesRes.failureCode, route: ""};
           await taskService.updateTask(_teamId, task._id, deltas, logger);
         } else {
           taskFailed = true;
-          deltas = { status: TaskStatus.FAILED, failureCode: getTaskRoutesRes.failureCode, route: "" };
+          deltas = {status: TaskStatus.FAILED, failureCode: getTaskRoutesRes.failureCode, route: ""};
           await taskService.updateTask(_teamId, task._id, deltas, logger);
           logger.LogError(`Unhandled failure code: ${getTaskRoutesRes.failureCode}`, {
             Class: "TaskOutcomeService",
@@ -591,7 +586,7 @@ export class TaskOutcomeService {
 
         let ttl = config.get("defaultQueuedTaskTTL");
 
-        await taskService.updateTask(_teamId, task._id, { status: TaskStatus.PUBLISHED, failureCode: "" }, logger);
+        await taskService.updateTask(_teamId, task._id, {status: TaskStatus.PUBLISHED, failureCode: ""}, logger);
 
         for (let i = 0; i < routes.length; i++) {
           if (routes[i]["type"] == "queue") {
@@ -601,7 +596,7 @@ export class TaskOutcomeService {
               routes[i]["route"],
               convertedTask,
               routes[i]["queueAssertArgs"],
-              { expiration: ttl }
+              {expiration: ttl}
             );
           } else {
             await amqp.PublishRoute(
@@ -615,7 +610,7 @@ export class TaskOutcomeService {
       }
 
       await jobService.UpdateJobStatus(_teamId, task._jobId, logger, null);
-      return { success };
+      return {success};
     } catch (err) {
       // logger.LogDebug(`Error publishing task`, { Class: 'TaskOutcomeService', Method: 'PublishTask', err });
       task.error = err.message;
@@ -624,7 +619,7 @@ export class TaskOutcomeService {
         durable: true,
         autoDelete: false,
       });
-      return { success: false };
+      return {success: false};
     }
   }
 
@@ -647,7 +642,7 @@ export class TaskOutcomeService {
       try {
         const task: TaskSchema = await taskService.findTaskByName(_teamId, _jobId, taskName);
         if (!task) {
-          logger.LogError(`Error in OnTaskSkipped - task not found`, { _teamId, _jobId: _jobId, taskName: taskName });
+          logger.LogError(`Error in OnTaskSkipped - task not found`, {_teamId, _jobId: _jobId, taskName: taskName});
           resolve();
           return;
         }
@@ -661,7 +656,7 @@ export class TaskOutcomeService {
         }
 
         task.status = TaskStatus.SKIPPED;
-        resUpdate = await taskService.updateTask(_teamId, task._id, { status: TaskStatus.SKIPPED }, logger);
+        resUpdate = await taskService.updateTask(_teamId, task._id, {status: TaskStatus.SKIPPED}, logger);
 
         // console.log('OnTaskSkipped -> resUpdate -> ', JSON.stringify(resUpdate, null, 4));
 

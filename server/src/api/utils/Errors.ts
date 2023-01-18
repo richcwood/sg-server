@@ -1,4 +1,4 @@
-import { TaskFailureCode } from "../../shared/Enums";
+import {TaskFailureCode} from "../../shared/Enums";
 
 export class MissingObjectError extends Error {
   constructor(message: string) {
@@ -11,6 +11,13 @@ export class FreeTierLimitExceededError extends Error {
   constructor(message: string) {
     super(message);
     this.name = "FreeTierLimitExceededError";
+  }
+}
+
+export class SaascipeImportError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "SaascipeImportError";
   }
 }
 

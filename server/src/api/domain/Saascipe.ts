@@ -1,37 +1,41 @@
+import {SaascipeType} from "../../shared/Enums";
 import {modelOptions, prop, getModelForClass, Severity} from "@typegoose/typegoose";
 import {FilterOperator} from "../utils/BulkGet";
+
 import * as mongodb from "mongodb";
 
-// Example of a schema / domain in Mongoose
-@modelOptions({schemaOptions: {collection: "artifact"}, options: {allowMixed: Severity.ALLOW}})
-export class ArtifactSchema {
+@modelOptions({schemaOptions: {collection: "saascipe"}, options: {allowMixed: Severity.ALLOW}})
+export class SaascipeSchema {
   _id?: mongodb.ObjectId;
 
   @prop()
   id?: mongodb.ObjectId;
 
   @prop({required: true})
-  _teamId: mongodb.ObjectId;
+  _publisherTeamId: mongodb.ObjectId;
+
+  @prop({required: true})
+  _publisherUserId: mongodb.ObjectId;
+
+  @prop({required: true})
+  _sourceId: mongodb.ObjectId;
 
   @prop({required: true})
   name: string;
 
-  @prop({default: ""})
-  prefix?: string;
+  @prop({required: true})
+  saascipeType: SaascipeType;
 
   @prop({required: true})
-  s3Path: string;
+  description: string;
 
-  @prop({default: "application/octet-stream"})
-  type: string;
-
-  @prop({default: ""})
-  url?: string;
+  @prop({default: 0})
+  currentVersion: number;
 
   // Define which filters are legal for which props (including nested props (not sure about nested arrays))
   public static readonly validFilters = {
     name: [FilterOperator.LIKE],
-    prefix: [FilterOperator.LIKE],
+    saascipeType: [FilterOperator.EQUALS],
   };
 
   // 2 way map between field values the API client sees and what is stored in the database.  Allows client to use 'id' and database to use '_id'
@@ -57,4 +61,4 @@ export class ArtifactSchema {
   };
 }
 
-export const ArtifactModel = getModelForClass(ArtifactSchema);
+export const SaascipeModel = getModelForClass(SaascipeSchema);

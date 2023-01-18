@@ -10,7 +10,7 @@ enum StepStatus {
   FAILED = 22,
   CANCELLED = 21,
 }
-export { StepStatus };
+export {StepStatus};
 
 enum TaskStatus {
   NOT_STARTED = 0,
@@ -25,7 +25,7 @@ enum TaskStatus {
   FAILED = 22,
   SKIPPED = 23,
 }
-export { TaskStatus };
+export {TaskStatus};
 
 enum TaskFailureCode {
   AGENT_CRASHED_OR_LOST_CONNECTIVITY = 0,
@@ -38,7 +38,7 @@ enum TaskFailureCode {
   TASK_EXEC_ERROR = 7,
   INVALID_TASK_STATUS = 8,
 }
-export { TaskFailureCode };
+export {TaskFailureCode};
 
 enum JobStatus {
   NOT_STARTED = 0,
@@ -51,13 +51,13 @@ enum JobStatus {
   FAILED = 22,
   SKIPPED = 23,
 }
-export { JobStatus };
+export {JobStatus};
 
 enum JobDefStatus {
   RUNNING = 10,
   PAUSED = 15,
 }
-export { JobDefStatus };
+export {JobDefStatus};
 
 enum LogLevel {
   ERROR = 40,
@@ -65,20 +65,20 @@ enum LogLevel {
   INFO = 20,
   DEBUG = 10,
 }
-export { LogLevel };
+export {LogLevel};
 
 enum TaskSource {
   CONSOLE = 0,
   JOB = 1,
 }
-export { TaskSource };
+export {TaskSource};
 
 enum UserTeamStatus {
   ACTIVE = 0,
   INACTIVE = 1,
   INVITED,
 } // someone deactivated this user from the team
-export { UserTeamStatus };
+export {UserTeamStatus};
 
 enum ScriptType {
   PYTHON = 0,
@@ -91,7 +91,7 @@ enum ScriptType {
   PHP = 7,
   POWERSHELL = 8,
 }
-export { ScriptType };
+export {ScriptType};
 
 const ScriptTypeDetails: any = {
   PYTHON: {
@@ -116,13 +116,13 @@ const ScriptTypeDetails: any = {
     cmd: "powershell",
   },
 };
-export { ScriptTypeDetails };
+export {ScriptTypeDetails};
 
 enum TeamPaymentStatus {
   HEALTHY = 0,
   DELINQUENT = 1,
 }
-export { TeamPaymentStatus };
+export {TeamPaymentStatus};
 
 enum InvoiceStatus {
   CREATED = 0,
@@ -131,22 +131,22 @@ enum InvoiceStatus {
   PARTIALLY_PAID = 3,
   REJECTED = 4,
 }
-export { InvoiceStatus };
+export {InvoiceStatus};
 
 enum PaymentMethodType {
   CREDIT_CARD = 0,
 }
-export { PaymentMethodType };
+export {PaymentMethodType};
 
 enum PaymentTransactionSource {
   STRIPE = 0,
 }
-export { PaymentTransactionSource };
+export {PaymentTransactionSource};
 
 enum PaymentTransactionType {
   CHARGE = 0,
 }
-export { PaymentTransactionType };
+export {PaymentTransactionType};
 
 enum PaymentTransactionStatus {
   APPROVED = 0,
@@ -155,17 +155,17 @@ enum PaymentTransactionStatus {
   DISPUTED = 3,
   RESOLVED = 4,
 }
-export { PaymentTransactionStatus };
+export {PaymentTransactionStatus};
 
 enum TeamPricingTier {
   FREE = 0,
   PAID = 1,
 }
-export { TeamPricingTier };
+export {TeamPricingTier};
 
 enum AccessRight {}
 // no access rights for now
-export { AccessRight };
+export {AccessRight};
 
 enum TaskDefTarget {
   SINGLE_AGENT = 1,
@@ -177,17 +177,30 @@ enum TaskDefTarget {
   GCP_FUNCTION = 64,
   AMAZON_AUTOMATION = 128,
 }
-export { TaskDefTarget };
+export {TaskDefTarget};
 
 enum AccessKeyType {
   USER = 0,
   AGENT = 1,
 }
-export { AccessKeyType };
+export {AccessKeyType};
 
 enum AuthTokenType {
   USER = 0,
   ACCESSKEY = 1,
   REFRESHKEY = 2,
 }
-export { AuthTokenType };
+export {AuthTokenType};
+
+enum SaascipeType {
+  JOB = 0,
+  SCRIPT = 1,
+}
+export {SaascipeType};
+
+enum RuntimeVariableFormat {
+  TEXT = "plaintext",
+  YAML = "yaml",
+  JSON = "json",
+}
+export {RuntimeVariableFormat};
