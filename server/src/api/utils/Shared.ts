@@ -108,11 +108,7 @@ let GetSingleSpecificAgentTaskRoute = async (
       $gte: new Date().getTime() - parseInt(__ACTIVE_AGENT_TIMEOUT_SECONDS) * 1000,
     },
   };
-  const targetAgentQuery = await agentService.findAllAgents(
-    _teamId,
-    filter,
-    "lastHeartbeatTime tags propertyOverrides numActiveTasks attemptedRunAgentIds"
-  );
+  const targetAgentQuery = await agentService.findAllAgents(_teamId, filter, "_id");
   if (!targetAgentQuery || (_.isArray(targetAgentQuery) && targetAgentQuery.length === 0)) {
     const errMsg = `Target agent not available`;
     logger.LogDebug(errMsg, {
