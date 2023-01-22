@@ -93,7 +93,7 @@ export class TaskOutcomeService {
     logger: BaseLogger,
     correlationId?: string,
     responseFields?: string
-  ): Promise<object> {
+  ): Promise<TaskOutcomeSchema> {
     data._teamId = _teamId;
     const taskOutcomeModel = new TaskOutcomeModel(data);
     let newTaskOutcome: TaskOutcomeSchema = await taskOutcomeModel.save();
@@ -591,6 +591,34 @@ export class TaskOutcomeService {
         for (let i = 0; i < routes.length; i++) {
           if (routes[i]["type"] == "queue") {
             // logger.LogDebug(`Publishing task`, { Class: 'TaskOutcomeService', Method: 'PublishTask', _teamId, task: convertedTask, route: routes[i]['route'] });
+
+            // Create task outcome records for each target
+            const taskOutcomeData: TaskOutcomeSchema = {
+              _teamId: _teamId,
+              _jobId: task._jobId,
+              _taskId: task._id,
+              _agentId: routes[i]["targetAgentId"],
+              sourceTaskRoute: task.sourceTaskRoute,
+              source: task.source,
+              status: TaskStatus.PUBLISHED,
+              correlationId: task.correlationId,
+              target: task.target,
+              runtimeVars: task.runtimeVars,
+              autoRestart: task.autoRestart,
+            };
+            if (task.target == TaskDefTarget.AWS_LAMBDA) {
+              taskOutcomeData.ipAddress = "0.0.0.0";
+              taskOutcomeData.machineId = "lambda-executor";
+            }
+            const taskOutcome: TaskOutcomeSchema = await taskOutcomeService.createTaskOutcome(
+              _teamId,
+              taskOutcomeData,
+              logger,
+              null,
+              ""
+            );
+            convertedTask._taskOutcomeId = taskOutcome._id;
+
             await amqp.PublishQueue(
               SGStrings.GetTeamExchangeName(_teamId.toHexString()),
               routes[i]["route"],

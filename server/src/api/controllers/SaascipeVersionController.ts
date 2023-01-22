@@ -23,17 +23,17 @@ export class SaascipeVersionController {
       );
 
       if (!saascipeVersion) {
-        next(new MissingObjectError(`SaascipeVersion ${req.params.saascipeVersionId} not found.`));
+        return next(new MissingObjectError(`SaascipeVersion ${req.params.saascipeVersionId} not found.`));
       } else {
         response.data = convertResponseData(SaascipeVersionSchema, saascipeVersion);
-        next();
+        return next();
       }
     } catch (err) {
       // If req.params.saascipeVersionId wasn't a mongo id then we will get a CastError - basically same as if the id wasn't found
       if (err instanceof Error.CastError) {
-        next(new MissingObjectError(`SaascipeVersion ${req.params.saascipeVersionId} not found.`));
+        return next(new MissingObjectError(`SaascipeVersion ${req.params.saascipeVersionId} not found.`));
       } else {
-        next(err);
+        return next(err);
       }
     }
   }
@@ -50,9 +50,9 @@ export class SaascipeVersionController {
       );
       response.data = convertResponseData(SaascipeVersionSchema, newSaascipeVersion);
       response.statusCode = ResponseCode.CREATED;
-      next();
+      return next();
     } catch (err) {
-      next(err);
+      return next(err);
     }
   }
 
@@ -69,14 +69,14 @@ export class SaascipeVersionController {
       );
 
       if (_.isArray(updatedSaascipeVersion) && updatedSaascipeVersion.length === 0) {
-        next(new MissingObjectError(`SaascipeVersion ${req.params.saascipeVersionId} not found.`));
+        return next(new MissingObjectError(`SaascipeVersion ${req.params.saascipeVersionId} not found.`));
       } else {
         response.data = convertResponseData(SaascipeVersionSchema, updatedSaascipeVersion);
         response.statusCode = ResponseCode.OK;
-        next();
+        return next();
       }
     } catch (err) {
-      next(err);
+      return next(err);
     }
   }
 
@@ -90,9 +90,9 @@ export class SaascipeVersionController {
         req.header("correlationId")
       );
       response.statusCode = ResponseCode.OK;
-      next();
+      return next();
     } catch (err) {
-      next(err);
+      return next(err);
     }
   }
 }

@@ -32,17 +32,17 @@ export class JobDefController {
       const jobDef = await jobDefService.findJobDef(_teamId, _jobDefId, <string>req.query.responseFields);
 
       if (!jobDef) {
-        next(new MissingObjectError(`JobDef ${req.params.jobDefId} not found.`));
+        return next(new MissingObjectError(`JobDef ${req.params.jobDefId} not found.`));
       } else {
         response.data = convertResponseData(JobDefSchema, jobDef);
-        next();
+        return next();
       }
     } catch (err) {
       // If req.params.jobDefId wasn't a mongo id then we will get a CastError - basically same as if the id wasn't found
       if (err instanceof Error.CastError) {
-        next(new MissingObjectError(`JobDef ${req.params.jobDefId} not found.`));
+        return next(new MissingObjectError(`JobDef ${req.params.jobDefId} not found.`));
       } else {
-        next(err);
+        return next(err);
       }
     }
   }
@@ -60,9 +60,9 @@ export class JobDefController {
       );
       response.data = convertResponseData(JobDefSchema, newJobDef);
       response.statusCode = ResponseCode.CREATED;
-      next();
+      return next();
     } catch (err) {
-      next(err);
+      return next(err);
     }
   }
 
@@ -79,9 +79,9 @@ export class JobDefController {
       );
       response.data = convertResponseData(JobDefSchema, newJobDef);
       response.statusCode = ResponseCode.CREATED;
-      next();
+      return next();
     } catch (err) {
-      next(err);
+      return next(err);
     }
   }
 
@@ -98,9 +98,9 @@ export class JobDefController {
       );
       response.data = convertResponseData(JobDefSchema, newJobDef);
       response.statusCode = ResponseCode.CREATED;
-      next();
+      return next();
     } catch (err) {
-      next(err);
+      return next(err);
     }
   }
 
@@ -117,9 +117,9 @@ export class JobDefController {
       );
       response.data = convertResponseData(JobDefSchema, newJobDef);
       response.statusCode = ResponseCode.CREATED;
-      next();
+      return next();
     } catch (err) {
-      next(err);
+      return next(err);
     }
   }
 
@@ -143,14 +143,14 @@ export class JobDefController {
       );
 
       if (!updatedJobDef) {
-        next(new MissingObjectError(`JobDef ${req.params.jobDefId} not found.`));
+        return next(new MissingObjectError(`JobDef ${req.params.jobDefId} not found.`));
       } else {
         response.data = convertResponseData(JobDefSchema, updatedJobDef);
         response.statusCode = ResponseCode.OK;
-        next();
+        return next();
       }
     } catch (err) {
-      next(err);
+      return next(err);
     }
   }
 
@@ -184,14 +184,14 @@ export class JobDefController {
         // now delete the actual job
         response.data = jobDefService.deleteJobDef(_teamId, new mongodb.ObjectId(jobDef._id), req.get("correlationId"));
         response.statusCode = ResponseCode.OK;
-        next();
+        return next();
       }
     } catch (err) {
       // If req.params.jobDefId wasn't a mongo id then we will get a CastError - basically same as if the id wasn't found
       if (err instanceof Error.CastError) {
-        next(new MissingObjectError(`JobDef ${req.params.jobDefId} not found.`));
+        return next(new MissingObjectError(`JobDef ${req.params.jobDefId} not found.`));
       } else {
-        next(err);
+        return next(err);
       }
     }
   }
@@ -207,7 +207,7 @@ export class JobDefController {
       // For debugging, how to stream the file normally / not as a download
       // const response: ResponseWrapper = resp['body'];
       // response.data = exportedJobs;
-      // next();
+      // return next();
 
       // How to save file as a download
       const jobBuffer = Buffer.from(JSON.stringify(exportedJobs));
@@ -220,9 +220,9 @@ export class JobDefController {
     } catch (err) {
       // If req.params.jobDefId wasn't a mongo id then we will get a CastError - basically same as if the id wasn't found
       if (err instanceof Error.CastError) {
-        next(new MissingObjectError(`JobDef ${req.params.jobDefId} not found.`));
+        return next(new MissingObjectError(`JobDef ${req.params.jobDefId} not found.`));
       } else {
-        next(err);
+        return next(err);
       }
     }
   }
@@ -243,10 +243,10 @@ export class JobDefController {
       const importReport = await jobDefService.importJobDefs(_teamId, userId, req.header("correlationId"), dataJSON);
       response.statusCode = ResponseCode.CREATED;
       response.data = importReport;
-      next();
+      return next();
     } catch (err) {
       console.log("\nOoooh crap", err);
-      next(err);
+      return next(err);
     }
   }
 }

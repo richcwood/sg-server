@@ -21,17 +21,17 @@ export class SaascipeController {
       const saascipe = await saascipeService.findSaascipe(new mongodb.ObjectId(req.params.saascipeId));
 
       if (!saascipe) {
-        next(new MissingObjectError(`Saascipe ${req.params.saascipeId} not found.`));
+        return next(new MissingObjectError(`Saascipe ${req.params.saascipeId} not found.`));
       } else {
         response.data = convertResponseData(SaascipeSchema, saascipe);
-        next();
+        return next();
       }
     } catch (err) {
       // If req.params.saascipeId wasn't a mongo id then we will get a CastError - basically same as if the id wasn't found
       if (err instanceof Error.CastError) {
-        next(new MissingObjectError(`Saascipe ${req.params.saascipeId} not found.`));
+        return next(new MissingObjectError(`Saascipe ${req.params.saascipeId} not found.`));
       } else {
-        next(err);
+        return next(err);
       }
     }
   }
@@ -48,9 +48,9 @@ export class SaascipeController {
       );
       response.data = convertResponseData(SaascipeSchema, newSaascipe);
       response.statusCode = ResponseCode.CREATED;
-      next();
+      return next();
     } catch (err) {
-      next(err);
+      return next(err);
     }
   }
 
@@ -67,14 +67,14 @@ export class SaascipeController {
       );
 
       if (_.isArray(updatedSaascipe) && updatedSaascipe.length === 0) {
-        next(new MissingObjectError(`Saascipe ${req.params.saascipeId} not found.`));
+        return next(new MissingObjectError(`Saascipe ${req.params.saascipeId} not found.`));
       } else {
         response.data = convertResponseData(SaascipeSchema, updatedSaascipe);
         response.statusCode = ResponseCode.OK;
-        next();
+        return next();
       }
     } catch (err) {
-      next(err);
+      return next(err);
     }
   }
 
@@ -88,9 +88,9 @@ export class SaascipeController {
         req.header("correlationId")
       );
       response.statusCode = ResponseCode.OK;
-      next();
+      return next();
     } catch (err) {
-      next(err);
+      return next(err);
     }
   }
 }

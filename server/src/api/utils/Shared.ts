@@ -248,7 +248,7 @@ let CreateTaskRouteForSingleAgent = async (
       throw new LaunchTaskError("Route missing targetAgentId", Enums.TaskFailureCode.TARGET_AGENT_NOT_SPECIFIED, task);
     const targetAgentId = routes[0].targetAgentId;
     updatedTask = await TaskModel.findOneAndUpdate(
-      {_id: task._id, _teamId},
+      {_id: task._id, _teamId: task._teamId},
       {$addToSet: {attemptedRunAgentIds: targetAgentId}},
       {new: true}
     );

@@ -1,20 +1,20 @@
-import { Request, Response, NextFunction, response } from "express";
-import { ResponseWrapper, ResponseCode } from "../utils/Types";
-import { TaskDefSchema, TaskDefModel } from "../domain/TaskDef";
-import { defaultBulkGet } from "../utils/BulkGet";
-import { taskDefService } from "../services/TaskDefService";
-import { stepDefService } from "../services/StepDefService";
-import { MissingObjectError } from "../utils/Errors";
-import { Error } from "mongoose";
-import { convertData as convertResponseData } from "../utils/ResponseConverters";
-import { convertData as convertRequestData } from "../utils/RequestConverters";
+import {Request, Response, NextFunction, response} from "express";
+import {ResponseWrapper, ResponseCode} from "../utils/Types";
+import {TaskDefSchema, TaskDefModel} from "../domain/TaskDef";
+import {defaultBulkGet} from "../utils/BulkGet";
+import {taskDefService} from "../services/TaskDefService";
+import {stepDefService} from "../services/StepDefService";
+import {MissingObjectError} from "../utils/Errors";
+import {Error} from "mongoose";
+import {convertData as convertResponseData} from "../utils/ResponseConverters";
+import {convertData as convertRequestData} from "../utils/RequestConverters";
 import * as _ from "lodash";
 import * as mongodb from "mongodb";
 
 export class TaskDefController {
   public async getManyTaskDefs(req: Request, resp: Response, next: NextFunction): Promise<void> {
     const _teamId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._teamid);
-    defaultBulkGet({ _teamId }, req, resp, next, TaskDefSchema, TaskDefModel, taskDefService);
+    defaultBulkGet({_teamId}, req, resp, next, TaskDefSchema, TaskDefModel, taskDefService);
   }
 
   // public async getTaskDefsForJob(req: Request, resp: Response, next: NextFunction): Promise<void> {
@@ -25,11 +25,11 @@ export class TaskDefController {
   //   const taskDefs = await taskDefService.findJobDefTaskDefs(_teamId, _jobDefId, (<string>req.query.responseFields));
 
   //   // if (_.isArray(taskDefs) && taskDefs.length === 0) {
-  //   //   next(new MissingObjectError(`No task defs found for job def ${_jobDefId}.`));
+  //   //   return next(new MissingObjectError(`No task defs found for job def ${_jobDefId}.`));
   //   // }
   //   // else {
   //     response.data = convertResponseData(TaskDefSchema, taskDefs);
-  //     next();
+  //     return next();
   //   // }
   // }
 
@@ -44,17 +44,17 @@ export class TaskDefController {
       );
 
       if (!taskDef) {
-        next(new MissingObjectError(`TaskDef ${req.params.taskDefId} not found.`));
+        return next(new MissingObjectError(`TaskDef ${req.params.taskDefId} not found.`));
       } else {
         response.data = convertResponseData(TaskDefSchema, taskDef[0]);
-        next();
+        return next();
       }
     } catch (err) {
       // If req.params.taskDefId wasn't a mongo id then we will get a CastError - basically same as if the id wasn't found
       if (err instanceof Error.CastError) {
-        next(new MissingObjectError(`TaskDef ${req.params.taskDefId} not found.`));
+        return next(new MissingObjectError(`TaskDef ${req.params.taskDefId} not found.`));
       } else {
-        next(err);
+        return next(err);
       }
     }
   }
@@ -71,9 +71,9 @@ export class TaskDefController {
       );
       response.data = convertResponseData(TaskDefSchema, newTaskDef);
       response.statusCode = ResponseCode.CREATED;
-      next();
+      return next();
     } catch (err) {
-      next(err);
+      return next(err);
     }
   }
 
@@ -90,14 +90,14 @@ export class TaskDefController {
       );
 
       if (_.isArray(updatedTaskDef) && updatedTaskDef.length === 0) {
-        next(new MissingObjectError(`TaskDef ${req.params.taskDefId} not found.`));
+        return next(new MissingObjectError(`TaskDef ${req.params.taskDefId} not found.`));
       } else {
         response.data = convertResponseData(TaskDefSchema, updatedTaskDef);
         response.statusCode = ResponseCode.OK;
-        next();
+        return next();
       }
     } catch (err) {
-      next(err);
+      return next(err);
     }
   }
 
@@ -117,7 +117,7 @@ export class TaskDefController {
         // First delete all of the step defs associated with the task
         const stepDefIds = await stepDefService.findAllStepDefs(_teamId, new mongodb.ObjectId(taskDef._id), "_id");
 
-        for (const { _id } of stepDefIds) {
+        for (const {_id} of stepDefIds) {
           await stepDefService.deleteStepDef(_teamId, new mongodb.ObjectId(_id), req.get("correlationId"));
         }
 
@@ -128,14 +128,14 @@ export class TaskDefController {
           req.get("correlationId")
         );
         response.statusCode = ResponseCode.OK;
-        next();
+        return next();
       }
     } catch (err) {
       // If req.params.taskDefId wasn't a mongo id then we will get a CastError - basically same as if the id wasn't found
       if (err instanceof Error.CastError) {
-        next(new MissingObjectError(`TaskDef ${req.params.taskDefId} not found.`));
+        return next(new MissingObjectError(`TaskDef ${req.params.taskDefId} not found.`));
       } else {
-        next(err);
+        return next(err);
       }
     }
   }
