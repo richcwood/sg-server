@@ -28,17 +28,17 @@ export class ScheduleController {
       );
 
       if (!schedule) {
-        next(new MissingObjectError(`Schedule ${req.params.scheduleId} not found.`));
+        return next(new MissingObjectError(`Schedule ${req.params.scheduleId} not found.`));
       } else {
         response.data = convertResponseData(ScheduleSchema, schedule);
-        next();
+        return next();
       }
     } catch (err) {
       // If req.params.scheduleId wasn't a mongo id then we will get a CastError - basically same as if the id wasn't found
       if (err instanceof Error.CastError) {
-        next(new MissingObjectError(`Schedule ${req.params.scheduleId} not found.`));
+        return next(new MissingObjectError(`Schedule ${req.params.scheduleId} not found.`));
       } else {
-        next(err);
+        return next(err);
       }
     }
   }
@@ -59,9 +59,9 @@ export class ScheduleController {
       );
       response.data = convertResponseData(ScheduleSchema, newSchedule);
       response.statusCode = ResponseCode.CREATED;
-      next();
+      return next();
     } catch (err) {
-      next(err);
+      return next(err);
     }
   }
 
@@ -79,14 +79,14 @@ export class ScheduleController {
       );
 
       if (_.isArray(updatedSchedule) && updatedSchedule.length === 0) {
-        next(new MissingObjectError(`Schedule ${req.params.scheduleId} not found.`));
+        return next(new MissingObjectError(`Schedule ${req.params.scheduleId} not found.`));
       } else {
         response.data = convertResponseData(ScheduleSchema, updatedSchedule);
         response.statusCode = ResponseCode.OK;
-        next();
+        return next();
       }
     } catch (err) {
-      next(err);
+      return next(err);
     }
   }
 
@@ -104,14 +104,14 @@ export class ScheduleController {
       );
 
       if (_.isArray(updatedSchedule) && updatedSchedule.length === 0) {
-        next(new MissingObjectError(`Schedule ${req.params.scheduleId} not found.`));
+        return next(new MissingObjectError(`Schedule ${req.params.scheduleId} not found.`));
       } else {
         response.data = convertResponseData(ScheduleSchema, updatedSchedule);
         response.statusCode = ResponseCode.OK;
-        next();
+        return next();
       }
     } catch (err) {
-      next(err);
+      return next(err);
     }
   }
 
@@ -125,9 +125,9 @@ export class ScheduleController {
         req.header("correlationId")
       );
       response.statusCode = ResponseCode.OK;
-      next();
+      return next();
     } catch (err) {
-      next(err);
+      return next(err);
     }
   }
 }

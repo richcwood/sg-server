@@ -87,17 +87,17 @@ export class AgentController {
       const agent = await agentService.findAgent(_teamId, _agentId, <string>req.query.responseFields);
 
       if (!agent) {
-        next(new MissingObjectError(`Agent ${req.params.agentId} not found.`));
+        return next(new MissingObjectError(`Agent ${req.params.agentId} not found.`));
       } else {
         response.data = convertResponseData(AgentSchema, agent);
-        next();
+        return next();
       }
     } catch (err) {
       // If req.params.agentId wasn't a mongo id then we will get a CastError - basically same as if the id wasn't found
       if (err instanceof Error.CastError) {
-        next(new MissingObjectError(`Agent ${req.params.agentId} not found.`));
+        return next(new MissingObjectError(`Agent ${req.params.agentId} not found.`));
       } else {
-        next(err);
+        return next(err);
       }
     }
   }
@@ -116,14 +116,14 @@ export class AgentController {
       if (!agent) {
         response.data = "";
         response.statusCode = ResponseCode.NOT_FOUND;
-        next();
-        // next(new MissingObjectError(`Agent '${machineId}" in team "${_teamId.toHexString()}' not found.`));
+        return next();
+        // return next(new MissingObjectError(`Agent '${machineId}" in team "${_teamId.toHexString()}' not found.`));
       } else {
         response.data = await addServerPropertiesToAgent(convertResponseData(AgentSchema, agent));
-        next();
+        return next();
       }
     } catch (err) {
-      next(err);
+      return next(err);
     }
   }
 
@@ -141,14 +141,14 @@ export class AgentController {
       if (!agent) {
         response.data = "";
         response.statusCode = ResponseCode.NOT_FOUND;
-        next();
-        // next(new MissingObjectError(`Agent '${machineId}" in team "${_teamId.toHexString()}' not found.`));
+        return next();
+        // return next(new MissingObjectError(`Agent '${machineId}" in team "${_teamId.toHexString()}' not found.`));
       } else {
         response.data = await addServerPropertiesToAgent(convertResponseData(AgentSchema, agent));
-        next();
+        return next();
       }
     } catch (err) {
-      next(err);
+      return next(err);
     }
   }
 
@@ -160,13 +160,13 @@ export class AgentController {
       const agents = await agentService.findActiveAgentsWithTags(_teamId, tags, <string>req.query.responseFields);
 
       if (!agents || (_.isArray(agents) && agents.length === 0)) {
-        next(new MissingObjectError(`No agent with tags ${req.params.tags} was found.`));
+        return next(new MissingObjectError(`No agent with tags ${req.params.tags} was found.`));
       } else {
         response.data = convertResponseData(AgentSchema, agents);
-        next();
+        return next();
       }
     } catch (err) {
-      next(err);
+      return next(err);
     }
   }
 
@@ -178,13 +178,13 @@ export class AgentController {
       const agents = await agentService.findDisconnectedAgents(_teamId, batchSize, <string>req.query.responseFields);
 
       if (!agents || (_.isArray(agents) && agents.length === 0)) {
-        next(new MissingObjectError(`No disconnected agents found.`));
+        return next(new MissingObjectError(`No disconnected agents found.`));
       } else {
         response.data = convertResponseData(AgentSchema, agents);
-        next();
+        return next();
       }
     } catch (err) {
-      next(err);
+      return next(err);
     }
   }
 
@@ -198,9 +198,9 @@ export class AgentController {
         req.header("correlationId")
       );
       response.statusCode = ResponseCode.OK;
-      next();
+      return next();
     } catch (err) {
-      next(err);
+      return next(err);
     }
   }
 
@@ -242,9 +242,9 @@ export class AgentController {
         if (isLambdaRunnerAgent) await RepublishTasksWaitingForLambdaRunner(newAgent._id, logger, amqp);
       }
 
-      next();
+      return next();
     } catch (err) {
-      next(err);
+      return next(err);
     }
   }
 
@@ -257,9 +257,9 @@ export class AgentController {
 
       response.data = res;
       response.statusCode = ResponseCode.OK;
-      next();
+      return next();
     } catch (err) {
-      next(err);
+      return next(err);
     }
   }
 
@@ -279,18 +279,18 @@ export class AgentController {
       );
 
       if (_.isArray(updatedAgent) && updatedAgent.length === 0) {
-        next(new MissingObjectError(`Agent ${req.params.agentId} not found.`));
+        return next(new MissingObjectError(`Agent ${req.params.agentId} not found.`));
       } else {
         response.data = convertResponseData(AgentSchema, updatedAgent);
         response.statusCode = ResponseCode.OK;
-        next();
+        return next();
       }
     } catch (err) {
       // If req.params.agentId wasn't a mongo id then we will get a CastError - basically same as if the id wasn't found
       if (err instanceof Error.CastError) {
-        next(new MissingObjectError(`Agent ${req.params.agentId} not found.`));
+        return next(new MissingObjectError(`Agent ${req.params.agentId} not found.`));
       } else {
-        next(err);
+        return next(err);
       }
     }
   }
@@ -354,7 +354,7 @@ export class AgentController {
       }
 
       if (_.isArray(agent) && agent.length === 0) {
-        next(new MissingObjectError(`Agent ${req.params.agentId} not found.`));
+        return next(new MissingObjectError(`Agent ${req.params.agentId} not found.`));
       } else {
         response.data = convertResponseData(AgentSchema, agent);
         if (tasksToCancel.length > 0) {
@@ -363,14 +363,14 @@ export class AgentController {
           // console.log('updateAgentHeartbeat -> cancel -> response.data ->', JSON.stringify(response.data, null, 4));
         }
         response.statusCode = ResponseCode.OK;
-        next();
+        return next();
       }
     } catch (err) {
       // If req.params.agentId wasn't a mongo id then we will get a CastError - basically same as if the id wasn't found
       if (err instanceof Error.CastError) {
-        next(new MissingObjectError(`Agent ${req.params.agentId} not found.`));
+        return next(new MissingObjectError(`Agent ${req.params.agentId} not found.`));
       } else {
-        next(err);
+        return next(err);
       }
     }
   }
@@ -416,18 +416,18 @@ export class AgentController {
       }
 
       if (_.isArray(updatedAgent) && updatedAgent.length === 0) {
-        next(new MissingObjectError(`Agent ${req.params.agentId} not found.`));
+        return next(new MissingObjectError(`Agent ${req.params.agentId} not found.`));
       } else {
         response.data = convertResponseData(AgentSchema, updatedAgent);
         response.statusCode = ResponseCode.OK;
-        next();
+        return next();
       }
     } catch (err) {
       // If req.params.agentId wasn't a mongo id then we will get a CastError - basically same as if the id wasn't found
       if (err instanceof Error.CastError) {
-        next(new MissingObjectError(`Agent ${req.params.agentId} not found.`));
+        return next(new MissingObjectError(`Agent ${req.params.agentId} not found.`));
       } else {
-        next(err);
+        return next(err);
       }
     }
   }
@@ -463,7 +463,7 @@ export class AgentController {
       );
 
       if (_.isArray(updatedAgent) && updatedAgent.length === 0) {
-        next(new MissingObjectError(`Agent ${req.params.agentId} not found.`));
+        return next(new MissingObjectError(`Agent ${req.params.agentId} not found.`));
       } else {
         if (
           req.body.maxActiveTasks &&
@@ -496,14 +496,14 @@ export class AgentController {
 
         response.data = convertResponseData(AgentSchema, updatedAgent);
         response.statusCode = ResponseCode.OK;
-        next();
+        return next();
       }
     } catch (err) {
       // If req.params.agentId wasn't a mongo id then we will get a CastError - basically same as if the id wasn't found
       if (err instanceof Error.CastError) {
-        next(new MissingObjectError(`Agent ${req.params.agentId} not found.`));
+        return next(new MissingObjectError(`Agent ${req.params.agentId} not found.`));
       } else {
-        next(err);
+        return next(err);
       }
     }
   }
@@ -523,18 +523,18 @@ export class AgentController {
       );
 
       if (_.isArray(updatedAgent) && updatedAgent.length === 0) {
-        next(new MissingObjectError(`Agent ${req.params.agentId} not found.`));
+        return next(new MissingObjectError(`Agent ${req.params.agentId} not found.`));
       } else {
         response.data = convertResponseData(AgentSchema, updatedAgent);
         response.statusCode = ResponseCode.OK;
-        next();
+        return next();
       }
     } catch (err) {
       // If req.params.agentId wasn't a mongo id then we will get a CastError - basically same as if the id wasn't found
       if (err instanceof Error.CastError) {
-        next(new MissingObjectError(`Agent ${req.params.agentId} not found.`));
+        return next(new MissingObjectError(`Agent ${req.params.agentId} not found.`));
       } else {
-        next(err);
+        return next(err);
       }
     }
   }
@@ -548,13 +548,13 @@ export class AgentController {
       await rabbitMQPublisher.publishToAgent(_teamId, _agentId, {stopAgent: 1});
       response.data = {};
       response.statusCode = ResponseCode.OK;
-      next();
+      return next();
     } catch (err) {
       // If req.params.agentId wasn't a mongo id then we will get a CastError - basically same as if the id wasn't found
       if (err instanceof Error.CastError) {
-        next(new MissingObjectError(`Agent ${req.params.agentId} not found.`));
+        return next(new MissingObjectError(`Agent ${req.params.agentId} not found.`));
       } else {
-        next(err);
+        return next(err);
       }
     }
   }
@@ -568,13 +568,13 @@ export class AgentController {
     try {
       response.data = await agentService.processOrphanedTasks(_teamId, _agentId, logger, amqp);
       response.statusCode = ResponseCode.CREATED;
-      next();
+      return next();
     } catch (err) {
       // If req.params.agentId wasn't a mongo id then we will get a CastError - basically same as if the id wasn't found
       if (err instanceof Error.CastError) {
-        next(new MissingObjectError(`Agent ${req.params.agentId} not found.`));
+        return next(new MissingObjectError(`Agent ${req.params.agentId} not found.`));
       } else {
-        next(err);
+        return next(err);
       }
     }
   }

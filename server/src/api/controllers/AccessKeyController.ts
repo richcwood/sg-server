@@ -27,20 +27,20 @@ export class AccessKeyController {
             const accessKey = await accessKeyService.findAccessKey(_teamId, new mongodb.ObjectId(req.params.accessKeyId), (<string>req.query.responseFields));
 
             if (!accessKey) {
-                next(new MissingObjectError(`AccessKey ${req.params.accessKeyId} not found.`));
+                return next(new MissingObjectError(`AccessKey ${req.params.accessKeyId} not found.`));
             }
             else {
                 response.data = convertResponseData(AccessKeySchema, accessKey);
-                next();
+                return next();
             }
         }
         catch (err) {
             // If req.params.accessKeyId wasn't a mongo id then we will get a CastError - basically same as if the id wasn't found
             if (err instanceof Error.CastError) {
-                next(new MissingObjectError(`AccessKey ${req.params.accessKeyId} not found.`));
+                return next(new MissingObjectError(`AccessKey ${req.params.accessKeyId} not found.`));
             }
             else {
-                next(err);
+                return next(err);
             }
         }
     }
@@ -65,10 +65,10 @@ export class AccessKeyController {
             response.data.accessKeySecret = newAccessKey.accessKeySecret;
 
             response.statusCode = ResponseCode.CREATED;
-            next();
+            return next();
         }
         catch (err) {
-            next(err);
+            return next(err);
         }
     }
 
@@ -80,16 +80,16 @@ export class AccessKeyController {
             const updatedAccessKey: any = await accessKeyService.updateAccessKey(_teamId, new mongodb.ObjectId(req.params.accessKeyId), convertRequestData(AccessKeySchema, req.body), req.header('correlationId'), (<string>req.query.responseFields));
 
             if (_.isArray(updatedAccessKey) && updatedAccessKey.length === 0) {
-                next(new MissingObjectError(`AccessKey ${req.params.accessKeyId} not found.`));
+                return next(new MissingObjectError(`AccessKey ${req.params.accessKeyId} not found.`));
             }
             else {
                 response.data = convertResponseData(AccessKeySchema, updatedAccessKey);
                 response.statusCode = ResponseCode.OK;
-                next();
+                return next();
             }
         }
         catch (err) {
-            next(err);
+            return next(err);
         }
     }
 
@@ -100,10 +100,10 @@ export class AccessKeyController {
             const _teamId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._teamid);
             response.data = await accessKeyService.deleteAccessKey(_teamId, new mongodb.ObjectId(req.params.accessKeyId), req.header('correlationId'));
             response.statusCode = ResponseCode.OK;
-            next();
+            return next();
         }
         catch (err) {
-            next(err);
+            return next(err);
         }
     }
 }

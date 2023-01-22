@@ -1,21 +1,21 @@
-import { Request, Response, NextFunction, response } from "express";
-import { ResponseWrapper, ResponseCode } from "../utils/Types";
-import { ScriptSchema, ScriptModel } from "../domain/Script";
-import { UserSchema } from "../domain/User";
-import { defaultBulkGet } from "../utils/BulkGet";
-import { scriptService } from "../services/ScriptService";
-import { userService } from "../services/UserService";
-import { MissingObjectError } from "../utils/Errors";
-import { Error } from "mongoose";
-import { convertData as convertResponseData } from "../utils/ResponseConverters";
-import { convertData as convertRequestData } from "../utils/RequestConverters";
+import {Request, Response, NextFunction, response} from "express";
+import {ResponseWrapper, ResponseCode} from "../utils/Types";
+import {ScriptSchema, ScriptModel} from "../domain/Script";
+import {UserSchema} from "../domain/User";
+import {defaultBulkGet} from "../utils/BulkGet";
+import {scriptService} from "../services/ScriptService";
+import {userService} from "../services/UserService";
+import {MissingObjectError} from "../utils/Errors";
+import {Error} from "mongoose";
+import {convertData as convertResponseData} from "../utils/ResponseConverters";
+import {convertData as convertRequestData} from "../utils/RequestConverters";
 import * as _ from "lodash";
 import * as mongodb from "mongodb";
 
 export class ScriptController {
   public async getManyScripts(req: Request, resp: Response, next: NextFunction): Promise<void> {
     const _teamId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._teamid);
-    defaultBulkGet({ _teamId }, req, resp, next, ScriptSchema, ScriptModel, scriptService);
+    defaultBulkGet({_teamId}, req, resp, next, ScriptSchema, ScriptModel, scriptService);
 
     // const _teamId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._teamid);
     // const _jobId = <string>req.params.jobId;
@@ -25,7 +25,7 @@ export class ScriptController {
 
     // response.data = scripts;
 
-    // next();
+    // return next();
     // defaultBulkGet(_teamId, req, resp, next, ScriptSchema, ScriptModel, scriptService);
   }
 
@@ -40,17 +40,17 @@ export class ScriptController {
       );
 
       if (!script) {
-        next(new MissingObjectError(`Script ${req.params.scriptId} not found.`));
+        return next(new MissingObjectError(`Script ${req.params.scriptId} not found.`));
       } else {
         response.data = convertResponseData(ScriptSchema, script);
-        next();
+        return next();
       }
     } catch (err) {
       // If req.params.scriptId wasn't a mongo id then we will get a CastError - basically same as if the id wasn't found
       if (err instanceof Error.CastError) {
-        next(new MissingObjectError(`Script ${req.params.scriptId} not found.`));
+        return next(new MissingObjectError(`Script ${req.params.scriptId} not found.`));
       } else {
-        next(err);
+        return next(err);
       }
     }
   }
@@ -68,9 +68,9 @@ export class ScriptController {
       );
       response.data = convertResponseData(ScriptSchema, newScript);
       response.statusCode = ResponseCode.CREATED;
-      next();
+      return next();
     } catch (err) {
-      next(err);
+      return next(err);
     }
   }
 
@@ -88,14 +88,14 @@ export class ScriptController {
       );
 
       if (_.isArray(updatedScript) && updatedScript.length === 0) {
-        next(new MissingObjectError(`Script ${req.params.scriptId} not found.`));
+        return next(new MissingObjectError(`Script ${req.params.scriptId} not found.`));
       } else {
         response.data = convertResponseData(ScriptSchema, updatedScript);
         response.statusCode = ResponseCode.OK;
-        next();
+        return next();
       }
     } catch (err) {
-      next(err);
+      return next(err);
     }
   }
 
@@ -109,9 +109,9 @@ export class ScriptController {
         req.header("correlationId")
       );
       response.statusCode = ResponseCode.OK;
-      next();
+      return next();
     } catch (err) {
-      next(err);
+      return next(err);
     }
   }
 }

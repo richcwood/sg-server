@@ -25,11 +25,11 @@ export class TaskController {
   //     const tasks = await taskService.findAllJobTasks(_teamId, _jobId, (<string>req.query.responseFields));
 
   //     if (_.isArray(tasks) && tasks.length === 0) {
-  //         next(new MissingObjectError(`No tasks found for job ${_jobId}.`));
+  //         return next(new MissingObjectError(`No tasks found for job ${_jobId}.`));
   //     }
   //     else {
   //         response.data = convertResponseData(TaskSchema, tasks);
-  //         next();
+  //         return next();
   //     }
   // }
 
@@ -44,17 +44,17 @@ export class TaskController {
       );
 
       if (_.isArray(task) && task.length === 0) {
-        next(new MissingObjectError(`Task ${req.params.taskId} not found.`));
+        return next(new MissingObjectError(`Task ${req.params.taskId} not found.`));
       } else {
         response.data = convertResponseData(TaskSchema, task[0]);
-        next();
+        return next();
       }
     } catch (err) {
       // If req.params.taskId wasn't a mongo id then we will get a CastError - basically same as if the id wasn't found
       if (err instanceof Error.CastError) {
-        next(new MissingObjectError(`Task ${req.params.taskId} not found.`));
+        return next(new MissingObjectError(`Task ${req.params.taskId} not found.`));
       } else {
-        next(err);
+        return next(err);
       }
     }
   }
@@ -66,9 +66,9 @@ export class TaskController {
       const _jobId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._jobId);
       response.data = await taskService.deleteTask(_teamId, _jobId, req.header("correlationId"));
       response.statusCode = ResponseCode.OK;
-      next();
+      return next();
     } catch (err) {
-      next(err);
+      return next(err);
     }
   }
 
@@ -84,9 +84,9 @@ export class TaskController {
       );
       response.data = convertResponseData(TaskSchema, newTask);
       response.statusCode = ResponseCode.CREATED;
-      next();
+      return next();
     } catch (err) {
-      next(err);
+      return next(err);
     }
   }
 
@@ -106,14 +106,14 @@ export class TaskController {
       );
 
       if (_.isArray(updatedTask) && updatedTask.length === 0) {
-        next(new MissingObjectError(`Task ${req.params.taskId} not found.`));
+        return next(new MissingObjectError(`Task ${req.params.taskId} not found.`));
       } else {
         response.data = convertResponseData(TaskSchema, updatedTask);
         response.statusCode = ResponseCode.OK;
-        next();
+        return next();
       }
     } catch (err) {
-      next(err);
+      return next(err);
     }
   }
 }
