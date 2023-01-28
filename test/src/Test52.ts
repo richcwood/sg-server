@@ -229,7 +229,7 @@ export default class Test52 extends TestBase.WorkflowTestBase {
                 _jobId: job.id,
                 _taskId: task1.id,
                 source: 1,
-                status: TaskStatus.RUNNING,
+                status: TaskStatus.PUBLISHED,
                 target: TaskDefTarget.SINGLE_AGENT_WITH_TAGS,
                 autoRestart: false,
                 type: 'TaskOutcome'
@@ -246,7 +246,7 @@ export default class Test52 extends TestBase.WorkflowTestBase {
                 _jobId: job.id,
                 _taskId: task2.id,
                 source: 1,
-                status: TaskStatus.RUNNING,
+                status: TaskStatus.PUBLISHED,
                 target: TaskDefTarget.SINGLE_AGENT,
                 autoRestart: false,
                 type: 'TaskOutcome'

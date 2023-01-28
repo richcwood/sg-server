@@ -64,7 +64,7 @@ export default class Test48 extends TestBase.WorkflowTestBase {
                 _teamId: config.get('sgTestTeam'),
                 _jobId: firstJob.job.id,
                 source: 1,
-                status: 10,
+                status: TaskStatus.PUBLISHED,
                 target: TaskDefTarget.SINGLE_AGENT,
                 autoRestart: false,
                 type: 'TaskOutcome'
@@ -127,7 +127,7 @@ export default class Test48 extends TestBase.WorkflowTestBase {
                 _teamId: config.get('sgTestTeam'),
                 _jobId: firstJob.job.id,
                 source: 1,
-                status: 10,
+                status: TaskStatus.PUBLISHED,
                 target: TaskDefTarget.SINGLE_AGENT,
                 autoRestart: false,
                 runtimeVars: { linenum: {'sensitive': false, 'value': 26} },

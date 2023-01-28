@@ -123,7 +123,7 @@ export default class Test49 extends TestBase.WorkflowTestBase {
                 _teamId: config.get('sgTestTeam'),
                 _jobId: job.id,
                 source: 1,
-                status: TaskStatus.RUNNING,
+                status: TaskStatus.PUBLISHED,
                 target: TaskDefTarget.SINGLE_AGENT,
                 autoRestart: true,
                 type: 'TaskOutcome'
@@ -239,7 +239,7 @@ export default class Test49 extends TestBase.WorkflowTestBase {
                 _jobId: job.id,
                 _taskId: task[0].model.id,
                 source: 1,
-                status: TaskStatus.RUNNING,
+                status: TaskStatus.PUBLISHED,
                 target: TaskDefTarget.SINGLE_AGENT,
                 autoRestart: true,
                 type: 'TaskOutcome'

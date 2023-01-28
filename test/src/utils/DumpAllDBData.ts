@@ -93,4 +93,8 @@ let DumpMongoData = async (path: string) => {
   process.exit();
 };
 
-DumpMongoData(`./test/data/testdata_1.json`);
+let filePath = process.argv[2];
+
+console.log(filePath);
+
+DumpMongoData(filePath);

@@ -6,8 +6,8 @@ import {NextFunction, Request, Response} from "express";
 const bodyParser = require("body-parser");
 const compression = require("compression");
 const cookieParser = require("cookie-parser");
-const cors = require("cors");
-const enforce = require("express-sslify");
+// const cors = require("cors");
+// const enforce = require("express-sslify");
 const IPCIDR = require("ip-cidr");
 const jwt = require("jsonwebtoken");
 const multer = require("multer");
@@ -134,9 +134,9 @@ class AppBuilder {
   private setUpMiddleware() {
     app.disable("etag");
 
-    if (environment != "debug" && environment !== "bartdev") {
-      this.app.use(enforce.HTTPS({trustProtoHeader: true}));
-    }
+    // if (environment != "debug" && environment !== "bartdev") {
+    //   this.app.use(enforce.HTTPS({trustProtoHeader: true}));
+    // }
 
     const validOrigins = [
       "http://console.saasglue.com",
@@ -182,7 +182,7 @@ class AppBuilder {
       maxAge: 3628800,
       credentials: true,
     };
-    app.use(cors(corsOptions));
+    // app.use(cors(corsOptions));
 
     if (config.get("httpLogs.enabled")) {
       morgan.token("user_id", (req) => req.headers.userid);

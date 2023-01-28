@@ -3,7 +3,7 @@ import * as config from 'config';
 import * as TestBase from './TestBase';
 import { InteractiveConsoleJob } from './TestArtifacts';
 import { SGUtils } from '../../server/src/shared/SGUtils';
-import { TaskDefTarget } from '../../server/src/shared/Enums';
+import { TaskDefTarget, TaskStatus } from '../../server/src/shared/Enums';
 import * as _ from 'lodash';
 import { modelOptions } from '@typegoose/typegoose';
 
@@ -71,7 +71,7 @@ export default class Test64 extends TestBase.WorkflowTestBase {
                     _teamId: config.get('sgTestTeam'),
                     _jobId: job.job.id,
                     source: 1,
-                    status: 10,
+                    status: TaskStatus.PUBLISHED,
                     target: TaskDefTarget.SINGLE_AGENT_WITH_TAGS,
                     autoRestart: false,
                     type: 'TaskOutcome'

@@ -146,7 +146,7 @@ export default class Test59 extends TestBase.WorkflowTestBase {
                 _teamId: _teamId,
                 _jobId: startedJobId,
                 source: 1,
-                status: TaskStatus.RUNNING,
+                status: TaskStatus.PUBLISHED,
                 ipAddress: '0.0.0.0',
                 machineId: 'lambda-executor',
                 target: TaskDefTarget.AWS_LAMBDA,

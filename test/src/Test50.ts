@@ -124,7 +124,7 @@ export default class Test50 extends TestBase.WorkflowTestBase {
                 _teamId: config.get('sgTestTeam'),
                 _jobId: job.id,
                 source: 1,
-                status: TaskStatus.RUNNING,
+                status: TaskStatus.PUBLISHED,
                 target: TaskDefTarget.SINGLE_AGENT,
                 autoRestart: true,
                 type: 'TaskOutcome'

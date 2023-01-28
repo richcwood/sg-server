@@ -136,7 +136,7 @@ export default class Test65 extends TestBase.WorkflowTestBase {
                 _teamId: _teamId,
                 _jobId: job.id,
                 source: 1,
-                status: 10,
+                status: TaskStatus.PUBLISHED,
                 target: TaskDefTarget.SINGLE_AGENT,
                 autoRestart: false,
                 type: 'TaskOutcome'

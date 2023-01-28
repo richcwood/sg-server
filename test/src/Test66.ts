@@ -156,7 +156,7 @@ export default class Test66 extends TestBase.WorkflowTestBase {
                 _jobId: job.id,
                 _taskId: task1[0].model.id,
                 source: 1,
-                status: 10,
+                status: TaskStatus.PUBLISHED,
                 target: TaskDefTarget.SINGLE_AGENT,
                 autoRestart: false,
                 type: 'TaskOutcome'
