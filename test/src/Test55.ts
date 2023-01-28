@@ -4,7 +4,6 @@ import { SGUtils } from '../../server/src/shared/SGUtils';
 import { ScriptType } from '../../server/src/shared/Enums';
 import * as _ from 'lodash';
 
-
 const script1 = `
 import time
 print('start')
@@ -14,19 +13,15 @@ print('@sgo{"route": "ok"}')
 `;
 const script1_b64 = SGUtils.btoa(script1);
 
-
 let self: Test55;
 
-
 export default class Test55 extends TestBase.WorkflowTestBase {
-
     constructor(testSetup) {
         super('Test55', testSetup);
         this.description = 'Create job from job def name';
 
         self = this;
     }
-
 
     public async RunTest() {
         let result: boolean;
@@ -40,8 +35,8 @@ export default class Test55 extends TestBase.WorkflowTestBase {
                     name: 'Script 55',
                     scriptType: ScriptType.PYTHON,
                     code: script1_b64,
-                    shadowCopyCode: script1_b64
-                }
+                    shadowCopyCode: script1_b64,
+                },
             ],
             jobDefs: [
                 {
@@ -52,13 +47,13 @@ export default class Test55 extends TestBase.WorkflowTestBase {
                             stepDefs: [
                                 {
                                     name: 'Step 1',
-                                    scriptName: 'Script 55'
-                                }
-                            ]
-                        }
-                    ]
-                }
-            ]
+                                    scriptName: 'Script 55',
+                                },
+                            ],
+                        },
+                    ],
+                },
+            ],
         };
 
         const { scripts, jobDefs } = await this.CreateJobDefsFromTemplates(properties);
@@ -66,7 +61,10 @@ export default class Test55 extends TestBase.WorkflowTestBase {
         let startedJobId;
         resApiCall = await this.testSetup.RestAPICall(`job`, 'POST', _teamId, { jobDefName: jobDefs['Job 55'].name });
         if (resApiCall.data.statusCode != 201) {
-            self.logger.LogError('Failed', { Message: `job POST returned ${resApiCall.data.statusCode}`, _jobDefId: jobDefs['Job 55'].id });
+            self.logger.LogError('Failed', {
+                Message: `job POST returned ${resApiCall.data.statusCode}`,
+                _jobDefId: jobDefs['Job 55'].id,
+            });
             return false;
         }
         startedJobId = resApiCall.data.data.id;
@@ -74,34 +72,31 @@ export default class Test55 extends TestBase.WorkflowTestBase {
         const jobStartedBP: any = {
             domainType: 'Job',
             operation: 1,
-            model:
-            {
+            model: {
                 _teamId: config.get('sgTestTeam'),
                 _jobDefId: jobDefs[properties.jobDefs[0].name].id,
                 runId: 0,
                 name: properties.jobDefs[0].name,
                 status: 0,
                 id: startedJobId,
-                type: 'Job'
-            }
-        }
+                type: 'Job',
+            },
+        };
         self.bpMessagesExpected.push(jobStartedBP);
 
         const jobCompletedBP: any = {
             domainType: 'Job',
             operation: 2,
-            model:
-            {
+            model: {
                 status: 20,
                 id: startedJobId,
-                type: 'Job'
-            }
+                type: 'Job',
+            },
         };
         self.bpMessagesExpected.push(jobCompletedBP);
 
         result = await self.WaitForTestToComplete();
-        if (!result)
-            return result;
+        if (!result) return result;
 
         return true;
     }

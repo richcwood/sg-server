@@ -1,138 +1,138 @@
-import {modelOptions, prop, getModelForClass, Severity} from "@typegoose/typegoose";
-import {FilterOperator} from "../utils/BulkGet";
-import {TaskSource} from "../../shared/Enums";
-import * as mongodb from "mongodb";
+import { modelOptions, prop, getModelForClass, Severity } from '@typegoose/typegoose';
+import { FilterOperator } from '../utils/BulkGet';
+import { TaskSource } from '../../shared/Enums';
+import * as mongodb from 'mongodb';
 
 // Example of a schema / domain in Mongoose
-@modelOptions({schemaOptions: {collection: "stepOutcome"}, options: {allowMixed: Severity.ALLOW}})
+@modelOptions({ schemaOptions: { collection: 'stepOutcome' }, options: { allowMixed: Severity.ALLOW } })
 export class StepOutcomeSchema {
-  _id?: mongodb.ObjectId;
+    _id?: mongodb.ObjectId;
 
-  @prop()
-  id?: mongodb.ObjectId;
+    @prop()
+    id?: mongodb.ObjectId;
 
-  @prop({required: true})
-  _teamId: mongodb.ObjectId;
+    @prop({ required: true })
+    _teamId: mongodb.ObjectId;
 
-  @prop({required: true})
-  _jobId?: mongodb.ObjectId;
+    @prop({ required: true })
+    _jobId?: mongodb.ObjectId;
 
-  @prop({required: true})
-  _stepId: mongodb.ObjectId;
+    @prop({ required: true })
+    _stepId: mongodb.ObjectId;
 
-  @prop({required: true})
-  _taskOutcomeId: mongodb.ObjectId;
+    @prop({ required: true })
+    _taskOutcomeId: mongodb.ObjectId;
 
-  @prop({required: false})
-  _invoiceId?: mongodb.ObjectId;
+    @prop({ required: false })
+    _invoiceId?: mongodb.ObjectId;
 
-  @prop({required: true})
-  machineId: string;
+    @prop({ required: true })
+    machineId: string;
 
-  @prop({required: true})
-  ipAddress: string;
+    @prop({ required: true })
+    ipAddress: string;
 
-  @prop({required: true})
-  name: string;
+    @prop({ required: true })
+    name: string;
 
-  @prop({required: true})
-  source: TaskSource;
+    @prop({ required: true })
+    source: TaskSource;
 
-  @prop({required: true})
-  runCode: string;
+    @prop({ required: true })
+    runCode: string;
 
-  @prop({default: {}})
-  runtimeVars?: any;
+    @prop({ default: {} })
+    runtimeVars?: any;
 
-  @prop()
-  stdout?: string;
+    @prop()
+    stdout?: string;
 
-  @prop()
-  stderr?: string;
+    @prop()
+    stderr?: string;
 
-  @prop()
-  exitCode?: number;
+    @prop()
+    exitCode?: number;
 
-  @prop()
-  signal?: string;
+    @prop()
+    signal?: string;
 
-  @prop()
-  status?: number;
+    @prop()
+    status?: number;
 
-  @prop()
-  dateStarted: Date;
+    @prop()
+    dateStarted: Date;
 
-  @prop()
-  dateCompleted?: Date;
+    @prop()
+    dateCompleted?: Date;
 
-  @prop({default: []})
-  tail?: string[];
+    @prop({ default: [] })
+    tail?: string[];
 
-  @prop({default: 0})
-  lastUpdateId?: number;
+    @prop({ default: 0 })
+    lastUpdateId?: number;
 
-  @prop({default: false})
-  archived?: boolean;
+    @prop({ default: false })
+    archived?: boolean;
 
-  @prop()
-  lambdaDuration?: number;
+    @prop()
+    lambdaDuration?: number;
 
-  @prop()
-  lambdaBilledDuration?: number;
+    @prop()
+    lambdaBilledDuration?: number;
 
-  @prop()
-  lambdaMemSize?: number;
+    @prop()
+    lambdaMemSize?: number;
 
-  @prop()
-  lambdaMaxMemUsed?: number;
+    @prop()
+    lambdaMaxMemUsed?: number;
 
-  @prop()
-  lambdaInitDuration?: number;
+    @prop()
+    lambdaInitDuration?: number;
 
-  @prop({default: {}})
-  agentTags?: any;
+    @prop({ default: {} })
+    agentTags?: any;
 
-  // Define which filters are legal for which props (including nested props (not sure about nested arrays))
-  public static readonly validFilters = {
-    name: [FilterOperator.LIKE],
-    _stepId: [FilterOperator.IN, FilterOperator.EQUALS],
-    _taskOutcomeId: [FilterOperator.EQUALS],
-    // 'dog.name': [FilterOperator.IN, FilterOperator.EQUALS, FilterOperator.NOT_EQUALS, FilterOperator.LIKE
-    // ],
-    // 'dog.smell': [FilterOperator.LIKE],
-    // firstName: [FilterOperator.IN, FilterOperator.LIKE, FilterOperator.EQUALS, FilterOperator.NOT_EQUALS],
-    // lastName: [FilterOperator.IN, FilterOperator.EQUALS, FilterOperator.NOT_EQUALS],
-    // id: [FilterOperator.EQUALS, FilterOperator.IN]
-  };
+    // Define which filters are legal for which props (including nested props (not sure about nested arrays))
+    public static readonly validFilters = {
+        name: [FilterOperator.LIKE],
+        _stepId: [FilterOperator.IN, FilterOperator.EQUALS],
+        _taskOutcomeId: [FilterOperator.EQUALS],
+        // 'dog.name': [FilterOperator.IN, FilterOperator.EQUALS, FilterOperator.NOT_EQUALS, FilterOperator.LIKE
+        // ],
+        // 'dog.smell': [FilterOperator.LIKE],
+        // firstName: [FilterOperator.IN, FilterOperator.LIKE, FilterOperator.EQUALS, FilterOperator.NOT_EQUALS],
+        // lastName: [FilterOperator.IN, FilterOperator.EQUALS, FilterOperator.NOT_EQUALS],
+        // id: [FilterOperator.EQUALS, FilterOperator.IN]
+    };
 
-  // 2 way map between field values the API client sees and what is stored in the database.  Allows client to use 'id' and database to use '_id'
-  public static readonly propAliases = {
-    _id: "id",
-    id: "_id",
-    __v: "version",
-  };
+    // 2 way map between field values the API client sees and what is stored in the database.  Allows client to use 'id' and database to use '_id'
+    public static readonly propAliases = {
+        _id: 'id',
+        id: '_id',
+        __v: 'version',
+    };
 
-  // Converters for values to/from the database.  Converter functions take the entire model
-  public static readonly dataConverters = {
-    // This isn't hooked up yet until needed - if it does, then call this in the controller layer on data before passing to service
-    toDB: {
-      _id: (data) => {
-        return new mongodb.ObjectId(data._id);
-      },
-      _stepId: (data) => {
-        return new mongodb.ObjectId(data._stepId);
-      },
-      _taskOutcomeId: (data) => {
-        return new mongodb.ObjectId(data._taskOutcomeId);
-      },
-    },
+    // Converters for values to/from the database.  Converter functions take the entire model
+    public static readonly dataConverters = {
+        // This isn't hooked up yet until needed - if it does, then call this in the controller layer on data before passing to service
+        toDB: {
+            _id: (data) => {
+                return new mongodb.ObjectId(data._id);
+            },
+            _stepId: (data) => {
+                return new mongodb.ObjectId(data._stepId);
+            },
+            _taskOutcomeId: (data) => {
+                return new mongodb.ObjectId(data._taskOutcomeId);
+            },
+        },
 
-    fromDB: {
-      // version: (data) => {
-      //   return undefined; // remove the version field - api users won't see it
-      // }
-    },
-  };
+        fromDB: {
+            // version: (data) => {
+            //   return undefined; // remove the version field - api users won't see it
+            // }
+        },
+    };
 }
 
 export const StepOutcomeModel = getModelForClass(StepOutcomeSchema);

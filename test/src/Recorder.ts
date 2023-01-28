@@ -6,11 +6,9 @@ import { AMQPConnector } from '../../server/src/shared/AMQPLib';
 import { MongoRepo } from '../../server/src/shared/MongoLib';
 import { SGStrings } from '../../server/src/shared/SGStrings';
 
-
 let self: Recorder;
 
 export default class Recorder {
-
     protected outFielPath;
     protected bpMessages: string[];
 
@@ -35,9 +33,26 @@ export default class Recorder {
         this.logger = new BaseLogger('Recorder');
         this.logger.Start();
 
-        self.amqp = new AMQPConnector('Recorder', '', self.amqpUrl, self.rmqVhost, 1, (activeMessages) => { }, this.logger);
+        self.amqp = new AMQPConnector(
+            'Recorder',
+            '',
+            self.amqpUrl,
+            self.rmqVhost,
+            1,
+            (activeMessages) => {},
+            this.logger
+        );
         await self.amqp.Start();
-        await self.amqp.ConsumeRoute('', true, true, true, true, self.OnBrowserPush.bind(this), SGStrings.GetTeamRoutingPrefix(config.get('sgTestTeam')), self.rmqBrowserPushRoute);
+        await self.amqp.ConsumeRoute(
+            '',
+            true,
+            true,
+            true,
+            true,
+            self.OnBrowserPush.bind(this),
+            SGStrings.GetTeamRoutingPrefix(config.get('sgTestTeam')),
+            self.rmqBrowserPushRoute
+        );
     }
 
     protected async OnBrowserPush(params: any, msgKey: string, ch: any) {
@@ -50,15 +65,13 @@ export default class Recorder {
     }
 }
 
-
 const recorder: Recorder = new Recorder(process.argv[2]);
 recorder.Start();
 
-let SignalHandler = async(signal) => {
+let SignalHandler = async (signal) => {
     await recorder.Stop();
     process.exit(128 + signal);
-}
-
+};
 
 process.on('SIGINT', SignalHandler);
 process.on('SIGTERM', SignalHandler);

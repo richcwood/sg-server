@@ -9,7 +9,6 @@ import * as Enums from '../../server/src/shared/Enums';
 import { TaskSource } from '../../server/src/shared/Enums';
 import * as mongodb from 'mongodb';
 
-
 const script1 = `
 import time
 print('start')
@@ -22,9 +21,7 @@ const script1_b64 = SGUtils.btoa(script1);
 
 let self: Test26;
 
-
 export default class Test26 extends TestBase.AdhocTaskTestBase {
-
     constructor(testSetup) {
         super('Test26', testSetup);
         this.description = 'Parameters passed to adhoc task job test';
@@ -48,9 +45,18 @@ export default class Test26 extends TestBase.AdhocTaskTestBase {
         const teamName = 'TestTeam';
         const _teamId = self.testSetup.teams[teamName].id;
 
-        let script_obj1: ScriptSchema = { '_teamId': _teamId, 'name': 'Script 26', 'scriptType': Enums.ScriptType.PYTHON, 'code': script1_b64, _originalAuthorUserId: this.sgUser.id, _lastEditedUserId: this.sgUser.id, lastEditedDate: new Date(), shadowCopyCode: script1_b64 };
+        let script_obj1: ScriptSchema = {
+            _teamId: _teamId,
+            name: 'Script 26',
+            scriptType: Enums.ScriptType.PYTHON,
+            code: script1_b64,
+            _originalAuthorUserId: this.sgUser.id,
+            _lastEditedUserId: this.sgUser.id,
+            lastEditedDate: new Date(),
+            shadowCopyCode: script1_b64,
+        };
         script_obj1 = await self.CreateScript(script_obj1, _teamId);
-        self.scripts.push(script_obj1);            
+        self.scripts.push(script_obj1);
 
         /// Create tasks
         const correlationId: string = new mongodb.ObjectId().toString();
@@ -64,35 +70,39 @@ export default class Test26 extends TestBase.AdhocTaskTestBase {
             steps: [
                 {
                     name: 'Step1',
-                    'script': {
+                    script: {
                         scriptType: Enums.ScriptType[script_obj1.scriptType],
-                        code: script_obj1.code
+                        code: script_obj1.code,
                     },
                     order: 0,
                     arguments: '',
-                    variables: ''
-                }
+                    variables: '',
+                },
             ],
-            correlationId: correlationId
+            correlationId: correlationId,
         };
 
         task.expectedValues = {
-            'type': 'task',
-            'matchCount': 8,
-            'tagsMatch': true,
-            'values': { [SGStrings.status]: Enums.TaskStatus.SUCCEEDED, 'correlationId': correlationId, 'source': TaskSource.JOB },
-            'runtimeVars': { [SGStrings.route]: { 'value': 'ok' }, 'globalParam1': { 'sensitive': false, 'value': 'globalParam1_val' } },
-            'step': [
-                { 'name': 'Step1', 'values': { 'status': Enums.TaskStatus.SUCCEEDED, 'stderr': '', 'exitCode': 0 } }
-            ],
-            'cntPartialMatch': 0,
-            'cntFullMatch': 0
+            type: 'task',
+            matchCount: 8,
+            tagsMatch: true,
+            values: {
+                [SGStrings.status]: Enums.TaskStatus.SUCCEEDED,
+                correlationId: correlationId,
+                source: TaskSource.JOB,
+            },
+            runtimeVars: {
+                [SGStrings.route]: { value: 'ok' },
+                globalParam1: { sensitive: false, value: 'globalParam1_val' },
+            },
+            step: [{ name: 'Step1', values: { status: Enums.TaskStatus.SUCCEEDED, stderr: '', exitCode: 0 } }],
+            cntPartialMatch: 0,
+            cntFullMatch: 0,
         };
         self.tasks.push(task);
 
         // console.log(util.inspect(self.tasks, false, null));
-    };
-
+    }
 
     public async RunTest() {
         self.logger.LogDebug(`Running test for \"${self.description}\"`);
@@ -102,11 +112,11 @@ export default class Test26 extends TestBase.AdhocTaskTestBase {
                 job: {
                     name: 'AdHocJob',
                     dateCreated: new Date(),
-                    tasks: [ task ],
-                    runtimeVars: { globalParam1: { 'sensitive': false, 'value': 'globalParam1_val' } }
-                }
-            }
-    
+                    tasks: [task],
+                    runtimeVars: { globalParam1: { sensitive: false, value: 'globalParam1_val' } },
+                },
+            };
+
             await self.testSetup.RestAPICall(`job`, 'POST', task._teamId, { correlationId: task.correlationId }, data);
         });
 

@@ -8,15 +8,15 @@ export class RedisLib {
     private redisAsyncClient: any;
     private redisClient: any;
     constructor() {
-        const loginUrl = config.get("redisUrl");
+        const loginUrl = config.get('redisUrl');
         this.redisAsyncClient = redisAsync.createClient(loginUrl);
         this.redisClient = redis.createClient(loginUrl);
 
         num_connections++;
         console.log(`${num_connections} redis connections`);
 
-        this.redisAsyncClient.on("error", function (err) {
-            console.log("Error " + err);
+        this.redisAsyncClient.on('error', function (err) {
+            console.log('Error ' + err);
         });
     }
 
@@ -38,22 +38,26 @@ export class RedisLib {
     }
 
     async GetOrCreateAtomic(key, defaultVal) {
-        let redis_cmd = "redis.replicate_commands(); local proc = redis.call('get', KEYS[1]); if proc then return proc; else redis.call('set', KEYS[1], ARGV[1]); return nil; end;";
+        let redis_cmd =
+            "redis.replicate_commands(); local proc = redis.call('get', KEYS[1]); if proc then return proc; else redis.call('set', KEYS[1], ARGV[1]); return nil; end;";
         return await this.redisAsyncClient.eval(redis_cmd, 1, key, defaultVal);
     }
 
     async GetOrCreateHashValueAtomic(hash, key, defaultVal) {
-        let redis_cmd = "redis.replicate_commands(); local proc = redis.call('hget', KEYS[1], ARGV[1]); if proc then return proc; else redis.call('hset', KEYS[1], ARGV[1], ARGV[2]); return nil; end;";
+        let redis_cmd =
+            "redis.replicate_commands(); local proc = redis.call('hget', KEYS[1], ARGV[1]); if proc then return proc; else redis.call('hset', KEYS[1], ARGV[1], ARGV[2]); return nil; end;";
         return await this.redisAsyncClient.eval(redis_cmd, 1, hash, key, defaultVal);
     }
 
     async IncrementValIfEqualsAtomic(key, expectedVal, newVal) {
-        let redis_cmd = "redis.replicate_commands(); local proc = redis.call('get', KEYS[1]); if proc == ARGV[1] then redis.call('set', KEYS[1], ARGV[2]); end; return proc;";
+        let redis_cmd =
+            "redis.replicate_commands(); local proc = redis.call('get', KEYS[1]); if proc == ARGV[1] then redis.call('set', KEYS[1], ARGV[2]); end; return proc;";
         return await this.redisAsyncClient.eval(redis_cmd, 1, key, expectedVal, newVal);
     }
 
     async SetHashValIfEqualsAtomic(hash, key, expectedVal, newVal) {
-        let redis_cmd = "redis.replicate_commands(); local proc = redis.call('hget', KEYS[1], ARGV[1]); if proc == ARGV[2] then redis.call('hset', KEYS[1], ARGV[1], ARGV[3]); end; return proc;";
+        let redis_cmd =
+            "redis.replicate_commands(); local proc = redis.call('hget', KEYS[1], ARGV[1]); if proc == ARGV[2] then redis.call('hset', KEYS[1], ARGV[1], ARGV[3]); end; return proc;";
         return await this.redisAsyncClient.eval(redis_cmd, 1, hash, key, expectedVal, newVal);
     }
 
@@ -72,15 +76,15 @@ export class RedisLib {
             arr.push(values[key]);
         });
         return await this.redisAsyncClient.hset(hash, arr);
-    };
+    }
 
     async GetHashValue(hash, key) {
         return await this.redisAsyncClient.hget(hash, key);
-    };
+    }
 
     async GetHashValues(hash) {
         return await this.redisAsyncClient.hgetall(hash);
-    };
+    }
 
     async AddMemberToSet(set: string, member: string) {
         return await this.redisAsyncClient.sadd(set, member);
@@ -100,7 +104,7 @@ export class RedisLib {
 
     async SetKeyTTL(key, ttl) {
         return await this.redisAsyncClient.expire(key, ttl);
-    };
+    }
 
     async SetKeysAtomic(keyValuePairs) {
         return new Promise((resolve, reject) => {
@@ -109,11 +113,9 @@ export class RedisLib {
                 multi.set(key, keyValuePairs[key]);
             });
             multi.exec((err, replies) => {
-                if (err)
-                    reject(err);
-                else
-                    resolve(replies);
+                if (err) reject(err);
+                else resolve(replies);
             });
         });
     }
-};
+}

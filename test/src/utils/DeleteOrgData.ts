@@ -5,12 +5,10 @@ import * as mongodb from 'mongodb';
 import * as mongoose from 'mongoose';
 const readline = require('readline');
 
-
 const rl = readline.createInterface({
     input: process.stdin,
-    output: process.stdout
+    output: process.stdout,
 });
-
 
 let DeleteTeamJobData = async (teamId: string) => {
     mongoose.connect(config.get('mongoUrl'), {});
@@ -25,7 +23,7 @@ let DeleteTeamJobData = async (teamId: string) => {
 
     console.log('mongo url -> ', config.get('mongoUrl'));
 
-    const filter: any = { "_teamId": new mongodb.ObjectId(teamId) };
+    const filter: any = { _teamId: new mongodb.ObjectId(teamId) };
 
     let res;
     res = await mongoRepo.DeleteByQuery(filter, 'job');
@@ -48,15 +46,15 @@ let DeleteTeamJobData = async (teamId: string) => {
     console.log(`deleted ${res} schedules`);
 
     process.exit();
-}
+};
 
 const teamId = process.argv[2];
 
 console.log(`Deleting data for team ${teamId} from ${config.get('mongoUrl')}`);
 
-rl.question("continue? (y/n) ", function (yesno) {
+rl.question('continue? (y/n) ', function (yesno) {
     if (yesno != 'y') {
-        rl.close()
+        rl.close();
         process.exit();
     } else {
         rl.close();

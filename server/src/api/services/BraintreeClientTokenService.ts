@@ -6,7 +6,6 @@ import * as config from 'config';
 import * as mongodb from 'mongodb';
 import * as braintree from 'braintree';
 
-
 export class BraintreeClientTokenService {
     public async createBrainTreeCustomer(team: TeamSchema): Promise<object> {
         let merchantId = config.get('braintreeMerchantId');
@@ -17,19 +16,18 @@ export class BraintreeClientTokenService {
             environment: braintree.Environment.Sandbox,
             merchantId: merchantId,
             publicKey: publicKey,
-            privateKey: privateKey
+            privateKey: privateKey,
         });
 
         return await new Promise(async (resolve, reject) => {
             let result = await gateway.customer.create({
                 id: team.id.toHexString(),
-                firstName: team.name
-              });
+                firstName: team.name,
+            });
 
-              resolve(result);
+            resolve(result);
         });
     }
-
 
     public async createBraintreeClientToken(_teamId: mongodb.ObjectId): Promise<object> {
         let merchantId = config.get('braintreeMerchantId');
@@ -40,12 +38,12 @@ export class BraintreeClientTokenService {
             environment: braintree.Environment.Sandbox,
             merchantId: merchantId,
             publicKey: publicKey,
-            privateKey: privateKey
+            privateKey: privateKey,
         });
 
         return await new Promise(async (resolve, reject) => {
             let result = await gateway.clientToken.generate({
-                customerId: _teamId.toHexString()
+                customerId: _teamId.toHexString(),
             });
 
             if (!result.success) {

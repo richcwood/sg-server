@@ -7,28 +7,30 @@ const jwt = require('jsonwebtoken');
 import * as config from 'config';
 import * as mongodb from 'mongodb';
 
-
 export class JoinTeamService {
     public async userJoinTeam(_userId: mongodb.ObjectId, _teamId: string, token: string): Promise<object> {
         /// Check if the invited user exists
-        const userModel: any = await userService.findUser(_userId, '_id email teamIds teamAccessRightIds teamIdsInvited teamIdsInactive passwordHash');
+        const userModel: any = await userService.findUser(
+            _userId,
+            '_id email teamIds teamAccessRightIds teamIdsInvited teamIdsInactive passwordHash'
+        );
         if (!userModel)
             throw new ValidationError('Something went wrong. Please request a new invite from the team administrator.');
 
         /// Check if the user is already in the team
         let userAlreadyInTeam: boolean = true;
-        if (userModel.teamIds.indexOf(_teamId) < 0)
-            userAlreadyInTeam = false;
+        if (userModel.teamIds.indexOf(_teamId) < 0) userAlreadyInTeam = false;
 
         /// Verify the token - the secret comes from the user document - if no secret we can't verify the token
         let tokenIsValid: boolean = false;
-        const filterRes = _.filter(userModel.teamIdsInvited, o => o._teamId == _teamId);
+        const filterRes = _.filter(userModel.teamIdsInvited, (o) => o._teamId == _teamId);
         let teamIdInviteSecret: string = undefined;
-        if (_.isArray(filterRes) && filterRes.length > 0)
-            teamIdInviteSecret = filterRes[0].inviteKey;
+        if (_.isArray(filterRes) && filterRes.length > 0) teamIdInviteSecret = filterRes[0].inviteKey;
         if (!teamIdInviteSecret) {
             if (!userAlreadyInTeam)
-                throw new ValidationError('Something went wrong. Please request a new invite from the team administrator.');
+                throw new ValidationError(
+                    'Something went wrong. Please request a new invite from the team administrator.'
+                );
         } else {
             /// We have the secret, use it to verify the token and then check the embedded data against the url params
             tokenIsValid = true;
@@ -39,10 +41,8 @@ export class JoinTeamService {
                 tokenIsValid = false;
             }
             if (tokenIsValid) {
-                if (_userId.toHexString() != jwtData.id)
-                    tokenIsValid = false;
-                else if (_teamId != jwtData.InvitedTeamId)
-                    tokenIsValid = false;
+                if (_userId.toHexString() != jwtData.id) tokenIsValid = false;
+                else if (_teamId != jwtData.InvitedTeamId) tokenIsValid = false;
             }
         }
 
@@ -91,10 +91,12 @@ export class JoinTeamService {
         return userModel;
     }
 
-
     public async anonymousJoinTeam(_userId: mongodb.ObjectId, token: string): Promise<object> {
         /// Check if the invited user exists
-        const userModel: any = await userService.findUser(_userId, '_id email teamIds teamAccessRightIds teamIdsInvited teamIdsInactive passwordHash');
+        const userModel: any = await userService.findUser(
+            _userId,
+            '_id email teamIds teamAccessRightIds teamIdsInvited teamIdsInactive passwordHash'
+        );
         if (!userModel)
             throw new ValidationError('Something went wrong. Please request a new invite from the team administrator.');
 
@@ -110,8 +112,7 @@ export class JoinTeamService {
 
         /// Check if the user is already in the team
         let userAlreadyInTeam: boolean = true;
-        if (userModel.teamIds.indexOf(_teamId) < 0)
-            userAlreadyInTeam = false;
+        if (userModel.teamIds.indexOf(_teamId) < 0) userAlreadyInTeam = false;
 
         /// If the user is already in the team it doesn't matter if the token is valid or not - just remove the secret
         ///     and if somehow the team was added to the inactive list, remove it
@@ -134,7 +135,7 @@ export class JoinTeamService {
         if (!tokenIsValid)
             throw new ValidationError('Something went wrong. Please request a new invite from the team administrator.');
 
-        userModel.teamIdsInvited.push({_teamId});
+        userModel.teamIdsInvited.push({ _teamId });
 
         /// If the user doesn't have a password yet, leave the team to which they are invited in the teamIdsInvited
         ///     array - this will get them routed to the page where they can enter their account details.
@@ -158,7 +159,6 @@ export class JoinTeamService {
         await userModel.save();
         return userModel;
     }
-
 
     // public async anonymousJoinTeam(_teamId: string, token: string): Promise<object> {
     //     /// Check if the invited user exists
@@ -194,8 +194,6 @@ export class JoinTeamService {
 
     //                 if (document.getElementById('zxcvbn')) {
 
-
-
     //                     window.zxcvbn_load_hook();
     //                     return;
     //                 }
@@ -210,8 +208,6 @@ export class JoinTeamService {
 
     //             window.zxcvbn_load_hook = function() {
 
-
-
     //                 if ($('#password-strength-meter-wrapper').length) return;
 
     //                 $('input[name=password]:visible')
@@ -219,8 +215,6 @@ export class JoinTeamService {
     //                         var color_map = ['', '#c81818', '#ffac1d', '#a6c060', '#27b30f'];
 
     //                         var word_map = [
-
-
 
     //                             ['#444', $('#zxcvbn_string_very_weak').html() || 'Very weak'],
     //                             ['#c81818', $('#zxcvbn_string_weak').html() || 'Weak'],
@@ -244,9 +238,7 @@ export class JoinTeamService {
     //                             if (str && str.length) ins.push(str);
     //                         }
 
-
     //                         var ret = zxcvbn(pass, ins);
-
 
     //                         var color_score;
     //                         if (pass.length < 6 || ret.score !== 0) {
@@ -266,15 +258,10 @@ export class JoinTeamService {
     //                             })
     //                             .text(word_map[ret.score][1]);
 
-
     //                     })
     //                     .change(function() {
     //                         $(this).keyup();
     //                     });
-
-
-
-
 
     //                 var d = $('<div/>');
     //                 d.attr('id', 'password-strength-meter-wrapper');
@@ -287,10 +274,6 @@ export class JoinTeamService {
     //                 if (window.TS) d.css('width', '100%');
     //                 $('input[name=password]:visible').after(d);
 
-
-
-
-
     //                 var bg = $('<div/>');
     //                 bg.css({
     //                     height: '4px',
@@ -300,10 +283,6 @@ export class JoinTeamService {
     //                     left: '0',
     //                 });
     //                 d.append(bg);
-
-
-
-
 
     //                 var color = $('<div/>');
     //                 color.css({
@@ -316,10 +295,6 @@ export class JoinTeamService {
     //                 color.attr('id', 'password-strength-meter');
     //                 d.append(color);
 
-
-
-
-
     //                 for (var i = 1; i < 4; i += 1) {
     //                     var sep = $('<div/>');
     //                     sep.css({
@@ -331,10 +306,6 @@ export class JoinTeamService {
     //                     });
     //                     d.append(sep);
     //                 }
-
-
-
-
 
     //                 var lbl = $('<div/>');
     //                 lbl.css({
@@ -350,7 +321,7 @@ export class JoinTeamService {
     //             };
     //         })();
     //         </script><div style="display:none;"><span id="zxcvbn_string_very_weak">Very weak</span><span id="zxcvbn_string_weak">Weak</span><span id="zxcvbn_string_so_so">So-so</span><span id="zxcvbn_string_good">Good</span><span id="zxcvbn_string_great">Great</span></div><script>
-    //          $(window).load(load_zxcvbn_script); 
+    //          $(window).load(load_zxcvbn_script);
     //         window.zxcvbn_url = "https:\/\/a.slack-edge.com\/bv1-8-8cacda2\/zxcvbn.1f5561bccc365c458bad.min.js";
     //         </script><style>.color_9f69e7:not(.nuc) {color:#9F69E7;}.color_4bbe2e:not(.nuc) {color:#4BBE2E;}.color_e7392d:not(.nuc) {color:#E7392D;}.color_3c989f:not(.nuc) {color:#3C989F;}.color_674b1b:not(.nuc) {color:#674B1B;}.color_e96699:not(.nuc) {color:#E96699;}.color_e0a729:not(.nuc) {color:#E0A729;}.color_684b6c:not(.nuc) {color:#684B6C;}.color_5b89d5:not(.nuc) {color:#5B89D5;}.color_2b6836:not(.nuc) {color:#2B6836;}.color_99a949:not(.nuc) {color:#99A949;}.color_df3dc0:not(.nuc) {color:#DF3DC0;}.color_4cc091:not(.nuc) {color:#4CC091;}.color_9b3b45:not(.nuc) {color:#9B3B45;}.color_d58247:not(.nuc) {color:#D58247;}.color_bb86b7:not(.nuc) {color:#BB86B7;}.color_5a4592:not(.nuc) {color:#5A4592;}.color_db3150:not(.nuc) {color:#DB3150;}.color_235e5b:not(.nuc) {color:#235E5B;}.color_9e3997:not(.nuc) {color:#9E3997;}.color_53b759:not(.nuc) {color:#53B759;}.color_c386df:not(.nuc) {color:#C386DF;}.color_385a86:not(.nuc) {color:#385A86;}.color_a63024:not(.nuc) {color:#A63024;}.color_5870dd:not(.nuc) {color:#5870DD;}.color_ea2977:not(.nuc) {color:#EA2977;}.color_50a0cf:not(.nuc) {color:#50A0CF;}.color_d55aef:not(.nuc) {color:#D55AEF;}.color_d1707d:not(.nuc) {color:#D1707D;}.color_43761b:not(.nuc) {color:#43761B;}.color_e06b56:not(.nuc) {color:#E06B56;}.color_8f4a2b:not(.nuc) {color:#8F4A2B;}.color_902d59:not(.nuc) {color:#902D59;}.color_de5f24:not(.nuc) {color:#DE5F24;}.color_a2a5dc:not(.nuc) {color:#A2A5DC;}.color_827327:not(.nuc) {color:#827327;}.color_3c8c69:not(.nuc) {color:#3C8C69;}.color_8d4b84:not(.nuc) {color:#8D4B84;}.color_84b22f:not(.nuc) {color:#84B22F;}.color_4ec0d6:not(.nuc) {color:#4EC0D6;}.color_e23f99:not(.nuc) {color:#E23F99;}.color_e475df:not(.nuc) {color:#E475DF;}.color_619a4f:not(.nuc) {color:#619A4F;}.color_a72f79:not(.nuc) {color:#A72F79;}.color_7d414c:not(.nuc) {color:#7D414C;}.color_aba727:not(.nuc) {color:#ABA727;}.color_965d1b:not(.nuc) {color:#965D1B;}.color_4d5e26:not(.nuc) {color:#4D5E26;}.color_dd8527:not(.nuc) {color:#DD8527;}.color_bd9336:not(.nuc) {color:#BD9336;}.color_e85d72:not(.nuc) {color:#E85D72;}.color_dc7dbb:not(.nuc) {color:#DC7DBB;}.color_bc3663:not(.nuc) {color:#BC3663;}.color_9d8eee:not(.nuc) {color:#9D8EEE;}.color_8469bc:not(.nuc) {color:#8469BC;}.color_73769d:not(.nuc) {color:#73769D;}.color_b14cbc:not(.nuc) {color:#B14CBC;}</style>
 

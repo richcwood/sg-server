@@ -38,56 +38,56 @@ import { convertData as convertRequestData } from '../../../server/src/api/utils
 import * as mongoose from 'mongoose';
 import * as mongodb from 'mongodb';
 
-
 let DumpMongoData = async (path: string, _teamId: any) => {
-  mongoose.connect(config.get('mongoUrl'), {});
+    mongoose.connect(config.get('mongoUrl'), {});
 
-  console.log('mongo url -> ', config.get('mongoUrl'));
+    console.log('mongo url -> ', config.get('mongoUrl'));
 
-  const filter = {_teamId};
+    const filter = { _teamId };
 
-  // let user: any = await userService.findAllUsersInternal();
-  // let team: any = await teamService.findAllTeamsInternal({_id: _teamId});
-  // let agent: any = await agentService.findAllAgentsInternal(filter);
-  // let job: any = await jobService.findAllJobsInternal(filter);
-  let jobDef: any = await jobDefService.findAllJobDefsInternal(filter);
-  let script: any = await scriptService.findAllScriptsInternal(filter);
-  // let step: any = await stepService.findAllStepsInternal(filter);
-  let stepDef: any = await stepDefService.findAllStepDefsInternal(filter);
-  // let stepOutcome: any = await stepOutcomeService.findAllStepOutcomesInternal(filter);
-  // let task: any = await taskService.findAllTasksInternal(filter);
-  let taskDef: any = await taskDefService.findAllTaskDefsInternal(filter);
-  // let taskOutcome: any = await taskOutcomeService.findAllTaskOutcomesInternal(filter);
-  // let schedule: any = await scheduleService.findAllSchedulesInternal(filter);
-  // let invoice: any = await invoiceService.findAllInvoicesInternal(filter);
-  // let paymentMethod: any = await paymentMethodService.findAllPaymentMethodsInternal(filter);
-  // let paymentTransaction: any = await paymentTransactionService.findAllPaymentTransactionsInternal(filter);
-  let teamVariable: any = await teamVariableService.findAllTeamVariablesInternal({_id: _teamId});
+    // let user: any = await userService.findAllUsersInternal();
+    // let team: any = await teamService.findAllTeamsInternal({_id: _teamId});
+    // let agent: any = await agentService.findAllAgentsInternal(filter);
+    // let job: any = await jobService.findAllJobsInternal(filter);
+    let jobDef: any = await jobDefService.findAllJobDefsInternal(filter);
+    let script: any = await scriptService.findAllScriptsInternal(filter);
+    // let step: any = await stepService.findAllStepsInternal(filter);
+    let stepDef: any = await stepDefService.findAllStepDefsInternal(filter);
+    // let stepOutcome: any = await stepOutcomeService.findAllStepOutcomesInternal(filter);
+    // let task: any = await taskService.findAllTasksInternal(filter);
+    let taskDef: any = await taskDefService.findAllTaskDefsInternal(filter);
+    // let taskOutcome: any = await taskOutcomeService.findAllTaskOutcomesInternal(filter);
+    // let schedule: any = await scheduleService.findAllSchedulesInternal(filter);
+    // let invoice: any = await invoiceService.findAllInvoicesInternal(filter);
+    // let paymentMethod: any = await paymentMethodService.findAllPaymentMethodsInternal(filter);
+    // let paymentTransaction: any = await paymentTransactionService.findAllPaymentTransactionsInternal(filter);
+    let teamVariable: any = await teamVariableService.findAllTeamVariablesInternal({ _id: _teamId });
 
-  let allTestObjects: any = {};
-  // allTestObjects['user'] = convertRequestData(UserSchema, user);
-  // allTestObjects['team'] = convertRequestData(TeamSchema, team);
-  // allTestObjects['agent'] = convertRequestData(AgentSchema, agent);
-  // allTestObjects['job'] = convertRequestData(JobSchema, job);
-  allTestObjects['jobDef'] = convertRequestData(JobDefSchema, jobDef);
-  allTestObjects['script'] = convertRequestData(ScriptSchema, script);
-  // allTestObjects['step'] = convertRequestData(StepSchema, step);
-  allTestObjects['stepDef'] = convertRequestData(StepDefSchema, stepDef);
-  // allTestObjects['stepOutcome'] = convertRequestData(StepOutcomeSchema, stepOutcome);
-  // allTestObjects['task'] = convertRequestData(TaskSchema, task);
-  allTestObjects['taskDef'] = convertRequestData(TaskDefSchema, taskDef);
-  // allTestObjects['taskOutcome'] = convertRequestData(TaskOutcomeSchema, taskOutcome);
-  // allTestObjects['schedule'] = convertRequestData(ScheduleSchema, schedule);
-  // allTestObjects['invoice'] = convertRequestData(InvoiceSchema, invoice);
-  // allTestObjects['paymentMethod'] = convertRequestData(PaymentMethodSchema, paymentMethod);
-  // allTestObjects['paymentTransaction'] = convertRequestData(PaymentTransactionSchema, paymentTransaction);
-  allTestObjects['teamVariable'] = convertRequestData(TeamVariableSchema, teamVariable);
+    let allTestObjects: any = {};
+    // allTestObjects['user'] = convertRequestData(UserSchema, user);
+    // allTestObjects['team'] = convertRequestData(TeamSchema, team);
+    // allTestObjects['agent'] = convertRequestData(AgentSchema, agent);
+    // allTestObjects['job'] = convertRequestData(JobSchema, job);
+    allTestObjects['jobDef'] = convertRequestData(JobDefSchema, jobDef);
+    allTestObjects['script'] = convertRequestData(ScriptSchema, script);
+    // allTestObjects['step'] = convertRequestData(StepSchema, step);
+    allTestObjects['stepDef'] = convertRequestData(StepDefSchema, stepDef);
+    // allTestObjects['stepOutcome'] = convertRequestData(StepOutcomeSchema, stepOutcome);
+    // allTestObjects['task'] = convertRequestData(TaskSchema, task);
+    allTestObjects['taskDef'] = convertRequestData(TaskDefSchema, taskDef);
+    // allTestObjects['taskOutcome'] = convertRequestData(TaskOutcomeSchema, taskOutcome);
+    // allTestObjects['schedule'] = convertRequestData(ScheduleSchema, schedule);
+    // allTestObjects['invoice'] = convertRequestData(InvoiceSchema, invoice);
+    // allTestObjects['paymentMethod'] = convertRequestData(PaymentMethodSchema, paymentMethod);
+    // allTestObjects['paymentTransaction'] = convertRequestData(PaymentTransactionSchema, paymentTransaction);
+    allTestObjects['teamVariable'] = convertRequestData(TeamVariableSchema, teamVariable);
 
-  try { if (fs.existsSync(path)) fs.unlinkSync(path); } catch (e) { }
-  fs.writeFileSync(path, JSON.stringify(allTestObjects));
+    try {
+        if (fs.existsSync(path)) fs.unlinkSync(path);
+    } catch (e) {}
+    fs.writeFileSync(path, JSON.stringify(allTestObjects));
 
-  process.exit();
-}
-
+    process.exit();
+};
 
 DumpMongoData('./test/data/demo_prod_org.json', new mongodb.ObjectId('5e99cbcb2317950015edb655'));

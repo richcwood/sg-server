@@ -3,14 +3,17 @@ import { payInvoiceAutoController } from '../controllers/PayInvoiceAutoControlle
 import { verifyAccessRights } from '../utils/AccessRightsVerifier';
 
 export class PayInvoiceAutoRouter {
+    public readonly router: Router;
 
-  public readonly router: Router;
+    constructor() {
+        this.router = Router();
 
-  constructor() {
-    this.router = Router();
-
-    this.router.post('/', verifyAccessRights(['PAY_INVOICE_AUTO', 'GLOBAL']), payInvoiceAutoController.payInvoiceAuto);
-  }
+        this.router.post(
+            '/',
+            verifyAccessRights(['PAY_INVOICE_AUTO', 'GLOBAL']),
+            payInvoiceAutoController.payInvoiceAuto
+        );
+    }
 }
 
 export const payInvoiceAutoRouterSingleton = new PayInvoiceAutoRouter();

@@ -2,7 +2,6 @@
  * Created by richwood on 3/8/18.
  */
 
- 
 export class SGStrings {
     static status: string = 'status';
     static route: string = 'route';
@@ -18,29 +17,28 @@ export class SGStrings {
     static fromRoutes: string = 'fromRoutes';
     static failureCode: string = 'failureCode';
 
-    static GetTaskKey(teamId: string, jobId: string|null, taskName: string) {
+    static GetTaskKey(teamId: string, jobId: string | null, taskName: string) {
         let taskKey = `team-${teamId}.`;
-        if (jobId)
-            taskKey += `job-${jobId}.`;
+        if (jobId) taskKey += `job-${jobId}.`;
         taskKey += `task-${taskName}`;
         return taskKey;
     }
 
     static GetJobKey(teamId: string, jobId: string) {
         return `team-${teamId}.job-${jobId}`;
-    };
+    }
 
     static GetTeamExchangeName(teamId: string) {
         return `${this.GetTeamRoutingPrefix(teamId)}`;
-    };
+    }
 
     static GetTeamLogExchangeName(teamId: string) {
         return `${this.GetTeamRoutingPrefix(teamId)}`;
-    };
+    }
 
     static GetTeamRoutingPrefix(teamId: string) {
         return `team-${teamId}`;
-    };
+    }
 
     static GetAgentQueue(teamId: string, agentId: string) {
         return `${this.GetTeamRoutingPrefix(teamId)}.agent-${agentId}`;
@@ -56,11 +54,11 @@ export class SGStrings {
 
     static GetAnyAgentQueue(teamId: string) {
         return `${this.GetTeamRoutingPrefix(teamId)}.agent`;
-    };
+    }
 
     static GetAllAgentsQueue(teamId: string) {
         return `${this.GetTeamRoutingPrefix(teamId)}.agent.all`;
-    };
+    }
 
     // static GetAnyAgentTagQueue(teamId: string, tag: string) {
     //     return `${this.GetAnyAgentQueue(teamId)}.${tag}`;

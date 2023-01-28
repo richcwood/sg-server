@@ -3,14 +3,13 @@ import { forgotPasswordController } from '../controllers/ForgotPasswordControlle
 import { verifyAccessRights } from '../utils/AccessRightsVerifier';
 
 export class ForgotPasswordRouter {
+    public readonly router: Router;
 
-  public readonly router: Router;
+    constructor() {
+        this.router = Router();
 
-  constructor() {
-    this.router = Router();
-
-    this.router.post('/', forgotPasswordController.requestReset);
-  }
+        this.router.post('/', forgotPasswordController.requestReset);
+    }
 }
 
 export const forgotPasswordRouterSingleton = new ForgotPasswordRouter();
