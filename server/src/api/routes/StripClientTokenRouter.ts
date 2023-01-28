@@ -3,15 +3,22 @@ import { stripeClientTokenController } from '../controllers/StripeClientTokenCon
 import { verifyAccessRights } from '../utils/AccessRightsVerifier';
 
 export class StripeClientTokenRouter {
+    public readonly router: Router;
 
-  public readonly router: Router;
+    constructor() {
+        this.router = Router();
 
-  constructor() {
-    this.router = Router();
-
-    this.router.get('/', verifyAccessRights(['PAYMENT_TOKEN_CREATE', 'GLOBAL']), stripeClientTokenController.getStripePublicToken);
-    this.router.post('/', verifyAccessRights(['PAYMENT_TOKEN_CREATE', 'GLOBAL']), stripeClientTokenController.createStripeClientSecret);
-  }
+        this.router.get(
+            '/',
+            verifyAccessRights(['PAYMENT_TOKEN_CREATE', 'GLOBAL']),
+            stripeClientTokenController.getStripePublicToken
+        );
+        this.router.post(
+            '/',
+            verifyAccessRights(['PAYMENT_TOKEN_CREATE', 'GLOBAL']),
+            stripeClientTokenController.createStripeClientSecret
+        );
+    }
 }
 
 export const stripeClientTokenRouterSingleton = new StripeClientTokenRouter();

@@ -3,14 +3,17 @@ import { payInvoiceManualController } from '../controllers/PayInvoiceManualContr
 import { verifyAccessRights } from '../utils/AccessRightsVerifier';
 
 export class PayInvoiceManualRouter {
+    public readonly router: Router;
 
-  public readonly router: Router;
+    constructor() {
+        this.router = Router();
 
-  constructor() {
-    this.router = Router();
-
-    this.router.post('/', verifyAccessRights(['PAY_INVOICE_MANUAL', 'GLOBAL']), payInvoiceManualController.payInvoiceManual);
-  }
+        this.router.post(
+            '/',
+            verifyAccessRights(['PAY_INVOICE_MANUAL', 'GLOBAL']),
+            payInvoiceManualController.payInvoiceManual
+        );
+    }
 }
 
 export const payInvoiceManualRouterSingleton = new PayInvoiceManualRouter();

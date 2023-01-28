@@ -12,9 +12,7 @@ import { PaymentMethodType } from '../../shared/Enums';
 import * as config from 'config';
 import { Stripe } from 'stripe';
 import * as _ from 'lodash';
-const bodyParser = require('body-parser')
-
-
+const bodyParser = require('body-parser');
 
 let appName: string = 'StripeWebhookRouter';
 let logger: BaseLogger = new BaseLogger(appName);
@@ -38,17 +36,13 @@ export default class StripeHookRouter {
     }
 
     setRoutes() {
-        this.router.post('/', bodyParser.raw({type: 'application/json'}), this.create.bind(this));
+        this.router.post('/', bodyParser.raw({ type: 'application/json' }), this.create.bind(this));
     }
 
     async create(req: Request, res: Response, next: NextFunction) {
         let event;
         try {
-          event = this.stripe.webhooks.constructEvent(
-            req.body,
-            req.headers["stripe-signature"],
-            this.secret
-          );
+            event = this.stripe.webhooks.constructEvent(req.body, req.headers['stripe-signature'], this.secret);
         } catch (error) {
             logger.LogError('Stripe webhook error', { body: req.body, headers: req.headers, error });
             throw new ForbiddenError('Stripe webhook error');
@@ -70,8 +64,7 @@ export default class StripeHookRouter {
             let paymentMethod: any = {};
 
             let name: string = `${event.data.object.card.brand} ... ${event.data.object.card.last4}`;
-            if (event.data.object.billing_details.name)
-                name = event.data.object.billing_details.name;
+            if (event.data.object.billing_details.name) name = event.data.object.billing_details.name;
 
             let type = PaymentMethodType.CREDIT_CARD;
 
@@ -83,7 +76,10 @@ export default class StripeHookRouter {
 
             paymentMethodService.createPaymentMethod(team._id, paymentMethod);
         } else if (event.type === 'payment_method.detached') {
-            const paymentMethods = await paymentMethodService.findAllPaymentMethodsInternal({ stripePaymentMethodId: event.data.object.id }, 'id');
+            const paymentMethods = await paymentMethodService.findAllPaymentMethodsInternal(
+                { stripePaymentMethodId: event.data.object.id },
+                'id'
+            );
             if (_.isArray(paymentMethods) && paymentMethods.length > 0) {
                 paymentMethodService.deletePaymentMethod(team._id, paymentMethods[0]._id);
             }
@@ -93,14 +89,16 @@ export default class StripeHookRouter {
                 throw new ValidationError('Unsupported payment method type');
             }
 
-            const paymentMethods = await paymentMethodService.findAllPaymentMethodsInternal({ stripePaymentMethodId: event.data.object.id }, 'id');
+            const paymentMethods = await paymentMethodService.findAllPaymentMethodsInternal(
+                { stripePaymentMethodId: event.data.object.id },
+                'id'
+            );
             if (!paymentMethods || (_.isArray(paymentMethods) && paymentMethods.length < 1))
                 throw new MissingObjectError(`No payment method found with stripe id "${event.data.object.id}"`);
             const paymentMethod: PaymentMethodSchema = paymentMethods[0];
 
             let name: string = `${event.data.object.card.brand} ... ${event.data.object.card.last4}`;
-            if (event.data.object.billing_details.name)
-                name = event.data.object.billing_details.name;
+            if (event.data.object.billing_details.name) name = event.data.object.billing_details.name;
 
             paymentMethod.name = name;
             paymentMethod.stripePaymentMethodId = event.data.object.id;
@@ -109,9 +107,14 @@ export default class StripeHookRouter {
 
             paymentMethodService.updatePaymentMethod(team._id, paymentMethod._id, paymentMethod);
         } else if (event.type === 'charge.refunded') {
-            const paymentTransactions = await paymentTransactionService.findAllPaymentTransactionsInternal({ processorTransactionId: event.data.object.payment_intent }, 'id refunds');
+            const paymentTransactions = await paymentTransactionService.findAllPaymentTransactionsInternal(
+                { processorTransactionId: event.data.object.payment_intent },
+                'id refunds'
+            );
             if (!paymentTransactions || (_.isArray(paymentTransactions) && paymentTransactions.length < 1))
-                throw new MissingObjectError(`No payment transaction found with payment intent id "${event.data.object.payment_intent}"`);
+                throw new MissingObjectError(
+                    `No payment transaction found with payment intent id "${event.data.object.payment_intent}"`
+                );
             const paymentTransaction: any = paymentTransactions[0].toObject();
 
             paymentTransaction.refunded = true;
@@ -125,7 +128,7 @@ export default class StripeHookRouter {
                     charge: refundObject.charge,
                     createdAt: refundObject.created * 1000,
                     reason: refundObject.reason,
-                    status: refundObject.status
+                    status: refundObject.status,
                 };
                 paymentTransaction.refunds.push(refund);
             }

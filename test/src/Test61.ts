@@ -4,7 +4,6 @@ import { SGUtils } from '../../server/src/shared/SGUtils';
 import { ScriptType, TaskDefTarget } from '../../server/src/shared/Enums';
 import * as _ from 'lodash';
 
-
 const script1 = `
 require "zlib"
 
@@ -21,19 +20,15 @@ puts "#{unzipped} compressed to #{zipped}";
 `;
 const script1_b64 = SGUtils.btoa(script1);
 
-
 let self: Test61;
 
-
 export default class Test61 extends TestBase.WorkflowTestBase {
-
     constructor(testSetup) {
         super('Test61', testSetup);
         this.description = 'Run ruby task with dependency as lambda';
 
         self = this;
     }
-
 
     public async RunTest() {
         let result: boolean;
@@ -52,8 +47,8 @@ export default class Test61 extends TestBase.WorkflowTestBase {
                     name: 'Script 61',
                     scriptType: ScriptType.RUBY,
                     code: script1_b64,
-                    shadowCopyCode: script1_b64
-                }
+                    shadowCopyCode: script1_b64,
+                },
             ],
             jobDefs: [
                 {
@@ -70,13 +65,13 @@ export default class Test61 extends TestBase.WorkflowTestBase {
                                     lambdaRole: config.get('lambda-admin-iam-role'),
                                     lambdaAWSRegion: config.get('AWS_REGION'),
                                     lambdaDependencies: 'requests',
-                                    lambdaTimeout: 10
-                                }
-                            ]
-                        }
-                    ]
-                }
-            ]
+                                    lambdaTimeout: 10,
+                                },
+                            ],
+                        },
+                    ],
+                },
+            ],
         };
 
         const { scripts, jobDefs } = await this.CreateJobDefsFromTemplates(properties);
@@ -84,7 +79,10 @@ export default class Test61 extends TestBase.WorkflowTestBase {
         let startedJobId;
         resApiCall = await this.testSetup.RestAPICall(`job`, 'POST', _teamId, { jobDefName: jobDefs['Job 61'].name });
         if (resApiCall.data.statusCode != 201) {
-            self.logger.LogError('Failed', { Message: `job POST returned ${resApiCall.data.statusCode}`, _jobDefId: jobDefs['Job 61'].id });
+            self.logger.LogError('Failed', {
+                Message: `job POST returned ${resApiCall.data.statusCode}`,
+                _jobDefId: jobDefs['Job 61'].id,
+            });
             return false;
         }
         startedJobId = resApiCall.data.data.id;
@@ -92,39 +90,36 @@ export default class Test61 extends TestBase.WorkflowTestBase {
         const jobStartedBP: any = {
             domainType: 'Job',
             operation: 1,
-            model:
-            {
+            model: {
                 _teamId: config.get('sgTestTeam'),
                 _jobDefId: jobDefs[properties.jobDefs[0].name].id,
                 runId: 0,
                 name: properties.jobDefs[0].name,
                 status: 0,
                 id: startedJobId,
-                type: 'Job'
-            }
-        }
+                type: 'Job',
+            },
+        };
         self.bpMessagesExpected.push(jobStartedBP);
 
         const jobCompletedBP: any = {
             domainType: 'Job',
             operation: 2,
-            model:
-            {
+            model: {
                 status: 20,
                 id: startedJobId,
-                type: 'Job'
-            }
+                type: 'Job',
+            },
         };
         self.bpMessagesExpected.push(jobCompletedBP);
 
         result = await self.WaitForTestToComplete();
-        if (!result)
-            return result;
+        if (!result) return result;
 
         // newAgent.offline = true;
         // await newAgent.SendHeartbeat(false, true);
         // await newAgent.Stop();
-    
+
         return true;
     }
 }

@@ -1,9 +1,15 @@
 import * as config from 'config';
 import * as TestBase from './TestBase';
 import { SGUtils } from '../../server/src/shared/SGUtils';
-import { ScriptType, TaskDefTarget, TaskStatus, TaskFailureCode, StepStatus, JobStatus } from '../../server/src/shared/Enums';
+import {
+    ScriptType,
+    TaskDefTarget,
+    TaskStatus,
+    TaskFailureCode,
+    StepStatus,
+    JobStatus,
+} from '../../server/src/shared/Enums';
 import * as _ from 'lodash';
-
 
 const script1 = `
 import requests
@@ -50,19 +56,15 @@ print(a)
 `;
 const script1_b64 = SGUtils.btoa(script1);
 
-
 let self: Test59;
 
-
 export default class Test59 extends TestBase.WorkflowTestBase {
-
     constructor(testSetup) {
         super('Test59', testSetup);
         this.description = 'Run python task as lambda with error';
 
         self = this;
     }
-
 
     public async RunTest() {
         let result: boolean;
@@ -81,8 +83,8 @@ export default class Test59 extends TestBase.WorkflowTestBase {
                     name: 'Script 59',
                     scriptType: ScriptType.PYTHON,
                     code: script1_b64,
-                    shadowCopyCode: script1_b64
-                }
+                    shadowCopyCode: script1_b64,
+                },
             ],
             jobDefs: [
                 {
@@ -99,17 +101,17 @@ export default class Test59 extends TestBase.WorkflowTestBase {
                                     lambdaRole: config.get('lambda-admin-iam-role'),
                                     lambdaAWSRegion: config.get('AWS_REGION'),
                                     lambdaDependencies: 'requests',
-                                    lambdaTimeout: 10
-                                }
-                            ]
-                        }
+                                    lambdaTimeout: 10,
+                                },
+                            ],
+                        },
                     ],
                     runtimeVars: {
-                        sgAccessKeyId: {'value': config.get('prodTestTeamAccessKeyId'), 'sensitive': false},
-                        sgAccessKeySecret: {'value': config.get('prodTestTeamAccessKeySecret'), 'sensitive': false}
-                    }
-                }
-            ]
+                        sgAccessKeyId: { value: config.get('prodTestTeamAccessKeyId'), sensitive: false },
+                        sgAccessKeySecret: { value: config.get('prodTestTeamAccessKeySecret'), sensitive: false },
+                    },
+                },
+            ],
         };
 
         const { scripts, jobDefs } = await this.CreateJobDefsFromTemplates(properties);
@@ -117,7 +119,10 @@ export default class Test59 extends TestBase.WorkflowTestBase {
         let startedJobId;
         resApiCall = await this.testSetup.RestAPICall(`job`, 'POST', _teamId, { jobDefName: jobDefs['Job 59'].name });
         if (resApiCall.data.statusCode != 201) {
-            self.logger.LogError('Failed', { Message: `job POST returned ${resApiCall.data.statusCode}`, _jobDefId: jobDefs['Job 59'].id });
+            self.logger.LogError('Failed', {
+                Message: `job POST returned ${resApiCall.data.statusCode}`,
+                _jobDefId: jobDefs['Job 59'].id,
+            });
             return false;
         }
         startedJobId = resApiCall.data.data.id;
@@ -125,24 +130,22 @@ export default class Test59 extends TestBase.WorkflowTestBase {
         const jobStartedBP: any = {
             domainType: 'Job',
             operation: 1,
-            model:
-            {
+            model: {
                 _teamId: config.get('sgTestTeam'),
                 _jobDefId: jobDefs[properties.jobDefs[0].name].id,
                 runId: 0,
                 name: properties.jobDefs[0].name,
                 status: 0,
                 id: startedJobId,
-                type: 'Job'
-            }
-        }
+                type: 'Job',
+            },
+        };
         self.bpMessagesExpected.push(jobStartedBP);
 
         const taskOutcomeCreatedBP: any = {
             domainType: 'TaskOutcome',
             operation: 1,
-            model:
-            {
+            model: {
                 _teamId: _teamId,
                 _jobId: startedJobId,
                 source: 1,
@@ -150,16 +153,15 @@ export default class Test59 extends TestBase.WorkflowTestBase {
                 ipAddress: '0.0.0.0',
                 machineId: 'lambda-executor',
                 target: TaskDefTarget.AWS_LAMBDA,
-                type: 'TaskOutcome'
-            }
-        }
+                type: 'TaskOutcome',
+            },
+        };
         self.bpMessagesExpected.push(taskOutcomeCreatedBP);
 
         const stepOutcomeCreatedBP: any = {
             domainType: 'StepOutcome',
             operation: 1,
-            model:
-            {
+            model: {
                 _teamId: _teamId,
                 _jobId: startedJobId,
                 name: 'Step 1',
@@ -167,81 +169,79 @@ export default class Test59 extends TestBase.WorkflowTestBase {
                 machineId: 'lambda-executor',
                 ipAddress: '0.0.0.0',
                 status: StepStatus.RUNNING,
-                type: 'StepOutcome'
-            }
-        }
+                type: 'StepOutcome',
+            },
+        };
         self.bpMessagesExpected.push(stepOutcomeCreatedBP);
 
         result = await self.WaitForTestToComplete();
-        if (!result)
-            return result;
+        if (!result) return result;
 
-
-        const taskOutcome = _.filter(self.bpMessages, x => x.domainType == 'TaskOutcome' && x.operation == 1 && x.model._jobId == startedJobId);
+        const taskOutcome = _.filter(
+            self.bpMessages,
+            (x) => x.domainType == 'TaskOutcome' && x.operation == 1 && x.model._jobId == startedJobId
+        );
         if (taskOutcome.length < 1) {
             throw new Error(`Unable to find TaskOutcome - {operation: 1, _jobId: ${startedJobId}}`);
         }
 
-        const stepOutcome = _.filter(self.bpMessages, x => x.domainType == 'StepOutcome' && x.operation == 1 && x.model._jobId == startedJobId);
+        const stepOutcome = _.filter(
+            self.bpMessages,
+            (x) => x.domainType == 'StepOutcome' && x.operation == 1 && x.model._jobId == startedJobId
+        );
         if (stepOutcome.length < 1) {
             throw new Error(`Unable to find StepOutcome - {operation: 1, _jobId: ${startedJobId}}`);
         }
 
-
         const stepOutcomeFailedBP: any = {
             domainType: 'StepOutcome',
             operation: 2,
-            model:
-            {
+            model: {
                 status: StepStatus.FAILED,
                 failureCode: TaskFailureCode.TASK_EXEC_ERROR,
-                runtimeVars: { route: {'value': 'fail'}},
-                stderr: '~|name \'a\' is not defined',
+                runtimeVars: { route: { value: 'fail' } },
+                stderr: "~|name 'a' is not defined",
                 exitCode: -1,
                 _teamId: _teamId,
                 id: stepOutcome[0].model.id,
-                type: 'StepOutcome'
-            }
-        }
+                type: 'StepOutcome',
+            },
+        };
         self.bpMessagesExpected.push(stepOutcomeFailedBP);
-
 
         const taskOutcomeFailedBP: any = {
             domainType: 'TaskOutcome',
             operation: 2,
-            model:
-            {
+            model: {
                 status: TaskStatus.FAILED,
                 failureCode: TaskFailureCode.TASK_EXEC_ERROR,
-                runtimeVars: { route: {'value': 'fail'}},
+                runtimeVars: { route: { value: 'fail' } },
                 _teamId: _teamId,
                 route: 'fail',
                 id: taskOutcome[0].model.id,
-                type: 'TaskOutcome'
-            }
-        }
+                type: 'TaskOutcome',
+            },
+        };
         self.bpMessagesExpected.push(taskOutcomeFailedBP);
 
         const jobCompletedBP: any = {
             domainType: 'Job',
             operation: 2,
-            model:
-            {
+            model: {
                 status: JobStatus.FAILED,
                 id: startedJobId,
-                type: 'Job'
-            }
+                type: 'Job',
+            },
         };
         self.bpMessagesExpected.push(jobCompletedBP);
 
         result = await self.WaitForTestToComplete(60000);
-        if (!result)
-            return result;
+        if (!result) return result;
 
         // newAgent.offline = true;
         // await newAgent.SendHeartbeat(false, true);
         // await newAgent.Stop();
-    
+
         return true;
     }
 }

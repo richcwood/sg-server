@@ -3,11 +3,9 @@ import { FilterOperator } from '../utils/BulkGet';
 import { TaskDefTarget, TaskSource } from '../../shared/Enums';
 import * as mongodb from 'mongodb';
 
-
 // Example of a schema / domain in Mongoose
-@modelOptions({ schemaOptions: { collection: 'task', minimize: false }, options: { allowMixed: Severity.ALLOW }  })
+@modelOptions({ schemaOptions: { collection: 'task', minimize: false }, options: { allowMixed: Severity.ALLOW } })
 export class TaskSchema {
-
     _id?: mongodb.ObjectId;
 
     @prop()
@@ -28,21 +26,21 @@ export class TaskSchema {
     @prop({ required: true })
     source: TaskSource;
 
-    @prop({required: true})
+    @prop({ required: true })
     target: TaskDefTarget;
 
-    @prop({required: false}) 
-    targetAgentId?: string; 
-  
-    @prop({default: {}}) 
+    @prop({ required: false })
+    targetAgentId?: string;
+
+    @prop({ default: {} })
     requiredTags: any;
-  
+
     @prop({ default: [] })
     fromRoutes?: string[][];
 
-    @prop({default: []})
+    @prop({ default: [] })
     toRoutes?: string[][];
-  
+
     @prop({ default: [] })
     artifacts?: mongodb.ObjectId[];
 
@@ -75,11 +73,11 @@ export class TaskSchema {
 
     @prop({ required: false })
     scriptsToInject?: any;
-  
+
     // Define which filters are legal for which props (including nested props (not sure about nested arrays))
     public static readonly validFilters = {
-        'name': [FilterOperator.LIKE, FilterOperator.EQUALS],
-        '_jobId': [FilterOperator.EQUALS]
+        name: [FilterOperator.LIKE, FilterOperator.EQUALS],
+        _jobId: [FilterOperator.EQUALS],
         // 'dog.name': [FilterOperator.IN, FilterOperator.EQUALS, FilterOperator.NOT_EQUALS, FilterOperator.LIKE
         // ],
         // 'dog.smell': [FilterOperator.LIKE],
@@ -90,9 +88,9 @@ export class TaskSchema {
 
     // 2 way map between field values the API client sees and what is stored in the database.  Allows client to use 'id' and database to use '_id'
     public static readonly propAliases = {
-        '_id': 'id',
-        'id': '_id',
-        '__v': 'version'
+        _id: 'id',
+        id: '_id',
+        __v: 'version',
     };
 
     // Converters for values to/from the database.  Converter functions take the entire model
@@ -107,15 +105,15 @@ export class TaskSchema {
             },
             _jobId: (data) => {
                 return new mongodb.ObjectId(data._jobId);
-            }
+            },
         },
 
         fromDB: {
             // version: (data) => {
             //   return undefined; // remove the version field - api users won't see it
             // }
-        }
-    }
-};
+        },
+    };
+}
 
 export const TaskModel = getModelForClass(TaskSchema);

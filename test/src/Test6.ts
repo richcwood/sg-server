@@ -9,7 +9,6 @@ import * as Enums from '../../server/src/shared/Enums';
 import { TaskSource } from '../../server/src/shared/Enums';
 import * as mongodb from 'mongodb';
 
-
 const script1 = `
 import time
 print('start')
@@ -21,9 +20,7 @@ const script1_b64 = SGUtils.btoa(script1);
 
 let self: Test6;
 
-
 export default class Test6 extends TestBase.AdhocTaskTestBase {
-
     constructor(testSetup) {
         super('Test6', testSetup);
         this.description = 'Basic adhoc task test';
@@ -47,9 +44,18 @@ export default class Test6 extends TestBase.AdhocTaskTestBase {
         const teamName = 'TestTeam';
         const _teamId = self.testSetup.teams[teamName].id;
 
-        let script_obj1: ScriptSchema = { '_teamId': _teamId, 'name': 'Script 6', 'scriptType': Enums.ScriptType.PYTHON, 'code': script1_b64, _originalAuthorUserId: this.sgUser.id, _lastEditedUserId: this.sgUser.id, lastEditedDate: new Date(), shadowCopyCode: script1_b64 };
+        let script_obj1: ScriptSchema = {
+            _teamId: _teamId,
+            name: 'Script 6',
+            scriptType: Enums.ScriptType.PYTHON,
+            code: script1_b64,
+            _originalAuthorUserId: this.sgUser.id,
+            _lastEditedUserId: this.sgUser.id,
+            lastEditedDate: new Date(),
+            shadowCopyCode: script1_b64,
+        };
         script_obj1 = await self.CreateScript(script_obj1, _teamId);
-        self.scripts.push(script_obj1);            
+        self.scripts.push(script_obj1);
 
         /// Create tasks
         const correlationId: string = new mongodb.ObjectId().toString();
@@ -63,32 +69,34 @@ export default class Test6 extends TestBase.AdhocTaskTestBase {
             steps: [
                 {
                     name: 'Step1',
-                    'script': {
+                    script: {
                         scriptType: Enums.ScriptType[script_obj1.scriptType],
-                        code: script_obj1.code
+                        code: script_obj1.code,
                     },
                     order: 0,
                     arguments: '',
-                    variables: ''
-                }
+                    variables: '',
+                },
             ],
-            correlationId: correlationId
+            correlationId: correlationId,
         };
 
         task.expectedValues = {
-            'type': 'task',
-            'matchCount': 7,
-            'tagsMatch': true,
-            'values': { [SGStrings.status]: Enums.TaskStatus.SUCCEEDED, 'correlationId': correlationId, source: TaskSource.JOB },
-            'runtimeVars': { [SGStrings.route]: { 'value': 'ok' } },
-            'step': [
-                { 'name': 'Step1', 'values': { 'status': Enums.TaskStatus.SUCCEEDED, 'stderr': '', 'exitCode': 0 } }
-            ],
-            'cntPartialMatch': 0,
-            'cntFullMatch': 0
+            type: 'task',
+            matchCount: 7,
+            tagsMatch: true,
+            values: {
+                [SGStrings.status]: Enums.TaskStatus.SUCCEEDED,
+                correlationId: correlationId,
+                source: TaskSource.JOB,
+            },
+            runtimeVars: { [SGStrings.route]: { value: 'ok' } },
+            step: [{ name: 'Step1', values: { status: Enums.TaskStatus.SUCCEEDED, stderr: '', exitCode: 0 } }],
+            cntPartialMatch: 0,
+            cntFullMatch: 0,
         };
         self.tasks.push(task);
 
         // console.log(util.inspect(self.tasks, false, null));
-    };
+    }
 }

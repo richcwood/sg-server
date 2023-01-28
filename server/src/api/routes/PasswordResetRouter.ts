@@ -3,14 +3,13 @@ import { passwordResetController } from '../controllers/PasswordResetController'
 import { verifyAccessRights } from '../utils/AccessRightsVerifier';
 
 export class PasswordResetRouter {
+    public readonly router: Router;
 
-  public readonly router: Router;
+    constructor() {
+        this.router = Router();
 
-  constructor() {
-    this.router = Router();
-
-    this.router.post('/', passwordResetController.updatePassword);
-  }
+        this.router.post('/', passwordResetController.updatePassword);
+    }
 }
 
 export const passwordResetRouterSingleton = new PasswordResetRouter();

@@ -6,11 +6,9 @@ export class AccessRightService {
         return AccessRightModel.find(filter).select(responseFields);
     }
 
-
     public async findAllAccessRights(responseFields?: string) {
         return AccessRightModel.find({}).select(responseFields);
     }
-
 
     public async createAccessRightInternal(data: any): Promise<object> {
         const model = new AccessRightModel(data);

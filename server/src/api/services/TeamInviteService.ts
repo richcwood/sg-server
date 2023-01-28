@@ -11,21 +11,16 @@ import * as config from 'config';
 import { teamService } from './TeamService';
 import * as mongodb from 'mongodb';
 
-
 export class TeamInviteService {
     public async inviteUserToTeamDirect(_teamId: mongodb.ObjectId, data: any, logger: BaseLogger): Promise<object> {
-        if (!data.email)
-            throw new ValidationError('Request missing "email" parameter');
-        if (!data._userId)
-            throw new ValidationError('Request missing "_userId" parameter');
+        if (!data.email) throw new ValidationError('Request missing "email" parameter');
+        if (!data._userId) throw new ValidationError('Request missing "_userId" parameter');
 
         const team: TeamSchema = await teamService.findTeam(_teamId, 'name');
-        if (!team)
-            throw new MissingObjectError('Invalid team');
+        if (!team) throw new MissingObjectError('Invalid team');
 
         const inviter: UserSchema = await userService.findUser(data._userId, 'name email companyName');
-        if (!inviter)
-            throw new ValidationError('Invalid user');
+        if (!inviter) throw new ValidationError('Invalid user');
 
         let userModel: any = undefined;
         const queryRes: any = await userService.findUserByEmail(data.email);
@@ -42,10 +37,9 @@ export class TeamInviteService {
             // await userModel.save();
         }
 
-        if (userModel.teamIds.indexOf(_teamId) >= 0)
-            return { result: 'success' };
+        if (userModel.teamIds.indexOf(_teamId) >= 0) return { result: 'success' };
 
-        const teamIdsInvited = userModel.teamIdsInvited.map(invite => invite._teamId.toHexString());
+        const teamIdsInvited = userModel.teamIdsInvited.map((invite) => invite._teamId.toHexString());
         if (teamIdsInvited.indexOf(_teamId.toHexString()) >= 0) {
             let newTeamIdsInvited: any[] = [];
             for (let i = 0; i < userModel.teamIdsInvited.length; i++) {
@@ -61,21 +55,23 @@ export class TeamInviteService {
         userModel.teamIdsInvited.push({ _teamId: _teamId, inviteKey: secret });
         await userModel.save();
 
-        const jwtExpiration = Date.now() + (1000 * 60 * 5); // 5 minutes
-        let token = jwt.sign({
-            id: userModel._id,
-            InvitedTeamId: team._id,
-            InvitedTeamName: team.name,
-            email: userModel.email,
-            emailConfirmed: true,
-            exp: Math.floor(jwtExpiration / 1000)
-        }, secret);//KeysUtil.getPrivate()); // todo - create a public / private key
+        const jwtExpiration = Date.now() + 1000 * 60 * 5; // 5 minutes
+        let token = jwt.sign(
+            {
+                id: userModel._id,
+                InvitedTeamId: team._id,
+                InvitedTeamName: team.name,
+                email: userModel.email,
+                emailConfirmed: true,
+                exp: Math.floor(jwtExpiration / 1000),
+            },
+            secret
+        ); //KeysUtil.getPrivate()); // todo - create a public / private key
 
         let url = config.get('WEB_CONSOLE_BASE_URL');
         const port = config.get('WEB_CONSOLE_PORT');
 
-        if (port != '')
-            url += `:${port}`
+        if (port != '') url += `:${port}`;
         let acceptInviteLink = `${url}/?invitedTeamToken=${token}`;
 
         console.log(acceptInviteLink);

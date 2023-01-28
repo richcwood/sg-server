@@ -14,12 +14,10 @@ const environment = process.env.NODE_ENV || 'development';
 
 export class SignupService {
     public async signupNewUserOAuth(data: any, logger: BaseLogger): Promise<object> {
-        if (!data.email)
-            throw new ValidationError(`Request body missing "email" parameter`);
+        if (!data.email) throw new ValidationError(`Request body missing "email" parameter`);
 
-        const queryRes: any = await userService.findAllUsersInternal({ email: data.email })
-        if (_.isArray(queryRes) && queryRes.length > 0) 
-            throw new ValidationError(`User already exists`);
+        const queryRes: any = await userService.findAllUsersInternal({ email: data.email });
+        if (_.isArray(queryRes) && queryRes.length > 0) throw new ValidationError(`User already exists`);
 
         let userModel: any = new UserModel(data);
         userModel.hasAcceptedTerms = true;
@@ -28,7 +26,13 @@ export class SignupService {
 
         try {
             let newEmailNotificationMessage = JSON.stringify(userModel, null, 4);
-            await SGUtils.SendInternalEmail('rich@saasglue.com', 'jack@saasglue.com,jay@saasglue.com,rich@saasglue.com', 'New user signed up', newEmailNotificationMessage, logger);
+            await SGUtils.SendInternalEmail(
+                'rich@saasglue.com',
+                'jack@saasglue.com,jay@saasglue.com,rich@saasglue.com',
+                'New user signed up',
+                newEmailNotificationMessage,
+                logger
+            );
         } catch (e) {
             logger.LogError(`Error sending new user notification message: ${e.message}`, userModel);
         }
@@ -36,19 +40,16 @@ export class SignupService {
         return userModel;
     }
 
-
     public async signupNewUser(data: any, logger: BaseLogger): Promise<object> {
-        if (!data.email)
-            throw new ValidationError(`Request body missing "email" parameter`);
+        if (!data.email) throw new ValidationError(`Request body missing "email" parameter`);
 
         let userModel: any = undefined;
 
         let userExistsAndConfirmed = false;
-        const queryRes: any = await userService.findAllUsersInternal({ email: data.email })
+        const queryRes: any = await userService.findAllUsersInternal({ email: data.email });
         if (_.isArray(queryRes) && queryRes.length > 0) {
             userModel = queryRes[0];
-            if (userModel.emailConfirmed)
-                userExistsAndConfirmed = true;
+            if (userModel.emailConfirmed) userExistsAndConfirmed = true;
         }
 
         // if (userExistsAndConfirmed) {
@@ -70,8 +71,7 @@ export class SignupService {
         // }
 
         if (!userExistsAndConfirmed) {
-            if (!userModel)
-                userModel = new UserModel(data);
+            if (!userModel) userModel = new UserModel(data);
 
             userModel.emailConfirmCode = SGUtils.makeNumericId();
             userModel.emailConfirmCodeExpiration = moment(new Date()).add(5, 'm').toDate().toISOString();
@@ -84,32 +84,38 @@ export class SignupService {
         return { email: userModel.email, confirmedEmailExists: userExistsAndConfirmed };
     }
 
-
-    public async confirmNewInvitedUser(userEmail: string, _teamId: string, token: string, logger: BaseLogger): Promise<object> {
+    public async confirmNewInvitedUser(
+        userEmail: string,
+        _teamId: string,
+        token: string,
+        logger: BaseLogger
+    ): Promise<object> {
         let updatedUser: any;
-        const queryRes: any = await userService.findUserByEmail(userEmail, '_id email teamIds teamAccessRightIds teamIdsInvited teamIdsInactive passwordHash');
+        const queryRes: any = await userService.findUserByEmail(
+            userEmail,
+            '_id email teamIds teamAccessRightIds teamIdsInvited teamIdsInactive passwordHash'
+        );
         if (!queryRes || (_.isArray(queryRes) && queryRes.length < 1)) {
             throw new ValidationError('Something went wrong. Please request a new invite from the team administrator.');
         }
         const userModel: UserSchema = queryRes[0];
 
-        if (userModel.emailConfirmed)
-            return userModel;
+        if (userModel.emailConfirmed) return userModel;
 
         /// Check if the user is already in the team
         let userAlreadyInTeam: boolean = true;
-        if (userModel.teamIds.indexOf(_teamId) < 0)
-            userAlreadyInTeam = false;
+        if (userModel.teamIds.indexOf(_teamId) < 0) userAlreadyInTeam = false;
 
         /// Verify the token - the secret comes from the user document - if no secret we can't verify the token
         let tokenIsValid: boolean = false;
-        const filterRes = _.filter(userModel.teamIdsInvited, o => o._teamId == _teamId);
+        const filterRes = _.filter(userModel.teamIdsInvited, (o) => o._teamId == _teamId);
         let teamIdInviteSecret: string = undefined;
-        if (_.isArray(filterRes) && filterRes.length > 0)
-            teamIdInviteSecret = filterRes[0].inviteKey;
+        if (_.isArray(filterRes) && filterRes.length > 0) teamIdInviteSecret = filterRes[0].inviteKey;
         if (!teamIdInviteSecret) {
             if (!userAlreadyInTeam)
-                throw new ValidationError('Something went wrong. Please request a new invite from the team administrator.');
+                throw new ValidationError(
+                    'Something went wrong. Please request a new invite from the team administrator.'
+                );
         } else {
             /// We have the secret, use it to verify the token and then check the embedded data against the url params
             tokenIsValid = true;
@@ -120,22 +126,26 @@ export class SignupService {
                 tokenIsValid = false;
             }
             if (tokenIsValid) {
-                if (userModel._id.toHexString() != jwtData.id)
-                    tokenIsValid = false;
-                else if (_teamId != jwtData.InvitedTeamId)
-                    tokenIsValid = false;
+                if (userModel._id.toHexString() != jwtData.id) tokenIsValid = false;
+                else if (_teamId != jwtData.InvitedTeamId) tokenIsValid = false;
             }
         }
 
         if (!tokenIsValid)
             throw new ValidationError('Something went wrong. Please request a new invite from the team administrator.');
 
-        updatedUser = await UserModel.findOneAndUpdate({_id: userModel._id}, { emailConfirmed: true }, { new: true });
+        updatedUser = await UserModel.findOneAndUpdate({ _id: userModel._id }, { emailConfirmed: true }, { new: true });
 
         if (environment != 'debug') {
             try {
                 let newEmailNotificationMessage = JSON.stringify(updatedUser, null, 4);
-                await SGUtils.SendInternalEmail('rich@saasglue.com', 'jack@saasglue.com,jay@saasglue.com,rich@saasglue.com', 'New user signed up', newEmailNotificationMessage, logger);
+                await SGUtils.SendInternalEmail(
+                    'rich@saasglue.com',
+                    'jack@saasglue.com,jay@saasglue.com,rich@saasglue.com',
+                    'New user signed up',
+                    newEmailNotificationMessage,
+                    logger
+                );
             } catch (e) {
                 logger.LogError(`Error sending new user notification message: ${e.message}`, updatedUser);
             }
@@ -144,13 +154,10 @@ export class SignupService {
         return updatedUser; // fully populated model
     }
 
-
     public async confirmNewUser(data: any, logger: BaseLogger): Promise<object> {
-        if (!data.emailConfirmCode)
-            throw new ValidationError(`Request body missing "emailConfirmCode" parameter`);
+        if (!data.emailConfirmCode) throw new ValidationError(`Request body missing "emailConfirmCode" parameter`);
 
-        if (!data.email)
-            throw new ValidationError(`Request body missing "email" parameter`);
+        if (!data.email) throw new ValidationError(`Request body missing "email" parameter`);
 
         let updatedUser: any;
         const queryRes: any = await userService.findUserByEmail(data.email);
@@ -159,8 +166,7 @@ export class SignupService {
         }
 
         const user: UserSchema = queryRes[0];
-        if (user.emailConfirmed)
-            throw new ValidationError('Email address already confirmed');
+        if (user.emailConfirmed) throw new ValidationError('Email address already confirmed');
 
         const userFilter = { email: data.email };
         if (!user.emailConfirmCode || !user.emailConfirmCodeExpiration)
@@ -168,22 +174,34 @@ export class SignupService {
 
         /// If the confirmation code is incorrect, expire the current code now to prevent brute force attack
         if (data.emailConfirmCode != user.emailConfirmCode) {
-            await UserModel.findOneAndUpdate(userFilter, { $unset: { emailConfirmCodeExpiration: '', emailConfirmCode: '' } });
+            await UserModel.findOneAndUpdate(userFilter, {
+                $unset: { emailConfirmCodeExpiration: '', emailConfirmCode: '' },
+            });
             throw new ValidationError('Invalid or expired confirmation code');
         }
 
         const dteNow: number = new Date().valueOf();
         const dteExp: number = new Date(user.emailConfirmCodeExpiration).valueOf();
-        if ((dteExp - dteNow) < 0) {
+        if (dteExp - dteNow < 0) {
             throw new ValidationError('Invalid or expired confirmation code');
         }
 
-        updatedUser = await UserModel.findOneAndUpdate(userFilter, { emailConfirmed: true, $unset: { emailConfirmCodeExpiration: '', emailConfirmCode: '' }, }, { new: true });
+        updatedUser = await UserModel.findOneAndUpdate(
+            userFilter,
+            { emailConfirmed: true, $unset: { emailConfirmCodeExpiration: '', emailConfirmCode: '' } },
+            { new: true }
+        );
 
         if (environment != 'debug') {
             try {
                 let newEmailNotificationMessage = JSON.stringify(updatedUser, null, 4);
-                await SGUtils.SendInternalEmail('rich@saasglue.com', 'jack@saasglue.com,jay@saasglue.com,rich@saasglue.com', 'New user signed up', newEmailNotificationMessage, logger);
+                await SGUtils.SendInternalEmail(
+                    'rich@saasglue.com',
+                    'jack@saasglue.com,jay@saasglue.com,rich@saasglue.com',
+                    'New user signed up',
+                    newEmailNotificationMessage,
+                    logger
+                );
             } catch (e) {
                 logger.LogError(`Error sending new user notification message: ${e.message}`, updatedUser);
             }
@@ -191,7 +209,6 @@ export class SignupService {
 
         return updatedUser; // fully populated model
     }
-
 
     public async oauthSetup(id: mongodb.ObjectId, data: any, responseFields?: string): Promise<object> {
         const filter = { _id: id };
@@ -209,16 +226,13 @@ export class SignupService {
         if (responseFields) {
             // It's is a bit wasteful to do another query but I can't chain a save with a select
             return userService.findUser(updatedUser._id, responseFields);
-        }
-        else {
+        } else {
             return updatedUser; // fully populated model
         }
     }
 
-
     public async setInitialPassword(id: mongodb.ObjectId, data: any, responseFields?: string): Promise<object> {
-        if (!data.password)
-        throw new ValidationError(`Request body missing "password" parameter`);
+        if (!data.password) throw new ValidationError(`Request body missing "password" parameter`);
 
         const filter = { _id: id };
 
@@ -231,15 +245,17 @@ export class SignupService {
         const salt = await bcrypt.genSalt(10);
         const passwordHash = await bcrypt.hash(data.password, salt);
 
-        let update: any = Object.assign({ passwordHash: passwordHash, hasAcceptedTerms: true, emailConfirmed: true }, data);
+        let update: any = Object.assign(
+            { passwordHash: passwordHash, hasAcceptedTerms: true, emailConfirmed: true },
+            data
+        );
 
         updatedUser = await UserModel.findOneAndUpdate(filter, update, { new: true }).select(responseFields);
 
         if (responseFields) {
             // It's is a bit wasteful to do another query but I can't chain a save with a select
             return userService.findUser(updatedUser._id, responseFields);
-        }
-        else {
+        } else {
             return updatedUser; // fully populated model
         }
     }

@@ -11,9 +11,7 @@ import { SGUtils } from '../../shared/SGUtils';
 import { GetAccessRightIdsForSGAgent, GetGlobalAccessRightId } from '../../api/utils/Shared';
 import BitSet from 'bitset';
 
-
 export class AccessKeyService {
-
     // Some services might need to add additional restrictions to bulk queries
     // This is how they would add more to the base query (Example: fetch only non-deleted users for all queries)
     // public async updateBulkQuery(query): Promise<object> {
@@ -25,25 +23,25 @@ export class AccessKeyService {
         return AccessKeyModel.find(filter).select(responseFields);
     }
 
-
     public async findAllAccessKeys(_teamId: mongodb.ObjectId, responseFields?: string) {
         return AccessKeyModel.find({ _teamId }).select(responseFields);
     }
 
-
-    public async findAccessKey(_teamId: mongodb.ObjectId, accessKeyId: mongodb.ObjectId, responseFields?: string): Promise<AccessKeySchema|null> {
-        const result: AccessKeySchema[] = await AccessKeyModel.findById(accessKeyId).find({ _teamId }).select(responseFields);
-        if (_.isArray(result) && result.length > 0)
-            return result[0];
+    public async findAccessKey(
+        _teamId: mongodb.ObjectId,
+        accessKeyId: mongodb.ObjectId,
+        responseFields?: string
+    ): Promise<AccessKeySchema | null> {
+        const result: AccessKeySchema[] = await AccessKeyModel.findById(accessKeyId)
+            .find({ _teamId })
+            .select(responseFields);
+        if (_.isArray(result) && result.length > 0) return result[0];
         return null;
     }
 
-
     public async createAccessKeyInternal(data): Promise<AccessKeySchema> {
-        if (!data.accessKeyId)
-            data.accessKeyId = SGUtils.makeid(20, false).toUpperCase();
-        if (!data.accessKeySecret)
-            data.accessKeySecret = crypto.randomBytes(20).toString('hex');
+        if (!data.accessKeyId) data.accessKeyId = SGUtils.makeid(20, false).toUpperCase();
+        if (!data.accessKeySecret) data.accessKeySecret = crypto.randomBytes(20).toString('hex');
 
         const accessKeyModel = new AccessKeyModel(data);
         const newAccessKey = await accessKeyModel.save();
@@ -51,17 +49,20 @@ export class AccessKeyService {
         return newAccessKey; // fully populated model
     }
 
-
-    public async createAccessKey(_teamId: mongodb.ObjectId, teamAccessRightIds: string[], data: any, correlationId: string, responseFields?: string): Promise<AccessKeySchema> {
-        if (!data.hasOwnProperty("accessKeyType"))
-            throw new ValidationError(`Missing required field "accessKeyType"`);
-        if (!data.hasOwnProperty("description"))
-            throw new ValidationError(`Missing required field "description"`);
+    public async createAccessKey(
+        _teamId: mongodb.ObjectId,
+        teamAccessRightIds: string[],
+        data: any,
+        correlationId: string,
+        responseFields?: string
+    ): Promise<AccessKeySchema> {
+        if (!data.hasOwnProperty('accessKeyType')) throw new ValidationError(`Missing required field "accessKeyType"`);
+        if (!data.hasOwnProperty('description')) throw new ValidationError(`Missing required field "description"`);
         if (!data.accessRightIds && data.accessKeyType != AccessKeyType.AGENT)
             throw new ValidationError(`Missing required field "accessRightIds"`);
         if (data.accessRightIds && data.accessKeyType == AccessKeyType.AGENT)
             throw new ValidationError(`Cannot set "accessRightIds" for Agent access keys`);
-        
+
         const teamIdAsString: string = _teamId.toHexString();
 
         if (data.accessKeyType == AccessKeyType.AGENT) {
@@ -101,53 +102,67 @@ export class AccessKeyService {
         const accessKeyModel = new AccessKeyModel(data);
         const newAccessKey = await accessKeyModel.save();
 
-        await rabbitMQPublisher.publish(_teamId, "AccessKey", correlationId, PayloadOperation.CREATE, convertData(AccessKeySchema, newAccessKey));
+        await rabbitMQPublisher.publish(
+            _teamId,
+            'AccessKey',
+            correlationId,
+            PayloadOperation.CREATE,
+            convertData(AccessKeySchema, newAccessKey)
+        );
 
         if (responseFields) {
             // It's is a bit wasteful to do another query but I can't chain a save with a select
             return this.findAccessKey(_teamId, newAccessKey._id, responseFields);
-        }
-        else {
+        } else {
             return newAccessKey; // fully populated model
         }
     }
 
-
-    public async updateAccessKey(_teamId: mongodb.ObjectId, id: mongodb.ObjectId, data: any, correlationId?: string, responseFields?: string): Promise<object> {
+    public async updateAccessKey(
+        _teamId: mongodb.ObjectId,
+        id: mongodb.ObjectId,
+        data: any,
+        correlationId?: string,
+        responseFields?: string
+    ): Promise<object> {
         const filter = { _id: id, _teamId };
 
-        if (data.hasOwnProperty('createdBy'))
-            throw new ValidationError('Cannot modify access key');
-        if (data.hasOwnProperty('accessKeyId'))
-            throw new ValidationError('Cannot modify access key');
-        if (data.hasOwnProperty('accessKeySecret'))
-            throw new ValidationError('Cannot modify access key');
-        if (data.hasOwnProperty('accessKeyType'))
-            throw new ValidationError('Cannot modify access key');
-        if (data.hasOwnProperty('description'))
-            throw new ValidationError('Cannot modify access key');
-        if (data.hasOwnProperty('expiration'))
-            throw new ValidationError('Cannot modify access key');
-        if (data.hasOwnProperty('accessRightIds'))
-            throw new ValidationError('Cannot modify access key');
+        if (data.hasOwnProperty('createdBy')) throw new ValidationError('Cannot modify access key');
+        if (data.hasOwnProperty('accessKeyId')) throw new ValidationError('Cannot modify access key');
+        if (data.hasOwnProperty('accessKeySecret')) throw new ValidationError('Cannot modify access key');
+        if (data.hasOwnProperty('accessKeyType')) throw new ValidationError('Cannot modify access key');
+        if (data.hasOwnProperty('description')) throw new ValidationError('Cannot modify access key');
+        if (data.hasOwnProperty('expiration')) throw new ValidationError('Cannot modify access key');
+        if (data.hasOwnProperty('accessRightIds')) throw new ValidationError('Cannot modify access key');
 
-        const updatedAccessKey = await AccessKeyModel.findOneAndUpdate(filter, data, { new: true }).select(responseFields);
+        const updatedAccessKey = await AccessKeyModel.findOneAndUpdate(filter, data, { new: true }).select(
+            responseFields
+        );
 
         if (!updatedAccessKey)
-            throw new MissingObjectError(`Access Key not found with filter "${JSON.stringify(filter, null, 4)}".`)
+            throw new MissingObjectError(`Access Key not found with filter "${JSON.stringify(filter, null, 4)}".`);
 
         const deltas = Object.assign({ _id: id }, data);
-        await rabbitMQPublisher.publish(_teamId, "AccessKey", correlationId, PayloadOperation.UPDATE, convertData(AccessKeySchema, deltas));
+        await rabbitMQPublisher.publish(
+            _teamId,
+            'AccessKey',
+            correlationId,
+            PayloadOperation.UPDATE,
+            convertData(AccessKeySchema, deltas)
+        );
 
         delete updatedAccessKey.accessKeySecret;
         return updatedAccessKey; // fully populated model
     }
 
-
-    public async deleteAccessKey(_teamId: mongodb.ObjectId, id: mongodb.ObjectId, correlationId: string): Promise<object> {
+    public async deleteAccessKey(
+        _teamId: mongodb.ObjectId,
+        id: mongodb.ObjectId,
+        correlationId: string
+    ): Promise<object> {
         const deleted = await AccessKeyModel.deleteOne({ _id: id, _teamId });
 
-        await rabbitMQPublisher.publish(_teamId, "AccessKey", correlationId, PayloadOperation.DELETE, { id: id });
+        await rabbitMQPublisher.publish(_teamId, 'AccessKey', correlationId, PayloadOperation.DELETE, { id: id });
 
         return deleted;
     }

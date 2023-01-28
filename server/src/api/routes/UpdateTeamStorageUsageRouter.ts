@@ -3,14 +3,17 @@ import { updateTeamStorageUsageController } from '../controllers/UpdateTeamStora
 import { verifyAccessRights } from '../utils/AccessRightsVerifier';
 
 export class UpdateTeamStorageUsageRouter {
+    public readonly router: Router;
 
-  public readonly router: Router;
+    constructor() {
+        this.router = Router();
 
-  constructor() {
-    this.router = Router();
-
-    this.router.post('/', verifyAccessRights(['TEAM_STORAGE_WRITE', 'GLOBAL']), updateTeamStorageUsageController.updateTeamStorageUsage);
-  }
+        this.router.post(
+            '/',
+            verifyAccessRights(['TEAM_STORAGE_WRITE', 'GLOBAL']),
+            updateTeamStorageUsageController.updateTeamStorageUsage
+        );
+    }
 }
 
 export const updateTeamStorageUsageRouterSingleton = new UpdateTeamStorageUsageRouter();

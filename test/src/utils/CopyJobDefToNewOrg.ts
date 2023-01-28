@@ -37,13 +37,16 @@ import * as mongoose from 'mongoose';
 import * as mongodb from 'mongodb';
 import * as _ from 'lodash';
 
-
-let CopyJobDefToNewTeam = async (sourceTeam: mongodb.ObjectId, destTeam: mongodb.ObjectId, _jobDefId: mongodb.ObjectId) => {
+let CopyJobDefToNewTeam = async (
+    sourceTeam: mongodb.ObjectId,
+    destTeam: mongodb.ObjectId,
+    _jobDefId: mongodb.ObjectId
+) => {
     mongoose.connect(config.get('mongoUrl'), {});
 
     console.log('mongo url -> ', config.get('mongoUrl'));
 
-    const userId = new mongodb.ObjectId("5e99cbcb2317950015edb655");
+    const userId = new mongodb.ObjectId('5e99cbcb2317950015edb655');
 
     const filter = { _jobDefId };
 
@@ -83,7 +86,9 @@ let CopyJobDefToNewTeam = async (sourceTeam: mongodb.ObjectId, destTeam: mongodb
             let stepDef = stepDefs[i];
             stepDef = JSON.parse(JSON.stringify(stepDef));
 
-            let script: any = await scriptService.findAllScriptsInternal({ _id: new mongodb.ObjectId(stepDef._scriptId) });
+            let script: any = await scriptService.findAllScriptsInternal({
+                _id: new mongodb.ObjectId(stepDef._scriptId),
+            });
             script = JSON.parse(JSON.stringify(script[0]));
             delete script._id;
             script._teamId = destTeam;
@@ -106,7 +111,7 @@ let CopyJobDefToNewTeam = async (sourceTeam: mongodb.ObjectId, destTeam: mongodb
     }
 
     process.exit();
-}
+};
 
 const sourceTeam = new mongodb.ObjectId('5de95c0453162e8891f5a830');
 const destTeam = new mongodb.ObjectId('5e99cbcb2317950015edb655');

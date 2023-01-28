@@ -43,11 +43,8 @@ import { AccessKeySchema } from '../../../server/src/api/domain/AccessKey';
 import { convertData as convertRequestData } from '../../../server/src/api/utils/RequestConverters';
 import * as mongoose from 'mongoose';
 
-
-
 let LoadMongoData = async (path: string) => {
-    if (config.get("environment") == 'production')
-        throw new Error('Attempted to load to production')
+    if (config.get('environment') == 'production') throw new Error('Attempted to load to production');
 
     console.log(`Loading data to ${config.get('mongoUrl')}`);
     mongoose.connect(config.get('mongoUrl'), {});
@@ -192,14 +189,18 @@ let LoadMongoData = async (path: string) => {
     if (allTestObjects.paymentMethod && allTestObjects.paymentMethod.length > 0) {
         for (let i = 0; i < allTestObjects.paymentMethod.length; i++) {
             const paymentMethod = allTestObjects.paymentMethod[i];
-            await paymentMethodService.createPaymentMethodInternal(convertRequestData(PaymentMethodSchema, paymentMethod));
+            await paymentMethodService.createPaymentMethodInternal(
+                convertRequestData(PaymentMethodSchema, paymentMethod)
+            );
         }
     }
 
     if (allTestObjects.paymentTransaction && allTestObjects.paymentTransaction.length > 0) {
         for (let i = 0; i < allTestObjects.paymentTransaction.length; i++) {
             const paymentTransaction = allTestObjects.paymentTransaction[i];
-            await paymentTransactionService.createPaymentTransactionInternal(convertRequestData(PaymentTransactionSchema, paymentTransaction));
+            await paymentTransactionService.createPaymentTransactionInternal(
+                convertRequestData(PaymentTransactionSchema, paymentTransaction)
+            );
         }
     }
 
@@ -218,7 +219,6 @@ let LoadMongoData = async (path: string) => {
     }
 
     process.exit();
-}
-
+};
 
 LoadMongoData(process.argv[2]);
