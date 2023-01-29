@@ -134,7 +134,7 @@ class AppBuilder {
     private setUpMiddleware() {
         app.disable('etag');
 
-        if (environment != 'debug' && environment !== 'bartdev') {
+        if (environment != 'debug' && environment !== 'bartdev' && environment !== 'richdev') {
             this.app.use(enforce.HTTPS({ trustProtoHeader: true }));
         }
 
