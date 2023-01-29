@@ -66,6 +66,7 @@
     "zxcvbn": "4.4.2"
   },
   "devDependencies": {
+    "@types/node": "^18.11.18",
     "mongodb-memory-server": "8.4.0"
   }
 }
