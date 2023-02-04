@@ -39,10 +39,10 @@ while token == '':
     RestAPILogin()
     if token == '':
         print('API login failed')
-        sys.stdout.flush
+        sys.stdout.flush()
         time.sleep(5)
         print('Retrying api login')
-        sys.stdout.flush
+        sys.stdout.flush()
 
 print('@sgo{{"sgAuthToken": "{}"}}'.format(token))
 `;

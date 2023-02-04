@@ -160,7 +160,7 @@ class AppBuilder {
 
         if (environment == 'stage') {
             validOrigins.push('http://saasglue-stage.herokuapp.com');
-        } else if (environment === 'bartdev' || environment === 'debug') {
+        } else if (environment === 'bartdev' || environment === 'debug' || environment === 'richdev') {
             validOrigins.push('http://localhost');
         }
 
@@ -182,7 +182,9 @@ class AppBuilder {
             maxAge: 3628800,
             credentials: true,
         };
-        app.use(cors(corsOptions));
+        if (environment != 'richdev') {
+            app.use(cors(corsOptions));
+        }
 
         if (config.get('httpLogs.enabled')) {
             morgan.token('user_id', (req) => req.headers.userid);
