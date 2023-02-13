@@ -108,12 +108,11 @@
 </template>
 
 <script lang="ts">
-import { Component, Vue, Watch } from "vue-property-decorator";
+import { Component, Vue } from "vue-property-decorator";
 import { BindStoreModel } from "@/decorator";
 import { StoreType } from "@/store/types";
 import { Agent } from "../store/agent/types";
 import { isAgentActive } from "@/store/agent/agentUtils";
-import { Tabs, Tab } from "vue-slim-tabs";
 import axios from "axios";
 import { SgAlert, AlertPlacement, AlertCategory } from "@/store/alert/types";
 import { momentToStringV1 } from "@/utils/DateTime";
@@ -122,7 +121,6 @@ import { tagsStringToMap, tagsMapToString } from "@/utils/Shared";
 import { JobDef } from "@/store/jobDef/types";
 import { showErrors } from "@/utils/ErrorHandler";
 import ScriptSearch from "@/components/ScriptSearch.vue";
-import JobDefSearch from "@/components/JobDefSearch.vue";
 import { ValidationProvider, ValidationObserver } from "vee-validate";
 
 enum UpdateTagType {
@@ -131,8 +129,7 @@ enum UpdateTagType {
 }
 
 @Component({
-  components: { Tabs, Tab, ScriptSearch, JobDefSearch, ValidationObserver, ValidationProvider },
-  props: {},
+  components: { ScriptSearch, ValidationObserver, ValidationProvider },
 })
 export default class AgentMonitor extends Vue {
   // Expose to template
@@ -343,8 +340,6 @@ export default class AgentMonitor extends Vue {
 }
 </script>
 
-<style src="vue-slim-tabs/themes/default.css"></style>
-
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped lang="scss">
 table {
@@ -380,10 +375,6 @@ th {
 ul {
   list-style: none;
   padding-left: 0.25rem;
-}
-
-:deep(.vue-tablist) {
-  padding: 0 64px;
 }
 
 .has-overflow {
