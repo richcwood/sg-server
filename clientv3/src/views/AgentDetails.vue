@@ -1,177 +1,120 @@
 <template>
     <div class="sg-container-p">
-        <tabs>
-            <tab title="Settings">
-                <validation-observer tag="div" class="sg-container-px" ref="agentSettingsValidationObserver">
-                    <table class="table" style="width: 575px; margin-top: 10px">
-                        <tr class="tr">
-                            <td class="td">Agent name</td>
-                            <td class="td">
-                                <validation-provider name="Agent Name" rules="agent-name" v-slot="{ errors }">
-                                    <input
-                                        class="input"
-                                        type="text"
-                                        style="width: 300px; margin-left: 10px"
-                                        v-model="name"
-                                    />
-                                    <div v-if="errors && errors.length > 0" class="message validation-error is-danger">
-                                        {{ errors[0] }}
-                                    </div>
-                                </validation-provider>
-                            </td>
-                        </tr>
-                        <tr class="tr">
-                            <td class="td">Max Active Tasks</td>
-                            <td class="td">
-                                <validation-provider
-                                    name="Max Active Tasks"
-                                    rules="agent-positiveNumber"
-                                    v-slot="{ errors }"
-                                >
-                                    <input
-                                        class="input"
-                                        type="text"
-                                        style="width: 300px; margin-left: 10px"
-                                        v-model="selectedMaxActiveTasks"
-                                    />
-                                    <div v-if="errors && errors.length > 0" class="message validation-error is-danger">
-                                        {{ errors[0] }}
-                                    </div>
-                                </validation-provider>
-                            </td>
-                        </tr>
-                        <tr class="tr">
-                            <td class="td">Handle General Tasks</td>
-                            <td class="td">
-                                <input type="checkbox" style="margin-left: 10px" v-model="selectedHandleGeneralTasks" />
-                            </td>
-                        </tr>
-                        <tr class="tr">
-                            <td class="td">Inactive Agent Timeout (ms)</td>
-                            <td class="td">
-                                <validation-provider
-                                    name="Inactive Agent Timeout(ms)"
-                                    rules="agent-positiveNumber"
-                                    v-slot="{ errors }"
-                                >
-                                    <input
-                                        class="input"
-                                        type="text"
-                                        style="width: 300px; margin-left: 10px"
-                                        v-model="selectedInactiveAgentTimeout"
-                                    />
-                                    <div v-if="errors && errors.length > 0" class="message validation-error is-danger">
-                                        {{ errors[0] }}
-                                    </div>
-                                </validation-provider>
-                            </td>
-                        </tr>
-                        <tr class="tr">
-                            <td class="td">Inactive Agent Job</td>
-                            <td class="td">
-                                <job-def-search
-                                    :jobDefId="selectedInactiveAgentJobDefId"
-                                    @jobDefPicked="onJobDefPicked"
-                                ></job-def-search>
-                            </td>
-                        </tr>
-                        <tr class="tr">
-                            <td class="td">Inactive Job Vars</td>
-                            <td class="td">
-                                <validation-provider name="RuntimeVars" rules="variable-map" v-slot="{ errors }">
-                                    <!-- <input
-                                        class="input"
-                                        type="text"
-                                        style="width: 300px; margin-left: 10px"
-                                        v-model="selectedInactiveAgentJobDefRuntimeVars"
-                                        @change="selectedInactiveAgentJobDefRuntimeVarsChanged"
-                                        :disabled="selectedAgents.length === 0"
-                                        placeholder="key=val,key=val"
-                                    /> -->
-                                    <div v-if="errors && errors.length > 0" class="message validation-error is-danger">
-                                        {{ errors[0] }}
-                                    </div>
-                                </validation-provider>
-                            </td>
-                        </tr>
-                        <tr class="tr">
-                            <td class="td"></td>
-                            <td class="td">
-                                <button class="button is-primary" @click="onAgentSave">Save</button>
-                                <button class="button" style="margin-left: 12px" @click="onCancel">Cancel</button>
-                            </td>
-                        </tr>
-                    </table>
+        <header class="mb-5">
+            <a href="#" @click.prevent="onNavigateToAgents" class="mr-5 is-size-5">
+                <font-awesome-icon icon="chevron-left" class="mr-2" />
+                <span>Back To Agents</span>
+            </a>
+            <a href="#" @click.prevent="onShowSystemInformation">Show System Infrormation</a>
+        </header>
+        <div class="columns is-variable is-5">
+            <div class="column is-4">
+                <h2 class="title">Settings</h2>
+                <validation-observer tag="div" ref="agentSettingsValidationObserver">
+                    <div class="field">
+                        <label for="" class="label">Agent Name</label>
+                        <validation-provider
+                            tag="div"
+                            class="control"
+                            name="Agent Name"
+                            rules="required|agent-name"
+                            v-slot="{ errors }"
+                        >
+                            <input class="input" type="text" v-model="name" />
+                            <p v-if="errors && errors.length > 0" class="help is-danger">{{ errors[0] }}</p>
+                        </validation-provider>
+                    </div>
+                    <div class="field">
+                        <label for="" class="label">Max Active Tasks</label>
+                        <validation-provider
+                            tag="div"
+                            class="control"
+                            name="Max Active Tasks"
+                            rules="agent-positiveNumber"
+                            v-slot="{ errors }"
+                        >
+                            <input class="input" type="text" inputmode="numeric" v-model="selectedMaxActiveTasks" />
+                            <p v-if="errors && errors.length > 0" class="help is-danger">{{ errors[0] }}</p>
+                        </validation-provider>
+                    </div>
+                    <div class="field">
+                        <label for="" class="label">Handle General Tasks</label>
+                        <div class="control">
+                            <input type="checkbox" v-model="selectedHandleGeneralTasks" />
+                        </div>
+                    </div>
+                    <div class="field">
+                        <label for="" class="label">Inactive Agent Timeout (ms)</label>
+                        <validation-provider
+                            tag="div"
+                            class="control"
+                            name="Inactive Agent Timeout(ms)"
+                            rules="agent-positiveNumber"
+                            v-slot="{ errors }"
+                        >
+                            <input class="input" type="text" v-model="selectedInactiveAgentTimeout" />
+                            <p v-if="errors && errors.length > 0" class="help is-danger">{{ errors[0] }}</p>
+                        </validation-provider>
+                    </div>
+                    <div class="field">
+                        <label for="" class="label">Inactive Agent Job</label>
+                        <div class="control">
+                            <job-def-search :jobDefId="selectedInactiveAgentJobDefId" @jobDefPicked="onJobDefPicked" />
+                        </div>
+                    </div>
+                    <div class="field">
+                        <label for="" class="label">Inactive Job Vars</label>
+                        <div class="control"></div>
+                    </div>
                 </validation-observer>
-            </tab>
-            <tab title="System Information">
-                <div class="sg-container-px">
-                    <p class="my-5">System information for the selected agent</p>
-                    <div>
-                        <pre>{{ agent.sysInfo || '' }}</pre>
+            </div>
+            <div class="column">
+                <h2 class="title">Tags</h2>
+                <div class="field has-addons">
+                    <div class="control">
+                        <input class="input" type="text" placeholder="key=value" @keypress.enter="onAddTagClicked" />
+                    </div>
+                    <div class="control">
+                        <button class="button is-info" @click="onAddTagClicked">Add tag</button>
                     </div>
                 </div>
-            </tab>
-            <tab title="Tags">
-                <div class="sg-container-p">
-                    <table class="table">
-                        <tr v-if="selectedAgentTags.length === 0">
-                            <td colspan="2">Agent has no tags</td>
-                        </tr>
-                        <tr v-for="tag in selectedAgentTags" :key="tag">
-                            <td>{{ tag }}</td>
-                            <td>
-                                <a href="#" class="button is-ghost" @click.prevent="onDeleteTagClicked(tag)">Delete</a>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td colspan="2"></td>
-                        </tr>
-                        <tr>
-                            <td colspan="2">
-                                <input
-                                    class="input"
-                                    type="text"
-                                    style="width: 125px"
-                                    v-model="newTagKey"
-                                    placeholder="key"
-                                />
-                                <span class="has-text-weight-bold mx-3">=</span>
-                                <input
-                                    class="input"
-                                    type="text"
-                                    style="width: 125px"
-                                    v-model="newTagValue"
-                                    placeholder="value"
-                                />
-                            </td>
-                            <td>
-                                <button class="button" @click="onAddTagClicked">Add tag to selected agents</button>
-                            </td>
-                        </tr>
-                    </table>
+                <h3 class="title is-4" v-if="selectedAgentTags.length === 0">Agent has no tags</h3>
+                <div v-else class="field is-grouped is-grouped-multiline">
+                    <div class="control" v-for="tag in selectedAgentTags" :key="tag">
+                        <div class="tags has-addons">
+                            <span class="tag is-primary">{{ tag }}</span>
+                            <a class="tag is-delete" @click="onDeleteTagClicked(tag)"></a>
+                        </div>
+                    </div>
                 </div>
-            </tab>
-        </tabs>
+            </div>
+        </div>
+        <VariableList v-model="runtimeVars" class="mb-5" />
+        <div class="buttons">
+            <button class="button is-primary" :class="{ 'is-loading': isSaving }" @click="onAgentSave">Save</button>
+            <button class="button" @click="onCancel">Cancel</button>
+        </div>
     </div>
 </template>
 
 <script lang="ts">
 import { ValidationObserver, ValidationProvider } from 'vee-validate';
 import { Component, Vue } from 'vue-property-decorator';
-import { Tabs, Tab } from "vue-slim-tabs";
 import _ from 'lodash';
 
+import SystemInformationModal from '@/components/agent/SystemInformationModal.vue';
 import { AlertCategory, AlertPlacement, SgAlert } from '@/store/alert/types';
 import { BindSelectedCopy, BindSelected, BindProp } from '@/decorator';
-import JobDefSearch from "@/components/JobDefSearch.vue";
+import { VariableMap } from '@/components/runtimeVariable/types';
+import { VariableList } from '@/components/runtimeVariable';
+import JobDefSearch from '@/components/JobDefSearch.vue';
 import { showErrors } from '@/utils/ErrorHandler';
 import { JobDef } from '@/store/jobDef/types';
 import { Agent } from '@/store/agent/types';
 import { StoreType } from '@/store/types';
 
 @Component({
-    components: { JobDefSearch, ValidationObserver, ValidationProvider, Tabs, Tab },
+    components: { JobDefSearch, ValidationObserver, ValidationProvider, VariableList },
     name: 'AgentDetails',
 })
 export default class AgentDetails extends Vue {
@@ -186,6 +129,7 @@ export default class AgentDetails extends Vue {
 
     private newTagKey = '';
     private newTagValue = '';
+    public isSaving = false;
 
     public get selectedMaxActiveTasks(): string {
         return this.agent.propertyOverrides['maxActiveTasks'];
@@ -237,29 +181,23 @@ export default class AgentDetails extends Vue {
         return tagKeyValues;
     }
 
-    // private selectedInactiveAgentJobDefRuntimeVars = '';
+    public get runtimeVars() {
+        return this.agent.propertyOverrides?.inactiveAgentJob?.runtimeVars;
+    }
 
-    // private selectedInactiveAgentJobDefRuntimeVarsChanged() {
-    //     let newVariablesMap;
-    //     try {
-    //         newVariablesMap = tagsStringToMap(this.selectedInactiveAgentJobDefRuntimeVars);
-    //     } catch (err) {
-    //         console.log('variables not well formed', err);
-    //         return;
-    //     }
+    public set runtimeVars(runtimeVars: VariableMap) {
+        const inactiveAgentJob = this.agent.propertyOverrides.inactiveAgentJob ?? { id: '' };
 
-    //     const selectedAgentIds = Object.keys(this.selectedAgentCopies);
-    //     for (const selectedAgentId of selectedAgentIds) {
-    //         const agentCopy = this.selectedAgentCopies[selectedAgentId];
-    //         if (!agentCopy.propertyOverrides['inactiveAgentJob']) {
-    //             agentCopy.propertyOverrides['inactiveAgentJob'] = {
-    //                 id: '',
-    //             };
-    //         }
-
-    //         agentCopy.propertyOverrides['inactiveAgentJob'].runtimeVars = newVariablesMap;
-    //     }
-    // }
+        this.$store.dispatch(`${StoreType.AgentStore}/updateSelectedCopy`, {
+            propertyOverrides: {
+                ...this.agent.propertyOverrides,
+                inactiveAgentJob: {
+                    ...inactiveAgentJob,
+                    runtimeVars,
+                },
+            },
+        });
+    }
 
     private selectedInactiveAgentJobDefId = '';
 
@@ -283,6 +221,8 @@ export default class AgentDetails extends Vue {
             if (!(await (<any>this.$refs.agentSettingsValidationObserver).validate())) {
                 return;
             }
+
+            this.isSaving = true;
 
             const savePromises = [];
             const properties = {
@@ -318,6 +258,8 @@ export default class AgentDetails extends Vue {
         } catch (err) {
             console.error(err);
             showErrors('Error saving agent settings.', err);
+        } finally {
+            this.isSaving = false;
         }
     }
 
@@ -368,6 +310,17 @@ export default class AgentDetails extends Vue {
             `${StoreType.AlertStore}/addAlert`,
             new SgAlert('Saved agent tags.', AlertPlacement.FOOTER, AlertCategory.INFO)
         );
+    }
+
+    public onNavigateToAgents(): void {
+        this.$router.push({ name: 'agentMonitor' });
+    }
+
+    public onShowSystemInformation(): void {
+        this.$modal.show(SystemInformationModal, {
+            agentName: this.agent.name,
+            systemInformation: this.agent.sysInfo,
+        });
     }
 }
 </script>

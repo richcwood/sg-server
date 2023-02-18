@@ -78,7 +78,9 @@
           </thead>
           <tbody>
             <tr v-for="agent in filteredAgents" :key="agent.id">
-              <td>{{ agent.name }}</td>
+              <td>
+                <a href="#" @click.prevent="onAgentClick(agent.id)">{{ agent.name }}</a>
+              </td>
               <td>
                 <span class="activeAgent" v-if="isAgentActive(agent)">Active</span>
                 <span v-else>Inactive</span>
@@ -336,6 +338,13 @@ export default class AgentMonitor extends Vue {
 
   private onCloseImportCronClicked() {
     this.$modal.hide("import-cron-modal");
+  }
+
+  public onAgentClick (agentId: string): void {
+    this.$router.push({
+      name: 'agentMonitorDetails',
+      params: { agentId }
+    });
   }
 }
 </script>
