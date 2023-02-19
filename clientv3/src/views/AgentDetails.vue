@@ -155,7 +155,6 @@ import { ValidationObserver, ValidationProvider } from 'vee-validate';
 import { Component, Vue } from 'vue-property-decorator';
 import _ from 'lodash';
 
-import SystemInformationModal from '@/components/agent/SystemInformationModal.vue';
 import { AlertCategory, AlertPlacement, SgAlert } from '@/store/alert/types';
 import { BindSelectedCopy, BindSelected, BindProp } from '@/decorator';
 import { VariableMap } from '@/components/runtimeVariable/types';
@@ -379,13 +378,6 @@ export default class AgentDetails extends Vue {
 
     public onNavigateToAgents(): void {
         this.$router.push({ name: 'agentMonitor' });
-    }
-
-    public onShowSystemInformation(): void {
-        this.$modal.show(SystemInformationModal, {
-            agentName: this.agent.name,
-            systemInformation: this.agent.sysInfo,
-        });
     }
 
     public onTabSelect(tab: AgentDetailsTab) {
