@@ -1,16 +1,57 @@
 <template>
     <div class="sg-container-p">
-        <header class="mb-5">
+        <header class="mb-5 is-flex is-align-items-center">
             <a href="#" @click.prevent="onNavigateToAgents" class="mr-5 is-size-5">
                 <font-awesome-icon icon="chevron-left" class="mr-2" />
                 <span>Back To Agents</span>
             </a>
-            <a href="#" @click.prevent="onShowSystemInformation">Show System Infrormation</a>
+            <ul class="tab-menu is-flex is-align-items-center has-text-weight-bold is-size-5 ml-6">
+                <li>
+                    <a
+                        @click.prevent="onTabSelect(AgentDetailsTab.SETTINGS)"
+                        :class="{ 'is-active': activeTab === AgentDetailsTab.SETTINGS }"
+                        class="px-1"
+                        href="#"
+                        >Settings</a
+                    >
+                </li>
+                <li>
+                    <a
+                        @click.prevent="onTabSelect(AgentDetailsTab.TAGS)"
+                        :class="{ 'is-active': activeTab === AgentDetailsTab.TAGS }"
+                        class="px-1"
+                        href="#"
+                        >Tags</a
+                    >
+                </li>
+                <li>
+                    <a
+                        @click.prevent="onTabSelect(AgentDetailsTab.INACTIVE_JOB_VARS)"
+                        :class="{ 'is-active': activeTab === AgentDetailsTab.INACTIVE_JOB_VARS }"
+                        class="px-1"
+                        href="#"
+                        >Inactive Job Variables</a
+                    >
+                </li>
+                <li>
+                    <a
+                        @click.prevent="onTabSelect(AgentDetailsTab.SYSTEM_INFO)"
+                        :class="{ 'is-active': activeTab === AgentDetailsTab.SYSTEM_INFO }"
+                        class="px-1"
+                        href="#"
+                        >System Information</a
+                    >
+                </li>
+            </ul>
+            <div class="buttons ml-5">
+                <button class="button is-primary" :class="{ 'is-loading': isSaving }" @click="onAgentSave">Save</button>
+                <button class="button" @click="onCancel">Cancel</button>
+            </div>
         </header>
-        <div class="columns is-variable is-5">
-            <div class="column is-4">
-                <h2 class="title">Settings</h2>
-                <validation-observer tag="div" ref="agentSettingsValidationObserver">
+        <validation-observer tag="div" ref="agentSettingsValidationObserver">
+            <div v-if="activeTab === AgentDetailsTab.SETTINGS" class="columns">
+                <div class="column is-4">
+                    <h2 class="title">Settings</h2>
                     <div class="field">
                         <label for="" class="label">Agent Name</label>
                         <validation-provider
@@ -62,38 +103,50 @@
                             <job-def-search :jobDefId="selectedInactiveAgentJobDefId" @jobDefPicked="onJobDefPicked" />
                         </div>
                     </div>
-                    <div class="field">
-                        <label for="" class="label">Inactive Job Vars</label>
-                        <div class="control"></div>
-                    </div>
-                </validation-observer>
-            </div>
-            <div class="column">
-                <h2 class="title">Tags</h2>
-                <div class="field has-addons">
-                    <div class="control">
-                        <input class="input" type="text" placeholder="key=value" @keypress.enter="onAddTagClicked" />
-                    </div>
-                    <div class="control">
-                        <button class="button is-info" @click="onAddTagClicked">Add tag</button>
-                    </div>
                 </div>
+            </div>
+            <div v-else-if="activeTab === AgentDetailsTab.TAGS">
+                <h2 class="title">Tags</h2>
+                <validation-provider name="Agent Tags" rules="variable-map" v-slot="{ errors, invalid }">
+                    <div class="field has-addons">
+                        <div class="control">
+                            <input
+                                class="input"
+                                v-model="newTag"
+                                type="text"
+                                placeholder="key=value"
+                                @keypress.enter="onAddTagClicked"
+                            />
+                        </div>
+                        <div class="control">
+                            <button class="button is-primary" :disabled="invalid" @click="onAddTagClicked">
+                                Add tag
+                            </button>
+                        </div>
+                    </div>
+                    <p v-if="errors && errors.length > 0" class="help is-danger">{{ errors[0] }}</p>
+                </validation-provider>
                 <h3 class="title is-4" v-if="selectedAgentTags.length === 0">Agent has no tags</h3>
-                <div v-else class="field is-grouped is-grouped-multiline">
+                <div v-else class="field is-grouped is-grouped-multiline mt-5">
                     <div class="control" v-for="tag in selectedAgentTags" :key="tag">
                         <div class="tags has-addons">
-                            <span class="tag is-primary">{{ tag }}</span>
+                            <span class="tag is-primary is-light">{{ tag }}</span>
                             <a class="tag is-delete" @click="onDeleteTagClicked(tag)"></a>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
-        <VariableList v-model="runtimeVars" class="mb-5" />
-        <div class="buttons">
-            <button class="button is-primary" :class="{ 'is-loading': isSaving }" @click="onAgentSave">Save</button>
-            <button class="button" @click="onCancel">Cancel</button>
-        </div>
+            <div v-else-if="activeTab === AgentDetailsTab.INACTIVE_JOB_VARS">
+                <div class="field">
+                    <label for="" class="label">Inactive Job Vars</label>
+                    <div class="control"></div>
+                </div>
+                <VariableList v-model="runtimeVars" class="mb-5" />
+            </div>
+            <div v-else-if="activeTab === AgentDetailsTab.SYSTEM_INFO">
+                <pre>{{ agent.sysInfo }}</pre>
+            </div>
+        </validation-observer>
     </div>
 </template>
 
@@ -109,9 +162,17 @@ import { VariableMap } from '@/components/runtimeVariable/types';
 import { VariableList } from '@/components/runtimeVariable';
 import JobDefSearch from '@/components/JobDefSearch.vue';
 import { showErrors } from '@/utils/ErrorHandler';
+import { tagsStringToMap } from '@/utils/Shared';
 import { JobDef } from '@/store/jobDef/types';
 import { Agent } from '@/store/agent/types';
 import { StoreType } from '@/store/types';
+
+enum AgentDetailsTab {
+    SETTINGS = 1,
+    TAGS,
+    INACTIVE_JOB_VARS,
+    SYSTEM_INFO,
+}
 
 @Component({
     components: { JobDefSearch, ValidationObserver, ValidationProvider, VariableList },
@@ -127,8 +188,10 @@ export default class AgentDetails extends Vue {
     @BindProp({ storeType: StoreType.AgentStore })
     public name: string;
 
-    private newTagKey = '';
-    private newTagValue = '';
+    public readonly AgentDetailsTab = AgentDetailsTab;
+    public activeTab: AgentDetailsTab = AgentDetailsTab.SETTINGS;
+
+    private newTag = '';
     public isSaving = false;
 
     public get selectedMaxActiveTasks(): string {
@@ -269,28 +332,30 @@ export default class AgentDetails extends Vue {
     }
 
     private async onAddTagClicked() {
-        const tagValue = this.newTagValue.trim();
-        const tagKey = this.newTagKey.trim();
+        if (!this.newTag.trim().length) {
+            return;
+        }
 
-        if (tagValue && tagKey) {
+        const tags = tagsStringToMap(this.newTag.trim());
+
+        try {
             await this.$store.dispatch(`${StoreType.AgentStore}/saveTags`, {
                 id: this.agent.id,
-                tags: Object.assign(
-                    {},
-                    {
-                        ...this.agent.tags,
-                        tagKey: tagValue,
-                    }
-                ),
+                tags: Object.assign({}, this.agent.tags, tags),
             });
 
-            this.newTagValue = '';
-            this.newTagKey = '';
+            this.newTag = '';
 
             this.$store.dispatch(
                 `${StoreType.AlertStore}/addAlert`,
                 new SgAlert('Saved agent tags.', AlertPlacement.FOOTER, AlertCategory.INFO)
             );
+        } catch (err) {
+            this.$store.dispatch(
+                `${StoreType.AlertStore}/addAlert`,
+                new SgAlert(`Failed to save agent tags.`, AlertPlacement.FOOTER, AlertCategory.ERROR)
+            );
+            console.error(err);
         }
     }
 
@@ -322,13 +387,22 @@ export default class AgentDetails extends Vue {
             systemInformation: this.agent.sysInfo,
         });
     }
+
+    public onTabSelect(tab: AgentDetailsTab) {
+        this.activeTab = tab;
+    }
 }
 </script>
 
-<style src="vue-slim-tabs/themes/default.css"></style>
-
 <style lang="scss" scoped>
-:deep(.vue-tablist) {
-    padding: 0 64px;
+.tab-menu a {
+    font-variant-caps: all-small-caps;
+    letter-spacing: 2px;
+    margin-right: 1rem;
+}
+
+.tab-menu .is-active {
+    background: deepskyblue;
+    color: white;
 }
 </style>
