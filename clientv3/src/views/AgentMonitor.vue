@@ -68,6 +68,7 @@
           <thead>
             <tr>
               <th>Name</th>
+              <th>Num. Active Tasks</th>
               <th>Status</th>
               <th>IP Address</th>
               <th>Tags</th>
@@ -81,6 +82,7 @@
               <td>
                 <a href="#" @click.prevent="onAgentClick(agent.id)">{{ agent.name }}</a>
               </td>
+              <td>{{ agent.numActiveTasks }}</td>
               <td>
                 <span class="activeAgent" v-if="isAgentActive(agent)">Active</span>
                 <span v-else>Inactive</span>
@@ -119,7 +121,7 @@ import axios from "axios";
 import { SgAlert, AlertPlacement, AlertCategory } from "@/store/alert/types";
 import { momentToStringV1 } from "@/utils/DateTime";
 import _ from "lodash";
-import { tagsStringToMap, tagsMapToString } from "@/utils/Shared";
+import { tagsMapToString } from "@/utils/Shared";
 import { JobDef } from "@/store/jobDef/types";
 import { showErrors } from "@/utils/ErrorHandler";
 import ScriptSearch from "@/components/ScriptSearch.vue";
