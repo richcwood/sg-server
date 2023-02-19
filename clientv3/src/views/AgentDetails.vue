@@ -137,13 +137,11 @@
                 </div>
             </div>
             <div v-else-if="activeTab === AgentDetailsTab.INACTIVE_JOB_VARS">
-                <div class="field">
-                    <label for="" class="label">Inactive Job Vars</label>
-                    <div class="control"></div>
-                </div>
+                <h2 class="title">Inactive Job Variables</h2>
                 <VariableList v-model="runtimeVars" class="mb-5" />
             </div>
             <div v-else-if="activeTab === AgentDetailsTab.SYSTEM_INFO">
+                <h2 class="title">{{ agent.name }} Agent System Information</h2>
                 <pre>{{ agent.sysInfo }}</pre>
             </div>
         </validation-observer>
