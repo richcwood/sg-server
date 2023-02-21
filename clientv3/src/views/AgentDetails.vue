@@ -43,13 +43,13 @@
                     >
                 </li>
             </ul>
-            <div class="buttons ml-5">
-                <button class="button is-primary" :class="{ 'is-loading': isSaving }" @click="onAgentSave">Save</button>
-                <button class="button" @click="onCancel">Cancel</button>
-            </div>
         </header>
-        <validation-observer tag="div" ref="agentSettingsValidationObserver">
-            <div v-if="activeTab === AgentDetailsTab.SETTINGS" class="columns mb-5">
+        <validation-observer
+            v-if="activeTab === AgentDetailsTab.SETTINGS"
+            ref="agentSettingsValidationObserver"
+            tag="div"
+        >
+            <div class="columns">
                 <div class="column is-4">
                     <div class="field">
                         <label for="" class="label">Agent Name</label>
@@ -104,43 +104,45 @@
                     </div>
                 </div>
             </div>
-            <div v-else-if="activeTab === AgentDetailsTab.TAGS" class="mb-5">
-                <validation-provider name="Agent Tags" rules="variable-map" v-slot="{ errors, invalid }">
-                    <div class="field has-addons">
-                        <div class="control">
-                            <input
-                                class="input"
-                                v-model="newTag"
-                                type="text"
-                                placeholder="key=value"
-                                @keypress.enter="onAddTagClicked"
-                            />
-                        </div>
-                        <div class="control">
-                            <button class="button is-primary" :disabled="invalid" @click="onAddTagClicked">
-                                Add tag
-                            </button>
-                        </div>
+            <div class="buttons">
+                <button class="button is-primary" :class="{ 'is-loading': isSaving }" @click="onAgentSave">Save</button>
+                <button class="button" @click="onCancel">Cancel</button>
+            </div>
+        </validation-observer>
+        <div v-else-if="activeTab === AgentDetailsTab.TAGS">
+            <validation-provider name="Agent Tags" rules="variable-map" v-slot="{ errors, invalid }">
+                <div class="field has-addons">
+                    <div class="control">
+                        <input
+                            class="input"
+                            v-model="newTag"
+                            type="text"
+                            placeholder="key=value"
+                            @keypress.enter="onAddTagClicked"
+                        />
                     </div>
-                    <p v-if="errors && errors.length > 0" class="help is-danger">{{ errors[0] }}</p>
-                </validation-provider>
-                <h3 class="title is-4" v-if="selectedAgentTags.length === 0">Agent has no tags</h3>
-                <div v-else class="field is-grouped is-grouped-multiline mt-5">
-                    <div class="control" v-for="tag in selectedAgentTags" :key="tag">
-                        <div class="tags has-addons">
-                            <span class="tag is-primary is-light">{{ tag }}</span>
-                            <a class="tag is-delete" @click="onDeleteTagClicked(tag)"></a>
-                        </div>
+                    <div class="control">
+                        <button class="button is-primary" :disabled="invalid" @click="onAddTagClicked">Add tag</button>
+                    </div>
+                </div>
+                <p v-if="errors && errors.length > 0" class="help is-danger">{{ errors[0] }}</p>
+            </validation-provider>
+            <h3 class="title is-4" v-if="selectedAgentTags.length === 0">Agent has no tags</h3>
+            <div v-else class="field is-grouped is-grouped-multiline mt-5">
+                <div class="control" v-for="tag in selectedAgentTags" :key="tag">
+                    <div class="tags has-addons">
+                        <span class="tag is-primary is-light">{{ tag }}</span>
+                        <a class="tag is-delete" @click="onDeleteTagClicked(tag)"></a>
                     </div>
                 </div>
             </div>
-            <div v-else-if="activeTab === AgentDetailsTab.INACTIVE_JOB_VARS" class="mb-5">
-                <VariableList v-model="runtimeVars" class="mb-5" />
-            </div>
-            <div v-else-if="activeTab === AgentDetailsTab.SYSTEM_INFO" class="mb-5">
-                <pre>{{ agent.sysInfo }}</pre>
-            </div>
-        </validation-observer>
+        </div>
+        <div v-else-if="activeTab === AgentDetailsTab.INACTIVE_JOB_VARS">
+            <VariableList v-model="runtimeVars" />
+        </div>
+        <div v-else-if="activeTab === AgentDetailsTab.SYSTEM_INFO">
+            <pre>{{ agent.sysInfo }}</pre>
+        </div>
     </div>
 </template>
 
