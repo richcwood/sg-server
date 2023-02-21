@@ -49,9 +49,8 @@
             </div>
         </header>
         <validation-observer tag="div" ref="agentSettingsValidationObserver">
-            <div v-if="activeTab === AgentDetailsTab.SETTINGS" class="columns">
+            <div v-if="activeTab === AgentDetailsTab.SETTINGS" class="columns mb-5">
                 <div class="column is-4">
-                    <h2 class="title">Settings</h2>
                     <div class="field">
                         <label for="" class="label">Agent Name</label>
                         <validation-provider
@@ -105,8 +104,7 @@
                     </div>
                 </div>
             </div>
-            <div v-else-if="activeTab === AgentDetailsTab.TAGS">
-                <h2 class="title">Tags</h2>
+            <div v-else-if="activeTab === AgentDetailsTab.TAGS" class="mb-5">
                 <validation-provider name="Agent Tags" rules="variable-map" v-slot="{ errors, invalid }">
                     <div class="field has-addons">
                         <div class="control">
@@ -136,12 +134,10 @@
                     </div>
                 </div>
             </div>
-            <div v-else-if="activeTab === AgentDetailsTab.INACTIVE_JOB_VARS">
-                <h2 class="title">Inactive Job Variables</h2>
+            <div v-else-if="activeTab === AgentDetailsTab.INACTIVE_JOB_VARS" class="mb-5">
                 <VariableList v-model="runtimeVars" class="mb-5" />
             </div>
-            <div v-else-if="activeTab === AgentDetailsTab.SYSTEM_INFO">
-                <h2 class="title">{{ agent.name }} Agent System Information</h2>
+            <div v-else-if="activeTab === AgentDetailsTab.SYSTEM_INFO" class="mb-5">
                 <pre>{{ agent.sysInfo }}</pre>
             </div>
         </validation-observer>
