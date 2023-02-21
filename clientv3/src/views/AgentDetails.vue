@@ -50,56 +50,94 @@
             tag="div"
         >
             <div class="columns">
-                <div class="column is-4">
-                    <div class="field">
-                        <label for="" class="label">Agent Name</label>
-                        <validation-provider
-                            tag="div"
-                            class="control"
-                            name="Agent Name"
-                            rules="required|agent-name"
-                            v-slot="{ errors }"
-                        >
-                            <input class="input" type="text" v-model="name" />
-                            <p v-if="errors && errors.length > 0" class="help is-danger">{{ errors[0] }}</p>
-                        </validation-provider>
-                    </div>
-                    <div class="field">
-                        <label for="" class="label">Max Active Tasks</label>
-                        <validation-provider
-                            tag="div"
-                            class="control"
-                            name="Max Active Tasks"
-                            rules="agent-positiveNumber"
-                            v-slot="{ errors }"
-                        >
-                            <input class="input" type="text" inputmode="numeric" v-model="selectedMaxActiveTasks" />
-                            <p v-if="errors && errors.length > 0" class="help is-danger">{{ errors[0] }}</p>
-                        </validation-provider>
-                    </div>
-                    <div class="field">
-                        <label for="" class="label">Handle General Tasks</label>
-                        <div class="control">
-                            <input type="checkbox" v-model="selectedHandleGeneralTasks" />
+                <div class="column is-6">
+                    <div class="field is-horizontal">
+                        <div class="field-label">
+                            <label for="" class="label">Agent Name</label>
+                        </div>
+                        <div class="field-body">
+                            <div class="field">
+                                <validation-provider
+                                    tag="div"
+                                    class="control"
+                                    name="Agent Name"
+                                    rules="required|agent-name"
+                                    v-slot="{ errors }"
+                                >
+                                    <input class="input" type="text" v-model="name" />
+                                    <p v-if="errors && errors.length > 0" class="help is-danger">{{ errors[0] }}</p>
+                                </validation-provider>
+                            </div>
                         </div>
                     </div>
-                    <div class="field">
-                        <label for="" class="label">Inactive Agent Timeout (ms)</label>
-                        <validation-provider
-                            tag="div"
-                            class="control"
-                            name="Inactive Agent Timeout(ms)"
-                            rules="agent-positiveNumber"
-                            v-slot="{ errors }"
-                        >
-                            <input class="input" type="text" v-model="selectedInactiveAgentTimeout" />
-                            <p v-if="errors && errors.length > 0" class="help is-danger">{{ errors[0] }}</p>
-                        </validation-provider>
+                    <div class="field is-horizontal">
+                        <div class="field-label">
+                            <label for="" class="label">Max Active Tasks</label>
+                        </div>
+                        <div class="field-body">
+                            <div class="field">
+                                <validation-provider
+                                    tag="div"
+                                    class="control"
+                                    name="Max Active Tasks"
+                                    rules="agent-positiveNumber"
+                                    v-slot="{ errors }"
+                                >
+                                    <input
+                                        class="input"
+                                        type="text"
+                                        inputmode="numeric"
+                                        v-model="selectedMaxActiveTasks"
+                                    />
+                                    <p v-if="errors && errors.length > 0" class="help is-danger">{{ errors[0] }}</p>
+                                </validation-provider>
+                            </div>
+                        </div>
                     </div>
-                    <div class="field">
-                        <label for="" class="label">Inactive Agent Job</label>
-                        <div class="control">
-                            <job-def-search :jobDefId="selectedInactiveAgentJobDefId" @jobDefPicked="onJobDefPicked" />
+                    <div class="field is-horizontal">
+                        <div class="field-label">
+                            <label for="" class="label">Handle General Tasks</label>
+                        </div>
+                        <div class="field-body">
+                            <div class="field">
+                                <div class="control">
+                                    <input type="checkbox" v-model="selectedHandleGeneralTasks" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="field is-horizontal">
+                        <div class="field-label">
+                            <label for="" class="label">Inactive Agent Timeout (ms)</label>
+                        </div>
+                        <div class="field-body">
+                            <div class="field">
+                                <validation-provider
+                                    tag="div"
+                                    class="control"
+                                    name="Inactive Agent Timeout(ms)"
+                                    rules="agent-positiveNumber"
+                                    v-slot="{ errors }"
+                                >
+                                    <input class="input" type="text" v-model="selectedInactiveAgentTimeout" />
+                                    <p v-if="errors && errors.length > 0" class="help is-danger">{{ errors[0] }}</p>
+                                </validation-provider>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="field is-horizontal">
+                        <div class="field-label">
+                            <label for="" class="label">Inactive Agent Job</label>
+                        </div>
+                        <div class="field-body">
+                            <div class="field">
+                                <div class="control">
+                                    <job-def-search
+                                        :jobDefId="selectedInactiveAgentJobDefId"
+                                        @jobDefPicked="onJobDefPicked"
+                                    />
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -257,7 +295,7 @@ export default class AgentDetails extends Vue {
             });
 
             this.$store.dispatch(`${StoreType.AgentStore}/updateSelectedCopy`, {
-                propertyOverrides: Object.assign({}, this.agent.propertyOverrides, { inactiveAgentJob })
+                propertyOverrides: Object.assign({}, this.agent.propertyOverrides, { inactiveAgentJob }),
             });
 
             this.$store.dispatch(
