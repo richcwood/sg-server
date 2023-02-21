@@ -138,7 +138,7 @@
             </div>
         </div>
         <div v-else-if="activeTab === AgentDetailsTab.INACTIVE_JOB_VARS">
-            <VariableList v-model="runtimeVars" />
+            <VariableList @input="onVariablesChange" :value="runtimeVars" />
         </div>
         <div v-else-if="activeTab === AgentDetailsTab.SYSTEM_INFO">
             <pre>{{ agent.sysInfo }}</pre>
@@ -243,18 +243,31 @@ export default class AgentDetails extends Vue {
         return this.agent.propertyOverrides?.inactiveAgentJob?.runtimeVars;
     }
 
-    public set runtimeVars(runtimeVars: VariableMap) {
-        const inactiveAgentJob = this.agent.propertyOverrides.inactiveAgentJob ?? { id: '' };
+    public async onVariablesChange(runtimeVars: VariableMap) {
+        const inactiveAgentJob = this.agent.propertyOverrides.inactiveAgentJob
+            ? Object.assign({}, this.agent.propertyOverrides.inactiveAgentJob, { runtimeVars })
+            : { id: '', runtimeVars };
 
-        this.$store.dispatch(`${StoreType.AgentStore}/updateSelectedCopy`, {
-            propertyOverrides: {
-                ...this.agent.propertyOverrides,
-                inactiveAgentJob: {
-                    ...inactiveAgentJob,
-                    runtimeVars,
+        try {
+            await this.$store.dispatch(`${StoreType.AgentStore}/saveSettings`, {
+                id: this.agent.id,
+                properties: {
+                    inactiveAgentJob,
                 },
-            },
-        });
+            });
+
+            this.$store.dispatch(`${StoreType.AgentStore}/updateSelectedCopy`, {
+                propertyOverrides: Object.assign({}, this.agent.propertyOverrides, { inactiveAgentJob })
+            });
+
+            this.$store.dispatch(
+                `${StoreType.AlertStore}/addAlert`,
+                new SgAlert('Saved inactive job variables.', AlertPlacement.FOOTER, AlertCategory.INFO)
+            );
+        } catch (e) {
+            console.error(e);
+            showErrors('Failed to update inactive job variables.', e);
+        }
     }
 
     private selectedInactiveAgentJobDefId = '';
@@ -313,9 +326,9 @@ export default class AgentDetails extends Vue {
                 `${StoreType.AlertStore}/addAlert`,
                 new SgAlert('Saved agent settings.', AlertPlacement.FOOTER, AlertCategory.INFO)
             );
-        } catch (err) {
-            console.error(err);
-            showErrors('Error saving agent settings.', err);
+        } catch (e) {
+            console.error(e);
+            showErrors('Error saving agent settings.', e);
         } finally {
             this.isSaving = false;
         }
