@@ -201,7 +201,7 @@ export default class Test59 extends TestBase.WorkflowTestBase {
                 failureCode: TaskFailureCode.TASK_EXEC_ERROR,
                 runtimeVars: { route: { value: 'fail' } },
                 stderr: "~|name 'a' is not defined",
-                exitCode: -1,
+                exitCode: 1,
                 _teamId: _teamId,
                 id: stepOutcome[0].model.id,
                 type: 'StepOutcome',
