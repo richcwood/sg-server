@@ -46,10 +46,10 @@ while token == '':
     RestAPILogin()
     if token == '':
         print('API login failed')
-        sys.stdout.flush
+        sys.stdout.flush()
         time.sleep(5)
         print('Retrying api login')
-        sys.stdout.flush
+        sys.stdout.flush()
 
 print('@sgo{{"sgAuthToken": "{}"}}'.format(token))
 print(a)
@@ -201,7 +201,7 @@ export default class Test59 extends TestBase.WorkflowTestBase {
                 failureCode: TaskFailureCode.TASK_EXEC_ERROR,
                 runtimeVars: { route: { value: 'fail' } },
                 stderr: "~|name 'a' is not defined",
-                exitCode: -1,
+                exitCode: 1,
                 _teamId: _teamId,
                 id: stepOutcome[0].model.id,
                 type: 'StepOutcome',

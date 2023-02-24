@@ -11,8 +11,12 @@ import { ScriptSchema } from '../../server/src/api/domain/Script';
 
 const script1 = `
 import time
+import sys
 print('start')
-time.sleep(2)
+for i in range(10):
+    print("running - ", i)
+    sys.stdout.flush()
+    time.sleep(2)
 print('done')
 print('@sgo{"route": "ok"}')
 `;

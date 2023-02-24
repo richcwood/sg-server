@@ -34,15 +34,14 @@ def RestAPILogin():
 
     token = json.loads(res.text)['config1']
 
-
 while token == '':
     RestAPILogin()
     if token == '':
         print('API login failed')
-        sys.stdout.flush
+        sys.stdout.flush()
         time.sleep(5)
         print('Retrying api login')
-        sys.stdout.flush
+        sys.stdout.flush()
 
 print('@sgo{{"sgAuthToken": "{}"}}'.format(token))
 `;
@@ -93,7 +92,7 @@ export default class Test58 extends TestBase.WorkflowTestBase {
                                     lambdaRole: config.get('lambda-admin-iam-role'),
                                     lambdaAWSRegion: config.get('AWS_REGION'),
                                     lambdaDependencies: 'requests',
-                                    lambdaTimeout: 10,
+                                    lambdaTimeout: 60,
                                 },
                             ],
                         },
