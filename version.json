@@ -1,0 +1,8 @@
+{
+    "scheduler_base": {
+        "version": "0.0.1"
+    },
+    "scheduler": {
+        "version": "0.0.1"
+    }
+}
