@@ -124,28 +124,26 @@
 </template>
 
 <script lang="ts">
+import { ValidationProvider, ValidationObserver } from 'vee-validate';
 import { Component, Vue } from 'vue-property-decorator';
-import { BindStoreModel } from '@/decorator';
-import { StoreType } from '@/store/types';
-import { Agent } from '../store/agent/types';
-import { isAgentActive } from '@/store/agent/agentUtils';
 import axios from 'axios';
-import { SgAlert, AlertPlacement, AlertCategory } from '@/store/alert/types';
-import { momentToStringV1 } from '@/utils/DateTime';
 import _ from 'lodash';
+
+import { SgAlert, AlertPlacement, AlertCategory } from '@/store/alert/types';
+import AgentsTagsModal from '@/components/agent/AgentsTagsModal.vue';
+import { isAgentActive } from '@/store/agent/agentUtils';
+import ScriptSearch from '@/components/ScriptSearch.vue';
+import { momentToStringV1 } from '@/utils/DateTime';
+import { showErrors } from '@/utils/ErrorHandler';
 import { tagsMapToString } from '@/utils/Shared';
 import { JobDef } from '@/store/jobDef/types';
-import { showErrors } from '@/utils/ErrorHandler';
-import ScriptSearch from '@/components/ScriptSearch.vue';
-import { ValidationProvider, ValidationObserver } from 'vee-validate';
-
-enum UpdateTagType {
-    ADD,
-    DELETE,
-}
+import { BindStoreModel } from '@/decorator';
+import { Agent } from '@/store/agent/types';
+import { StoreType } from '@/store/types';
 
 @Component({
     components: { ScriptSearch, ValidationObserver, ValidationProvider },
+    name: 'AgentMonitor',
 })
 export default class AgentMonitor extends Vue {
     // Expose to template
@@ -251,61 +249,6 @@ export default class AgentMonitor extends Vue {
         this.$store.dispatch(`${StoreType.AgentStore}/saveSettings`, { id: agent.id, properties });
     }
 
-    private newTagKey = '';
-    private newTagValue = '';
-
-    private async onAddTagClicked() {
-        // TODO apply new tags to filtered list of agents
-        if (this.newTagKey.trim() && this.newTagValue.trim()) {
-            this.updateSelectedAgentTags(UpdateTagType.ADD, this.newTagKey, this.newTagValue);
-        }
-    }
-
-    private onDeleteTagClicked(tag: string) {
-        // TODO remove tags from filtered list of agents
-        // the tag should be in key=value format because it will come from the template above
-        this.updateSelectedAgentTags(UpdateTagType.DELETE, tag.split('=')[0]);
-    }
-
-    private async updateSelectedAgentTags(updateType: UpdateTagType, tagKey: string, tagValue?: string) {
-        try {
-            const agentIds = Object.keys(this.filteredAgents);
-            const savePromises: Promise<any>[] = [];
-
-            for (let agentId of agentIds) {
-                const agentCopy: Agent = this.filteredAgents[agentId];
-
-                if (updateType === UpdateTagType.ADD) {
-                    savePromises.push(
-                        this.$store.dispatch('agentStore/saveTags', { id: agentId, tags: agentCopy.tags })
-                    );
-                } else {
-                    if (agentCopy.tags[tagKey]) {
-                        savePromises.push(
-                            this.$store.dispatch('agentStore/saveTags', { id: agentId, tags: agentCopy.tags })
-                        );
-                    } else {
-                        console.error('Tried to remove a tag that did not exist on agent', tagKey, agentCopy.name);
-                    }
-                }
-            }
-
-            await Promise.all(savePromises);
-
-            this.$store.dispatch(
-                `${StoreType.AlertStore}/addAlert`,
-                new SgAlert('Saved agent tags.', AlertPlacement.FOOTER, AlertCategory.INFO)
-            );
-
-            if (updateType === UpdateTagType.ADD) {
-                this.newTagKey = this.newTagValue = '';
-            }
-        } catch (err) {
-            console.error(err);
-            showErrors('Error saving agent tags.', err);
-        }
-    }
-
     private selectedAgentForCronImport: Agent | null = null;
     private rawCronJobs = [];
     private rawCronEnvVars = {};
@@ -369,7 +312,9 @@ export default class AgentMonitor extends Vue {
         });
     }
 
-    public onOpenTagsModal(): void {}
+    public onOpenTagsModal(): void {
+        this.$modal.show(AgentsTagsModal, { agents: this.filteredAgents }, { height: 'auto' });
+    }
 }
 </script>
 

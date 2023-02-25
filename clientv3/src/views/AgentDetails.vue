@@ -382,26 +382,27 @@ export default class AgentDetails extends Vue {
             return;
         }
 
-        const tags = tagsStringToMap(this.newTag.trim());
+        const tags = Object.assign({}, this.agent.tags, tagsStringToMap(this.newTag.trim()));
 
         try {
             await this.$store.dispatch(`${StoreType.AgentStore}/saveTags`, {
                 id: this.agent.id,
-                tags: Object.assign({}, this.agent.tags, tags),
+                tags
             });
 
             this.newTag = '';
 
+            this.$store.dispatch(`${StoreType.AgentStore}/updateSelectedCopy`, { tags });
             this.$store.dispatch(
                 `${StoreType.AlertStore}/addAlert`,
                 new SgAlert('Saved agent tags.', AlertPlacement.FOOTER, AlertCategory.INFO)
             );
-        } catch (err) {
+        } catch (e) {
             this.$store.dispatch(
                 `${StoreType.AlertStore}/addAlert`,
                 new SgAlert(`Failed to save agent tags.`, AlertPlacement.FOOTER, AlertCategory.ERROR)
             );
-            console.error(err);
+            console.error(e);
         }
     }
 
@@ -412,15 +413,25 @@ export default class AgentDetails extends Vue {
 
         delete tags[tagName];
 
-        await this.$store.dispatch(`${StoreType.AgentStore}/saveTags`, {
-            id: this.agent.id,
-            tags,
-        });
+        try {
+            await this.$store.dispatch(`${StoreType.AgentStore}/saveTags`, {
+                id: this.agent.id,
+                tags,
+            });
 
-        this.$store.dispatch(
-            `${StoreType.AlertStore}/addAlert`,
-            new SgAlert('Saved agent tags.', AlertPlacement.FOOTER, AlertCategory.INFO)
-        );
+            this.$store.dispatch(`${StoreType.AgentStore}/updateSelectedCopy`, { tags });
+
+            this.$store.dispatch(
+                `${StoreType.AlertStore}/addAlert`,
+                new SgAlert(`Agent ${tag} tag removed.`, AlertPlacement.FOOTER, AlertCategory.INFO)
+            );
+        } catch (e) {
+            this.$store.dispatch(
+                `${StoreType.AlertStore}/addAlert`,
+                new SgAlert(`Failed to remove agent ${tag} tag.`, AlertPlacement.FOOTER, AlertCategory.ERROR)
+            );
+            console.error(e);
+        }
     }
 
     public onNavigateToAgents(): void {
