@@ -1,0 +1,16 @@
+FROM python:3.9.4-slim-buster as scheduler_base
+
+ARG DIR=/home/appuser
+WORKDIR $DIR/app
+
+RUN python -m venv $DIR/env
+ENV PATH="$DIR/bin:$PATH"
+
+COPY requirements_job_scheduler.txt .
+RUN --mount=type=secret,id=.env.github_credentials,dst=/etc/secrets/.env \
+    --mount=type=cache,target=/root/.cache/pip pip install -r requirements_job_scheduler.txt
+RUN apt-get update && apt-get install -y git
+RUN echo "git+https://${github_credentials}@github.com/saasglue/apscheduler-2.git"
+RUN --mount=type=secret,id=github_credentials \
+    github_credentials="$(cat /run/secrets/github_credentials)" \
+    && python -m pip install "git+https://${github_credentials}@github.com/saasglue/apscheduler-2.git"

@@ -116,8 +116,12 @@ stdout_handler.setLevel(logging.DEBUG)
 stdout_handler.setFormatter(formatter)
 cm_logger.addHandler(stdout_handler)
 
+
+logs_directory = "/tmp/logs"
+if not os.path.exists(logs_directory):
+    os.makedirs(logs_directory)
 timed_rotating_file_handler = TimedRotatingFileHandler(
-    "./logs/jobscheduler.log", when="s", interval=30, backupCount=10
+    f"{logs_directory}/jobscheduler.log", when="s", interval=30, backupCount=10
 )
 timed_rotating_file_handler.setLevel(logging.DEBUG)
 timed_rotating_file_handler.setFormatter(formatter)
