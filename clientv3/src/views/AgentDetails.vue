@@ -187,11 +187,11 @@
 <script lang="ts">
 import { ValidationObserver, ValidationProvider } from 'vee-validate';
 import { Component, Vue } from 'vue-property-decorator';
-import _ from 'lodash';
+import { mapValues } from 'lodash';
 
+import { VariableMap, ValueFormat } from '@/components/runtimeVariable/types';
 import { AlertCategory, AlertPlacement, SgAlert } from '@/store/alert/types';
 import { BindSelectedCopy, BindSelected, BindProp } from '@/decorator';
-import { VariableMap } from '@/components/runtimeVariable/types';
 import { VariableList } from '@/components/runtimeVariable';
 import JobDefSearch from '@/components/JobDefSearch.vue';
 import { showErrors } from '@/utils/ErrorHandler';
@@ -277,13 +277,17 @@ export default class AgentDetails extends Vue {
         return tagKeyValues;
     }
 
-    public get runtimeVars() {
-        return this.agent.propertyOverrides?.inactiveAgentJob?.runtimeVars;
+    public get runtimeVars(): VariableMap {
+        const variables = this.agent.propertyOverrides?.inactiveAgentJob?.runtimeVars;
+
+        return variables
+            ? mapValues(variables, value => ({ value, format: ValueFormat.TEXT, sensitive: false }))
+            : null;
     }
 
     public async onVariablesChange(runtimeVars: VariableMap) {
         const inactiveAgentJob = this.agent.propertyOverrides.inactiveAgentJob
-            ? Object.assign({}, this.agent.propertyOverrides.inactiveAgentJob, { runtimeVars })
+            ? Object.assign({}, this.agent.propertyOverrides.inactiveAgentJob, { runtimeVars: mapValues(runtimeVars, 'value') })
             : { id: '', runtimeVars };
 
         try {
