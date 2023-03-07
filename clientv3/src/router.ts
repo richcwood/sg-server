@@ -9,6 +9,7 @@ import InvitationsForMe from '@/views/InvitationsForMe.vue';
 import JobMonitor from '@/views/JobMonitor.vue';
 import JobDetailsMonitor from '@/views/JobDetailsMonitor.vue';
 import AgentMonitor from '@/views/AgentMonitor.vue';
+import AgentDetails from '@/views/AgentDetails.vue';
 import JobList from '@/views/JobList.vue';
 import JobDesigner from '@/views/JobDesigner.vue';
 import InteractiveConsole from '@/views/InteractiveConsole.vue';
@@ -154,7 +155,26 @@ const router = new Router({
     {
       path: '/agentMonitor',
       name: 'agentMonitor',
-      component: AgentMonitor
+      component: AgentMonitor,
+    },
+    {
+      path: '/agentMonitor/:agentId',
+      name: 'agentMonitorDetails',
+      component: AgentDetails,
+      meta: {
+        async beforeEnter (to: Route, from: Route, next: Function) {
+          const { agentId } = to.params;
+
+          try {
+            const agent = await store.dispatch(`${StoreType.AgentStore}/fetchModel`, agentId);
+
+            store.dispatch(`${StoreType.AgentStore}/select`, agent);
+          } catch (e) {
+            console.error('Failed to fetch agent model with id:', agentId);
+            next({ name: 'agentMonitor' });
+          }
+        }
+      }
     },
     {
       path: '/interactiveConsole/:scriptId?',

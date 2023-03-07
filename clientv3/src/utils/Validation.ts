@@ -28,7 +28,8 @@ vee_validate_extend('required', {
       valid: ['', null, undefined].indexOf(value) === -1
     };
   },
-  computesRequired: true
+  computesRequired: true,
+  message: enMessages.messages['required']
 });
 
 vee_validate_extend('required_checkbox', {
@@ -129,24 +130,16 @@ const initValidation = function(){
     }
   });
 
-  // Kind of stupid but I need custom validators for the agent settings because they have that stupid muti-select thing
   vee_validate_extend('agent-name', value => {
-    if(value === '<>'){
-      return true;
-    }
-    else if( _.isString(value) && value.match(objectNameRegex) !== null){
+    if( _.isString(value) && value.match(objectNameRegex) !== null){
       return true;
     }
     else {
-      return '{_field_} is not a valid';
+      return 'The {_field_} field is not valid.';
     }
   });
 
   vee_validate_extend('agent-positiveNumber', value => {
-    if(value === '<>'){
-      return true;
-    }
-    
     if(!_.isNaN(value)){
       value = value+'';
     }

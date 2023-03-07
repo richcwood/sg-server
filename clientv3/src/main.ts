@@ -30,7 +30,8 @@ import {
   faMinusSquare,
   faEye,
   faEyeSlash,
-  faSave
+  faSave,
+  faChevronLeft,
 } from '@fortawesome/free-solid-svg-icons';
 import '@/sass/index.scss';
 
@@ -50,6 +51,7 @@ library.add(faMinusSquare);
 library.add(faEye);
 library.add(faEyeSlash);
 library.add(faSave);
+library.add(faChevronLeft);
 
 Vue.component('font-awesome-icon', FontAwesomeIcon);
 
