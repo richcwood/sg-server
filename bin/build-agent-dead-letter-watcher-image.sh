@@ -2,7 +2,7 @@
 
 set -e
 
-APPNAME=scheduler
+APPNAME=agent_deadletter_watcher
 VERSION=v`cat version.json| jq -r --arg app "$APPNAME" '.[$app]' | jq -r '.version'`
 
-./bin/build_image.sh $APPNAME Dockerfile.$APPNAME $VERSION
+./bin/build-image.sh $APPNAME Dockerfile.$APPNAME $VERSION

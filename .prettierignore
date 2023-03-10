@@ -1,2 +1,4 @@
 clientv3
 dist
+
+*.yaml

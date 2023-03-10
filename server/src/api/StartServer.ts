@@ -134,7 +134,12 @@ class AppBuilder {
     private setUpMiddleware() {
         app.disable('etag');
 
-        if (environment != 'debug' && environment !== 'bartdev' && environment !== 'richdev') {
+        if (
+            environment != 'debug' &&
+            environment !== 'bartdev' &&
+            environment !== 'richdev' &&
+            environment !== 'dev_k8s'
+        ) {
             this.app.use(enforce.HTTPS({ trustProtoHeader: true }));
         }
 
@@ -160,7 +165,12 @@ class AppBuilder {
 
         if (environment == 'stage') {
             validOrigins.push('http://saasglue-stage.herokuapp.com');
-        } else if (environment === 'bartdev' || environment === 'debug' || environment === 'richdev') {
+        } else if (
+            environment === 'bartdev' ||
+            environment === 'debug' ||
+            environment === 'richdev' ||
+            environment === 'dev_k8s'
+        ) {
             validOrigins.push('http://localhost');
         }
 
@@ -502,6 +512,8 @@ class AppBuilder {
                                 //   }
                                 // }
                             } else if (req.headers.teamIds.indexOf((<any>req).headers._teamid) !== -1) {
+                                teamAccess = true;
+                            } else if (config.get('sgAdminTeam') === (<any>req).headers._teamid) {
                                 teamAccess = true;
                             }
                         }

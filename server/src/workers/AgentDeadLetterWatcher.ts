@@ -13,7 +13,6 @@ import { TaskFailureCode, TaskDefTarget } from '../shared/Enums';
 // import { TaskSchema } from '../api/domain/Task';
 import * as util from 'util';
 import { SGUtils } from '../shared/SGUtils';
-import { SGStrings } from '../shared/SGStrings';
 
 const amqpUrl = config.get('amqpUrl');
 const rmqVhost = config.get('rmqVhost');

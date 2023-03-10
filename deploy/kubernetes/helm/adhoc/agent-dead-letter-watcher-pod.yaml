@@ -1,0 +1,19 @@
+kind: Pod
+apiVersion: v1
+metadata:
+    name: agent-deadletter-watcher-test
+    namespace: saasglue-server-dev
+    labels:
+        app: agent-deadletter-watcher
+spec:
+    serviceAccountName: agent-deadletter-watcher
+    containers:
+        - name: agent-deadletter-watcher-test
+          image: agent_deadletter_watcher:v0.0.1
+          # command: ['./bin/run-agent-deadletter-watcher.sh']
+          command: ['sleep', 'infinity']
+          env:
+              - name: NODE_ENV
+                value: dev_k8s
+          imagePullPolicy: IfNotPresent
+    restartPolicy: Never

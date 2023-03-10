@@ -1,0 +1,10 @@
+version: '3.7'
+services:
+    server:
+        container_name: server
+        image: server:v0.0.1
+        hostname: server
+        ports:
+            - '3000:3000'
+        environment:
+            - NODE_ENV=dev_k8s

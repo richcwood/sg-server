@@ -1,8 +1,8 @@
 {
     "loggingLevel": 10,
     "environment": "dev_k8s",
-    "WEB_CONSOLE_BASE_URL": "http://docker.for.mac.localhost",
-    "API_BASE_URL": "http://docker.for.mac.localhost",
+    "WEB_CONSOLE_BASE_URL": "http://server",
+    "API_BASE_URL": "http://server",
     "stompUrl": "ws://docker.for.mac.localhost:15674/ws",
     "amqpUrl": "amqp://bartSpikeUser:RocketDog99!@docker.for.mac.localhost/bartsVHost",
     "rmqAdminUrl": "http://bartSpikeUser:RocketDog99!@docker.for.mac.localhost:15672/api/",

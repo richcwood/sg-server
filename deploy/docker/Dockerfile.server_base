@@ -1,0 +1,8 @@
+FROM node:16 as server_base
+
+ARG DIR=/home/appuser
+WORKDIR $DIR/app
+
+COPY . ./
+
+RUN npm ci
