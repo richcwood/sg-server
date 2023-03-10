@@ -330,8 +330,6 @@ export default class App extends Vue {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   color: #2c3e50;
-  width: 100%;
-  height: 100%;
 
   &.has-light-background {
     background-color: var(--main-background-color);

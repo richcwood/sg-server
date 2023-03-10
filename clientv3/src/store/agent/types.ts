@@ -21,23 +21,20 @@ export enum Architecture {
 };
 
 export interface Agent extends Model {
-  id: string,
-  _teamId?: string,
-  targetVersion: string,
-  machineId: string,
-  ipAddress: string,
-  reportedVersion: string,
-  lastHeartbeatTime: number,
-  numActiveTasks: number,
-  tags: {[key: string]: string},
-  archived: boolean,
-  cron?: string,
-  name: string,
-  propertyOverrides: {[key: string]: any},
-  sysInfo: any,
-  createDate: string,
-  offline: boolean,
-
-  // this is only for the UI
-  _isSelectedInMonitor?: boolean
+  id: string;
+  _teamId?: string;
+  targetVersion: string;
+  machineId: string;
+  ipAddress: string;
+  reportedVersion: string;
+  lastHeartbeatTime: number;
+  numActiveTasks: number;
+  tags: {[key: string]: string};
+  archived: boolean;
+  cron?: string;
+  name: string;
+  propertyOverrides: {[key: string]: any};
+  sysInfo: any;
+  createDate: string;
+  offline: boolean;
 };
