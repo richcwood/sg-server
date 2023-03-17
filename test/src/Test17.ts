@@ -30,16 +30,6 @@ export default class Test17 extends TestBase.default {
     public async CreateTest() {
         await super.CreateTest();
 
-        // /// Create team
-        // let team: any = {'name': 'TestTeam17', 'isActive': true, 'rmqPassword': SGUtils.makeid(10)};
-        // team = await self.CreateTeam(team);
-        // self.teams.push(team);
-
-        // /// Create agents
-        // let agent;
-        // agent = { '_teamId': _teamId, 'machineId': SGUtils.makeid(), 'ipAddress': '10.10.0.90', 'tags': [], 'numActiveTasks': 0, 'lastHeartbeatTime': new Date().getTime(), 'rmqPassword': team['rmqPassword']};
-        // self.agents.push(agent);
-
         const teamName = 'TestTeam';
         const _teamId = self.testSetup.teams[teamName].id;
 

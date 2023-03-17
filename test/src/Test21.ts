@@ -48,24 +48,6 @@ export default class Test21 extends TestBase.default {
             { handleGeneralTasks: false }
         );
 
-        // /// Create team
-        // let team: any = {'name': 'TestTeam21', 'isActive': true, 'rmqPassword': SGUtils.makeid(10)};
-        // team = await self.CreateTeam(team);
-        // self.teams.push(team);
-
-        // /// Create agents
-        // let agent = {
-        //   '_teamId': _teamId,
-        //   'machineId': SGUtils.makeid(),
-        //   'ipAddress': '10.10.0.90',
-        //   'tags': [],
-        //   'numActiveTasks': 0,
-        //   'lastHeartbeatTime': new Date().getTime(),
-        //   'rmqPassword': team['rmqPassword'],
-        //   'handleGeneralTasks': false
-        // };
-        // self.agents.push(agent);
-
         /// Create job def
         let jobDef: JobDefSchema = {
             _teamId: _teamId,

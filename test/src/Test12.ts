@@ -47,24 +47,6 @@ export default class Test12 extends TestBase.default {
     public async CreateTest() {
         await super.CreateTest();
 
-        /// Create team
-        // let team: any = {'name': 'TestTeam12', 'isActive': true, 'rmqPassword': SGUtils.makeid(10)};
-        // team = await self.CreateTeam(team);
-        // self.teams.push(team);
-
-        /// Create agents
-        // let agent;
-        // agent = { '_teamId': _teamId, 'machineId': SGUtils.makeid(), 'ipAddress': '10.10.0.90', 'tags': [], 'numActiveTasks': 0, 'lastHeartbeatTime': new Date().getTime(), 'rmqPassword': team['rmqPassword']};
-        // self.agents.push(agent);
-        // agent = { '_teamId': _teamId, 'machineId': SGUtils.makeid(), 'ipAddress': '10.10.0.90', 'tags': [], 'numActiveTasks': 0, 'lastHeartbeatTime': new Date().getTime(), 'rmqPassword': team['rmqPassword']};
-        // self.agents.push(agent);
-        // agent = { '_teamId': _teamId, 'machineId': SGUtils.makeid(), 'ipAddress': '10.10.0.91', 'tags': ['numchucks'], 'numActiveTasks': 0, 'lastHeartbeatTime': new Date().getTime(), 'rmqPassword': team['rmqPassword']};
-        // self.agents.push(agent);
-        // agent = { '_teamId': _teamId, 'machineId': SGUtils.makeid(), 'ipAddress': '10.10.0.92', 'tags': ['throwingstar'], 'numActiveTasks': 0, 'lastHeartbeatTime': new Date().getTime(), 'rmqPassword': team['rmqPassword']};
-        // self.agents.push(agent);
-        // agent = { '_teamId': _teamId, 'machineId': SGUtils.makeid(), 'ipAddress': '10.10.0.93', 'tags': ['numchucks', 'throwingstar'], 'numActiveTasks': 1, 'lastHeartbeatTime': new Date().getTime(), 'rmqPassword': team['rmqPassword']};
-        // self.agents.push(agent);
-
         const teamName = 'TestTeam';
         const _teamId = self.testSetup.teams[teamName].id;
 

@@ -1,0 +1,37 @@
+kind: Pod
+apiVersion: v1
+metadata:
+  name: test-runner
+  namespace: saasglue-server-dev
+spec:
+  serviceAccountName: saasglue-service
+  volumes:
+    - name: sg-server-source
+      hostPath:
+        path: /Users/richwood/dev/sg-server
+  containers:
+    - name: test-runner
+      image: server_base:v0.0.1
+      command: ["sleep", "infinity"]
+      securityContext:
+        allowPrivilegeEscalation: false
+        runAsUser: 0
+      env:
+        - name: NODE_ENV
+          value: dev_k8s
+        - name: HOST
+          value: "0.0.0.0"
+      volumeMounts:
+        - name: sg-server-source
+          mountPath: /home/appuser/app/
+      imagePullPolicy: IfNotPresent
+  restartPolicy: Never
+  tolerations:
+    - effect: NoSchedule
+      key: duration
+      operator: Equal
+      value: static
+    - effect: NoSchedule
+      key: processorType
+      operator: Equal
+      value: cpu

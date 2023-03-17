@@ -3,7 +3,6 @@ FROM node:16 as app
 ARG DIR=/home/appuser
 WORKDIR $DIR/app
 
-COPY --from=server_base:v0.0.1 $DIR/app/clientv3/.env.production ./
 COPY --from=server_base:v0.0.1 $DIR/app/clientv3/package*.json ./
 COPY --from=server_base:v0.0.1 $DIR/app/clientv3/dist ./dist
 COPY --from=server_base:v0.0.1 $DIR/app/clientv3/node_modules ./node_modules
@@ -38,11 +37,6 @@ RUN chmod 755 $DIR && \
 
 # Set ownership
 RUN chown -R appuser:appuser $DIR
-
-# Set environment variables
-ARG VERSION
-ENV BHR_VERSION ${VERSION}
-ENV BHR_ENV production
 
 EXPOSE 80
 EXPOSE 3000

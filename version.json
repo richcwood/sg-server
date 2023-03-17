@@ -13,5 +13,8 @@
     },
     "agent_deadletter_watcher": {
         "version": "0.0.1"
+    },
+    "test_runner": {
+        "version": "0.0.1"
     }
 }

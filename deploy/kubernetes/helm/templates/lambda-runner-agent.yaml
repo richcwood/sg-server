@@ -1,0 +1,38 @@
+kind: Pod
+apiVersion: v1
+metadata:
+  name: lambda-runner-agent
+  namespace: saasglue-server-dev
+spec:
+  serviceAccountName: agent
+  volumes:
+    - name: sg-agent-source
+      hostPath:
+        path: /Users/richwood/dev/sg-agent
+  containers:
+    - name: lambda-runner-agent
+      image: saasglue/sg-agent-dev_k8s:latest
+      # command: ["sleep", "infinity"]
+      command: ["./bin/run_agent_standalone.sh", "./configs/docker/dev_lambda_runner/"]
+      securityContext:
+        allowPrivilegeEscalation: false
+        runAsUser: 0
+      env:
+        - name: AWS_ACCESS_KEY_ID
+          value: AKIAX3EV7JGZPNRECXBG
+        - name: AWS_SECRET_ACCESS_KEY
+          value: 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
+      volumeMounts:
+        - name: sg-agent-source
+          mountPath: /home/appuser/app/
+      imagePullPolicy: IfNotPresent
+  restartPolicy: Never
+  tolerations:
+    - effect: NoSchedule
+      key: duration
+      operator: Equal
+      value: static
+    - effect: NoSchedule
+      key: processorType
+      operator: Equal
+      value: cpu

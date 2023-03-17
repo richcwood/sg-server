@@ -35,16 +35,6 @@ export default class Test15 extends TestBase.ScheduledJobTestBase {
     public async CreateTest() {
         await super.CreateTest();
 
-        // /// Create team
-        // let team: any = {'name': 'TestTeam15-1', 'isActive': true, 'rmqPassword': SGUtils.makeid(10)};
-        // team = await self.CreateTeam(team);
-        // self.teams.push(team);
-
-        // /// Create agents
-        // let agent;
-        // agent = { '_teamId': _teamId, 'machineId': SGUtils.makeid(), 'ipAddress': '10.10.0.90', 'tags': [], 'numActiveTasks': 0, 'lastHeartbeatTime': new Date().getTime(), 'rmqPassword': team['rmqPassword']};
-        // self.agents.push(agent);
-
         const teamName = 'TestTeam';
         const _teamId = self.testSetup.teams[teamName].id;
 
@@ -127,15 +117,6 @@ export default class Test15 extends TestBase.ScheduledJobTestBase {
             FunctionKwargs: { _teamId: _teamId, targetId: jobDef1['id'] },
         };
         self.schedules.push(schedule);
-
-        // /// Create team
-        // team = {'name': 'TestTeam15-2', 'isActive': true, 'rmqPassword': SGUtils.makeid(10)};
-        // team = await self.CreateTeam(team);
-        // self.teams.push(team);
-
-        // /// Create agents
-        // agent = { '_teamId': _teamId, 'machineId': SGUtils.makeid(), 'ipAddress': '10.10.0.90', 'tags': [], 'numActiveTasks': 0, 'lastHeartbeatTime': new Date().getTime(), 'rmqPassword': team['rmqPassword']};
-        // self.agents.push(agent);
 
         /// Create job def
         let jobDef2: JobDefSchema = {
