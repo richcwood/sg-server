@@ -30,7 +30,7 @@
                         :class="{ 'is-active': activeTab === AgentDetailsTab.INACTIVE_JOB_VARS }"
                         class="px-1"
                         href="#"
-                        >Inactive Job Variables</a
+                        >Inactive Agent Job</a
                     >
                 </li>
                 <li>
@@ -106,40 +106,6 @@
                             </div>
                         </div>
                     </div>
-                    <div class="field is-horizontal">
-                        <div class="field-label">
-                            <label for="" class="label">Inactive Agent Timeout (ms)</label>
-                        </div>
-                        <div class="field-body">
-                            <div class="field">
-                                <validation-provider
-                                    tag="div"
-                                    class="control"
-                                    name="Inactive Agent Timeout(ms)"
-                                    rules="agent-positiveNumber"
-                                    v-slot="{ errors }"
-                                >
-                                    <input class="input" type="text" v-model="selectedInactiveAgentTimeout" />
-                                    <p v-if="errors && errors.length > 0" class="help is-danger">{{ errors[0] }}</p>
-                                </validation-provider>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="field is-horizontal">
-                        <div class="field-label">
-                            <label for="" class="label">Inactive Agent Job</label>
-                        </div>
-                        <div class="field-body">
-                            <div class="field">
-                                <div class="control">
-                                    <job-def-search
-                                        :jobDefId="selectedInactiveAgentJobDefId"
-                                        @jobDefPicked="onJobDefPicked"
-                                    />
-                                </div>
-                            </div>
-                        </div>
-                    </div>
                 </div>
             </div>
             <div class="buttons">
@@ -176,6 +142,42 @@
             </div>
         </div>
         <div v-else-if="activeTab === AgentDetailsTab.INACTIVE_JOB_VARS">
+            <div class="field is-horizontal">
+                <div class="field-label">
+                    <label for="" class="label">Inactive Agent Job</label>
+                </div>
+                <div class="field-body">
+                    <div class="field">
+                        <div class="control">
+                            <JobDefSearch
+                                class="jod-def-search"
+                                :jobDefId="selectedInactiveAgentJobDefId"
+                                @jobDefPicked="onJobDefPicked"
+                            />
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="field is-horizontal">
+                <div class="field-label">
+                    <label for="" class="label">Inactive Agent Timeout (ms)</label>
+                </div>
+                <div class="field-body">
+                    <div class="field">
+                        <validation-provider
+                            tag="div"
+                            class="control"
+                            name="Inactive Agent Timeout(ms)"
+                            rules="agent-positiveNumber"
+                            v-slot="{ errors }"
+                        >
+                            <input class="input field-250" type="text" v-model="selectedInactiveAgentTimeout" />
+                            <p v-if="errors && errors.length > 0" class="help is-danger">{{ errors[0] }}</p>
+                        </validation-provider>
+                    </div>
+                </div>
+            </div>
+            <div class="is-divider"></div>
             <VariableList @input="onVariablesChange" :value="runtimeVars" />
         </div>
         <div v-else-if="activeTab === AgentDetailsTab.SYSTEM_INFO">
@@ -281,13 +283,15 @@ export default class AgentDetails extends Vue {
         const variables = this.agent.propertyOverrides?.inactiveAgentJob?.runtimeVars;
 
         return variables
-            ? mapValues(variables, value => ({ value, format: ValueFormat.TEXT, sensitive: false }))
+            ? mapValues(variables, (value) => ({ value, format: ValueFormat.TEXT, sensitive: false }))
             : null;
     }
 
     public async onVariablesChange(runtimeVars: VariableMap) {
         const inactiveAgentJob = this.agent.propertyOverrides.inactiveAgentJob
-            ? Object.assign({}, this.agent.propertyOverrides.inactiveAgentJob, { runtimeVars: mapValues(runtimeVars, 'value') })
+            ? Object.assign({}, this.agent.propertyOverrides.inactiveAgentJob, {
+                  runtimeVars: mapValues(runtimeVars, 'value'),
+              })
             : { id: '', runtimeVars };
 
         try {
@@ -391,7 +395,7 @@ export default class AgentDetails extends Vue {
         try {
             await this.$store.dispatch(`${StoreType.AgentStore}/saveTags`, {
                 id: this.agent.id,
-                tags
+                tags,
             });
 
             this.newTag = '';
@@ -458,5 +462,13 @@ export default class AgentDetails extends Vue {
 .tab-menu .is-active {
     background: deepskyblue;
     color: white;
+}
+
+.jod-def-search {
+    margin-left: -10px;
+}
+
+.field-250 {
+    width: 250px;
 }
 </style>

@@ -120,5 +120,6 @@
 
     .control.has-icons-right .icon {
         width: auto;
+        z-index: 1;
     }
 </style>
