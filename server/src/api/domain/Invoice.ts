@@ -60,7 +60,7 @@ export class InvoiceSchema {
     @prop({ required: true })
     newAgentRate: number;
 
-    @prop({ required: true })
+    @prop({ required: false })
     numNewAgents: number;
 
     @prop({ required: true })
