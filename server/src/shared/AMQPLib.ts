@@ -85,11 +85,10 @@ export class AMQPConnector {
             return;
         }
 
-        this.LogDebug('Received request to start AMQP connection to RabbitMQ', { url: this.url, Vhost: this.vhost });
+        this.LogDebug('Received request to start AMQP connection to RabbitMQ', { Vhost: this.vhost });
         try {
             this.conn = await this.amqp.connect(this.url);
         } catch (e) {
-            console.log('error ---------------------------> ', e);
             this.LogError('Error starting AMQP connection to RabbitMQ', '', { error: e });
             await this.OnDisconnect();
             return false;
@@ -159,7 +158,7 @@ export class AMQPConnector {
                 this.pubChannel = null;
             }
 
-            await this.conn.close();
+            if (this.conn) await this.conn.close();
             this.LogDebug('Completed request to stop AMQP connection', {});
         } catch (e) {
             this.LogError('Error stopping AMQP connection', '', { error: e });
@@ -175,14 +174,14 @@ export class AMQPConnector {
         }
     }
 
-    async CreateConsumerChannel() {
-        if (this.consumerChannel) return;
+    async CreateConsumerChannel(): Promise<boolean> {
+        if (this.consumerChannel) return true;
         try {
             this.consumerChannel = await this.conn.createChannel();
         } catch (e) {
             this.LogError('Error creating consumer channel', '', { error: e });
             await this.OnDisconnect();
-            return;
+            return false;
         }
         this.consumerChannel.on('error', (err) => {
             this.LogError('Consumer channel error', '', { error: err });
@@ -193,17 +192,17 @@ export class AMQPConnector {
         });
         this.consumerChannel.prefetch(this.prefetchCount);
         this.LogDebug('Consumer channel created', {});
-        return;
+        return true;
     }
 
-    async CreatePublisherChannel() {
-        if (this.pubChannel) return;
+    async CreatePublisherChannel(): Promise<boolean> {
+        if (this.pubChannel) return true;
         try {
             this.pubChannel = await this.conn.createConfirmChannel();
         } catch (e) {
             this.LogError('Error creating publisher channel', '', { error: e });
             await this.OnDisconnect();
-            return;
+            return false;
         }
         this.pubChannel.on('error', (err) => {
             this.LogError('Publisher channel error', '', { error: err });
@@ -234,13 +233,25 @@ export class AMQPConnector {
             if (m[0] == 'queue') this.PublishQueue(m[1], m[2], m[3], m[4], m[5]);
             else this.PublishRoute(m[1], m[2], m[3], m[4]);
         }
+        return true;
     }
 
     async PublishQueue(exchange: string, routingKey: string, content: any, queueAssertArgs: any, args: any = {}) {
         if (!routingKey || routingKey == '') return;
 
         try {
-            await this.CreatePublisherChannel();
+            const publisherCreated: boolean = await this.CreatePublisherChannel();
+            if (!publisherCreated) {
+                this.LogError('Error publishing message', 'PublishQueue', {
+                    Error: 'Error creating publisher channel',
+                    Exchange: exchange,
+                    Route: routingKey,
+                    Content: content,
+                    args: args,
+                });
+                this.offlinePubQueue.push(['queue', exchange, routingKey, content, queueAssertArgs, args]);
+                return;
+            }
 
             if (exchange != '') {
                 await this.AssertExchange(exchange, 'topic', true, false, false);
@@ -256,8 +267,8 @@ export class AMQPConnector {
             // this.LogDebug('Published message', { 'Exchange': exchange, 'Route': routingKey, 'Content': content, 'Response': res });
         } catch (e) {
             if (this.stoppedByUser) return;
-            this.LogError('Error publishing message', e.stack, {
-                Error: e.message,
+            this.LogError('Error publishing message', e.stack || '', {
+                Error: e.message || '',
                 Exchange: exchange,
                 Route: routingKey,
                 Content: content,
@@ -272,7 +283,18 @@ export class AMQPConnector {
         if (!routingKey || routingKey == '') return;
 
         try {
-            await this.CreatePublisherChannel();
+            const publisherCreated: boolean = await this.CreatePublisherChannel();
+            if (!publisherCreated) {
+                this.LogError('Error publishing message', 'PublishRoute', {
+                    Error: 'Error creating publisher channel',
+                    Exchange: exchange,
+                    Route: routingKey,
+                    Content: content,
+                    args: args,
+                });
+                this.offlinePubQueue.push(['route', exchange, routingKey, content, args]);
+                return;
+            }
 
             if (exchange != '') await this.AssertExchange(exchange, 'topic', true, false, false);
 
@@ -294,17 +316,17 @@ export class AMQPConnector {
     }
 
     private async PublishLocal(exchange: string, routingKey: string, content: any, args: any) {
-        return new Promise(async (resolve, reject) => {
-            let res = await this.pubChannel.publish(
+        return new Promise<void>(async (resolve, reject) => {
+            const res = await this.pubChannel.publish(
                 exchange,
                 routingKey,
                 Buffer.from(JSON.stringify(content)),
                 Object.assign({ persistent: true, mandatory: true }, args),
-                (err, ok, val) => {
+                (err) => {
                     if (err) reject(err);
-                    resolve(res);
                 }
             );
+            resolve(res);
         });
     }
 
@@ -331,7 +353,11 @@ export class AMQPConnector {
 
         let sub: any;
         try {
-            await this.CreateConsumerChannel();
+            const consumerCreated: boolean = await this.CreateConsumerChannel();
+            if (!consumerCreated) {
+                this.LogError('Error consuming AMQP queue', 'ConsumeQueue', { QueueName: queueName });
+                return;
+            }
 
             if (exchange != '') await this.AssertExchange(exchange, 'topic', true, false, false);
 
@@ -414,7 +440,15 @@ export class AMQPConnector {
         if (!route || route == '') return;
 
         try {
-            await this.CreateConsumerChannel();
+            const consumerCreated: boolean = await this.CreateConsumerChannel();
+            if (!consumerCreated) {
+                this.LogError('Error consuming AMQP route', 'ConsumeRoute', {
+                    QueueName: queueName,
+                    Exchange: exchange,
+                    Route: route,
+                });
+                return;
+            }
 
             let headers: any = { exclusive: exclusive, durable: durable, autoDelete: autoDelete };
             if (expires > 0) headers['expires'] = expires;

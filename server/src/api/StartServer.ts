@@ -77,8 +77,6 @@ import * as mongoose from 'mongoose';
 import * as morgan from 'morgan';
 import * as fs from 'fs';
 
-console.log(`\n\n *** Bart starting the server *** \n`);
-
 // Create a new express application instance
 const app: express.Application = express();
 
@@ -176,9 +174,7 @@ class AppBuilder {
 
         const corsOptions: any = {
             origin: (origin, callback) => {
-                console.log(`\n\n *** Bart *** \n origin=>${origin}\n\n`);
                 if (!origin || isValidOrigin(origin)) {
-                    console.log(`Origin ${origin} was VALID`);
                     callback(null, true);
                 } else {
                     callback(new Error(`Hey silly! ${origin} is just not allowed!`));
