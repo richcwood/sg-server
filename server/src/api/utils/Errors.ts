@@ -68,3 +68,17 @@ export class ForbiddenError extends Error {
         return this.path;
     }
 }
+
+export class ErrorWithCause extends Error {
+    public readonly context: any | undefined;
+    public readonly cause: any | undefined;
+
+    constructor(message: string, context: any) {
+        super(message);
+        if ('cause' in context) {
+            this.cause = context['cause'];
+            delete context['cause'];
+        }
+        this.context = context;
+    }
+}

@@ -1,4 +1,5 @@
 import * as util from 'util';
+import { SGUtils } from './SGUtils';
 
 let removeItemFromArray = (array: any[], item: any) => {
     const index = array.indexOf(item);
@@ -21,6 +22,8 @@ export class AMQPConnector {
     private consumerChannel: any;
     private pubChannel: any;
     private activeMessages: any = [];
+    private publisherChannelRequested: boolean = false;
+    private consumerChannelRequested: boolean = false;
 
     constructor(
         public appName: string,
@@ -82,12 +85,23 @@ export class AMQPConnector {
     async Start() {
         this.stoppedByUser = false;
         if (this.conn) {
-            return;
+            return true;
         }
 
         this.LogDebug('Received request to start AMQP connection to RabbitMQ', { Vhost: this.vhost });
         try {
-            this.conn = await this.amqp.connect(this.url);
+            await SGUtils.retryWithBackoff(
+                async () => {
+                    return await this.amqp.connect(this.url);
+                },
+                (conn) => {
+                    this.conn = conn;
+                },
+                (e) => {
+                    this.LogError(e.message, e.stack, Object.assign(e.context, { cause: e.cause }));
+                },
+                30
+            );
         } catch (e) {
             this.LogError('Error starting AMQP connection to RabbitMQ', '', { error: e });
             await this.OnDisconnect();
@@ -100,48 +114,17 @@ export class AMQPConnector {
         this.conn.on('close', async () => {
             this.LogDebug('AMQP connection closed', {});
             this.conn = null;
+            this.pubChannel = null;
+            this.consumerChannel = null;
             if (!this.stoppedByUser) {
                 await sleep(10000);
-                this.Start();
+                await this.Start();
+                if (this.publisherChannelRequested) await this.CreatePublisherChannel();
+                if (this.consumerChannelRequested) await this.CreateConsumerChannel();
             }
         });
 
         this.LogDebug('Completed request to start AMQP connection', { url: this.url, Vhost: this.vhost });
-
-        this.subscribedRoutes.forEach(async (params) => {
-            if (params['route']) {
-                this.LogDebug('Resubscribing to route', {
-                    QueueName: params['queueName'],
-                    exchange: params['Rxchange'],
-                    Route: params['route'],
-                    expires: params['expires'],
-                });
-                await this.ConsumeRoute(
-                    params['queueName'],
-                    params['exclusive'],
-                    params['durable'],
-                    params['autoDelete'],
-                    params['noAck'],
-                    params['fnHandleMessage'],
-                    params['exchange'],
-                    params['route'],
-                    params['expires']
-                );
-            } else {
-                this.LogDebug('Resubscribing to queue', { QueueName: params['queueName'], expires: params['expires'] });
-                await this.ConsumeQueue(
-                    params['queueName'],
-                    params['exclusive'],
-                    params['durable'],
-                    params['autoDelete'],
-                    params['noAck'],
-                    params['fnHandleMessage'],
-                    params['exchange'],
-                    params['expires']
-                );
-            }
-        });
-        this.subscribedRoutes.length = 0;
 
         return true;
     }
@@ -176,8 +159,51 @@ export class AMQPConnector {
 
     async CreateConsumerChannel(): Promise<boolean> {
         if (this.consumerChannel) return true;
+        this.consumerChannelRequested = true;
         try {
+            if (!this.conn) {
+                await this.Start();
+            }
             this.consumerChannel = await this.conn.createChannel();
+
+            const subscribedRoutesCopy = this.subscribedRoutes.slice();
+            this.subscribedRoutes.length = 0;
+            subscribedRoutesCopy.forEach(async (params) => {
+                if (params['route']) {
+                    this.LogDebug('Resubscribing to route', {
+                        QueueName: params['queueName'],
+                        exchange: params['Rxchange'],
+                        Route: params['route'],
+                        expires: params['expires'],
+                    });
+                    await this.ConsumeRoute(
+                        params['queueName'],
+                        params['exclusive'],
+                        params['durable'],
+                        params['autoDelete'],
+                        params['noAck'],
+                        params['fnHandleMessage'],
+                        params['exchange'],
+                        params['route'],
+                        params['expires']
+                    );
+                } else {
+                    this.LogDebug('Resubscribing to queue', {
+                        QueueName: params['queueName'],
+                        expires: params['expires'],
+                    });
+                    await this.ConsumeQueue(
+                        params['queueName'],
+                        params['exclusive'],
+                        params['durable'],
+                        params['autoDelete'],
+                        params['noAck'],
+                        params['fnHandleMessage'],
+                        params['exchange'],
+                        params['expires']
+                    );
+                }
+            });
         } catch (e) {
             this.LogError('Error creating consumer channel', '', { error: e });
             await this.OnDisconnect();
@@ -197,7 +223,11 @@ export class AMQPConnector {
 
     async CreatePublisherChannel(): Promise<boolean> {
         if (this.pubChannel) return true;
+        this.publisherChannelRequested = true;
         try {
+            if (!this.conn) {
+                await this.Start();
+            }
             this.pubChannel = await this.conn.createConfirmChannel();
         } catch (e) {
             this.LogError('Error creating publisher channel', '', { error: e });
@@ -527,6 +557,7 @@ export class AMQPConnector {
             this.LogDebug('Unsubscribing', { Subscription: util.inspect(sub, false, null) });
             await this.consumerChannel.cancel(sub.consumerTag);
             removeItemFromArray(this.subscriptions, sub);
+            if (this.subscriptions.length < 1) this.consumerChannelRequested = false;
         } catch (e) {
             this.LogError('Error in StopConsumingQueue', '', { error: e });
         }
@@ -544,6 +575,7 @@ export class AMQPConnector {
     async StopConsuming() {
         try {
             while (this.subscriptions.length > 0) await this.StopConsumingQueue(this.subscriptions[0]);
+            this.consumerChannelRequested = false;
         } catch (e) {
             this.LogError('Error in StopConsuming', '', { error: e });
         }

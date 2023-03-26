@@ -19,7 +19,7 @@ import * as pdf from 'html-pdf';
 import * as moment from 'moment';
 import * as compressing from 'compressing';
 import * as config from 'config';
-import { MissingObjectError, ValidationError } from '../api/utils/Errors';
+import { MissingObjectError, ValidationError, ErrorWithCause } from '../api/utils/Errors';
 import * as _ from 'lodash';
 import * as Enums from './Enums';
 import axios from 'axios';
@@ -106,6 +106,36 @@ export class SGUtils {
         return new Promise((resolve) => {
             setTimeout(resolve, ms);
         });
+    }
+
+    static async retryWithBackoff(fn, cb, logError, maxTries = 10) {
+        let tryCount = 0;
+        let waitTimesBackoff = [1000, 5000, 10000, 20000, 30000, 60000];
+        while (true) {
+            tryCount += 1;
+            try {
+                let result = await fn();
+                cb(result);
+                break;
+            } catch (e) {
+                if (tryCount >= maxTries) {
+                    logError(
+                        new ErrorWithCause('Function failed after max attempts', { cause: e, maxTries: maxTries })
+                    );
+                    return;
+                } else {
+                    const waitTime = waitTimesBackoff.shift() || 60000;
+                    logError(
+                        new ErrorWithCause('Function failed - retrying', {
+                            cause: e,
+                            tryCount: tryCount,
+                            waitTime: waitTime,
+                        })
+                    );
+                    await SGUtils.sleep(waitTime);
+                }
+            }
+        }
     }
 
     // This will parse a delimited string into an array of
