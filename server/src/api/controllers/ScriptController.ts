@@ -12,6 +12,17 @@ import { convertData as convertRequestData } from '../utils/RequestConverters';
 import * as _ from 'lodash';
 import * as mongodb from 'mongodb';
 
+let errorHandler = (err, req: Request, resp: Response, next: NextFunction) => {
+    // If req.params.scriptId wasn't a mongo id then we will get a CastError - basically same as if the id wasn't found
+    if (err instanceof Error.CastError) {
+        if (req.params && req.params.scriptId)
+            return next(new MissingObjectError(`Script ${req.params.scriptId} not found.`));
+        else return next(new MissingObjectError(`Script not found.`));
+    } else {
+        return next(err);
+    }
+};
+
 export class ScriptController {
     public async getManyScripts(req: Request, resp: Response, next: NextFunction): Promise<void> {
         const _teamId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._teamid);
@@ -46,12 +57,7 @@ export class ScriptController {
                 return next();
             }
         } catch (err) {
-            // If req.params.scriptId wasn't a mongo id then we will get a CastError - basically same as if the id wasn't found
-            if (err instanceof Error.CastError) {
-                return next(new MissingObjectError(`Script ${req.params.scriptId} not found.`));
-            } else {
-                return next(err);
-            }
+            return errorHandler(err, req, resp, next);
         }
     }
 

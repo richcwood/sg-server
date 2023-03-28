@@ -18,6 +18,17 @@ import { readFileSync } from 'fs';
 import { BaseLogger } from '../../shared/SGLogger';
 import { AMQPConnector } from '../../shared/AMQPLib';
 
+let errorHandler = (err, req: Request, resp: Response, next: NextFunction) => {
+    // If req.params.jobDefId wasn't a mongo id then we will get a CastError - basically same as if the id wasn't found
+    if (err instanceof Error.CastError) {
+        if (req.params && req.params.jobDefId)
+            return next(new MissingObjectError(`JobDef ${req.params.jobDefId} not found.`));
+        else return next(new MissingObjectError(`JobDef not found.`));
+    } else {
+        return next(err);
+    }
+};
+
 export class JobDefController {
     public async getManyJobDefs(req: Request, resp: Response, next: NextFunction): Promise<void> {
         const _teamId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._teamid);
@@ -38,12 +49,7 @@ export class JobDefController {
                 return next();
             }
         } catch (err) {
-            // If req.params.jobDefId wasn't a mongo id then we will get a CastError - basically same as if the id wasn't found
-            if (err instanceof Error.CastError) {
-                return next(new MissingObjectError(`JobDef ${req.params.jobDefId} not found.`));
-            } else {
-                return next(err);
-            }
+            return errorHandler(err, req, resp, next);
         }
     }
 
@@ -195,12 +201,7 @@ export class JobDefController {
                 return next();
             }
         } catch (err) {
-            // If req.params.jobDefId wasn't a mongo id then we will get a CastError - basically same as if the id wasn't found
-            if (err instanceof Error.CastError) {
-                return next(new MissingObjectError(`JobDef ${req.params.jobDefId} not found.`));
-            } else {
-                return next(err);
-            }
+            return errorHandler(err, req, resp, next);
         }
     }
 
@@ -227,11 +228,7 @@ export class JobDefController {
             readStream.pipe(resp);
         } catch (err) {
             // If req.params.jobDefId wasn't a mongo id then we will get a CastError - basically same as if the id wasn't found
-            if (err instanceof Error.CastError) {
-                return next(new MissingObjectError(`JobDef ${req.params.jobDefId} not found.`));
-            } else {
-                return next(err);
-            }
+            return errorHandler(err, req, resp, next);
         }
     }
 

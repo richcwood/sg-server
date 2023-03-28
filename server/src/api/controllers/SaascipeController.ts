@@ -10,6 +10,17 @@ import { convertData as convertRequestData } from '../utils/RequestConverters';
 import * as _ from 'lodash';
 import * as mongodb from 'mongodb';
 
+let errorHandler = (err, req: Request, resp: Response, next: NextFunction) => {
+    // If req.params.saascipeId wasn't a mongo id then we will get a CastError - basically same as if the id wasn't found
+    if (err instanceof Error.CastError) {
+        if (req.params && req.params.saascipeId)
+            return next(new MissingObjectError(`Saascipe ${req.params.saascipeId} not found.`));
+        else return next(new MissingObjectError(`Saascipe not found.`));
+    } else {
+        return next(err);
+    }
+};
+
 export class SaascipeController {
     public async getManySaascipes(req: Request, resp: Response, next: NextFunction): Promise<void> {
         defaultBulkGet({}, req, resp, next, SaascipeSchema, SaascipeModel, saascipeService);
@@ -27,12 +38,7 @@ export class SaascipeController {
                 return next();
             }
         } catch (err) {
-            // If req.params.saascipeId wasn't a mongo id then we will get a CastError - basically same as if the id wasn't found
-            if (err instanceof Error.CastError) {
-                return next(new MissingObjectError(`Saascipe ${req.params.saascipeId} not found.`));
-            } else {
-                return next(err);
-            }
+            return errorHandler(err, req, resp, next);
         }
     }
 

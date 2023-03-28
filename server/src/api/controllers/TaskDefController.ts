@@ -11,6 +11,17 @@ import { convertData as convertRequestData } from '../utils/RequestConverters';
 import * as _ from 'lodash';
 import * as mongodb from 'mongodb';
 
+let errorHandler = (err, req: Request, resp: Response, next: NextFunction) => {
+    // If req.params.taskDefId wasn't a mongo id then we will get a CastError - basically same as if the id wasn't found
+    if (err instanceof Error.CastError) {
+        if (req.params && req.params.taskDefId)
+            return next(new MissingObjectError(`TaskDef ${req.params.taskDefId} not found.`));
+        else return next(new MissingObjectError(`TaskDef not found.`));
+    } else {
+        return next(err);
+    }
+};
+
 export class TaskDefController {
     public async getManyTaskDefs(req: Request, resp: Response, next: NextFunction): Promise<void> {
         const _teamId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._teamid);
@@ -50,12 +61,7 @@ export class TaskDefController {
                 return next();
             }
         } catch (err) {
-            // If req.params.taskDefId wasn't a mongo id then we will get a CastError - basically same as if the id wasn't found
-            if (err instanceof Error.CastError) {
-                return next(new MissingObjectError(`TaskDef ${req.params.taskDefId} not found.`));
-            } else {
-                return next(err);
-            }
+            return errorHandler(err, req, resp, next);
         }
     }
 
@@ -135,12 +141,7 @@ export class TaskDefController {
                 return next();
             }
         } catch (err) {
-            // If req.params.taskDefId wasn't a mongo id then we will get a CastError - basically same as if the id wasn't found
-            if (err instanceof Error.CastError) {
-                return next(new MissingObjectError(`TaskDef ${req.params.taskDefId} not found.`));
-            } else {
-                return next(err);
-            }
+            return errorHandler(err, req, resp, next);
         }
     }
 }

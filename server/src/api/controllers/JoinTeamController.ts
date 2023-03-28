@@ -82,7 +82,6 @@ export class JoinTeamController {
             response.statusCode = ResponseCode.CREATED;
             return next();
         } catch (err) {
-            console.log('\n\nBARTTT', err);
             return next(err);
         }
     }

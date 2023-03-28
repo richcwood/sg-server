@@ -52,7 +52,9 @@ export class TaskController {
         } catch (err) {
             // If req.params.taskId wasn't a mongo id then we will get a CastError - basically same as if the id wasn't found
             if (err instanceof Error.CastError) {
-                return next(new MissingObjectError(`Task ${req.params.taskId} not found.`));
+                if (req.params && req.params.taskId)
+                    return next(new MissingObjectError(`Task ${req.params.taskId} not found.`));
+                else return next(new MissingObjectError(`Task not found.`));
             } else {
                 return next(err);
             }

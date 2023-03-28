@@ -39,7 +39,9 @@ export class TeamController {
         } catch (err) {
             // If req.params.teamId wasn't a mongo id then we will get a CastError - basically same as if the id wasn't found
             if (err instanceof Error.CastError) {
-                return next(new MissingObjectError(`Team ${req.params.teamId} not found.`));
+                if (req.params && req.params.teamId)
+                    return next(new MissingObjectError(`Team ${req.params.teamId} not found.`));
+                else return next(new MissingObjectError(`Team not found.`));
             } else {
                 return next(err);
             }
@@ -128,7 +130,6 @@ export class TeamController {
 
             return next();
         } catch (err) {
-            console.error(err);
             return next(err);
         }
     }

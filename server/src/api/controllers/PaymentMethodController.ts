@@ -10,6 +10,17 @@ import { convertData as convertRequestData } from '../utils/RequestConverters';
 import * as _ from 'lodash';
 import * as mongodb from 'mongodb';
 
+let errorHandler = (err, req: Request, resp: Response, next: NextFunction) => {
+    // If req.params.paymentMethodId wasn't a mongo id then we will get a CastError - basically same as if the id wasn't found
+    if (err instanceof Error.CastError) {
+        if (req.params && req.params.paymentMethodId)
+            return next(new MissingObjectError(`PaymentMethod ${req.params.paymentMethodId} not found.`));
+        else return next(new MissingObjectError(`PaymentMethod not found.`));
+    } else {
+        return next(err);
+    }
+};
+
 export class PaymentMethodController {
     public async getManyPaymentMethods(req: Request, resp: Response, next: NextFunction): Promise<void> {
         const _teamId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._teamid);
@@ -33,12 +44,7 @@ export class PaymentMethodController {
                 return next();
             }
         } catch (err) {
-            // If req.params.paymentMethodId wasn't a mongo id then we will get a CastError - basically same as if the id wasn't found
-            if (err instanceof Error.CastError) {
-                return next(new MissingObjectError(`PaymentMethod ${req.params.paymentMethodId} not found.`));
-            } else {
-                return next(err);
-            }
+            return errorHandler(err, req, resp, next);
         }
     }
 

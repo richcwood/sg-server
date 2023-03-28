@@ -11,6 +11,17 @@ import { BaseLogger } from '../../shared/SGLogger';
 import * as _ from 'lodash';
 import * as mongodb from 'mongodb';
 
+let errorHandler = (err, req: Request, resp: Response, next: NextFunction) => {
+    // If req.params.paymentTransactionId wasn't a mongo id then we will get a CastError - basically same as if the id wasn't found
+    if (err instanceof Error.CastError) {
+        if (req.params && req.params.paymentTransactionId)
+            return next(new MissingObjectError(`PaymentTransaction ${req.params.paymentTransactionId} not found.`));
+        else return next(new MissingObjectError(`PaymentTransaction not found.`));
+    } else {
+        return next(err);
+    }
+};
+
 export class PaymentTransactionController {
     public async getManyPaymentTransactions(req: Request, resp: Response, next: NextFunction): Promise<void> {
         const _teamId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._teamid);
@@ -42,12 +53,7 @@ export class PaymentTransactionController {
                 return next();
             }
         } catch (err) {
-            // If req.params.paymentTransactionId wasn't a mongo id then we will get a CastError - basically same as if the id wasn't found
-            if (err instanceof Error.CastError) {
-                return next(new MissingObjectError(`PaymentTransaction ${req.params.paymentTransactionId} not found.`));
-            } else {
-                return next(err);
-            }
+            return errorHandler(err, req, resp, next);
         }
     }
 

@@ -11,6 +11,17 @@ import * as _ from 'lodash';
 import * as mongodb from 'mongodb';
 import { FreeTierChecks } from '../../shared/FreeTierChecks';
 
+let errorHandler = (err, req: Request, resp: Response, next: NextFunction) => {
+    // If req.params.settingsId wasn't a mongo id then we will get a CastError - basically same as if the id wasn't found
+    if (err instanceof Error.CastError) {
+        if (req.params && req.params.type)
+            return next(new MissingObjectError(`Settings ${req.params.type} not found.`));
+        else return next(new MissingObjectError(`Settings not found.`));
+    } else {
+        return next(err);
+    }
+};
+
 export class SettingsController {
     public async getManySettings(req: Request, resp: Response, next: NextFunction): Promise<void> {
         const _teamId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._teamid);
@@ -29,12 +40,7 @@ export class SettingsController {
                 return next();
             }
         } catch (err) {
-            // If req.params.settingsId wasn't a mongo id then we will get a CastError - basically same as if the id wasn't found
-            if (err instanceof Error.CastError) {
-                return next(new MissingObjectError(`Settings ${req.params.type} not found.`));
-            } else {
-                return next(err);
-            }
+            return errorHandler(err, req, resp, next);
         }
     }
 

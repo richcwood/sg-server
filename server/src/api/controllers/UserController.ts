@@ -41,7 +41,9 @@ export class UserController {
         } catch (err) {
             // If req.params.userId wasn't a mongo id then we will get a CastError - basically same as if the id wasn't found
             if (err instanceof Error.CastError) {
-                return next(new MissingObjectError(`User ${req.params.userId} not found.`));
+                if (req.params && req.params.userId)
+                    return next(new MissingObjectError(`User ${req.params.userId} not found.`));
+                else return next(new MissingObjectError(`User not found.`));
             } else {
                 return next(err);
             }

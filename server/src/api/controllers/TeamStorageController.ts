@@ -35,7 +35,9 @@ export class TeamStorageController {
         } catch (err) {
             // If req.params.teamStorageId wasn't a mongo id then we will get a CastError - basically same as if the id wasn't found
             if (err instanceof Error.CastError) {
-                return next(new MissingObjectError(`TeamStorage ${req.params.teamStorageId} not found.`));
+                if (req.params && req.params.teamStorageId)
+                    return next(new MissingObjectError(`TeamStorage ${req.params.teamStorageId} not found.`));
+                else return next(new MissingObjectError(`TeamStorage not found.`));
             } else {
                 return next(err);
             }

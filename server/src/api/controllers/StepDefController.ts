@@ -51,7 +51,9 @@ export class StepDefController {
         } catch (err) {
             // If req.params.stepDefId wasn't a mongo id then we will get a CastError - basically same as if the id wasn't found
             if (err instanceof Error.CastError) {
-                return next(new MissingObjectError(`StepDef ${req.params.stepDefId} not found.`));
+                if (req.params && req.params.stepDefId)
+                    return next(new MissingObjectError(`StepDef ${req.params.stepDefId} not found.`));
+                else return next(new MissingObjectError(`StepDef not found.`));
             } else {
                 return next(err);
             }
