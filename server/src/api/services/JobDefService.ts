@@ -297,6 +297,17 @@ export class JobDefService {
             convertData(JobDefSchema, newJobDef)
         );
 
+        let day_of_week: string = '';
+        if (tokens[4] != '*') day_of_week = tokens[4];
+        let month: string = '';
+        if (tokens[3] != '*') month = tokens[3];
+        let day: string = '';
+        if (tokens[2] != '*') day = tokens[2];
+        let hour: string = '';
+        if (tokens[1] != '*') hour = tokens[1];
+        let minute: string = '';
+        if (tokens[0] != '*') minute = tokens[0];
+
         const schedule_data: any = {
             _teamId,
             _jobDefId: newJobDef._id,
@@ -306,11 +317,11 @@ export class JobDefService {
             isActive: true,
             TriggerType: 'cron',
             cron: {
-                Day_Of_Week: tokens[4],
-                Month: tokens[3],
-                Day: tokens[2],
-                Hour: tokens[1],
-                Minute: tokens[0],
+                Day_Of_Week: day_of_week,
+                Month: month,
+                Day: day,
+                Hour: hour,
+                Minute: minute,
             },
             FunctionKwargs: {
                 _teamId,
