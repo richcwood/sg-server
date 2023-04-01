@@ -46,9 +46,9 @@ export class AgentLogRouter {
 
         try {
             const file = req['file'];
-            // console.log(`AgentLogRouter -> create -> ${req['file']}`);
+            // console.log(`AgentLogRouter -> create -> file -> ${util.inspect(file, false, null)}`);
             if (!file) {
-                next(new ValidationError('Please upload a file'));
+                return next(new ValidationError('Please upload a file'));
             }
 
             const uncompressedFilePath = file.path.substr(0, file.path.lastIndexOf('.')) + '.txt';
@@ -92,7 +92,7 @@ export class AgentLogRouter {
                 });
             }
         } catch (err) {
-            next(err);
+            return next(err);
         }
     }
 }

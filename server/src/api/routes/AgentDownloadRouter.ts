@@ -598,8 +598,7 @@ export class AgentDownloadRouter {
                 if (numAgents >= freeTierSettings.maxAgents) {
                     response.data = '';
                     response.statusCode = ResponseCode.FORBIDDEN;
-                    next();
-                    return;
+                    return next();
                 }
             }
         }
@@ -661,23 +660,16 @@ export class AgentDownloadRouter {
                     );
                     response.data = signedUrl;
                     response.statusCode = ResponseCode.OK;
-                    next();
-                    return;
+                    return next();
                 }
             } catch (e) {
-                next();
-                return;
+                return next();
             }
         }
 
         response.data = '';
         response.statusCode = ResponseCode.NOT_AVAILABLE;
-        next();
-
-        let createAgentUrl = `agentDownload/agent/${agentVersion}/${platform}`;
-        if (arch) createAgentUrl += `/${arch}`;
-
-        await localRestAccess.RestAPICall(createAgentUrl, 'POST', _teamId.toHexString(), null, null, req.cookies.Auth);
+        return next();
     }
 }
 
