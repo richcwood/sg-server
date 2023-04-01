@@ -515,11 +515,11 @@ export class SGUtils {
         invoice_raw = invoice_raw.replace('{storage_rate}', '' + invoice.jobStoragePerMBRate);
         invoice_raw = invoice_raw.replace('{storage_total}', '' + storageTotal.toFixed(2));
 
-        let newAgentsTotal = invoice.numNewAgents * invoice.newAgentRate;
-        if (newAgentsTotal < 0.01) newAgentsTotal = 0;
-        invoice_raw = invoice_raw.replace('{new_agents_qty}', '' + invoice.numNewAgents);
-        invoice_raw = invoice_raw.replace('{new_agents_rate}', '' + invoice.newAgentRate);
-        invoice_raw = invoice_raw.replace('{new_agents_total}', '' + newAgentsTotal.toFixed(2));
+        // let newAgentsTotal = invoice.numNewAgents * invoice.newAgentRate;
+        // if (newAgentsTotal < 0.01) newAgentsTotal = 0;
+        // invoice_raw = invoice_raw.replace('{new_agents_qty}', '' + invoice.numNewAgents);
+        // invoice_raw = invoice_raw.replace('{new_agents_rate}', '' + invoice.newAgentRate);
+        // invoice_raw = invoice_raw.replace('{new_agents_total}', '' + newAgentsTotal.toFixed(2));
 
         let artifactsDownloadedTotal = invoice.artifactsDownloadedGB * invoice.artifactsDownloadedPerGBRate;
         if (artifactsDownloadedTotal < 0.01) artifactsDownloadedTotal = 0;

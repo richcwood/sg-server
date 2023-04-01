@@ -16,7 +16,7 @@ export interface Invoice extends Model {
   artifactsDownloadedPerMBRate: number;
   artifactsDownloadedMB: number;
   newAgentRate: number;
-  numNewAgents: number;
+  // numNewAgents: number;
   billAmount: number;
   paidAmount: number;
   status: InvoiceStatus;

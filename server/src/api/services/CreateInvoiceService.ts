@@ -74,15 +74,15 @@ export class CreateInvoiceService {
         const freeTierSettings = await settingsService.findSettings('FreeTierLimits');
 
         /// Get the number of new agents since the start of the billing cycle minus the free tier free agents
-        data.numNewAgents = 0;
-        let newAgentsFilter: any = {};
-        newAgentsFilter['_teamId'] = data._teamId;
-        newAgentsFilter['createDate'] = { $gte: data.startDate };
+        // data.numNewAgents = 0;
+        // let newAgentsFilter: any = {};
+        // newAgentsFilter['_teamId'] = data._teamId;
+        // newAgentsFilter['createDate'] = { $gte: data.startDate };
 
-        let numNewAgents: number = 0;
-        let numNewAgentsQuery = await AgentModel.aggregate([{ $match: newAgentsFilter }, { $count: 'num_new_agents' }]);
-        if (_.isArray(numNewAgentsQuery) && numNewAgentsQuery.length > 0)
-            numNewAgents = numNewAgentsQuery[0].num_new_agents;
+        // let numNewAgents: number = 0;
+        // let numNewAgentsQuery = await AgentModel.aggregate([{ $match: newAgentsFilter }, { $count: 'num_new_agents' }]);
+        // if (_.isArray(numNewAgentsQuery) && numNewAgentsQuery.length > 0)
+        //     numNewAgents = numNewAgentsQuery[0].num_new_agents;
 
         // let numOldAgents = 0;
         // let oldAgentsFilter: any = {};
@@ -98,8 +98,8 @@ export class CreateInvoiceService {
         // let freeAgents = freeTierSettings.maxAgents - numOldAgents;
         // freeAgents = Math.max(freeAgents, 0);
 
-        data.numNewAgents = numNewAgents - freeTierSettings.maxAgents;
-        data.numNewAgents = Math.max(data.numNewAgents, 0);
+        // data.numNewAgents = numNewAgents - freeTierSettings.maxAgents;
+        // data.numNewAgents = Math.max(data.numNewAgents, 0);
 
         /// Get current job history storage amount
         let team = await teamService.findTeam(data._teamId, 'jobStorageSpaceHighWatermark ownerId');

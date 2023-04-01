@@ -26,6 +26,22 @@
     $ kubectl get all
 ```
 
+## To connect to web server from a browser
+
+1. Port forward the web client
+
+```
+    $ kubectl port-forward service/client 8080:8080
+```
+
+2. Port forward the api
+
+```
+    $ kubectl port-forward service/server 3000:3000
+```
+
+3. Browse to http://localhost:8080
+
 ## To run integration tests
 
 1. Create test-runner pod
