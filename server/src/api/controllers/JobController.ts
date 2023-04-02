@@ -58,6 +58,7 @@ export class JobController {
             //     'Headers': JSON.stringify(req.headers, null, 4),
             //     'Params': JSON.stringify(req.params, null, 4)
             // });
+            await FreeTierChecks.MaxScriptsCheck(_teamId);
 
             let newJob = await jobService.createJob(
                 _teamId,
@@ -129,7 +130,8 @@ export class JobController {
             //     'Params': JSON.stringify(req.params, null, 4)
             // });
 
-            await FreeTierChecks.PaidTierRequired(_teamId, 'Please upgrade to the paid tier to run Jobs');
+            await FreeTierChecks.MaxScriptsCheck(_teamId);
+            // await FreeTierChecks.PaidTierRequired(_teamId, 'Please upgrade to the paid tier to run Jobs');
 
             if (Object.keys(req.headers).indexOf('_jobdefid') >= 0) {
                 const _jobDefId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._jobdefid);

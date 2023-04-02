@@ -8,7 +8,6 @@ import { S3Access } from '../../shared/S3Access';
 import * as mongodb from 'mongodb';
 import * as _ from 'lodash';
 import * as config from 'config';
-import { FreeTierChecks } from '../../shared/FreeTierChecks';
 
 export class ArtifactService {
     public async findAllArtifactsInternal(filter?: any, responseFields?: string): Promise<Array<ArtifactSchema>> {
@@ -67,8 +66,6 @@ export class ArtifactService {
         let s3Path = '';
         if (config.get('environment') != 'production') s3Path += `${config.get('environment')}/`;
         s3Path += `${_teamId.toHexString()}/`;
-
-        await FreeTierChecks.MaxArtifactStorageCheck(_teamId);
 
         if (data.prefix) s3Path += `${data.prefix}`;
         s3Path += data.name;

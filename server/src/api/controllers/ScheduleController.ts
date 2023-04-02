@@ -9,7 +9,6 @@ import { convertData as convertResponseData } from '../utils/ResponseConverters'
 import { convertData as convertRequestData } from '../utils/RequestConverters';
 import * as _ from 'lodash';
 import * as mongodb from 'mongodb';
-import { FreeTierChecks } from '../../shared/FreeTierChecks';
 
 let errorHandler = (err, req: Request, resp: Response, next: NextFunction) => {
     // If req.params.scheduleId wasn't a mongo id then we will get a CastError - basically same as if the id wasn't found
@@ -55,8 +54,6 @@ export class ScheduleController {
         req.body.lastUpdatedBy = new mongodb.ObjectId(<string>req.headers.userid);
         const response: ResponseWrapper = resp['body'];
         try {
-            await FreeTierChecks.PaidTierRequired(_teamId, 'Please upgrade to the paid tier to schedule Jobs');
-
             const newSchedule = await scheduleService.createSchedule(
                 _teamId,
                 convertRequestData(ScheduleSchema, req.body),

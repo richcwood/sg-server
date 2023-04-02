@@ -9,7 +9,6 @@ import { convertData as convertResponseData } from '../utils/ResponseConverters'
 import { convertData as convertRequestData } from '../utils/RequestConverters';
 import * as _ from 'lodash';
 import * as mongodb from 'mongodb';
-import { FreeTierChecks } from '../../shared/FreeTierChecks';
 
 let errorHandler = (err, req: Request, resp: Response, next: NextFunction) => {
     // If req.params.settingsId wasn't a mongo id then we will get a CastError - basically same as if the id wasn't found

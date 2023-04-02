@@ -3,7 +3,8 @@ import { ResponseWrapper, ResponseCode } from '../utils/Types';
 import { ArtifactSchema, ArtifactModel } from '../domain/Artifact';
 import { defaultBulkGet } from '../utils/BulkGet';
 import { artifactService } from '../services/ArtifactService';
-import { MissingObjectError } from '../utils/Errors';
+import { MissingObjectError, FreeTierLimitExceededError } from '../utils/Errors';
+import { FreeTierChecks } from '../../shared/FreeTierChecks';
 import { Error } from 'mongoose';
 import { convertData as convertResponseData } from '../utils/ResponseConverters';
 import { convertData as convertRequestData } from '../utils/RequestConverters';
@@ -49,6 +50,9 @@ export class ArtifactController {
         const _teamId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._teamid);
         const response: ResponseWrapper = resp['body'];
         try {
+            if (FreeTierChecks.IsTeamOnFreeTier(_teamId))
+                throw new FreeTierLimitExceededError('Upgrade to upload artifacts');
+
             const newArtifact = await artifactService.createArtifact(
                 _teamId,
                 convertRequestData(ArtifactSchema, req.body),

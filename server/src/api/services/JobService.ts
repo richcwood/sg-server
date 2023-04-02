@@ -21,7 +21,6 @@ import * as config from 'config';
 import { jobDefService } from '../services/JobDefService';
 import { JobDefSchema } from '../domain/JobDef';
 import { MissingObjectError, ValidationError } from '../utils/Errors';
-import { FreeTierChecks } from '../../shared/FreeTierChecks';
 import * as mongodb from 'mongodb';
 import { stepOutcomeService } from './StepOutcomeService';
 
@@ -208,17 +207,12 @@ export class JobService {
                     )}`
                 );
 
-            for (let taskDef of taskDefs) {
-                if (taskDef.target == Enums.TaskDefTarget.AWS_LAMBDA) {
-                    FreeTierChecks.PaidTierRequired(_teamId, 'Please upgrade to the paid tier to run AWS Lambda tasks');
-                }
-            }
             // console.log('JobService -> createJobFromJobDef -> taskDefs -> ', JSON.stringify(taskDefs, null, 4));
             const downstreamDependencies = await SGUtils.GenerateDownstreamDependenciesForJobTasks(taskDefs);
             // console.log('JobService -> createJobFromJobDef -> downstreamDependencies -> ', JSON.stringify(downstreamDependencies, null, 4));
 
             for (let taskDef of taskDefs) {
-                // console.log('JobService -> createJobFromJobDef -> taskDef -> ', taskDef);
+                // `console`.log('JobService -> createJobFromJobDef -> taskDef -> ', taskDef);
                 let task: TaskSchema = {
                     _teamId: _teamId,
                     _jobId: newJob._id,
@@ -837,8 +831,6 @@ export class JobService {
         if (!currentJob)
             throw new MissingObjectError(`Job '${_jobId.toHexString()}" not found for team "${_teamId.toHexString()}'`);
         // console.log('JobService -> LaunchTasksWithNoUpstreamDependencies -> job -> ', JSON.stringify(currentJob, null, 4));
-
-        // await FreeTierChecks.MaxScriptsCheck(_teamId);
 
         let no_tasks_to_run: boolean = true;
         const tasks = await taskService.findAllJobTasks(_teamId, _jobId);
