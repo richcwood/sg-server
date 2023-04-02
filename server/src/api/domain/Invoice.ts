@@ -58,12 +58,6 @@ export class InvoiceSchema {
     artifactsStorageGB: number;
 
     @prop({ required: true })
-    newAgentRate: number;
-
-    @prop({ required: false })
-    numNewAgents: number;
-
-    @prop({ required: true })
     awsLambdaComputeGbSecondsRate: number;
 
     @prop({ required: true })

@@ -216,7 +216,6 @@ export class CreateInvoiceService {
         if (
             !data.scriptPricing ||
             !data.jobStoragePerMBRate ||
-            !data.newAgentRate ||
             !data.defaultArtifactsStoragePerGBRate ||
             !data.artifactsDownloadedPerGBRate ||
             !data.awsLambdaComputeGbSecondsRate ||
@@ -224,7 +223,6 @@ export class CreateInvoiceService {
         ) {
             if (!data.scriptPricing) data.scriptPricing = billingSettings.defaultScriptPricing;
             if (!data.jobStoragePerMBRate) data.jobStoragePerMBRate = billingSettings.defaultJobStoragePerMBRate;
-            if (!data.newAgentRate) data.newAgentRate = billingSettings.defaultNewAgentRate;
             if (!data.artifactsStoragePerGBRate)
                 data.artifactsStoragePerGBRate = billingSettings.defaultArtifactsStoragePerGBRate;
             if (!data.artifactsDownloadedPerGBRate)
@@ -244,7 +242,6 @@ export class CreateInvoiceService {
             data.billAmount += data.artifactsDownloadedPerGBRate * data.artifactsDownloadedGB;
         if (data.artifactsStoragePerGBRate * data.artifactsStorageGB >= 0.01)
             data.billAmount += data.artifactsStoragePerGBRate * data.artifactsStorageGB;
-        if (data.newAgentRate >= 0.01) data.billAmount += data.newAgentRate * data.numNewAgents;
         if (data.jobStoragePerMBRate * data.storageMB >= 0.01)
             data.billAmount += data.jobStoragePerMBRate * data.storageMB;
         if (data.awsLambdaComputeGbSecondsRate * data.awsLambdaComputeGbSeconds >= 0.01)

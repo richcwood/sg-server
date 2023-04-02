@@ -120,7 +120,6 @@ let SettingsTemplate: any[] = [
                 ],
             },
             defaultJobStoragePerMBRate: 0.015,
-            defaultNewAgentRate: 0.00176,
             defaultArtifactsDownloadedPerGBRate: 0.09,
             defaultArtifactsStoragePerGBRate: 0.023,
             defaultAwsLambdaComputeGbSecondsRate: 0.0000166667,
