@@ -4,6 +4,8 @@ import { AccessRightModel } from '../domain/AccessRight';
 import { ForbiddenError } from '../utils/Errors';
 import BitSet from 'bitset';
 
+import * as config from 'config';
+
 let accessRightNameToIdMap: { [rightName: string]: number };
 
 export const convertAccessRightNamesToIds = async (accessRightNames: string[]) => {
@@ -35,6 +37,7 @@ export const verifyAccessRights = (rightNamesToVerify: string[]) => {
     return async (req: Request, res: Response, next: NextFunction) => {
         const teamAccessRightIds = req.headers.teamAccessRightIds;
         const teamId = <string>req.headers._teamid;
+        const sgAdminTeam = config.get('sgAdminTeam');
 
         if (teamAccessRightIds && teamAccessRightIds[teamId]) {
             const rightIdsToVerify = await convertAccessRightNamesToIds(rightNamesToVerify);
@@ -49,9 +52,9 @@ export const verifyAccessRights = (rightNamesToVerify: string[]) => {
             } else {
                 return next(new ForbiddenError(`User doesn't have access rights for this endpoint`, req.originalUrl));
             }
-        } else if (teamAccessRightIds && teamAccessRightIds['default']) {
+        } else if (teamAccessRightIds && teamAccessRightIds[sgAdminTeam]) {
             const rightIdsToVerify = await convertAccessRightNamesToIds(rightNamesToVerify);
-            const userRightsBitset = BitSet.fromHexString(teamAccessRightIds['default']);
+            const userRightsBitset = BitSet.fromHexString(teamAccessRightIds[sgAdminTeam]);
 
             if (
                 rightIdsToVerify.some((rightId: number) => {
