@@ -509,7 +509,7 @@ class AppBuilder {
                                 // }
                             } else if (req.headers.teamIds.indexOf((<any>req).headers._teamid) !== -1) {
                                 teamAccess = true;
-                            } else if (config.get('sgAdminTeam') === (<any>req).headers._teamid) {
+                            } else if (req.headers.teamIds.indexOf(config.get('sgAdminTeam')) !== -1) {
                                 teamAccess = true;
                             }
                         }
