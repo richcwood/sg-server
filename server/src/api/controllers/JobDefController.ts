@@ -17,6 +17,7 @@ import { Stream } from 'stream';
 import { readFileSync } from 'fs';
 import { BaseLogger } from '../../shared/SGLogger';
 import { AMQPConnector } from '../../shared/AMQPLib';
+import { scheduleService } from '../services/ScheduleService';
 
 let errorHandler = (err, req: Request, resp: Response, next: NextFunction) => {
     // If req.params.jobDefId wasn't a mongo id then we will get a CastError - basically same as if the id wasn't found
@@ -173,7 +174,16 @@ export class JobDefController {
             if (!jobDef) {
                 return next(new MissingObjectError(`JobDef ${req.params.jobDefId} not found.`));
             } else {
-                // First delete all of the task defs associated with the job
+                // Delete all of the schedules associated with the job
+                const scheduleIds = await scheduleService.findAllSchedulesInternal(
+                    { _teamId, _jobDefId: new mongodb.ObjectId(jobDef._id) },
+                    '_id'
+                );
+                for (const { _id } of scheduleIds) {
+                    await scheduleService.deleteSchedule(_teamId, new mongodb.ObjectId(_id), req.get('correlationId'));
+                }
+
+                // Delete all of the task defs associated with the job
                 const taskDefIds = await taskDefService.findJobDefTaskDefs(
                     _teamId,
                     new mongodb.ObjectId(jobDef._id),
