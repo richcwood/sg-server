@@ -1,5 +1,3 @@
-import { int } from 'aws-sdk/clients/datapipeline';
-
 import BitSet from 'bitset';
 import * as config from 'config';
 const jwt = require('jsonwebtoken');
@@ -619,8 +617,8 @@ let RepublishTasksWaitingForLambdaRunner = async (
  * @param _teamId
  * @returns int
  */
-let NumNotStartedTasks = async (_teamId: mongodb.ObjectId): Promise<int> => {
-    let numNotStartedTasks: int = 0;
+let NumNotStartedTasks = async (_teamId: mongodb.ObjectId): Promise<number> => {
+    let numNotStartedTasks: number = 0;
     let noAgentTasksFilter = {};
     noAgentTasksFilter['_teamId'] = _teamId;
     noAgentTasksFilter['status'] = {

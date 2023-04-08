@@ -26,9 +26,6 @@ import { RuntimeVariableFormat, TaskDefTarget } from '../../shared/Enums';
 import { MissingObjectError, ValidationError, SaascipeImportError } from '../utils/Errors';
 import { S3Access } from '../../shared/S3Access';
 import { SGUtils } from '../../shared/SGUtils';
-import { bool } from 'aws-sdk/clients/signer';
-import { MongoDbSettings } from 'aws-sdk/clients/dms';
-import { isExpressionWithTypeArguments } from 'typescript';
 
 interface IJobDefExport {
     jobDef: Partial<JobDefSchema>;
