@@ -10,6 +10,7 @@ export class SecretsManager {
     private readonly logger: BaseLogger;
 
     constructor(params, logger) {
+        this.logger = logger;
         const region: string = params['AWS_REGION'];
         const stdTTL: number = params['STDTTL'] || 60;
         const checkperiod: number = params['CHECK_PERIOD'] || 30;
