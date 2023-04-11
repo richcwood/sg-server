@@ -14,8 +14,6 @@ import { TaskFailureCode, TaskDefTarget } from '../shared/Enums';
 import * as util from 'util';
 import { SGUtils } from '../shared/SGUtils';
 
-const amqpUrl = config.get('amqpUrl');
-const rmqVhost = config.get('rmqVhost');
 const rmqTaskLaunchErrorQueue = config.get('rmqTaskLaunchErrorQueue');
 const rmqAgentDeadLetterQueue = config.get('rmqAgentDeadLetterQueue');
 const rmqDLQRoute = config.get('rmqDLQRoute');
@@ -44,8 +42,6 @@ export default class AgentDeadLetterWatcher {
             this.amqpConnector = new AMQPConnector(
                 appName,
                 '',
-                amqpUrl,
-                rmqVhost,
                 1,
                 (activeMessages) => this.OnRabbitMQDisconnect(activeMessages),
                 baseLogger

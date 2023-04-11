@@ -1,16 +1,15 @@
 #!/usr/bin/env node
 const util = require('util');
-const config = require("config");
-const SGLogger_1 = require("../../server/src/shared/SGLogger");
+const config = require('config');
+const SGLogger_1 = require('../../server/src/shared/SGLogger');
 
-const rmqAdminUrl = config.get('rmqAdminUrl');
-let rmqVhost = config.get('rmqVhost');
+const rmqAdminUrl = process.env.rmqAdminUrl;
+let rmqVhost = process.env.rmqVhost;
 
-const RabbitMQAdmin_1 = require("../../server/src/shared/RabbitMQAdmin");
+const RabbitMQAdmin_1 = require('../../server/src/shared/RabbitMQAdmin');
 let appName = 'rmq_utils';
 let logger = new SGLogger_1.BaseLogger(appName, {});
 logger.Start();
-
 
 let teamsToKeep = ['5de95c0453162e8891f5a830'];
 
@@ -50,14 +49,13 @@ let teamsToKeep = ['5de95c0453162e8891f5a830'];
             //     let queue = await rmqAdmin.getQueueDetails(queues[index]);
             //     console.log(queue.data.consumers);
             // }
-            
+
             for (let index = 0; index < queues.length; index++) {
                 try {
                     let remove = true;
                     for (let i = 0; i < teamsToKeep.length; i++) {
                         if (queues[index].indexOf(teamsToKeep[i]) >= 0) {
-                            if (queues[index].indexOf('updater') < 0)
-                                remove = false;
+                            if (queues[index].indexOf('updater') < 0) remove = false;
                             break;
                         }
                     }
@@ -67,7 +65,7 @@ let teamsToKeep = ['5de95c0453162e8891f5a830'];
                         // console.log('remove queue res -> ', res);
                     }
                     // console.log(res);
-                } catch(e) {
+                } catch (e) {
                     console.log(`Error deleting queue: "${queues[index]}": ${util.inspect(e, false, null)}`);
                 }
             }
@@ -76,7 +74,7 @@ let teamsToKeep = ['5de95c0453162e8891f5a830'];
         // if (process.argv[3]) {
         //     let exchanges = await rmqAdmin.getExchanges(process.argv[3]);
         //     console.log(exchanges);
-            
+
         //     for (let index = 0; index < exchanges.length; index++) {
         //         try {
         //             let remove = true;
@@ -101,7 +99,7 @@ let teamsToKeep = ['5de95c0453162e8891f5a830'];
         // if (process.argv[4]) {
         //     let users = await rmqAdmin.getUsers(process.argv[4]);
         //     console.log(users);
-            
+
         //     for (let index = 0; index < users.length; index++) {
         //         try {
         //             let remove = true;
@@ -121,11 +119,9 @@ let teamsToKeep = ['5de95c0453162e8891f5a830'];
         //         }
         //     }
         // }
-    }
-    catch (e) {
+    } catch (e) {
         console.error(e);
     }
 })();
-
 
 // to delete all exchange, queues and users except our test items:  node test/dist/sg-server/test/src/rmq_utils.js ^team- ^team- ^5

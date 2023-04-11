@@ -11,7 +11,7 @@ export class SecretsManager {
 
     constructor(params, logger) {
         this.logger = logger;
-        const region: string = params['AWS_REGION'];
+        const region: string = params['awsRegion'];
         const stdTTL: number = params['STDTTL'] || 60;
         const checkperiod: number = params['CHECK_PERIOD'] || 30;
         const options = this.getAWSCredentialsOptions(params);

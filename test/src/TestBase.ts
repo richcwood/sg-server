@@ -46,9 +46,9 @@ export default abstract class TestBase {
     protected logger: any;
     protected description: string;
     protected amqpUrl = config.get('amqpUrl');
-    protected rmqUsername = config.get('rmqUsername');
-    protected rmqPassword = config.get('rmqPassword');
-    protected rmqVhost = config.get('rmqVhost');
+    protected rmqUsername = process.env.rmqUsername;
+    protected rmqPassword = process.env.rmqPassword;
+    protected rmqVhost = process.env.rmqVhost;
     protected rmqBrowserPushRoute = config.get('rmqBrowserPushRoute');
     protected rmqDLQRoute = config.get('rmqDLQRoute');
     protected mongoUrl = config.get('mongoUrl');
@@ -372,15 +372,7 @@ export default abstract class TestBase {
     // }
 
     public async StartTestMonitor() {
-        self.amqp = new AMQPConnector(
-            'SchedulerTest',
-            '',
-            self.amqpUrl,
-            self.rmqVhost,
-            1,
-            (activeMessages) => {},
-            this.logger
-        );
+        self.amqp = new AMQPConnector('SchedulerTest', '', 1, (activeMessages) => {}, this.logger);
         await self.amqp.Start();
         await self.amqp.ConsumeRoute(
             '',

@@ -27,9 +27,9 @@ import {
 } from '../utils/Shared';
 import { SGUtils } from '../../shared/SGUtils';
 
-const stompUrl = config.get('stompUrl');
-const rmqVhost = config.get('rmqVhost');
-const rmqAdminUrl = config.get('rmqAdminUrl');
+const stompUrl = process.env.stompUrl;
+const rmqVhost = process.env.rmqVhost;
+const rmqAdminUrl = process.env.rmqAdminUrl;
 const inactiveAgentQueueTTLHours = parseInt(config.get('inactiveAgentQueueTTLHours'), 10);
 const __ACTIVE_AGENT_TIMEOUT_SECONDS = parseInt(config.get('activeAgentTimeoutSeconds'), 10);
 const adminTeamId = config.get('sgAdminTeam');

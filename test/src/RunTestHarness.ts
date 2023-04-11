@@ -4,6 +4,7 @@ import * as util from 'util';
 import * as config from 'config';
 import axios from 'axios';
 import { exec } from 'child_process';
+import { SecretsLoader } from '../../server/src/shared/SecretsLoader';
 import { MongoRepo } from '../../server/src/shared/MongoLib';
 import { SGUtils } from '../../server/src/shared/SGUtils';
 import { SGStrings } from '../../server/src/shared/SGStrings';
@@ -268,6 +269,14 @@ let RawStompTest = async () => {
     client.activate();
 };
 
+let SecretsLoaderTest = async () => {
+    let logger = new BaseLogger('RunTestHarness');
+    logger.Start();
+
+    await SecretsLoader.loadRabbitMQ(logger);
+    console.log(process.env.rmqUrl);
+};
+
 let StompTest = async () => {
     const rmqUsername = config.get('rmqUsername');
     const rmqPassword = config.get('rmqPassword');
@@ -331,7 +340,7 @@ let AMQPTest = async () => {
 
     const amqpUrl = config.get('amqpUrl');
     const rmqVhost = config.get('rmqVhost');
-    const connector = new AMQPConnector('RunTestHarness', '', amqpUrl, rmqVhost, 1, (activeMessages) => {}, logger);
+    const connector = new AMQPConnector('RunTestHarness', '', 1, (activeMessages) => {}, logger);
     await connector.Start();
 
     // await connector.ConsumeRoute('temp_queue_1', true, true, true, false, (msg, msgKey, cb) => this.CompleteTask(msg, msgKey, cb), '', 'bp', 10000);
@@ -567,15 +576,7 @@ let RunRepublishTasksWaitingForAgent = async (_teamId: string) => {
 
     const amqpUrl = config.get('amqpUrl');
     const rmqVhost = config.get('rmqVhost');
-    let amqp: AMQPConnector = new AMQPConnector(
-        'RunTestHarness',
-        '',
-        amqpUrl,
-        rmqVhost,
-        1,
-        (activeMessages) => {},
-        logger
-    );
+    let amqp: AMQPConnector = new AMQPConnector('RunTestHarness', '', 1, (activeMessages) => {}, logger);
 
     await RepublishTasksWaitingForAgent(new mongodb.ObjectId(_teamId), null, logger, amqp);
 
@@ -2229,7 +2230,7 @@ let PublishJobTask = async () => {
 
     const amqpUrl = config.get('amqpUrl');
     const rmqVhost = config.get('rmqVhost');
-    let amqp: AMQPConnector = new AMQPConnector(appName, '', amqpUrl, rmqVhost, 1, (activeMessages) => {}, logger);
+    let amqp: AMQPConnector = new AMQPConnector(appName, '', 1, (activeMessages) => {}, logger);
 
     const _teamId = config.get('sgTestTeam');
     const _jobId = new mongodb.ObjectId('5e88a1fa4ff0b10b4847a4e7');
@@ -2658,7 +2659,7 @@ let MongoTest = async () => {
 // ProcessOrphanedTasks();
 // PublishJobTask();
 // PruneJobs('605366d1d26030001713b1cc');
-UploadFileToS3(process.argv[2]);
+// UploadFileToS3(process.argv[2]);
 // GetS3PrefixSize('production/5de95c0453162e8891f5a830/');
 // CreateTeam("saas glue admin", "5ef125b4fb07e500150507ca");
 // DumpMongoData('./production_20200615.json');
@@ -2671,6 +2672,7 @@ UploadFileToS3(process.argv[2]);
 // RabbitMQAdminTest();
 // CloseRabbitMQConnections("bartSpikeUser");
 // AMQPTest();
+SecretsLoaderTest();
 // StompTest();
 // RawStompTest();
 // ScheduleScript();

@@ -6,15 +6,6 @@
     "API_BASE_URL": "https://console.saasglue.com",
     "API_PORT": "",
     "API_VERSION": "v0",
-    "stompUrl": "wss://grand-silver-bat.rmq4.cloudamqp.com/ws/stomp",
-    "amqpUrl": "amqps://erpbwfab:2Y6n7quHHysEiRauCLD2O9bNex0h8zLJ@grand-silver-bat.rmq4.cloudamqp.com/sgProd",
-    "rmqAdminUrl": "https://erpbwfab:2Y6n7quHHysEiRauCLD2O9bNex0h8zLJ@grand-silver-bat.rmq4.cloudamqp.com/api/",
-    "rmqUrl": "grand-silver-bat.rmq4.cloudamqp.com",
-    "rmqStompPort": "15674",
-    "rmqAdminPort": "15672",
-    "rmqUsername": "erpbwfab",
-    "rmqPassword": "2Y6n7quHHysEiRauCLD2O9bNex0h8zLJ",
-    "rmqVhost": "sgProd",
     "inactiveAgentQueueTTLHours": 24,
     "agentCrashRestartInterval": 30000,
     "mongoUrl": "mongodb+srv://sgApp:qBVgdcOa5V0L4cPL@cluster0.hbuyr.mongodb.net/sg_prod?retryWrites=true&w=majority",
@@ -45,6 +36,6 @@
     "sessionSecret": "E8aOMjriElNJB1yzAqp4lkU9SwucJhHX",
     "rabbitmq-credentials": {
         "secretName": "arn:aws:secretsmanager:us-east-2:948032566234:secret:production/SaaSGlueAPI/RabbitMQ-6fO5Km",
-        "awsProfile": "default"
+        "awsRegion": "us-east-2"
     }
 }

@@ -14,8 +14,8 @@ export default class Recorder {
 
     protected logger: any;
     protected description: string;
-    protected amqpUrl = config.get('amqpUrl');
-    protected rmqVhost = config.get('rmqVhost');
+    protected amqpUrl = process.env.amqpUrl;
+    protected rmqVhost = process.env.rmqVhost;
     protected rmqBrowserPushRoute = config.get('rmqBrowserPushRoute');
     protected mongoUrl = config.get('mongoUrl');
     protected mongoDbname = config.get('mongoDbName');
@@ -33,15 +33,7 @@ export default class Recorder {
         this.logger = new BaseLogger('Recorder');
         this.logger.Start();
 
-        self.amqp = new AMQPConnector(
-            'Recorder',
-            '',
-            self.amqpUrl,
-            self.rmqVhost,
-            1,
-            (activeMessages) => {},
-            this.logger
-        );
+        self.amqp = new AMQPConnector('Recorder', '', 1, (activeMessages) => {}, this.logger);
         await self.amqp.Start();
         await self.amqp.ConsumeRoute(
             '',

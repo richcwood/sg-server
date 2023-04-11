@@ -37,8 +37,8 @@ let env = 'UnitTest';
 
 const stompUrl = config.get('stompUrl');
 const amqpUrl = config.get('amqpUrl');
-const rmqAdminUrl = config.get('rmqAdminUrl');
-let rmqVhost = config.get('rmqVhost');
+const rmqAdminUrl = process.env.rmqAdminUrl;
+let rmqVhost = process.env.rmqVhost;
 let rmqScheduleUpdatesQueue = config.get('rmqScheduleUpdatesQueue');
 // let rmqNoAgentForTaskQueue = config.get('rmqNoAgentForTaskQueue');
 let inactiveAgentQueueTTLHours = config.get('inactiveAgentQueueTTLHours');
@@ -120,15 +120,7 @@ export default class TestSetup {
 
     async Init() {
         try {
-            this.amqpConnector = new AMQPConnector(
-                this.appName,
-                '',
-                amqpUrl,
-                rmqVhost,
-                1,
-                (activeMessages) => {},
-                this.logger
-            );
+            this.amqpConnector = new AMQPConnector(this.appName, '', 1, (activeMessages) => {}, this.logger);
             if (!(await this.amqpConnector.Start())) throw new Error('Error starting AMQP');
 
             // await this.StopScheduler();

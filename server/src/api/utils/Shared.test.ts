@@ -49,14 +49,14 @@ let amqp;
 beforeAll(async () => {
     await db.open();
 
-    const amqpUrl = config.get('amqpUrl');
-    const rmqVhost = config.get('rmqVhost');
     const rmqBrowserPushRoute = config.get('rmqBrowserPushRoute');
 
     logger = new BaseLogger(testName);
     logger.Start();
 
-    amqp = new AMQPConnector(testName, '', amqpUrl, rmqVhost, 1, (activeMessages) => {}, logger);
+    console.log('process.env -------------> ', process.env);
+
+    amqp = new AMQPConnector(testName, '', 1, (activeMessages) => {}, logger);
     await amqp.Start();
     //   await amqp.ConsumeRoute(
     //     "",

@@ -25,7 +25,7 @@ process.on('unhandledRejection', (reason, p) => {
 
 let testSetup: TestSetup = new TestSetup(appName, logger);
 
-let amqpConnector = new AMQPConnector('SchedulerTest', '', amqpUrl, rmqVhost, 1, (activeMessages) => {}, logger);
+let amqpConnector = new AMQPConnector('SchedulerTest', '', 1, (activeMessages) => {}, logger);
 
 (async () => {
     try {
