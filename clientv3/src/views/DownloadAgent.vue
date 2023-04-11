@@ -2,7 +2,7 @@
     <div class="main">
         <section class="sg-container-p">
             <h1 class="title">
-                Download a secure agent to be able to run SaasGlue scripts
+                Download a secure agent to run SaaSGlue scripts
                 <span class="tag is-primary is-medium">~1 Minute</span>
             </h1>
 
@@ -30,6 +30,9 @@
             </div>
 
             <div class="content">
+                <h2 class="mb-3 has-text-weight-semibold is-size-4-desktop is-size-5-touch">
+                    1. Download the agent installer
+                </h2>
                 <a
                     v-if="activeTab === OperatingSystem.WINDOWS"
                     class="button is-primary"
@@ -65,9 +68,9 @@
                     <span>Download Mac</span>
                 </a>
 
-                <div class="my-5">
+                <div class="my-6">
                     <h2 class="mb-3 has-text-weight-semibold is-size-4-desktop is-size-5-touch">
-                        Unzip the agent installer
+                        2. Unzip the agent installer
                     </h2>
                     <p v-if="activeTab === OperatingSystem.WINDOWS">Unzip the agent installer file.</p>
                     <div v-else-if="activeTab === OperatingSystem.LINUX">
@@ -88,13 +91,13 @@
                     </div>
                 </div>
 
-                <div class="my-5">
-                    <h2 class="mb-3 has-text-weight-semibold is-size-4-desktop is-size-5-touch">Agent security key</h2>
+                <div class="my-6">
+                    <h2 class="mb-3 has-text-weight-semibold is-size-4-desktop is-size-5-touch">3. Get an agent security key</h2>
 
                     <div class="is-flex is-align-items-center">
                         <button class="button is-primary" @click="onCreateSecureKey">Create Secure Key</button>
                         <span class="ml-3"
-                            >Or click <router-link to="/accessKeys">here</router-link> if you already have one.</span
+                            >Or user an <router-link to="/accessKeys">existing</router-link> key.</span
                         >
                     </div>
                     <div v-if="accessKeyCreated" class="notification is-success my-4">
@@ -106,11 +109,11 @@
 
                 <div>
                     <h2 class="mb-3 has-text-weight-semibold is-size-4-desktop is-size-5-touch">
-                        Execute the agent installer to download the agent launcher
+                        4. Download and install the agent launcher
                     </h2>
                     <p>
-                        Run this command where you downloaded the agent installer. The command will download a fresh
-                        version of the agent and set up your security keys.
+                        Run this command where you downloaded the agent installer. The command will download 
+                        the agent launcher, set up your security keys and install the agent launcher as a service.
                     </p>
                     <div>
                         <code v-if="activeTab === OperatingSystem.WINDOWS" class="p-4 my-4 code-snippet">
@@ -118,7 +121,7 @@
                             <span v-html="agentAccessSecret"></span>
                         </code>
                         <code v-else-if="activeTab == OperatingSystem.MAC" class="p-4 my-4 code-snippet">
-                            $ sudo ./sg-agent-installer-mac -c download -i <span v-html="agentAccessKey"></span> -s
+                            $ sudo ./sg-agent-installer-mac -c install -i <span v-html="agentAccessKey"></span> -s
                             <span v-html="agentAccessSecret"></span>
                         </code>
                         <code
@@ -128,7 +131,16 @@
                             $ sudo ./sg-agent-installer-linux -c install -i <span v-html="agentAccessKey"></span> -s
                             <span v-html="agentAccessSecret"></span>
                         </code>
+                        <p>
+                        You should <router-link to="/agentMonitor">see</router-link> your new agent reporting for duty shortly.
+                    </p>
                     </div>
+                </div>
+
+                <div style="margin-top: 75px">
+                    <h2 class="mb-5 has-text-weight-semibold is-size-3-desktop is-size-4-touch">
+                        Advanced instructions for agents
+                    </h2>
                 </div>
 
                 <div>
@@ -144,15 +156,6 @@
                     <code v-else-if="activeTab === OperatingSystem.MAC" class="p-4 my-4 code-snippet">
                         $ sudo ./sg-agent-installer-mac -c start
                     </code>
-                    <p>
-                        If everything worked correctly, you should <router-link to="/agentMonitor">see</router-link> your new agent reporting for duty.
-                    </p>
-                </div>
-
-                <div style="margin-top: 500px">
-                    <h2 class="mb-3 has-text-weight-semibold is-size-4-desktop is-size-5-touch">
-                        Advanced instructions for agents
-                    </h2>
                 </div>
 
                 <div>
