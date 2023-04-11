@@ -104,6 +104,12 @@
                         <button class="delete" @click="accessKeyCreated = false"></button>
                         Key and secret created. Please, save them in a safe place. Key and Secret will be lost once
                         browser session is closed.
+                        <div>
+                            <span>Access key id: <span v-html="agentAccessKey"></span></span>
+                        </div>
+                        <div>
+                            <span>Secret access key: <span v-html="agentAccessSecret"></span></span>
+                        </div>
                     </div>
                 </div>
 
@@ -113,7 +119,7 @@
                     </h2>
                     <p>
                         Run this command where you downloaded the agent installer. The command will download 
-                        the agent launcher, set up your security keys and install the agent launcher as a service.
+                        the agent launcher and install the agent launcher service.
                     </p>
                     <div>
                         <code v-if="activeTab === OperatingSystem.WINDOWS" class="p-4 my-4 code-snippet">
