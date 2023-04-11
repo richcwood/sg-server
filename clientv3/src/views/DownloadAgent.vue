@@ -97,7 +97,7 @@
                     <div class="is-flex is-align-items-center">
                         <button class="button is-primary" @click="onCreateSecureKey">Create Secure Key</button>
                         <span class="ml-3"
-                            >Or user an <router-link to="/accessKeys">existing</router-link> key.</span
+                            >Or use an <router-link to="/accessKeys">existing</router-link> key.</span
                         >
                     </div>
                     <div v-if="accessKeyCreated" class="notification is-success my-4">
