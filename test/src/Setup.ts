@@ -35,8 +35,8 @@ const mongoose = require('mongoose');
 
 let env = 'UnitTest';
 
-const stompUrl = config.get('stompUrl');
-const amqpUrl = config.get('amqpUrl');
+const stompUrl = process.env.stompUrl;
+const amqpUrl = process.env.amqpUrl;
 const rmqAdminUrl = process.env.rmqAdminUrl;
 let rmqVhost = process.env.rmqVhost;
 let rmqScheduleUpdatesQueue = config.get('rmqScheduleUpdatesQueue');
@@ -324,6 +324,7 @@ export default class TestSetup {
 
             if ('handleGeneralTasks' in agent) params.handleGeneralTasks = agent.handleGeneralTasks;
 
+            console.log('agent params ------------> ', params);
             let new_agent: Agent = new Agent(params);
             await new_agent.Init();
             return new_agent;

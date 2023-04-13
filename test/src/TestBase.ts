@@ -1,6 +1,23 @@
+import { SecretsLoader } from '../../server/src/shared/SecretsLoader';
+import { BaseLogger } from '../../server/src/shared/SGLogger';
+import * as dotenv from 'dotenv';
+
+const environment = process.env.NODE_ENV || 'development';
+const appName = 'SaaSGlueAPI';
+let logger: BaseLogger;
+(async () => {
+    logger = new BaseLogger(appName);
+    logger.Start();
+
+    if (environment === 'production') {
+        await SecretsLoader.loadRabbitMQ(logger);
+    } else {
+        dotenv.config();
+    }
+})();
+
 import * as util from 'util';
 import * as config from 'config';
-import { BaseLogger } from '../../server/src/shared/SGLogger';
 import { AMQPConnector } from '../../server/src/shared/AMQPLib';
 import { MongoRepo } from '../../server/src/shared/MongoLib';
 import { SGStrings } from '../../server/src/shared/SGStrings';
@@ -45,7 +62,7 @@ export default abstract class TestBase {
 
     protected logger: any;
     protected description: string;
-    protected amqpUrl = config.get('amqpUrl');
+    protected amqpUrl = process.env.amqpUrl;
     protected rmqUsername = process.env.rmqUsername;
     protected rmqPassword = process.env.rmqPassword;
     protected rmqVhost = process.env.rmqVhost;
@@ -68,7 +85,7 @@ export default abstract class TestBase {
     constructor(testName: string, testSetup: any = null) {
         this.testName = testName;
         this.testSetup = testSetup;
-        this.logger = new BaseLogger(this.testName);
+        this.logger = logger;
         this.logger.Start();
 
         this.mongoRepo = new MongoRepo(this.testName, this.mongoUrl, this.mongoDbname, this.logger);

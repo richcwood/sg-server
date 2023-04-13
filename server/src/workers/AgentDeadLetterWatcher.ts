@@ -3,16 +3,18 @@
  */
 
 'use strict';
+import { localRestAccess } from '../api/utils/LocalRestAccess';
+// import { TaskSchema } from '../api/domain/Task';
+
+import { AMQPConnector } from '../shared/AMQPLib';
+import { TaskFailureCode, TaskDefTarget, TaskStatus } from '../shared/Enums';
+import { SGUtils } from '../shared/SGUtils';
+import { SecretsLoader } from '../shared/SecretsLoader';
+import { BaseLogger } from '../shared/SGLogger';
 
 import * as config from 'config';
-import { localRestAccess } from '../api/utils/LocalRestAccess';
-import { AMQPConnector } from '../shared/AMQPLib';
-import { BaseLogger } from '../shared/SGLogger';
-import { TaskStatus } from '../shared/Enums';
-import { TaskFailureCode, TaskDefTarget } from '../shared/Enums';
-// import { TaskSchema } from '../api/domain/Task';
+import * as dotenv from 'dotenv';
 import * as util from 'util';
-import { SGUtils } from '../shared/SGUtils';
 
 const rmqTaskLaunchErrorQueue = config.get('rmqTaskLaunchErrorQueue');
 const rmqAgentDeadLetterQueue = config.get('rmqAgentDeadLetterQueue');
@@ -39,6 +41,11 @@ export default class AgentDeadLetterWatcher {
     async Init() {
         const baseLogger = new BaseLogger(appName);
         try {
+            if (env === 'production') {
+                await SecretsLoader.loadRabbitMQ(logger);
+            } else {
+                dotenv.config();
+            }
             this.amqpConnector = new AMQPConnector(
                 appName,
                 '',

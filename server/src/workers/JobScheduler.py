@@ -1,6 +1,5 @@
 import json
-import logging
-import os
+# import logging
 import requests
 import sendgrid
 import socket
@@ -8,7 +7,9 @@ import sys
 import traceback
 
 from datetime import datetime, date, timedelta
-from logging.handlers import TimedRotatingFileHandler
+from dotenv import load_dotenv
+# from logging.handlers import TimedRotatingFileHandler
+from os import environ, path, makedirs
 from pytz import utc
 from sendgrid.helpers.mail import *
 from threading import Event
@@ -23,18 +24,17 @@ from apscheduler.triggers.date import DateTrigger
 from apscheduler.triggers.interval import IntervalTrigger
 from apscheduler.util import timedelta_seconds
 
-from rmq_comm import *
-
-
-logging.basicConfig()
+from py_utils.credentials import Credentials
+from py_utils.logger import logger
+from py_utils.rmq_comm import *
 
 wait_schedule_updates_handler_exception = Event()
 
 env = "default"
-if "NODE_ENV" in os.environ:
-    env = os.environ["NODE_ENV"]
+if "NODE_ENV" in environ:
+    env = environ["NODE_ENV"]
 
-sendGrid = sendgrid.SendGridAPIClient(api_key=os.environ.get("SENDGRID_API_KEY"))
+sendGrid = sendgrid.SendGridAPIClient(api_key=environ.get("SENDGRID_API_KEY"))
 
 mongoUrl = None
 mongoDbName = None
@@ -51,14 +51,21 @@ apiPort = None
 apiVersion = None
 token = None
 
+def logDebug(msgData):
+    logger.debug("%s", msgData)
+
+def logInfo(msgData):
+    logger.debug("%s", msgData)
+
+def logWarning(msgData):
+    logger.debug("%s", msgData)
+
+def logError(msgData):
+    logger.debug("%s", msgData)
 
 def loadConfigValues(configFile):
     global mongoUrl
     global mongoDbName
-    global rmqUrl
-    global rmqUsername
-    global rmqPassword
-    global rmqVhost
     global rmqScheduleUpdatesQueue
     global environment
     global loggingLevel
@@ -74,14 +81,6 @@ def loadConfigValues(configFile):
             mongoUrl = config["mongoUrl"]
         if "mongoDbName" in config:
             mongoDbName = config["mongoDbName"]
-        if "rmqUrl" in config:
-            rmqUrl = config["rmqUrl"]
-        if "rmqUsername" in config:
-            rmqUsername = config["rmqUsername"]
-        if "rmqPassword" in config:
-            rmqPassword = config["rmqPassword"]
-        if "rmqVhost" in config:
-            rmqVhost = config["rmqVhost"]
         if "rmqScheduleUpdatesQueue" in config:
             rmqScheduleUpdatesQueue = config["rmqScheduleUpdatesQueue"]
         if "environment" in config:
@@ -99,38 +98,32 @@ def loadConfigValues(configFile):
         if "schedulerToken" in config:
             token = "Auth={};".format(config["schedulerToken"])
 
+def load_rabbitmq_secrets():
+    config = {}
+    with open("config/production.json", "r") as f:
+        s = f.read()
+        config = json.loads(s)
+    params = config["rabbitmq-credentials"]
+    
+    credentials = Credentials(logInfo, logWarning, logError, **params)
+    credentials.reset_cache()
+    secrets = credentials.get_secret()
+    for key in secrets:
+        environ[key] = secrets[key]
+
+if env == "production":
+    load_rabbitmq_secrets()
+else:
+    load_dotenv()
+
+rmqUrl = environ["rmqUrl"]
+rmqUsername = environ["rmqUsername"]
+rmqPassword = environ["rmqPassword"]
+rmqVhost = environ["rmqVhost"]
 
 loadConfigValues("config/default.json")
 if env != "default":
     loadConfigValues("config/{}.json".format(env))
-
-cm_logger = logging.getLogger("job_scheduler")
-cm_logger.setLevel(int(loggingLevel))
-
-formatter = logging.Formatter(
-    '{"_timeStamp": "%(asctime)s", "_sourceHost": "%(host_name)s", "_appName": "%(app_name)s", "_logLevel": %(levelno)s, "details": %(message)s}'
-)
-
-stdout_handler = logging.StreamHandler(sys.stdout)
-stdout_handler.setLevel(logging.DEBUG)
-stdout_handler.setFormatter(formatter)
-cm_logger.addHandler(stdout_handler)
-
-
-logs_directory = "/tmp/logs"
-if not os.path.exists(logs_directory):
-    os.makedirs(logs_directory)
-timed_rotating_file_handler = TimedRotatingFileHandler(
-    f"{logs_directory}/jobscheduler.log", when="s", interval=30, backupCount=10
-)
-timed_rotating_file_handler.setLevel(logging.DEBUG)
-timed_rotating_file_handler.setFormatter(formatter)
-cm_logger.addHandler(timed_rotating_file_handler)
-
-host = socket.gethostname()
-cml_adapter = logging.LoggerAdapter(
-    cm_logger, {"build": environment, "app_name": "JobScheduler", "host_name": host}
-)
 
 jobstores = {
     "default": MongoDBJobStore(
@@ -148,28 +141,11 @@ job_scheduler.configure(
     jobstores=jobstores, executors=executors, job_defaults=job_defaults, timezone=utc
 )
 
-
 scheduleTriggerType2String = {
     IntervalTrigger: "interval",
     DateTrigger: "date",
     CronTrigger: "cron",
 }
-
-
-def logDebug(msgData):
-    global cml_adapter
-    cml_adapter.debug(json.dumps(msgData, default=str))
-
-
-def logInfo(msgData):
-    global cml_adapter
-    cml_adapter.info(json.dumps(msgData, default=str))
-
-
-def logError(msgData):
-    global cml_adapter
-    cml_adapter.error(json.dumps(msgData, default=str))
-
 
 def sendEmail(from_mail, to_email, subject, body):
     global sendGrid

@@ -92,7 +92,6 @@ export class AMQPConnector {
 
         this.LogDebug('Received request to start AMQP connection to RabbitMQ', { Vhost: this.vhost });
         try {
-            console.log('amqpurl -----------> ', this.url);
             await SGUtils.retryWithBackoff(
                 async () => {
                     return await this.amqp.connect(this.url);

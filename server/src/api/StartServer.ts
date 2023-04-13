@@ -1,3 +1,21 @@
+import { SecretsLoader } from '../shared/SecretsLoader';
+import { BaseLogger } from '../shared/SGLogger';
+import * as dotenv from 'dotenv';
+
+const environment = process.env.NODE_ENV || 'development';
+const appName = 'SaaSGlueAPI';
+let logger: BaseLogger;
+(async () => {
+    logger = new BaseLogger(appName);
+    logger.Start();
+
+    if (environment === 'production') {
+        await SecretsLoader.loadRabbitMQ(logger);
+    } else {
+        dotenv.config();
+    }
+})();
+
 import { MetricsLogger } from './utils/MetricsLogger';
 MetricsLogger.init();
 
@@ -71,14 +89,10 @@ import { userService } from './services/UserService';
 
 import { AMQPConnector } from '../shared/AMQPLib';
 import { AuthTokenType } from '../shared/Enums';
-import { SecretsLoader } from '../shared/SecretsLoader';
-import { BaseLogger } from '../shared/SGLogger';
 
 import { ValidationError } from './utils/Errors';
 
 import * as config from 'config';
-import * as dotenv from 'dotenv';
-dotenv.config();
 import * as mongodb from 'mongodb';
 import * as mongoose from 'mongoose';
 import * as morgan from 'morgan';
@@ -88,10 +102,6 @@ import * as fs from 'fs';
     // Create a new express application instance
     const app: express.Application = express();
 
-    const appName = 'SaaSGlueAPI';
-
-    const environment = process.env.NODE_ENV || 'development';
-
     var options = {
         autoIndex: false, // Don't build indexes
         useUnifiedTopology: true,
@@ -99,16 +109,10 @@ import * as fs from 'fs';
         // If not connected, return errors immediately rather than waiting for reconnect
         // bufferMaxEntries: 0
     };
+
     mongoose.connect(config.get('mongoUrl'), options);
 
     const redisClient = redis.createClient(config.get('redisUrl'), { no_ready_check: true });
-
-    let logger: BaseLogger = new BaseLogger(appName);
-    logger.Start();
-
-    if (environment === 'production') {
-        await SecretsLoader.loadRabbitMQ(logger);
-    }
 
     let amqp: AMQPConnector = new AMQPConnector(appName, '', 1, (activeMessages) => {}, logger);
     amqp.Start();

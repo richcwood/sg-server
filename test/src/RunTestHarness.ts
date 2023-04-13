@@ -278,15 +278,15 @@ let SecretsLoaderTest = async () => {
 };
 
 let StompTest = async () => {
-    const rmqUsername = config.get('rmqUsername');
-    const rmqPassword = config.get('rmqPassword');
+    const rmqUsername = process.env.rmqUsername;
+    const rmqPassword = process.env.rmqPassword;
 
     let logger = new BaseLogger('RunTestHarness');
     logger.Start();
 
-    const stompUrl = config.get('stompUrl');
-    const rmqAdminUrl = config.get('rmqAdminUrl');
-    const rmqVhost = config.get('rmqVhost');
+    const stompUrl = process.env.stompUrl;
+    const rmqAdminUrl = process.env.rmqAdminUrl;
+    const rmqVhost = process.env.rmqVhost;
     const connector = new StompConnector(
         'test',
         'instanceId',
@@ -339,7 +339,7 @@ let AMQPTest = async () => {
     logger.Start();
 
     const amqpUrl = config.get('amqpUrl');
-    const rmqVhost = config.get('rmqVhost');
+    const rmqVhost = process.env.rmqVhost;
     const connector = new AMQPConnector('RunTestHarness', '', 1, (activeMessages) => {}, logger);
     await connector.Start();
 
@@ -374,8 +374,8 @@ let AMQPTest = async () => {
 };
 
 let CloseRabbitMQConnections = async (user: string) => {
-    const rmqAdminUrl = config.get('rmqAdminUrl');
-    let rmqVhost = config.get('rmqVhost');
+    const rmqAdminUrl = process.env.rmqAdminUrl;
+    let rmqVhost = process.env.rmqVhost;
 
     try {
         const rmqAdmin = new RabbitMQAdmin(rmqAdminUrl, rmqVhost);
@@ -398,8 +398,8 @@ let CloseRabbitMQConnections = async (user: string) => {
 };
 
 let RabbitMQAdminTest = async () => {
-    const rmqAdminUrl = config.get('rmqAdminUrl');
-    let rmqVhost = config.get('rmqVhost');
+    const rmqAdminUrl = process.env.rmqAdminUrl;
+    let rmqVhost = process.env.rmqVhost;
 
     try {
         const rmqAdmin = new RabbitMQAdmin(rmqAdminUrl, rmqVhost);
@@ -418,8 +418,8 @@ let RabbitMQAdminTest = async () => {
 
 let RabbitMQTeamSetup = async (teamId: string) => {
     mongoose.connect(config.get('mongoUrl'), {});
-    const rmqAdminUrl = config.get('rmqAdminUrl');
-    let rmqVhost = config.get('rmqVhost');
+    const rmqAdminUrl = process.env.rmqAdminUrl;
+    let rmqVhost = process.env.rmqVhost;
 
     console.log('rmqAdminUrl -> ', rmqAdminUrl);
     console.log('rmqVhost -> ', rmqVhost);
@@ -443,8 +443,8 @@ let RabbitMQTeamSetup = async (teamId: string) => {
 };
 
 let RabbitMQSetup = async () => {
-    const rmqAdminUrl = config.get('rmqAdminUrl');
-    let rmqVhost = config.get('rmqVhost');
+    const rmqAdminUrl = process.env.rmqAdminUrl;
+    let rmqVhost = process.env.rmqVhost;
 
     try {
         const rmqAdmin = new RabbitMQAdmin(rmqAdminUrl, rmqVhost);
@@ -501,9 +501,9 @@ let UpdateAgentVersion = async () => {
 //   const util = require('util');
 //   const config = require("config");
 //   let rmqUrl = config.get('rmqUrl');
-//   let rmqUsername = config.get('rmqUsername');
-//   let rmqPassword = config.get('rmqPassword');
-//   let rmqVhost = config.get('rmqVhost');
+//   let rmqUsername = process.env.rmqUsername;
+//   let rmqPassword = process.env.rmqPassword;
+//   let rmqVhost = process.env.rmqVhost;
 //   let _teamId = config.get('_teamId');
 //   let mongoUrl = config.get('mongoUrl');
 //   let mongoDbName = config.get('mongoDbName');
@@ -575,7 +575,7 @@ let RunRepublishTasksWaitingForAgent = async (_teamId: string) => {
     logger.Start();
 
     const amqpUrl = config.get('amqpUrl');
-    const rmqVhost = config.get('rmqVhost');
+    const rmqVhost = process.env.rmqVhost;
     let amqp: AMQPConnector = new AMQPConnector('RunTestHarness', '', 1, (activeMessages) => {}, logger);
 
     await RepublishTasksWaitingForAgent(new mongodb.ObjectId(_teamId), null, logger, amqp);
@@ -2229,7 +2229,7 @@ let PublishJobTask = async () => {
     logger.Start();
 
     const amqpUrl = config.get('amqpUrl');
-    const rmqVhost = config.get('rmqVhost');
+    const rmqVhost = process.env.rmqVhost;
     let amqp: AMQPConnector = new AMQPConnector(appName, '', 1, (activeMessages) => {}, logger);
 
     const _teamId = config.get('sgTestTeam');
@@ -2589,8 +2589,8 @@ let ConfigNewRabbitMQServer = async () => {
     logger.Start();
 
     try {
-        const rmqAdminUrl = config.get('rmqAdminUrl');
-        let rmqVhost = config.get('rmqVhost');
+        const rmqAdminUrl = process.env.rmqAdminUrl;
+        let rmqVhost = process.env.rmqVhost;
         let rmqScheduleUpdatesQueue = config.get('rmqScheduleUpdatesQueue');
         // let rmqNoAgentForTaskQueue = config.get('rmqNoAgentForTaskQueue');
 
