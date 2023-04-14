@@ -6,7 +6,7 @@ import sys
 import boto3
 from botocore.exceptions import ClientError
 
-from logger import logger
+from py_utils.logger import logger
 
 
 class Credentials(object):

@@ -1,5 +1,4 @@
 import json
-# import logging
 import requests
 import sendgrid
 import socket
@@ -8,7 +7,6 @@ import traceback
 
 from datetime import datetime, date, timedelta
 from dotenv import load_dotenv
-# from logging.handlers import TimedRotatingFileHandler
 from os import environ, path, makedirs
 from pytz import utc
 from sendgrid.helpers.mail import *
@@ -180,7 +178,6 @@ def json_serial(obj):
 
 
 def RestAPICall(url, method, _teamId, headers, data={}):
-    global cml_adapter
     global token
     global apiBaseUrl
     global apiPort
@@ -377,7 +374,6 @@ def schedule_changed(existing_job, job):
 
 
 def on_message(delivery_tag, body, async_consumer):
-    global cml_adapter
     global job_scheduler
 
     try:
@@ -701,7 +697,6 @@ def schedule_updates_handler(args1, stop_event):
     global rmqPassword
     global rmqVhost
     global rmqScheduleUpdatesQueue
-    global cml_adapter
     global wait_schedule_updates_handler_exception
     global useSSL
 
@@ -712,7 +707,6 @@ def schedule_updates_handler(args1, stop_event):
         "{0}://{1}:{2}@{3}/{4}".format(
             urlRoot, rmqUsername, rmqPassword, rmqUrl, rmqVhost
         ),
-        cml_adapter,
         {
             "exch": "worker",
             "exch_type": "topic",
@@ -740,7 +734,6 @@ def run_scheduler_async(args1, stop_event):
     """
     Run the scheduler in a separate thread as it is blocking
     """
-    global cml_adapter
     global job_scheduler
 
     try:
@@ -750,7 +743,6 @@ def run_scheduler_async(args1, stop_event):
 
 
 def main():
-    global cml_adapter
     global wait_schedule_updates_handler_exception
     global job_scheduler
 
@@ -773,7 +765,7 @@ def main():
                 wait_schedule_updates_handler_exception.wait(5)
             )
             if schedule_updates_exception_occurred:
-                cml_adapter.error({"msg": "Exception occurred in on_message event"})
+                logError({"msg": "Exception occurred in on_message event"})
                 wait_schedule_updates_handler_exception.clear()
     except KeyboardInterrupt:
         logInfo({"msg": "process interrupted - exiting", "Method": "main"})

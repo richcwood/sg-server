@@ -324,7 +324,6 @@ export default class TestSetup {
 
             if ('handleGeneralTasks' in agent) params.handleGeneralTasks = agent.handleGeneralTasks;
 
-            console.log('agent params ------------> ', params);
             let new_agent: Agent = new Agent(params);
             await new_agent.Init();
             return new_agent;
