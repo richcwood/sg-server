@@ -1574,12 +1574,15 @@ let UpdateUserTeamAccessRights = async () => {
 let UploadFileToS3 = async (filePath: string) => {
     await new Promise(async (resolve, reject) => {
         try {
+            let logger = new BaseLogger('RunTestHarness');
+            logger.Start();
+
             const fs = require('fs');
             const readFile = require('util').promisify(fs.readFile);
             const fileData = await readFile(filePath);
 
             const fileType = 'multipart/form-data';
-            let s3Access = new S3Access();
+            let s3Access = new S3Access(logger);
 
             let url = await s3Access.putSignedS3URL(
                 `${path.basename(filePath)}`,
@@ -1614,7 +1617,10 @@ let UploadFileToS3 = async (filePath: string) => {
 
 let GetS3PrefixSize = async (prefix: string) => {
     try {
-        let s3Access = new S3Access();
+        let logger = new BaseLogger('RunTestHarness');
+        logger.Start();
+
+        let s3Access = new S3Access(logger);
 
         let res = await s3Access.sizeOf(prefix, `${config.get('S3_BUCKET_TEAM_ARTIFACTS')}`);
         console.log('res -> ', res);

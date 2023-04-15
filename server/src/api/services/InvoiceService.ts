@@ -3,6 +3,7 @@ import { InvoiceSchema, InvoiceModel } from '../domain/Invoice';
 import { rabbitMQPublisher, PayloadOperation } from '../utils/RabbitMQPublisher';
 import { MissingObjectError, ValidationError } from '../utils/Errors';
 import { S3Access } from '../../shared/S3Access';
+import { BaseLogger } from '../../shared/SGLogger';
 import { InvoiceStatus } from '../../shared/Enums';
 import * as mongodb from 'mongodb';
 import * as _ from 'lodash';
@@ -27,13 +28,13 @@ export class InvoiceService {
         return null;
     }
 
-    public async findInvoicePDF(_teamId: mongodb.ObjectId, id: mongodb.ObjectId) {
+    public async findInvoicePDF(_teamId: mongodb.ObjectId, id: mongodb.ObjectId, logger: BaseLogger) {
         const invoiceQuery = await InvoiceModel.findById(id).find({ _teamId }).select('pdfLocation');
         if (!invoiceQuery || (_.isArray(invoiceQuery) && invoiceQuery.length === 0))
             throw new MissingObjectError(`No invoice with id "${id.toHexString()}"`);
         const invoice: InvoiceSchema = invoiceQuery[0];
 
-        let s3Access = new S3Access();
+        let s3Access = new S3Access(logger);
         let url = await s3Access.getSignedS3URL(invoice.pdfLocation, config.get('S3_BUCKET_INVOICES'));
 
         return { id: invoice._id, url };

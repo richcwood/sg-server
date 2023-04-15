@@ -251,9 +251,10 @@ export { CreateScriptFromTemplate };
 let CreateArtifact = async (
     _teamId: mongodb.ObjectId,
     data: Partial<ArtifactSchema>,
-    artifactPath: string
+    artifactPath: string,
+    logger: BaseLogger
 ): Promise<ArtifactSchema> => {
-    const artifact: ArtifactSchema = await artifactService.createArtifact(_teamId, data, '');
+    const artifact: ArtifactSchema = await artifactService.createArtifact(_teamId, data, logger, '');
 
     const readFileAsync = require('util').promisify(readFile);
     const fileData = await readFileAsync(artifactPath);

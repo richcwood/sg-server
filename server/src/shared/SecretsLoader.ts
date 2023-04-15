@@ -6,8 +6,8 @@ export class SecretsLoader {
     static async loadRabbitMQ(logger) {
         const rabbitmqCredentials: any = config.get('rabbitmq-credentials');
         const awsProfile: string = rabbitmqCredentials.awsProfile;
-        const awsRegion: string = rabbitmqCredentials.awsRegion;
-        const secretsManager = new SecretsManager({ awsProfile, awsRegion }, logger);
+        const awsRegion: string = rabbitmqCredentials.AWS_REGION;
+        const secretsManager = new SecretsManager({ awsProfile, AWS_REGION: awsRegion }, logger);
         const secretName: string = rabbitmqCredentials.secretName;
         const rmqSecretsJson: any = await secretsManager.getSecret(secretName);
         const rmqSecrets = JSON.parse(rmqSecretsJson);

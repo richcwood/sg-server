@@ -27,7 +27,7 @@ class Credentials(object):
 
         self._client = session.client(
             service_name="secretsmanager",
-            region_name=params["awsRegion"],
+            region_name=params["AWS_REGION"],
         )
 
         self._secret_name = params["secretName"]

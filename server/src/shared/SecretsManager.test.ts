@@ -17,9 +17,9 @@ jest.mock('node-cache', () => {
 });
 
 describe('SecretsManager', () => {
-    const region = 'us-east-2';
+    const awsRegion = 'us-east-2';
     const awsProfile = 'default';
-    const params = { awsProfile: 'default', awsRegion: region, STDTTL: 120 };
+    const params = { awsProfile: 'default', AWS_REGION: awsRegion, STDTTL: 120 };
     const awsSecretsManagerConstructorParams = { profile: awsProfile };
     const secretName = 'my-secret';
     const secretValue = 'my-secret-value';
@@ -61,7 +61,7 @@ describe('SecretsManager', () => {
 
     describe('constructor', () => {
         it('should create an AWS.SecretsManager client with the provided params', () => {
-            expect(AWS.SecretsManager).toHaveBeenCalledWith({ region, ...awsSecretsManagerConstructorParams });
+            expect(AWS.SecretsManager).toHaveBeenCalledWith({ awsRegion, ...awsSecretsManagerConstructorParams });
         });
     });
 

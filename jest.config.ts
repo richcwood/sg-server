@@ -54,7 +54,7 @@ export default {
     // forceCoverageMatch: [],
 
     // A path to a module which exports an async function that is triggered once before all test suites
-    // globalSetup: "<rootDir>/test_helpers/Setup.ts",
+    globalSetup: '<rootDir>/test_helpers/Setup.ts',
 
     // A path to a module which exports an async function that is triggered once after all test suites
     globalTeardown: '<rootDir>/test_helpers/Teardown.ts',

@@ -36,6 +36,6 @@
     "sessionSecret": "E8aOMjriElNJB1yzAqp4lkU9SwucJhHX",
     "rabbitmq-credentials": {
         "secretName": "arn:aws:secretsmanager:us-east-2:948032566234:secret:production/SaaSGlueAPI/RabbitMQ-6fO5Km",
-        "awsRegion": "us-east-2"
+        "AWS_REGION": "us-east-2"
     }
 }

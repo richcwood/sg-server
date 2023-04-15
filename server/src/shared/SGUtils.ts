@@ -589,7 +589,7 @@ export class SGUtils {
         let s3Path = `${team._id}/${invoiceDateString}/${invoicePDFFileName}`;
         const environment = config.get('environment');
         if (environment != 'production') s3Path = environment + '/' + s3Path;
-        const s3Access = new S3Access();
+        const s3Access = new S3Access(logger);
         await s3Access.uploadFile(localInvoicePDFPath, s3Path, config.get('S3_BUCKET_INVOICES'));
 
         invoiceModel.pdfLocation = s3Path;

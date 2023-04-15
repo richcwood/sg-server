@@ -54,8 +54,6 @@ beforeAll(async () => {
     logger = new BaseLogger(testName);
     logger.Start();
 
-    console.log('process.env -------------> ', process.env);
-
     amqp = new AMQPConnector(testName, '', 1, (activeMessages) => {}, logger);
     await amqp.Start();
     //   await amqp.ConsumeRoute(

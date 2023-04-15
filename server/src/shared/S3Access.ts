@@ -1,18 +1,41 @@
-import * as fs from 'fs';
-import * as aws from 'aws-sdk';
+import * as AWS from 'aws-sdk';
 import * as config from 'config';
+import * as fs from 'fs';
 import * as _ from 'lodash';
 
-const s3 = new aws.S3({
-    credentials: {
-        accessKeyId: config.get('AWS_ACCESS_KEY_ID'),
-        secretAccessKey: config.get('AWS_SECRET_ACCESS_KEY'),
-    },
-    region: config.get('AWS_REGION'),
-});
+import { BaseLogger } from './SGLogger';
 
 export class S3Access {
-    constructor() {}
+    private readonly client: AWS.S3;
+    private readonly logger: BaseLogger;
+
+    constructor(logger) {
+        this.logger = logger;
+        const region: string = config.get('AWS_REGION');
+        const options = this.getAWSCredentialsOptions();
+        this.client = new AWS.S3({ region, ...options });
+    }
+
+    private getAWSCredentialsOptions(): any {
+        let options = {};
+        const awsAccessKeyId: string = process.env.AWS_ACCESS_KEY_ID;
+        const awsSecretAccessKey: string = process.env.AWS_SECRET_ACCESS_KEY;
+        let awsProfile: string = '';
+        if (config.has('awsProfile')) awsProfile = config.get('awsProfile');
+
+        if (awsAccessKeyId && awsSecretAccessKey) {
+            options['credentials'] = {
+                accessKeyId: awsAccessKeyId,
+                secretAccessKey: awsSecretAccessKey,
+            };
+        } else if (awsProfile) {
+            options['profile'] = awsProfile;
+        } else {
+            this.logger.LogWarning('No AWS credentials provided - defaulting to host assigned IAM role', {});
+        }
+
+        return options;
+    }
 
     async downloadFile(filePath: string, s3Path: string, bucket: string) {
         return new Promise((resolve, reject) => {
@@ -20,7 +43,7 @@ export class S3Access {
                 Bucket: bucket,
                 Key: s3Path,
             };
-            s3.getObject(params, (s3Err, data) => {
+            this.client.getObject(params, (s3Err, data) => {
                 if (s3Err) {
                     reject(s3Err);
                     return;
@@ -48,7 +71,7 @@ export class S3Access {
 
                 // let options = {partSize: 10 * 1024 * 1024, queueSize: 1};
                 let options = {};
-                s3.upload(params, options, (s3Err, data) => {
+                this.client.upload(params, options, (s3Err, data) => {
                     if (s3Err) {
                         reject(s3Err);
                         return;
@@ -68,7 +91,7 @@ export class S3Access {
                 Key: destPath,
             };
 
-            s3.copyObject(params, (s3Err, data) => {
+            this.client.copyObject(params, (s3Err, data) => {
                 if (s3Err) {
                     reject(s3Err);
                     return;
@@ -91,7 +114,7 @@ export class S3Access {
                 Key: s3Path,
             };
 
-            s3.deleteObject(params, (s3Err, data) => {
+            this.client.deleteObject(params, (s3Err, data) => {
                 if (s3Err) {
                     reject(s3Err);
                     return;
@@ -107,7 +130,7 @@ export class S3Access {
             Prefix: prefix,
         };
 
-        const listedObjects = await s3.listObjectsV2(listParams).promise();
+        const listedObjects = await this.client.listObjectsV2(listParams).promise();
 
         if (listedObjects.Contents.length === 0) return;
 
@@ -120,7 +143,7 @@ export class S3Access {
             deleteParams.Delete.Objects.push({ Key });
         });
 
-        await s3.deleteObjects(deleteParams).promise();
+        await this.client.deleteObjects(deleteParams).promise();
 
         if (listedObjects.IsTruncated) await this.emptyS3Folder(prefix, bucket);
     }
@@ -131,7 +154,7 @@ export class S3Access {
             Key: s3FilePath,
             Expires: parseInt(config.get('S3_URL_EXPIRATION_SECONDS'), 10),
         };
-        return s3.getSignedUrl('getObject', params);
+        return this.client.getSignedUrl('getObject', params);
     }
 
     async putSignedS3URL(s3FilePath: string, bucket: string, contentType: string) {
@@ -141,7 +164,7 @@ export class S3Access {
             Expires: parseInt(config.get('S3_URL_EXPIRATION_SECONDS'), 10),
             ContentType: contentType,
         };
-        return s3.getSignedUrl('putObject', params);
+        return this.client.getSignedUrl('putObject', params);
     }
 
     async objectExists(s3FilePath: string, bucket: string) {
@@ -151,7 +174,7 @@ export class S3Access {
         };
 
         return new Promise((resolve, reject) => {
-            s3.headObject(params, async (err, data) => {
+            this.client.headObject(params, async (err, data) => {
                 if (err) {
                     if (err.code == 'NotFound') {
                         resolve(false);
@@ -175,7 +198,7 @@ export class S3Access {
         if (token) params.ContinuationToken = token;
 
         return new Promise((resolve, reject) => {
-            s3.listObjectsV2(params, async (err, data) => {
+            this.client.listObjectsV2(params, async (err, data) => {
                 if (err) {
                     reject(err);
                     return;

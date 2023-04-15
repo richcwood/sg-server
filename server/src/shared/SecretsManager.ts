@@ -11,11 +11,11 @@ export class SecretsManager {
 
     constructor(params, logger) {
         this.logger = logger;
-        const region: string = params['awsRegion'];
+        const awsRegion: string = params['AWS_REGION'];
         const stdTTL: number = params['STDTTL'] || 60;
         const checkperiod: number = params['CHECK_PERIOD'] || 30;
         const options = this.getAWSCredentialsOptions(params);
-        this.client = new AWS.SecretsManager({ region, ...options });
+        this.client = new AWS.SecretsManager({ awsRegion, ...options });
         this.cache = new NodeCache({ stdTTL, checkperiod });
     }
 

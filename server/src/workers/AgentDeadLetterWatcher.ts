@@ -2,9 +2,13 @@
  * Created by richwood on 2/27/18.
  */
 
-'use strict';
+('use strict');
+import * as path from 'path';
+const configDir = path.join(__dirname, 'pkg_agent_dead_letter_watcher');
+process.env['NODE_CONFIG_DIR'] = configDir;
+const config = require('../../node_modules/config');
+
 import { localRestAccess } from '../api/utils/LocalRestAccess';
-// import { TaskSchema } from '../api/domain/Task';
 
 import { AMQPConnector } from '../shared/AMQPLib';
 import { TaskFailureCode, TaskDefTarget, TaskStatus } from '../shared/Enums';
@@ -12,14 +16,12 @@ import { SGUtils } from '../shared/SGUtils';
 import { SecretsLoader } from '../shared/SecretsLoader';
 import { BaseLogger } from '../shared/SGLogger';
 
-import * as config from 'config';
 import * as dotenv from 'dotenv';
 import * as util from 'util';
 
 const rmqTaskLaunchErrorQueue = config.get('rmqTaskLaunchErrorQueue');
 const rmqAgentDeadLetterQueue = config.get('rmqAgentDeadLetterQueue');
 const rmqDLQRoute = config.get('rmqDLQRoute');
-// const rmqNoAgentForTaskQueue = config.get('rmqNoAgentForTaskQueue');
 const noAgentAvailableFailureRetryInterval = config.get('noAgentAvailableFailureRetryInterval');
 const env = process.env.NODE_ENV;
 
