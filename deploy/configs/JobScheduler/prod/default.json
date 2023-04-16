@@ -1,0 +1,16 @@
+{
+    "loggingLevel": 20,
+    "environment": "production",
+    "API_BASE_URL": "https://console.saasglue.com",
+    "API_PORT": "",
+    "API_VERSION": "v0",
+    "useSSL": "true",
+    "mongoUrl": "mongodb+srv://sgApp:qBVgdcOa5V0L4cPL@cluster0.hbuyr.mongodb.net/sg_prod?retryWrites=true&w=majority",
+    "mongoDbName": "sg_prod",
+    "rmqScheduleUpdatesQueue": "schedule_update",
+    "schedulerToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjVkZTg4MTAyNzVhZDkyZTViYjhkZTc4YSIsImVtYWlsIjoic2NoZWR1bGVyQHNhYXNnbHVlLmNvbSIsInRlYW1JZHMiOltdLCJ0ZWFtQWNjZXNzUmlnaHRJZHMiOnt9LCJpYXQiOjE2MDQxOTc2NDd9.dCXjzmdBgDpBUhqSsdmoW9VTWN9TTdlsDEF9qx_CVJE",
+    "rabbitmq-credentials": {
+        "secretName": "arn:aws:secretsmanager:us-east-2:948032566234:secret:production/SaaSGlueAPI/RabbitMQ-6fO5Km",
+        "AWS_REGION": "us-east-2"
+    }
+}

@@ -1,5 +1,6 @@
 import logging
 import platform
+import re
 import time
 
 from collections.abc import Mapping
@@ -10,6 +11,28 @@ from re import I
 
 REDACTION_PATTERNS = ["rmqUsername", "rmqPassword", "secretName"]
 
+def redact_credentials_in_uri(uri):
+    """
+    Redacts credentials from URIs by replacing them with asterisks.
+
+    Args:
+        uri (str): The URI to redact.
+
+    Returns:
+        str: The redacted URI.
+    """
+    # Regular expression pattern to match credentials in the URI
+    pattern = r"(?<=://)([^:]+):([^@]+)@"
+    # Find the credentials in the URI using regex
+    match = re.search(pattern, uri)
+    if match:
+        redacted_uri = uri
+        for g in match.groups():
+            redacted_uri = redacted_uri.replace(g, "[REDACTED]")
+        return redacted_uri
+    else:
+        return uri
+
 def redact_record_args(args, patterns):
     """
     Recursively traverse <args> dict redacting the value of any
@@ -17,15 +40,17 @@ def redact_record_args(args, patterns):
     """
 
     for k, v in args.items():
+        print("k ------> ", k)
+        print("v ------> ", v)
         if isinstance(v, Mapping):
             args[k] = redact_record_args(v, patterns)
         else:
+            print("redacting...")
             if k in patterns:
                 args[k] = "[REDACTED]"
             else:
-                args[k] = v
+                args[k] = redact_credentials_in_uri(v)
     return args
-
 
 class RedactionFilter(logging.Filter):
     """Prevents secrets from being written to logs"""
@@ -40,6 +65,7 @@ class RedactionFilter(logging.Filter):
         NOTE: This only works if record.args is a dict or other Mapping object
         """
 
+        record.msg = redact_credentials_in_uri(record.msg)
         if isinstance(record.args, Mapping):
             record.args = redact_record_args(record.args, self._patterns)
 

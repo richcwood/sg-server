@@ -71,7 +71,7 @@ class AsyncConsumer(object):
         :rtype: pika.SelectConnection
 
         """
-        self.logger.info("Connecting to %s", self._url)
+        self.logger.info("%s", {"message": "Connecting to RabbitMQ", "uri": self._url})
         return pika.SelectConnection(
             parameters=pika.URLParameters(self._url),
             on_open_callback=self.on_connection_open,

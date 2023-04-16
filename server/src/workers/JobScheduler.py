@@ -7,7 +7,7 @@ import traceback
 
 from datetime import datetime, date, timedelta
 from dotenv import load_dotenv
-from os import environ
+from os import environ, path
 from pytz import utc
 from sendgrid.helpers.mail import *
 from threading import Event
@@ -61,7 +61,9 @@ def load_rabbitmq_secrets(params):
 
 config = getConfigValues("config/default.json")
 if env != "default":
-    config = getConfigValues("config/{}.json".format(env), config)
+    env_config_file_name = "config/{}.json".format(env)
+    if path.isfile(env_config_file_name):
+        config = getConfigValues("config/{}.json".format(env), config)
 
 mongoUrl = config.get("mongoUrl")
 mongoDbName = config.get("mongoDbName")

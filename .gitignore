@@ -4,6 +4,9 @@ github_credentials*
 #dist
 dist
 
+#tmp
+tmp
+
 # mongo db data
 docker/mongodb/data/
 

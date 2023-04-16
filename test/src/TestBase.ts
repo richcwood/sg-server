@@ -418,6 +418,7 @@ export default abstract class TestBase {
             if (params.operation == PayloadOperation.CREATE) {
                 self.jobs.push(params.model);
             } else {
+                console.log('self.jobDefs ----------> ', self.jobDefs);
                 let job: JobSchema = _.filter(self.jobs, (x) => x.id == params.model.id);
                 job = Object.assign(job, params.model);
                 if (params.model.status >= Enums.JobStatus.COMPLETED && params.operation == PayloadOperation.UPDATE)
