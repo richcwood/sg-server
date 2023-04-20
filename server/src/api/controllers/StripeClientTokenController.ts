@@ -10,7 +10,7 @@ export class StripeClientTokenController {
     public async getStripePublicToken(req: Request, resp: Response, next: NextFunction): Promise<void> {
         const response: ResponseWrapper = resp['body'];
         try {
-            response.data = { key: config.get('stripePublicKey') };
+            response.data = { key: process.env.stripePublicKey };
             response.statusCode = ResponseCode.OK;
             return next();
         } catch (err) {

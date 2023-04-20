@@ -8,34 +8,38 @@
     "API_VERSION": "v0",
     "inactiveAgentQueueTTLHours": 24,
     "agentCrashRestartInterval": 30000,
-    "mongoUrl": "mongodb+srv://sgApp:qBVgdcOa5V0L4cPL@cluster0.hbuyr.mongodb.net/sg_prod?retryWrites=true&w=majority",
-    "mongoDbName": "sg_prod",
-    "redisUrl": "redis://default:WdvbdAkBT8RfjLlW8009HsiDrEQp8flE@redis-19478.c240.us-east-1-3.ec2.cloud.redislabs.com:19478",
     "useSSL": "true",
     "logDest": "file",
-    "adminToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjVkZTg4MTAyNzVhZDkyZTViYjhkZTc4YSIsImVtYWlsIjoiYWRtaW5Ac2Fhc2dsdWUuY29tIiwidGVhbUlkcyI6W10sInRlYW1BY2Nlc3NSaWdodElkcyI6e30sImlhdCI6MTYwNDE5NzIxMn0.0sbKDMOnmCRnfUTZ1Zzx59Vm6NBo1qZmaDzduAhsOpw",
-    "schedulerToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjVkZTg4MTAyNzVhZDkyZTViYjhkZTc4YSIsImVtYWlsIjoic2NoZWR1bGVyQHNhYXNnbHVlLmNvbSIsInRlYW1JZHMiOltdLCJ0ZWFtQWNjZXNzUmlnaHRJZHMiOnt9LCJpYXQiOjE2MDQxOTc2NDd9.dCXjzmdBgDpBUhqSsdmoW9VTWN9TTdlsDEF9qx_CVJE",
-    "sgTestUser": "testuser@saasglue.com",
-    "sgTestUserPassword": "mypassword",
-    "sgTestTeam": "5de95c0453162e8891f5a830",
-    "sgAdminTeam": "5f57b2f14b5da00017df0d4f",
-    "sgTeam": "5e99cbcb2317950015edb655",
-    "old_secret": "shhh",
-    "old_secret_expiration": "2020-11-05",
-    "secret": "-$op)):x3#m{OtRt$3Cnzqoq#9ar)UD7<zRSr?L",
-    "stripeApiVersion": "2020-08-27",
-    "stripePublicKey": "pk_live_51Hq1pkE7OqlLKVtkvf6LzpCtYuWTuUrgdqO06OdL21pzBbJe25YsaHeYtMuwhvJ1R6F2X7QX8C4VvUzTHShEulJm00VNLAP2AW",
-    "stripePrivateKey": "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",
-    "stripeWebhookSecret": "whsec_kgxRlp3dZ0kO9ERPsMOMpILwPWM96qzf",
-    "googleAuthClientId": "642301105471-8e8hg49pu2a2pudgh3847insps675rfk.apps.googleusercontent.com",
-    "googleAuthClientSecret": "RyORXgVVL6rgpC1fTMiQzQq1",
-    "googleAuthCallBackUrl": "https://console.saasglue.com/login/goauth_callback",
-    "githubAuthClientId": "5faccadb62ecaf995e3e",
-    "githubAuthClientSecret": "7e102cf39103b550623cb52a864b27a7da079c2c",
-    "githubAuthCallBackUrl": "https://console.saasglue.com/login/ghauth_callback",
-    "sessionSecret": "E8aOMjriElNJB1yzAqp4lkU9SwucJhHX",
     "rabbitmq-credentials": {
         "secretName": "arn:aws:secretsmanager:us-east-2:948032566234:secret:production/SaaSGlueAPI/RabbitMQ-6fO5Km",
+        "AWS_REGION": "us-east-2"
+    },
+    "mongodb-credentials": {
+        "secretName": "arn:aws:secretsmanager:us-east-2:948032566234:secret:production/SaaSGlueAPI/MongoDBAtlas-aY1xOA",
+        "AWS_REGION": "us-east-2"
+    },
+    "redis-credentials": {
+        "secretName": "arn:aws:secretsmanager:us-east-2:948032566234:secret:production/SaaSGlueAPI/Redis-nNMM7v",
+        "AWS_REGION": "us-east-2"
+    },
+    "stripe-credentials": {
+        "secretName": "arn:aws:secretsmanager:us-east-2:948032566234:secret:production/SaaSGlueAPI/Stripe-hef2f4",
+        "AWS_REGION": "us-east-2"
+    },
+    "sg-api-secrets": {
+        "secretName": "arn:aws:secretsmanager:us-east-2:948032566234:secret:production/SaaSGlueAPI-vhAkEr",
+        "AWS_REGION": "us-east-2"
+    },
+    "send-grid-credentials": {
+        "secretName": "arn:aws:secretsmanager:us-east-2:948032566234:secret:production/SaaSGlueAPI/SendGrid-KU40T0",
+        "AWS_REGION": "us-east-2"
+    },
+    "google-auth-credentials": {
+        "secretName": "arn:aws:secretsmanager:us-east-2:948032566234:secret:production/SaaSGlueAPI/GoogleAuth-bXdg7p",
+        "AWS_REGION": "us-east-2"
+    },
+    "github-auth-credentials": {
+        "secretName": "arn:aws:secretsmanager:us-east-2:948032566234:secret:production/SaaSGlueAPI/GithubAuth-aPySUT",
         "AWS_REGION": "us-east-2"
     }
 }

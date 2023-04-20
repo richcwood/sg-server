@@ -192,7 +192,7 @@ describe("Test 'get not started tasks' functions 2", () => {
 describe('Test task routing', () => {
     const inactiveAgentQueueTTLHours = parseInt(config.get('inactiveAgentQueueTTLHours'), 10) * 60 * 60 * 1000;
     const _teamId: mongodb.ObjectId = new mongodb.ObjectId();
-    const sgAdminTeamId = new mongodb.ObjectId(config.get('sgAdminTeam'));
+    const sgAdminTeamId = new mongodb.ObjectId(process.env.sgAdminTeam);
     const task1_Id = new mongodb.ObjectId();
     const task2_Id = new mongodb.ObjectId();
     const task3_Id = new mongodb.ObjectId();
@@ -234,7 +234,7 @@ describe('Test task routing', () => {
             true,
             true,
             OnBrowserPush.bind(this),
-            SGStrings.GetTeamRoutingPrefix(config.get('sgTestTeam')),
+            SGStrings.GetTeamRoutingPrefix(process.env.sgTestTeam),
             rmqBrowserPushRoute
         );
 

@@ -8,7 +8,7 @@ export class RedisLib {
     private redisAsyncClient: any;
     private redisClient: any;
     constructor() {
-        const loginUrl = config.get('redisUrl');
+        const loginUrl = process.env.redisUrl;
         this.redisAsyncClient = redisAsync.createClient(loginUrl);
         this.redisClient = redis.createClient(loginUrl);
 

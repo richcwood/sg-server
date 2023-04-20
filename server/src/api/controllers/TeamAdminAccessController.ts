@@ -24,7 +24,7 @@ export class TeamAdminAccessController {
 
             if (req.body.teamIds) {
                 const jwtExpiration = Date.now() + 1000 * 60 * 60 * 24; // 1 day
-                const secret = config.get('secret');
+                const secret = process.env.secret;
                 var token = jwt.sign(
                     {
                         id: teamAdminAccessUpdated._id,
@@ -65,7 +65,7 @@ export class TeamAdminAccessController {
 
             if (req.body.teamIds) {
                 const jwtExpiration = Date.now() + 1000 * 60 * 60 * 24; // 1 day
-                const secret = config.get('secret');
+                const secret = process.env.secret;
                 var token = jwt.sign(
                     {
                         id: teamAdminAccessUpdated._id,

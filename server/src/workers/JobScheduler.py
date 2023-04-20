@@ -65,8 +65,6 @@ if env != "default":
     if path.isfile(env_config_file_name):
         config = getConfigValues("config/{}.json".format(env), config)
 
-mongoUrl = config.get("mongoUrl")
-mongoDbName = config.get("mongoDbName")
 rmqScheduleUpdatesQueue = config.get("rmqScheduleUpdatesQueue")
 environment = config.get("environment")
 loggingLevel = config.get("loggingLevel")
@@ -74,13 +72,15 @@ useSSL = config.get("useSSL") == "true"
 apiBaseUrl = config.get("API_BASE_URL")
 apiPort = config.get("API_PORT")
 apiVersion = config.get("API_VERSION")
-token = "Auth={};".format(config.get("schedulerToken"))
 
 if env == "production":
     load_rabbitmq_secrets(config["rabbitmq-credentials"])
 else:
     load_dotenv()
 
+mongoUrl = environ["mongoUrl"]
+mongoDbName = environ["mongoDbName"]
+token = "Auth={};".format(environ["schedulerToken"])
 rmqUrl = environ["rmqUrl"]
 rmqUsername = environ["rmqUsername"]
 rmqPassword = environ["rmqPassword"]

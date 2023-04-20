@@ -39,9 +39,9 @@ import * as mongoose from 'mongoose';
 import * as mongodb from 'mongodb';
 
 let DumpMongoData = async (path: string, _teamId: any) => {
-    mongoose.connect(config.get('mongoUrl'), {});
+    mongoose.connect(process.env.mongoUrl, {});
 
-    console.log('mongo url -> ', config.get('mongoUrl'));
+    console.log('mongo url -> ', process.env.mongoUrl);
 
     const filter = { _teamId };
 

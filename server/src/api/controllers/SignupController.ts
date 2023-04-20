@@ -42,7 +42,7 @@ export class SignupController {
 
             const jwtExpiration = Date.now() + 5 * 60 * 1000; // x minute(s)
 
-            const secret = config.get('secret');
+            const secret = process.env.secret;
             var token = jwt.sign(
                 {
                     id: updatedUser._id,
@@ -80,7 +80,7 @@ export class SignupController {
 
             const jwtExpiration = Date.now() + 5 * 60 * 1000; // x minute(s)
 
-            const secret = config.get('secret');
+            const secret = process.env.secret;
             var token = jwt.sign(
                 {
                     id: updatedUser._id,
@@ -121,7 +121,7 @@ export class SignupController {
 
             const jwtExpiration = Date.now() + 24 * 60 * 60 * 1000; // x minute(s)
 
-            const secret = config.get('secret');
+            const secret = process.env.secret;
             var token = jwt.sign(
                 {
                     id: updatedUser._id,
@@ -162,7 +162,7 @@ export class SignupController {
 
             const jwtExpiration = Date.now() + 24 * 60 * 60 * 1000; // x minute(s)
 
-            const secret = config.get('secret');
+            const secret = process.env.secret;
             var token = jwt.sign(
                 {
                     id: updatedUser._id,

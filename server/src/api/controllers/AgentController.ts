@@ -32,7 +32,7 @@ const rmqVhost = process.env.rmqVhost;
 const rmqAdminUrl = process.env.rmqAdminUrl;
 const inactiveAgentQueueTTLHours = parseInt(config.get('inactiveAgentQueueTTLHours'), 10);
 const __ACTIVE_AGENT_TIMEOUT_SECONDS = parseInt(config.get('activeAgentTimeoutSeconds'), 10);
-const adminTeamId = config.get('sgAdminTeam');
+const adminTeamId = process.env.sgAdminTeam;
 const awsLambdaRequiredTags = config.get('awsLambdaRequiredTags');
 
 let errorHandler = (err, req: Request, resp: Response, next: NextFunction) => {

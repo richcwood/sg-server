@@ -375,7 +375,7 @@ let GetTaskRoutes = async (
 
         /// For aws lambda objectives, route the task to a SaaSGlue aws lambda agent
         else if (task.target == Enums.TaskDefTarget.AWS_LAMBDA) {
-            const sgAdminTeam = new mongodb.ObjectId(config.get('sgAdminTeam'));
+            const sgAdminTeam = new mongodb.ObjectId(process.env.sgAdminTeam);
             const requiredTags = config.get('awsLambdaRequiredTags');
 
             const agentsWithRequiredTags = await agentService.findActiveAgentsWithTags(

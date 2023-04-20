@@ -37,7 +37,7 @@ export const verifyAccessRights = (rightNamesToVerify: string[]) => {
     return async (req: Request, res: Response, next: NextFunction) => {
         const teamAccessRightIds = req.headers.teamAccessRightIds;
         const teamId = <string>req.headers._teamid;
-        const sgAdminTeam = config.get('sgAdminTeam');
+        const sgAdminTeam = process.env.sgAdminTeam;
 
         if (teamAccessRightIds && teamAccessRightIds[teamId]) {
             const rightIdsToVerify = await convertAccessRightNamesToIds(rightNamesToVerify);

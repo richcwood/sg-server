@@ -27,7 +27,7 @@ export class PasswordResetController {
 
             const jwtExpiration = Date.now() + 1000 * 60 * 60 * 24; // x minute(s)
 
-            const secret = config.get('secret');
+            const secret = process.env.secret;
             var token = jwt.sign(
                 {
                     id: updatedUser._id,

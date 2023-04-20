@@ -17,8 +17,8 @@ export default class Recorder {
     protected amqpUrl = process.env.amqpUrl;
     protected rmqVhost = process.env.rmqVhost;
     protected rmqBrowserPushRoute = config.get('rmqBrowserPushRoute');
-    protected mongoUrl = config.get('mongoUrl');
-    protected mongoDbname = config.get('mongoDbName');
+    protected mongoUrl = process.env.mongoUrl;
+    protected mongoDbname = process.env.mongoDbName;
 
     protected mongoRepo: MongoRepo;
     protected amqp: AMQPConnector;
@@ -42,7 +42,7 @@ export default class Recorder {
             true,
             true,
             self.OnBrowserPush.bind(this),
-            SGStrings.GetTeamRoutingPrefix(config.get('sgTestTeam')),
+            SGStrings.GetTeamRoutingPrefix(process.env.sgTestTeam),
             self.rmqBrowserPushRoute
         );
     }

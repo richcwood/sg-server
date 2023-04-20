@@ -40,12 +40,9 @@ def redact_record_args(args, patterns):
     """
 
     for k, v in args.items():
-        print("k ------> ", k)
-        print("v ------> ", v)
         if isinstance(v, Mapping):
             args[k] = redact_record_args(v, patterns)
         else:
-            print("redacting...")
             if k in patterns:
                 args[k] = "[REDACTED]"
             else:

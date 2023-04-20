@@ -1347,8 +1347,8 @@ export class SGUtils {
         rawMessage = rawMessage.replace(/{to_address}/g, '' + recipientAddress);
         rawMessage = rawMessage.replace(/{from}/g, '' + from);
 
-        const host = config.get('SendGridSMTPHost');
-        const port = config.get('SendGridSMTPPort');
+        const host = process.env.SendGridSMTPHost;
+        const port = process.env.SendGridSMTPPort;
 
         var settings = {
             host: host,
@@ -1404,8 +1404,8 @@ export class SGUtils {
         rawMsg = rawMsg.replace(/{to_address}/g, '' + recipientAddress);
         rawMsg = rawMsg.replace(/{from}/g, '' + senderAddress);
 
-        const host = config.get('SendGridSMTPHost');
-        const port = config.get('SendGridSMTPPort');
+        const host = process.env.SendGridSMTPHost;
+        const port = process.env.SendGridSMTPPort;
 
         var settings = {
             host: host,

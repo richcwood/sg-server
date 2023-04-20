@@ -1,16 +1,12 @@
 import { NextFunction, Request, Response, Router } from 'express';
-import { ResponseWrapper, ResponseCode } from '../utils/Types';
 import { ForbiddenError, MissingObjectError, ValidationError } from '../utils/Errors';
 import { BaseLogger } from '../../shared/SGLogger';
 import { paymentMethodService } from '../../api/services/PaymentMethodService';
 import { PaymentMethodSchema } from '../domain/PaymentMethod';
 import { paymentTransactionService } from '../../api/services/PaymentTransactionService';
-import { PaymentTransactionSchema } from '../domain/PaymentTransaction';
 import { teamService } from '../../api/services/TeamService';
-import { TeamSchema } from '../../api/domain/Team';
 import { PaymentMethodType } from '../../shared/Enums';
-import * as config from 'config';
-import { Stripe } from 'stripe';
+const Stripe = require('stripe');
 import * as _ from 'lodash';
 const bodyParser = require('body-parser');
 
@@ -26,10 +22,10 @@ export default class StripeHookRouter {
     constructor() {
         this.router = Router();
 
-        this.secret = config.get('stripeWebhookSecret');
+        this.secret = process.env.stripeWebhookSecret;
 
-        let stripeApiVersion = config.get('stripeApiVersion');
-        let privateKey = config.get('stripePrivateKey');
+        let stripeApiVersion = process.env.stripeApiVersion;
+        let privateKey = process.env.stripePrivateKey;
         this.stripe = new Stripe(privateKey, stripeApiVersion);
 
         this.setRoutes();

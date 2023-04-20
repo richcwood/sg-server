@@ -110,9 +110,9 @@ import * as fs from 'fs';
         // bufferMaxEntries: 0
     };
 
-    mongoose.connect(config.get('mongoUrl'), options);
+    mongoose.connect(process.env.mongoUrl, options);
 
-    const redisClient = redis.createClient(config.get('redisUrl'), { no_ready_check: true });
+    const redisClient = redis.createClient(process.env.redisUrl, { no_ready_check: true });
 
     let amqp: AMQPConnector = new AMQPConnector(appName, '', 1, (activeMessages) => {}, logger);
     amqp.Start();
@@ -120,7 +120,7 @@ import * as fs from 'fs';
     const expressSessionOptions: any = {
         store: new RedisStore({ client: redisClient }),
         saveUninitialized: false,
-        secret: config.get('sessionSecret'),
+        secret: process.env.sessionSecret,
         resave: false,
         cookie: {},
     };
@@ -283,7 +283,7 @@ import * as fs from 'fs';
                 );
 
                 const jwtExpiration = Date.now() + 1000 * 60 * 60 * 24; // 1 day
-                const secret = config.get('secret');
+                const secret = process.env.secret;
                 var token = jwt.sign(
                     {
                         id: user._id,
@@ -403,7 +403,7 @@ import * as fs from 'fs';
                     } else {
                         /// TODO: prevent user from modifying properties like teamIds, etc.
                         const authToken = req.headers.auth ? req.headers.auth : req.cookies.Auth;
-                        const secret = config.get('secret');
+                        const secret = process.env.secret;
                         const jwtData = jwt.verify(authToken, secret);
 
                         const params = req.originalUrl.split('/');
@@ -425,7 +425,7 @@ import * as fs from 'fs';
                             // todo - use the private key here
                             // todo - verify the team id was sent in the request header
                             // todo - verify the team id is in the JWT tokens teamIds array
-                            const secret = config.get('secret');
+                            const secret = process.env.secret;
                             let jwtData;
                             try {
                                 jwtData = jwt.verify(authToken, secret);
@@ -523,7 +523,7 @@ import * as fs from 'fs';
                                     // }
                                 } else if (req.headers.teamIds.indexOf((<any>req).headers._teamid) !== -1) {
                                     teamAccess = true;
-                                } else if (req.headers.teamIds.indexOf(config.get('sgAdminTeam')) !== -1) {
+                                } else if (req.headers.teamIds.indexOf(process.env.sgAdminTeam) !== -1) {
                                     teamAccess = true;
                                 }
                             }

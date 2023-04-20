@@ -68,8 +68,8 @@ export default abstract class TestBase {
     protected rmqVhost = process.env.rmqVhost;
     protected rmqBrowserPushRoute = config.get('rmqBrowserPushRoute');
     protected rmqDLQRoute = config.get('rmqDLQRoute');
-    protected mongoUrl = config.get('mongoUrl');
-    protected mongoDbname = config.get('mongoDbName');
+    protected mongoUrl = process.env.mongoUrl;
+    protected mongoDbname = process.env.mongoDbName;
 
     protected mongoRepo: MongoRepo;
     protected amqp: AMQPConnector;
@@ -105,8 +105,8 @@ export default abstract class TestBase {
     }
 
     public async CreateTest() {
-        const agentAccessKeyId = config.get('agentAccessKeyId');
-        const agentAccessKeySecret = config.get('agentAccessKeySecret');
+        const agentAccessKeyId = process.env.agentAccessKeyId;
+        const agentAccessKeySecret = process.env.agentAccessKeySecret;
 
         let res = await this.Login(agentAccessKeyId, agentAccessKeySecret);
         let tmp = res[0].split(';');
@@ -122,14 +122,14 @@ export default abstract class TestBase {
 
     public async GetTestUser() {
         try {
-            // let auth = `${config.get('adminToken')};`;
+            // let auth = `${process.env.adminToken};`;
             // this.token = auth;
             // this.adminToken = auth;
 
             let resApiCall: any = await this.testSetup.RestAPICall(
                 'user',
                 'GET',
-                config.get('sgTestTeam'),
+                process.env.sgTestTeam,
                 null,
                 this.sgUser
             );
@@ -146,16 +146,16 @@ export default abstract class TestBase {
 
     public async CreateTestUser() {
         try {
-            this.token = config.get('adminToken') + ';';
+            this.token = process.env.adminToken + ';';
             // this.adminToken = this.token;
 
             this.sgUser = {
                 id: '5e1fac8a7e501cfd86cee31d',
-                email: config.get('sgTestUser'),
+                email: process.env.sgTestUser,
             };
 
             // const email = `${SGUtils.makeid(20)}@saasglue.com`;
-            // const password = config.get('sgTestUserPassword');
+            // const password = process.env.sgTestUserPassword;
             // const salt = await bcrypt.genSalt(10);
             // const passwordHash = await bcrypt.hash(password, salt);
             // this.sgUser = { 'email': email, 'password': password, passwordHash: passwordHash, 'hasAcceptedTerms': true, 'lastLogin': new Date().toISOString() };
@@ -176,7 +176,7 @@ export default abstract class TestBase {
     }
 
     // public async CreateTeam(team: any) {
-    //     let restAPICallRes: any = await this.testSetup.RestAPICall(`team/${config.get('sgTestTeam')}`, 'GET', config.get('sgTestTeam'), null, team);
+    //     let restAPICallRes: any = await this.testSetup.RestAPICall(`team/${process.env.sgTestTeam}`, 'GET', process.env.sgTestTeam, null, team);
 
     //     return restAPICallRes.data.data;
 
@@ -398,7 +398,7 @@ export default abstract class TestBase {
             true,
             true,
             self.OnBrowserPush.bind(this),
-            SGStrings.GetTeamRoutingPrefix(config.get('sgTestTeam')),
+            SGStrings.GetTeamRoutingPrefix(process.env.sgTestTeam),
             self.rmqBrowserPushRoute
         );
     }
@@ -1183,7 +1183,7 @@ export abstract class WorkflowTestBase extends TestBase {
     protected async CreateJobDefsFromTemplates(properties: any) {
         let resApiCall: any;
 
-        const _teamId: string = config.get('sgTestTeam');
+        const _teamId: string = process.env.sgTestTeam;
 
         let scripts: any = {};
         for (let script of properties.scripts) {

@@ -31,7 +31,7 @@ export default class Test50 extends TestBase.WorkflowTestBase {
         let result: boolean;
         let resApiCall: any;
 
-        const _teamId: string = config.get('sgTestTeam');
+        const _teamId: string = process.env.sgTestTeam;
 
         const properties: any = {
             scripts: [
@@ -80,7 +80,7 @@ export default class Test50 extends TestBase.WorkflowTestBase {
             domainType: 'Job',
             operation: 1,
             model: {
-                _teamId: config.get('sgTestTeam'),
+                _teamId: process.env.sgTestTeam,
                 _jobDefId: jobDefs[properties.jobDefs[0].name].id,
                 runId: 0,
                 name: properties.jobDefs[0].name,
@@ -102,7 +102,7 @@ export default class Test50 extends TestBase.WorkflowTestBase {
             model: {
                 status: null,
                 autoRestart: true,
-                _teamId: config.get('sgTestTeam'),
+                _teamId: process.env.sgTestTeam,
                 _jobId: job.id,
                 name: properties.jobDefs[0].taskDefs[0].name,
                 target: TaskDefTarget.SINGLE_AGENT,
@@ -117,7 +117,7 @@ export default class Test50 extends TestBase.WorkflowTestBase {
             domainType: 'TaskOutcome',
             operation: 1,
             model: {
-                _teamId: config.get('sgTestTeam'),
+                _teamId: process.env.sgTestTeam,
                 _jobId: job.id,
                 source: 1,
                 status: TaskStatus.PUBLISHED,
@@ -165,7 +165,7 @@ export default class Test50 extends TestBase.WorkflowTestBase {
             domainType: 'TaskOutcome',
             operation: 2,
             model: {
-                _teamId: config.get('sgTestTeam'),
+                _teamId: process.env.sgTestTeam,
                 _jobId: job.id,
                 status: TaskStatus.CANCELING,
                 target: TaskDefTarget.SINGLE_AGENT,

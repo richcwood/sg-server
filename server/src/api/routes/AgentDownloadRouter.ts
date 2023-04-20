@@ -17,8 +17,8 @@ import * as _ from 'lodash';
 import * as mongodb from 'mongodb';
 import { verifyAccessRights } from '../utils/AccessRightsVerifier';
 
-const mongoUrl = config.get('mongoUrl');
-const mongoDbName = config.get('mongoDbName');
+const mongoUrl = process.env.mongoUrl;
+const mongoDbName = process.env.mongoDbName;
 
 let appName: string = 'AgentDownloadRouter';
 let agentDownloadRouterLogger: BaseLogger = new BaseLogger(appName);
@@ -41,16 +41,6 @@ export class AgentDownloadRouter {
     }
 
     setRoutes() {
-        this.router.post(
-            '/agent/:version/:platform/:arch?',
-            verifyAccessRights(['AGENT_DOWNLOAD_CREATE', 'GLOBAL']),
-            this.createAgent.bind(this)
-        );
-        this.router.post(
-            '/agentstub/:platform/:arch?',
-            verifyAccessRights(['AGENT_DOWNLOAD_CREATE', 'GLOBAL']),
-            this.createAgentStub.bind(this)
-        );
         this.router.get(
             '/agent/:machineId/:platform/:arch?',
             verifyAccessRights(['AGENT_DOWNLOAD', 'GLOBAL']),
@@ -111,9 +101,8 @@ export class AgentDownloadRouter {
 
         const platform: string = <string>req.params.platform;
         if (validPlatforms.indexOf(platform) < 0) {
-            next(new ValidationError('Missing or invalid platform param'));
+            return next(new ValidationError('Missing or invalid platform param'));
             // res.status(422).send('Missing or invalid platform param');
-            return;
         }
 
         let arch: string = <string>req.params.arch;
@@ -124,9 +113,8 @@ export class AgentDownloadRouter {
                 arch = '';
             } else {
                 if (validArchitectures.indexOf(arch) < 0) {
-                    next(new ValidationError('Invalid arch param'));
+                    return next(new ValidationError('Invalid arch param'));
                     // res.status(422).send('Invalid arch param');
-                    return;
                 }
             }
         }
@@ -184,282 +172,16 @@ export class AgentDownloadRouter {
                     );
                     response.data = signedUrl;
                     response.statusCode = ResponseCode.OK;
-                    next();
-                    return;
+                    return next();
                 }
             } catch (e) {
-                next(e);
-                return;
+                return next(e);
             }
         }
 
         response.data = '';
         response.statusCode = ResponseCode.NOT_AVAILABLE;
-        next();
-
-        let createAgentStubUrl = `agentDownload/agentstub/${platform}`;
-        if (arch) createAgentStubUrl += `/${arch}`;
-
-        await localRestAccess.RestAPICall(createAgentStubUrl, 'POST', _teamId, null, null, req.cookies.Auth);
-    }
-
-    // Create an agent download stub
-    async createAgentStub(req: Request, res: Response, next: NextFunction) {
-        const _teamId: string = <string>req.headers._teamid;
-        const logger: BaseLogger = (<any>req).logger;
-        const response: ResponseWrapper = res['body'];
-
-        const platform: string = <string>req.params.platform;
-        if (validPlatforms.indexOf(platform) < 0) {
-            next(new ValidationError('Missing or invalid platform param'));
-            return;
-        }
-
-        let arch: string = <string>req.params.arch;
-        if (!arch) {
-            arch = '';
-        } else {
-            if (validArchitectures.indexOf(arch) < 0) {
-                next(new ValidationError('Invalid arch param'));
-                return;
-            }
-        }
-
-        const agentVersionSettings = await settingsService.findSettings('AgentVersion');
-        let agentStubVersion = agentVersionSettings.agentStub;
-
-        // logger.LogInfo('Create agent stub called', { '_teamId': _teamId, 'Platform': platform, 'Arch': arch });
-
-        // Run a query which will return null if we have an active agent stub or create information for the requested agent
-        //  stub with the status defaulted to "creating" in a single atomic operation - if the current status is "creating" and
-        //  the AGENT_CREATE_TIMEOUT period is exceeded a new agent will be created
-        const platformKey = `Values.agent_stub_install.${platform}${arch}`;
-        const statusKey = `Values.agent_stub_install.${platform}${arch}.status`;
-        const versionKey = `Values.agent_stub_install.${platform}${arch}.version`;
-        const lastUpdateTimeKey = `Values.agent_stub_install.${platform}${arch}.lastUpdateTime`;
-
-        let queryPlatformNotExists = {};
-        queryPlatformNotExists[platformKey] = { $exists: false };
-
-        let queryStatusNotExists = {};
-        queryStatusNotExists[statusKey] = { $exists: false };
-
-        let queryLastUpdateTimeNotExists = {};
-        queryLastUpdateTimeNotExists[lastUpdateTimeKey] = { $exists: false };
-
-        let queryStatusError = {};
-        queryStatusError[statusKey] = { $eq: 'error' };
-
-        let queryCurrentAgentStubVersion = {};
-        queryCurrentAgentStubVersion[versionKey] = { $ne: agentStubVersion };
-
-        let queryUpdate = {};
-        const lastUpdateTime = new Date().getTime();
-        queryUpdate[platformKey] = {
-            status: 'creating',
-            lastUpdateTime: lastUpdateTime,
-            message: '',
-            version: agentStubVersion,
-        };
-
-        const agentBuildUpdate: any = await this.mongoRepo.Update(
-            'settings',
-            {
-                $and: [
-                    { Type: 'AgentBuild' },
-                    {
-                        $or: [
-                            { agent_stub_install: { $exists: false } },
-                            queryPlatformNotExists,
-                            queryStatusNotExists,
-                            queryLastUpdateTimeNotExists,
-                            queryStatusError,
-                            queryCurrentAgentStubVersion,
-                        ],
-                    },
-                ],
-            },
-            { $set: queryUpdate },
-            { _id: 1 }
-        );
-
-        if (agentBuildUpdate != null && agentBuildUpdate.lastErrorObject.updatedExisting) {
-            try {
-                let data = {
-                    name: `BuildAgentStub - ${platform}${arch} - ${agentStubVersion}`,
-                    runtimeVars: {
-                        agentVersion: agentStubVersion,
-                        platform: platform,
-                        arch: arch,
-                    },
-                };
-                let jobDefId = config.get('buildAgentStubJobDefId');
-                if (platform == 'win') jobDefId = config.get('buildAgentStubWinx64JobDefId');
-                await localRestAccess.RestAPICall(
-                    'job',
-                    'POST',
-                    config.get('sgAdminTeam'),
-                    { _jobDefId: jobDefId },
-                    data
-                );
-            } catch (err) {
-                logger.LogInfo(`Error creating agent stub: ${err}`, {
-                    Platform: platform,
-                    Arch: arch,
-                    Version: agentStubVersion,
-                });
-                queryUpdate[platformKey]['status'] = 'error';
-                queryUpdate[platformKey]['location'] = '';
-                queryUpdate[platformKey]['message'] = err.message;
-                await this.mongoRepo.Update(
-                    'settings',
-                    { _id: agentBuildUpdate['_id'] },
-                    { $set: queryUpdate },
-                    { _id: 1 }
-                );
-                next(err);
-                return;
-            }
-            response.data = '';
-            response.statusCode = ResponseCode.NOT_AVAILABLE;
-            next();
-        } else {
-            const queryProjection: any = {};
-            queryProjection[platformKey] = 1;
-            const agentBuild = await this.mongoRepo.GetById(agentBuildUpdate['_id'], 'settings', queryProjection);
-            if (agentBuild['Values.agent_stub_install'][platform + arch]['status'] == 'creating') {
-                response.data = '';
-                response.statusCode = ResponseCode.NOT_AVAILABLE;
-                next();
-            } else {
-                response.data = '';
-                response.statusCode = ResponseCode.OK;
-                next();
-            }
-        }
-    }
-
-    // Create an agent download
-    async createAgent(req: Request, res: Response, next: NextFunction) {
-        const logger: BaseLogger = (<any>req).logger;
-        const response: ResponseWrapper = res['body'];
-
-        const agentVersion: string = <string>req.params.version;
-        if (!agentVersion.match(/v\d+\.\d+\.\d+\.\d+/g)) {
-            next(new ValidationError(`Invalid version param "${agentVersion}" - should be formatted as "vx.x.x.x"`));
-            return;
-        }
-        const agentVersionMongo = agentVersion.split('.').join('_');
-
-        const platform: string = <string>req.params.platform;
-        if (validPlatforms.indexOf(platform) < 0) {
-            next(new ValidationError('Missing or invalid platform param'));
-            return;
-        }
-
-        let arch: string = <string>req.params.arch;
-        if (!arch) {
-            arch = '';
-        } else {
-            if (validArchitectures.indexOf(arch) < 0) {
-                next(new ValidationError('Invalid arch param'));
-                return;
-            }
-        }
-        const platformKey = `Values.agent_install.${agentVersionMongo}.${platform}${arch}`;
-        const statusKey = `Values.agent_install.${agentVersionMongo}.${platform}${arch}.status`;
-        const lastUpdateTimeKey = `Values.agent_install.${agentVersionMongo}.${platform}${arch}.lastUpdateTime`;
-
-        let queryPlatformNotExists = {};
-        queryPlatformNotExists[platformKey] = { $exists: false };
-
-        let queryStatusNotExists = {};
-        queryStatusNotExists[statusKey] = { $exists: false };
-
-        let queryLastUpdateTimeNotExists = {};
-        queryLastUpdateTimeNotExists[lastUpdateTimeKey] = { $exists: false };
-
-        let queryStatusError = {};
-        queryStatusError[statusKey] = { $eq: 'error' };
-
-        let queryUpdate = {};
-        const lastUpdateTime = new Date().getTime();
-        queryUpdate[platformKey] = { status: 'creating', lastUpdateTime: lastUpdateTime, message: '' };
-
-        const agentBuildUpdate: any = await this.mongoRepo.Update(
-            'settings',
-            {
-                $and: [
-                    { Type: 'AgentBuild' },
-                    {
-                        $or: [
-                            { agent_install: { $exists: false } },
-                            queryPlatformNotExists,
-                            queryStatusNotExists,
-                            queryLastUpdateTimeNotExists,
-                            queryStatusError,
-                        ],
-                    },
-                ],
-            },
-            { $set: queryUpdate },
-            { _id: 1 }
-        );
-
-        if (agentBuildUpdate != null && agentBuildUpdate.lastErrorObject.updatedExisting) {
-            try {
-                let data = {
-                    name: `BuildAgent - ${platform}${arch} - ${agentVersion}`,
-                    runtimeVars: {
-                        agentVersion: agentVersion,
-                        platform: platform,
-                        arch: arch,
-                    },
-                };
-                let jobDefId = config.get('buildAgentJobDefId');
-                if (platform == 'win') jobDefId = config.get('buildAgentWinx64JobDefId');
-                await localRestAccess.RestAPICall(
-                    'job',
-                    'POST',
-                    config.get('sgAdminTeam'),
-                    { _jobDefId: jobDefId },
-                    data
-                );
-            } catch (err) {
-                logger.LogInfo(`Error creating agent: ${err}`, {
-                    Platform: platform,
-                    Arch: arch,
-                    Version: agentVersion,
-                });
-                queryUpdate[platformKey]['status'] = 'error';
-                queryUpdate[platformKey]['location'] = '';
-                queryUpdate[platformKey]['message'] = err.message;
-                await this.mongoRepo.Update(
-                    'settings',
-                    { _id: agentBuildUpdate['_id'] },
-                    { $set: queryUpdate },
-                    { _id: 1 }
-                );
-                next(err);
-                return;
-            }
-            response.data = '';
-            response.statusCode = ResponseCode.NOT_AVAILABLE;
-            next();
-        } else {
-            const queryProjection: any = {};
-            queryProjection[platformKey] = 1;
-            const agentBuild = await this.mongoRepo.GetById(agentBuildUpdate['_id'], 'settings', queryProjection);
-            if (agentBuild['Values.agent_install'][agentVersionMongo][platform + arch]['status'] == 'creating') {
-                response.data = '';
-                response.statusCode = ResponseCode.NOT_AVAILABLE;
-                next();
-            } else {
-                response.data = '';
-                response.statusCode = ResponseCode.OK;
-                next();
-            }
-        }
+        return next();
     }
 
     // Returns 303 if agent install does not exist - otherwise returns 200 plus a signed url for direct s3 download
@@ -473,14 +195,12 @@ export class AgentDownloadRouter {
         if (!existingTeam) {
             response.data = '';
             response.statusCode = ResponseCode.NOT_FOUND;
-            next(new ValidationError(`Invalid team`));
-            return;
+            return next(new ValidationError(`Invalid team`));
         }
 
         const platform: string = <string>req.params.platform;
         if (validPlatforms.indexOf(platform) < 0) {
-            next(new ValidationError('Missing or invalid platform param'));
-            return;
+            return next(new ValidationError('Missing or invalid platform param'));
         }
 
         let arch: string = <string>req.params.arch;
@@ -491,9 +211,8 @@ export class AgentDownloadRouter {
                 arch = '';
             } else {
                 if (validArchitectures.indexOf(arch) < 0) {
-                    next(new ValidationError('Invalid arch param'));
+                    return next(new ValidationError('Invalid arch param'));
                     // res.status(422).send('Invalid arch param');
-                    return;
                 }
             }
         }

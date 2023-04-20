@@ -84,7 +84,7 @@ export class TeamService {
             }
 
             /// Create general team invite link
-            const secret = config.get('secret');
+            const secret = process.env.secret;
             const jwtExpiration = Date.now() + 1000 * 60 * 60 * 24 * 180; // 180 days
             let token = jwt.sign(
                 {
