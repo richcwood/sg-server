@@ -61,7 +61,10 @@ describe('SecretsManager', () => {
 
     describe('constructor', () => {
         it('should create an AWS.SecretsManager client with the provided params', () => {
-            expect(AWS.SecretsManager).toHaveBeenCalledWith({ awsRegion, ...awsSecretsManagerConstructorParams });
+            expect(AWS.SecretsManager).toHaveBeenCalledWith({
+                region: awsRegion,
+                ...awsSecretsManagerConstructorParams,
+            });
         });
     });
 
