@@ -15,7 +15,7 @@ export class SecretsManager {
         const stdTTL: number = params['STDTTL'] || 60;
         const checkperiod: number = params['CHECK_PERIOD'] || 30;
         const options = this.getAWSCredentialsOptions(params);
-        this.client = new AWS.SecretsManager({ awsRegion, ...options });
+        this.client = new AWS.SecretsManager({ region: awsRegion, ...options });
         this.cache = new NodeCache({ stdTTL, checkperiod });
     }
 
@@ -52,5 +52,21 @@ export class SecretsManager {
         const secretValue = data.SecretString;
         this.cache.set(secretName, secretValue);
         return secretValue;
+    }
+}
+
+export class SecretsLoader {
+    static async loadSecrets(credentials_config, logger) {
+        logger.LogInfo('Loading secrets', { name: credentials_config['name'] });
+        const credentials = credentials_config['credentials'];
+        const awsProfile: string = credentials.awsProfile;
+        const awsRegion: string = credentials.AWS_REGION;
+        const secretsManager = new SecretsManager({ awsProfile, AWS_REGION: awsRegion }, logger);
+        const secretName: string = credentials.secretName;
+        const rmqSecretsJson: any = await secretsManager.getSecret(secretName);
+        const rmqSecrets = JSON.parse(rmqSecretsJson);
+        for (let key of Object.keys(rmqSecrets)) {
+            process.env[key] = rmqSecrets[key];
+        }
     }
 }

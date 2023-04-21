@@ -13,7 +13,7 @@ import { localRestAccess } from '../api/utils/LocalRestAccess';
 import { AMQPConnector } from '../shared/AMQPLib';
 import { TaskFailureCode, TaskDefTarget, TaskStatus } from '../shared/Enums';
 import { SGUtils } from '../shared/SGUtils';
-import { SecretsLoader } from '../shared/SecretsLoader';
+import { SecretsLoader } from '../shared/SecretsManager';
 import { BaseLogger } from '../shared/SGLogger';
 
 import * as dotenv from 'dotenv';
@@ -44,7 +44,10 @@ export default class AgentDeadLetterWatcher {
         const baseLogger = new BaseLogger(appName);
         try {
             if (env === 'production') {
-                await SecretsLoader.loadRabbitMQ(logger);
+                const secretConfigs = config.get('secrets');
+                for (let secretConfig of secretConfigs) {
+                    await SecretsLoader.loadSecrets(secretConfig, logger);
+                }
             } else {
                 dotenv.config();
             }

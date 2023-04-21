@@ -1,20 +1,5 @@
-import { SecretsLoader } from '../shared/SecretsLoader';
-import { BaseLogger } from '../shared/SGLogger';
-import * as dotenv from 'dotenv';
-
 const environment = process.env.NODE_ENV || 'development';
 const appName = 'SaaSGlueAPI';
-let logger: BaseLogger;
-(async () => {
-    logger = new BaseLogger(appName);
-    logger.Start();
-
-    if (environment === 'production') {
-        await SecretsLoader.loadRabbitMQ(logger);
-    } else {
-        dotenv.config();
-    }
-})();
 
 import { MetricsLogger } from './utils/MetricsLogger';
 MetricsLogger.init();
@@ -89,16 +74,32 @@ import { userService } from './services/UserService';
 
 import { AMQPConnector } from '../shared/AMQPLib';
 import { AuthTokenType } from '../shared/Enums';
+import { SecretsLoader } from '../shared/SecretsManager';
+import { BaseLogger } from '../shared/SGLogger';
 
 import { ValidationError } from './utils/Errors';
 
 import * as config from 'config';
+import * as dotenv from 'dotenv';
 import * as mongodb from 'mongodb';
 import * as mongoose from 'mongoose';
 import * as morgan from 'morgan';
-import * as fs from 'fs';
+
+let logger: BaseLogger;
 
 (async () => {
+    logger = new BaseLogger(appName);
+    logger.Start();
+
+    if (environment === 'production') {
+        const secretConfigs = config.get('secrets');
+        for (let secretConfig of secretConfigs) {
+            await SecretsLoader.loadSecrets(secretConfig, logger);
+        }
+    } else {
+        dotenv.config();
+    }
+
     // Create a new express application instance
     const app: express.Application = express();
 
