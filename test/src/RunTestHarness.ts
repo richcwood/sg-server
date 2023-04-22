@@ -4,7 +4,7 @@ import * as util from 'util';
 import * as config from 'config';
 import axios from 'axios';
 import { exec } from 'child_process';
-import { SecretsLoader } from '../../server/src/shared/SecretsLoader';
+import { SecretsLoader } from '../../server/src/shared/SecretsManager';
 import { MongoRepo } from '../../server/src/shared/MongoLib';
 import { SGUtils } from '../../server/src/shared/SGUtils';
 import { SGStrings } from '../../server/src/shared/SGStrings';
@@ -276,7 +276,10 @@ let SecretsLoaderTest = async () => {
     let logger = new BaseLogger('RunTestHarness');
     logger.Start();
 
-    await SecretsLoader.loadRabbitMQ(logger);
+    const secretConfigs = config.get('secrets');
+    for (let secretConfig of secretConfigs) {
+        await SecretsLoader.loadSecrets(secretConfig, logger);
+    }
     console.log(process.env.rmqUrl);
 };
 

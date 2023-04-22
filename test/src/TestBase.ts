@@ -1,19 +1,17 @@
-import { SecretsLoader } from '../../server/src/shared/SecretsLoader';
-import { BaseLogger } from '../../server/src/shared/SGLogger';
+import { strict as assert } from 'assert';
 import * as dotenv from 'dotenv';
 
+import { BaseLogger } from '../../server/src/shared/SGLogger';
+
 const environment = process.env.NODE_ENV || 'development';
+assert(environment == 'development');
 const appName = 'SaaSGlueAPI';
 let logger: BaseLogger;
 (async () => {
     logger = new BaseLogger(appName);
     logger.Start();
 
-    if (environment === 'production') {
-        await SecretsLoader.loadRabbitMQ(logger);
-    } else {
-        dotenv.config();
-    }
+    dotenv.config();
 })();
 
 import * as util from 'util';
