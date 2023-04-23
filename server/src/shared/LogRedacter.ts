@@ -2,7 +2,7 @@ export interface LogData {
     [key: string]: string | number | Record<string, unknown>;
 }
 
-const DEFAULT_REDACT_LIST: RegExp[] = [/rmqUsername/, /rmqPassword/, /token/gi];
+const DEFAULT_REDACT_LIST: RegExp[] = [/rmqUsername/, /rmqPassword/, /token/gi, /cookie/];
 
 export class LogRedacter {
     private redactList: RegExp[];
