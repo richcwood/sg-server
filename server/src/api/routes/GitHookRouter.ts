@@ -8,8 +8,8 @@ const Octokit = require('@octokit/rest');
 import * as util from 'util';
 import * as config from 'config';
 
-const mongoUrl = config.get('mongoUrl');
-const mongoDbName = config.get('mongoDbName');
+const mongoUrl = process.env.mongoUrl;
+const mongoDbName = process.env.mongoDbName;
 
 // Your registered app must have a secret set. The secret is used to verify that webhooks are sent by GitHub.
 const WEBHOOK_SECRET = process.env.GITHUB_WEBHOOK_SECRET;

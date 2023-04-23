@@ -14,11 +14,11 @@ export default class Recorder {
 
     protected logger: any;
     protected description: string;
-    protected amqpUrl = config.get('amqpUrl');
-    protected rmqVhost = config.get('rmqVhost');
+    protected amqpUrl = process.env.amqpUrl;
+    protected rmqVhost = process.env.rmqVhost;
     protected rmqBrowserPushRoute = config.get('rmqBrowserPushRoute');
-    protected mongoUrl = config.get('mongoUrl');
-    protected mongoDbname = config.get('mongoDbName');
+    protected mongoUrl = process.env.mongoUrl;
+    protected mongoDbname = process.env.mongoDbName;
 
     protected mongoRepo: MongoRepo;
     protected amqp: AMQPConnector;
@@ -33,15 +33,7 @@ export default class Recorder {
         this.logger = new BaseLogger('Recorder');
         this.logger.Start();
 
-        self.amqp = new AMQPConnector(
-            'Recorder',
-            '',
-            self.amqpUrl,
-            self.rmqVhost,
-            1,
-            (activeMessages) => {},
-            this.logger
-        );
+        self.amqp = new AMQPConnector('Recorder', '', 1, (activeMessages) => {}, this.logger);
         await self.amqp.Start();
         await self.amqp.ConsumeRoute(
             '',
@@ -50,7 +42,7 @@ export default class Recorder {
             true,
             true,
             self.OnBrowserPush.bind(this),
-            SGStrings.GetTeamRoutingPrefix(config.get('sgTestTeam')),
+            SGStrings.GetTeamRoutingPrefix(process.env.sgTestTeam),
             self.rmqBrowserPushRoute
         );
     }

@@ -17,11 +17,6 @@ spec:
       securityContext:
         allowPrivilegeEscalation: false
         runAsUser: 0
-      env:
-        - name: AWS_ACCESS_KEY_ID
-          value: AKIAX3EV7JGZPNRECXBG
-        - name: AWS_SECRET_ACCESS_KEY
-          value: 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
       volumeMounts:
         - name: sg-agent-source
           mountPath: /home/appuser/app/

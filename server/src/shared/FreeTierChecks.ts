@@ -6,6 +6,7 @@ import { SGUtils } from './SGUtils';
 import * as _ from 'lodash';
 import { settingsService } from '../api/services/SettingsService';
 import { MissingObjectError, FreeTierLimitExceededError } from '../api/utils/Errors';
+import { BaseLogger } from '../shared/SGLogger';
 import { S3Access } from '../shared/S3Access';
 import { rabbitMQPublisher } from '../api/utils/RabbitMQPublisher';
 import * as mongodb from 'mongodb';
@@ -53,12 +54,12 @@ export class FreeTierChecks {
         }
     };
 
-    static MaxArtifactStorageCheck = async (_teamId: mongodb.ObjectId) => {
+    static MaxArtifactStorageCheck = async (_teamId: mongodb.ObjectId, logger: BaseLogger) => {
         const team = await teamService.findTeam(_teamId, 'pricingTier');
         if (!team) throw new MissingObjectError(`Team '${_teamId.toHexString()} not found`);
 
         if (team.pricingTier == TeamPricingTier.FREE) {
-            let s3Access = new S3Access();
+            let s3Access = new S3Access(logger);
             let s3Path = '';
             if (config.get('environment') != 'production') s3Path += `${config.get('environment')}/`;
             s3Path += `${_teamId.toHexString()}/`;

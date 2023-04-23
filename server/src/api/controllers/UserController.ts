@@ -69,7 +69,7 @@ export class UserController {
 
     //     if (req.body.teamIds) {
     //       const jwtExpiration = Date.now() + (1000 * 60 * 60 * 24); // 1 day
-    //       const secret = config.get('secret');
+    //       const secret = process.env.secret;
     //       var token = jwt.sign({
     //         id: userUpdated._id,
     //         email: userUpdated.email,
@@ -150,7 +150,7 @@ export class UserController {
             );
 
             const jwtExpiration = Date.now() + 1000 * 60 * 60 * 24; // 1 day
-            const secret = config.get('secret');
+            const secret = process.env.secret;
             var token = jwt.sign(
                 {
                     id: userUpdated._id,
@@ -189,7 +189,7 @@ export class UserController {
             );
 
             const jwtExpiration = Date.now() + 1000 * 60 * 60 * 24; // 1 day
-            const secret = config.get('secret');
+            const secret = process.env.secret;
             var token = jwt.sign(
                 {
                     id: userUpdated._id,

@@ -50,9 +50,9 @@ export default class LoginRouter {
         const sess: any = (<any>req).session;
         try {
             const goAuth2Client = new google.auth.OAuth2(
-                config.get('googleAuthClientId'),
-                config.get('googleAuthClientSecret'),
-                config.get('googleAuthCallBackUrl')
+                process.env.googleAuthClientId,
+                process.env.googleAuthClientSecret,
+                process.env.googleAuthCallBackUrl
             );
 
             const goAuthUrl: any = goAuth2Client.generateAuthUrl({
@@ -129,7 +129,7 @@ export default class LoginRouter {
         // Create a JWT
         const jwtExpiration = Date.now() + 1000 * 60 * 60 * 24; // x minute(s)
 
-        const secret = config.get('secret');
+        const secret = process.env.secret;
         var token = jwt.sign(
             {
                 id: loginResult._id,
@@ -172,9 +172,9 @@ export default class LoginRouter {
             // console.log('goAuthCallback called');
             // console.log('session -> ', sess);
             const goAuth2Client = new google.auth.OAuth2(
-                config.get('googleAuthClientId'),
-                config.get('googleAuthClientSecret'),
-                config.get('googleAuthCallBackUrl')
+                process.env.googleAuthClientId,
+                process.env.googleAuthClientSecret,
+                process.env.googleAuthCallBackUrl
             );
 
             // console.log('goAuthCallback -> req -> ', req.query)
@@ -254,9 +254,9 @@ export default class LoginRouter {
         const sess: any = (<any>req).session;
         try {
             // const goAuth2Client = new google.auth.OAuth2(
-            //   config.get('githubAuthClientId'),
-            //   config.get('githubAuthClientSecret'),
-            //   config.get('githubAuthCallBackUrl')
+            //   process.env.githubAuthClientId,
+            //   process.env.githubAuthClientSecret,
+            //   process.env.githubAuthCallBackUrl
             // );
 
             // const goAuthUrl: any = goAuth2Client.generateAuthUrl({
@@ -273,7 +273,7 @@ export default class LoginRouter {
 
             const ghAuthUrl = `https://github.com/login/oauth/authorize?client_id=${config.get(
                 'githubAuthClientId'
-            )}&state=${authStateValue}&scope=user&redirect_uri=${config.get('githubAuthCallBackUrl')}`;
+            )}&state=${authStateValue}&scope=user&redirect_uri=${process.env.githubAuthCallBackUrl}`;
 
             // console.log('loginLink -> [', ghAuthUrl, ']');
 
@@ -303,7 +303,7 @@ export default class LoginRouter {
 
             const getTokenUrl = `https://github.com/login/oauth/access_token?client_id=${config.get(
                 'githubAuthClientId'
-            )}&client_secret=${config.get('githubAuthClientSecret')}&code=${(<any>req.query).code}`;
+            )}&client_secret=${process.env.githubAuthClientSecret}&code=${(<any>req.query).code}`;
             // console.log('getTokenurl -> ', getTokenUrl);
 
             const getTokenResponse = await axios({
@@ -399,7 +399,7 @@ export default class LoginRouter {
             // Create a JWT
             const jwtExpiration = Date.now() + 1000 * 60 * 60 * 24; // x minute(s)
 
-            const secret = config.get('secret');
+            const secret = process.env.secret;
             var token = jwt.sign(
                 {
                     id: loginResult._id,
@@ -460,7 +460,7 @@ export default class LoginRouter {
             let teamAccessRightIds = {};
             teamAccessRightIds[loginResult._teamId] = convertTeamAccessRightsToBitset(loginResult.accessRightIds);
 
-            const secret = config.get('secret');
+            const secret = process.env.secret;
 
             let tokenData: any = {
                 id: loginResult._id,
@@ -522,7 +522,7 @@ export default class LoginRouter {
         const authToken = req.headers.auth ? req.headers.auth : req.cookies.Auth;
         let jwtData;
         try {
-            const secret = config.get('secret');
+            const secret = process.env.secret;
             jwtData = jwt.verify(authToken, secret);
 
             if (jwtData.type != AuthTokenType.REFRESHKEY) {

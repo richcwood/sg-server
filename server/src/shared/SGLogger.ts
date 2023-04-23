@@ -1,9 +1,11 @@
 import * as os from 'os';
 import * as fs from 'fs';
-import { LogLevel } from './Enums';
 import * as AsyncLock from 'async-lock';
 import * as config from 'config';
 import * as path from 'path';
+
+import { LogLevel } from './Enums';
+import { LogRedacter, LogData } from './LogRedacter';
 
 const logDest = config.get('logDest');
 const logsPath: string = 'sumologic_logs';
@@ -38,6 +40,7 @@ class BaseLogger {
     private machineId: string;
     private appLoggingLevel: any = null;
     private defaultLoggingLevel: LogLevel = LogLevel.DEBUG;
+    private redacter: LogRedacter;
 
     public pruneLogsInterval: number = 65000; // 65 seconds
     public cycleCacheInterval: number = 30000; // 30 seconds
@@ -59,6 +62,7 @@ class BaseLogger {
         this.machineId = os.hostname();
 
         this.appLoggingLevel = LogLevel.DEBUG;
+        this.redacter = new LogRedacter();
         // if (Object.keys(this.config).indexOf('loggingLevel') >= 0)
         //     this.defaultLoggingLevel = this.config['loggingLevel'];
     }
@@ -255,7 +259,8 @@ class BaseLogger {
             },
             values
         );
-        if (environment == 'production' || environment == 'stage') console.log(JSON.stringify(values));
+        if (environment == 'production' || environment == 'stage')
+            console.log(JSON.stringify(this.redacter.redactMessage(values)));
         else console.log(JSON.stringify(values, null, 4));
     }
 

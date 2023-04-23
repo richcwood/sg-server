@@ -14,6 +14,8 @@ let sleep = async (ms: number) => {
 
 export class AMQPConnector {
     private amqp: any;
+    private url: string;
+    private vhost: string;
     private offlinePubQueue: any;
     private subscribedRoutes: any;
     private subscriptions: any;
@@ -28,13 +30,13 @@ export class AMQPConnector {
     constructor(
         public appName: string,
         public clientId: string,
-        public url: string,
-        public vhost: string,
         public prefetchCount: number,
         public fnOnDisconnect: any,
         private logger: any
     ) {
         this.amqp = require('amqplib');
+        this.url = process.env.amqpUrl;
+        this.vhost = process.env.rmqVhost;
         this.subscribedRoutes = [];
         this.subscriptions = [];
         this.stoppedByUser = false;

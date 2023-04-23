@@ -1,5 +1,4 @@
-import db from './DB';
+import * as dotenv from 'dotenv';
+dotenv.config();
 
-module.exports = async () => {
-    await db.open();
-};
+module.exports = async () => {};

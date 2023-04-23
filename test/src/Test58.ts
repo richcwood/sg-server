@@ -61,9 +61,9 @@ export default class Test58 extends TestBase.WorkflowTestBase {
         let result: boolean;
         let resApiCall: any;
 
-        const _teamId: string = config.get('sgTestTeam');
+        const _teamId: string = process.env.sgTestTeam;
 
-        // const sgAdminTeam: string = config.get('sgAdminTeam');
+        // const sgAdminTeam: string = process.env.sgAdminTeam;
         // const awsLambdaRequiredTags: string = config.get('awsLambdaRequiredTags');
         // const newAgentProperties = { '_teamId': sgAdminTeam, 'machineId': 'AdminAgent', 'ipAddress': '10.10.0.104', 'tags': awsLambdaRequiredTags, 'numActiveTasks': 0, 'lastHeartbeatTime': null, 'rmqPassword': 'lpUs8Cnsju' };
         // const newAgent = await self.testSetup.InitAgent(newAgentProperties);
@@ -98,8 +98,8 @@ export default class Test58 extends TestBase.WorkflowTestBase {
                         },
                     ],
                     runtimeVars: {
-                        sgAccessKeyId: { value: config.get('prodTestTeamAccessKeyId'), sensitive: false },
-                        sgAccessKeySecret: { value: config.get('prodTestTeamAccessKeySecret'), sensitive: false },
+                        sgAccessKeyId: { value: process.env.prodTestTeamAccessKeyId, sensitive: false },
+                        sgAccessKeySecret: { value: process.env.prodTestTeamAccessKeySecret, sensitive: false },
                     },
                 },
             ],
@@ -122,7 +122,7 @@ export default class Test58 extends TestBase.WorkflowTestBase {
             domainType: 'Job',
             operation: 1,
             model: {
-                _teamId: config.get('sgTestTeam'),
+                _teamId: process.env.sgTestTeam,
                 _jobDefId: jobDefs[properties.jobDefs[0].name].id,
                 runId: 0,
                 name: properties.jobDefs[0].name,

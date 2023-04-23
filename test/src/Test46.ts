@@ -30,7 +30,7 @@ export default class Test46 extends TestBase.WorkflowTestBase {
         let result: boolean;
         let resApiCall: any;
 
-        const _teamId: string = config.get('sgTestTeam');
+        const _teamId: string = process.env.sgTestTeam;
 
         let firstJob: any = _.cloneDeep(InteractiveConsoleJob);
         firstJob.job.name = 'IC - Test46';

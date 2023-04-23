@@ -31,12 +31,12 @@ export default class Test51 extends TestBase.WorkflowTestBase {
 
     public ProcessOrphanedTasks = async () => {
         try {
-            let res = await self.Login(config.get('agentAccessKeyId'), config.get('agentAccessKeySecret'));
+            let res = await self.Login(process.env.agentAccessKeyId, process.env.agentAccessKeySecret);
             let tmp = res[0].split(';');
             let auth = tmp[0];
             auth = auth.substring(5) + ';';
 
-            // mongoose.connect(config.get('mongoUrl'), {});
+            // mongoose.connect(process.env.mongoUrl, {});
 
             /// To prevent a run away process - if we have tons of orphaned tasks it may be an indicator of a problem with SaaSGlue itself
             const maxOfflineAgentsToProcess = 10;
@@ -51,7 +51,7 @@ export default class Test51 extends TestBase.WorkflowTestBase {
                     disconnectedAgentsQuery = await self.testSetup.RestAPICall(
                         'agent/disconnected/disconnected?responseFields=id _teamId',
                         'GET',
-                        config.get('sgTestTeam'),
+                        process.env.sgTestTeam,
                         { batchSize: 10 },
                         null,
                         auth
@@ -103,7 +103,7 @@ export default class Test51 extends TestBase.WorkflowTestBase {
         let result: boolean;
         let resApiCall: any;
 
-        const _teamId: string = config.get('sgTestTeam');
+        const _teamId: string = process.env.sgTestTeam;
 
         const properties: any = {
             scripts: [
@@ -152,7 +152,7 @@ export default class Test51 extends TestBase.WorkflowTestBase {
             domainType: 'Job',
             operation: 1,
             model: {
-                _teamId: config.get('sgTestTeam'),
+                _teamId: process.env.sgTestTeam,
                 _jobDefId: jobDefs[properties.jobDefs[0].name].id,
                 runId: 0,
                 name: properties.jobDefs[0].name,
@@ -174,7 +174,7 @@ export default class Test51 extends TestBase.WorkflowTestBase {
             model: {
                 status: null,
                 autoRestart: true,
-                _teamId: config.get('sgTestTeam'),
+                _teamId: process.env.sgTestTeam,
                 _jobId: job.id,
                 name: properties.jobDefs[0].taskDefs[0].name,
                 target: TaskDefTarget.SINGLE_AGENT,
@@ -189,7 +189,7 @@ export default class Test51 extends TestBase.WorkflowTestBase {
             domainType: 'TaskOutcome',
             operation: 1,
             model: {
-                _teamId: config.get('sgTestTeam'),
+                _teamId: process.env.sgTestTeam,
                 _jobId: job.id,
                 source: 1,
                 status: TaskStatus.PUBLISHED,
@@ -224,7 +224,7 @@ export default class Test51 extends TestBase.WorkflowTestBase {
             domainType: 'StepOutcome',
             operation: 1,
             model: {
-                _teamId: config.get('sgTestTeam'),
+                _teamId: process.env.sgTestTeam,
                 _jobId: job.id,
                 _taskOutcomeId: taskOutcome[0].model.id,
                 name: 'Step 1',
@@ -314,7 +314,7 @@ export default class Test51 extends TestBase.WorkflowTestBase {
             domainType: 'TaskOutcome',
             operation: 1,
             model: {
-                _teamId: config.get('sgTestTeam'),
+                _teamId: process.env.sgTestTeam,
                 _jobId: job.id,
                 source: 1,
                 status: TaskStatus.PUBLISHED,
@@ -345,7 +345,7 @@ export default class Test51 extends TestBase.WorkflowTestBase {
             domainType: 'StepOutcome',
             operation: 1,
             model: {
-                _teamId: config.get('sgTestTeam'),
+                _teamId: process.env.sgTestTeam,
                 _jobId: job.id,
                 _taskOutcomeId: newTaskOutcome[0].model.id,
                 name: 'Step 1',

@@ -1,17 +1,13 @@
-// process.env.NODE_CONFIG_DIR = '../../../../config/';
+import TestSetup from './Setup';
+
+import { AMQPConnector } from '../../server/src/shared/AMQPLib';
+import { BaseLogger } from '../../server/src/shared/SGLogger';
+import { SGUtils } from '../../server/src/shared/SGUtils';
 
 import * as fs from 'fs';
 import * as util from 'util';
-import * as config from 'config';
-import { BaseLogger } from '../../server/src/shared/SGLogger';
-import TestSetup from './Setup';
-import { AMQPConnector } from '../../server/src/shared/AMQPLib';
-import { SGUtils } from '../../server/src/shared/SGUtils';
 
 let appName: string = 'RunSchedulerTest';
-
-let amqpUrl = config.get('amqpUrl');
-let rmqVhost = config.get('rmqVhost');
 
 let logger: BaseLogger = new BaseLogger(appName);
 logger.Start();
@@ -25,8 +21,6 @@ process.on('unhandledRejection', (reason, p) => {
 
 let testSetup: TestSetup = new TestSetup(appName, logger);
 
-let amqpConnector = new AMQPConnector('SchedulerTest', '', amqpUrl, rmqVhost, 1, (activeMessages) => {}, logger);
-
 (async () => {
     try {
         let testsRootPath: string = __dirname;
@@ -34,6 +28,7 @@ let amqpConnector = new AMQPConnector('SchedulerTest', '', amqpUrl, rmqVhost, 1,
         await testSetup.Init();
         await testSetup.InitEnvironment();
 
+        let amqpConnector = new AMQPConnector('SchedulerTest', '', 1, (activeMessages) => {}, logger);
         await amqpConnector.Start();
 
         let testsToRun = process.argv[2].split(',');

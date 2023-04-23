@@ -4,8 +4,8 @@ import { BaseLogger } from '../../../server/src/shared/SGLogger';
 import * as _ from 'lodash';
 
 let UpdateAgentVersion = async () => {
-    const mongoUrl = config.get('mongoUrl');
-    const mongoDbname = config.get('mongoDbName');
+    const mongoUrl = process.env.mongoUrl;
+    const mongoDbname = process.env.mongoDbName;
 
     let logger = new BaseLogger('RunTestHarness');
     logger.Start();

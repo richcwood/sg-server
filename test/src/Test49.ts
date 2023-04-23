@@ -31,7 +31,7 @@ export default class Test49 extends TestBase.WorkflowTestBase {
         let result: boolean;
         let resApiCall: any;
 
-        const _teamId: string = config.get('sgTestTeam');
+        const _teamId: string = process.env.sgTestTeam;
 
         const properties: any = {
             scripts: [
@@ -80,7 +80,7 @@ export default class Test49 extends TestBase.WorkflowTestBase {
             domainType: 'Job',
             operation: 1,
             model: {
-                _teamId: config.get('sgTestTeam'),
+                _teamId: process.env.sgTestTeam,
                 _jobDefId: jobDefs[properties.jobDefs[0].name].id,
                 runId: 0,
                 name: properties.jobDefs[0].name,
@@ -102,7 +102,7 @@ export default class Test49 extends TestBase.WorkflowTestBase {
             model: {
                 status: null,
                 autoRestart: true,
-                _teamId: config.get('sgTestTeam'),
+                _teamId: process.env.sgTestTeam,
                 _jobId: job.id,
                 name: properties.jobDefs[0].taskDefs[0].name,
                 target: 1,
@@ -116,7 +116,7 @@ export default class Test49 extends TestBase.WorkflowTestBase {
             domainType: 'TaskOutcome',
             operation: 1,
             model: {
-                _teamId: config.get('sgTestTeam'),
+                _teamId: process.env.sgTestTeam,
                 _jobId: job.id,
                 source: 1,
                 status: TaskStatus.PUBLISHED,
@@ -164,7 +164,7 @@ export default class Test49 extends TestBase.WorkflowTestBase {
             domainType: 'TaskOutcome',
             operation: 2,
             model: {
-                _teamId: config.get('sgTestTeam'),
+                _teamId: process.env.sgTestTeam,
                 _jobId: job.id,
                 status: TaskStatus.INTERRUPTING,
                 target: TaskDefTarget.SINGLE_AGENT,
@@ -207,7 +207,7 @@ export default class Test49 extends TestBase.WorkflowTestBase {
                 status: TaskStatus.PUBLISHED,
                 // autoRestart: true,
                 //                attemptedRunAgentIds: ['5f20a331fbab450ed2e8bb1a'],
-                // _teamId: config.get('sgTestTeam'),
+                // _teamId: process.env.sgTestTeam,
                 // _jobId: job.id,
                 // name: 'Task 1',
                 // targetAgentId: null,
@@ -235,7 +235,7 @@ export default class Test49 extends TestBase.WorkflowTestBase {
             domainType: 'TaskOutcome',
             operation: 1,
             model: {
-                _teamId: config.get('sgTestTeam'),
+                _teamId: process.env.sgTestTeam,
                 _jobId: job.id,
                 _taskId: task[0].model.id,
                 source: 1,

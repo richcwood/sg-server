@@ -4,10 +4,12 @@ set -e
 
 ENVIRONMENT=$1
 RUN_TYPE=$2
+AWS_ACCESS_KEY_ID=$3
+AWS_SECRET_ACCESS_KEY=$4
 
-if [ $# -lt 2 ];
+if [ $# -lt 4 ];
 then
-  echo “USAGE: $0 [environment] [run type: run \| dry-run]“
+  echo “USAGE: $0 [environment] [run type: run \| dry-run] [AWS_ACCESS_KEY_ID for lambda runner agent] [AWS_SECRET_ACCESS_KEY]“
   exit 1
 fi
 

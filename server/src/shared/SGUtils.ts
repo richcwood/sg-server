@@ -589,7 +589,7 @@ export class SGUtils {
         let s3Path = `${team._id}/${invoiceDateString}/${invoicePDFFileName}`;
         const environment = config.get('environment');
         if (environment != 'production') s3Path = environment + '/' + s3Path;
-        const s3Access = new S3Access();
+        const s3Access = new S3Access(logger);
         await s3Access.uploadFile(localInvoicePDFPath, s3Path, config.get('S3_BUCKET_INVOICES'));
 
         invoiceModel.pdfLocation = s3Path;
@@ -1347,8 +1347,8 @@ export class SGUtils {
         rawMessage = rawMessage.replace(/{to_address}/g, '' + recipientAddress);
         rawMessage = rawMessage.replace(/{from}/g, '' + from);
 
-        const host = config.get('SendGridSMTPHost');
-        const port = config.get('SendGridSMTPPort');
+        const host = process.env.SendGridSMTPHost;
+        const port = process.env.SendGridSMTPPort;
 
         var settings = {
             host: host,
@@ -1404,8 +1404,8 @@ export class SGUtils {
         rawMsg = rawMsg.replace(/{to_address}/g, '' + recipientAddress);
         rawMsg = rawMsg.replace(/{from}/g, '' + senderAddress);
 
-        const host = config.get('SendGridSMTPHost');
-        const port = config.get('SendGridSMTPPort');
+        const host = process.env.SendGridSMTPHost;
+        const port = process.env.SendGridSMTPPort;
 
         var settings = {
             host: host,

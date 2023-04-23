@@ -1,0 +1,13 @@
+{
+    "name": "sg-agent-dead-letter-watcher",
+    "version": "1.0.0",
+    "description": "SaaSGlue agent dead letter watcher",
+    "keywords": [],
+    "author": "",
+    "license": "ISC",
+    "pkg": {
+        "assets": [
+            "default.json"
+        ]
+    }
+}

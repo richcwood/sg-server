@@ -98,7 +98,7 @@ export class StepOutcomeController {
     public async createStepOutcome(req: Request, resp: Response, next: NextFunction): Promise<void> {
         let _teamId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._teamid);
         if (
-            _teamId.toHexString() == config.get('sgAdminTeam') &&
+            _teamId.toHexString() == process.env.sgAdminTeam &&
             req.body._teamId &&
             req.body._teamId != _teamId.toHexString()
         )
@@ -123,7 +123,7 @@ export class StepOutcomeController {
         const logger: BaseLogger = (<any>req).logger;
         let _teamId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._teamid);
         if (
-            _teamId.toHexString() == config.get('sgAdminTeam') &&
+            _teamId.toHexString() == process.env.sgAdminTeam &&
             req.body._teamId &&
             req.body._teamId != _teamId.toHexString()
         )

@@ -4,6 +4,9 @@
 
 'use strict';
 
+import * as dotenv from 'dotenv';
+dotenv.config();
+
 let start = Date.now();
 let logElapsed = function (msg) {
     console.log(msg, Date.now() - start);
@@ -35,10 +38,10 @@ const mongoose = require('mongoose');
 
 let env = 'UnitTest';
 
-const stompUrl = config.get('stompUrl');
-const amqpUrl = config.get('amqpUrl');
-const rmqAdminUrl = config.get('rmqAdminUrl');
-let rmqVhost = config.get('rmqVhost');
+const stompUrl = process.env.stompUrl;
+const amqpUrl = process.env.amqpUrl;
+const rmqAdminUrl = process.env.rmqAdminUrl;
+let rmqVhost = process.env.rmqVhost;
 let rmqScheduleUpdatesQueue = config.get('rmqScheduleUpdatesQueue');
 // let rmqNoAgentForTaskQueue = config.get('rmqNoAgentForTaskQueue');
 let inactiveAgentQueueTTLHours = config.get('inactiveAgentQueueTTLHours');
@@ -47,8 +50,8 @@ const apiPort = config.get('API_PORT');
 const apiVersion = config.get('API_VERSION');
 const logDest = config.get('logDest');
 
-let mongoUrl = config.get('mongoUrl');
-let mongoDbName = config.get('mongoDbName');
+let mongoUrl = process.env.mongoUrl;
+let mongoDbName = process.env.mongoDbName;
 
 export default class TestSetup {
     private mongoRepo: MongoRepo;
@@ -78,7 +81,7 @@ export default class TestSetup {
         this.teams = {};
         this.agents = [];
         this.token = '';
-        if (config.has('adminToken')) this.token = config.get('adminToken');
+        this.token = process.env.adminToken;
     }
 
     async RunPython(params: string[], options: any = {}) {
@@ -120,15 +123,7 @@ export default class TestSetup {
 
     async Init() {
         try {
-            this.amqpConnector = new AMQPConnector(
-                this.appName,
-                '',
-                amqpUrl,
-                rmqVhost,
-                1,
-                (activeMessages) => {},
-                this.logger
-            );
+            this.amqpConnector = new AMQPConnector(this.appName, '', 1, (activeMessages) => {}, this.logger);
             if (!(await this.amqpConnector.Start())) throw new Error('Error starting AMQP');
 
             // await this.StopScheduler();
@@ -152,12 +147,14 @@ export default class TestSetup {
 
     async CreateTeams() {
         let restAPICallRes: any = await this.RestAPICall(
-            `team/${config.get('sgTestTeam')}`,
+            `team/${process.env.sgTestTeam}`,
             'GET',
-            config.get('sgTestTeam'),
+            process.env.sgTestTeam,
             null,
             null
         );
+        console.log('sgTestTeam --------------> ', process.env.sgTestTeam);
+        console.log('restAPICallRes --------------> ', restAPICallRes);
         const team: any = restAPICallRes.data.data;
         team.id = new mongodb.ObjectId(team.id);
         this.teams[team.name] = team;
@@ -283,11 +280,11 @@ export default class TestSetup {
             //   body["teamAccessRightIds"] = [];
             //   body["teamAccessRightIds"][agent._teamId] = bits;
 
-            // const auth = jwt.sign(body, config.get('secret'));//KeysUtil.getPrivate()); // todo - create a public / private key
+            // const auth = jwt.sign(body, process.env.secret);//KeysUtil.getPrivate()); // todo - create a public / private key
 
             // const jwtExpiration = Date.now() + (1000 * 60 * 60 * 24); // x minute(s)
 
-            // const secret = config.get('secret');
+            // const secret = process.env.secret;
             // var auth = jwt.sign({
             //     teamIds: [agent._teamId],
             //     email: `Agent-${agent.machineId}`,
@@ -318,12 +315,12 @@ export default class TestSetup {
                 runStandAlone: true,
             };
 
-            if (agent._teamId == config.get('sgAdminTeam')) {
-                params.accessKeyId = config.get('adminTeamAgentAccessKeyId');
-                params.accessKeySecret = config.get('adminTeamAgentAccessKeySecret');
+            if (agent._teamId == process.env.sgAdminTeam) {
+                params.accessKeyId = process.env.adminTeamAgentAccessKeyId;
+                params.accessKeySecret = process.env.adminTeamAgentAccessKeySecret;
             } else {
-                params.accessKeyId = config.get('agentAccessKeyId');
-                params.accessKeySecret = config.get('agentAccessKeySecret');
+                params.accessKeyId = process.env.agentAccessKeyId;
+                params.accessKeySecret = process.env.agentAccessKeySecret;
             }
 
             if ('inactivePeriodWaitTime' in agent) params.inactivePeriodWaitTime = agent.inactivePeriodWaitTime;
@@ -535,8 +532,8 @@ export default class TestSetup {
                 'Content-Type': 'application/json',
             },
             data: {
-                accessKeyId: config.get('agentAccessKeyId'),
-                accessKeySecret: config.get('agentAccessKeySecret'),
+                accessKeyId: process.env.agentAccessKeyId,
+                accessKeySecret: process.env.agentAccessKeySecret,
             },
         });
 
@@ -617,9 +614,12 @@ export default class TestSetup {
                 });
                 resolve(response);
             } catch (e) {
-                console.log(
-                    `RestAPICall error occurred calling ${method} on '${url}': ${e.message} - ${e.response.data.errors[0].title} - ${e.response.data.errors[0].description}`
-                );
+                if (e.response && e.response.data && e.response.data.errors && e.response.data.errors.length > 0)
+                    console.log(
+                        `RestAPICall error occurred calling ${method} on '${url}': ${e.message} - ${e.response.data.errors[0].title} - ${e.response.data.errors[0].description}`
+                    );
+                else console.log(`RestAPICall error occurred calling ${method} on '${url}': ${e}`);
+
                 resolve(e.response);
             }
         });

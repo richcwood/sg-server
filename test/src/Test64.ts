@@ -44,7 +44,7 @@ export default class Test64 extends TestBase.WorkflowTestBase {
         let result: boolean;
         let resApiCall: any;
 
-        const _teamId: string = config.get('sgTestTeam');
+        const _teamId: string = process.env.sgTestTeam;
 
         let jobs: any[] = [];
         let taskOutcomeIds: any[] = [];
@@ -61,7 +61,7 @@ export default class Test64 extends TestBase.WorkflowTestBase {
                 domainType: 'TaskOutcome',
                 operation: 1,
                 model: {
-                    _teamId: config.get('sgTestTeam'),
+                    _teamId: process.env.sgTestTeam,
                     _jobId: job.job.id,
                     source: 1,
                     status: TaskStatus.PUBLISHED,

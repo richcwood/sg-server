@@ -11,17 +11,17 @@ const rl = readline.createInterface({
 });
 
 let DeleteTeamJobData = async (teamId: string) => {
-    mongoose.connect(config.get('mongoUrl'), {});
+    mongoose.connect(process.env.mongoUrl, {});
 
-    const mongoUrl = config.get('mongoUrl');
-    const mongoDbname = config.get('mongoDbName');
+    const mongoUrl = process.env.mongoUrl;
+    const mongoDbname = process.env.mongoDbName;
 
     let logger = new BaseLogger('RunTestHarness');
     logger.Start();
 
     let mongoRepo = new MongoRepo('RunTestHarness', mongoUrl, mongoDbname, logger);
 
-    console.log('mongo url -> ', config.get('mongoUrl'));
+    console.log('mongo url -> ', process.env.mongoUrl);
 
     const filter: any = { _teamId: new mongodb.ObjectId(teamId) };
 
@@ -50,7 +50,7 @@ let DeleteTeamJobData = async (teamId: string) => {
 
 const teamId = process.argv[2];
 
-console.log(`Deleting data for team ${teamId} from ${config.get('mongoUrl')}`);
+console.log(`Deleting data for team ${teamId} from ${process.env.mongoUrl}`);
 
 rl.question('continue? (y/n) ', function (yesno) {
     if (yesno != 'y') {
