@@ -2085,7 +2085,8 @@ let GenerateToken = async () => {
 };
 
 let VerifyToken = async (token: string) => {
-    const secret = process.env.secret;
+    // const secret = process.env.secret;
+    const secret = '-$op)):x3#m{OtRt$3Cnzqoq#9ar)UD7<zRSr?L';
     const res = jwt.verify(token, secret);
     console.log('res -> ', res);
 };
@@ -2707,7 +2708,7 @@ let MongoTest = async () => {
 // SubmitInvoicesForPayment();
 // TestBraintreeWebhook();
 // CreateInvoicePDF(0);
-GenerateToken();
+// GenerateToken();
 // AgentRestAPICall();
 // DeleteJobs({'_jobDefId': process.argv[2]});
 // DeleteJobDefs({"name": /Cron.*/});
@@ -2720,7 +2721,9 @@ GenerateToken();
 // CreateAccessKey();
 // printTeamAccessRightsBitSet();
 // CreateProdAccessKeys();
-// (async () => { VerifyToken(process.argv[2]); })();
+(async () => {
+    VerifyToken(process.argv[2]);
+})();
 
 // RabbitMQTeamSetup('5f57b2f14b5da00017df0d4f');
 // RabbitMQTeamSetup('5e99cbcb2317950015edb655');
