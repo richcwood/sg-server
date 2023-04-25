@@ -45,4 +45,18 @@ describe('LogRedacter', () => {
 
         expect(redactedData).toEqual({ username: 'john', age: 25 });
     });
+
+    it('should not crash on null', () => {
+        const data: LogData = null;
+        const redactedData = redacter.redactMessage(data);
+
+        expect(redactedData).toEqual(null);
+    });
+
+    it('should not crash on enpty dict', () => {
+        const data: LogData = {};
+        const redactedData = redacter.redactMessage(data);
+
+        expect(redactedData).toEqual({});
+    });
 });
