@@ -437,14 +437,13 @@ let logger: BaseLogger;
                                         next(new ValidationError('The access token expired'));
                                         return;
                                     }
-                                } else if (err.name == 'JsonWebTokenError' && process.env.old_secret) {
-                                    const old_secret = process.env.old_secret;
-                                    if (old_secret && process.env.old_secret_expiration) {
-                                        if (new Date() < new Date(process.env.old_secret_expiration)) {
-                                            jwtData = jwt.verify(authToken, old_secret);
-                                        } else {
-                                            throw err;
-                                        }
+                                } else if (
+                                    err.name == 'JsonWebTokenError' &&
+                                    process.env.old_secret &&
+                                    process.env.old_secret_expiration
+                                ) {
+                                    if (new Date() < new Date(process.env.old_secret_expiration)) {
+                                        jwtData = jwt.verify(authToken, process.env.old_secret);
                                     } else {
                                         throw err;
                                     }
