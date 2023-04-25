@@ -15,6 +15,7 @@ export class LogRedacter {
     // Redact sensitive information from a log message
     public redactMessage(data: LogData): LogData {
         // Redact sensitive information in the key value pairs
+        if (!data) return data;
         const redact = (obj: LogData) => {
             Object.entries(obj).forEach(([key, value]) => {
                 if (typeof value === 'string') {
