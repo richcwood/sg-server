@@ -437,7 +437,7 @@ let logger: BaseLogger;
                                         next(new ValidationError('The access token expired'));
                                         return;
                                     }
-                                } else if (err.name == 'JsonWebTokenError') {
+                                } else if (err.name == 'JsonWebTokenError' && config.has('old_secret')) {
                                     const old_secret = config.get('old_secret');
                                     if (old_secret) {
                                         const old_secret_expiration = config.get('old_secret_expiration');
