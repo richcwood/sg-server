@@ -14,8 +14,6 @@ let sleep = async (ms: number) => {
 
 export class AMQPConnector {
     private amqp: any;
-    private url: string;
-    private vhost: string;
     private offlinePubQueue: any;
     private subscribedRoutes: any;
     private subscriptions: any;
@@ -35,8 +33,6 @@ export class AMQPConnector {
         private logger: any
     ) {
         this.amqp = require('amqplib');
-        this.url = process.env.amqpUrl;
-        this.vhost = process.env.rmqVhost;
         this.subscribedRoutes = [];
         this.subscriptions = [];
         this.stoppedByUser = false;
@@ -90,11 +86,11 @@ export class AMQPConnector {
             return true;
         }
 
-        this.LogDebug('Received request to start AMQP connection to RabbitMQ', { Vhost: this.vhost });
+        this.LogDebug('Received request to start AMQP connection to RabbitMQ', { Vhost: process.env.rmqVhost });
         try {
             await SGUtils.retryWithBackoff(
                 async () => {
-                    return await this.amqp.connect(this.url);
+                    return await this.amqp.connect(process.env.amqpUrl);
                 },
                 (conn) => {
                     this.conn = conn;
@@ -126,7 +122,10 @@ export class AMQPConnector {
             }
         });
 
-        this.LogDebug('Completed request to start AMQP connection', { url: this.url, Vhost: this.vhost });
+        this.LogDebug('Completed request to start AMQP connection', {
+            url: process.env.amqpUrl,
+            Vhost: process.env.rmqVhost,
+        });
 
         return true;
     }

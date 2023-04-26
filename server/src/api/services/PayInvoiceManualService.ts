@@ -64,10 +64,7 @@ export class PayInvoiceManualService {
             return { _teamId: _teamId, amount: 0 };
         }
 
-        let stripeApiVersion = process.env.stripeApiVersion;
-        let privateKey = process.env.stripePrivateKey;
-
-        const stripe = new Stripe(privateKey, stripeApiVersion);
+        const stripe = new Stripe(process.env.stripePrivateKey, process.env.stripeApiVersion);
 
         if (data.amount < amount) amount = data.amount;
 

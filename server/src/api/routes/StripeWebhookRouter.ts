@@ -17,16 +17,11 @@ logger.Start();
 export default class StripeHookRouter {
     public router: Router;
     private stripe: any = undefined;
-    private secret: string;
 
     constructor() {
         this.router = Router();
 
-        this.secret = process.env.stripeWebhookSecret;
-
-        let stripeApiVersion = process.env.stripeApiVersion;
-        let privateKey = process.env.stripePrivateKey;
-        this.stripe = new Stripe(privateKey, stripeApiVersion);
+        this.stripe = new Stripe(process.env.stripePrivateKey, process.env.stripeApiVersion);
 
         this.setRoutes();
     }
@@ -38,7 +33,11 @@ export default class StripeHookRouter {
     async create(req: Request, res: Response, next: NextFunction) {
         let event;
         try {
-            event = this.stripe.webhooks.constructEvent(req.body, req.headers['stripe-signature'], this.secret);
+            event = this.stripe.webhooks.constructEvent(
+                req.body,
+                req.headers['stripe-signature'],
+                process.env.stripeWebhookSecret
+            );
         } catch (error) {
             logger.LogError('Stripe webhook error', { body: req.body, headers: req.headers, error });
             throw new ForbiddenError('Stripe webhook error');

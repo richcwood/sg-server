@@ -7,13 +7,7 @@ import { teamService } from './TeamService';
 export class StripeClientTokenService {
     public async createStripeCustomer(team: TeamSchema): Promise<object> {
         // let merchantId = config.get('stripeMerchantId');
-        let stripeApiVersion = process.env.stripeApiVersion;
-        let publicKey = process.env.stripePublicKey;
-        let privateKey = process.env.stripePrivateKey;
-
-        const stripe = new Stripe('sk_test_4eC39HqLyjWDarjtT1zdp7dc', {
-            apiVersion: stripeApiVersion,
-        });
+        const stripe = new Stripe(process.env.stripePrivateKey, process.env.stripeApiVersion);
 
         return await new Promise(async (resolve, reject) => {
             try {
@@ -48,11 +42,7 @@ export class StripeClientTokenService {
         const team: TeamSchema = <TeamSchema>await teamService.findTeam(_teamId, 'stripe_id');
         if (!team) throw new MissingObjectError(`Team "${_teamId.toHexString()}" not found`);
 
-        let stripeApiVersion = process.env.stripeApiVersion;
-        let publicKey = process.env.stripePublicKey;
-        let privateKey = process.env.stripePrivateKey;
-
-        const stripe = new Stripe(privateKey, stripeApiVersion);
+        const stripe = new Stripe(process.env.stripePrivateKey, process.env.stripeApiVersion);
 
         return await new Promise(async (resolve, reject) => {
             try {

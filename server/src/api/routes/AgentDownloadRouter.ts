@@ -17,9 +17,6 @@ import * as _ from 'lodash';
 import * as mongodb from 'mongodb';
 import { verifyAccessRights } from '../utils/AccessRightsVerifier';
 
-const mongoUrl = process.env.mongoUrl;
-const mongoDbName = process.env.mongoDbName;
-
 let appName: string = 'AgentDownloadRouter';
 let agentDownloadRouterLogger: BaseLogger = new BaseLogger(appName);
 agentDownloadRouterLogger.Start();
@@ -34,7 +31,12 @@ export class AgentDownloadRouter {
 
     constructor() {
         this.s3Access = new S3Access(agentDownloadRouterLogger);
-        this.mongoRepo = new MongoRepo(appName, mongoUrl, mongoDbName, agentDownloadRouterLogger);
+        this.mongoRepo = new MongoRepo(
+            appName,
+            process.env.mongoUrl,
+            process.env.mongoDbName,
+            agentDownloadRouterLogger
+        );
 
         this.router = Router();
         this.setRoutes();

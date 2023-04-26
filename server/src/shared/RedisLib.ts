@@ -8,9 +8,8 @@ export class RedisLib {
     private redisAsyncClient: any;
     private redisClient: any;
     constructor() {
-        const loginUrl = process.env.redisUrl;
-        this.redisAsyncClient = redisAsync.createClient(loginUrl);
-        this.redisClient = redis.createClient(loginUrl);
+        this.redisAsyncClient = redisAsync.createClient(process.env.redisUrl);
+        this.redisClient = redis.createClient(process.env.redisUrl);
 
         num_connections++;
         console.log(`${num_connections} redis connections`);

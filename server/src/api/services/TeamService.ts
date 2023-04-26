@@ -111,7 +111,6 @@ export class TeamService {
 
         /// Create rabbitmq artifacts for this team
         const rmqAdminUrl = process.env.rmqAdminUrl;
-
         let rmqVhost = process.env.rmqVhost;
         const rmqAdmin = new RabbitMQAdmin(rmqAdminUrl, rmqVhost, logger);
         const newUsername = newTeam._id.toString();
