@@ -35,14 +35,13 @@ export class LogRedacter {
                         }
 
                         obj[key] = value;
-                    } else if (typeof value === 'object') {
+                    } else if (value && typeof value === 'object') {
                         // Recursively redact sensitive information in the nested objects
                         redact(value as LogData);
                     }
                 });
             } catch (err) {
-                console.log('redactMessage - data ----------> ', data);
-                console.log('redactMessage - err ----------> ', err);
+                console.log('Error redacting message', { err, obj });
             }
         };
 
