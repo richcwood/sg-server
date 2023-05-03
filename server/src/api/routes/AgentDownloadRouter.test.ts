@@ -12,9 +12,6 @@ import { TeamSchema } from '../domain/Team';
 
 import * as AgentDownloadRouter from './AgentDownloadRouter';
 
-import { settingsService } from '../services/SettingsService';
-import * as util from 'util';
-
 import { S3Access } from '../../shared/S3Access';
 import { BaseLogger } from '../../shared/SGLogger';
 

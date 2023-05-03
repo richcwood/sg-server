@@ -306,7 +306,7 @@ let logger: BaseLogger;
             this.app.use(`${apiURLBase}/accesskey`, accessKeyRouter);
             this.app.use(`${apiURLBase}/accessright`, accessRightRouter);
             this.app.use(`${apiURLBase}/agent`, agentRouter);
-            this.app.use(`${apiURLBase}/agentDownload`, agentDownloadRouter);
+            this.app.use(`${apiURLBase}/agentDownload`, agentDownloadRouter());
             this.app.use(`${apiURLBase}/agentlog`, agentLogRouter);
             this.app.use(`${apiURLBase}/artifact`, artifactRouter);
             this.app.use(`${apiURLBase}/createinvoice`, createInvoiceRouter);
