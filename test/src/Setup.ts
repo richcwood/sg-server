@@ -35,9 +35,6 @@ import * as path from 'path';
 const jwt = require('jsonwebtoken');
 import Bitset from 'bitset';
 const mongoose = require('mongoose');
-
-let env = 'UnitTest';
-
 const stompUrl = process.env.stompUrl;
 const amqpUrl = process.env.amqpUrl;
 const rmqAdminUrl = process.env.rmqAdminUrl;

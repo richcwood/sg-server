@@ -1,8 +1,5 @@
-import { convertData } from '../utils/ResponseConverters';
 import { SettingsSchema, SettingsModel } from '../domain/Settings';
-import { rabbitMQPublisher, PayloadOperation } from '../utils/RabbitMQPublisher';
-import { MissingObjectError, ValidationError } from '../utils/Errors';
-import * as mongodb from 'mongodb';
+import { MissingObjectError } from '../utils/Errors';
 import * as _ from 'lodash';
 
 export class SettingsService {

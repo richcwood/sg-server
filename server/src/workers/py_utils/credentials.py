@@ -129,6 +129,3 @@ if __name__ == "__main__":
         _load_rabbitmq_secrets()
     else:
         load_dotenv()
-
-    # Use "secret_name" value of params by default
-    print("env -------> ", environ)
