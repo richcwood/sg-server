@@ -2625,6 +2625,35 @@ let SendTestBrowserAlert = async () => {
     rabbitMQPublisher.publishBrowserAlert(process.env.sgTestTeam, `This is a test message`);
 };
 
+let MongooseTest = async () => {
+    mongoose.connect(process.env.mongoUrl, {});
+
+    const platformKey = `Values.agent_stub_install.linux`;
+
+    let queryPlatform = {};
+    queryPlatform[platformKey] = { $exists: true };
+
+    let queryStatus = {};
+    const statusKey = `Values.agent_stub_install.linux.status`;
+    queryStatus[statusKey] = { $eq: 'ready' };
+
+    let projectionDoc = {};
+    const locationKey = `Values.agent_stub_install.linux.location`;
+    projectionDoc[locationKey] = 1;
+    projectionDoc['_id'] = 1;
+
+    const filter = {};
+    filter[platformKey] = { $exists: true };
+    filter[statusKey] = { $eq: 'ready' };
+    filter['Type'] = 'AgentBuild';
+
+    console.log('filter ----------> ', filter);
+    console.log('response fields ----------> ', `${locationKey} _id`);
+    const agentBuild = await settingsService.findAllSettingsInternal(filter, `${locationKey} _id`);
+    console.log('after');
+    console.log('agentBuild ----------> ', util.inspect(agentBuild, false, null));
+};
+
 let MongoTest = async () => {
     const mongoUrl = process.env.mongoUrl;
     const mongoDbname = process.env.mongoDbName;
@@ -2657,7 +2686,7 @@ let MongoTest = async () => {
     console.log('result ---------> ', result);
 };
 
-// MongoTest();
+// MongooseTest();
 // RunRepublishTasksWaitingForAgent('5f57b2f14b5da00017df0d4f');
 // CreateBrainTreeCompanyForTeams();
 // CreateStripeCompanyForTeams();
@@ -2721,9 +2750,9 @@ let MongoTest = async () => {
 // CreateAccessKey();
 // printTeamAccessRightsBitSet();
 // CreateProdAccessKeys();
-(async () => {
-    VerifyToken(process.argv[2]);
-})();
+// (async () => {
+//     VerifyToken(process.argv[2]);
+// })();
 
 // RabbitMQTeamSetup('5f57b2f14b5da00017df0d4f');
 // RabbitMQTeamSetup('5e99cbcb2317950015edb655');

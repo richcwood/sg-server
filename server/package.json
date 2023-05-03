@@ -68,6 +68,8 @@
     },
     "devDependencies": {
         "@types/node": "^18.11.18",
-        "mongodb-memory-server": "8.4.0"
+        "aws-sdk-mock": "^5.8.0",
+        "mongodb-memory-server": "8.4.0",
+        "supertest": "^6.3.3"
     }
 }
