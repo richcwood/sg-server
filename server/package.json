@@ -14,6 +14,7 @@
     "author": "",
     "license": "ISC",
     "dependencies": {
+        "@mailchimp/mailchimp_marketing": "3.0.80",
         "@octokit/rest": "18.12.0",
         "@sendgrid/mail": "6.5.5",
         "@stomp/stompjs": "6.1.2",
@@ -67,9 +68,11 @@
         "zxcvbn": "4.4.2"
     },
     "devDependencies": {
+        "@types/mailchimp__mailchimp_marketing": "^3.0.9",
         "@types/node": "^18.11.18",
         "aws-sdk-mock": "^5.8.0",
         "mongodb-memory-server": "8.4.0",
+        "reflect-metadata": "^0.1.13",
         "supertest": "^6.3.3"
     }
 }

@@ -10,7 +10,6 @@ import { TeamSchema } from '../api/domain/Team';
 import { InvoiceSchema } from '../api/domain/Invoice';
 import { JobSchema } from '../api/domain/Job';
 import { teamVariableService } from '../api/services/TeamVariableService';
-import { AccessRightModel, AccessRightSchema } from '../api/domain/AccessRight';
 import { BaseLogger } from './SGLogger';
 import { S3Access } from './S3Access';
 import * as mongodb from 'mongodb';
