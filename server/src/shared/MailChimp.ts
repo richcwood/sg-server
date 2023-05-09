@@ -6,7 +6,7 @@ import * as crypto from 'crypto';
 
 const validMemberStatuses: string[] = ['subscribed', 'unsubscribed', 'cleaned', 'pending', 'transactional'];
 
-export class MailchimpAPI {
+export class MailChimpAPI {
     private _apiKey: string;
     private _lists: Map<string, string> = undefined;
     get lists(): Map<string, string> {
@@ -21,7 +21,7 @@ export class MailchimpAPI {
                 server: this._apiKey.split('-')[1],
             });
         } catch (err) {
-            console.error('Error initializing MailchimpAPI', err);
+            console.error('Error initializing MailChimpAPI', err);
         }
     }
 
@@ -39,7 +39,6 @@ export class MailchimpAPI {
      * @returns
      */
     async getLists() {
-        if (!mailchimp) throw new Error('MailChimpAPI not initialized');
         this._lists = new Map([]);
         const listsDetails = await mailchimp.lists.getAllLists();
         for (const list of listsDetails.lists) {

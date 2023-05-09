@@ -13,7 +13,7 @@ import { exec } from 'child_process';
 import * as Enums from './Enums';
 
 import { BaseLogger } from './SGLogger';
-import { MailchimpAPI } from './MailChimp';
+import { MailChimpAPI } from './MailChimp';
 import { S3Access } from './S3Access';
 import { SGStrings } from './SGStrings';
 
@@ -33,7 +33,7 @@ import { teamVariableService } from '../api/services/TeamVariableService';
 
 import { MissingObjectError, ValidationError, ErrorWithCause } from '../api/utils/Errors';
 
-const mailchimpAPI: MailchimpAPI = new MailchimpAPI();
+let mailchimpAPI: MailChimpAPI;
 
 const ascii2utf8: any = {
     '0': '30',
@@ -711,6 +711,7 @@ export class SGUtils {
 
     static NewUserNotification = async (updatedUser: Partial<UserSchema>, logger: BaseLogger) => {
         try {
+            if (!mailchimpAPI) mailchimpAPI = new MailChimpAPI();
             await mailchimpAPI.addMember(updatedUser.email, 'subscribed');
         } catch (e) {
             const properties: any = Object.assign(updatedUser, { error: e.message });

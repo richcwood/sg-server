@@ -1,6 +1,6 @@
 const mailchimp = require('@mailchimp/mailchimp_marketing');
 
-import { MailchimpAPI } from './MailChimp';
+import { MailChimpAPI } from './MailChimp';
 
 // Mock the mailchimp_marketing package
 jest.mock('@mailchimp/mailchimp_marketing', () => ({
@@ -18,8 +18,8 @@ jest.mock('@mailchimp/mailchimp_marketing', () => ({
 // Define the API key to use in the tests
 process.env.MAILCHIMP_API_KEY = 'my-mailchimp-api-key';
 
-describe('MailchimpAPI', () => {
-    let mailchimpAPI: MailchimpAPI;
+describe('MailChimpAPI', () => {
+    let mailchimpAPI: MailChimpAPI;
     let lists: any[];
     const defaultListId = 'list-id';
     const defaultListName = 'My List';
@@ -30,7 +30,7 @@ describe('MailchimpAPI', () => {
     });
 
     beforeEach(() => {
-        mailchimpAPI = new MailchimpAPI();
+        mailchimpAPI = new MailChimpAPI();
     });
 
     afterEach(() => {
