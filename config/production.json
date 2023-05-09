@@ -66,6 +66,13 @@
                 "secretName": "arn:aws:secretsmanager:us-east-2:948032566234:secret:production/SaaSGlueAPI/GithubAuth-aPySUT",
                 "AWS_REGION": "us-east-2"
             }
+        },
+        {
+            "name": "mailchimp",
+            "credentials": {
+                "secretName": "arn:aws:secretsmanager:us-east-2:948032566234:secret:production/SaaSGlueAPI/MailChimp-IuEoah",
+                "AWS_REGION": "us-east-2"
+            }
         }
     ]
 }
