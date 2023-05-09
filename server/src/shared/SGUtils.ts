@@ -1,29 +1,39 @@
+import * as compressing from 'compressing';
+import * as config from 'config';
+import * as fs from 'fs';
+import * as pdf from 'html-pdf';
+import * as _ from 'lodash';
+import * as moment from 'moment';
+import * as mongodb from 'mongodb';
 import * as os from 'os';
+
+import axios from 'axios';
 import { exec } from 'child_process';
+
+import * as Enums from './Enums';
+
+import { BaseLogger } from './SGLogger';
+import { MailchimpAPI } from './MailChimp';
+import { S3Access } from './S3Access';
 import { SGStrings } from './SGStrings';
+
+import { JobSchema } from '../api/domain/Job';
+import { InvoiceSchema } from '../api/domain/Invoice';
 import { TaskDefSchema } from '../api/domain/TaskDef';
+import { TaskOutcomeSchema } from '../api/domain/TaskOutcome';
+import { TeamSchema } from '../api/domain/Team';
+import { UserSchema } from '../api/domain/User';
+
+import { scriptService } from '../api/services/ScriptService';
 import { teamService } from '../api/services/TeamService';
 import { jobService } from '../api/services/JobService';
 import { taskService } from '../api/services/TaskService';
 import { taskOutcomeService } from '../api/services/TaskOutcomeService';
-import { TeamSchema } from '../api/domain/Team';
-import { InvoiceSchema } from '../api/domain/Invoice';
-import { JobSchema } from '../api/domain/Job';
 import { teamVariableService } from '../api/services/TeamVariableService';
-import { BaseLogger } from './SGLogger';
-import { S3Access } from './S3Access';
-import * as mongodb from 'mongodb';
-import * as fs from 'fs';
-import * as pdf from 'html-pdf';
-import * as moment from 'moment';
-import * as compressing from 'compressing';
-import * as config from 'config';
+
 import { MissingObjectError, ValidationError, ErrorWithCause } from '../api/utils/Errors';
-import * as _ from 'lodash';
-import * as Enums from './Enums';
-import axios from 'axios';
-import { scriptService } from '../api/services/ScriptService';
-import { TaskOutcomeSchema } from '../api/domain/TaskOutcome';
+
+const mailchimpAPI: MailchimpAPI = new MailchimpAPI();
 
 const ascii2utf8: any = {
     '0': '30',
@@ -697,6 +707,28 @@ export class SGUtils {
         let end = moment(date).endOf('month');
 
         return { start, end };
+    };
+
+    static NewUserNotification = async (updatedUser: Partial<UserSchema>, logger: BaseLogger) => {
+        try {
+            await mailchimpAPI.addMember(updatedUser.email, 'subscribed');
+        } catch (e) {
+            const properties: any = Object.assign(updatedUser, { error: e.message });
+            logger.LogError('Error sending new user notification to MailChimp', properties);
+        }
+        try {
+            let newEmailNotificationMessage = JSON.stringify(updatedUser, null, 4);
+            await SGUtils.SendInternalEmail(
+                'rich@saasglue.com',
+                'jack@saasglue.com,jay@saasglue.com,rich@saasglue.com',
+                'New user signed up',
+                newEmailNotificationMessage,
+                logger
+            );
+        } catch (e) {
+            const properties: any = Object.assign(updatedUser, { error: e.message });
+            logger.LogError('Error sending new user notification message', properties);
+        }
     };
 
     static SendTaskErrorAlertSlack = async (
