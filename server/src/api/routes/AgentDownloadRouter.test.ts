@@ -3,7 +3,6 @@ import { Application, Response } from 'express';
 import { handleErrors } from '../utils/ErrorMiddleware';
 import { handleBuildResponseWrapper, handleResponse } from '../utils/ResponseMiddleware';
 
-import * as config from 'config';
 import * as mongodb from 'mongodb';
 import * as request from 'supertest';
 
