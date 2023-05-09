@@ -15,10 +15,14 @@ export class MailchimpAPI {
 
     constructor() {
         this._apiKey = process.env.MAILCHIMP_API_KEY!;
-        mailchimp.setConfig({
-            _apiKey: this._apiKey,
-            server: this._apiKey.split('-')[1],
-        });
+        try {
+            mailchimp.setConfig({
+                _apiKey: this._apiKey,
+                server: this._apiKey.split('-')[1],
+            });
+        } catch (err) {
+            console.error('Error initializing MailchimpAPI', err);
+        }
     }
 
     /**
@@ -35,6 +39,7 @@ export class MailchimpAPI {
      * @returns
      */
     async getLists() {
+        if (!mailchimp) throw new Error('MailChimpAPI not initialized');
         this._lists = new Map([]);
         const listsDetails = await mailchimp.lists.getAllLists();
         for (const list of listsDetails.lists) {
