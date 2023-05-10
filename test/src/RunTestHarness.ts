@@ -80,6 +80,7 @@ import Bitset from 'bitset';
 import { AccessKeyModel } from '../../server/src/api/domain/AccessKey';
 import { teamVariableService } from '../../server/src/api/services/TeamVariableService';
 import { TeamVariableModel } from '../../server/src/api/domain/TeamVariable';
+import { MailChimpAPI } from '../../server/src/shared/MailChimp';
 
 const waitForAgentCreateInterval = 15000;
 const waitForAgentCreateMaxRetries = 12;
@@ -334,6 +335,33 @@ let StompTest = async () => {
     // await connector_pub.Publish('job', 'temp_route', { 'key2': 'val22' });
 
     await SGUtils.sleep(5000);
+};
+
+let MailChimpTest = async () => {
+    let logger = new BaseLogger('RunTestHarness');
+    logger.Start();
+
+    const secretConfigs = config.get('secrets');
+    for (let secretConfig of secretConfigs) {
+        await SecretsLoader.loadSecrets(secretConfig, logger);
+    }
+
+    const updatedUser = {
+        _id: '645b10178720fa2acfe34c31',
+        dateCreated: new Date('2023-05-10T03:31:14.038Z'),
+        teamIds: [],
+        teamIdsInactive: [],
+        teamIdsInvited: [],
+        email: 'fidos52398@jwsuns.com',
+        emailConfirmed: true,
+        hasAcceptedTerms: false,
+        teamAccessRightIds: {},
+    };
+    const mailchimpAPI = new MailChimpAPI();
+    // const response = await mailchimpAPI.addMember(updatedUser.email, 'subscribed');
+    // const response = await mailchimpAPI.getMemberInfo(updatedUser.email);
+    const response = await mailchimpAPI.deleteMember(updatedUser.email);
+    console.log('response -------> ', response);
 };
 
 let AMQPTest = async () => {
@@ -2686,6 +2714,7 @@ let MongoTest = async () => {
     console.log('result ---------> ', result);
 };
 
+MailChimpTest();
 // MongooseTest();
 // RunRepublishTasksWaitingForAgent('5f57b2f14b5da00017df0d4f');
 // CreateBrainTreeCompanyForTeams();

@@ -15,9 +15,10 @@ export class MailChimpAPI {
 
     constructor() {
         this._apiKey = process.env.MAILCHIMP_API_KEY!;
+        const server = this._apiKey.split('-')[1];
         try {
             mailchimp.setConfig({
-                _apiKey: this._apiKey,
+                apiKey: this._apiKey,
                 server: this._apiKey.split('-')[1],
             });
         } catch (err) {
@@ -75,10 +76,10 @@ export class MailChimpAPI {
      * @param subscriberId - can be an subscriber hash or email address
      * @returns
      */
-    async getMemberInfo(listName: string = 'saas glue', subscriberId: any) {
+    async getMemberInfo(subscriberId: any, listName: string = 'saas glue') {
         const listId = await this.getListId(listName);
         const response = await mailchimp.lists.getListMember(listId, subscriberId);
-        return response.memberInfo;
+        return response;
     }
 
     /**
@@ -94,7 +95,7 @@ export class MailChimpAPI {
             email_address: emailAddress,
             status: status,
         });
-        return response.memberInfo;
+        return response;
     }
 
     /**
@@ -108,7 +109,7 @@ export class MailChimpAPI {
         if ('status' in member) assert(validMemberStatuses.indexOf(member.status) >= 0, 'Invalid status');
         const listId = await this.getListId(listName);
         const response = await mailchimp.lists.updateListMember(listId, memberId, member);
-        return response.memberInfo;
+        return response;
     }
 
     /**

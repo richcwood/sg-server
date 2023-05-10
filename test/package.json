@@ -60,6 +60,7 @@
         "zip-a-folder": "0.0.12"
     },
     "devDependencies": {
+        "@mailchimp/mailchimp_marketing": "^3.0.80",
         "@types/node": "^18.11.18"
     }
 }

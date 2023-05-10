@@ -94,8 +94,8 @@ describe('MailChimpAPI', () => {
                 id: defaultMemberId,
                 email_address: memberEmail,
             };
-            (mailchimp.lists.getListMember as jest.Mock).mockResolvedValueOnce({ memberInfo });
-            const result = await mailchimpAPI.getMemberInfo(defaultListName, memberEmail);
+            (mailchimp.lists.getListMember as jest.Mock).mockResolvedValueOnce(memberInfo);
+            const result = await mailchimpAPI.getMemberInfo(memberEmail, defaultListName);
             expect(mailchimp.lists.getListMember).toHaveBeenCalledWith(defaultListId, memberEmail);
             expect(result).toEqual(memberInfo);
         });
@@ -110,7 +110,7 @@ describe('MailChimpAPI', () => {
                 email_address: memberEmail,
             };
             const status = 'subscribed';
-            (mailchimp.lists.addListMember as jest.Mock).mockResolvedValueOnce({ memberInfo });
+            (mailchimp.lists.addListMember as jest.Mock).mockResolvedValueOnce(memberInfo);
             const result = await mailchimpAPI.addMember(memberEmail, status, defaultListName);
             expect(mailchimp.lists.addListMember).toHaveBeenCalledWith(defaultListId, {
                 email_address: memberEmail,
@@ -137,7 +137,7 @@ describe('MailChimpAPI', () => {
                 email_address: memberEmail,
                 status: 'subscribed',
             };
-            (mailchimp.lists.updateListMember as jest.Mock).mockResolvedValueOnce({ memberInfo });
+            (mailchimp.lists.updateListMember as jest.Mock).mockResolvedValueOnce(memberInfo);
             const result = await mailchimpAPI.updateMember(defaultMemberId, memberInfo, defaultListName);
             expect(mailchimp.lists.updateListMember).toHaveBeenCalledWith(defaultListId, defaultMemberId, memberInfo);
             expect(result).toEqual(memberInfo);
