@@ -33,5 +33,9 @@ export class ScheduleRouter {
     }
 }
 
-export const scheduleRouterSingleton = new ScheduleRouter();
-export const scheduleRouter = scheduleRouterSingleton.router;
+export const scheduleRouterSingleton = (): ScheduleRouter | any => {
+    return new ScheduleRouter();
+};
+export const scheduleRouter = (): any => {
+    return scheduleRouterSingleton().router;
+};

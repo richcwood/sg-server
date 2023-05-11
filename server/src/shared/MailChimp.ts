@@ -15,7 +15,6 @@ export class MailChimpAPI {
 
     constructor() {
         this._apiKey = process.env.MAILCHIMP_API_KEY!;
-        const server = this._apiKey.split('-')[1];
         try {
             mailchimp.setConfig({
                 apiKey: this._apiKey,

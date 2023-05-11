@@ -12,5 +12,9 @@ export class AccessRightRouter {
     }
 }
 
-export const accessRightRouterSingleton = new AccessRightRouter();
-export const accessRightRouter = accessRightRouterSingleton.router;
+export const accessRightRouterSingleton = (): AccessRightRouter | any => {
+    return new AccessRightRouter();
+};
+export const accessRightRouter = (): any => {
+    return accessRightRouterSingleton().router;
+};

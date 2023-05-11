@@ -21,5 +21,9 @@ export class TeamAdminAccessRouter {
     }
 }
 
-export const teamAdminAccessRouterSingleton = new TeamAdminAccessRouter();
-export const teamAdminAccessRouter = teamAdminAccessRouterSingleton.router;
+export const teamAdminAccessRouterSingleton = (): TeamAdminAccessRouter | any => {
+    return new TeamAdminAccessRouter();
+};
+export const teamAdminAccessRouter = (): any => {
+    return teamAdminAccessRouterSingleton().router;
+};

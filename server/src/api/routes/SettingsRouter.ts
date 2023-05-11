@@ -20,5 +20,9 @@ export class SettingsRouter {
     }
 }
 
-export const settingsRouterSingleton = new SettingsRouter();
-export const settingsRouter = settingsRouterSingleton.router;
+export const settingsRouterSingleton = (): SettingsRouter | any => {
+    return new SettingsRouter();
+};
+export const settingsRouter = (): any => {
+    return settingsRouterSingleton().router;
+};

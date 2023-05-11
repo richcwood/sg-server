@@ -20,5 +20,9 @@ export class TeamRouter {
     }
 }
 
-export const teamRouterSingleton = new TeamRouter();
-export const teamRouter = teamRouterSingleton.router;
+export const teamRouterSingleton = (): TeamRouter | any => {
+    return new TeamRouter();
+};
+export const teamRouter = (): any => {
+    return teamRouterSingleton().router;
+};

@@ -28,5 +28,9 @@ export class AccessKeyRouter {
     }
 }
 
-export const accessKeyRouterSingleton = new AccessKeyRouter();
-export const accessKeyRouter = accessKeyRouterSingleton.router;
+export const accessKeyRouterSingleton = (): AccessKeyRouter | any => {
+    return new AccessKeyRouter();
+};
+export const accessKeyRouter = (): any => {
+    return accessKeyRouterSingleton().router;
+};

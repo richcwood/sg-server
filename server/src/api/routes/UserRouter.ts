@@ -16,5 +16,9 @@ export class UserRouter {
     }
 }
 
-export const userRouterSingleton = new UserRouter();
-export const userRouter = userRouterSingleton.router;
+export const userRouterSingleton = (): UserRouter | any => {
+    return new UserRouter();
+};
+export const userRouter = (): any => {
+    return userRouterSingleton().router;
+};

@@ -12,5 +12,9 @@ export class PasswordResetRouter {
     }
 }
 
-export const passwordResetRouterSingleton = new PasswordResetRouter();
-export const passwordResetRouter = passwordResetRouterSingleton.router;
+export const passwordResetRouterSingleton = (): PasswordResetRouter | any => {
+    return new PasswordResetRouter();
+};
+export const passwordResetRouter = (): any => {
+    return passwordResetRouterSingleton().router;
+};

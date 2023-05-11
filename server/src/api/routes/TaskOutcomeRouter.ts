@@ -28,5 +28,9 @@ export class TaskOutcomeRouter {
     }
 }
 
-export const taskOutcomeRouterSingleton = new TaskOutcomeRouter();
-export const taskOutcomeRouter = taskOutcomeRouterSingleton.router;
+export const taskOutcomeRouterSingleton = (): TaskOutcomeRouter | any => {
+    return new TaskOutcomeRouter();
+};
+export const taskOutcomeRouter = (): any => {
+    return taskOutcomeRouterSingleton().router;
+};

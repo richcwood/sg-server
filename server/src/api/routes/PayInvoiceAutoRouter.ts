@@ -16,5 +16,9 @@ export class PayInvoiceAutoRouter {
     }
 }
 
-export const payInvoiceAutoRouterSingleton = new PayInvoiceAutoRouter();
-export const payInvoiceAutoRouter = payInvoiceAutoRouterSingleton.router;
+export const payInvoiceAutoRouterSingleton = (): PayInvoiceAutoRouter | any => {
+    return new PayInvoiceAutoRouter();
+};
+export const payInvoiceAutoRouter = (): any => {
+    return payInvoiceAutoRouterSingleton().router;
+};

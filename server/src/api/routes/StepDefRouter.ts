@@ -24,5 +24,9 @@ export class StepDefRouter {
     }
 }
 
-export const stepDefRouterSingleton = new StepDefRouter();
-export const stepDefRouter = stepDefRouterSingleton.router;
+export const stepDefRouterSingleton = (): StepDefRouter | any => {
+    return new StepDefRouter();
+};
+export const stepDefRouter = (): any => {
+    return stepDefRouterSingleton().router;
+};
