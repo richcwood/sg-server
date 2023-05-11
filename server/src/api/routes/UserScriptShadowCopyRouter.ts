@@ -36,5 +36,9 @@ export class UserScriptShadowCopyRouter {
     }
 }
 
-export const userScriptShadowCopyRouterSingleton = new UserScriptShadowCopyRouter();
-export const userScriptShadowCopyRouter = userScriptShadowCopyRouterSingleton.router;
+export const userScriptShadowCopyRouterSingleton = (): UserScriptShadowCopyRouter | any => {
+    return new UserScriptShadowCopyRouter();
+};
+export const userScriptShadowCopyRouter = (): any => {
+    return userScriptShadowCopyRouterSingleton().router;
+};

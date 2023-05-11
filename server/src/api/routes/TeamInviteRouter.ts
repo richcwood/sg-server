@@ -16,5 +16,9 @@ export class TeamInviteRouter {
     }
 }
 
-export const teamInviteRouterSingleton = new TeamInviteRouter();
-export const teamInviteRouter = teamInviteRouterSingleton.router;
+export const teamInviteRouterSingleton = (): TeamInviteRouter | any => {
+    return new TeamInviteRouter();
+};
+export const teamInviteRouter = (): any => {
+    return teamInviteRouterSingleton().router;
+};

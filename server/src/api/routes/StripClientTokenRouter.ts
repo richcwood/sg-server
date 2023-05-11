@@ -21,5 +21,9 @@ export class StripeClientTokenRouter {
     }
 }
 
-export const stripeClientTokenRouterSingleton = new StripeClientTokenRouter();
-export const stripeClientTokenRouter = stripeClientTokenRouterSingleton.router;
+export const stripeClientTokenRouterSingleton = (): StripeClientTokenRouter | any => {
+    return new StripeClientTokenRouter();
+};
+export const stripeClientTokenRouter = (): any => {
+    return stripeClientTokenRouterSingleton().router;
+};

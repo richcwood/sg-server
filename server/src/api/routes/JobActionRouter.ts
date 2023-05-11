@@ -22,5 +22,9 @@ export class JobActionRouter {
     }
 }
 
-export const jobActionRouterSingleton = new JobActionRouter();
-export const jobActionRouter = jobActionRouterSingleton.router;
+export const jobActionRouterSingleton = (): JobActionRouter | any => {
+    return new JobActionRouter();
+};
+export const jobActionRouter = (): any => {
+    return jobActionRouterSingleton().router;
+};

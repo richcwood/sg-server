@@ -28,5 +28,9 @@ export class SaascipeVersionRouter {
     }
 }
 
-export const saascipeVersionRouterSingleton = new SaascipeVersionRouter();
-export const saascipeVersionRouter = saascipeVersionRouterSingleton.router;
+export const saascipeVersionRouterSingleton = (): SaascipeVersionRouter | any => {
+    return new SaascipeVersionRouter();
+};
+export const saascipeVersionRouter = (): any => {
+    return saascipeVersionRouterSingleton().router;
+};

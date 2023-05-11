@@ -24,5 +24,9 @@ export class InvoiceRouter {
     }
 }
 
-export const invoiceRouterSingleton = new InvoiceRouter();
-export const invoiceRouter = invoiceRouterSingleton.router;
+export const invoiceRouterSingleton = (): InvoiceRouter | any => {
+    return new InvoiceRouter();
+};
+export const invoiceRouter = (): any => {
+    return invoiceRouterSingleton().router;
+};

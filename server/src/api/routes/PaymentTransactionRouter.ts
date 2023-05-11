@@ -31,5 +31,9 @@ export class PaymentTransactionRouter {
     }
 }
 
-export const paymentTransactionRouterSingleton = new PaymentTransactionRouter();
-export const paymentTransactionRouter = paymentTransactionRouterSingleton.router;
+export const paymentTransactionRouterSingleton = (): PaymentTransactionRouter | any => {
+    return new PaymentTransactionRouter();
+};
+export const paymentTransactionRouter = (): any => {
+    return paymentTransactionRouterSingleton().router;
+};

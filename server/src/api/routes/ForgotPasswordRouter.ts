@@ -12,5 +12,9 @@ export class ForgotPasswordRouter {
     }
 }
 
-export const forgotPasswordRouterSingleton = new ForgotPasswordRouter();
-export const forgotPasswordRouter = forgotPasswordRouterSingleton.router;
+export const forgotPasswordRouterSingleton = (): ForgotPasswordRouter | any => {
+    return new ForgotPasswordRouter();
+};
+export const forgotPasswordRouter = (): any => {
+    return forgotPasswordRouterSingleton().router;
+};

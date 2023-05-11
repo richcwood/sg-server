@@ -97,8 +97,12 @@ export class AgentLogRouter {
     }
 }
 
-export const agentLogRouterSingleton = new AgentLogRouter();
-export const agentLogRouter = agentLogRouterSingleton.router;
+export const agentLogRouterSingleton = (): AgentLogRouter | any => {
+    return new AgentLogRouter();
+};
+export const agentLogRouter = (): any => {
+    return agentLogRouterSingleton().router;
+};
 
 // export default class AgentLogRouter1 {
 //   public router: Router;
