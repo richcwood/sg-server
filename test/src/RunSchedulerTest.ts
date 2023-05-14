@@ -10,7 +10,6 @@ import * as util from 'util';
 let appName: string = 'RunSchedulerTest';
 
 let logger: BaseLogger = new BaseLogger(appName);
-logger.Start();
 
 process.on('unhandledRejection', (reason, p) => {
     logger.LogError('RunSchedulerTest Unhandled Rejection', {

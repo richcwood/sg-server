@@ -12,7 +12,6 @@ const bodyParser = require('body-parser');
 
 let appName: string = 'StripeWebhookRouter';
 let logger: BaseLogger = new BaseLogger(appName);
-logger.Start();
 
 export default class StripeHookRouter {
     public router: Router;

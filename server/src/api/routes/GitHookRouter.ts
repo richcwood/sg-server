@@ -15,7 +15,6 @@ import * as util from 'util';
 
 let appName: string = 'GitHookRouter';
 let logger: BaseLogger = new BaseLogger(appName);
-logger.Start();
 
 export default class GitHookRouter {
     public router: Router;

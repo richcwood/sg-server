@@ -34,7 +34,6 @@ class RabbitMQPublisher {
 
     private async start() {
         let logger: BaseLogger = new BaseLogger(appName);
-        logger.Start();
         this.amqp = new AMQPConnector(appName, '', 1, (activeMessages) => {}, logger);
         await this.amqp.Start();
         this.started = true;

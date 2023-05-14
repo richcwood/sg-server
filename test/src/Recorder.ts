@@ -31,7 +31,6 @@ export default class Recorder {
 
     public async Start() {
         this.logger = new BaseLogger('Recorder');
-        this.logger.Start();
 
         self.amqp = new AMQPConnector('Recorder', '', 1, (activeMessages) => {}, this.logger);
         await self.amqp.Start();

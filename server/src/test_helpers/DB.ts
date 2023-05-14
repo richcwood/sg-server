@@ -3,7 +3,6 @@ import { MongoMemoryServer } from 'mongodb-memory-server';
 import { BaseLogger } from '../shared/SGLogger';
 
 let logger: BaseLogger = new BaseLogger('MongoConnector');
-logger.Start();
 
 (<any>mongoose).Promise = global.Promise;
 mongoose.set('debug', process.env.DEBUG !== undefined);

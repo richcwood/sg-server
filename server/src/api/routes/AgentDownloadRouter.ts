@@ -21,7 +21,6 @@ import { agentService } from '../services/AgentService';
 
 let appName: string = 'AgentDownloadRouter';
 let agentDownloadRouterLogger: BaseLogger = new BaseLogger(appName);
-agentDownloadRouterLogger.Start();
 
 const validPlatforms: string[] = ['freebsd', 'linux', 'alpine', 'macos', 'win'];
 const validArchitectures: string[] = ['x64', 'x86', 'armv6', 'armv7'];

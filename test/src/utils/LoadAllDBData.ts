@@ -56,7 +56,6 @@ let LoadMongoData = async (path: string) => {
     const mongoDbname = process.env.mongoDbName;
 
     let logger = new BaseLogger('RunTestHarness');
-    logger.Start();
 
     let rawdata: any = fs.readFileSync(path);
     let allTestObjects = JSON.parse(rawdata);

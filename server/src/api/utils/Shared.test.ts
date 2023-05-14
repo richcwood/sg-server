@@ -52,7 +52,6 @@ beforeAll(async () => {
     const rmqBrowserPushRoute = config.get('rmqBrowserPushRoute');
 
     logger = new BaseLogger(testName);
-    logger.Start();
 
     amqp = new AMQPConnector(testName, '', 1, (activeMessages) => {}, logger);
     await amqp.Start();

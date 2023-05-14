@@ -89,7 +89,6 @@ let logger: BaseLogger;
 
 (async () => {
     logger = new BaseLogger(appName);
-    logger.Start();
 
     if (environment === 'production') {
         const secretConfigs = config.get('secrets');
