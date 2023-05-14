@@ -37,6 +37,18 @@ describe('MailChimpAPI', () => {
         jest.clearAllMocks();
     });
 
+    describe('setConfig', () => {
+        it('should call setConfig with correct parameters', async () => {
+            const configParametersExpected = {
+                apiKey: process.env.MAILCHIMP_API_KEY,
+                server: process.env.MAILCHIMP_API_KEY.split('-')[1],
+            };
+            (mailchimp.setConfig as jest.Mock).mockResolvedValueOnce(configParametersExpected);
+            const mailchimpAPITest: MailChimpAPI = new MailChimpAPI();
+            expect(mailchimp.setConfig).toHaveBeenCalledWith(configParametersExpected);
+        });
+    });
+
     describe('getLists', () => {
         it('should get all mailchimp lists in a name->id map', async () => {
             (mailchimp.lists.getAllLists as jest.Mock).mockResolvedValueOnce({ lists });
