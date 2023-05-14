@@ -27,7 +27,6 @@ const env = process.env.NODE_ENV;
 
 let appName: string = 'AgentDeadLetterWatcher';
 let logger: BaseLogger = new BaseLogger(appName);
-logger.Start();
 
 process.on('unhandledRejection', (reason, p) => {
     logger.LogError('Unhandled Rejection', {

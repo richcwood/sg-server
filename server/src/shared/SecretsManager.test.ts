@@ -33,7 +33,6 @@ describe('SecretsManager', () => {
 
     beforeAll(async () => {
         logger = new BaseLogger('SecretsManagerTest');
-        logger.Start();
     });
 
     beforeEach(() => {

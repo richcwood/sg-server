@@ -45,7 +45,6 @@ let LoadMongoData = async (path: string, teamId: string = '') => {
     const mongoDbname = process.env.mongoDbName;
 
     let logger = new BaseLogger('RunTestHarness');
-    logger.Start();
 
     let mongoRepo = new MongoRepo('RunTestHarness', mongoUrl, mongoDbname, logger);
 

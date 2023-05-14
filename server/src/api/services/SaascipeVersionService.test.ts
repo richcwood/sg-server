@@ -22,7 +22,6 @@ beforeAll(async () => {
     await db.open();
 
     logger = new BaseLogger(testName);
-    logger.Start();
 });
 
 afterAll(async () => await db.close());

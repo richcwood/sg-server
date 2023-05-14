@@ -88,7 +88,7 @@ export default class Test58 extends TestBase.WorkflowTestBase {
                                 {
                                     name: 'Step 1',
                                     scriptName: 'Script 58',
-                                    lambdaRuntime: 'python3.7',
+                                    lambdaRuntime: 'python3.10',
                                     lambdaRole: config.get('lambda-admin-iam-role'),
                                     lambdaAWSRegion: config.get('AWS_REGION'),
                                     lambdaDependencies: 'requests',

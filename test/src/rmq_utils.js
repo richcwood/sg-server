@@ -9,7 +9,6 @@ let rmqVhost = process.env.rmqVhost;
 const RabbitMQAdmin_1 = require('../../server/src/shared/RabbitMQAdmin');
 let appName = 'rmq_utils';
 let logger = new SGLogger_1.BaseLogger(appName, {});
-logger.Start();
 
 let teamsToKeep = ['5de95c0453162e8891f5a830'];
 

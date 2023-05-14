@@ -275,7 +275,6 @@ let RawStompTest = async () => {
 
 let SecretsLoaderTest = async () => {
     let logger = new BaseLogger('RunTestHarness');
-    logger.Start();
 
     const secretConfigs = config.get('secrets');
     for (let secretConfig of secretConfigs) {
@@ -289,7 +288,6 @@ let StompTest = async () => {
     const rmqPassword = process.env.rmqPassword;
 
     let logger = new BaseLogger('RunTestHarness');
-    logger.Start();
 
     const stompUrl = process.env.stompUrl;
     const rmqAdminUrl = process.env.rmqAdminUrl;
@@ -339,7 +337,6 @@ let StompTest = async () => {
 
 let MailChimpTest = async () => {
     let logger = new BaseLogger('RunTestHarness');
-    logger.Start();
 
     const secretConfigs = config.get('secrets');
     for (let secretConfig of secretConfigs) {
@@ -370,7 +367,6 @@ let AMQPTest = async () => {
     const rmqScheduleUpdatesQueue = config.get('rmqScheduleUpdatesQueue');
 
     let logger = new BaseLogger('RunTestHarness');
-    logger.Start();
 
     const amqpUrl = config.get('amqpUrl');
     const rmqVhost = process.env.rmqVhost;
@@ -459,7 +455,6 @@ let RabbitMQTeamSetup = async (teamId: string) => {
     console.log('rmqVhost -> ', rmqVhost);
 
     let logger = new BaseLogger('RunTestHarness');
-    logger.Start();
 
     try {
         let team: any = await teamService.findTeam(new mongodb.ObjectId(teamId));
@@ -518,7 +513,6 @@ let UpdateAgentVersion = async () => {
     console.log('_teamId -> ', _teamId);
 
     let logger = new BaseLogger('RunTestHarness');
-    logger.Start();
 
     let mongoRepo = new MongoRepo('RunTestHarness', mongoUrl, mongoDbname, logger);
     let res = await mongoRepo.UpdateMany(
@@ -577,7 +571,6 @@ let DeleteMongoData = async () => {
     const mongoDbname = process.env.mongoDbName;
 
     let logger = new BaseLogger('RunTestHarness');
-    logger.Start();
 
     let mongoRepo = new MongoRepo('RunTestHarness', mongoUrl, mongoDbname, logger);
 
@@ -606,7 +599,6 @@ let RunRepublishTasksWaitingForAgent = async (_teamId: string) => {
     mongoose.connect(process.env.mongoUrl, {});
 
     let logger = new BaseLogger('RunTestHarness');
-    logger.Start();
 
     const amqpUrl = config.get('amqpUrl');
     const rmqVhost = process.env.rmqVhost;
@@ -639,7 +631,6 @@ let FixTeamDBRecords = async () => {
 
 let CancelFailedJobs = async () => {
     let logger = new BaseLogger('RunTestHarness');
-    logger.Start();
     mongoose.connect(process.env.mongoUrl, {});
 
     const _teamId = '5f57b2f14b5da00017df0d4f';
@@ -669,7 +660,6 @@ let CancelFailedJobs = async () => {
 
 let DeleteNotStartedJobs = async () => {
     let logger = new BaseLogger('RunTestHarness');
-    logger.Start();
     mongoose.connect(process.env.mongoUrl, {});
 
     const _teamId = '5f57b2f14b5da00017df0d4f';
@@ -922,7 +912,6 @@ let LoadMongoData = async (path: string) => {
     const mongoDbname = process.env.mongoDbName;
 
     let logger = new BaseLogger('RunTestHarness');
-    logger.Start();
 
     let mongoRepo = new MongoRepo('RunTestHarness', mongoUrl, mongoDbname, logger);
 
@@ -1099,7 +1088,6 @@ let LoadSettingsToMongo = async () => {
     const mongoDbname = process.env.mongoDbName;
 
     let logger = new BaseLogger('RunTestHarness');
-    logger.Start();
 
     let mongoRepo = new MongoRepo('RunTestHarness', mongoUrl, mongoDbname, logger);
 
@@ -1290,7 +1278,6 @@ let CreateTeam = async (teamName, ownerId) => {
     const appName = 'RunTestHarness';
 
     let logger = new BaseLogger(appName);
-    logger.Start();
 
     mongoose.connect(process.env.mongoUrl, {});
 
@@ -1307,7 +1294,6 @@ let CreateJob = async () => {
     const appName = 'RunTestHarness';
 
     let logger = new BaseLogger(appName);
-    logger.Start();
 
     let mongoRepo = new MongoRepo(appName, mongoUrl, mongoDbname, logger);
 
@@ -1609,7 +1595,6 @@ let UploadFileToS3 = async (filePath: string) => {
     await new Promise(async (resolve, reject) => {
         try {
             let logger = new BaseLogger('RunTestHarness');
-            logger.Start();
 
             const fs = require('fs');
             const readFile = require('util').promisify(fs.readFile);
@@ -1652,7 +1637,6 @@ let UploadFileToS3 = async (filePath: string) => {
 let GetS3PrefixSize = async (prefix: string) => {
     try {
         let logger = new BaseLogger('RunTestHarness');
-        logger.Start();
 
         let s3Access = new S3Access(logger);
 
@@ -1728,7 +1712,6 @@ let CreateUser = async (email: string, password: string, teamIds: string[] = [])
 
         const appName = 'RunTestHarness';
         let logger = new BaseLogger(appName);
-        logger.Start();
 
         let mongoRepo = new MongoRepo(appName, mongoUrl, mongoDbname, logger);
 
@@ -1763,7 +1746,6 @@ let StopScheduler = async () => {
 
 let SendTestEmail = async () => {
     let logger = new BaseLogger('SendTestEmailSMTP');
-    logger.Start();
 
     await SGUtils.SendInternalEmail(
         'rich@saasglue.com',
@@ -1795,7 +1777,6 @@ let SendTestEmail = async () => {
 
 let SendTestSlack = async () => {
     let logger = new BaseLogger('SendTestEmailSMTP');
-    logger.Start();
 
     console.log('before send');
     SGUtils.SendCustomerSlack(
@@ -1808,7 +1789,6 @@ let SendTestSlack = async () => {
 
 let SendTestEmailSMTP = async () => {
     let logger = new BaseLogger('SendTestEmailSMTP');
-    logger.Start();
 
     await SGUtils.SendSignupConfirmEmail('123456', 'rich@wifunds.com', logger);
 };
@@ -2138,7 +2118,6 @@ let CreateAgentInstall = async (_teamId: string, agentVersion: string, nodeRange
     let appName: string = 'CreateAgentInstall';
 
     let logger: BaseLogger = new BaseLogger(appName);
-    logger.Start();
 
     let mongoRepo = new MongoRepo(appName, mongoUrl, mongoDbName, logger);
 
@@ -2267,7 +2246,6 @@ let PublishJobTask = async () => {
     mongoose.connect(process.env.mongoUrl, {});
 
     let logger = new BaseLogger(appName);
-    logger.Start();
 
     const amqpUrl = config.get('amqpUrl');
     const rmqVhost = process.env.rmqVhost;
@@ -2380,7 +2358,6 @@ let DeleteJobs = async (filter: any) => {
     const mongoDbname = process.env.mongoDbName;
 
     let logger = new BaseLogger('RunTestHarness');
-    logger.Start();
 
     let mongoRepo = new MongoRepo('RunTestHarness', mongoUrl, mongoDbname, logger);
 
@@ -2404,7 +2381,6 @@ let DeleteJobDefs = async (filter: any) => {
     const mongoDbname = process.env.mongoDbName;
 
     let logger = new BaseLogger('RunTestHarness');
-    logger.Start();
 
     let mongoRepo = new MongoRepo('RunTestHarness', mongoUrl, mongoDbname, logger);
 
@@ -2435,7 +2411,6 @@ let PruneJobs = async (teamId: string) => {
     console.log('mongoDbname -> ', mongoDbname);
 
     let logger = new BaseLogger('RunTestHarness');
-    logger.Start();
 
     let mongoRepo = new MongoRepo('RunTestHarness', mongoUrl, mongoDbname, logger);
 
@@ -2627,7 +2602,6 @@ let PruneJobs = async (teamId: string) => {
 
 let ConfigNewRabbitMQServer = async () => {
     let logger = new BaseLogger('ConfigNewRabbitMQServer');
-    logger.Start();
 
     try {
         const rmqAdminUrl = process.env.rmqAdminUrl;
@@ -2690,7 +2664,6 @@ let MongoTest = async () => {
     console.log('mongoDbname -> ', mongoDbname);
 
     let logger = new BaseLogger('RunTestHarness');
-    logger.Start();
 
     let mongoRepo = new MongoRepo('RunTestHarness', mongoUrl, mongoDbname, logger);
 

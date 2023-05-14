@@ -4,12 +4,11 @@ import * as dotenv from 'dotenv';
 import { BaseLogger } from '../../server/src/shared/SGLogger';
 
 const environment = process.env.NODE_ENV || 'development';
-assert(environment == 'development');
+assert(environment == 'debug');
 const appName = 'SaaSGlueAPI';
 let logger: BaseLogger;
 (async () => {
     logger = new BaseLogger(appName);
-    logger.Start();
 
     dotenv.config();
 })();
@@ -84,7 +83,6 @@ export default abstract class TestBase {
         this.testName = testName;
         this.testSetup = testSetup;
         this.logger = logger;
-        this.logger.Start();
 
         this.mongoRepo = new MongoRepo(this.testName, this.mongoUrl, this.mongoDbname, this.logger);
         // this.agents = [];
