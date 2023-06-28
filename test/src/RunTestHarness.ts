@@ -2029,10 +2029,10 @@ let convertTeamAccessRightsToBitset = (accessRightIds) => {
 let GenerateToken = async () => {
     const secret = process.env.secret;
 
-    const mongoose = require('mongoose');
+    // const mongoose = require('mongoose');
 
-    console.log('mongoUrl ------------> ', process.env.mongoUrl);
-    mongoose.connect(process.env.mongoUrl, {});
+    // console.log('mongoUrl ------------> ', process.env.mongoUrl);
+    // mongoose.connect(process.env.mongoUrl, {});
 
     // const jwtExpiration = Date.now() + 1000 * 60 * 60 * 24 * 180; // 180 days
     // let token = jwt.sign(
@@ -2052,9 +2052,22 @@ let GenerateToken = async () => {
 
     // console.log(JSON.stringify(joinTeamLink));
 
-    let accessRightIds = await GetAccessRightIds(['GLOBAL']);
+    // let accessRightIds = await GetAccessRightIds(['GLOBAL']);
     // // let accessRightIds = await GetAccessRightIds(['AGENT_CREATE', 'AGENT_DOWNLOAD_GET', 'AGENT_LOG_CREATE', 'AGENT_READ', 'AGENT_UDPATE', 'AGENT_UPDATE_HEARTBEAT', 'JOB_CREATE', 'STEP_OUTCOME_CREATE', 'STEP_OUTCOME_UPDATE', 'TASK_OUTCOME_CREATE', 'TASK_OUTCOME_UPDATE']);
-    let bits = convertTeamAccessRightsToBitset(accessRightIds);
+    // let bits = convertTeamAccessRightsToBitset(accessRightIds);
+
+    const body = {
+        id: '617c7ec0a8da910018e2be23',
+        type: 0,
+        email: 'bogod23049@d3ff.com',
+        teamIds: ['60c16b64b308e30017981609'],
+        teamAccessRightIds: {
+            '60c16b64b308e30017981609': '13f3f73f86f1198',
+        },
+        teamIdsInvited: [],
+        name: 'Marketing Demo',
+        companyName: 'SG Marketing Demo',
+    };
 
     // const body = {
     //   "teamIds": [
@@ -2080,12 +2093,12 @@ let GenerateToken = async () => {
     //     teamAccessRightIds: { default: bits },
     // };
 
-    const body = {
-        id: '5de8810275ad92e5bb8de78a',
-        email: 'scheduler@saasglue.com',
-        teamIds: [],
-        teamAccessRightIds: {},
-    };
+    // const body = {
+    //     id: '5de8810275ad92e5bb8de78a',
+    //     email: 'scheduler@saasglue.com',
+    //     teamIds: [],
+    //     teamAccessRightIds: {},
+    // };
 
     var token = jwt.sign(body, secret); //KeysUtil.getPrivate()); // todo - create a public / private key
 
@@ -2093,8 +2106,8 @@ let GenerateToken = async () => {
 };
 
 let VerifyToken = async (token: string) => {
-    // const secret = process.env.secret;
-    const secret = '-$op)):x3#m{OtRt$3Cnzqoq#9ar)UD7<zRSr?L';
+    const secret = process.env.secret;
+    console.log(secret);
     const res = jwt.verify(token, secret);
     console.log('res -> ', res);
 };
@@ -2687,7 +2700,7 @@ let MongoTest = async () => {
     console.log('result ---------> ', result);
 };
 
-MailChimpTest();
+// MailChimpTest();
 // MongooseTest();
 // RunRepublishTasksWaitingForAgent('5f57b2f14b5da00017df0d4f');
 // CreateBrainTreeCompanyForTeams();
@@ -2739,7 +2752,7 @@ MailChimpTest();
 // SubmitInvoicesForPayment();
 // TestBraintreeWebhook();
 // CreateInvoicePDF(0);
-// GenerateToken();
+GenerateToken();
 // AgentRestAPICall();
 // DeleteJobs({'_jobDefId': process.argv[2]});
 // DeleteJobDefs({"name": /Cron.*/});
