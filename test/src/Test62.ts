@@ -71,7 +71,7 @@ export default class Test62 extends TestBase.WorkflowTestBase {
                                 {
                                     name: 'Step 1',
                                     scriptName: 'Script 62',
-                                    lambdaRuntime: 'nodejs12.x',
+                                    lambdaRuntime: 'nodejs14.x',
                                     lambdaRole: config.get('lambda-admin-iam-role'),
                                     lambdaAWSRegion: config.get('AWS_REGION'),
                                     lambdaZipfile: artifact.id,
