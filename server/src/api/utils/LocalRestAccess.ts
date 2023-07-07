@@ -15,7 +15,7 @@ class LocalRestAccess {
                 let authToken = token;
 
                 if (!authToken) {
-                    authToken = `${config.get('adminToken')};`;
+                    authToken = `${process.env.adminToken};`;
                 }
 
                 let apiUrl = config.get('API_BASE_URL');

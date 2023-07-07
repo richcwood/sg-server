@@ -25,10 +25,8 @@ import { taskDefService } from '../services/TaskDefService';
 import { RuntimeVariableFormat, TaskDefTarget } from '../../shared/Enums';
 import { MissingObjectError, ValidationError, SaascipeImportError } from '../utils/Errors';
 import { S3Access } from '../../shared/S3Access';
+import { BaseLogger } from '../../shared/SGLogger';
 import { SGUtils } from '../../shared/SGUtils';
-import { bool } from 'aws-sdk/clients/signer';
-import { MongoDbSettings } from 'aws-sdk/clients/dms';
-import { isExpressionWithTypeArguments } from 'typescript';
 
 interface IJobDefExport {
     jobDef: Partial<JobDefSchema>;
@@ -265,7 +263,8 @@ export { PrepareStepDefsForExport };
  */
 let PrepareTaskDefsForExport = async (
     _teamId: mongodb.ObjectId,
-    _jobDefId: mongodb.ObjectId
+    _jobDefId: mongodb.ObjectId,
+    logger: BaseLogger
 ): Promise<{
     taskDefs: Array<Partial<TaskDefSchema>>;
     scripts: Array<mongodb.Objectid>;
@@ -297,7 +296,7 @@ let PrepareTaskDefsForExport = async (
 
         if (taskDefToExport.artifacts) {
             for (let artifactId of taskDefToExport.artifacts) {
-                const artifact: ArtifactSchema = await artifactService.findArtifact(_teamId, artifactId);
+                const artifact: ArtifactSchema = await artifactService.findArtifact(_teamId, artifactId, logger);
                 if (artifact) {
                     taskDefPartial.artifacts.push({ prefix: artifact.prefix, name: artifact.name });
                     artifacts.push({ prefix: artifact.prefix, name: artifact.name, s3Path: artifact.s3Path });
@@ -319,7 +318,7 @@ let PrepareTaskDefsForExport = async (
         for (let stepDef of getStepDefsResults.stepDefs) {
             if (stepDef.lambdaZipfile) {
                 const artifactId: mongodb.ObjectId = new mongodb.ObjectId(stepDef.lambdaZipfile);
-                const artifact: ArtifactSchema = await artifactService.findArtifact(_teamId, artifactId);
+                const artifact: ArtifactSchema = await artifactService.findArtifact(_teamId, artifactId, logger);
                 if (artifact) {
                     stepDef.lambdaZipfile = { prefix: artifact.prefix, name: artifact.name };
                     artifacts.push({ prefix: artifact.prefix, name: artifact.name, s3Path: artifact.s3Path });
@@ -340,7 +339,11 @@ export { PrepareTaskDefsForExport };
  * @param _teamId
  * @param _jobDefId
  */
-let PrepareJobDefForExport = async (_teamId: mongodb.ObjectId, _jobDefId: mongodb.ObjectId): Promise<IJobDefExport> => {
+let PrepareJobDefForExport = async (
+    _teamId: mongodb.ObjectId,
+    _jobDefId: mongodb.ObjectId,
+    logger: BaseLogger
+): Promise<IJobDefExport> => {
     console.log('PrepareJobDefForExport starting');
     const jobDefToExport: JobDefSchema = await jobDefService.findJobDef(
         _teamId,
@@ -366,7 +369,7 @@ let PrepareJobDefForExport = async (_teamId: mongodb.ObjectId, _jobDefId: mongod
         taskDefs: Array<Partial<TaskDefSchema>>;
         scripts: Array<mongodb.Objectid>;
         artifacts: Array<Partial<ArtifactSchema>>;
-    } = await PrepareTaskDefsForExport(_teamId, jobDefToExport._id);
+    } = await PrepareTaskDefsForExport(_teamId, jobDefToExport._id, logger);
     const taskDefs: Array<Partial<TaskDefSchema>> = getTaskDefsResult.taskDefs;
     const artifacts: Array<Partial<ArtifactSchema>> = getTaskDefsResult.artifacts;
     let scripts: Array<Partial<ScriptSchema>> = [];
@@ -391,10 +394,11 @@ export { PrepareJobDefForExport };
 let ExportJobDefArtifacts = async (
     _teamId: mongodb.ObjectId,
     artifacts: Array<Partial<ArtifactSchema>>,
-    saascipeVersion: Partial<SaascipeVersionSchema>
+    saascipeVersion: Partial<SaascipeVersionSchema>,
+    logger: BaseLogger
 ) => {
     const environment = config.get('environment');
-    const s3Access = new S3Access();
+    const s3Access = new S3Access(logger);
     for (let artifact of artifacts) {
         let destPath: string = `${saascipeVersion['_id'].toHexString()}/${artifact.name}`;
         if (environment != 'production') destPath = environment + '/' + destPath;
@@ -415,6 +419,7 @@ let ImportArtifact = async (
     _teamId: mongodb.ObjectId,
     _saascipeVersionId: mongodb.ObjectId,
     artifactToImport: Partial<ArtifactSchema>,
+    logger: BaseLogger,
     correlationId?: string
 ): Promise<ArtifactSchema> => {
     let newArtifactName: string = artifactToImport.name;
@@ -458,10 +463,15 @@ let ImportArtifact = async (
         prefix: artifactToImport.prefix,
     };
 
-    const newArtifact: ArtifactSchema = await artifactService.createArtifact(_teamId, newArtifactData, correlationId);
+    const newArtifact: ArtifactSchema = await artifactService.createArtifact(
+        _teamId,
+        newArtifactData,
+        logger,
+        correlationId
+    );
 
     const environment = config.get('environment');
-    const s3Access = new S3Access();
+    const s3Access = new S3Access(logger);
     let srcPath: string = `${_saascipeVersionId.toHexString()}/${artifactToImport.name}`;
     if (environment != 'production') srcPath = environment + '/' + srcPath;
     srcPath = saascipesS3Bucket + '/' + srcPath;
@@ -878,6 +888,7 @@ let ImportJobSaascipe = async (
     _teamId: mongodb.ObjectId,
     _userId: mongodb.ObjectId,
     _saascipeVersionId: mongodb.ObjectId,
+    logger: BaseLogger,
     correlationId?: string
 ): Promise<IJobDefImport> => {
     const saascipeVersion: SaascipeVersionSchema = await saascipeVersionService.findSaascipeVersion(_saascipeVersionId);
@@ -898,7 +909,7 @@ let ImportJobSaascipe = async (
 
     const artifactsImported: Array<ArtifactSchema> = [];
     for (let artifact of saascipeDef.artifacts) {
-        const res: ArtifactSchema = await ImportArtifact(_teamId, _saascipeVersionId, artifact, correlationId);
+        const res: ArtifactSchema = await ImportArtifact(_teamId, _saascipeVersionId, artifact, logger, correlationId);
         artifactsImported.push(res);
     }
 

@@ -139,9 +139,64 @@ let SettingsTemplate: any[] = [
             freeArtifactsDownloadBytes: 0,
             freeArtifactsStorageBytes: 0,
         },
-        __v: 0,
+    },
+    {
+        Type: 'AgentBuild',
+        Values: {
+            agent_stub_install: {
+                linux: {
+                    status: 'ready',
+                    location: 'agent-stub/production/v0.0.1/linux/sg-agent-launcher.gz',
+                },
+                macos: {
+                    location: 'agent-stub/production/v0.0.1/macos/sg-agent-launcher.gz',
+                    status: 'ready',
+                },
+                winx64: {
+                    location: 'agent-stub/production/v0.0.1/winx64/sg-agent-launcher.zip',
+                    status: 'ready',
+                },
+            },
+            agent_install: {
+                v0_0_1: {
+                    linux: {
+                        location: 'agent/production/v0.0.1/linux/sg-agent.gz',
+                        status: 'ready',
+                    },
+                    macos: {
+                        location: 'agent/production/v0.0.1/macos/sg-agent.gz',
+                        status: 'ready',
+                    },
+                    winx64: {
+                        location: 'agent/production/v0.0.1/winx64/sg-agent.exe.gz',
+                        status: 'ready',
+                    },
+                },
+                v0_0_2: {
+                    linux: {
+                        location: 'agent/production/v0.0.2/linux/sg-agent.gz',
+                        status: 'ready',
+                    },
+                    macos: {
+                        location: 'agent/production/v0.0.2/macos/sg-agent.gz',
+                        status: 'ready',
+                    },
+                    winx64: {
+                        location: 'agent/production/v0.0.2/winx64/sg-agent.exe.gz',
+                        status: 'ready',
+                    },
+                },
+            },
+        },
+    },
+    {
+        Type: 'AgentVersion',
+        Values: {
+            agent: 'v0.0.1',
+        },
     },
 ];
+export { SettingsTemplate };
 
 let TeamTemplate: any = {
     name: 'Test Team',
@@ -192,8 +247,8 @@ export { ScheduleTemplate };
  * Creates a settings schema based on the template
  * @returns {Promise<SettingsSchema>}
  */
-let CreateSettingsFromTemplate = async (): Promise<SettingsSchema[]> => {
-    let settingsTemplate: SettingsSchema[] = _.clone(SettingsTemplate);
+let CreateSettingsFromTemplate = async (settingsTemplate: SettingsSchema[] = null): Promise<SettingsSchema[]> => {
+    if (!settingsTemplate) settingsTemplate = _.clone(SettingsTemplate);
     let settings: SettingsSchema[] = [];
     for (let template of settingsTemplate) {
         settings.push(convertResponseData(SettingsSchema, await settingsService.createSettings(template)));
@@ -254,9 +309,10 @@ export { CreateScriptFromTemplate };
 let CreateArtifact = async (
     _teamId: mongodb.ObjectId,
     data: Partial<ArtifactSchema>,
-    artifactPath: string
+    artifactPath: string,
+    logger: BaseLogger
 ): Promise<ArtifactSchema> => {
-    const artifact: ArtifactSchema = await artifactService.createArtifact(_teamId, data, '');
+    const artifact: ArtifactSchema = await artifactService.createArtifact(_teamId, data, logger, '');
 
     const readFileAsync = require('util').promisify(readFile);
     const fileData = await readFileAsync(artifactPath);

@@ -4,6 +4,9 @@ github_credentials*
 #dist
 dist
 
+#tmp
+tmp
+
 # mongo db data
 docker/mongodb/data/
 
@@ -64,7 +67,7 @@ typings/
 .yarn-integrity
 
 # dotenv environment variables file
-.env
+.env*
 
 # python files
 *.pyc
@@ -73,3 +76,5 @@ typings/
 
 sg-agent-launcher
 
+# deploy packages
+deploy/package

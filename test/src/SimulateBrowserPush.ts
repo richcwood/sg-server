@@ -25,7 +25,7 @@ const rawdata: any = fs.readFileSync(path);
 const bpMessages = JSON.parse(rawdata);
 const numMessagesTotal = bpMessages.length;
 
-const _teamId = config.get('sgTestTeam');
+const _teamId = process.env.sgTestTeam;
 let row = 0;
 
 let SendNextMessage = async (row: number) => {

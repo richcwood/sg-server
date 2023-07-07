@@ -1,5 +1,3 @@
-import { int } from 'aws-sdk/clients/datapipeline';
-
 import BitSet from 'bitset';
 import * as config from 'config';
 const jwt = require('jsonwebtoken');
@@ -377,7 +375,7 @@ let GetTaskRoutes = async (
 
         /// For aws lambda objectives, route the task to a SaaSGlue aws lambda agent
         else if (task.target == Enums.TaskDefTarget.AWS_LAMBDA) {
-            const sgAdminTeam = new mongodb.ObjectId(config.get('sgAdminTeam'));
+            const sgAdminTeam = new mongodb.ObjectId(process.env.sgAdminTeam);
             const requiredTags = config.get('awsLambdaRequiredTags');
 
             const agentsWithRequiredTags = await agentService.findActiveAgentsWithTags(
@@ -619,8 +617,8 @@ let RepublishTasksWaitingForLambdaRunner = async (
  * @param _teamId
  * @returns int
  */
-let NumNotStartedTasks = async (_teamId: mongodb.ObjectId): Promise<int> => {
-    let numNotStartedTasks: int = 0;
+let NumNotStartedTasks = async (_teamId: mongodb.ObjectId): Promise<number> => {
+    let numNotStartedTasks: number = 0;
     let noAgentTasksFilter = {};
     noAgentTasksFilter['_teamId'] = _teamId;
     noAgentTasksFilter['status'] = {

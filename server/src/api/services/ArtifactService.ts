@@ -4,6 +4,7 @@ import { TaskDefSchema } from '../domain/TaskDef';
 import { taskDefService } from '../services/TaskDefService';
 import { rabbitMQPublisher, PayloadOperation } from '../utils/RabbitMQPublisher';
 import { MissingObjectError, ValidationError } from '../utils/Errors';
+import { BaseLogger } from '../../shared/SGLogger';
 import { S3Access } from '../../shared/S3Access';
 import * as mongodb from 'mongodb';
 import * as _ from 'lodash';
@@ -18,13 +19,13 @@ export class ArtifactService {
         return ArtifactModel.find({ _teamId }).select(responseFields);
     }
 
-    public async findArtifact(_teamId: mongodb.ObjectId, id: mongodb.ObjectId) {
+    public async findArtifact(_teamId: mongodb.ObjectId, id: mongodb.ObjectId, logger: BaseLogger) {
         const artifactQuery = await ArtifactModel.findById(id).find({ _teamId }).select('prefix name type s3Path');
         if (!artifactQuery || (_.isArray(artifactQuery) && artifactQuery.length === 0))
             throw new MissingObjectError(`No artifact with id "${id.toHexString()}"`);
         const artifact: ArtifactSchema = artifactQuery[0];
 
-        let s3Access = new S3Access();
+        let s3Access = new S3Access(logger);
         // let s3Path = "";
         // if (config.get("environment") != "production") s3Path += `${config.get("environment")}/`;
         // s3Path += `${_teamId.toHexString()}/`;
@@ -53,7 +54,12 @@ export class ArtifactService {
     /// Artifacts meta data is stored in mongodb - the actual object is stored in s3 - a temporary secure url is returned when a new
     ///     artifact is created via POST which can then be used by the browser to upload the artifact directly to s3 - the url
     ///     is returned with the artifact object but is not saved to the database since it's temporary anyway
-    public async createArtifact(_teamId: mongodb.ObjectId, data: any, correlationId: string): Promise<ArtifactSchema> {
+    public async createArtifact(
+        _teamId: mongodb.ObjectId,
+        data: any,
+        logger: BaseLogger,
+        correlationId: string
+    ): Promise<ArtifactSchema> {
         if (!data.name) throw new ValidationError(`Request body missing "name" parameter`);
         let filter = { _teamId, name: data.name };
 
@@ -62,7 +68,7 @@ export class ArtifactService {
             filter['prefix'] = data.prefix;
         }
 
-        let s3Access = new S3Access();
+        let s3Access = new S3Access(logger);
         let s3Path = '';
         if (config.get('environment') != 'production') s3Path += `${config.get('environment')}/`;
         s3Path += `${_teamId.toHexString()}/`;
@@ -76,7 +82,7 @@ export class ArtifactService {
         let newArtifact: ArtifactSchema;
         const existingArtifact = await this.findAllArtifactsInternal(filter, '_id');
         if (_.isArray(existingArtifact) && existingArtifact.length > 0) {
-            newArtifact = await this.updateArtifact(_teamId, existingArtifact[0]._id, data, correlationId);
+            newArtifact = await this.updateArtifact(_teamId, existingArtifact[0]._id, data, logger, correlationId);
             // let msg: string = 'Artifact';
             // if (data.prefix)
             //     msg += ` prefix="${data.prefix}"`
@@ -108,6 +114,7 @@ export class ArtifactService {
         _teamId: mongodb.ObjectId,
         id: mongodb.ObjectId,
         data: any,
+        logger: BaseLogger,
         correlationId: string
     ): Promise<ArtifactSchema> {
         if (!data.name) throw new ValidationError(`Request body missing "name" parameter`);
@@ -125,7 +132,7 @@ export class ArtifactService {
             throw new ValidationError(`Artifact already exists with prefix="${oldPrefix}" name="${artifact.name}"`);
         }
 
-        let s3Access = new S3Access();
+        let s3Access = new S3Access(logger);
         let url = await s3Access.putSignedS3URL(artifact.s3Path, config.get('S3_BUCKET_TEAM_ARTIFACTS'), artifact.type);
         artifact.url = url;
 
@@ -146,6 +153,7 @@ export class ArtifactService {
     public async deleteArtifact(
         _teamId: mongodb.ObjectId,
         id: mongodb.ObjectId,
+        logger: BaseLogger,
         correlationId: string
     ): Promise<object> {
         const artifactQuery = await ArtifactModel.findById(id).find({ _teamId }).select('prefix name type, s3Path');
@@ -167,7 +175,7 @@ export class ArtifactService {
 
         const deleted = await ArtifactModel.deleteOne({ _id: id, _teamId });
 
-        let s3Access = new S3Access();
+        let s3Access = new S3Access(logger);
         await s3Access.deleteObject(artifact.s3Path, config.get('S3_BUCKET_TEAM_ARTIFACTS'));
 
         await rabbitMQPublisher.publish(_teamId, 'Artifact', correlationId, PayloadOperation.DELETE, { _id: id });

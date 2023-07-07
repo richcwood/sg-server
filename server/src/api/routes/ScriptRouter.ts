@@ -16,5 +16,9 @@ export class ScriptRouter {
     }
 }
 
-export const scriptRouterSingleton = new ScriptRouter();
-export const scriptRouter = scriptRouterSingleton.router;
+export const scriptRouterSingleton = (): ScriptRouter | any => {
+    return new ScriptRouter();
+};
+export const scriptRouter = (): any => {
+    return scriptRouterSingleton().router;
+};

@@ -24,5 +24,9 @@ export class SaascipeRouter {
     }
 }
 
-export const saascipeRouterSingleton = new SaascipeRouter();
-export const saascipeRouter = saascipeRouterSingleton.router;
+export const saascipeRouterSingleton = (): SaascipeRouter | any => {
+    return new SaascipeRouter();
+};
+export const saascipeRouter = (): any => {
+    return saascipeRouterSingleton().router;
+};

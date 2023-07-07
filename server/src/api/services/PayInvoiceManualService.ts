@@ -11,10 +11,9 @@ import { InvoiceStatus, TeamPaymentStatus } from '../../shared/Enums';
 import { TeamSchema } from '../domain/Team';
 import { SGUtils } from '../../shared/SGUtils';
 import * as _ from 'lodash';
-import * as config from 'config';
 import { teamService } from './TeamService';
 import * as mongodb from 'mongodb';
-import { Stripe } from 'stripe';
+const Stripe = require('stripe');
 
 export class PayInvoiceManualService {
     public async payInvoice(
@@ -65,10 +64,7 @@ export class PayInvoiceManualService {
             return { _teamId: _teamId, amount: 0 };
         }
 
-        let stripeApiVersion = config.get('stripeApiVersion');
-        let privateKey = config.get('stripePrivateKey');
-
-        const stripe = new Stripe(privateKey, stripeApiVersion);
+        const stripe = new Stripe(process.env.stripePrivateKey, process.env.stripeApiVersion);
 
         if (data.amount < amount) amount = data.amount;
 

@@ -1,36 +1,26 @@
 import { NextFunction, Request, Response, Router } from 'express';
-import { ResponseWrapper, ResponseCode } from '../utils/Types';
 import { ForbiddenError, MissingObjectError, ValidationError } from '../utils/Errors';
 import { BaseLogger } from '../../shared/SGLogger';
 import { paymentMethodService } from '../../api/services/PaymentMethodService';
 import { PaymentMethodSchema } from '../domain/PaymentMethod';
 import { paymentTransactionService } from '../../api/services/PaymentTransactionService';
-import { PaymentTransactionSchema } from '../domain/PaymentTransaction';
 import { teamService } from '../../api/services/TeamService';
-import { TeamSchema } from '../../api/domain/Team';
 import { PaymentMethodType } from '../../shared/Enums';
-import * as config from 'config';
-import { Stripe } from 'stripe';
+const Stripe = require('stripe');
 import * as _ from 'lodash';
 const bodyParser = require('body-parser');
 
 let appName: string = 'StripeWebhookRouter';
 let logger: BaseLogger = new BaseLogger(appName);
-logger.Start();
 
 export default class StripeHookRouter {
     public router: Router;
     private stripe: any = undefined;
-    private secret: string;
 
     constructor() {
         this.router = Router();
 
-        this.secret = config.get('stripeWebhookSecret');
-
-        let stripeApiVersion = config.get('stripeApiVersion');
-        let privateKey = config.get('stripePrivateKey');
-        this.stripe = new Stripe(privateKey, stripeApiVersion);
+        this.stripe = new Stripe(process.env.stripePrivateKey, process.env.stripeApiVersion);
 
         this.setRoutes();
     }
@@ -42,7 +32,11 @@ export default class StripeHookRouter {
     async create(req: Request, res: Response, next: NextFunction) {
         let event;
         try {
-            event = this.stripe.webhooks.constructEvent(req.body, req.headers['stripe-signature'], this.secret);
+            event = this.stripe.webhooks.constructEvent(
+                req.body,
+                req.headers['stripe-signature'],
+                process.env.stripeWebhookSecret
+            );
         } catch (error) {
             logger.LogError('Stripe webhook error', { body: req.body, headers: req.headers, error });
             throw new ForbiddenError('Stripe webhook error');

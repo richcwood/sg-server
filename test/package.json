@@ -30,6 +30,7 @@
         "child_process": "1.0.2",
         "compressing": "1.5.0",
         "config": "3.1.0",
+        "dotenv": "16.0.3",
         "event-stream": "4.0.1",
         "express-jwt": "5.3.1",
         "find-process": "1.4.2",
@@ -39,9 +40,10 @@
         "moment-timezone": "0.5.31",
         "mongodb": "3.7.3",
         "mongoose": "6.2.3",
+        "node-cache": "5.1.2",
         "node-ipc": "9.1.1",
         "nodemailer": "6.4.2",
-        "pkg": "4.3.7",
+        "pkg": "5.8.0",
         "ps-node": "0.1.6",
         "shortid": "2.2.14",
         "stompjs": "2.3.3",
@@ -58,6 +60,7 @@
         "zip-a-folder": "0.0.12"
     },
     "devDependencies": {
+        "@mailchimp/mailchimp_marketing": "^3.0.80",
         "@types/node": "^18.11.18"
     }
 }

@@ -4,6 +4,7 @@ import * as util from 'util';
 import * as config from 'config';
 import axios from 'axios';
 import { exec } from 'child_process';
+import { SecretsLoader } from '../../server/src/shared/SecretsManager';
 import { MongoRepo } from '../../server/src/shared/MongoLib';
 import { SGUtils } from '../../server/src/shared/SGUtils';
 import { SGStrings } from '../../server/src/shared/SGStrings';
@@ -79,9 +80,13 @@ import Bitset from 'bitset';
 import { AccessKeyModel } from '../../server/src/api/domain/AccessKey';
 import { teamVariableService } from '../../server/src/api/services/TeamVariableService';
 import { TeamVariableModel } from '../../server/src/api/domain/TeamVariable';
+import { MailChimpAPI } from '../../server/src/shared/MailChimp';
 
 const waitForAgentCreateInterval = 15000;
 const waitForAgentCreateMaxRetries = 12;
+
+import * as dotenv from 'dotenv';
+dotenv.config();
 
 let DownloadAgent = async () => {
     try {
@@ -103,7 +108,7 @@ let DownloadAgent_Create = async () => {
         responseType: 'text',
         headers: {
             Cookie: `Auth=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImJhcnR3b29kQGdtYWlsLmNvbSIsIm9yZ0lkcyI6WyI1YzhhYWVmMTlmYzkyNTZiZWI3NzI1NWIiLCI1YzlhOGY3ODlmYzkyNTZiZWJkMjBmMjQiXSwiZXhwIjoxNTU4NzQxMDgwLCJpYXQiOjE1NTg2NTQ2ODB9.wTgXJolOrZLpzyDFHsVpCfJmb5MlOjjYKu0ISbATuxE;`,
-            objectid: config.get('sgTestTeam'),
+            objectid: process.env.sgTestTeam,
             platform: 'macos',
             arch: '',
         },
@@ -190,7 +195,7 @@ let DownloadAgent_GetUrl = async (numTries: number = 0) => {
         let url = `${apiUrl}/api/v0/agentDownload/agent/0klAO/linux`;
         console.log(`DownloadAgent_GetUrl -> url == ${url}`);
 
-        const auth = `${config.get('adminToken')};`;
+        const auth = `${process.env.adminToken};`;
 
         try {
             const response = await axios({
@@ -268,16 +273,25 @@ let RawStompTest = async () => {
     client.activate();
 };
 
+let SecretsLoaderTest = async () => {
+    let logger = new BaseLogger('RunTestHarness');
+
+    const secretConfigs = config.get('secrets');
+    for (let secretConfig of secretConfigs) {
+        await SecretsLoader.loadSecrets(secretConfig, logger);
+    }
+    console.log(process.env.rmqUrl);
+};
+
 let StompTest = async () => {
-    const rmqUsername = config.get('rmqUsername');
-    const rmqPassword = config.get('rmqPassword');
+    const rmqUsername = process.env.rmqUsername;
+    const rmqPassword = process.env.rmqPassword;
 
     let logger = new BaseLogger('RunTestHarness');
-    logger.Start();
 
-    const stompUrl = config.get('stompUrl');
-    const rmqAdminUrl = config.get('rmqAdminUrl');
-    const rmqVhost = config.get('rmqVhost');
+    const stompUrl = process.env.stompUrl;
+    const rmqAdminUrl = process.env.rmqAdminUrl;
+    const rmqVhost = process.env.rmqVhost;
     const connector = new StompConnector(
         'test',
         'instanceId',
@@ -321,17 +335,42 @@ let StompTest = async () => {
     await SGUtils.sleep(5000);
 };
 
+let MailChimpTest = async () => {
+    let logger = new BaseLogger('RunTestHarness');
+
+    const secretConfigs = config.get('secrets');
+    for (let secretConfig of secretConfigs) {
+        await SecretsLoader.loadSecrets(secretConfig, logger);
+    }
+
+    const updatedUser = {
+        _id: '645b10178720fa2acfe34c31',
+        dateCreated: new Date('2023-05-10T03:31:14.038Z'),
+        teamIds: [],
+        teamIdsInactive: [],
+        teamIdsInvited: [],
+        email: 'fidos52398@jwsuns.com',
+        emailConfirmed: true,
+        hasAcceptedTerms: false,
+        teamAccessRightIds: {},
+    };
+    const mailchimpAPI = new MailChimpAPI();
+    // const response = await mailchimpAPI.addMember(updatedUser.email, 'subscribed');
+    // const response = await mailchimpAPI.getMemberInfo(updatedUser.email);
+    const response = await mailchimpAPI.deleteMember(updatedUser.email);
+    console.log('response -------> ', response);
+};
+
 let AMQPTest = async () => {
-    const mongoUrl = config.get('mongoUrl');
-    const mongoDbname = config.get('mongoDbName');
+    const mongoUrl = process.env.mongoUrl;
+    const mongoDbname = process.env.mongoDbName;
     const rmqScheduleUpdatesQueue = config.get('rmqScheduleUpdatesQueue');
 
     let logger = new BaseLogger('RunTestHarness');
-    logger.Start();
 
     const amqpUrl = config.get('amqpUrl');
-    const rmqVhost = config.get('rmqVhost');
-    const connector = new AMQPConnector('RunTestHarness', '', amqpUrl, rmqVhost, 1, (activeMessages) => {}, logger);
+    const rmqVhost = process.env.rmqVhost;
+    const connector = new AMQPConnector('RunTestHarness', '', 1, (activeMessages) => {}, logger);
     await connector.Start();
 
     // await connector.ConsumeRoute('temp_queue_1', true, true, true, false, (msg, msgKey, cb) => this.CompleteTask(msg, msgKey, cb), '', 'bp', 10000);
@@ -365,8 +404,8 @@ let AMQPTest = async () => {
 };
 
 let CloseRabbitMQConnections = async (user: string) => {
-    const rmqAdminUrl = config.get('rmqAdminUrl');
-    let rmqVhost = config.get('rmqVhost');
+    const rmqAdminUrl = process.env.rmqAdminUrl;
+    let rmqVhost = process.env.rmqVhost;
 
     try {
         const rmqAdmin = new RabbitMQAdmin(rmqAdminUrl, rmqVhost);
@@ -389,8 +428,8 @@ let CloseRabbitMQConnections = async (user: string) => {
 };
 
 let RabbitMQAdminTest = async () => {
-    const rmqAdminUrl = config.get('rmqAdminUrl');
-    let rmqVhost = config.get('rmqVhost');
+    const rmqAdminUrl = process.env.rmqAdminUrl;
+    let rmqVhost = process.env.rmqVhost;
 
     try {
         const rmqAdmin = new RabbitMQAdmin(rmqAdminUrl, rmqVhost);
@@ -408,15 +447,14 @@ let RabbitMQAdminTest = async () => {
 };
 
 let RabbitMQTeamSetup = async (teamId: string) => {
-    mongoose.connect(config.get('mongoUrl'), {});
-    const rmqAdminUrl = config.get('rmqAdminUrl');
-    let rmqVhost = config.get('rmqVhost');
+    mongoose.connect(process.env.mongoUrl, {});
+    const rmqAdminUrl = process.env.rmqAdminUrl;
+    let rmqVhost = process.env.rmqVhost;
 
     console.log('rmqAdminUrl -> ', rmqAdminUrl);
     console.log('rmqVhost -> ', rmqVhost);
 
     let logger = new BaseLogger('RunTestHarness');
-    logger.Start();
 
     try {
         let team: any = await teamService.findTeam(new mongodb.ObjectId(teamId));
@@ -434,8 +472,8 @@ let RabbitMQTeamSetup = async (teamId: string) => {
 };
 
 let RabbitMQSetup = async () => {
-    const rmqAdminUrl = config.get('rmqAdminUrl');
-    let rmqVhost = config.get('rmqVhost');
+    const rmqAdminUrl = process.env.rmqAdminUrl;
+    let rmqVhost = process.env.rmqVhost;
 
     try {
         const rmqAdmin = new RabbitMQAdmin(rmqAdminUrl, rmqVhost);
@@ -463,8 +501,8 @@ let RabbitMQSetup = async () => {
 
 let UpdateAgentVersion = async () => {
     console.log('hi');
-    const mongoUrl = config.get('mongoUrl');
-    const mongoDbname = config.get('mongoDbName');
+    const mongoUrl = process.env.mongoUrl;
+    const mongoDbname = process.env.mongoDbName;
 
     const version = process.argv[2];
 
@@ -475,7 +513,6 @@ let UpdateAgentVersion = async () => {
     console.log('_teamId -> ', _teamId);
 
     let logger = new BaseLogger('RunTestHarness');
-    logger.Start();
 
     let mongoRepo = new MongoRepo('RunTestHarness', mongoUrl, mongoDbname, logger);
     let res = await mongoRepo.UpdateMany(
@@ -492,12 +529,12 @@ let UpdateAgentVersion = async () => {
 //   const util = require('util');
 //   const config = require("config");
 //   let rmqUrl = config.get('rmqUrl');
-//   let rmqUsername = config.get('rmqUsername');
-//   let rmqPassword = config.get('rmqPassword');
-//   let rmqVhost = config.get('rmqVhost');
+//   let rmqUsername = process.env.rmqUsername;
+//   let rmqPassword = process.env.rmqPassword;
+//   let rmqVhost = process.env.rmqVhost;
 //   let _teamId = config.get('_teamId');
-//   let mongoUrl = config.get('mongoUrl');
-//   let mongoDbName = config.get('mongoDbName');
+//   let mongoUrl = process.env.mongoUrl;
+//   let mongoDbName = process.env.mongoDbName;
 //   const useSSL = (config.get('useSSL') === 'true');
 
 //   const appName = 'AdHocScriptSubmitter';
@@ -530,11 +567,10 @@ let UpdateAgentVersion = async () => {
 // }
 
 let DeleteMongoData = async () => {
-    const mongoUrl = config.get('mongoUrl');
-    const mongoDbname = config.get('mongoDbName');
+    const mongoUrl = process.env.mongoUrl;
+    const mongoDbname = process.env.mongoDbName;
 
     let logger = new BaseLogger('RunTestHarness');
-    logger.Start();
 
     let mongoRepo = new MongoRepo('RunTestHarness', mongoUrl, mongoDbname, logger);
 
@@ -560,22 +596,13 @@ let DeleteMongoData = async () => {
 };
 
 let RunRepublishTasksWaitingForAgent = async (_teamId: string) => {
-    mongoose.connect(config.get('mongoUrl'), {});
+    mongoose.connect(process.env.mongoUrl, {});
 
     let logger = new BaseLogger('RunTestHarness');
-    logger.Start();
 
     const amqpUrl = config.get('amqpUrl');
-    const rmqVhost = config.get('rmqVhost');
-    let amqp: AMQPConnector = new AMQPConnector(
-        'RunTestHarness',
-        '',
-        amqpUrl,
-        rmqVhost,
-        1,
-        (activeMessages) => {},
-        logger
-    );
+    const rmqVhost = process.env.rmqVhost;
+    let amqp: AMQPConnector = new AMQPConnector('RunTestHarness', '', 1, (activeMessages) => {}, logger);
 
     await RepublishTasksWaitingForAgent(new mongodb.ObjectId(_teamId), null, logger, amqp);
 
@@ -583,7 +610,7 @@ let RunRepublishTasksWaitingForAgent = async (_teamId: string) => {
 };
 
 let FixTeamDBRecords = async () => {
-    mongoose.connect(config.get('mongoUrl'), {});
+    mongoose.connect(process.env.mongoUrl, {});
 
     let teams: any = await teamService.findAllTeamsInternal({ userAssigned: { $exists: false } });
 
@@ -604,8 +631,7 @@ let FixTeamDBRecords = async () => {
 
 let CancelFailedJobs = async () => {
     let logger = new BaseLogger('RunTestHarness');
-    logger.Start();
-    mongoose.connect(config.get('mongoUrl'), {});
+    mongoose.connect(process.env.mongoUrl, {});
 
     const _teamId = '5f57b2f14b5da00017df0d4f';
     const teamId: any = new mongodb.ObjectId(_teamId);
@@ -634,8 +660,7 @@ let CancelFailedJobs = async () => {
 
 let DeleteNotStartedJobs = async () => {
     let logger = new BaseLogger('RunTestHarness');
-    logger.Start();
-    mongoose.connect(config.get('mongoUrl'), {});
+    mongoose.connect(process.env.mongoUrl, {});
 
     const _teamId = '5f57b2f14b5da00017df0d4f';
     const teamId: any = new mongodb.ObjectId(_teamId);
@@ -663,7 +688,7 @@ let DeleteNotStartedJobs = async () => {
 };
 
 let FixAccessKeyDbRecords = async () => {
-    mongoose.connect(config.get('mongoUrl'), {});
+    mongoose.connect(process.env.mongoUrl, {});
 
     let accessKeys: any = await accessKeyService.findAllAccessKeysInternal();
 
@@ -683,7 +708,7 @@ let FixAccessKeyDbRecords = async () => {
 };
 
 let FixScriptDBRecords = async () => {
-    mongoose.connect(config.get('mongoUrl'), {});
+    mongoose.connect(process.env.mongoUrl, {});
 
     let scripts: any = await scriptService.findAllScriptsInternal();
 
@@ -704,7 +729,7 @@ let FixScriptDBRecords = async () => {
 };
 
 let FixRuntimeVarsDBRecords = async () => {
-    mongoose.connect(config.get('mongoUrl'), {});
+    mongoose.connect(process.env.mongoUrl, {});
 
     // Update team variables
     let teamVars: any = await teamVariableService.findAllTeamVariablesInternal();
@@ -834,7 +859,7 @@ let FixRuntimeVarsDBRecords = async () => {
 };
 
 let DumpMongoData = async (path: string) => {
-    mongoose.connect(config.get('mongoUrl'), {});
+    mongoose.connect(process.env.mongoUrl, {});
 
     let user: any = await userService.findAllUsersInternal();
     let team: any = await teamService.findAllTeamsInternal();
@@ -881,13 +906,12 @@ let DumpMongoData = async (path: string) => {
 };
 
 let LoadMongoData = async (path: string) => {
-    mongoose.connect(config.get('mongoUrl'), {});
+    mongoose.connect(process.env.mongoUrl, {});
 
-    const mongoUrl = config.get('mongoUrl');
-    const mongoDbname = config.get('mongoDbName');
+    const mongoUrl = process.env.mongoUrl;
+    const mongoDbname = process.env.mongoDbName;
 
     let logger = new BaseLogger('RunTestHarness');
-    logger.Start();
 
     let mongoRepo = new MongoRepo('RunTestHarness', mongoUrl, mongoDbname, logger);
 
@@ -1038,7 +1062,7 @@ let LoadMongoData = async (path: string) => {
 };
 
 let DumpSettingsFromMongo = async () => {
-    mongoose.connect(config.get('mongoUrl'), {});
+    mongoose.connect(process.env.mongoUrl, {});
 
     const path = './settings.json';
 
@@ -1056,15 +1080,14 @@ let DumpSettingsFromMongo = async () => {
 };
 
 let LoadSettingsToMongo = async () => {
-    mongoose.connect(config.get('mongoUrl'), {});
+    mongoose.connect(process.env.mongoUrl, {});
 
     const path = './settings.json';
 
-    const mongoUrl = config.get('mongoUrl');
-    const mongoDbname = config.get('mongoDbName');
+    const mongoUrl = process.env.mongoUrl;
+    const mongoDbname = process.env.mongoDbName;
 
     let logger = new BaseLogger('RunTestHarness');
-    logger.Start();
 
     let mongoRepo = new MongoRepo('RunTestHarness', mongoUrl, mongoDbname, logger);
 
@@ -1113,7 +1136,7 @@ let TestBraintreeWebhook = async () => {
 };
 
 let CreateInvoiceReports = async () => {
-    mongoose.connect(config.get('mongoUrl'), {});
+    mongoose.connect(process.env.mongoUrl, {});
 
     let teams = await teamService.findAllTeamsInternal({ userAssigned: true }, 'id scriptRate jobStoragePerMBRate');
     console.log('teams -> ', teams);
@@ -1145,7 +1168,7 @@ let CreateInvoiceReports = async () => {
 };
 
 let CreateInvoices = async () => {
-    const auth = `${config.get('adminToken')};`;
+    const auth = `${process.env.adminToken};`;
 
     let teams: any = await RestAPICall(
         'team?responseFields=id scriptRate jobStoragePerMBRate',
@@ -1215,7 +1238,7 @@ let SubmitInvoicesForPayment = async () => {
         privateKey: privateKey,
     });
 
-    const auth = `${config.get('adminToken')};`;
+    const auth = `${process.env.adminToken};`;
 
     let url = `invoice?filter=status==${Enums.InvoiceStatus.CREATED}&responseFields=id _teamId`;
     let invoices: any = await RestAPICall(url, 'GET', null, null, null, auth);
@@ -1255,9 +1278,8 @@ let CreateTeam = async (teamName, ownerId) => {
     const appName = 'RunTestHarness';
 
     let logger = new BaseLogger(appName);
-    logger.Start();
 
-    mongoose.connect(config.get('mongoUrl'), {});
+    mongoose.connect(process.env.mongoUrl, {});
 
     let team = await teamService.createTeam({ name: teamName, ownerId: new mongodb.ObjectId(ownerId) }, logger);
 
@@ -1266,13 +1288,12 @@ let CreateTeam = async (teamName, ownerId) => {
 };
 
 let CreateJob = async () => {
-    const mongoUrl = config.get('mongoUrl');
-    const mongoDbname = config.get('mongoDbName');
+    const mongoUrl = process.env.mongoUrl;
+    const mongoDbname = process.env.mongoDbName;
 
     const appName = 'RunTestHarness';
 
     let logger = new BaseLogger(appName);
-    logger.Start();
 
     let mongoRepo = new MongoRepo(appName, mongoUrl, mongoDbname, logger);
 
@@ -1289,7 +1310,7 @@ let CreateJob = async () => {
 };
 
 let CreateAccessKey = async () => {
-    mongoose.connect(config.get('mongoUrl'), {});
+    mongoose.connect(process.env.mongoUrl, {});
 
     let data: any = {
         accessKeyType: 1,
@@ -1371,7 +1392,7 @@ let LoadAccessRightIdsToProd = async () => {
     ];
 
     console.log('mongoUrl -> @sgg("mongoUrl")');
-    mongoose.connect(config.get('mongoUrl'), {});
+    mongoose.connect(process.env.mongoUrl, {});
     await AccessRightModel.deleteMany();
 
     for (let i = 0; i < accessRights.length; i++) {
@@ -1447,7 +1468,7 @@ let CreateAccessRightIds = async () => {
     ];
 
     console.log('mongoUrl -> @sgg("mongoUrl")');
-    mongoose.connect(config.get('mongoUrl'), {});
+    mongoose.connect(process.env.mongoUrl, {});
     await AccessRightModel.deleteMany();
 
     let rightId = 1;
@@ -1464,7 +1485,7 @@ let GetAllAccessRights = async () => {
     let lstAccessRights: string[] = [];
 
     console.log('mongoUrl -> @sgg("mongoUrl")');
-    mongoose.connect(config.get('mongoUrl'), {});
+    mongoose.connect(process.env.mongoUrl, {});
 
     const accessRights = await AccessRightModel.find({}).select('name rightId');
 
@@ -1493,7 +1514,7 @@ let CreateProdAccessKeys = async () => {
     const mongoose = require('mongoose');
 
     console.log('mongoUrl -> @sgg("mongoUrl")');
-    mongoose.connect(config.get('mongoUrl'), {});
+    mongoose.connect(process.env.mongoUrl, {});
     await AccessKeyModel.deleteMany({ accessKeyType: Enums.AccessKeyType.AGENT });
 
     let teams = await teamService.findAllTeamsInternal({}, 'ownerId');
@@ -1519,7 +1540,7 @@ let UpdateUserTeamAccessRights = async () => {
     const mongoose = require('mongoose');
 
     console.log('mongoUrl -> @sgg("mongoUrl")');
-    mongoose.connect(config.get('mongoUrl'), {});
+    mongoose.connect(process.env.mongoUrl, {});
 
     let teams = await teamService.findAllTeamsInternal({}, 'ownerId');
 
@@ -1573,12 +1594,14 @@ let UpdateUserTeamAccessRights = async () => {
 let UploadFileToS3 = async (filePath: string) => {
     await new Promise(async (resolve, reject) => {
         try {
+            let logger = new BaseLogger('RunTestHarness');
+
             const fs = require('fs');
             const readFile = require('util').promisify(fs.readFile);
             const fileData = await readFile(filePath);
 
             const fileType = 'multipart/form-data';
-            let s3Access = new S3Access();
+            let s3Access = new S3Access(logger);
 
             let url = await s3Access.putSignedS3URL(
                 `${path.basename(filePath)}`,
@@ -1613,7 +1636,9 @@ let UploadFileToS3 = async (filePath: string) => {
 
 let GetS3PrefixSize = async (prefix: string) => {
     try {
-        let s3Access = new S3Access();
+        let logger = new BaseLogger('RunTestHarness');
+
+        let s3Access = new S3Access(logger);
 
         let res = await s3Access.sizeOf(prefix, `${config.get('S3_BUCKET_TEAM_ARTIFACTS')}`);
         console.log('res -> ', res);
@@ -1682,12 +1707,11 @@ let CreateUser = async (email: string, password: string, teamIds: string[] = [])
         const passwordHash = await bcrypt.hash(password, salt);
         console.log('passwordHash is ', passwordHash);
 
-        const mongoUrl = config.get('mongoUrl');
-        const mongoDbname = config.get('mongoDbName');
+        const mongoUrl = process.env.mongoUrl;
+        const mongoDbname = process.env.mongoDbName;
 
         const appName = 'RunTestHarness';
         let logger = new BaseLogger(appName);
-        logger.Start();
 
         let mongoRepo = new MongoRepo(appName, mongoUrl, mongoDbname, logger);
 
@@ -1722,7 +1746,6 @@ let StopScheduler = async () => {
 
 let SendTestEmail = async () => {
     let logger = new BaseLogger('SendTestEmailSMTP');
-    logger.Start();
 
     await SGUtils.SendInternalEmail(
         'rich@saasglue.com',
@@ -1754,7 +1777,6 @@ let SendTestEmail = async () => {
 
 let SendTestSlack = async () => {
     let logger = new BaseLogger('SendTestEmailSMTP');
-    logger.Start();
 
     console.log('before send');
     SGUtils.SendCustomerSlack(
@@ -1767,7 +1789,6 @@ let SendTestSlack = async () => {
 
 let SendTestEmailSMTP = async () => {
     let logger = new BaseLogger('SendTestEmailSMTP');
-    logger.Start();
 
     await SGUtils.SendSignupConfirmEmail('123456', 'rich@wifunds.com', logger);
 };
@@ -1876,7 +1897,7 @@ let BraintreeTesting = async () => {
         privateKey: privateKey,
     });
 
-    const teamId = config.get('sgTeam');
+    const teamId = process.env.sgTeam;
 
     try {
         let result = await gateway.customer.create({
@@ -2006,34 +2027,47 @@ let convertTeamAccessRightsToBitset = (accessRightIds) => {
 };
 
 let GenerateToken = async () => {
-    const secret = config.get('secret');
+    const secret = process.env.secret;
 
-    const mongoose = require('mongoose');
+    // const mongoose = require('mongoose');
 
-    console.log('mongoUrl -> @sgg("mongoUrl")');
-    mongoose.connect(config.get('mongoUrl'), {});
+    // console.log('mongoUrl ------------> ', process.env.mongoUrl);
+    // mongoose.connect(process.env.mongoUrl, {});
 
-    const jwtExpiration = Date.now() + 1000 * 60 * 60 * 24 * 180; // 180 days
-    let token = jwt.sign(
-        {
-            InvitedTeamId: new mongodb.ObjectId('5e99cbcb2317950015edb655'),
-            InvitedTeamName: 'saas glue demo',
-            exp: Math.floor(jwtExpiration / 1000),
-        },
-        secret
-    ); //KeysUtil.getPrivate()); // todo - create a public / private key
+    // const jwtExpiration = Date.now() + 1000 * 60 * 60 * 24 * 180; // 180 days
+    // let token = jwt.sign(
+    //     {
+    //         InvitedTeamId: new mongodb.ObjectId('5e99cbcb2317950015edb655'),
+    //         InvitedTeamName: 'saas glue demo',
+    //         exp: Math.floor(jwtExpiration / 1000),
+    //     },
+    //     secret
+    // ); //KeysUtil.getPrivate()); // todo - create a public / private key
 
-    let url = config.get('WEB_CONSOLE_BASE_URL');
-    const port = config.get('WEB_CONSOLE_PORT');
+    // let url = config.get('WEB_CONSOLE_BASE_URL');
+    // const port = config.get('WEB_CONSOLE_PORT');
 
-    if (port != '') url += `:${port}`;
-    let joinTeamLink = `${url}/?invitedTeamToken=${token}`;
+    // if (port != '') url += `:${port}`;
+    // let joinTeamLink = `${url}/?invitedTeamToken=${token}`;
 
-    console.log(JSON.stringify(joinTeamLink));
+    // console.log(JSON.stringify(joinTeamLink));
 
     // let accessRightIds = await GetAccessRightIds(['GLOBAL']);
     // // let accessRightIds = await GetAccessRightIds(['AGENT_CREATE', 'AGENT_DOWNLOAD_GET', 'AGENT_LOG_CREATE', 'AGENT_READ', 'AGENT_UDPATE', 'AGENT_UPDATE_HEARTBEAT', 'JOB_CREATE', 'STEP_OUTCOME_CREATE', 'STEP_OUTCOME_UPDATE', 'TASK_OUTCOME_CREATE', 'TASK_OUTCOME_UPDATE']);
     // let bits = convertTeamAccessRightsToBitset(accessRightIds);
+
+    const body = {
+        id: '617c7ec0a8da910018e2be23',
+        type: 0,
+        email: 'bogod23049@d3ff.com',
+        teamIds: ['60c16b64b308e30017981609'],
+        teamAccessRightIds: {
+            '60c16b64b308e30017981609': '13f3f73f86f1198',
+        },
+        teamIdsInvited: [],
+        name: 'Marketing Demo',
+        companyName: 'SG Marketing Demo',
+    };
 
     // const body = {
     //   "teamIds": [
@@ -2053,32 +2087,33 @@ let GenerateToken = async () => {
     // }
 
     // const body = {
-    //   "id": "5de8810275ad92e5bb8de78a",
-    //   "email": "admin@saasglue.com",
-    //   "teamIds": [],
-    //   "teamAccessRightIds": {default: bits}
-    // }
+    //     id: '5de8810275ad92e5bb8de78a',
+    //     email: 'admin@saasglue.com',
+    //     teamIds: [],
+    //     teamAccessRightIds: { default: bits },
+    // };
 
     // const body = {
-    //   "id": "5de8810275ad92e5bb8de78a",
-    //   "email": "scheduler@saasglue.com",
-    //   "teamIds": [],
-    //   "teamAccessRightIds": {}
-    // }
+    //     id: '5de8810275ad92e5bb8de78a',
+    //     email: 'scheduler@saasglue.com',
+    //     teamIds: [],
+    //     teamAccessRightIds: {},
+    // };
 
-    // var token = jwt.sign(body, secret);//KeysUtil.getPrivate()); // todo - create a public / private key
+    var token = jwt.sign(body, secret); //KeysUtil.getPrivate()); // todo - create a public / private key
 
-    // console.log(JSON.stringify(token));
+    console.log(JSON.stringify(token));
 };
 
 let VerifyToken = async (token: string) => {
-    const secret = config.get('secret');
+    const secret = process.env.secret;
+    console.log(secret);
     const res = jwt.verify(token, secret);
     console.log('res -> ', res);
 };
 
 let CreateAgentInstall = async (_teamId: string, agentVersion: string, nodeRange: string, platform: string, arch) => {
-    const secret = config.get('secret');
+    const secret = process.env.secret;
     var token = jwt.sign(
         {
             teamIds: [_teamId],
@@ -2090,13 +2125,12 @@ let CreateAgentInstall = async (_teamId: string, agentVersion: string, nodeRange
     let apiUrl = config.get('API_BASE_URL');
     const apiPort = config.get('API_PORT');
     let logDest = config.get('logDest');
-    const mongoUrl = config.get('mongoUrl');
-    const mongoDbName = config.get('mongoDbName');
+    const mongoUrl = process.env.mongoUrl;
+    const mongoDbName = process.env.mongoDbName;
 
     let appName: string = 'CreateAgentInstall';
 
     let logger: BaseLogger = new BaseLogger(appName);
-    logger.Start();
 
     let mongoRepo = new MongoRepo(appName, mongoUrl, mongoDbName, logger);
 
@@ -2192,8 +2226,8 @@ steps.push({ script: script2_json, arguments: 'there', variables: script_env_var
 
 /// Create invoices
 // (async () => {
-//   const mongoUrl = config.get('mongoUrl');
-//   const mongoDbname = config.get('mongoDbName');
+//   const mongoUrl = process.env.mongoUrl;
+//   const mongoDbname = process.env.mongoDbName;
 
 //   let logger = new BaseLogger('GenerateInvoices');
 //   let mongoRepo = new MongoRepo('GenerateInvoices', mongoUrl, mongoDbname, logger);
@@ -2222,16 +2256,15 @@ steps.push({ script: script2_json, arguments: 'there', variables: script_env_var
 let PublishJobTask = async () => {
     const appName = 'PublishJobTask';
 
-    mongoose.connect(config.get('mongoUrl'), {});
+    mongoose.connect(process.env.mongoUrl, {});
 
     let logger = new BaseLogger(appName);
-    logger.Start();
 
     const amqpUrl = config.get('amqpUrl');
-    const rmqVhost = config.get('rmqVhost');
-    let amqp: AMQPConnector = new AMQPConnector(appName, '', amqpUrl, rmqVhost, 1, (activeMessages) => {}, logger);
+    const rmqVhost = process.env.rmqVhost;
+    let amqp: AMQPConnector = new AMQPConnector(appName, '', 1, (activeMessages) => {}, logger);
 
-    const _teamId = config.get('sgTestTeam');
+    const _teamId = process.env.sgTestTeam;
     const _jobId = new mongodb.ObjectId('5e88a1fa4ff0b10b4847a4e7');
 
     const queryTasks = await taskService.findAllJobTasks(_teamId, _jobId);
@@ -2244,7 +2277,7 @@ let PublishJobTask = async () => {
 };
 
 let CreateStripeCompanyForTeams = async () => {
-    mongoose.connect(config.get('mongoUrl'), {});
+    mongoose.connect(process.env.mongoUrl, {});
 
     const teams = await teamService.findAllTeamsInternal({ userAssigned: true });
 
@@ -2264,8 +2297,8 @@ let CreateStripeCompanyForTeams = async () => {
 };
 
 let CreateBrainTreeCompanyForTeams = async () => {
-    const auth = `${config.get('adminToken')};`;
-    mongoose.connect(config.get('mongoUrl'), {});
+    const auth = `${process.env.adminToken};`;
+    mongoose.connect(process.env.mongoUrl, {});
 
     const teams = await teamService.findAllTeamsInternal({});
 
@@ -2284,8 +2317,8 @@ let CreateBrainTreeCompanyForTeams = async () => {
 };
 
 let ProcessOrphanedTasks = async () => {
-    const auth = `${config.get('adminToken')};`;
-    mongoose.connect(config.get('mongoUrl'), {});
+    const auth = `${process.env.adminToken};`;
+    mongoose.connect(process.env.mongoUrl, {});
 
     const batchSize: number = 10;
 
@@ -2332,13 +2365,12 @@ let ProcessOrphanedTasks = async () => {
 };
 
 let DeleteJobs = async (filter: any) => {
-    mongoose.connect(config.get('mongoUrl'), {});
+    mongoose.connect(process.env.mongoUrl, {});
 
-    const mongoUrl = config.get('mongoUrl');
-    const mongoDbname = config.get('mongoDbName');
+    const mongoUrl = process.env.mongoUrl;
+    const mongoDbname = process.env.mongoDbName;
 
     let logger = new BaseLogger('RunTestHarness');
-    logger.Start();
 
     let mongoRepo = new MongoRepo('RunTestHarness', mongoUrl, mongoDbname, logger);
 
@@ -2356,13 +2388,12 @@ let DeleteJobs = async (filter: any) => {
 };
 
 let DeleteJobDefs = async (filter: any) => {
-    mongoose.connect(config.get('mongoUrl'), {});
+    mongoose.connect(process.env.mongoUrl, {});
 
-    const mongoUrl = config.get('mongoUrl');
-    const mongoDbname = config.get('mongoDbName');
+    const mongoUrl = process.env.mongoUrl;
+    const mongoDbname = process.env.mongoDbName;
 
     let logger = new BaseLogger('RunTestHarness');
-    logger.Start();
 
     let mongoRepo = new MongoRepo('RunTestHarness', mongoUrl, mongoDbname, logger);
 
@@ -2386,14 +2417,13 @@ let DeleteJobDefs = async (filter: any) => {
 ///   until all are done. Maybe better to do it with ec2 instances and a custom scaling solution
 ///   where idle agents automatically shut themselves down with an "inactive" script.
 let PruneJobs = async (teamId: string) => {
-    const mongoUrl = config.get('mongoUrl');
-    const mongoDbname = config.get('mongoDbName');
+    const mongoUrl = process.env.mongoUrl;
+    const mongoDbname = process.env.mongoDbName;
 
     console.log('mongoUrl -> ', mongoUrl);
     console.log('mongoDbname -> ', mongoDbname);
 
     let logger = new BaseLogger('RunTestHarness');
-    logger.Start();
 
     let mongoRepo = new MongoRepo('RunTestHarness', mongoUrl, mongoDbname, logger);
 
@@ -2585,11 +2615,10 @@ let PruneJobs = async (teamId: string) => {
 
 let ConfigNewRabbitMQServer = async () => {
     let logger = new BaseLogger('ConfigNewRabbitMQServer');
-    logger.Start();
 
     try {
-        const rmqAdminUrl = config.get('rmqAdminUrl');
-        let rmqVhost = config.get('rmqVhost');
+        const rmqAdminUrl = process.env.rmqAdminUrl;
+        let rmqVhost = process.env.rmqVhost;
         let rmqScheduleUpdatesQueue = config.get('rmqScheduleUpdatesQueue');
         // let rmqNoAgentForTaskQueue = config.get('rmqNoAgentForTaskQueue');
 
@@ -2608,18 +2637,46 @@ let ConfigNewRabbitMQServer = async () => {
 };
 
 let SendTestBrowserAlert = async () => {
-    rabbitMQPublisher.publishBrowserAlert(config.get('sgTestTeam'), `This is a test message`);
+    rabbitMQPublisher.publishBrowserAlert(process.env.sgTestTeam, `This is a test message`);
+};
+
+let MongooseTest = async () => {
+    mongoose.connect(process.env.mongoUrl, {});
+
+    const platformKey = `Values.agent_stub_install.linux`;
+
+    let queryPlatform = {};
+    queryPlatform[platformKey] = { $exists: true };
+
+    let queryStatus = {};
+    const statusKey = `Values.agent_stub_install.linux.status`;
+    queryStatus[statusKey] = { $eq: 'ready' };
+
+    let projectionDoc = {};
+    const locationKey = `Values.agent_stub_install.linux.location`;
+    projectionDoc[locationKey] = 1;
+    projectionDoc['_id'] = 1;
+
+    const filter = {};
+    filter[platformKey] = { $exists: true };
+    filter[statusKey] = { $eq: 'ready' };
+    filter['Type'] = 'AgentBuild';
+
+    console.log('filter ----------> ', filter);
+    console.log('response fields ----------> ', `${locationKey} _id`);
+    const agentBuild = await settingsService.findAllSettingsInternal(filter, `${locationKey} _id`);
+    console.log('after');
+    console.log('agentBuild ----------> ', util.inspect(agentBuild, false, null));
 };
 
 let MongoTest = async () => {
-    const mongoUrl = config.get('mongoUrl');
-    const mongoDbname = config.get('mongoDbName');
+    const mongoUrl = process.env.mongoUrl;
+    const mongoDbname = process.env.mongoDbName;
 
     console.log('mongoUrl -> ', mongoUrl);
     console.log('mongoDbname -> ', mongoDbname);
 
     let logger = new BaseLogger('RunTestHarness');
-    logger.Start();
 
     let mongoRepo = new MongoRepo('RunTestHarness', mongoUrl, mongoDbname, logger);
 
@@ -2643,7 +2700,8 @@ let MongoTest = async () => {
     console.log('result ---------> ', result);
 };
 
-// MongoTest();
+// MailChimpTest();
+// MongooseTest();
 // RunRepublishTasksWaitingForAgent('5f57b2f14b5da00017df0d4f');
 // CreateBrainTreeCompanyForTeams();
 // CreateStripeCompanyForTeams();
@@ -2658,7 +2716,7 @@ let MongoTest = async () => {
 // ProcessOrphanedTasks();
 // PublishJobTask();
 // PruneJobs('605366d1d26030001713b1cc');
-UploadFileToS3(process.argv[2]);
+// UploadFileToS3(process.argv[2]);
 // GetS3PrefixSize('production/5de95c0453162e8891f5a830/');
 // CreateTeam("saas glue admin", "5ef125b4fb07e500150507ca");
 // DumpMongoData('./production_20200615.json');
@@ -2671,6 +2729,7 @@ UploadFileToS3(process.argv[2]);
 // RabbitMQAdminTest();
 // CloseRabbitMQConnections("bartSpikeUser");
 // AMQPTest();
+// SecretsLoaderTest();
 // StompTest();
 // RawStompTest();
 // ScheduleScript();
@@ -2693,7 +2752,7 @@ UploadFileToS3(process.argv[2]);
 // SubmitInvoicesForPayment();
 // TestBraintreeWebhook();
 // CreateInvoicePDF(0);
-// GenerateToken();
+GenerateToken();
 // AgentRestAPICall();
 // DeleteJobs({'_jobDefId': process.argv[2]});
 // DeleteJobDefs({"name": /Cron.*/});
@@ -2706,7 +2765,9 @@ UploadFileToS3(process.argv[2]);
 // CreateAccessKey();
 // printTeamAccessRightsBitSet();
 // CreateProdAccessKeys();
-// (async () => { VerifyToken(process.argv[2]); })();
+// (async () => {
+//     VerifyToken(process.argv[2]);
+// })();
 
 // RabbitMQTeamSetup('5f57b2f14b5da00017df0d4f');
 // RabbitMQTeamSetup('5e99cbcb2317950015edb655');
@@ -2729,7 +2790,7 @@ UploadFileToS3(process.argv[2]);
 // })();
 
 // (async () => {
-// mongoose.connect(config.get('mongoUrl'), {});
+// mongoose.connect(process.env.mongoUrl, {});
 
 // const __ACTIVE_AGENT_TIMEOUT_SECONDS = config.get('__ACTIVE_AGENT_TIMEOUT_SECONDS');
 // let inactiveAgentsFilter = {};

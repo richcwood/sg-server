@@ -103,7 +103,7 @@ export class JoinTeamService {
         let tokenIsValid: boolean = true;
         let jwtData;
         try {
-            jwtData = jwt.verify(token, config.get('secret'));
+            jwtData = jwt.verify(token, process.env.secret);
         } catch (err) {
             tokenIsValid = false;
         }
@@ -169,7 +169,7 @@ export class JoinTeamService {
     //     let tokenIsValid: boolean = true;
     //     let jwtData;
     //     try {
-    //         jwtData = jwt.verify(token, config.get('secret'));
+    //         jwtData = jwt.verify(token, process.env.secret);
     //     } catch (err) {
     //         tokenIsValid = false;
     //     }

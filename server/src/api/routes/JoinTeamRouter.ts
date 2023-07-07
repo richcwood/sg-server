@@ -12,5 +12,9 @@ export class JoinTeamRouter {
     }
 }
 
-export const joinTeamRouterSingleton = new JoinTeamRouter();
-export const joinTeamRouter = joinTeamRouterSingleton.router;
+export const joinTeamRouterSingleton = (): JoinTeamRouter | any => {
+    return new JoinTeamRouter();
+};
+export const joinTeamRouter = (): any => {
+    return joinTeamRouterSingleton().router;
+};

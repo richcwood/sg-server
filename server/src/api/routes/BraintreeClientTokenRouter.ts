@@ -11,5 +11,9 @@ export class BraintreeClientTokenRouter {
     }
 }
 
-export const braintreeClientTokenRouterSingleton = new BraintreeClientTokenRouter();
-export const braintreeClientTokenRouter = braintreeClientTokenRouterSingleton.router;
+export const braintreeClientTokenRouterSingleton = (): BraintreeClientTokenRouter | any => {
+    return new BraintreeClientTokenRouter();
+};
+export const braintreeClientTokenRouter = (): any => {
+    return braintreeClientTokenRouterSingleton().router;
+};

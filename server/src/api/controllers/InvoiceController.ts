@@ -48,7 +48,12 @@ export class InvoiceController {
         try {
             const _teamId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._teamid);
             const response: ResponseWrapper = (resp as any).body;
-            const invoice = await invoiceService.findInvoicePDF(_teamId, new mongodb.ObjectId(req.params.invoiceId));
+            const logger: BaseLogger = (<any>req).logger;
+            const invoice = await invoiceService.findInvoicePDF(
+                _teamId,
+                new mongodb.ObjectId(req.params.invoiceId),
+                logger
+            );
 
             response.data = convertResponseData(InvoiceSchema, invoice);
             return next();

@@ -23,7 +23,7 @@ export default class Test56 extends TestBase.WorkflowTestBase {
         let result: boolean;
         let resApiCall: any;
 
-        const _teamId: string = config.get('sgTestTeam');
+        const _teamId: string = process.env.sgTestTeam;
 
         const properties: any = {
             scripts: [
@@ -45,7 +45,7 @@ export default class Test56 extends TestBase.WorkflowTestBase {
                                 {
                                     name: 'Step 1',
                                     scriptName: 'Script 56',
-                                    lambdaRuntime: 'nodejs12.x',
+                                    lambdaRuntime: 'nodejs14.x',
                                     lambdaRole: config.get('lambda-admin-iam-role'),
                                     lambdaAWSRegion: config.get('AWS_REGION'),
                                 },
@@ -73,7 +73,7 @@ export default class Test56 extends TestBase.WorkflowTestBase {
             domainType: 'Job',
             operation: 1,
             model: {
-                _teamId: config.get('sgTestTeam'),
+                _teamId: process.env.sgTestTeam,
                 _jobDefId: jobDefs[properties.jobDefs[0].name].id,
                 runId: 0,
                 name: properties.jobDefs[0].name,

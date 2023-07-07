@@ -29,7 +29,7 @@ export default class Test38 extends TestBase.WorkflowTestBase {
         let result: boolean;
         let resApiCall: any;
 
-        const _teamId: string = config.get('sgTestTeam');
+        const _teamId: string = process.env.sgTestTeam;
 
         let agentMachineId: string = self.testSetup.agents[0].machineId;
         let agentId: string;
@@ -73,7 +73,7 @@ export default class Test38 extends TestBase.WorkflowTestBase {
             domainType: 'TaskOutcome',
             operation: 1,
             model: {
-                _teamId: config.get('sgTestTeam'),
+                _teamId: process.env.sgTestTeam,
                 _jobId: firstJob.job.id,
                 source: 1,
                 status: 5,

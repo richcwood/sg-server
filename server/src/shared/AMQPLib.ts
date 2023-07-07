@@ -28,8 +28,6 @@ export class AMQPConnector {
     constructor(
         public appName: string,
         public clientId: string,
-        public url: string,
-        public vhost: string,
         public prefetchCount: number,
         public fnOnDisconnect: any,
         private logger: any
@@ -88,11 +86,11 @@ export class AMQPConnector {
             return true;
         }
 
-        this.LogDebug('Received request to start AMQP connection to RabbitMQ', { Vhost: this.vhost });
+        this.LogDebug('Received request to start AMQP connection to RabbitMQ', { Vhost: process.env.rmqVhost });
         try {
             await SGUtils.retryWithBackoff(
                 async () => {
-                    return await this.amqp.connect(this.url);
+                    return await this.amqp.connect(process.env.amqpUrl);
                 },
                 (conn) => {
                     this.conn = conn;
@@ -124,7 +122,10 @@ export class AMQPConnector {
             }
         });
 
-        this.LogDebug('Completed request to start AMQP connection', { url: this.url, Vhost: this.vhost });
+        this.LogDebug('Completed request to start AMQP connection', {
+            url: process.env.amqpUrl,
+            Vhost: process.env.rmqVhost,
+        });
 
         return true;
     }

@@ -24,5 +24,9 @@ export class TaskDefRouter {
     }
 }
 
-export const taskDefRouterSingleton = new TaskDefRouter();
-export const taskDefRouter = taskDefRouterSingleton.router;
+export const taskDefRouterSingleton = (): TaskDefRouter | any => {
+    return new TaskDefRouter();
+};
+export const taskDefRouter = (): any => {
+    return taskDefRouterSingleton().router;
+};

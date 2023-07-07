@@ -112,7 +112,7 @@ export class TaskActionService {
         };
 
         let _teamIdAgent: mongodb.ObjectId = _teamId;
-        const sgAdminTeam = new mongodb.ObjectId(config.get('sgAdminTeam'));
+        const sgAdminTeam = new mongodb.ObjectId(process.env.sgAdminTeam);
         if (task.target == TaskDefTarget.AWS_LAMBDA) _teamIdAgent = sgAdminTeam;
 
         let getTaskRoutesRes: IGetTaskRouteResult = await GetTaskRoutes(_teamIdAgent, routeTaskInfo, logger);

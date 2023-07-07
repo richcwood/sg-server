@@ -27,12 +27,8 @@ import {
 } from '../utils/Shared';
 import { SGUtils } from '../../shared/SGUtils';
 
-const stompUrl = config.get('stompUrl');
-const rmqVhost = config.get('rmqVhost');
-const rmqAdminUrl = config.get('rmqAdminUrl');
 const inactiveAgentQueueTTLHours = parseInt(config.get('inactiveAgentQueueTTLHours'), 10);
 const __ACTIVE_AGENT_TIMEOUT_SECONDS = parseInt(config.get('activeAgentTimeoutSeconds'), 10);
-const adminTeamId = config.get('sgAdminTeam');
 const awsLambdaRequiredTags = config.get('awsLambdaRequiredTags');
 
 let errorHandler = (err, req: Request, resp: Response, next: NextFunction) => {
@@ -49,7 +45,7 @@ let configureAgentQueues = async (_teamId: mongodb.ObjectId, _agentId: mongodb.O
     let inactiveAgentQueueTTL = inactiveAgentQueueTTLHours * 60 * 60 * 1000;
     let team: TeamSchema = await teamService.findTeam(_teamId);
 
-    const rmqAdmin = new RabbitMQAdmin(rmqAdminUrl, rmqVhost, logger);
+    const rmqAdmin = new RabbitMQAdmin(process.env.rmqAdminUrl, process.env.rmqVhost, logger);
 
     // let team = await this.mongoRepo.GetById(this.mongoRepo.ObjectIdFromString(_teamId), 'team', { rmqPassword: 1 });
     // const newUsername = _teamId.toString();
@@ -79,11 +75,11 @@ let addServerPropertiesToAgent = async (agent: any) => {
     if (!team) throw new MissingObjectError(`Agent team "${agent._teamId.toHexString()}" not found`);
     return Object.assign(agent, {
         inactiveAgentQueueTTL: inactiveAgentQueueTTLHours * 60 * 60 * 1000,
-        stompUrl: stompUrl,
-        rmqAdminUrl: rmqAdminUrl,
+        stompUrl: process.env.stompUrl,
+        rmqAdminUrl: process.env.rmqAdminUrl,
         rmqUsername: agent._teamId.toHexString(),
         rmqPassword: team.rmqPassword,
-        rmqVhost: rmqVhost,
+        rmqVhost: process.env.rmqVhost,
     });
 };
 
@@ -242,7 +238,7 @@ export class AgentController {
                 await RepublishTasksWaitingForAgent(_teamId, newAgent._id, logger, amqp);
             }
 
-            if (_teamId == adminTeamId && _.isArray(newAgent.tags) && newAgent.tags.length > 0) {
+            if (_teamId == process.env.sgAdminTeam && _.isArray(newAgent.tags) && newAgent.tags.length > 0) {
                 let isLambdaRunnerAgent: boolean = true;
                 for (let i = 0; i < Object.keys(awsLambdaRequiredTags).length; i++) {
                     const key = Object.keys(awsLambdaRequiredTags)[i];
@@ -353,7 +349,7 @@ export class AgentController {
                     await RepublishTasksWaitingForAgent(_teamId, _agentId, logger, amqp);
                 }
 
-                if (_teamId == adminTeamId) {
+                if (_teamId == process.env.sgAdminTeam) {
                     let isLambdaRunnerAgent: boolean = true;
                     for (let i = 0; i < Object.keys(awsLambdaRequiredTags).length; i++) {
                         const key = Object.keys(awsLambdaRequiredTags)[i];
@@ -413,7 +409,7 @@ export class AgentController {
                 await RepublishTasksWaitingForAgent(_teamId, _agentId, logger, amqp);
             }
 
-            if (_teamId == adminTeamId) {
+            if (_teamId == process.env.sgAdminTeam) {
                 let isLambdaRunnerAgent: boolean = true;
                 for (let i = 0; i < Object.keys(awsLambdaRequiredTags).length; i++) {
                     const key = Object.keys(awsLambdaRequiredTags)[i];
@@ -486,7 +482,7 @@ export class AgentController {
                             await RepublishTasksWaitingForAgent(_teamId, _agentId, logger, amqp);
                         }
 
-                        if (_teamId == adminTeamId) {
+                        if (_teamId == process.env.sgAdminTeam) {
                             let isLambdaRunnerAgent: boolean = true;
                             for (let i = 0; i < Object.keys(awsLambdaRequiredTags).length; i++) {
                                 const key = Object.keys(awsLambdaRequiredTags)[i];

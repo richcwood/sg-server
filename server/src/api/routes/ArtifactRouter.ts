@@ -28,5 +28,9 @@ export class ArtifactRouter {
     }
 }
 
-export const artifactRouterSingleton = new ArtifactRouter();
-export const artifactRouter = artifactRouterSingleton.router;
+export const artifactRouterSingleton = (): ArtifactRouter | any => {
+    return new ArtifactRouter();
+};
+export const artifactRouter = (): any => {
+    return artifactRouterSingleton().router;
+};

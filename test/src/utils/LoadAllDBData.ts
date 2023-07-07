@@ -43,17 +43,19 @@ import { AccessKeySchema } from '../../../server/src/api/domain/AccessKey';
 import { convertData as convertRequestData } from '../../../server/src/api/utils/RequestConverters';
 import * as mongoose from 'mongoose';
 
+import * as dotenv from 'dotenv';
+dotenv.config();
+
 let LoadMongoData = async (path: string) => {
     if (config.get('environment') == 'production') throw new Error('Attempted to load to production');
 
-    console.log(`Loading data to ${config.get('mongoUrl')}`);
-    mongoose.connect(config.get('mongoUrl'), {});
+    console.log(`Loading data to ${process.env.mongoUrl}`);
+    mongoose.connect(process.env.mongoUrl, {});
 
-    const mongoUrl = config.get('mongoUrl');
-    const mongoDbname = config.get('mongoDbName');
+    const mongoUrl = process.env.mongoUrl;
+    const mongoDbname = process.env.mongoDbName;
 
     let logger = new BaseLogger('RunTestHarness');
-    logger.Start();
 
     let rawdata: any = fs.readFileSync(path);
     let allTestObjects = JSON.parse(rawdata);

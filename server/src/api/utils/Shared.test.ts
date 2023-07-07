@@ -49,14 +49,11 @@ let amqp;
 beforeAll(async () => {
     await db.open();
 
-    const amqpUrl = config.get('amqpUrl');
-    const rmqVhost = config.get('rmqVhost');
     const rmqBrowserPushRoute = config.get('rmqBrowserPushRoute');
 
     logger = new BaseLogger(testName);
-    logger.Start();
 
-    amqp = new AMQPConnector(testName, '', amqpUrl, rmqVhost, 1, (activeMessages) => {}, logger);
+    amqp = new AMQPConnector(testName, '', 1, (activeMessages) => {}, logger);
     await amqp.Start();
     //   await amqp.ConsumeRoute(
     //     "",
@@ -194,7 +191,7 @@ describe("Test 'get not started tasks' functions 2", () => {
 describe('Test task routing', () => {
     const inactiveAgentQueueTTLHours = parseInt(config.get('inactiveAgentQueueTTLHours'), 10) * 60 * 60 * 1000;
     const _teamId: mongodb.ObjectId = new mongodb.ObjectId();
-    const sgAdminTeamId = new mongodb.ObjectId(config.get('sgAdminTeam'));
+    const sgAdminTeamId = new mongodb.ObjectId(process.env.sgAdminTeam);
     const task1_Id = new mongodb.ObjectId();
     const task2_Id = new mongodb.ObjectId();
     const task3_Id = new mongodb.ObjectId();
@@ -236,7 +233,7 @@ describe('Test task routing', () => {
             true,
             true,
             OnBrowserPush.bind(this),
-            SGStrings.GetTeamRoutingPrefix(config.get('sgTestTeam')),
+            SGStrings.GetTeamRoutingPrefix(process.env.sgTestTeam),
             rmqBrowserPushRoute
         );
 

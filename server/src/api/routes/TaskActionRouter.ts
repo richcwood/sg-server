@@ -21,5 +21,9 @@ export class TaskActionRouter {
     }
 }
 
-export const taskActionRouterSingleton = new TaskActionRouter();
-export const taskActionRouter = taskActionRouterSingleton.router;
+export const taskActionRouterSingleton = (): TaskActionRouter | any => {
+    return new TaskActionRouter();
+};
+export const taskActionRouter = (): any => {
+    return taskActionRouterSingleton().router;
+};

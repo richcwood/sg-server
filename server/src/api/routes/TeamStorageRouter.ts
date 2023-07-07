@@ -31,5 +31,9 @@ export class TeamStorageRouter {
     }
 }
 
-export const teamStorageRouterSingleton = new TeamStorageRouter();
-export const teamStorageRouter = teamStorageRouterSingleton.router;
+export const teamStorageRouterSingleton = (): TeamStorageRouter | any => {
+    return new TeamStorageRouter();
+};
+export const teamStorageRouter = (): any => {
+    return teamStorageRouterSingleton().router;
+};

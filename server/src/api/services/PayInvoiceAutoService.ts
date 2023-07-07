@@ -12,10 +12,9 @@ import { TeamSchema } from '../domain/Team';
 import { PaymentTransactionStatus } from '../../shared/Enums';
 import { SGUtils } from '../../shared/SGUtils';
 import * as _ from 'lodash';
-import * as config from 'config';
 import { teamService } from './TeamService';
 import * as mongodb from 'mongodb';
-import { Stripe } from 'stripe';
+const Stripe = require('stripe');
 
 export class PayInvoiceAutoService {
     public async payInvoice(
@@ -62,10 +61,7 @@ export class PayInvoiceAutoService {
             return { _teamId: _teamId, amount: 0 };
         }
 
-        let stripeApiVersion = config.get('stripeApiVersion');
-        let privateKey = config.get('stripePrivateKey');
-
-        const stripe = new Stripe(privateKey, stripeApiVersion);
+        const stripe = new Stripe(process.env.stripePrivateKey, process.env.stripeApiVersion);
 
         const paymentMethods = await stripe.paymentMethods.list({
             customer: team.stripe_id,

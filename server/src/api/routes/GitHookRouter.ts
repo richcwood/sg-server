@@ -6,20 +6,15 @@ const bodyParser = require('body-parser');
 const crypto = require('crypto');
 const Octokit = require('@octokit/rest');
 import * as util from 'util';
-import * as config from 'config';
-
-const mongoUrl = config.get('mongoUrl');
-const mongoDbName = config.get('mongoDbName');
 
 // Your registered app must have a secret set. The secret is used to verify that webhooks are sent by GitHub.
-const WEBHOOK_SECRET = process.env.GITHUB_WEBHOOK_SECRET;
+// process.env.GITHUB_WEBHOOK_SECRET;
 
 // The GitHub App's identifier (type integer) set when registering an app.
-const APP_IDENTIFIER = process.env.GITHUB_APP_IDENTIFIER;
+// const APP_IDENTIFIER = process.env.GITHUB_APP_IDENTIFIER;
 
 let appName: string = 'GitHookRouter';
 let logger: BaseLogger = new BaseLogger(appName);
-logger.Start();
 
 export default class GitHookRouter {
     public router: Router;
@@ -27,7 +22,7 @@ export default class GitHookRouter {
 
     constructor() {
         this.router = Router();
-        this.mongoRepo = new MongoRepo(appName, mongoUrl, mongoDbName, logger);
+        this.mongoRepo = new MongoRepo(appName, process.env.mongoUrl, process.env.mongoDbName, logger);
         this.setRoutes();
     }
 
@@ -45,7 +40,7 @@ export default class GitHookRouter {
         const their_signature_header = req.headers['x-hub-signature'] || 'sha1=';
         let [method, checksum] = (<string>their_signature_header).split('=');
 
-        const hmac = crypto.createHmac(method, WEBHOOK_SECRET, payload);
+        const hmac = crypto.createHmac(method, process.env.GITHUB_WEBHOOK_SECRET, payload);
         const digest = hmac.update(payload).digest('hex');
 
         if (!checksum || !digest || checksum !== digest) {

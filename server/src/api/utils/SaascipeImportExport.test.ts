@@ -63,7 +63,6 @@ beforeAll(async () => {
     await db.open();
 
     logger = new BaseLogger(testName);
-    logger.Start();
 });
 
 afterAll(async () => await db.close());
@@ -281,7 +280,12 @@ describe('SaaScipe JobDef exporter tests', () => {
         const artifactPath: string = `${workingDir}/${artifactTemplate.name}`;
         writeFileSync(artifactPath, 'hello world');
         const compressedArtifactPath = await SGUtils.GzipFile(artifactPath);
-        const artifact: ArtifactSchema = await CreateArtifact(_exportTeamId, artifactTemplate, compressedArtifactPath);
+        const artifact: ArtifactSchema = await CreateArtifact(
+            _exportTeamId,
+            artifactTemplate,
+            compressedArtifactPath,
+            logger
+        );
         artifacts.push(artifact);
         unlinkSync(artifactPath);
 
@@ -380,7 +384,7 @@ describe('SaaScipe JobDef exporter tests', () => {
     test('Export saascipe JobDef test', async () => {
         const saascipe: SaascipeSchema = saascipes[_saascipeId.toHexString()];
 
-        const saascipeDef: IJobDefExport = await PrepareJobDefForExport(_exportTeamId, saascipe._sourceId);
+        const saascipeDef: IJobDefExport = await PrepareJobDefForExport(_exportTeamId, saascipe._sourceId, logger);
         const saascipeVersionTemplatesCopy: any[] = _.cloneDeep(saascipeVersionTemplates);
         saascipeVersionTemplatesCopy[0]['saascipeDef'] = saascipeDef;
 
@@ -389,9 +393,9 @@ describe('SaaScipe JobDef exporter tests', () => {
             saascipeVersionTemplatesCopy
         );
 
-        await ExportJobDefArtifacts(_exportTeamId, saascipeDef.artifacts, saascipeVersionTemplatesCopy[0]);
+        await ExportJobDefArtifacts(_exportTeamId, saascipeDef.artifacts, saascipeVersionTemplatesCopy[0], logger);
 
-        const s3Access = new S3Access();
+        const s3Access = new S3Access(logger);
         const saascipeTemplate: any = _.cloneDeep(saascipeTemplates)[0];
         validateEquality(saascipeTemplate['_publisherTeamId'].toHexString(), saascipe._publisherTeamId.toHexString());
         validateEquality(saascipeTemplate['_publisherUserId'].toHexString(), saascipe._publisherUserId.toHexString());
@@ -442,7 +446,7 @@ describe('SaaScipe JobDef exporter tests', () => {
                 validateEquality(await s3Access.objectExists(destPath, saascipesS3Bucket), true);
             }
 
-            await ImportJobSaascipe(_importTeamId, _importUserId, _saascipeVersionId, correlationId);
+            await ImportJobSaascipe(_importTeamId, _importUserId, _saascipeVersionId, logger, correlationId);
 
             const importScripts: Array<ScriptSchema> = await scriptService.findAllScriptsInternal({
                 _teamId: _importTeamId,

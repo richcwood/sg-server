@@ -16,5 +16,9 @@ export class PayInvoiceManualRouter {
     }
 }
 
-export const payInvoiceManualRouterSingleton = new PayInvoiceManualRouter();
-export const payInvoiceManualRouter = payInvoiceManualRouterSingleton.router;
+export const payInvoiceManualRouterSingleton = (): PayInvoiceManualRouter | any => {
+    return new PayInvoiceManualRouter();
+};
+export const payInvoiceManualRouter = (): any => {
+    return payInvoiceManualRouterSingleton().router;
+};

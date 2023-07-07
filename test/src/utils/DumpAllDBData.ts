@@ -41,8 +41,11 @@ import { AccessKeySchema } from '../../../server/src/api/domain/AccessKey';
 import { convertData as convertRequestData } from '../../../server/src/api/utils/RequestConverters';
 import * as mongoose from 'mongoose';
 
+import * as dotenv from 'dotenv';
+dotenv.config();
+
 let DumpMongoData = async (path: string) => {
-    mongoose.connect(config.get('mongoUrl'), {});
+    mongoose.connect(process.env.mongoUrl, {});
 
     let user: any = await userService.findAllUsersInternal();
     let team: any = await teamService.findAllTeamsInternal();

@@ -84,7 +84,7 @@ export class TeamService {
             }
 
             /// Create general team invite link
-            const secret = config.get('secret');
+            const secret = process.env.secret;
             const jwtExpiration = Date.now() + 1000 * 60 * 60 * 24 * 180; // 180 days
             let token = jwt.sign(
                 {
@@ -110,9 +110,8 @@ export class TeamService {
         }
 
         /// Create rabbitmq artifacts for this team
-        const rmqAdminUrl = config.get('rmqAdminUrl');
-
-        let rmqVhost = config.get('rmqVhost');
+        const rmqAdminUrl = process.env.rmqAdminUrl;
+        let rmqVhost = process.env.rmqVhost;
         const rmqAdmin = new RabbitMQAdmin(rmqAdminUrl, rmqVhost, logger);
         const newUsername = newTeam._id.toString();
 

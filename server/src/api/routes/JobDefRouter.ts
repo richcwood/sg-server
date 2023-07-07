@@ -43,5 +43,9 @@ export class JobDefRouter {
     }
 }
 
-export const jobDefRouterSingleton = new JobDefRouter();
-export const jobDefRouter = jobDefRouterSingleton.router;
+export const jobDefRouterSingleton = (): JobDefRouter | any => {
+    return new JobDefRouter();
+};
+export const jobDefRouter = (): any => {
+    return jobDefRouterSingleton().router;
+};

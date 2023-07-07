@@ -15,5 +15,9 @@ export class SignupRouter {
     }
 }
 
-export const signupRouterSingleton = new SignupRouter();
-export const signupRouter = signupRouterSingleton.router;
+export const signupRouterSingleton = (): SignupRouter | any => {
+    return new SignupRouter();
+};
+export const signupRouter = (): any => {
+    return signupRouterSingleton().router;
+};

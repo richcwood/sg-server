@@ -15,8 +15,6 @@ export enum PayloadOperation {
 
 const appName: string = 'RabbitMQPublisher';
 
-const amqpUrl = config.get('amqpUrl');
-const rmqVhost = config.get('rmqVhost');
 const rmqBrowserPushRoute = config.get('rmqBrowserPushRoute');
 const rmqBrowserAlertsRoute = config.get('rmqBrowserAlertsRoute');
 const rmqScheduleUpdatesQueue = config.get('rmqScheduleUpdatesQueue');
@@ -36,8 +34,7 @@ class RabbitMQPublisher {
 
     private async start() {
         let logger: BaseLogger = new BaseLogger(appName);
-        logger.Start();
-        this.amqp = new AMQPConnector(appName, '', amqpUrl, rmqVhost, 1, (activeMessages) => {}, logger);
+        this.amqp = new AMQPConnector(appName, '', 1, (activeMessages) => {}, logger);
         await this.amqp.Start();
         this.started = true;
     }

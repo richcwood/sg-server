@@ -1,4 +1,3 @@
-import * as config from 'config';
 import * as mongodb from 'mongodb';
 import * as _ from 'lodash';
 
@@ -6,8 +5,6 @@ import { AgentSchema } from '../domain/Agent';
 
 import { agentService } from './AgentService';
 
-import { AMQPConnector } from '../../shared/AMQPLib';
-import * as Enums from '../../shared/Enums';
 import { BaseLogger } from '../../shared/SGLogger';
 
 import db from '../../test_helpers/DB';
@@ -17,13 +14,11 @@ import { CreateAgents } from '../../test_helpers/TestArtifacts';
 const testName = 'AgentService';
 
 let logger;
-let amqp;
 
 beforeAll(async () => {
     await db.open();
 
     logger = new BaseLogger(testName);
-    logger.Start();
 });
 
 afterAll(async () => await db.close());

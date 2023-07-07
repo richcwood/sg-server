@@ -36,7 +36,7 @@ export default class Test48 extends TestBase.WorkflowTestBase {
         let result: boolean;
         let resApiCall: any;
 
-        const _teamId: string = config.get('sgTestTeam');
+        const _teamId: string = process.env.sgTestTeam;
 
         let firstJob: any = _.cloneDeep(InteractiveConsoleJob);
         firstJob.job.name = 'IC - Test48';
@@ -55,7 +55,7 @@ export default class Test48 extends TestBase.WorkflowTestBase {
             domainType: 'TaskOutcome',
             operation: 1,
             model: {
-                _teamId: config.get('sgTestTeam'),
+                _teamId: process.env.sgTestTeam,
                 _jobId: firstJob.job.id,
                 source: 1,
                 status: TaskStatus.PUBLISHED,
@@ -121,7 +121,7 @@ export default class Test48 extends TestBase.WorkflowTestBase {
             domainType: 'TaskOutcome',
             operation: 1,
             model: {
-                _teamId: config.get('sgTestTeam'),
+                _teamId: process.env.sgTestTeam,
                 _jobId: firstJob.job.id,
                 source: 1,
                 status: TaskStatus.PUBLISHED,

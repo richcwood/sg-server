@@ -16,5 +16,9 @@ export class UpdateTeamStorageUsageRouter {
     }
 }
 
-export const updateTeamStorageUsageRouterSingleton = new UpdateTeamStorageUsageRouter();
-export const updateTeamStorageUsageRouter = updateTeamStorageUsageRouterSingleton.router;
+export const updateTeamStorageUsageRouterSingleton = (): UpdateTeamStorageUsageRouter | any => {
+    return new UpdateTeamStorageUsageRouter();
+};
+export const updateTeamStorageUsageRouter = (): any => {
+    return updateTeamStorageUsageRouterSingleton().router;
+};

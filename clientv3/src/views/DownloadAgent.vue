@@ -1,345 +1,232 @@
 <template>
-  <div class="main">
+    <div class="main">
+        <section class="sg-container-p">
+            <h1 class="title">
+                Download a secure agent to run SaaSGlue scripts
+                <span class="tag is-primary is-medium">~1 Minute</span>
+            </h1>
 
-    <section class="sg-container-px py-5 has-background-deepskyblue">
-      <div class="columns">
-        <div class="column">
-            <h2 class="has-text-white is-size-1-desktop is-size-3-touch has-text-weight-bold">SaaSGlue Agent Installation</h2><br>
-        </div>
-        <div class="column">
-            <h3 class="is-size-3-desktop has-text-white is-size-6-touch">Run scripts on all your devices.</h3>
-            <h3 class="is-size-3-desktop has-text-white is-size-6-touch">Available for <b>Windows</b>, <b>Linux</b>, and <b>Mac.</b></h3>
-        </div>
-      </div>
-    </section>
-
-    <section class="sg-container-px py-6">
-      <div class="columns mb-5 has-text-white has-text-weight-bold download-section">
-        <div class="column">
-          <a class="button is-primary py-4 icon-text has-button-shadow" href="https://sg-agent-installer.s3.us-east-2.amazonaws.com/sg-agent-installer-win-x64.zip">
-            <span class="icon mr-3">
-              <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/3/34/Windows_logo_-_2012_derivative.svg/25px-Windows_logo_-_2012_derivative.svg.png">
-            </span>
-            <span class="is-size-4 is-size-5-touch">Download Windows x64</span>
-          </a>
-        </div>
-        <div class="column">
-          <a class="button is-primary py-4 icon-text has-button-shadow" href="https://sg-agent-installer.s3.us-east-2.amazonaws.com/sg-agent-installer-linux.gz">
-            <span class="icon mr-3">
-              <img src="https://upload.wikimedia.org/wikipedia/commons/a/ab/Linux_Logo_in_Linux_Libertine_Font.svg">
-            </span>
-            <span class="is-size-4 is-size-5-touch">Download Linux</span>
-          </a>
-        </div>
-        <div class="column">
-          <a class="button is-primary py-4 icon-text has-button-shadow" href="https://sg-agent-installer.s3.us-east-2.amazonaws.com/sg-agent-installer-mac.gz">
-            <span class="icon mr-3">
-              <img src="https://upload.wikimedia.org/wikipedia/commons/f/fa/Apple_logo_black.svg" />
-            </span>
-            <span class="is-size-4 is-size-5-touch">Download Mac</span>
-          </a>
-        </div>
-      </div>
-
-      <div class="is-size-5-desktop is-size-6-touch">
-        <h2 class="subtitle">
-          SaaSGlue executes your scripts on your devices via the SaaSGlue Agent, a lightweight application that you can install on your Windows, Linux & Mac devices. The SaaSGlue Agent Installer is a command line tool to install the agent.<br><br>
-          Before installing the agent you’ll need an agent access key. Click <router-link to="/accessKeys">here</router-link> if you don’t already have one.
-        </h2>
-        <div class="is-divider"></div>
-        <div class="mt-4">
-          <h2 class="has-text-weight-semibold is-size-4-desktop is-size-5-touch mb-4">Usage</h2>
-          <h2 class="subtitle">
-            First <a href="#unzip_agent_instructions">unzip the agent installer download.</a><br><br>
-            Use the agent installer to run the agent:
-          </h2>
-          <div class="content">
-            <ul>
-              <li class="ml-6"><a href="#install_agent_as_service">Install the agent as a service</a></li>
-              <div class="ml-6 my-3">- or -</div>
-              <li class="ml-6"><a href="#run_agent_command_line">Run the agent from the command line</a></li>
-            </ul>
-          </div>
-          <h2 class="subtitle">
-            If you installed the agent as a service, you can also use the agent installer to:
-          </h2>
-          <div class="content">
-            <ul>
-              <li class="ml-6"><a href="#stop_agent_service">Stop the agent service</a></li>
-              <li class="ml-6"><a href="#start_agent_service">Start the agent service</a></li>
-              <li class="ml-6"><a href="#uninstall_agent_service">Uninstall the agent service</a></li>
-            </ul>
-          </div>
-        </div>
-        <div class="is-divider"></div>
-        <h2 class="has-text-weight-semibold is-size-4-desktop is-size-5-touch" id="unzip_agent_instructions">Unzip the agent installer</h2>
-        <div class="tabs mt-4 ml-4 is-size-5-desktop is-size-6-touch">
-          <ul>
-            <li v-bind:class="{ 'is-active': tabSelInstallAsService == 'WinInstallAsService' }" @click="tabSelInstallAsService = 'WinInstallAsService'"><a>Windows</a></li>
-            <li v-bind:class="{ 'is-active': tabSelInstallAsService == 'LinuxInstallAsService' }" @click="tabSelInstallAsService = 'LinuxInstallAsService'"><a>Linux</a></li>
-            <li v-bind:class="{ 'is-active': tabSelInstallAsService == 'MacInstallAsService' }" @click="tabSelInstallAsService = 'MacInstallAsService'"><a>Mac</a></li>
-          </ul>
-        </div>
-
-        <div class="container ml-4 is-size-5-desktop is-size-6-touch">
-          <div v-show="tabSelInstallAsService == 'WinInstallAsService'">
-            <ul><li>Right click the installer zip file, then click Extract All</li></ul>
-            <img class="ml-5 mt-3 box" src="agent_installer_unzip_1.png" width="720px" height="auto">
-            <ul><li>Choose the destination location and click Extract</li></ul>
-            <img class="ml-5 mt-3 box" src="agent_installer_unzip_2.png" width="720px" height="auto">
-          </div>
-          <div v-show="tabSelInstallAsService == 'LinuxInstallAsService'">
-            <h2 class="subtitle mb-5">Unzip the installer zip file and make the agent installer executable.</h2>
-            <code class="p-5 ml-5 has-text-black code-snippet">
-$ gunzip sg-agent-installer-linux.gz
-<br><br>
-$ chmod 711 sg-agent-installer-linux
-            </code>
-          </div>
-          <div v-show="tabSelInstallAsService == 'MacInstallAsService'">
-            <h2 class="subtitle mb-5">Unzip the installer zip file and make the agent installer executable.</h2>
-            <code class="p-5 ml-5 has-text-black code-snippet">
-$ gunzip sg-agent-installer-mac.gz
-            <br><br>
-$ chmod 711 sg-agent-installer-mac
-            </code>
-          </div>
-        </div>
-
-        <br>
-
-        <div class="is-divider"></div>
-        <h2 class="has-text-weight-semibold is-size-4-desktop is-size-5-touch" id="install_agent_as_service">Install the agent as a service</h2>
-        <div class="tabs mt-4 ml-4 is-size-5-desktop is-size-6-touch">
-          <ul>
-            <li v-bind:class="{ 'is-active': tabSelInstallAsService == 'WinInstallAsService' }" @click="tabSelInstallAsService = 'WinInstallAsService'"><a>Windows</a></li>
-            <li v-bind:class="{ 'is-active': tabSelInstallAsService == 'LinuxInstallAsService' }" @click="tabSelInstallAsService = 'LinuxInstallAsService'"><a>Linux</a></li>
-            <li v-bind:class="{ 'is-active': tabSelInstallAsService == 'MacInstallAsService' }" @click="tabSelInstallAsService = 'MacInstallAsService'"><a>Mac</a></li>
-          </ul>
-        </div>
-
-        <div class="container ml-4 is-size-5-desktop is-size-6-touch">
-          <div v-show="tabSelInstallAsService == 'WinInstallAsService'">
-            <h2 class="has-text-weight-normal">The best way to install the agent is as a Windows service. You can do this with either of these methods.</h2>
-            <div class="content mb-5">
-              <ul>
-                <li>Double click the installer</li>
-                <li>Run the installer from the command line</li>
-              </ul>
+            <div class="tabs">
+                <ul>
+                    <li
+                        :class="{ 'is-active': activeTab == OperatingSystem.WINDOWS }"
+                        @click="activeTab = OperatingSystem.WINDOWS"
+                    >
+                        <a>Windows</a>
+                    </li>
+                    <li
+                        :class="{ 'is-active': activeTab == OperatingSystem.LINUX }"
+                        @click="activeTab = OperatingSystem.LINUX"
+                    >
+                        <a>Linux</a>
+                    </li>
+                    <li
+                        :class="{ 'is-active': activeTab == OperatingSystem.MAC }"
+                        @click="activeTab = OperatingSystem.MAC"
+                    >
+                        <a>Mac</a>
+                    </li>
+                </ul>
             </div>
-            <code class="p-5 ml-5 has-text-black code-snippet">
-> sg-agent-win-installer.exe -c install -i [agent access key id] -s [agent access secret] -t [tags]
-            </code>
-            <p class="subtitle has-text-weight-normal ml-5 mt-5">The agent uses an access key id/secret pair to make a secure connection to the SaaSGlue API. The credentials are saved in a <a href="#config_file">config</a> file. The config file is saved in the same folder as the installer.<br><br>The command line parameters are optional. If you include them, the config file will be created automatically. Otherwise you will be prompted for your credentials by the agent installer.</p>
-          </div>
-          <div v-show="tabSelInstallAsService == 'LinuxInstallAsService'">
-            <h2 class="has-text-weight-normal">The best way to install the agent is with systemd. You can do this with either of these methods.</h2>
-            <div class="content mb-5">
-              <ul>
-                <li>Double click the installer</li>
-                <li>Run the installer from the command line</li>
-              </ul>
+
+            <div class="content">
+                <h2 class="mb-3 has-text-weight-semibold is-size-4-desktop is-size-5-touch">
+                    1. Download the agent installer
+                </h2>
+                <a
+                    v-if="activeTab === OperatingSystem.WINDOWS"
+                    class="button is-primary"
+                    href="https://sg-agent-installer.s3.us-east-2.amazonaws.com/sg-agent-installer-win-x64.zip"
+                >
+                    <span class="icon">
+                        <img
+                            src="https://upload.wikimedia.org/wikipedia/commons/thumb/3/34/Windows_logo_-_2012_derivative.svg/25px-Windows_logo_-_2012_derivative.svg.png"
+                        />
+                    </span>
+                    <span>Download Windows x64</span>
+                </a>
+                <a
+                    v-else-if="activeTab === OperatingSystem.LINUX"
+                    class="button is-primary"
+                    href="https://sg-agent-installer.s3.us-east-2.amazonaws.com/sg-agent-installer-linux.gz"
+                >
+                    <span class="icon mr-3">
+                        <img
+                            src="https://upload.wikimedia.org/wikipedia/commons/a/ab/Linux_Logo_in_Linux_Libertine_Font.svg"
+                        />
+                    </span>
+                    <span>Download Linux</span>
+                </a>
+                <a
+                    v-else-if="activeTab === OperatingSystem.MAC"
+                    class="button is-primary"
+                    href="https://sg-agent-installer.s3.us-east-2.amazonaws.com/sg-agent-installer-mac.gz"
+                >
+                    <span class="icon mr-3">
+                        <img src="https://upload.wikimedia.org/wikipedia/commons/f/fa/Apple_logo_black.svg" />
+                    </span>
+                    <span>Download Mac</span>
+                </a>
+
+                <div class="my-6">
+                    <h2 class="mb-3 has-text-weight-semibold is-size-4-desktop is-size-5-touch">
+                        2. Unzip the agent installer
+                    </h2>
+                    <p v-if="activeTab === OperatingSystem.WINDOWS">Unzip the agent installer file.</p>
+                    <div v-else-if="activeTab === OperatingSystem.LINUX">
+                        <p>Unzip the installer zip file and make the agent installer executable.</p>
+                        <code class="p-4 my-4 code-snippet">
+                            $ gunzip sg-agent-installer-linux.gz
+                            <br />
+                            $ chmod 711 sg-agent-installer-linux
+                        </code>
+                    </div>
+                    <div v-else-if="activeTab === OperatingSystem.MAC">
+                        <p>Unzip the installer zip file and make the agent installer executable.</p>
+                        <code class="p-4 my-4 code-snippet">
+                            $ gunzip sg-agent-installer-mac.gz
+                            <br />
+                            $ chmod 711 sg-agent-installer-mac
+                        </code>
+                    </div>
+                </div>
+
+                <div class="my-6">
+                    <h2 class="mb-3 has-text-weight-semibold is-size-4-desktop is-size-5-touch">3. Get an agent security key</h2>
+
+                    <div class="is-flex is-align-items-center">
+                        <button class="button is-primary" @click="onCreateSecureKey">Create Secure Key</button>
+                        <span class="ml-3"
+                            >Or use an <router-link to="/accessKeys">existing</router-link> key.</span
+                        >
+                    </div>
+                    <div v-if="accessKeyCreated" class="notification is-success my-4">
+                        <button class="delete" @click="accessKeyCreated = false"></button>
+                        Key and secret created. Please, save them in a safe place. Key and Secret will be lost once
+                        browser session is closed.
+                        <div>
+                            <span>Access key id: <span v-html="agentAccessKey"></span></span>
+                        </div>
+                        <div>
+                            <span>Secret access key: <span v-html="agentAccessSecret"></span></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <h2 class="mb-3 has-text-weight-semibold is-size-4-desktop is-size-5-touch">
+                        4. Download and install the agent launcher
+                    </h2>
+                    <p>
+                        Run this command where you downloaded the agent installer. The command will download 
+                        the agent launcher and install the agent launcher service.
+                    </p>
+                    <div>
+                        <code v-if="activeTab === OperatingSystem.WINDOWS" class="p-4 my-4 code-snippet">
+                            > sg-agent-installer-win-x64.exe -c install -i <span v-html="agentAccessKey"></span> -s
+                            <span v-html="agentAccessSecret"></span>
+                        </code>
+                        <code v-else-if="activeTab == OperatingSystem.MAC" class="p-4 my-4 code-snippet">
+                            $ sudo ./sg-agent-installer-mac -c install -i <span v-html="agentAccessKey"></span> -s
+                            <span v-html="agentAccessSecret"></span>
+                        </code>
+                        <code
+                            v-else-if="activeTab == OperatingSystem.LINUX"
+                            class="p-4 my-4 code-snippet"
+                        >
+                            $ sudo ./sg-agent-installer-linux -c install -i <span v-html="agentAccessKey"></span> -s
+                            <span v-html="agentAccessSecret"></span>
+                        </code>
+                        <p>
+                        You should <router-link to="/agentMonitor">see</router-link> your new agent reporting for duty shortly.
+                    </p>
+                    </div>
+                </div>
+
+                <div style="margin-top: 75px">
+                    <h2 class="mb-5 has-text-weight-semibold is-size-3-desktop is-size-4-touch">
+                        Advanced instructions for agents
+                    </h2>
+                </div>
+
+                <div>
+                    <h2 class="mb-3 has-text-weight-semibold is-size-4-desktop is-size-5-touch">
+                        Start the agent service
+                    </h2>
+                    <code v-if="activeTab === OperatingSystem.WINDOWS" class="p-4 my-4 code-snippet">
+                        > sg-agent-installer-win-x64.exe -c start
+                    </code>
+                    <code v-else-if="activeTab === OperatingSystem.LINUX" class="p-4 my-4 code-snippet">
+                        $ sudo ./sg-agent-installer-linux -c start
+                    </code>
+                    <code v-else-if="activeTab === OperatingSystem.MAC" class="p-4 my-4 code-snippet">
+                        $ sudo ./sg-agent-installer-mac -c start
+                    </code>
+                </div>
+
+                <div>
+                    <h2 class="mb-3 has-text-weight-semibold is-size-4-desktop is-size-5-touch">
+                        Stop the agent service
+                    </h2>
+                    <div v-if="activeTab === OperatingSystem.WINDOWS">
+                        <code class="p-4 my-4 code-snippet"> > sg-agent-installer-win-x64.exe -c stop </code>
+                    </div>
+                    <div v-else-if="activeTab === OperatingSystem.LINUX">
+                        <code class="p-4 my-4 code-snippet"> $ sudo ./sg-agent-installer-linux -c stop </code>
+                    </div>
+                    <div v-else-if="activeTab === OperatingSystem.MAC">
+                        <code class="p-4 my-4 code-snippet"> $ sudo ./sg-agent-installer-mac -c stop </code>
+                    </div>
+                </div>
+
+                <div>
+                    <h2 class="mb-3 has-text-weight-semibold is-size-4-desktop is-size-5-touch">
+                        Uninstall the agent service
+                    </h2>
+                    <div v-if="activeTab === OperatingSystem.WINDOWS">
+                        <code class="p-4 my-4 code-snippet"> > sg-agent-installer-win-x64.exe -c uninstall </code>
+                    </div>
+                    <div v-else-if="activeTab === OperatingSystem.LINUX">
+                        <code class="p-4 my-4 code-snippet"> $ sudo ./sg-agent-installer-linux -c uninstall </code>
+                    </div>
+                    <div v-else-if="activeTab === OperatingSystem.MAC">
+                        <code class="p-4 my-4 code-snippet"> $ sudo ./sg-agent-installer-mac -c uninstall </code>
+                    </div>
+                </div>
             </div>
-            <code class="p-5 ml-5 has-text-black code-snippet">
-$ sudo ./sg-agent-installer-linux -c install -i [agent access key id] -s [agent access secret] -t [tags]
-            </code>
-            <p class="subtitle has-text-weight-normal ml-5 mt-5">The agent uses an access key id/secret pair to make a secure connection to the SaaSGlue API. The credentials are saved in a <a href="#config_file">config</a> file. When installed with systemd the config file is saved in /etc/saasglue.<br><br>The command line parameters are optional. If you include them, the config file will be created automatically. Otherwise you will be prompted for your credentials by the agent installer.</p>
-          </div>
-          <div v-show="tabSelInstallAsService == 'MacInstallAsService'">
-            <h2 class="has-text-weight-normal">The best way to install the agent is with launchd. You can do this with either of these methods.</h2>
-            <div class="content mb-5">
-              <ul>
-                <li>Double click the installer</li>
-                <li>Run the installer from the command line</li>
-              </ul>
-            </div>
-            <code class="p-5 ml-5 has-text-black code-snippet">
-$ sudo ./sg-agent-installer-mac -c install -i [agent access key id] -s [agent access secret] -t [tags] -p [path]
-            </code>
-            <p class="subtitle has-text-weight-normal ml-5 mt-5">The agent uses an access key id/secret pair to make a secure connection to the SaaSGlue API. The credentials are saved in a <a href="#config_file">config</a> file. When installed with launchd the config file is saved in a folder named .saasglue in your home folder.<br><br>The command line parameters are optional. If you include them, the config file will be created automatically. Otherwise you will be prompted for your credentials by the agent installer.<br><br>You can use the "-p" parameter to specify the PATH variable for the agent runtime environment. If not specified, the installer will use the PATH variable of the environment in which the installer runs.</p>
-          </div>
-        </div>
 
-        <div class="is-divider"></div>
-        <h2 class="has-text-weight-semibold is-size-4-desktop is-size-5-touch" id="run_agent_command_line">Run the agent from the command line</h2>
-        <div class="tabs mt-4 ml-4 is-size-5-desktop is-size-6-touch">
-          <ul>
-            <li v-bind:class="{ 'is-active': tabSelInstallAsService == 'WinInstallAsService' }" @click="tabSelInstallAsService = 'WinInstallAsService'"><a>Windows</a></li>
-            <li v-bind:class="{ 'is-active': tabSelInstallAsService == 'LinuxInstallAsService' }" @click="tabSelInstallAsService = 'LinuxInstallAsService'"><a>Linux</a></li>
-            <li v-bind:class="{ 'is-active': tabSelInstallAsService == 'MacInstallAsService' }" @click="tabSelInstallAsService = 'MacInstallAsService'"><a>Mac</a></li>
-          </ul>
-        </div>
-        <div class="container ml-4 is-size-5-desktop is-size-6-touch">
-          <div v-show="tabSelInstallAsService == 'WinInstallAsService'">
-            <h2 class="has-text-weight-normal">To run the agent from the command line:</h2>
-            <div class="content mb-5">
-              <ol>
-                <li>Download the SaaSGlue Agent launcher</li>
-                  <code class="p-5 ml-5 my-5 has-text-black code-snippet">
-> sg-agent-win-installer.exe -c download -i [agent access key id] -s [agent access secret] -t [tags]
-                  </code>
-                <li>Run the SaaSGlue Agent launcher</li>
-                  <code class="p-5 ml-5 my-5 has-text-black code-snippet">
-> sg-agent-launcher.exe
-                  </code>
-              </ol>
-            </div>
-            <p class="subtitle has-text-weight-normal ml-5 mt-5">The agent uses an access key id/secret pair to make a secure connection to the SaaSGlue API. The credentials are saved in a <a href="#config_file">config</a> file. The config file is saved in the same folder as the installer.<br><br>If you include the agent credentials on the command line the config file will be created automatically. Otherwise you will be prompted for your credentials by the agent installer.</p>
-          </div>
-          <div v-show="tabSelInstallAsService == 'LinuxInstallAsService'">
-            <h2 class="has-text-weight-normal">To run the agent from the command line:</h2>
-            <div class="content mb-5">
-              <ol>
-                <li>Download the SaaSGlue Agent launcher</li>
-                  <code class="p-5 ml-5 my-5 has-text-black code-snippet">
-$ sudo ./sg-agent-installer-linux -c download -i [agent access key id] -s [agent access secret] -t [tags]
-                  </code>
-                <li>Run the SaaSGlue Agent launcher</li>
-                  <code class="p-5 ml-5 my-5 has-text-black code-snippet">
-> ./sg-agent-launcher
-                  </code>
-              </ol>
-            </div>
-            <p class="subtitle has-text-weight-normal ml-5 mt-5">The agent uses an access key id/secret pair to make a secure connection to the SaaSGlue API. The credentials are saved in a <a href="#config_file">config</a> file. The agent download process will save the config file in the same folder as the installer.<br><br>If you include the agent credentials on the command line the config file will be created automatically. Otherwise you will be prompted for your credentials by the agent installer.</p>
-          </div>
-          <div v-show="tabSelInstallAsService == 'MacInstallAsService'">
-            <h2 class="has-text-weight-normal">To run the agent from the command line:</h2>
-            <div class="content mb-5">
-              <ol>
-                <li>Download the SaaSGlue Agent launcher</li>
-                  <code class="p-5 ml-5 my-5 has-text-black code-snippet">
-$ sudo ./sg-agent-installer-mac -c download -i [agent access key id] -s [agent access secret] -t [tags]
-                  </code>
-                <li>Run the SaaSGlue Agent launcher</li>
-                  <code class="p-5 ml-5 my-5 has-text-black code-snippet">
-> ./sg-agent-launcher
-                  </code>
-              </ol>
-            </div>
-            <p class="subtitle has-text-weight-normal ml-5 mt-5">The agent uses an access key id/secret pair to make a secure connection to the SaaSGlue API. The credentials are saved in a <a href="#config_file">config</a> file. The agent download process will save the config file in the same folder as the installer.<br><br>If you include the agent credentials on the command line the config file will be created automatically. Otherwise you will be prompted for your credentials by the agent installer.</p>
-          </div>
-        </div>
+            <div class="is-size-5-desktop is-size-6-touch">
+                <h2 class="mb-3 has-text-weight-semibold is-size-4-desktop is-size-5-touch">Configuration file</h2>
+                <p>
+                    The SaaSGlue Agent uses Oauth2 to maintain a secure connection to the SaaSGlue API. The agent access
+                    key id and secret are stored in a config file. On startup, the agent looks for the config file in
+                    the following locations (in order):
+                </p>
+                <div class="content">
+                    <ol>
+                        <li class="ml-6">The directory where the agent launcher is located</li>
+                        <li class="ml-6 mt-3">An operating system specific location (Linux & Mac)</li>
+                        <ul class="mt-3">
+                            <li class="ml-6">Linux: /etc/saasglue/sg.cfg</li>
+                            <li class="ml-6">Mac: /home/[current user]/.saasglue/sg.cfg</li>
+                        </ul>
+                    </ol>
+                </div>
 
-        <div class="is-divider"></div>
-        <h2 class="has-text-weight-semibold is-size-4-desktop is-size-5-touch" id="stop_agent_service">Stop the agent service</h2>
-        <div class="tabs mt-4 ml-4 is-size-5-desktop is-size-6-touch">
-          <ul>
-            <li v-bind:class="{ 'is-active': tabSelInstallAsService == 'WinInstallAsService' }" @click="tabSelInstallAsService = 'WinInstallAsService'"><a>Windows</a></li>
-            <li v-bind:class="{ 'is-active': tabSelInstallAsService == 'LinuxInstallAsService' }" @click="tabSelInstallAsService = 'LinuxInstallAsService'"><a>Linux</a></li>
-            <li v-bind:class="{ 'is-active': tabSelInstallAsService == 'MacInstallAsService' }" @click="tabSelInstallAsService = 'MacInstallAsService'"><a>Mac</a></li>
-          </ul>
-        </div>
-        <div class="container ml-4 is-size-5-desktop is-size-6-touch">
-          <div v-show="tabSelInstallAsService == 'WinInstallAsService'">
-            <h2 class="has-text-weight-normal">To stop the agent service:</h2>
-            <code class="p-5 ml-5 my-5 has-text-black code-snippet">
-> sg-agent-win-installer.exe -c stop
-            </code>
-          </div>
-          <div v-show="tabSelInstallAsService == 'LinuxInstallAsService'">
-            <h2 class="has-text-weight-normal">To stop the agent service:</h2>
-            <code class="p-5 ml-5 my-5 has-text-black code-snippet">
-$ sudo ./sg-agent-installer-linux -c stop
-            </code>
-          </div>
-          <div v-show="tabSelInstallAsService == 'MacInstallAsService'">
-            <h2 class="has-text-weight-normal">To stop the agent service:</h2>
-            <code class="p-5 ml-5 my-5 has-text-black code-snippet">
-$ ./sg-agent-installer-mac -c stop
-            </code>
-          </div>
-        </div>
+                <h2 class="subtitle">The config file is formatted as follows:</h2>
 
-        <div class="is-divider"></div>
-        <h2 class="has-text-weight-semibold is-size-4-desktop is-size-5-touch" id="start_agent_service">Start the agent service</h2>
-        <div class="tabs mt-4 ml-4 is-size-5-desktop is-size-6-touch">
-          <ul>
-            <li v-bind:class="{ 'is-active': tabSelInstallAsService == 'WinInstallAsService' }" @click="tabSelInstallAsService = 'WinInstallAsService'"><a>Windows</a></li>
-            <li v-bind:class="{ 'is-active': tabSelInstallAsService == 'LinuxInstallAsService' }" @click="tabSelInstallAsService = 'LinuxInstallAsService'"><a>Linux</a></li>
-            <li v-bind:class="{ 'is-active': tabSelInstallAsService == 'MacInstallAsService' }" @click="tabSelInstallAsService = 'MacInstallAsService'"><a>Mac</a></li>
-          </ul>
-        </div>
-        <div class="container ml-4 is-size-5-desktop is-size-6-touch">
-          <div v-show="tabSelInstallAsService == 'WinInstallAsService'">
-            <h2 class="has-text-weight-normal">To start the agent service:</h2>
-            <code class="p-5 ml-5 my-5 has-text-black code-snippet">
-> sg-agent-win-installer.exe -c start
-            </code>
-          </div>
-          <div v-show="tabSelInstallAsService == 'LinuxInstallAsService'">
-            <h2 class="has-text-weight-normal">To start the agent service:</h2>
-            <code class="p-5 ml-5 my-5 has-text-black code-snippet">
-$ sudo ./sg-agent-installer-linux -c start
-            </code>
-          </div>
-          <div v-show="tabSelInstallAsService == 'MacInstallAsService'">
-            <h2 class="has-text-weight-normal">To start the agent service:</h2>
-            <code class="p-5 ml-5 my-5 has-text-black code-snippet">
-$ ./sg-agent-installer-mac -c start
-            </code>
-          </div>
-        </div>
-
-        <div class="is-divider"></div>
-        <h2 class="has-text-weight-semibold is-size-4-desktop is-size-5-touch" id="uninstall_agent_service">Uninstall the agent service</h2>
-        <div class="tabs mt-4 ml-4 is-size-5-desktop is-size-6-touch">
-          <ul>
-            <li v-bind:class="{ 'is-active': tabSelInstallAsService == 'WinInstallAsService' }" @click="tabSelInstallAsService = 'WinInstallAsService'"><a>Windows</a></li>
-            <li v-bind:class="{ 'is-active': tabSelInstallAsService == 'LinuxInstallAsService' }" @click="tabSelInstallAsService = 'LinuxInstallAsService'"><a>Linux</a></li>
-            <li v-bind:class="{ 'is-active': tabSelInstallAsService == 'MacInstallAsService' }" @click="tabSelInstallAsService = 'MacInstallAsService'"><a>Mac</a></li>
-          </ul>
-        </div>
-        <div class="container ml-4 is-size-5-desktop is-size-6-touch">
-          <div v-show="tabSelInstallAsService == 'WinInstallAsService'">
-            <h2 class="has-text-weight-normal">To uninstall the agent service:</h2>
-            <code class="p-5 ml-5 my-5 has-text-black code-snippet">
-> sg-agent-win-installer.exe -c uninstall
-            </code>
-          </div>
-          <div v-show="tabSelInstallAsService == 'LinuxInstallAsService'">
-            <h2 class="has-text-weight-normal">To uninstall the agent service:</h2>
-            <code class="p-5 ml-5 my-5 has-text-black code-snippet">
-$ sudo ./sg-agent-installer-linux -c uninstall
-            </code>
-          </div>
-          <div v-show="tabSelInstallAsService == 'MacInstallAsService'">
-            <h2 class="has-text-weight-normal">To uninstall the agent service:</h2>
-            <code class="p-5 ml-5 my-5 has-text-black code-snippet">
-$ ./sg-agent-installer-mac -c uninstall
-            </code>
-          </div>
-        </div>
-
-        <div class="is-divider"></div>
-        <h2 class="has-text-weight-semibold is-size-4-desktop is-size-5-touch" id="config_file">Config file</h2>
-        <h2 class="mt-4">
-          The SaaSGlue Agent uses Oauth2 to maintain a secure connection to the SaaSGlue API. The agent access key id and secret are stored in a config file. On startup, the agent looks for the config file in the following locations (in order):</h2>
-        <div class="content">
-          <ol>
-            <li class="ml-6">The directory where the agent launcher is located</li>
-            <li class="ml-6 mt-3">An operating system specific location (Linux & Mac)</li>
-            <ul class="mt-3">
-              <li class="ml-6">Linux: /etc/saasglue/sg.cfg</li>
-              <li class="ml-6">Mac: /home/[current user]/.saasglue/sg.cfg</li>
-            </ul>
-          </ol>
-        </div>
-
-        <h2 class="subtitle">
-          The config file is formatted as follows:
-        </h2>
-          
-
-<pre>{
+                <pre>
+{
   "SG_ACCESS_KEY_ID": "********",
   "SG_ACCESS_KEY_SECRET": "********",
   "tags": {
       "key": "value"
   }
-}</pre>
-      </div>
+}</pre
+                >
+            </div>
 
-      <!-- <br><br>
+            <!-- <br><br>
       <div class="container">
         <tabs>
           <tab title="Windows Instructions">
@@ -450,49 +337,106 @@ $ ./sg-agent-installer-mac -c uninstall
           </tab>
         </tabs>
       </div> -->
-    </section>
-    
-  </div>
+        </section>
+    </div>
 </template>
 
 <script lang="ts">
-import { Component, Prop, Vue, Watch } from 'vue-property-decorator';
+import { Component, Vue } from 'vue-property-decorator';
 import { Tabs, Tab } from 'vue-slim-tabs';
 import _ from 'lodash';
 
-enum UpdateTagType {
-  ADD, DELETE
-};
+import CreateAccessKeyModal from '@/components/CreateAccessKeyModal.vue';
+
+enum OperatingSystem {
+    WINDOWS = 1,
+    LINUX,
+    MAC,
+}
 
 @Component({
-  components: { Tabs, Tab },
-  props: { },
+    components: { Tabs, Tab, CreateAccessKeyModal },
+    name: 'DownloadAgent',
 })
 export default class DownloadAgent extends Vue {
-  private tabSelInstallAsService: string = "WinInstallAsService";
+    public activeTab: OperatingSystem = OperatingSystem.WINDOWS;
+    public agentAccessSecret: string = 'SG_ACCESS_KEY_SECRET';
+    public agentAccessKey: string = 'SG_ACCESS_KEY_ID';
+    public accessKeyCreated: boolean = false;
+    public OperatingSystem = OperatingSystem;
+
+    public created(): void {
+        this.detectOs();
+        this.readAgentAccessKey();
+    }
+
+    public detectOs(): void {
+        if (navigator.userAgent.includes('Win')) {
+            this.activeTab = OperatingSystem.WINDOWS;
+        } else if (navigator.userAgent.includes('Mac')) {
+            this.activeTab = OperatingSystem.MAC;
+        } else if (navigator.userAgent.includes('Linux')) {
+            this.activeTab = OperatingSystem.LINUX;
+        }
+    }
+
+    public readAgentAccessKey(): void {
+        if (sessionStorage.getItem('installAgentAccessKey')) {
+            const agent = JSON.parse(sessionStorage.getItem('installAgentAccessKey'));
+
+            this.agentAccessSecret = agent.accessSecret;
+            this.agentAccessKey = agent.accessKey;
+        }
+    }
+
+    public onCreateSecureKey(): void {
+        this.$modal.show(
+            CreateAccessKeyModal,
+            {},
+            {
+                width: 600,
+                height: 'auto',
+            },
+            {
+                'accessKey:created': (res) => {
+                    this.onAccessKeyCreated(res);
+                },
+            }
+        );
+    }
+
+    public onAccessKeyCreated(res: { accessSecret: string; accessKey: string }): void {
+        sessionStorage.setItem(
+            'installAgentAccessKey',
+            JSON.stringify({
+                accessSecret: res.accessSecret,
+                accessKey: res.accessKey,
+            })
+        );
+        this.readAgentAccessKey();
+
+        this.accessKeyCreated = true;
+    }
 }
 </script>
 
-
 <style scoped lang="scss">
-  .code-snippet {
+.code-snippet {
     display: block;
     white-space: nowrap;
-    border: 1px solid lightgray;
+    border-radius: 5px;
+    color: white;
     overflow: auto;
-  }
+    background: var(--code-background-color);
+}
 
-  .has-background-deepskyblue {
-      background: linear-gradient(to right, #3a7bd5, #00d2ff);
-  }
-
-  .download-section .button {
+.download-section .button {
     width: 100%;
     max-width: 350px;
     height: auto;
-  }
+}
 
-  .subtitle {
-      line-height: 26px;
-  }
+.subtitle {
+    line-height: 26px;
+}
 </style>

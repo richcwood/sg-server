@@ -14,6 +14,7 @@
     "author": "",
     "license": "ISC",
     "dependencies": {
+        "@mailchimp/mailchimp_marketing": "3.0.80",
         "@octokit/rest": "18.12.0",
         "@sendgrid/mail": "6.5.5",
         "@stomp/stompjs": "6.1.2",
@@ -53,8 +54,9 @@
         "mongoose": "6.2.3",
         "morgan": "1.10.0",
         "multer": "1.4.4",
+        "node-cache": "5.1.2",
         "nodemailer": "6.7.2",
-        "pkg": "4.5.1",
+        "pkg": "5.8.0",
         "redis": "2.8.0",
         "stripe": "8.205.0",
         "text-encoding": "0.7.0",
@@ -66,7 +68,11 @@
         "zxcvbn": "4.4.2"
     },
     "devDependencies": {
+        "@types/mailchimp__mailchimp_marketing": "^3.0.9",
         "@types/node": "^18.11.18",
-        "mongodb-memory-server": "8.4.0"
+        "aws-sdk-mock": "^5.8.0",
+        "mongodb-memory-server": "8.4.0",
+        "reflect-metadata": "^0.1.13",
+        "supertest": "^6.3.3"
     }
 }

@@ -2,7 +2,6 @@ import { modelOptions, prop, getModelForClass, Severity } from '@typegoose/typeg
 import { FilterOperator } from '../utils/BulkGet';
 import { TaskDefTarget, TaskSource } from '../../shared/Enums';
 import * as mongodb from 'mongodb';
-import { MongoDbSettings } from 'aws-sdk/clients/dms';
 
 // Example of a schema / domain in Mongoose
 @modelOptions({

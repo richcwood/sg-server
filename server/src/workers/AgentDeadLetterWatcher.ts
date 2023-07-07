@@ -2,30 +2,31 @@
  * Created by richwood on 2/27/18.
  */
 
-'use strict';
+('use strict');
+import * as path from 'path';
+const configDir = path.join(__dirname, 'pkg_agent_dead_letter_watcher');
+process.env['NODE_CONFIG_DIR'] = configDir;
+const config = require('../../node_modules/config');
 
-import * as config from 'config';
 import { localRestAccess } from '../api/utils/LocalRestAccess';
-import { AMQPConnector } from '../shared/AMQPLib';
-import { BaseLogger } from '../shared/SGLogger';
-import { TaskStatus } from '../shared/Enums';
-import { TaskFailureCode, TaskDefTarget } from '../shared/Enums';
-// import { TaskSchema } from '../api/domain/Task';
-import * as util from 'util';
-import { SGUtils } from '../shared/SGUtils';
 
-const amqpUrl = config.get('amqpUrl');
-const rmqVhost = config.get('rmqVhost');
+import { AMQPConnector } from '../shared/AMQPLib';
+import { TaskFailureCode, TaskDefTarget, TaskStatus } from '../shared/Enums';
+import { SGUtils } from '../shared/SGUtils';
+import { SecretsLoader } from '../shared/SecretsManager';
+import { BaseLogger } from '../shared/SGLogger';
+
+import * as dotenv from 'dotenv';
+import * as util from 'util';
+
 const rmqTaskLaunchErrorQueue = config.get('rmqTaskLaunchErrorQueue');
 const rmqAgentDeadLetterQueue = config.get('rmqAgentDeadLetterQueue');
 const rmqDLQRoute = config.get('rmqDLQRoute');
-// const rmqNoAgentForTaskQueue = config.get('rmqNoAgentForTaskQueue');
 const noAgentAvailableFailureRetryInterval = config.get('noAgentAvailableFailureRetryInterval');
 const env = process.env.NODE_ENV;
 
 let appName: string = 'AgentDeadLetterWatcher';
 let logger: BaseLogger = new BaseLogger(appName);
-logger.Start();
 
 process.on('unhandledRejection', (reason, p) => {
     logger.LogError('Unhandled Rejection', {
@@ -41,11 +42,17 @@ export default class AgentDeadLetterWatcher {
     async Init() {
         const baseLogger = new BaseLogger(appName);
         try {
+            if (env === 'production') {
+                const secretConfigs = config.get('secrets');
+                for (let secretConfig of secretConfigs) {
+                    await SecretsLoader.loadSecrets(secretConfig, logger);
+                }
+            } else {
+                dotenv.config();
+            }
             this.amqpConnector = new AMQPConnector(
                 appName,
                 '',
-                amqpUrl,
-                rmqVhost,
                 1,
                 (activeMessages) => this.OnRabbitMQDisconnect(activeMessages),
                 baseLogger

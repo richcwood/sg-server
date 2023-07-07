@@ -39,17 +39,16 @@ import * as mongodb from 'mongodb';
 import * as mongoose from 'mongoose';
 
 let LoadMongoData = async (path: string, teamId: string = '') => {
-    mongoose.connect(config.get('mongoUrl'), {});
+    mongoose.connect(process.env.mongoUrl, {});
 
-    const mongoUrl = config.get('mongoUrl');
-    const mongoDbname = config.get('mongoDbName');
+    const mongoUrl = process.env.mongoUrl;
+    const mongoDbname = process.env.mongoDbName;
 
     let logger = new BaseLogger('RunTestHarness');
-    logger.Start();
 
     let mongoRepo = new MongoRepo('RunTestHarness', mongoUrl, mongoDbname, logger);
 
-    console.log('mongo url -> ', config.get('mongoUrl'));
+    console.log('mongo url -> ', process.env.mongoUrl);
 
     // await teamService.createTeam({"name" : "saas glue demo", "ownerId" : new mongodb.ObjectId("5e99cb8e2317950015edb654")}, logger);
 
@@ -213,7 +212,7 @@ let LoadMongoData = async (path: string, teamId: string = '') => {
 const filePath = process.argv[2];
 const team = process.argv[3];
 
-console.log(`Loading data for team ${team} from ${filePath} to ${config.get('mongoUrl')}`);
+console.log(`Loading data for team ${team} from ${filePath} to ${process.env.mongoUrl}`);
 
 LoadMongoData(filePath, team);
 

@@ -1,6 +1,4 @@
 import json
-import logging
-import os
 import requests
 import sendgrid
 import socket
@@ -8,14 +6,14 @@ import sys
 import traceback
 
 from datetime import datetime, date, timedelta
-from logging.handlers import TimedRotatingFileHandler
+from dotenv import load_dotenv
+from os import environ, path
 from pytz import utc
 from sendgrid.helpers.mail import *
 from threading import Event
 from threading import Thread
 
-from apscheduler.executors.pool import ProcessPoolExecutor
-from apscheduler.executors.pool import ThreadPoolExecutor
+from apscheduler.executors.pool import ProcessPoolExecutor, ThreadPoolExecutor
 from apscheduler.jobstores.mongodb import MongoDBJobStore
 from apscheduler.schedulers.blocking import BlockingScheduler
 from apscheduler.triggers.cron import CronTrigger
@@ -23,114 +21,70 @@ from apscheduler.triggers.date import DateTrigger
 from apscheduler.triggers.interval import IntervalTrigger
 from apscheduler.util import timedelta_seconds
 
-from rmq_comm import *
-
-
-logging.basicConfig()
+from py_utils.credentials import Credentials
+from py_utils.logger import logger
+from py_utils.rmq_comm import *
 
 wait_schedule_updates_handler_exception = Event()
 
 env = "default"
-if "NODE_ENV" in os.environ:
-    env = os.environ["NODE_ENV"]
+if "NODE_ENV" in environ:
+    env = environ["NODE_ENV"]
 
-sendGrid = sendgrid.SendGridAPIClient(api_key=os.environ.get("SENDGRID_API_KEY"))
+sendGrid = sendgrid.SendGridAPIClient(api_key=environ.get("SENDGRID_API_KEY"))
 
-mongoUrl = None
-mongoDbName = None
-rmqUrl = None
-rmqUsername = None
-rmqPassword = None
-rmqVhost = None
-rmqScheduleUpdatesQueue = None
-environment = None
-loggingLevel = None
-useSSL = None
-apiBaseUrl = None
-apiPort = None
-apiVersion = None
-token = None
+def logDebug(msgData):
+    logger.debug("%s", msgData)
 
+def logInfo(msgData):
+    logger.debug("%s", msgData)
 
-def loadConfigValues(configFile):
-    global mongoUrl
-    global mongoDbName
-    global rmqUrl
-    global rmqUsername
-    global rmqPassword
-    global rmqVhost
-    global rmqScheduleUpdatesQueue
-    global environment
-    global loggingLevel
-    global useSSL
-    global apiBaseUrl
-    global apiPort
-    global apiVersion
-    global token
+def logWarning(msgData):
+    logger.debug("%s", msgData)
+
+def logError(msgData):
+    logger.debug("%s", msgData)
+
+def getConfigValues(configFile, currentConfig={}) -> dict:
+    config = {}
     with open(configFile, "r") as f:
         s = f.read()
         config = json.loads(s)
-        if "mongoUrl" in config:
-            mongoUrl = config["mongoUrl"]
-        if "mongoDbName" in config:
-            mongoDbName = config["mongoDbName"]
-        if "rmqUrl" in config:
-            rmqUrl = config["rmqUrl"]
-        if "rmqUsername" in config:
-            rmqUsername = config["rmqUsername"]
-        if "rmqPassword" in config:
-            rmqPassword = config["rmqPassword"]
-        if "rmqVhost" in config:
-            rmqVhost = config["rmqVhost"]
-        if "rmqScheduleUpdatesQueue" in config:
-            rmqScheduleUpdatesQueue = config["rmqScheduleUpdatesQueue"]
-        if "environment" in config:
-            environment = config["environment"]
-        if "loggingLevel" in config:
-            loggingLevel = config["loggingLevel"]
-        if "useSSL" in config:
-            useSSL = config["useSSL"] == "true"
-        if "API_BASE_URL" in config:
-            apiBaseUrl = config["API_BASE_URL"]
-        if "API_PORT" in config:
-            apiPort = config["API_PORT"]
-        if "API_VERSION" in config:
-            apiVersion = config["API_VERSION"]
-        if "schedulerToken" in config:
-            token = "Auth={};".format(config["schedulerToken"])
+    return currentConfig | config
 
+def load_rabbitmq_secrets(params):
+    credentials = Credentials(logInfo, logWarning, logError, **params)
+    credentials.reset_cache()
+    secrets = credentials.get_secret()
+    for key in secrets:
+        environ[key] = secrets[key]
 
-loadConfigValues("config/default.json")
+config = getConfigValues("config/default.json")
 if env != "default":
-    loadConfigValues("config/{}.json".format(env))
+    env_config_file_name = "config/{}.json".format(env)
+    if path.isfile(env_config_file_name):
+        config = getConfigValues("config/{}.json".format(env), config)
 
-cm_logger = logging.getLogger("job_scheduler")
-cm_logger.setLevel(int(loggingLevel))
+rmqScheduleUpdatesQueue = config.get("rmqScheduleUpdatesQueue")
+environment = config.get("environment")
+loggingLevel = config.get("loggingLevel")
+useSSL = config.get("useSSL") == "true"
+apiBaseUrl = config.get("API_BASE_URL")
+apiPort = config.get("API_PORT")
+apiVersion = config.get("API_VERSION")
 
-formatter = logging.Formatter(
-    '{"_timeStamp": "%(asctime)s", "_sourceHost": "%(host_name)s", "_appName": "%(app_name)s", "_logLevel": %(levelno)s, "details": %(message)s}'
-)
+if env == "production":
+    load_rabbitmq_secrets(config["rabbitmq-credentials"])
+else:
+    load_dotenv()
 
-stdout_handler = logging.StreamHandler(sys.stdout)
-stdout_handler.setLevel(logging.DEBUG)
-stdout_handler.setFormatter(formatter)
-cm_logger.addHandler(stdout_handler)
-
-
-logs_directory = "/tmp/logs"
-if not os.path.exists(logs_directory):
-    os.makedirs(logs_directory)
-timed_rotating_file_handler = TimedRotatingFileHandler(
-    f"{logs_directory}/jobscheduler.log", when="s", interval=30, backupCount=10
-)
-timed_rotating_file_handler.setLevel(logging.DEBUG)
-timed_rotating_file_handler.setFormatter(formatter)
-cm_logger.addHandler(timed_rotating_file_handler)
-
-host = socket.gethostname()
-cml_adapter = logging.LoggerAdapter(
-    cm_logger, {"build": environment, "app_name": "JobScheduler", "host_name": host}
-)
+mongoUrl = environ["mongoUrl"]
+mongoDbName = environ["mongoDbName"]
+token = "Auth={};".format(environ["schedulerToken"])
+rmqUrl = environ["rmqUrl"]
+rmqUsername = environ["rmqUsername"]
+rmqPassword = environ["rmqPassword"]
+rmqVhost = environ["rmqVhost"]
 
 jobstores = {
     "default": MongoDBJobStore(
@@ -148,30 +102,14 @@ job_scheduler.configure(
     jobstores=jobstores, executors=executors, job_defaults=job_defaults, timezone=utc
 )
 
-
-scheduleTriggerType2String = {
+schedule_trigger_type_to_string = {
     IntervalTrigger: "interval",
     DateTrigger: "date",
     CronTrigger: "cron",
 }
 
 
-def logDebug(msgData):
-    global cml_adapter
-    cml_adapter.debug(json.dumps(msgData, default=str))
-
-
-def logInfo(msgData):
-    global cml_adapter
-    cml_adapter.info(json.dumps(msgData, default=str))
-
-
-def logError(msgData):
-    global cml_adapter
-    cml_adapter.error(json.dumps(msgData, default=str))
-
-
-def sendEmail(from_mail, to_email, subject, body):
+def send_email(from_mail, to_email, subject, body):
     global sendGrid
 
     from_email_obj = Email("rich@saasglue.com")
@@ -183,7 +121,7 @@ def sendEmail(from_mail, to_email, subject, body):
         logError(
             {
                 "msg": "Error sending alert email",
-                "Method": "sendEmail",
+                "Method": "send_email",
                 "from_mail": from_mail,
                 "to_email": to_email,
                 "subject": subject,
@@ -191,8 +129,6 @@ def sendEmail(from_mail, to_email, subject, body):
                 "response": response.status_code + " - " + response.body,
             }
         )
-    # else:
-    #     logDebug({"msg": "successfully sent email"})
 
 
 def json_serial(obj):
@@ -203,19 +139,18 @@ def json_serial(obj):
     raise TypeError("Type %s not serializable" % type(obj))
 
 
-def RestAPICall(url, method, _teamId, headers, data={}):
-    global cml_adapter
+def rest_api_call(url, method, _teamId, headers, data={}):
     global token
     global apiBaseUrl
     global apiPort
     global apiVersion
 
-    httpResponseCode = ""
+    http_response_code = ""
     try:
-        apiUrl = apiBaseUrl
+        api_url = apiBaseUrl
         if apiPort != "":
-            apiUrl += ":{}".format(apiPort)
-        url = "{}/api/{}/{}".format(apiUrl, apiVersion, url)
+            api_url += ":{}".format(apiPort)
+        url = "{}/api/{}/{}".format(api_url, apiVersion, url)
 
         default_headers = {
             "Cookie": token,
@@ -237,17 +172,17 @@ def RestAPICall(url, method, _teamId, headers, data={}):
             )
         else:
             raise Exception("{} method not supported".format(method))
-        httpResponseCode = res.status_code
+        http_response_code = res.status_code
         if str(res.status_code)[0] != "2":
             raise Exception(
                 "Call to {} returned {} - {}".format(url, res.status_code, res.text)
             )
-        return [True, httpResponseCode]
+        return [True, http_response_code]
     except Exception as ex:
         logError(
             {
                 "msg": str(ex),
-                "Method": "RestAPICall",
+                "Method": "rest_api_call",
                 "url": url,
                 "method": method,
                 "_teamId": _teamId,
@@ -255,7 +190,7 @@ def RestAPICall(url, method, _teamId, headers, data={}):
                 "data": data,
             }
         )
-        return [False, httpResponseCode]
+        return [False, http_response_code]
 
 
 def on_launch_job(scheduled_time, job_id, _teamId, targetId, runtimeVars):
@@ -271,7 +206,7 @@ def on_launch_job(scheduled_time, job_id, _teamId, targetId, runtimeVars):
             "data": data,
         }
     )
-    res = RestAPICall("job", "POST", _teamId, {"_jobDefId": targetId}, data)
+    res = rest_api_call("job", "POST", _teamId, {"_jobDefId": targetId}, data)
 
     updateSchedule = True
     if not res[0]:
@@ -287,14 +222,14 @@ def on_launch_job(scheduled_time, job_id, _teamId, targetId, runtimeVars):
                     "_scheduleId": job_id,
                 }
             )
-            res = RestAPICall("schedule/{}".format(job_id), "DELETE", _teamId, {}, {})
+            res = rest_api_call("schedule/{}".format(job_id), "DELETE", _teamId, {}, {})
 
     if updateSchedule:
         job = job_scheduler.get_job(job_id)
 
         if job:
             url = "schedule/fromscheduler/{}".format(job_id)
-            RestAPICall(
+            rest_api_call(
                 url,
                 "PUT",
                 _teamId,
@@ -325,7 +260,7 @@ def on_launch_job(scheduled_time, job_id, _teamId, targetId, runtimeVars):
                     "_scheduleId": job_id,
                 }
             )
-            res = RestAPICall("schedule/{}".format(job_id), "DELETE", _teamId, {}, {})
+            res = rest_api_call("schedule/{}".format(job_id), "DELETE", _teamId, {}, {})
 
 
 def parse_job_interval(job):
@@ -381,19 +316,19 @@ def date_schedule_changed(existing_job, job):
 
 
 def schedule_changed(existing_job, job):
-    if scheduleTriggerType2String[type(existing_job.trigger)] != job["TriggerType"]:
+    if schedule_trigger_type_to_string[type(existing_job.trigger)] != job["TriggerType"]:
         return True
 
     if not existing_job.next_run_time and job["isActive"]:
         return True
 
-    if scheduleTriggerType2String[type(existing_job.trigger)] == "cron":
+    if schedule_trigger_type_to_string[type(existing_job.trigger)] == "cron":
         if cron_schedule_changed(existing_job, job):
             return True
-    elif scheduleTriggerType2String[type(existing_job.trigger)] == "interval":
+    elif schedule_trigger_type_to_string[type(existing_job.trigger)] == "interval":
         if interval_schedule_changed(existing_job, job):
             return True
-    elif scheduleTriggerType2String[type(existing_job.trigger)] == "date":
+    elif schedule_trigger_type_to_string[type(existing_job.trigger)] == "date":
         if date_schedule_changed(existing_job, job):
             return True
 
@@ -401,7 +336,6 @@ def schedule_changed(existing_job, job):
 
 
 def on_message(delivery_tag, body, async_consumer):
-    global cml_adapter
     global job_scheduler
 
     try:
@@ -690,7 +624,7 @@ def on_message(delivery_tag, body, async_consumer):
         job = job_scheduler.get_job(msg["id"])
         if job:
             url = "schedule/fromscheduler/{}".format(job.id)
-            RestAPICall(
+            rest_api_call(
                 url,
                 "PUT",
                 msg["_teamId"],
@@ -712,7 +646,7 @@ def on_message(delivery_tag, body, async_consumer):
         async_consumer.acknowledge_message(delivery_tag)
         if "_teamId" in msg:
             url = "schedule/fromscheduler/{}".format(msg["id"])
-            RestAPICall(url, "PUT", msg["_teamId"], {}, {"scheduleError": ex.message})
+            rest_api_call(url, "PUT", msg["_teamId"], {}, {"scheduleError": ex.message})
         logError({"msg": str(ex), "Method": "on_message", "body": body})
     # finally:
     #     async_consumer.start_consuming()
@@ -725,7 +659,6 @@ def schedule_updates_handler(args1, stop_event):
     global rmqPassword
     global rmqVhost
     global rmqScheduleUpdatesQueue
-    global cml_adapter
     global wait_schedule_updates_handler_exception
     global useSSL
 
@@ -736,7 +669,6 @@ def schedule_updates_handler(args1, stop_event):
         "{0}://{1}:{2}@{3}/{4}".format(
             urlRoot, rmqUsername, rmqPassword, rmqUrl, rmqVhost
         ),
-        cml_adapter,
         {
             "exch": "worker",
             "exch_type": "topic",
@@ -764,7 +696,6 @@ def run_scheduler_async(args1, stop_event):
     """
     Run the scheduler in a separate thread as it is blocking
     """
-    global cml_adapter
     global job_scheduler
 
     try:
@@ -774,7 +705,6 @@ def run_scheduler_async(args1, stop_event):
 
 
 def main():
-    global cml_adapter
     global wait_schedule_updates_handler_exception
     global job_scheduler
 
@@ -797,7 +727,7 @@ def main():
                 wait_schedule_updates_handler_exception.wait(5)
             )
             if schedule_updates_exception_occurred:
-                cml_adapter.error({"msg": "Exception occurred in on_message event"})
+                logError({"msg": "Exception occurred in on_message event"})
                 wait_schedule_updates_handler_exception.clear()
     except KeyboardInterrupt:
         logInfo({"msg": "process interrupted - exiting", "Method": "main"})

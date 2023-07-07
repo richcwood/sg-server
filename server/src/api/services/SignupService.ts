@@ -1,14 +1,18 @@
-import { convertData } from '../utils/ResponseConverters';
-import { UserSchema, UserModel } from '../domain/User';
-import { userService } from './UserService';
-import * as mongodb from 'mongodb';
-import { SGUtils } from '../../shared/SGUtils';
-import { MissingObjectError, ValidationError } from '../utils/Errors';
-import { BaseLogger } from '../../shared/SGLogger';
-import * as moment from 'moment';
-import * as _ from 'lodash';
 import * as bcrypt from 'bcrypt';
+import * as _ from 'lodash';
+import * as moment from 'moment';
+import * as mongodb from 'mongodb';
+
 const jwt = require('jsonwebtoken');
+
+import { UserSchema, UserModel } from '../domain/User';
+
+import { userService } from './UserService';
+
+import { BaseLogger } from '../../shared/SGLogger';
+import { SGUtils } from '../../shared/SGUtils';
+
+import { MissingObjectError, ValidationError } from '../utils/Errors';
 
 const environment = process.env.NODE_ENV || 'development';
 
@@ -24,18 +28,7 @@ export class SignupService {
         userModel.emailConfirmed = true;
         userModel = await userModel.save();
 
-        try {
-            let newEmailNotificationMessage = JSON.stringify(userModel, null, 4);
-            await SGUtils.SendInternalEmail(
-                'rich@saasglue.com',
-                'jack@saasglue.com,jay@saasglue.com,rich@saasglue.com',
-                'New user signed up',
-                newEmailNotificationMessage,
-                logger
-            );
-        } catch (e) {
-            logger.LogError(`Error sending new user notification message: ${e.message}`, userModel);
-        }
+        SGUtils.NewUserNotification(userModel, logger);
 
         return userModel;
     }
@@ -137,18 +130,7 @@ export class SignupService {
         updatedUser = await UserModel.findOneAndUpdate({ _id: userModel._id }, { emailConfirmed: true }, { new: true });
 
         if (environment != 'debug') {
-            try {
-                let newEmailNotificationMessage = JSON.stringify(updatedUser, null, 4);
-                await SGUtils.SendInternalEmail(
-                    'rich@saasglue.com',
-                    'jack@saasglue.com,jay@saasglue.com,rich@saasglue.com',
-                    'New user signed up',
-                    newEmailNotificationMessage,
-                    logger
-                );
-            } catch (e) {
-                logger.LogError(`Error sending new user notification message: ${e.message}`, updatedUser);
-            }
+            SGUtils.NewUserNotification(updatedUser, logger);
         }
 
         return updatedUser; // fully populated model
@@ -193,18 +175,7 @@ export class SignupService {
         );
 
         if (environment != 'debug') {
-            try {
-                let newEmailNotificationMessage = JSON.stringify(updatedUser, null, 4);
-                await SGUtils.SendInternalEmail(
-                    'rich@saasglue.com',
-                    'jack@saasglue.com,jay@saasglue.com,rich@saasglue.com',
-                    'New user signed up',
-                    newEmailNotificationMessage,
-                    logger
-                );
-            } catch (e) {
-                logger.LogError(`Error sending new user notification message: ${e.message}`, updatedUser);
-            }
+            SGUtils.NewUserNotification(updatedUser, logger);
         }
 
         return updatedUser; // fully populated model

@@ -6,7 +6,7 @@ let LongRunningJob: any = {
         name: 'RunLongRunningScript',
         tasks: [
             {
-                _teamId: config.get('sgTestTeam'),
+                _teamId: process.env.sgTestTeam,
                 name: 'Task1',
                 source: 0,
                 requiredTags: [],
@@ -38,7 +38,7 @@ let InteractiveConsoleJob: any = {
         runtimeVars: {},
         tasks: [
             {
-                _teamId: config.get('sgTestTeam'),
+                _teamId: process.env.sgTestTeam,
                 name: 'Task1',
                 source: 0,
                 requiredTags: {},
@@ -66,7 +66,7 @@ let InteractiveConsoleJob: any = {
 export { InteractiveConsoleJob };
 
 let ScriptTemplate: any = {
-    _teamId: config.get('sgTestTeam'),
+    _teamId: process.env.sgTestTeam,
     name: 'Script 1',
     scriptType: '2',
     code: 'ZWNobyAiSGVsbG8gV29ybGQi',
@@ -76,14 +76,14 @@ export { ScriptTemplate };
 
 let JobDefTemplate: any = {
     Name: 'Job 1',
-    _teamId: config.get('sgTestTeam'),
-    createdBy: config.get('sgTestUser'),
+    _teamId: process.env.sgTestTeam,
+    createdBy: process.env.sgTestUser,
 };
 export { JobDefTemplate };
 
 let TaskDefTemplate: any = {
     name: 'Task 1',
-    _teamId: config.get('sgTestTeam'),
+    _teamId: process.env.sgTestTeam,
     _jobDefId: '{{_jobDefId}}',
     requiredTags: [],
     dependsOn: [],
@@ -93,7 +93,7 @@ export { TaskDefTemplate };
 
 let StepDefTemplate: any = {
     name: 'Step 1',
-    _teamId: config.get('sgTestTeam'),
+    _teamId: process.env.sgTestTeam,
     _taskDefId: '{{_taskDefId}}',
     _scriptId: '{{_scriptId}}',
     order: '0',

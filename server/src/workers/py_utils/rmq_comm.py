@@ -5,6 +5,8 @@ import functools
 import pika
 from pika.exchange_type import ExchangeType
 
+from py_utils.logger import logger
+
 
 class AsyncConsumer(object):
     """This is an example consumer that will handle unexpected interactions
@@ -20,7 +22,7 @@ class AsyncConsumer(object):
 
     """
 
-    def __init__(self, amqp_url, logger, params):
+    def __init__(self, amqp_url, params):
         """Create a new instance of the consumer class, passing in the AMQP
         URL used to connect to RabbitMQ.
 
@@ -69,7 +71,7 @@ class AsyncConsumer(object):
         :rtype: pika.SelectConnection
 
         """
-        self.logger.info("Connecting to %s", self._url)
+        self.logger.info("%s", {"message": "Connecting to RabbitMQ", "uri": self._url})
         return pika.SelectConnection(
             parameters=pika.URLParameters(self._url),
             on_open_callback=self.on_connection_open,

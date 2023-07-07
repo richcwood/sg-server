@@ -42,9 +42,9 @@ let CopyJobDefToNewTeam = async (
     destTeam: mongodb.ObjectId,
     _jobDefId: mongodb.ObjectId
 ) => {
-    mongoose.connect(config.get('mongoUrl'), {});
+    mongoose.connect(process.env.mongoUrl, {});
 
-    console.log('mongo url -> ', config.get('mongoUrl'));
+    console.log('mongo url -> ', process.env.mongoUrl);
 
     const userId = new mongodb.ObjectId('5e99cbcb2317950015edb655');
 

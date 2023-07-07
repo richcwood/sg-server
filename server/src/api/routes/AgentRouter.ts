@@ -63,5 +63,9 @@ export class AgentRouter {
     }
 }
 
-export const agentRouterSingleton = new AgentRouter();
-export const agentRouter = agentRouterSingleton.router;
+export const agentRouterSingleton = (): AgentRouter | any => {
+    return new AgentRouter();
+};
+export const agentRouter = (): any => {
+    return agentRouterSingleton().router;
+};

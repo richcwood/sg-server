@@ -36,5 +36,9 @@ export class TeamVariableRouter {
     }
 }
 
-export const teamVariableRouterSingleton = new TeamVariableRouter();
-export const teamVariableRouter = teamVariableRouterSingleton.router;
+export const teamVariableRouterSingleton = (): TeamVariableRouter | any => {
+    return new TeamVariableRouter();
+};
+export const teamVariableRouter = (): any => {
+    return teamVariableRouterSingleton().router;
+};
