@@ -93,7 +93,7 @@
           </table>
         </tab>
 
-        <tab class="sg-container-p" title="Run on AWS Lambda">
+        <tab v-if="showLambdaTab" class="sg-container-p" title="Run on AWS Lambda">
           <table class="table is-fullwidth">
             <tr>
               <td>
@@ -249,7 +249,7 @@ import { momentToStringV1 } from "../utils/DateTime";
 import { ICJobSettings, Job } from "../store/job/types";
 import { TaskOutcome } from "../store/taskOutcome/types";
 import { LambdaMemorySizes, LambdaRuntimes } from "@/store/stepDef/types";
-import { JobStatus, StepStatus, TaskFailureCode, enumKeyToPretty } from "../utils/Enums";
+import { JobStatus, StepStatus, TaskFailureCode, TeamPricingTier, enumKeyToPretty } from "../utils/Enums";
 import AgentSearch from "../components/AgentSearch.vue";
 import ScriptEditor from "../components/ScriptEditor.vue";
 import { showErrors } from "../utils/ErrorHandler";
@@ -358,6 +358,9 @@ export default class InteractiveConsole extends Vue {
   @BindProp({ storeType: StoreType.InteractiveConsole })
   public latestRanJobId: string;
 
+  @BindProp({ storeType: StoreType.TeamStore })
+  private pricingTier: TeamPricingTier;
+
   private async mounted() {
     if (this.script) {
       this.scriptId = this.script.id;
@@ -376,6 +379,10 @@ export default class InteractiveConsole extends Vue {
     this.$store.dispatch(`${StoreType.InteractiveConsole}/updateSelectedCopy`, {
       latestRanJobId: null
     });
+  }
+
+  public get showLambdaTab (): boolean {
+    return this.pricingTier !== TeamPricingTier.FREE;
   }
 
   private onTargetAgentPicked(agent: Agent) {
