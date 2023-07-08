@@ -34,6 +34,9 @@
         </div>
 
         <div class="navbar-end">
+          <div class="navbar-item scripts-counter is-hoverable">
+            <FreeScriptsCounter />
+          </div>
           <div class="navbar-item has-dropdown is-hoverable">
             <a href="#" class="navbar-link is-arrowless">
               <font-awesome-icon icon="users" class="mr-2" /> Team
@@ -102,10 +105,11 @@ import { Team } from './store/team/types';
 import { SgAlert, AlertPlacement, AlertCategory } from './store/alert/types';
 import { BindSelected, BindStoreModel } from './decorator';
 import MainFooter from '@/components/MainFooter.vue';
+import FreeScriptsCounter from './components/FreeScriptsCounter.vue';
 
 @Component({
   directives: { ClickOutside },
-  components: { MainFooter }
+  components: { MainFooter, FreeScriptsCounter }
 })
 export default class App extends Vue {
 
