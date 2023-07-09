@@ -1,6 +1,6 @@
 <template>
     <IsFreeTier>
-        <template #no>
+        <template #yes>
             <section class="columns content">
                 <div class="column is-full">
                     <div class="notification is-warning">
@@ -10,7 +10,7 @@
                 </div>
             </section>
         </template>
-        <template #yes>
+        <template #no>
             <section class="columns content">
                 <div class="column is-narrow">
                     <div class="box">

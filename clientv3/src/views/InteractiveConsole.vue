@@ -80,13 +80,13 @@
 
         <tab class="sg-container-p" title="Run on AWS Lambda">
           <IsFreeTier>
-            <template #no>
+            <template #yes>
               <div class="notification is-warning">
                 <router-link to="/invoices" activeClass="">Upgrate</router-link> to start running SaaSGlue scripts
                 on AWS Lambda.
               </div>
             </template>
-            <template #yes>
+            <template #no>
               <table class="table is-fullwidth">
                 <tr>
                   <td>
@@ -228,7 +228,7 @@ import { Agent } from "../store/agent/types";
 import { User } from "../store/user/types";
 import axios from "axios";
 import { SgAlert, AlertPlacement } from "../store/alert/types";
-import { Script, ScriptType } from "../store/script/types";
+import { Script, ScriptType, scriptTypesForMonaco } from "../store/script/types";
 import { ScriptShadow } from "../store/scriptShadow/types";
 import { TaskDefTarget } from "../store/taskDef/types";
 import { BindSelected, BindProp, BindSelectedCopy } from "../decorator";
@@ -238,7 +238,7 @@ import { momentToStringV1 } from "../utils/DateTime";
 import { ICJobSettings, Job } from "../store/job/types";
 import { TaskOutcome } from "../store/taskOutcome/types";
 import { LambdaMemorySizes, LambdaRuntimes } from "@/store/stepDef/types";
-import { JobStatus, enumKeyToPretty } from "../utils/Enums";
+import { JobStatus, StepStatus, TaskFailureCode, enumKeyToPretty } from "../utils/Enums";
 import AgentSearch from "../components/AgentSearch.vue";
 import ScriptEditor from "../components/ScriptEditor.vue";
 import { showErrors } from "../utils/ErrorHandler";
@@ -249,7 +249,7 @@ import { ScriptTarget, ICTab } from "@/store/interactiveConsole/types";
 import LambdaRuntimeSelect from "@/components/LambdaRuntimeSelect.vue";
 import { VariableMap } from "@/components/runtimeVariable/types";
 import { VariableList } from '@/components/runtimeVariable';
-import IsFreeTier from '@/components/IsFreeTier.vue';
+import IsFreeTier from "@/components/IsFreeTier.vue";
 
 @Component({
   components: {
@@ -268,9 +268,12 @@ import IsFreeTier from '@/components/IsFreeTier.vue';
 })
 export default class InteractiveConsole extends Vue {
   // Expose to templates
+  private readonly scriptTypesForMonaco = scriptTypesForMonaco;
   private readonly TaskDefTarget = TaskDefTarget;
   private readonly momentToStringV1 = momentToStringV1;
   private readonly JobStatus = JobStatus;
+  private readonly StepStatus = StepStatus;
+  private readonly TaskFailureCode = TaskFailureCode;
   private readonly enumKeyToPretty = enumKeyToPretty;
   private readonly LambdaMemorySizes = LambdaMemorySizes;
   public readonly ScriptTarget = ScriptTarget;
