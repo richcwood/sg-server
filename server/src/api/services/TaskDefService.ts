@@ -2,8 +2,9 @@ import { convertData } from '../utils/ResponseConverters';
 import { TaskDefSchema, TaskDefModel } from '../domain/TaskDef';
 import { StepDefSchema, StepDefModel } from '../domain/StepDef';
 import { rabbitMQPublisher, PayloadOperation } from '../utils/RabbitMQPublisher';
-import { MissingObjectError, ValidationError } from '../utils/Errors';
+import { FreeTierLimitExceededError, MissingObjectError, ValidationError } from '../utils/Errors';
 import { SGUtils } from '../../shared/SGUtils';
+import { FreeTierChecks } from '../../shared/FreeTierChecks';
 import * as Enums from '../../shared/Enums';
 import * as mongodb from 'mongodb';
 import * as _ from 'lodash';
@@ -66,6 +67,11 @@ export class TaskDefService {
         correlationId: string,
         responseFields?: string
     ): Promise<TaskDefSchema> {
+        if (data.target == Enums.TaskDefTarget.AWS_LAMBDA) {
+            if (FreeTierChecks.IsTeamOnFreeTier(_teamId))
+                throw new FreeTierLimitExceededError('Upgrade to run AWS Lambda tasks');
+        }
+
         if (!data.name) throw new ValidationError(`Request body missing "name" parameter`);
         if (!data._jobDefId) throw new ValidationError(`Request body missing "_jobDefId" parameter`);
 

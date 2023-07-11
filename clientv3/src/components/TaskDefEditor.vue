@@ -140,7 +140,14 @@
                 </select>
               </div>
               <div>
-                <button class="button" @click="onAddArtifactClicked">Add Artifact(s)</button>
+                <IsFreeTier>
+                  <template #yes>
+                    <button class="button" title="Artifacts upload is not available on a Free tier." disabled>Add Artifact(s)</button>
+                  </template>
+                  <template #no>
+                    <button class="button" @click="onAddArtifactClicked">Add Artifact(s)</button>
+                  </template>
+                </IsFreeTier>
                 <button class="button button-spaced" @click="onRemoveArtifactClicked" :disabled="selectedArtifactIds.length === 0" >Remove Artifact(s)</button>
               </div>
             </td>
@@ -153,23 +160,23 @@
 
 <script lang="ts">
 import _ from 'lodash';
-import { Component, Prop, Vue, Watch } from 'vue-property-decorator';
+import { Component, Vue, Watch } from 'vue-property-decorator';
 import { StoreType } from '../store/types';
-import { SgAlert, AlertPlacement, AlertCategory } from '../store/alert/types';
+import { SgAlert, AlertPlacement } from '../store/alert/types';
 import { showErrors } from '../utils/ErrorHandler'; 
 import { TaskDef, TaskDefTarget } from '../store/taskDef/types';
 import { StepDef } from '../store/stepDef/types';
 import { Artifact } from '../store/artifact/types';
-import { BindStoreModel, BindSelected, BindSelectedCopy, BindProp } from '../decorator';
-import axios from 'axios';
-import { focusElement, tagsStringToMap, tagsMapToString } from '../utils/Shared';
+import { BindSelectedCopy } from '../decorator';
+import { tagsStringToMap, tagsMapToString } from '../utils/Shared';
 import { ValidationProvider, ValidationObserver } from 'vee-validate';
 import AgentSearch from './AgentSearch.vue';
 import ArtifactSearch from '../components/ArtifactSearch.vue';
+import IsFreeTier from '@/components/IsFreeTier.vue';
 
 @Component({
   components: {
-    ValidationProvider, ValidationObserver, AgentSearch, ArtifactSearch
+    ValidationProvider, ValidationObserver, AgentSearch, ArtifactSearch, IsFreeTier,
   }
 })
 export default class TaskDefEditor extends Vue {

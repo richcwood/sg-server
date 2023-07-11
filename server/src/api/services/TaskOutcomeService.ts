@@ -18,7 +18,6 @@ import { convertData } from '../utils/ResponseConverters';
 
 import { AMQPConnector } from '../../shared/AMQPLib';
 import { JobStatus, JobDefStatus, StepStatus, TaskDefTarget, TaskFailureCode, TaskStatus } from '../../shared/Enums';
-import { FreeTierChecks } from '../../shared/FreeTierChecks';
 import { BaseLogger } from '../../shared/SGLogger';
 import { SGStrings } from '../../shared/SGStrings';
 import { SGUtils } from '../../shared/SGUtils';
@@ -468,8 +467,6 @@ export class TaskOutcomeService {
     }
 
     async LaunchTask(_teamId: mongodb.ObjectId, taskToLaunch: any, logger: BaseLogger, amqp: AMQPConnector) {
-        // await FreeTierChecks.MaxScriptsCheck(_teamId);
-
         const _taskId: mongodb.ObjectId = taskToLaunch.taskId;
         let task: any;
         try {

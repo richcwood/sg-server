@@ -11,9 +11,14 @@ import { S3Access } from '../shared/S3Access';
 import { rabbitMQPublisher } from '../api/utils/RabbitMQPublisher';
 import * as mongodb from 'mongodb';
 import * as config from 'config';
-import { MongoDbSettings } from 'aws-sdk/clients/dms';
 
 export class FreeTierChecks {
+    static IsTeamOnFreeTier = async (_teamId: mongodb.ObjectId) => {
+        const team = await teamService.findTeam(_teamId, 'pricingTier activationDate freeTierMaxDays');
+        if (!team) throw new MissingObjectError(`Team '${_teamId.toHexString()} not found`);
+        return (team.pricingTier = TeamPricingTier.FREE);
+    };
+
     static PaidTierRequired = async (_teamId: mongodb.ObjectId, errMsg: string) => {
         const team = await teamService.findTeam(_teamId, 'pricingTier activationDate freeTierMaxDays');
         if (!team) throw new MissingObjectError(`Team '${_teamId.toHexString()} not found`);
@@ -30,6 +35,20 @@ export class FreeTierChecks {
     };
 
     static MaxScriptsCheck = async (_teamId: mongodb.ObjectId) => {
+        const team = await teamService.findTeam(_teamId, 'pricingTier cntFreeScriptsRun');
+        if (!team) throw new MissingObjectError(`Team '${_teamId.toHexString()} not found`);
+        if (team.pricingTier == TeamPricingTier.FREE) {
+            const freeTierSettings = await settingsService.findSettings('FreeTierLimits');
+            if (team.cntFreeScriptsRun >= freeTierSettings.maxScripts) {
+                const msg = `You have reached the maximum number of free scripts - please upgrade to run additional scripts`;
+                rabbitMQPublisher.publishBrowserAlert(_teamId, msg);
+                console.log('throwing error --------> ', msg);
+                throw new FreeTierLimitExceededError(msg);
+            }
+        }
+    };
+
+    static MaxScriptsInBillingCycleCheck = async (_teamId: mongodb.ObjectId) => {
         const team = await teamService.findTeam(_teamId, 'pricingTier');
         if (!team) throw new MissingObjectError(`Team '${_teamId.toHexString()} not found`);
         if (team.pricingTier == TeamPricingTier.FREE) {

@@ -10,12 +10,17 @@
     </modal>
 
     <nav class="navbar" v-if="!isOnLandingPage()">
-      <div class="navbar-brand mr-6">
+      <div class="navbar-brand">
           <router-link exact activeClass="navbar-logo-active" to="/" class="navbar-item navbar-logo is-relative">
               <img src="/SaasLogoRevised.svg" alt="SaaSGlue logo" width="132" height="22">
           </router-link>
+          <a role="button" class="navbar-burger" aria-label="menu" aria-expanded="false">
+            <span aria-hidden="true"></span>
+            <span aria-hidden="true"></span>
+            <span aria-hidden="true"></span>
+          </a>
       </div>
-      <div class="navbar-menu is-active">
+      <div class="navbar-menu" id="navMenu">
         <div class="navbar-start has-text-weight-bold">
           <router-link class="navbar-item" to="/downloadAgent">Download Agent</router-link>
           <router-link activeClass="" :class="{'router-link-active': isLinkActive(['jobList', 'jobDesigner'])}" class="navbar-item" to="/jobList">Designer</router-link>
@@ -27,58 +32,55 @@
           <router-link class="navbar-item" to="/teamAlerts">Alerts</router-link>
           <router-link class="navbar-item" to="/scripts">Scripts</router-link>
         </div>
-        <div class="navbar-end mr-6 is-flex-grow-1 is-align-items-center is-justify-content-end">
 
-          <div class="team-dropdown dropdown is-right mr-4" :class="{'is-active': showTeamsMenu}" v-click-outside="onClickedOutsideTeamsMenu">
-            <a href="#" class="dropdown-trigger dropdown-link" @click.prevent="onClickedTeamsMenu">
-              <font-awesome-icon icon="users" /> Team
+        <div class="navbar-end">
+          <div class="navbar-item scripts-counter is-hoverable">
+            <FreeScriptsCounter />
+          </div>
+          <div class="navbar-item has-dropdown is-hoverable">
+            <a href="#" class="navbar-link is-arrowless">
+              <font-awesome-icon icon="users" class="mr-2" /> Team
             </a>
-            <div class="dropdown-menu has-text-weight-bold" role="menu">
-              <div class="dropdown-content" role="menu">
-                <span class="dropdown-item has-text-centered has-text-grey">Switch Teams</span>
-                <hr class="dropdown-divider">
-
-                <a class="dropdown-item"
-                  v-for="teamId of Object.values(userTeamIds)"
-                  @click.prevent="onClickedTeamId(teamId)"
-                  :key="teamId"
-                  :class="{'is-active': selectedTeam && selectedTeam.id === teamId}">
-                  {{ getTeam(teamId).name }}
-                </a>
-              </div>
+            <div class="team-dropdown navbar-dropdown is-boxed">
+              <span class="navbar-item has-text-weight-bold">Switch Teams</span>
+              <hr class="navbar-divider">
+              <a class="navbar-item"
+                v-for="teamId of Object.values(userTeamIds)"
+                @click.prevent="onClickedTeamId(teamId)"
+                :key="teamId"
+                :class="{'is-active': selectedTeam && selectedTeam.id === teamId}">
+                {{ getTeam(teamId).name }}
+              </a>
             </div>
           </div>
 
-          <div class="dropdown is-right" :class="{'is-active': showUserMenu}" v-click-outside="onClickedOutsideUserMenu">
-            <div class="dropdown-trigger">
-              <a href="#" class="dropdown-link" @click.prevent="onClickedUserMenu">
-                <font-awesome-icon icon="cog" /> Settings
+          <div class="navbar-item has-dropdown is-hoverable">
+            <a href="#" class="navbar-link is-arrowless">
+              <font-awesome-icon icon="cog" class="mr-2" /> Settings
+            </a>
+
+            <div class="navbar-dropdown is-right is-boxed">
+              <a class="navbar-item" @click.prevent="onClickedInviteTeammates">
+                Invite Teammates
               </a>
-            </div>
-            <div class="dropdown-menu" role="menu">
-              <div class="dropdown-content" role="menu">
-                <a class="dropdown-item" @click.prevent="onClickedInviteTeammates">
-                  Invite Teammates
-                </a>
-                <a class="dropdown-item" @click.prevent="onClickedAcceptInvitations">
-                  Accept Invitations {{invitationsCountString}}
-                </a>
-                <hr class="dropdown-divider">
-                <a class="dropdown-item" @click.prevent="onClickedInvoices">
-                  Invoices and Payments
-                </a>
-                <hr class="dropdown-divider">
-                <a class="dropdown-item" @click.prevent="onClickedAccessKeys">
-                  Access Keys
-                </a>
-                <a class="dropdown-item" @click.prevent="onClickedSettings">
-                  Settings
-                </a>
-                <hr class="dropdown-divider">
-                <a class="dropdown-item" @click.prevent="onClickedSignOut">
-                  <font-awesome-icon icon="sign-out-alt" class="mr-1" /> Sign Out
-                </a>
-              </div>
+              <a class="navbar-item" @click.prevent="onClickedAcceptInvitations">
+                Accept Invitations {{invitationsCountString}}
+              </a>
+              <hr class="navbar-divider">
+              <a class="navbar-item" @click.prevent="onClickedInvoices">
+                Invoices and Payments
+              </a>
+              <hr class="navbar-divider">
+              <a class="navbar-item" @click.prevent="onClickedAccessKeys">
+                Access Keys
+              </a>
+              <a class="navbar-item" @click.prevent="onClickedSettings">
+                Settings
+              </a>
+              <hr class="navbar-divider">
+              <a class="navbar-item" @click.prevent="onClickedSignOut">
+                <font-awesome-icon icon="sign-out-alt" class="mr-1" /> Sign Out
+              </a>
             </div>
           </div>
 
@@ -103,10 +105,11 @@ import { Team } from './store/team/types';
 import { SgAlert, AlertPlacement, AlertCategory } from './store/alert/types';
 import { BindSelected, BindStoreModel } from './decorator';
 import MainFooter from '@/components/MainFooter.vue';
+import FreeScriptsCounter from './components/FreeScriptsCounter.vue';
 
 @Component({
   directives: { ClickOutside },
-  components: { MainFooter }
+  components: { MainFooter, FreeScriptsCounter }
 })
 export default class App extends Vue {
 
@@ -126,9 +129,6 @@ export default class App extends Vue {
   @BindStoreModel({storeType: StoreType.AlertStore, selectedModelName: 'currentWindow'})
   private alertWindow!: SgAlert;
 
-  private showTeamsMenu = false;
-  private showUserMenu = false;
-
   @Watch('alertWindow')
   private onAlertWindowChanged(){
     if(this.alertWindow){
@@ -137,6 +137,15 @@ export default class App extends Vue {
     else {
       this.$modal.hide('alert-modal');
     }
+  }
+
+  public mounted () {
+    const navbarBurger = document.querySelector('.navbar-burger');
+
+    navbarBurger?.addEventListener('click', () => {
+      navbarBurger.classList.toggle('is-active');
+      document.getElementById('navMenu').classList.toggle('is-active');
+    });
   }
 
   private closeAlert(){
@@ -175,41 +184,13 @@ export default class App extends Vue {
     }
   }
 
-  private onClickedUserMenu(){
-    this.showUserMenu = !this.showUserMenu;
-
-    if(this.showUserMenu){
-      this.showTeamsMenu = false;
-    }
-  }
-
-  private onClickedOutsideUserMenu(){
-    this.showUserMenu = false;
-  }
-
-  private onClickedTeamsMenu(){
-    this.showTeamsMenu = !this.showTeamsMenu;
-
-    if(this.showTeamsMenu){
-      this.showUserMenu = false; 
-    }
-  }
-
-  private onClickedOutsideTeamsMenu(){
-    this.showTeamsMenu = false;
-  }
-
   private onClickedAccessKeys(){
-    this.showUserMenu = false;
-
     if(this.$router.currentRoute.name !== 'accessKeys'){
       this.$router.push({name: 'accessKeys'});
     }
   }
 
   private onClickedSettings(){
-    this.showUserMenu = false;
-
     if(this.$router.currentRoute.name !== 'settings'){
       this.$router.push({name: 'settings'});
     }
@@ -276,23 +257,18 @@ export default class App extends Vue {
       if(this.$router.currentRoute.name !== 'invoices'){
         this.$router.push({name: 'invoices'});
       }
-
-      this.showUserMenu = false;
     }
 
     private onClickedInviteTeammates(){
       if(this.$router.currentRoute.name !== 'inviteTeammates'){
         this.$router.push({name: 'inviteTeammates'});
       }
-
-      this.showUserMenu = false;
     }
 
     private onClickedAcceptInvitations(){
       if(this.$router.currentRoute.name !== 'invitationsForMe'){
         this.$router.push({name: 'invitationsForMe'});
       }
-      this.showUserMenu = false;
     }
 
     private onClickedSignOut(){
@@ -338,6 +314,7 @@ export default class App extends Vue {
 
 .navbar {
   background-color: inherit;
+  padding: 0 10px;
 
   .navbar-logo-active::after {
     content: "";
@@ -370,9 +347,13 @@ export default class App extends Vue {
       border: 2px solid var(--font-color-active);
       border-radius: 5px;
     }
+
+    &.has-dropdown:hover .navbar-link {
+      background-color: inherit;
+    }
   }
 
-  .dropdown-link {
+  .navbar-link {
     color: #5a5959;
     font-weight: bold;
 
@@ -386,7 +367,7 @@ export default class App extends Vue {
     background-color: inherit;
   }
 
-  .dropdown.is-active .dropdown-link {
+  .navbar-dropdown.is-active .navbar-link {
     color: var(--font-color-active);
   }
 }

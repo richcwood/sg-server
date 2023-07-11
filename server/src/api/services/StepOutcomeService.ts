@@ -1,5 +1,6 @@
 import { convertData } from '../utils/ResponseConverters';
 import { StepOutcomeSchema, StepOutcomeModel } from '../domain/StepOutcome';
+import { TeamModel } from '../domain/Team';
 import { rabbitMQPublisher, PayloadOperation } from '../utils/RabbitMQPublisher';
 import { BaseLogger } from '../../shared/SGLogger';
 import { MissingObjectError } from '../utils/Errors';
@@ -87,6 +88,10 @@ export class StepOutcomeService {
         data._teamId = _teamId;
         const stepOutcomeModel = new StepOutcomeModel(data);
         const newStepOutcome = await stepOutcomeModel.save();
+
+        const filterTeam = { _teamId };
+        const team = await TeamModel.findOneAndUpdate(filterTeam, { $inc: { cntFreeScriptsRun: 1 } });
+        if (!team) throw new MissingObjectError(`Team '${_teamId}" not found`);
 
         await rabbitMQPublisher.publish(
             _teamId,

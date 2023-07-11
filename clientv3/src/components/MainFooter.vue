@@ -10,7 +10,7 @@
                 <transition name="guide-body">
                     <section v-if="isGuideOpen" class="guide-body sg-container-px">
                         <div class="content pt-4">
-                            <div v-if="isGuideOpen" class="is-flex is-justify-content-space-between is-align-items-center">
+                            <div v-if="isGuideOpen" class="is-flex is-justify-content-space-between is-align-items-center mb-2">
                                 <h2 class="subtitle is-5 mb-0">{{ component.getTitle() }}</h2>
                                 <a href="#" @click.prevent="onTogglePageGuide">
                                     <font-awesome-icon icon="times" size="2x" />

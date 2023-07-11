@@ -41,11 +41,11 @@
             switch (+this.scriptType) {
                 case ScriptType.JAVASCRIPT:
                 case ScriptType.NODE:
-                    return [LambdaRuntimes.NODEJS_14, LambdaRuntimes.NODEJS_12];
+                    return [LambdaRuntimes.NODEJS_18, LambdaRuntimes.NODEJS_16, LambdaRuntimes.NODEJS_14];
                 case ScriptType.RUBY:
                     return [LambdaRuntimes.RUBY_2_7];
                 case ScriptType.PYTHON:
-                    return [LambdaRuntimes.PYTHON_3_9, LambdaRuntimes.PYTHON_3_8, LambdaRuntimes.PYTHON_3_7];
+                    return [LambdaRuntimes.PYTHON_3_10, LambdaRuntimes.PYTHON_3_9, LambdaRuntimes.PYTHON_3_8, LambdaRuntimes.PYTHON_3_7];
                 default:
                     return Object.values(LambdaRuntimes);
             }

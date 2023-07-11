@@ -1,5 +1,5 @@
 <template>
-  <div @mousemove="onMouseMove" @mouseup="onMouseUp">
+  <div @mousemove="onMouseMove" @mouseup="onMouseUp" class="job-designer">
     <!-- Modals -->
 
     <modal name="select-script-vars-modal" :classes="'round-popup'" :width="600" :height="750">
@@ -66,11 +66,18 @@
             <button class="button" @click="createNewTaskDef">Create Regular Task</button>
           </td>
         </tr>
-        <tr class="tr">
-          <td class="td">
-            <button class="button" @click="createNewAWSLambdaTaskDef">Create AWS Lambda Task</button>
-          </td>
-        </tr>
+          <tr class="tr">
+            <td class="td">
+              <IsFreeTier>
+                <template #yes>
+                  <button class="button" title="AWS Lambda is not available on a Free tier." disabled>Create AWS Lambda Task</button>
+                </template>
+                <template #no>
+                  <button class="button" @click="createNewAWSLambdaTaskDef">Create AWS Lambda Task</button>
+                </template>
+              </IsFreeTier>
+              </td>
+            </tr>
         <tr class="tr">
           <td class="td">
             <button class="button" @click="cancelCreateNewTaskDef_chooseTarget">Cancel</button>
@@ -726,12 +733,24 @@
           </div>
           <div class="dropdown-menu" id="dropdown-menu" role="menu">
             <div class="dropdown-content">
-              <a class="dropdown-item" @click.prevent="onNavMenuCreateTaskClicked">Create Task</a>
-              <a class="dropdown-item" @click.prevent="onNavMenuCreateAWSLambdaTaskClicked">Create AWS Lambda Task</a>
-              <span v-if="selectedTaskDefForEdit === null" class="dropdown-item" style="color: lightgray;"
-                >Create Step</span
-              >
-              <a v-else class="dropdown-item" @click.prevent="onNavMenuCreateStepClicked">Create Step</a>
+              <button class="dropdown-item button is-text" @click.prevent="onNavMenuCreateTaskClicked">Create Task</button>
+
+              <IsFreeTier>
+                <template #yes>
+                  <button class="dropdown-item button is-text" title="AWS Lambda is not available on a Free tier." disabled>
+                    Create AWS Lambda Task
+                  </button>
+                </template>
+                <template #no>
+                  <button class="dropdown-item button is-text" @click.prevent="onNavMenuCreateAWSLambdaTaskClicked">
+                    Create AWS Lambda Task
+                  </button>
+                </template>
+              </IsFreeTier>
+
+              <button class="dropdown-item button is-text" :disabled="selectedTaskDefForEdit === null" @click.prevent="onNavMenuCreateStepClicked">
+                Create Step
+              </button>
             </div>
           </div>
         </div>
@@ -1378,6 +1397,7 @@ import ValueInput from '@/components/runtimeVariable/ValueInput.vue';
 import { VariableList } from '@/components/runtimeVariable';
 import { ValueFormat, Variable, VariableMap } from '@/components/runtimeVariable/types';
 import ModalCard from '@/components/core/ModalCard.vue';
+import IsFreeTier from '@/components/IsFreeTier.vue';
 
 enum JobTab {
   VARIABLES = "RuntimeVariables",
@@ -1405,6 +1425,7 @@ enum JobTab {
     ValueInput,
     VariableList,
     ModalCard,
+    IsFreeTier,
   },
   directives: { ClickOutside },
 })
@@ -2616,6 +2637,10 @@ table {
   width: 100%;
   top: 100%;
   left: 0;
+}
+
+.job-designer .button.is-text {
+  text-decoration: none;
 }
 </style>
 

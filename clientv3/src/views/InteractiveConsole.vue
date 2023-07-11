@@ -10,26 +10,20 @@
         </div>
         <div class="mr-4">
           <span class="has-text-weight-bold mr-3">Last Edited By</span>
-          <span v-if="script"
-            >{{ getUser(script._lastEditedUserId).name }} on {{ momentToStringV1(script.lastEditedDate) }}</span
-          >
+          <span v-if="script">{{ getUser(script._lastEditedUserId).name }} on {{ momentToStringV1(script.lastEditedDate)
+          }}</span>
         </div>
         <div class="is-flex">
           <span class="has-text-weight-bold mr-3">Team Members Can Edit</span>
           <template v-if="script">
             <div class="control">
               <div class="checkbox">
-                <input
-                  type="checkbox"
-                  v-model="script.teamEditable"
-                  :disabled="script._originalAuthorUserId !== loggedInUserId"
-                  @change="onTeamEditableChanged(script)"
-                />
+                <input type="checkbox" v-model="script.teamEditable"
+                  :disabled="script._originalAuthorUserId !== loggedInUserId" @change="onTeamEditableChanged(script)" />
               </div>
             </div>
-            <span v-if="script._originalAuthorUserId !== loggedInUserId" style="color:gray;"
-              >(orignal author: {{ getUser(script._originalAuthorUserId).name }})</span
-            >
+            <span v-if="script._originalAuthorUserId !== loggedInUserId" style="color:gray;">(orignal author: {{
+              getUser(script._originalAuthorUserId).name }})</span>
           </template>
         </div>
       </div>
@@ -46,11 +40,8 @@
               </td>
               <td>
                 <select class="input" style="width: 350px;" v-model="runAgentTarget">
-                  <option
-                    v-for="(targetIndex, targetName) in TargetAgentChoices"
-                    :key="`target-choice-${targetIndex}`"
-                    :value="targetIndex"
-                  >
+                  <option v-for="(targetIndex, targetName) in TargetAgentChoices" :key="`target-choice-${targetIndex}`"
+                    :value="targetIndex">
                     {{ targetName }}
                   </option>
                 </select>
@@ -61,19 +52,13 @@
                 <label class="label" style="width: 150px;">Target Agent</label>
               </td>
               <td>
-                <agent-search
-                  :width="'350px'"
-                  :agentId="runAgentTargetAgentId"
-                  @agentPicked="onTargetAgentPicked"
-                ></agent-search>
+                <agent-search :width="'350px'" :agentId="runAgentTargetAgentId"
+                  @agentPicked="onTargetAgentPicked"></agent-search>
               </td>
             </tr>
-            <tr
-              v-if="
-                runAgentTarget === TaskDefTarget.ALL_AGENTS_WITH_TAGS ||
-                  runAgentTarget === TaskDefTarget.SINGLE_AGENT_WITH_TAGS
-              "
-            >
+            <tr v-if="runAgentTarget === TaskDefTarget.ALL_AGENTS_WITH_TAGS ||
+              runAgentTarget === TaskDefTarget.SINGLE_AGENT_WITH_TAGS
+              ">
               <td>
                 <label class="label" style="width: 150px;">Target Agent Tags</label>
               </td>
@@ -94,72 +79,77 @@
         </tab>
 
         <tab class="sg-container-p" title="Run on AWS Lambda">
-          <table class="table is-fullwidth">
-            <tr>
-              <td>
-                <label class="label" style="width: 150px;">Lambda Runtime</label>
-              </td>
-              <td>
-                <div class="select">
-                  <validation-provider name="Lambda Runtime" rules="required" v-slot="{ errors }">
-                    <LambdaRuntimeSelect v-model="lambdaRuntime" :scriptType="scriptType" style="width: 350px;" />
-                    <div v-if="errors && errors.length > 0" class="message validation-error is-danger">
-                      {{ errors[0] }}
+          <IsFreeTier>
+            <template #yes>
+              <div class="notification is-warning">
+                <router-link to="/invoices" activeClass="">Upgrate</router-link> to start running SaaSGlue scripts
+                on AWS Lambda.
+              </div>
+            </template>
+            <template #no>
+              <table class="table is-fullwidth">
+                <tr>
+                  <td>
+                    <label class="label" style="width: 150px;">Lambda Runtime</label>
+                  </td>
+                  <td>
+                    <div class="select">
+                      <validation-provider name="Lambda Runtime" rules="required" v-slot="{ errors }">
+                        <LambdaRuntimeSelect v-model="lambdaRuntime" :scriptType="scriptType" style="width: 350px;" />
+                        <div v-if="errors && errors.length > 0" class="message validation-error is-danger">
+                          {{ errors[0] }}
+                        </div>
+                      </validation-provider>
                     </div>
-                  </validation-provider>
-                </div>
-              </td>
-            </tr>
-            <tr>
-              <td>
-                <label class="label" style="width: 150px;">Lambda Memory Size</label>
-              </td>
-              <td>
-                <div class="select">
-                  <select v-model="lambdaMemory" style="width: 350px;">
-                    <option v-for="memSize in LambdaMemorySizes" :key="memSize" :value="memSize">
-                      {{ memSize }} mb
-                    </option>
-                  </select>
-                </div>
-              </td>
-            </tr>
-            <tr>
-              <td>
-                <label class="label" style="width: 150px;">Lambda Timeout (seconds)</label>
-              </td>
-              <td>
-                <validation-provider name="Lambda Timeout" rules="required|lambdaTimeout" v-slot="{ errors }">
-                  <input class="input" style="width: 350px;" v-model="lambdaTimeout" />
-                  <div v-if="errors && errors.length > 0" class="message validation-error is-danger">
-                    {{ errors[0] }}
-                  </div>
-                </validation-provider>
-              </td>
-            </tr>
-            <tr>
-              <td>
-                <label class="label" style="width: 150px;">Lambda Dependencies</label>
-              </td>
-              <td>
-                <input
-                  class="input"
-                  style="width: 350px;"
-                  v-model="lambdaDependencies"
-                  placeholder="compression;axios"
-                />
-              </td>
-            </tr>
-          </table>
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    <label class="label" style="width: 150px;">Lambda Memory Size</label>
+                  </td>
+                  <td>
+                    <div class="select">
+                      <select v-model="lambdaMemory" style="width: 350px;">
+                        <option v-for="memSize in LambdaMemorySizes" :key="memSize" :value="memSize">
+                          {{ memSize }} mb
+                        </option>
+                      </select>
+                    </div>
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    <label class="label" style="width: 150px;">Lambda Timeout (seconds)</label>
+                  </td>
+                  <td>
+                    <validation-provider name="Lambda Timeout" rules="required|lambdaTimeout" v-slot="{ errors }">
+                      <input class="input" style="width: 350px;" v-model="lambdaTimeout" />
+                      <div v-if="errors && errors.length > 0" class="message validation-error is-danger">
+                        {{ errors[0] }}
+                      </div>
+                    </validation-provider>
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    <label class="label" style="width: 150px;">Lambda Dependencies</label>
+                  </td>
+                  <td>
+                    <input class="input" style="width: 350px;" v-model="lambdaDependencies"
+                      placeholder="compression;axios" />
+                  </td>
+                </tr>
+              </table>
+            </template>
+          </IsFreeTier>
         </tab>
+
         <tab v-if="latestRanJobId && selectedJob" class="sg-container-p" titleSlot="results-title">
           <div class="is-flex is-align-items-center">
             <span class="mr-3">{{ selectedJob.name }}</span>
-            <button
-              class="button is-ghost mr-3"
+            <button class="button is-ghost mr-3"
               :disabled="selectedJob.status !== JobStatus.RUNNING && selectedJob.status !== JobStatus.INTERRUPTED"
-              @click="onCancelJobClicked"
-            >
+              @click="onCancelJobClicked">
               Cancel
             </button>
             <span class="mr-3">{{ enumKeyToPretty(JobStatus, selectedJob.status) }}</span>
@@ -167,6 +157,7 @@
           </div>
           <task-monitor-details :selectedJobId="selectedJob.id" />
         </tab>
+
         <template #results-title>
           <span id="ic-results-tab">
             <span class="script-run-spinner" v-if="isScriptRunning"></span>
@@ -217,9 +208,7 @@
           <tr>
             <td></td>
             <td>
-              <button @click="onRunScript"
-                :disabled="!scriptCopy || isJobRunning"
-                :class="{'is-loading': isJobRunning}"
+              <button @click="onRunScript" :disabled="!scriptCopy || isJobRunning" :class="{ 'is-loading': isJobRunning }"
                 class="button is-primary mr-3">
                 Run Script
               </button>
@@ -260,6 +249,7 @@ import { ScriptTarget, ICTab } from "@/store/interactiveConsole/types";
 import LambdaRuntimeSelect from "@/components/LambdaRuntimeSelect.vue";
 import { VariableMap } from "@/components/runtimeVariable/types";
 import { VariableList } from '@/components/runtimeVariable';
+import IsFreeTier from "@/components/IsFreeTier.vue";
 
 @Component({
   components: {
@@ -272,7 +262,8 @@ import { VariableList } from '@/components/runtimeVariable';
     ValidationObserver,
     TaskMonitorDetails,
     LambdaRuntimeSelect,
-    VariableList
+    VariableList,
+    IsFreeTier,
   },
 })
 export default class InteractiveConsole extends Vue {
@@ -388,7 +379,7 @@ export default class InteractiveConsole extends Vue {
   }
 
   @Watch('selectedJob.status')
-  public onJobStatusChange (status: JobStatus): void {
+  public onJobStatusChange(status: JobStatus): void {
     const isRunning = status === JobStatus.RUNNING;
 
     if (isRunning) {
@@ -398,7 +389,7 @@ export default class InteractiveConsole extends Vue {
     this.isScriptRunning = isRunning;
   }
 
-  public onTabSelect (e: MouseEvent, index: ICTab): void {
+  public onTabSelect(e: MouseEvent, index: ICTab): void {
     switch (index) {
       case ICTab.LAMBDA:
         this.scriptTarget = ScriptTarget.LAMBDA
@@ -408,7 +399,7 @@ export default class InteractiveConsole extends Vue {
     }
   }
 
-  private selectTab (index: ICTab): void {
+  private selectTab(index: ICTab): void {
     (<any>this.$refs.runSettingsTabs).selectedIndex = index;
   }
 
@@ -474,7 +465,7 @@ export default class InteractiveConsole extends Vue {
   }
 
   @Watch('latestRanJobId')
-  private async onICJobRun (id: string): Promise<void> {
+  private async onICJobRun(id: string): Promise<void> {
     this.isJobRunning = true;
     const job = await this.$store.dispatch(`${StoreType.JobStore}/fetchModel`, id);
     this.$store.dispatch(`${StoreType.JobStore}/select`, job);

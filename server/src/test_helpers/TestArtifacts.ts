@@ -15,6 +15,7 @@ import { ScheduleSchema } from '../api/domain/Schedule';
 import { ScriptSchema } from '../api/domain/Script';
 import { SettingsSchema } from '../api/domain/Settings';
 import { StepDefSchema } from '../api/domain/StepDef';
+import { StepOutcomeSchema } from '../api/domain/StepOutcome';
 import { TaskSchema } from '../api/domain/Task';
 import { TaskDefSchema } from '../api/domain/TaskDef';
 import { TeamSchema } from '../api/domain/Team';
@@ -30,6 +31,7 @@ import { scheduleService } from '../api/services/ScheduleService';
 import { scriptService } from '../api/services/ScriptService';
 import { settingsService } from '../api/services/SettingsService';
 import { stepDefService } from '../api/services/StepDefService';
+import { stepOutcomeService } from '../api/services/StepOutcomeService';
 import { taskService } from '../api/services/TaskService';
 import { taskDefService } from '../api/services/TaskDefService';
 import { teamService } from '../api/services/TeamService';
@@ -130,6 +132,7 @@ let SettingsTemplate: any[] = [
     {
         Type: 'FreeTierLimits',
         Values: {
+            maxScripts: 1000,
             maxScriptsPerBillingCycle: 500,
             maxAgents: 10,
             freeDaysJobStorage: 60,
@@ -464,6 +467,17 @@ let CreateTasks = async (_teamId: mongodb.ObjectId, tasks: Partial<TaskSchema>[]
     }
 };
 export { CreateTasks };
+
+/**
+ *
+ * @param stepOutcomes
+ */
+let CreateStepOutcomes = async (_teamId: mongodb.ObjectId, stepOutcomes: Partial<TaskSchema>[]) => {
+    for (let s of stepOutcomes) {
+        await stepOutcomeService.createStepOutcome(_teamId, s, null);
+    }
+};
+export { CreateStepOutcomes };
 
 let CreateTeamVariables = async (_teamId: mongodb.ObjectId, teamVars: Partial<TeamVariableSchema>[]) => {
     for (let t of teamVars) {
