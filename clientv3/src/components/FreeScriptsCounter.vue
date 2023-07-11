@@ -1,10 +1,6 @@
 <template>
-  <router-link v-if="showCounter"
-    to="/invoices"
-    class="navbar-item has-text-weight-bold"
-    :class="className"
-    activeClass=""
-    title="Count of remaining free scripts. Upgrade!">
+  <router-link v-if="showCounter" to="/invoices" class="navbar-item has-text-weight-bold" :class="className"
+    activeClass="" title="Count of remaining free scripts. Upgrade!">
     {{ remainingCounter }}
   </router-link>
 </template>
@@ -35,7 +31,7 @@ export default class FreeScriptsCounter extends Vue {
   }
 
   public get className() {
-    return this.remainingCounter > 0 ? 'has-text-success' : 'has-text-danger';
+    return this.remainingCounter > 50 ? 'has-text-success' : 'has-text-danger';
   }
 }
 </script>

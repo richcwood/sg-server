@@ -32,12 +32,8 @@ import { PayloadOperation } from '../../server/src/api/utils/RabbitMQPublisher';
 import { TaskSchema } from '../../server/src/api/domain/Task';
 import * as _ from 'lodash';
 import axios from 'axios';
-import { fstat } from 'fs';
-import * as fs from 'fs';
-import * as bcrypt from 'bcrypt';
 import * as mongodb from 'mongodb';
 import { TeamVariableSchema } from '../../server/src/api/domain/TeamVariable';
-import { basename } from 'path';
 import { ScriptTemplate, JobDefTemplate, TaskDefTemplate, StepDefTemplate } from './TestArtifacts';
 
 let self: TestBase;
