@@ -16,10 +16,10 @@ import { BindProp } from '@/decorator';
   name: 'FreeScriptsCounter'
 })
 export default class FreeScriptsCounter extends Vue {
-  @BindProp({ storeType: StoreType.TeamStore })
+  @BindProp({ storeType: StoreType.TeamStore, selectedModelName: 'selected' })
   private cntFreeScriptsRun: number;
 
-  @BindProp({ storeType: StoreType.TeamStore })
+  @BindProp({ storeType: StoreType.TeamStore, selectedModelName: 'selected' })
   private pricingTier: TeamPricingTier;
 
   public get showCounter(): boolean {
