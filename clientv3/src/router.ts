@@ -25,6 +25,7 @@ import AuthCallback from '@/views/AuthCallback.vue';
 import _ from 'lodash';
 import { SgAlert, AlertPlacement, AlertCategory } from "@/store/alert/types";
 import LambdaScript from '@/components/pageGuides/LambdaScript.vue';
+import NewScripts from '@/views/NewScripts.vue';
 
 Vue.use(Router);
 
@@ -247,6 +248,15 @@ const router = new Router({
           }
         }
       }
+    },
+    {
+      path: '/newscripts',
+      name: 'scripts',
+      component: NewScripts,
+      // meta: {
+      //   beforeEnter: async (to: Route, from: Route) => {
+      //   }
+      // }
     },
     {
       path: '/settings',
