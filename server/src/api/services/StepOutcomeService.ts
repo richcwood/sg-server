@@ -89,7 +89,7 @@ export class StepOutcomeService {
         const stepOutcomeModel = new StepOutcomeModel(data);
         const newStepOutcome = await stepOutcomeModel.save();
 
-        const filterTeam = { _teamId, pricingTier: TeamPricingTier.FREE };
+        const filterTeam = { _id: _teamId, pricingTier: TeamPricingTier.FREE };
         const team = await TeamModel.findOneAndUpdate(
             filterTeam,
             { $inc: { cntFreeScriptsRun: 1 } },
