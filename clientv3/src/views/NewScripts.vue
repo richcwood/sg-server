@@ -1,5 +1,5 @@
 <template>
-  <div class="scripts-page sg-container-px">
+  <div class="scripts-page mt-1">
     <ScriptsFilter />
     <BaseEditor />
   </div>
@@ -22,11 +22,14 @@ export default class NewScripts extends Vue {
 
 <style lang="scss" scoped>
 .scripts-page {
+  --primary-border: 1px #dadce0 solid;
+  --header-controls-height: 41px;
+
   width: 100%;
   height: 100%;
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 300px 1fr;
   grid-template-rows: 100%;
-  column-gap: 20px;
+  border-top: var(--primary-border);
 }
 </style>

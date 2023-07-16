@@ -1,18 +1,35 @@
 <template>
-  <div>
-    <header>
+  <aside class="scripts-panel">
+    <header class="pl-5">
       <h3 class="is-size-5">Scripts</h3>
       <div class="header-controls"></div>
     </header>
-    <div class="field">
-      <p class="control has-icons-left has-icons-right">
+    <div class="field scripts-list p-3 pl-5">
+      <div class="control has-icons-left has-icons-right mb-3">
         <input class="input" type="text" placeholder="Script name">
         <span class="icon is-small is-left">
           <font-awesome-icon icon="search" />
         </span>
-      </p>
+      </div>
+      <div>
+        <!-- TODO: Add tabindex system -->
+        <ul>
+          <li class="mb-1 script-item" title="">
+            <a class="has-text-dark" href="">Script 1</a>
+          </li>
+          <li class="mb-1 script-item selected" title="">
+            <a class="has-text-dark" href="">Script 2</a>
+          </li>
+          <li class="mb-1 script-item" title="">
+            <a class="has-text-dark" href="">Script 3</a>
+          </li>
+          <li class="mb-1 script-item has-unsaved-changes" title="">
+            <a class="has-text-dark" href="">Script 4</a>
+          </li>
+        </ul>
+      </div>
     </div>
-  </div>
+  </aside>
 </template>
 
 <script lang="ts">
@@ -133,4 +150,37 @@ export default class ScriptsFilter extends Vue {
 }
 </script>
 
-<style lang="scss" scoped></style>
+<style lang="scss" scoped>
+.scripts-panel {
+  border-right: var(--primary-border);
+}
+
+header {
+  padding-top: 5px;
+  height: var(--header-controls-height);
+  border-bottom: var(--primary-border);
+}
+
+.script-item {
+  text-overflow: ellipsis;
+  overflow: hidden;
+  padding-left: 0.75rem;
+}
+
+.script-item a {
+  white-space: nowrap;
+}
+
+.selected {
+  border-radius: 3px;
+  border: 1px solid deepskyblue;
+}
+
+.has-unsaved-changes {
+  font-weight: bold;
+}
+
+.has-unsaved-changes::before {
+  content: '*';
+}
+</style>

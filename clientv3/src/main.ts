@@ -32,6 +32,17 @@ import {
   faEyeSlash,
   faSave,
   faChevronLeft,
+  faUndo,
+  faRedo,
+  faPlay,
+  faFileAlt,
+  faTrash,
+  faInfo,
+  faPencilAlt,
+  faFileCode,
+  faEraser,
+  faExpand,
+  faClock,
 } from '@fortawesome/free-solid-svg-icons';
 import '@/sass/index.scss';
 
@@ -52,6 +63,17 @@ library.add(faEye);
 library.add(faEyeSlash);
 library.add(faSave);
 library.add(faChevronLeft);
+library.add(faUndo);
+library.add(faRedo);
+library.add(faPlay);
+library.add(faFileAlt);
+library.add(faTrash);
+library.add(faPencilAlt);
+library.add(faInfo);
+library.add(faFileCode);
+library.add(faEraser);
+library.add(faExpand);
+library.add(faClock);
 
 Vue.component('font-awesome-icon', FontAwesomeIcon);
 
