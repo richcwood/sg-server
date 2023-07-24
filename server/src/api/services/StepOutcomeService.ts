@@ -1,10 +1,10 @@
 import { convertData } from '../utils/ResponseConverters';
 import { StepOutcomeSchema, StepOutcomeModel } from '../domain/StepOutcome';
-import { TeamModel } from '../domain/Team';
+import { TeamSchema, TeamModel } from '../domain/Team';
 import { rabbitMQPublisher, PayloadOperation } from '../utils/RabbitMQPublisher';
 import { BaseLogger } from '../../shared/SGLogger';
 import { MissingObjectError } from '../utils/Errors';
-import { TaskStatus } from '../../shared/Enums';
+import { TaskStatus, TeamPricingTier } from '../../shared/Enums';
 import { SGUtils } from '../../shared/SGUtils';
 import * as mongodb from 'mongodb';
 import * as _ from 'lodash';
@@ -89,9 +89,21 @@ export class StepOutcomeService {
         const stepOutcomeModel = new StepOutcomeModel(data);
         const newStepOutcome = await stepOutcomeModel.save();
 
-        const filterTeam = { _teamId };
-        const team = await TeamModel.findOneAndUpdate(filterTeam, { $inc: { cntFreeScriptsRun: 1 } });
-        if (!team) throw new MissingObjectError(`Team '${_teamId}" not found`);
+        const filterTeam = { _id: _teamId, pricingTier: TeamPricingTier.FREE };
+        const team = await TeamModel.findOneAndUpdate(
+            filterTeam,
+            { $inc: { cntFreeScriptsRun: 1 } },
+            { new: true }
+        ).select('_id cntFreeScriptsRun');
+        if (team) {
+            await rabbitMQPublisher.publish(
+                _teamId,
+                'Team',
+                correlationId,
+                PayloadOperation.UPDATE,
+                convertData(TeamSchema, team)
+            );
+        }
 
         await rabbitMQPublisher.publish(
             _teamId,
