@@ -381,6 +381,9 @@ export default class App extends Vue {
 
 .main-content {
   overflow: auto;
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-rows: 1fr;
 }
 
 [name=alertMessage] .Error {
