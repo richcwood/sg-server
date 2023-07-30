@@ -4,41 +4,49 @@
       <h3 class="is-size-5">Scripts</h3>
       <div class="header-controls"></div>
     </header>
-    <div class="field scripts-list p-3 pl-5">
-      <div class="control has-icons-left has-icons-right mb-3">
-        <input @input="onSearchKeyDown" @blur="onSearchInputBlur" :value="searchTerm" placeholder="Script name"
-          class="input" type="text" />
-        <span class="icon is-small is-left">
-          <font-awesome-icon icon="search" />
-        </span>
+
+    <div class="p-3 pb-0">
+      <div class="field">
+        <div class="control has-icons-left has-icons-right">
+          <input @input="onSearchKeyDown" @blur="onSearchInputBlur" :value="searchTerm" placeholder="Script name"
+            class="input" type="text" />
+          <span class="icon is-small is-left">
+            <font-awesome-icon icon="search" />
+          </span>
+        </div>
       </div>
-      <div>
-        <template v-if="selectedScript">
+
+      <template v-if="selectedScript">
+        <div>
           <sup class="is-block has-text-weight-bold">Selected</sup>
-          <p class="mb-1 script-item selected">
+          <p class="mb-1 pl-2 script-item selected">
             <span :title="selectedScript.name" class="has-text-dark script-name">
-                {{ selectedScript.name}}
+              {{ selectedScript.name }}
             </span>
           </p>
-        </template>
+        </div>
+      </template>
 
-        <template v-if="Object.keys(unsavedScripts).length > 0">
+      <template v-if="Object.keys(unsavedScripts).length > 0">
+        <div>
           <sup class="is-block has-text-weight-bold">Unsaved Changes</sup>
-          <p v-for="script in unsavedScripts" class="mb-1 script-item has-unsaved-changes">
-            <span :title="script.name" class="has-text-dark script-name">{{ script.name}}</span>
+          <p v-for="script in unsavedScripts" class="mb-1 pl-2 script-item has-unsaved-changes">
+            <span :title="script.name" class="has-text-dark script-name">{{ script.name }}</span>
           </p>
-        </template>
+        </div>
+      </template>
 
-        <hr v-if="Object.keys(unsavedScripts).length > 0 || selectedScript" class="my-2" />
+      <hr v-if="Object.keys(unsavedScripts).length > 0 || selectedScript" class="my-2" />
+    </div>
 
-        <ul>
-          <li v-for="script in filteredScripts" :class="{ 'has-unsaved-changes': unsavedScripts[script.id] }" class="mb-1 script-item"
-            :key="script.id">
-            <a @mousedown="onScriptSelect(script)" @keypress.enter="onScriptSelect(script)" @click.prevent
-              :title="script.name" class="has-text-dark" href="#"><span class="script-name">{{ script.name }}</span></a>
-          </li>
-        </ul>
-      </div>
+    <div class="px-3 pt-0 pb-3 list-wrapper">
+      <ul>
+        <li v-for="script in filteredScripts"
+          class="mb-1 pl-2 script-item" :key="script.id">
+          <a @mousedown="onScriptSelect(script)" @keypress.enter="onScriptSelect(script)" @click.prevent
+            :title="script.name" class="has-text-dark" href="#"><span class="script-name">{{ script.name }}</span></a>
+        </li>
+      </ul>
     </div>
   </aside>
 </template>
@@ -110,6 +118,15 @@ export default class ScriptsFilter extends Vue {
 <style lang="scss" scoped>
 .scripts-panel {
   border-right: var(--primary-border);
+
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-rows: 41px min-content 1fr;
+  overflow: hidden;
+}
+
+.list-wrapper {
+  overflow: auto;
 }
 
 header {
@@ -121,7 +138,6 @@ header {
 .script-item {
   text-overflow: ellipsis;
   overflow: hidden;
-  padding-left: 0.75rem;
 }
 
 .script-item a {

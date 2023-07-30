@@ -1,5 +1,5 @@
 <template>
-  <div class="scripts-page mt-1">
+  <div class="scripts-page">
     <ScriptsFilter />
     <BaseEditor />
   </div>
@@ -25,11 +25,10 @@ export default class NewScripts extends Vue {
   --primary-border: 1px #dadce0 solid;
   --header-controls-height: 41px;
 
-  width: 100%;
-  height: 100%;
   display: grid;
   grid-template-columns: 300px 1fr;
-  grid-template-rows: 100%;
+  grid-template-rows: 1fr;
   border-top: var(--primary-border);
+  overflow: hidden;
 }
 </style>

@@ -13,10 +13,8 @@
   --code-background-color: var(--wetasphalt-color);
 }
 
-html,
 body {
-  height: 100%;
-  width: 100%;
+  overflow: hidden;
 }
 
 // v-tooltip styles

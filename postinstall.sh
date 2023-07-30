@@ -1,7 +1,7 @@
 cd server
-npm i
+npm ci
 
 cd ../clientv3
-npm i
+npm ci
 
 npm run build
