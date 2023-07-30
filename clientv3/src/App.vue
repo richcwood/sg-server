@@ -88,7 +88,9 @@
       </div>
     </nav>
 
-    <router-view />
+    <section class="main-content">
+      <router-view />
+    </section>
 
     <main-footer v-if="!isOnLandingPage()" />
   </div>
@@ -311,7 +313,6 @@ export default class App extends Vue {
   display: grid;
   grid-template-columns: 1fr;
   grid-template-rows: 3.25rem 1fr 30px;
-  overflow: auto;
 
   &.has-light-background {
     background-color: var(--main-background-color);
@@ -376,6 +377,10 @@ export default class App extends Vue {
   .navbar-dropdown.is-active .navbar-link {
     color: var(--font-color-active);
   }
+}
+
+.main-content {
+  overflow: auto;
 }
 
 [name=alertMessage] .Error {
