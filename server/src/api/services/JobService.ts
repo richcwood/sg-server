@@ -1,28 +1,34 @@
-import { convertData } from '../utils/ResponseConverters';
 import { JobSchema, JobModel } from '../domain/Job';
-import { rabbitMQPublisher, PayloadOperation } from '../utils/RabbitMQPublisher';
+import { JobDefModel, JobDefSchema } from '../domain/JobDef';
+import { ScheduleSchema } from '../domain/Schedule';
+import { ScriptSchema } from '../domain/Script';
+import { StepSchema } from '../domain/Step';
 import { TaskSchema } from '../domain/Task';
 import { TaskDefSchema } from '../domain/TaskDef';
-import { JobDefModel } from '../domain/JobDef';
-import { StepSchema } from '../domain/Step';
-import { ScriptSchema } from '../domain/Script';
-import { taskDefService } from '../services/TaskDefService';
-import { stepDefService } from '../services/StepDefService';
-import { taskService } from '../services/TaskService';
-import { taskOutcomeService } from '../services/TaskOutcomeService';
-import { stepService } from '../services/StepService';
-import { scriptService } from '../services/ScriptService';
-import { BaseLogger } from '../../shared/SGLogger';
-import * as Enums from '../../shared/Enums';
-import { SGUtils } from '../../shared/SGUtils';
-import { AMQPConnector } from '../../shared/AMQPLib';
-import * as _ from 'lodash';
-import * as config from 'config';
+
 import { jobDefService } from '../services/JobDefService';
-import { JobDefSchema } from '../domain/JobDef';
-import { MissingObjectError, ValidationError } from '../utils/Errors';
-import * as mongodb from 'mongodb';
+import { scheduleService } from '../services/ScheduleService';
+import { scriptService } from '../services/ScriptService';
+import { stepService } from '../services/StepService';
+import { stepDefService } from '../services/StepDefService';
 import { stepOutcomeService } from './StepOutcomeService';
+import { taskService } from '../services/TaskService';
+import { taskDefService } from '../services/TaskDefService';
+import { taskOutcomeService } from '../services/TaskOutcomeService';
+
+import { AMQPConnector } from '../../shared/AMQPLib';
+import { BaseLogger } from '../../shared/SGLogger';
+import { SGUtils } from '../../shared/SGUtils';
+
+import { MissingObjectError, ValidationError } from '../utils/Errors';
+import { rabbitMQPublisher, PayloadOperation } from '../utils/RabbitMQPublisher';
+import { convertData } from '../utils/ResponseConverters';
+
+import * as config from 'config';
+import * as _ from 'lodash';
+import * as mongodb from 'mongodb';
+
+import * as Enums from '../../shared/Enums';
 
 export class JobService {
     // Some services might need to add additional restrictions to bulk queries
@@ -287,6 +293,17 @@ export class JobService {
             }
 
             this.LaunchReadyJobs(_teamId, job._jobDefId, logger, amqp);
+
+            // If the job was created by a schedule, check if the schedule has a repetition property - if so,
+            //  create a schedule from the repetition property.
+            if ('_scheduleId' in data) {
+                await scheduleService.createScheduleFromRepetition(
+                    _teamId,
+                    data._scheduleId,
+                    newJob.dateScheduled,
+                    correlationId
+                );
+            }
 
             if (responseFields) {
                 // It's is a bit wasteful to do another query but I can't chain a save with a select

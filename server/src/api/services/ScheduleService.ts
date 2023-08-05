@@ -1,12 +1,69 @@
-import { convertData } from '../utils/ResponseConverters';
 import { ScheduleSchema, ScheduleModel } from '../domain/Schedule';
-import { rabbitMQPublisher, PayloadOperation } from '../utils/RabbitMQPublisher';
+
 import { MissingObjectError, ValidationError } from '../utils/Errors';
+import { rabbitMQPublisher, PayloadOperation } from '../utils/RabbitMQPublisher';
+import { convertData } from '../utils/ResponseConverters';
+import { Subset } from '../utils/Types';
+
+import { SGUtils } from '../../shared/SGUtils';
 
 import * as _ from 'lodash';
 import * as mongodb from 'mongodb';
 
 export class ScheduleService {
+    public async createScheduleFromRepetition(
+        _teamId: mongodb.ObjectId,
+        _scheduleId: mongodb.ObjectId,
+        dateScheduled: Date,
+        correlationId: string
+    ): Promise<ScheduleSchema | null> {
+        const schedule: ScheduleSchema = await this.findSchedule(_teamId, _scheduleId);
+        if (schedule && 'cron' in schedule && schedule.cron.Repetition) {
+            const repetition = schedule.cron.Repetition;
+            const scheduleName = `${schedule.name} - repetition`;
+            const intervalMinutes: number = SGUtils.totalMinutes(
+                repetition.interval.Weeks,
+                repetition.interval.Days,
+                repetition.interval.Hours,
+                repetition.interval.Minutes
+            );
+            const durationMinutes: number = SGUtils.totalMinutes(
+                repetition.duration.Weeks,
+                repetition.duration.Days,
+                repetition.duration.Hours,
+                repetition.duration.Minutes
+            );
+            if (durationMinutes >= intervalMinutes) {
+                console.log('creating repetition schedule');
+                const startDate = new Date(dateScheduled.getTime() + intervalMinutes * 60000).toISOString();
+                const endDate = new Date(dateScheduled.getTime() + durationMinutes * 60000).toISOString();
+                const interval = {
+                    Weeks: repetition.interval.Weeks,
+                    Days: repetition.interval.Days,
+                    Hours: repetition.interval.Hours,
+                    Minutes: repetition.interval.Minutes,
+                    Start_Date: startDate,
+                    End_Date: endDate,
+                    Jitter: undefined,
+                };
+                const newSchedule: Partial<ScheduleSchema> = {
+                    _jobDefId: schedule._jobDefId,
+                    name: scheduleName,
+                    interval: interval,
+                    FunctionKwargs: schedule.FunctionKwargs,
+                    TriggerType: schedule.TriggerType,
+                    createdBy: schedule.createdBy,
+                    lastUpdatedBy: schedule.lastUpdatedBy,
+                    misfire_grace_time: schedule.misfire_grace_time,
+                    coalesce: schedule.coalesce,
+                    max_instances: schedule.max_instances,
+                };
+                return this.createSchedule(_teamId, newSchedule, correlationId);
+            }
+        }
+        return;
+    }
+
     // Some services might need to add additional restrictions to bulk queries
     // This is how they would add more to the base query (Example: fetch only non-deleted users for all queries)
     // public async updateBulkQuery(query): Promise<object> {
@@ -42,12 +99,10 @@ export class ScheduleService {
 
     public async createSchedule(
         _teamId: mongodb.ObjectId,
-        data: any,
+        data: Subset<ScheduleSchema>,
         correlationId: string,
         responseFields?: string
     ): Promise<ScheduleSchema> {
-        if (data.Seconds) throw new ValidationError('Seconds interval not supported');
-
         data._teamId = _teamId;
         const scheduleModel = new ScheduleModel(data);
         const newSchedule = await scheduleModel.save();
@@ -75,12 +130,10 @@ export class ScheduleService {
     public async updateSchedule(
         _teamId: mongodb.ObjectId,
         id: mongodb.ObjectId,
-        data: any,
+        data: Subset<ScheduleSchema>,
         correlationId: string,
         responseFields?: string
     ): Promise<object> {
-        if (data.Seconds) throw new ValidationError('Seconds interval not supported');
-
         const filter = { _id: id, _teamId };
         data.scheduleError = '';
 
@@ -115,7 +168,7 @@ export class ScheduleService {
     public async updateFromScheduler(
         _teamId: mongodb.ObjectId,
         id: mongodb.ObjectId,
-        data: any,
+        data: Subset<ScheduleSchema>,
         correlationId: string,
         responseFields?: string
     ): Promise<object> {

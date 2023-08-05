@@ -63,6 +63,20 @@ export class ScheduleSchema {
         End_Date: string;
         Timezone: string;
         Jitter: string;
+        Repetition: {
+            interval: {
+                Weeks: number;
+                Days: number;
+                Hours: number;
+                Minutes: number;
+            };
+            duration: {
+                Weeks: number;
+                Days: number;
+                Hours: number;
+                Minutes: number;
+            };
+        };
     };
 
     @prop({ default: {} })
