@@ -63,6 +63,7 @@ describe('Schedule service tests', () => {
             max_instances,
             cron: {
                 Repetition: {
+                    enabled: true,
                     interval: {
                         Weeks: 1,
                         Days: 2,
@@ -117,7 +118,7 @@ describe('Schedule service tests', () => {
         expect(repetitionSchedule.FunctionKwargs).toMatchObject(schedule.FunctionKwargs);
         expect(repetitionSchedule.createdBy).toStrictEqual(schedule.createdBy);
         expect(repetitionSchedule.lastUpdatedBy).toStrictEqual(schedule.lastUpdatedBy);
-        await validateEquality(repetitionSchedule.TriggerType, schedule.TriggerType);
+        await validateEquality(repetitionSchedule.TriggerType, 'interval');
         await validateEquality(repetitionSchedule.misfire_grace_time, schedule.misfire_grace_time);
         await validateEquality(repetitionSchedule.coalesce, schedule.coalesce);
         await validateEquality(repetitionSchedule.max_instances, schedule.max_instances);
@@ -143,6 +144,7 @@ describe('Schedule service tests', () => {
             max_instances,
             cron: {
                 Repetition: {
+                    enabled: true,
                     interval: {
                         Minutes: 10,
                     },
@@ -192,7 +194,7 @@ describe('Schedule service tests', () => {
         expect(repetitionSchedule.FunctionKwargs).toMatchObject(schedule.FunctionKwargs);
         expect(repetitionSchedule.createdBy).toStrictEqual(schedule.createdBy);
         expect(repetitionSchedule.lastUpdatedBy).toStrictEqual(schedule.lastUpdatedBy);
-        await validateEquality(repetitionSchedule.TriggerType, schedule.TriggerType);
+        await validateEquality(repetitionSchedule.TriggerType, 'interval');
         await validateEquality(repetitionSchedule.misfire_grace_time, schedule.misfire_grace_time);
         await validateEquality(repetitionSchedule.coalesce, schedule.coalesce);
         await validateEquality(repetitionSchedule.max_instances, schedule.max_instances);
@@ -218,6 +220,7 @@ describe('Schedule service tests', () => {
             max_instances,
             cron: {
                 Repetition: {
+                    enabled: true,
                     interval: {
                         Minutes: 11,
                     },

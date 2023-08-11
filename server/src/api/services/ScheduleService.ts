@@ -18,7 +18,12 @@ export class ScheduleService {
         correlationId: string
     ): Promise<ScheduleSchema | null> {
         const schedule: ScheduleSchema = await this.findSchedule(_teamId, _scheduleId);
-        if (schedule && 'cron' in schedule && schedule.cron.Repetition) {
+        if (
+            schedule &&
+            schedule.TriggerType == 'cron' &&
+            schedule.cron.Repetition &&
+            schedule.cron.Repetition.enabled
+        ) {
             const repetition = schedule.cron.Repetition;
             const scheduleName = `${schedule.name} - repetition`;
             const intervalMinutes: number = SGUtils.totalMinutes(
@@ -34,9 +39,8 @@ export class ScheduleService {
                 repetition.duration.Minutes
             );
             if (durationMinutes >= intervalMinutes) {
-                console.log('creating repetition schedule');
-                const startDate = new Date(dateScheduled.getTime() + intervalMinutes * 60000).toISOString();
-                const endDate = new Date(dateScheduled.getTime() + durationMinutes * 60000).toISOString();
+                const startDate = new Date(dateScheduled.getTime() + intervalMinutes * 60000).toJSON();
+                const endDate = new Date(dateScheduled.getTime() + durationMinutes * 60000).toJSON();
                 const interval = {
                     Weeks: repetition.interval.Weeks,
                     Days: repetition.interval.Days,
@@ -46,12 +50,21 @@ export class ScheduleService {
                     End_Date: endDate,
                     Jitter: undefined,
                 };
-                const newSchedule: Partial<ScheduleSchema> = {
+                const cron = {
+                    Repetition: {
+                        enabled: false,
+                        interval: {},
+                        duration: {},
+                    },
+                };
+                const newSchedule: Subset<ScheduleSchema> = {
                     _jobDefId: schedule._jobDefId,
                     name: scheduleName,
+                    isActive: true,
                     interval: interval,
+                    cron: cron,
                     FunctionKwargs: schedule.FunctionKwargs,
-                    TriggerType: schedule.TriggerType,
+                    TriggerType: 'interval',
                     createdBy: schedule.createdBy,
                     lastUpdatedBy: schedule.lastUpdatedBy,
                     misfire_grace_time: schedule.misfire_grace_time,

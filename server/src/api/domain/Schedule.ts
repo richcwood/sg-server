@@ -64,6 +64,7 @@ export class ScheduleSchema {
         Timezone: string;
         Jitter: string;
         Repetition: {
+            enabled: boolean;
             interval: {
                 Weeks: number;
                 Days: number;

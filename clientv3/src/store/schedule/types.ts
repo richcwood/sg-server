@@ -33,7 +33,22 @@ export interface Schedule extends Model {
       Start_Date: string,
       End_Date: string,
       Timezone: string,
-      Jitter: number
+      Jitter: number,
+      Repetition: {
+        enabled: boolean,
+        interval: {
+            Weeks: number,
+            Days: number,
+            Hours: number,
+            Minutes: number,
+        },
+        duration: {
+            Weeks: number,
+            Days: number,
+            Hours: number,
+            Minutes: number,
+        }
+    }
   };
 
   interval?: {
