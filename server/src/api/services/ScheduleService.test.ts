@@ -1,27 +1,18 @@
 import * as _ from 'lodash';
 import * as mongodb from 'mongodb';
-import * as util from 'util';
 
 import { ScheduleSchema } from '../domain/Schedule';
-import { TeamSchema } from '../domain/Team';
 
 import { scheduleService } from './ScheduleService';
-import { teamService } from './TeamService';
 
 import { RuntimeVariableFormat } from '../../shared/Enums';
 import { BaseLogger } from '../../shared/SGLogger';
 
-import { MissingObjectError } from '../utils/Errors';
 import { Subset } from '../utils/Types';
 
 import db from '../../test_helpers/DB';
 
-import {
-    CreateScheduleFromTemplate,
-    CreateSettingsFromTemplate,
-    CreateTeamFromTemplate,
-} from '../../test_helpers/TestArtifacts';
-import { validateEquality, validateDeepEquality } from '../../test_helpers/Validators';
+import { validateEquality } from '../../test_helpers/Validators';
 import { SGUtils } from '../../shared/SGUtils';
 
 const testName = 'ScheduleServiceTest';
