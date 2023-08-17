@@ -42,6 +42,12 @@
 
 3. Browse to http://localhost:8080
 
+## To run unit tests
+
+```
+    $ npm run test
+```
+
 ## To run integration tests
 
 1. Create test-runner pod
@@ -78,6 +84,23 @@
 
 ```
     $ kubectl delete -f adhoc/test-runner.yaml
+```
+
+## To deploy Job Scheduler
+
+1. Deploy the current version to s3
+
+```
+    $ ./bin/deploy-job-scheduler.sh
+```
+
+2. SSH to the admin EC2 instance (ip-172-31-30-247)
+
+3. Run the update script
+
+```
+    $ cd JobScheduler
+    $ ./update.sh
 ```
 
 ## Useful bash/zshrc aliases:

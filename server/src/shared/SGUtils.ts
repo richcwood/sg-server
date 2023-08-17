@@ -75,6 +75,9 @@ Content-Disposition: inline
 `;
 
 export class SGUtils {
+    static totalMinutes = (weeks = 0, days = 0, hours = 0, minutes = 0) =>
+        weeks * 7 * 24 * 60 + days * 24 * 60 + hours * 60 + minutes;
+
     static concat = (x, y) => x.concat(y);
 
     static flatMap = (f, xs) => xs.map(f).reduce(SGUtils.concat, []);

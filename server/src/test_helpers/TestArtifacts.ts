@@ -352,6 +352,7 @@ let CreateScheduleFromTemplate = async (_teamId: mongodb.ObjectId, properties: a
     Object.assign(scheduleTemplate, properties);
     return await scheduleService.createSchedule(_teamId, scheduleTemplate, '');
 };
+export { CreateScheduleFromTemplate };
 
 /**
  * Creates a taskdef schema with the given json formatted properties

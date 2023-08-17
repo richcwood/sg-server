@@ -10,8 +10,7 @@ from dotenv import load_dotenv
 from os import environ, path
 from pytz import utc
 from sendgrid.helpers.mail import *
-from threading import Event
-from threading import Thread
+from threading import Event, Thread
 
 from apscheduler.executors.pool import ProcessPoolExecutor, ThreadPoolExecutor
 from apscheduler.jobstores.mongodb import MongoDBJobStore
@@ -33,17 +32,22 @@ if "NODE_ENV" in environ:
 
 sendGrid = sendgrid.SendGridAPIClient(api_key=environ.get("SENDGRID_API_KEY"))
 
+
 def logDebug(msgData):
     logger.debug("%s", msgData)
+
 
 def logInfo(msgData):
     logger.debug("%s", msgData)
 
+
 def logWarning(msgData):
     logger.debug("%s", msgData)
 
+
 def logError(msgData):
     logger.debug("%s", msgData)
+
 
 def getConfigValues(configFile, currentConfig={}) -> dict:
     config = {}
@@ -52,12 +56,14 @@ def getConfigValues(configFile, currentConfig={}) -> dict:
         config = json.loads(s)
     return currentConfig | config
 
+
 def load_rabbitmq_secrets(params):
     credentials = Credentials(logInfo, logWarning, logError, **params)
     credentials.reset_cache()
     secrets = credentials.get_secret()
     for key in secrets:
         environ[key] = secrets[key]
+
 
 config = getConfigValues("config/default.json")
 if env != "default":
@@ -195,7 +201,11 @@ def rest_api_call(url, method, _teamId, headers, data={}):
 
 def on_launch_job(scheduled_time, job_id, _teamId, targetId, runtimeVars):
     runtimeVars["scheduled_time"] = {"value": scheduled_time, "sensitive": False}
-    data = {"dateScheduled": scheduled_time, "runtimeVars": runtimeVars}
+    data = {
+        "dateScheduled": scheduled_time,
+        "runtimeVars": runtimeVars,
+        "_scheduleId": job_id,
+    }
     logInfo(
         {
             "msg": "Launching job",
@@ -203,6 +213,7 @@ def on_launch_job(scheduled_time, job_id, _teamId, targetId, runtimeVars):
             "_jobDefId": targetId,
             "date": datetime.now(),
             "scheduled_time": scheduled_time,
+            "_scheduleId": job_id,
             "data": data,
         }
     )
@@ -316,7 +327,10 @@ def date_schedule_changed(existing_job, job):
 
 
 def schedule_changed(existing_job, job):
-    if schedule_trigger_type_to_string[type(existing_job.trigger)] != job["TriggerType"]:
+    if (
+        schedule_trigger_type_to_string[type(existing_job.trigger)]
+        != job["TriggerType"]
+    ):
         return True
 
     if not existing_job.next_run_time and job["isActive"]:
