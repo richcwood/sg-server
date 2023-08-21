@@ -43,6 +43,9 @@ export class AgentSchema {
     @prop({ default: '' })
     cron?: string;
 
+    @prop({ default: [] })
+    winTasks?: string[];
+
     @prop()
     rmqPassword?: string;
 

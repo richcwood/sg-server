@@ -22,14 +22,14 @@ export interface Schedule extends Model {
   max_instances?: number;
   RunDate?: string;
   cron?: {
-      Year: number,
-      Month: number,
-      Day: number,
-      Week: number,
-      Day_Of_Week: number,
-      Hour: number,
-      Minute: number,
-      Second: number,
+      Year: number | string,
+      Month: number | string,
+      Day: number | string,
+      Week: number | string,
+      Day_Of_Week: number | string,
+      Hour: number | string,
+      Minute: number | string,
+      Second: number | string,
       Start_Date: string,
       End_Date: string,
       Timezone: string,

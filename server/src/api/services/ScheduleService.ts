@@ -77,6 +77,74 @@ export class ScheduleService {
         return;
     }
 
+    public async createScheduleFromWindowsTask(
+        _teamId: mongodb.ObjectId,
+        _jobDefId: mongodb.ObjectId,
+        data: any,
+        index: number,
+        correlationId: string
+    ): Promise<ScheduleSchema | null> {
+        const task = data['Task'];
+        if (task) {
+            let taskEnabled = false;
+            if ('Enabled' in task['Settings']) taskEnabled = task['Settings']['Enabled'];
+            if ('Triggers' in task) {
+                for (let triggerType of Object.keys(task['Triggers'])) {
+                    let triggers;
+                    if (_.isArray(task['Triggers'][triggerType])) triggers = [task['Triggers'][triggerType]];
+                    else triggers = task['Triggers'][triggerType];
+                    for (let trigger of triggers) {
+                        let schedule: ScheduleSchema;
+                        if (triggerType == 'CalendarTrigger') {
+                            schedule.TriggerType = 'cron';
+                            schedule.isActive = taskEnabled;
+                            if ('Enabled' in trigger) schedule.isActive = taskEnabled && trigger['Enabled'];
+                        }
+                    }
+                }
+            }
+        }
+        const startDate = data['StartBoundary'] || '';
+        const endDate = data['EndBoundary'] || '';
+        const isActive = data['Enabled'];
+
+        let day_of_week: string = '';
+        if (tokens[4] != '*') day_of_week = tokens[4];
+        let month: string = '';
+        if (tokens[3] != '*') month = tokens[3];
+        let day: string = '';
+        if (tokens[2] != '*') day = tokens[2];
+        let hour: string = '';
+        if (tokens[1] != '*') hour = tokens[1];
+        let minute: string = '';
+        if (tokens[0] != '*') minute = tokens[0];
+
+        const schedule_data: any = {
+            _teamId,
+            _jobDefId: _jobDefId,
+            name: `Schedule from Windows Task - ${index.toString()}`,
+            createdBy: data.createdBy,
+            lastUpdatedBy: data.createdBy,
+            isActive: true,
+            TriggerType: 'cron',
+            cron: {
+                Day_Of_Week: day_of_week,
+                Month: month,
+                Day: day,
+                Hour: hour,
+                Minute: minute,
+            },
+            FunctionKwargs: {
+                _teamId,
+                targetId: newJobDef._id,
+            },
+        };
+        if (agent.timezone) schedule_data.cron.Timezone = agent.timezone;
+        await scheduleService.createSchedule(_teamId, schedule_data, correlationId, '_id');
+
+        return this.findJobDef(_teamId, newJobDef._id, responseFields);
+    }
+
     // Some services might need to add additional restrictions to bulk queries
     // This is how they would add more to the base query (Example: fetch only non-deleted users for all queries)
     // public async updateBulkQuery(query): Promise<object> {
