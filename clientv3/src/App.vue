@@ -173,7 +173,8 @@ export default class App extends Vue {
 
   private get appClasses () {
     return {
-      'has-light-background': this.$route.path === '/' || this.$route.path.startsWith('/jobDesigner')
+      'has-light-background': this.$route.path === '/' || this.$route.path.startsWith('/jobDesigner'),
+      'has-landing-page': this.isOnLandingPage(),
     };
   }
 
@@ -313,6 +314,10 @@ export default class App extends Vue {
   display: grid;
   grid-template-columns: 1fr;
   grid-template-rows: 3.25rem 1fr 30px;
+
+  &.has-landing-page {
+    display: block;
+  }
 
   &.has-light-background {
     background-color: var(--main-background-color);
