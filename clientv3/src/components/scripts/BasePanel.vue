@@ -1,5 +1,5 @@
 <template>
-  <EditorPanel v-slot="{ onSave, onRun, onRunLambda, onShowLogs }">
+  <EditorPanel :scriptId="scriptId" v-slot="{ onSave, onRun, onRunLambda, onShowLogs }">
     <div class="panel-controls pr-5">
       <div class="buttons m-0 separator">
         <button class="button is-small mb-0" title="Undo Changes">
@@ -95,7 +95,7 @@
 </template>
 
 <script lang="ts">
-import { Component, Vue } from 'vue-property-decorator';
+import { Component, Vue, Prop } from 'vue-property-decorator';
 
 import EditorPanel from './EditorPanel.vue';
 
@@ -104,6 +104,7 @@ import EditorPanel from './EditorPanel.vue';
   components: { EditorPanel }
 })
 export default class BasePanel extends Vue {
+  @Prop({ required: true }) public readonly scriptId: string;
 
 }
 </script>

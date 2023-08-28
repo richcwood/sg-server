@@ -1,7 +1,7 @@
 <template>
   <div class="scripts-page">
-    <ScriptsFilter />
-    <BaseEditor />
+    <ScriptsFilter @script-select="onScriptSelect" />
+    <BaseEditor :scriptId="selectedScriptId" />
   </div>
 </template>
 
@@ -16,7 +16,11 @@ import BaseEditor from '@/components/scripts/BaseEditor.vue';
   components: { ScriptsFilter, BaseEditor },
 })
 export default class NewScripts extends Vue {
+  public selectedScriptId: string = null;
 
+  public onScriptSelect (id: string) {
+    this.selectedScriptId = id;
+  }
 }
 </script>
 

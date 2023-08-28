@@ -104,7 +104,7 @@ export default class ScriptsFilter extends Vue {
       this.searchTerm = '';
     }
 
-    this.$emit('script-select', script);
+    this.$emit('script-select', script.id);
   }
 
   public onSearchInputBlur() {

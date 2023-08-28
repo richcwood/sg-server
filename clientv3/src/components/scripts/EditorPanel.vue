@@ -1,10 +1,12 @@
 <script lang="ts">
-import { Component, Vue } from 'vue-property-decorator';
+import { Component, Vue, Prop } from 'vue-property-decorator';
 
 @Component({
   name: 'EditorPanel',
 })
 export default class EditorPanel extends Vue {
+  @Prop({ required: true }) public readonly scriptId: string;
+
   public render () {
     return this.$scopedSlots.default({
       onRunLambda: this.onRunLambda,
@@ -15,7 +17,7 @@ export default class EditorPanel extends Vue {
   }
 
   public onSave () {
-    console.log('On save');
+    console.log('On save', this.scriptId);
   }
 
   public onRun () {
