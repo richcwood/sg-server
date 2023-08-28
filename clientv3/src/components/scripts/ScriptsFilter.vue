@@ -79,10 +79,6 @@ export default class ScriptsFilter extends Vue {
       scripts = scripts.concat(this.$store.state[StoreType.ScriptNameStore].models);
     }
 
-    if (this.selectedScript) {
-      scripts = scripts.filter(script => script.id !== this.selectedScript.id);
-    }
-
     return scripts.sort((a, b) => a.name.localeCompare(b.name));
   }
 
@@ -91,7 +87,6 @@ export default class ScriptsFilter extends Vue {
   }
 
   public async onScriptSelect(script: Script) {
-    this.searchTerm = script.name;
     // The scripts in this component are dynamic and might not be in the store yet
     await this.$store.dispatch(`${StoreType.ScriptStore}/fetchModel`, script.id);
 
@@ -101,7 +96,6 @@ export default class ScriptsFilter extends Vue {
   private selectScript(script: Script) {
     if (script !== null) {
       this.selectedScript = script;
-      this.searchTerm = '';
     }
 
     this.$emit('script-select', script.id);
