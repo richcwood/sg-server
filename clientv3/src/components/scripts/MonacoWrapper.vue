@@ -1,8 +1,11 @@
 <template>
-  <div v-if="!isLoading" ref="scriptEditor" class="monaco-editor"></div>
-  <div v-else class="is-flex is-align-items-center is-justify-content-center">
+  <div v-if="!scriptId" class="is-flex is-align-items-center is-justify-content-center">
+    <h2 class="is-size-4">Select a script to edit.</h2>
+  </div>
+  <div v-else-if="!scriptId" class="is-flex is-align-items-center is-justify-content-center">
     <p class="is-size-4"><span class="spinner"></span> Script is loading</p>
   </div>
+  <div v-else ref="scriptEditor" class="monaco-editor"></div>
 </template>
 
 <script lang="ts">
@@ -29,7 +32,7 @@ export default class MonacoWrapper extends Vue {
     scriptEditor: HTMLDivElement;
   };
 
-  @Prop({ required: true }) public readonly scriptId: string;
+  @Prop({ default: null }) public readonly scriptId: string;
 
   @BindSelectedCopy({ storeType: StoreType.ScriptShadowStore })
   private scriptShadow: ScriptShadow;

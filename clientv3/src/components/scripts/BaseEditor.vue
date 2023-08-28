@@ -1,11 +1,7 @@
 <template>
   <div class="is-flex is-flex-direction-column">
     <BasePanel :scriptId="scriptId" />
-    <MonacoWrapper v-if="scriptId" :scriptId="scriptId" class="is-flex-grow-1" />
-
-    <div v-else class="is-flex-grow-1 is-flex is-align-items-center is-justify-content-center">
-      <h2 class="is-size-4">Select a script to edit.</h2>
-    </div>
+    <MonacoWrapper :scriptId="scriptId" class="is-flex-grow-1" />
   </div>
 </template>
 

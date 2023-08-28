@@ -22,7 +22,7 @@
 
         <button class="button is-small mb-0" title="Revert Changes">
           <span class="icon">
-            <font-awesome-icon icon="eraser" />
+            <font-awesome-icon icon="history" />
           </span>
         </button>
       </div>
@@ -62,7 +62,7 @@
           <span>Run in AWS Lambda</span>
         </button>
 
-        <button class="button is-small mb-0" title="Schedule Script">
+        <button class="button is-small mb-0" title="Schedule Run">
           <span class="icon">
             <font-awesome-icon icon="clock" />
           </span>

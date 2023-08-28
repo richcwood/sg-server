@@ -40,9 +40,9 @@ import {
   faInfo,
   faPencilAlt,
   faFileCode,
-  faEraser,
   faExpand,
   faClock,
+  faHistory
 } from '@fortawesome/free-solid-svg-icons';
 import '@/sass/index.scss';
 
@@ -71,9 +71,9 @@ library.add(faTrash);
 library.add(faPencilAlt);
 library.add(faInfo);
 library.add(faFileCode);
-library.add(faEraser);
 library.add(faExpand);
 library.add(faClock);
+library.add(faHistory);
 
 Vue.component('font-awesome-icon', FontAwesomeIcon);
 
