@@ -1,5 +1,8 @@
 <template>
-  <div ref="scriptEditor" class="monaco-editor"></div>
+  <div v-if="!isLoading" ref="scriptEditor" class="monaco-editor"></div>
+  <div v-else class="is-flex is-align-items-center is-justify-content-center">
+    <p class="is-size-4"><span class="spinner"></span> Script is loading</p>
+  </div>
 </template>
 
 <script lang="ts">
@@ -18,6 +21,7 @@ import { StoreType } from '@/store/types';
 export default class MonacoWrapper extends Vue {
   private scriptEditor: monaco.editor.IStandaloneCodeEditor;
   private scriptShadowCopySaveInterval: any;
+  public isLoading = true;
   private theme = 'vs';
 
   public $refs: {
@@ -60,10 +64,14 @@ export default class MonacoWrapper extends Vue {
     }
 
     try {
+      this.isLoading = true;
+
       const script = await this.$store.dispatch(`${StoreType.ScriptStore}/fetchModel`, this.scriptId);
       this.$store.dispatch(`${StoreType.ScriptStore}/select`, script);
     } catch (err) {
       this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Unable to load the script ${this.scriptId}`, AlertPlacement.FOOTER));
+    } finally {
+      this.isLoading = false;
     }
   }
 
@@ -152,4 +160,9 @@ export default class MonacoWrapper extends Vue {
 </script>
 
 <style lang="scss" scoped>
+.spinner {
+  @include loader;
+
+  display: inline-block;
+}
 </style>
