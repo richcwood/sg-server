@@ -1,6 +1,6 @@
 <template>
-  <EditorPanel :scriptId="scriptId" v-slot="{ onSave, onRun, onRunLambda, onShowLogs }">
-    <div class="panel-controls pr-5">
+  <EditorPanel :scriptId="scriptId" v-slot="{ onSave, onRun, onRunLambda, onShowLogs, onShowSettings }">
+    <div class="panel-controls">
       <div class="buttons m-0 separator">
         <button class="button is-small mb-0" title="Undo Changes">
           <span class="icon">
@@ -84,9 +84,14 @@
           </span>
         </button>
 
-        <button class="button is-small mb-0" title="Script Information">
+        <button :disabled="!scriptId" class="button is-small mb-0" title="Script Information">
           <span class="icon">
             <font-awesome-icon icon="info" />
+          </span>
+        </button>
+        <button @click="onShowSettings" :disabled="!scriptId" class="button is-small mb-0" title="Editor Settings">
+          <span class="icon">
+            <font-awesome-icon icon="cog" />
           </span>
         </button>
       </div>
@@ -116,7 +121,7 @@ export default class BasePanel extends Vue {
   justify-content: flex-start;
   height: var(--header-controls-height);
   border-bottom: var(--primary-border);
-  padding-left: 10px;
+  padding: 0 10px;
 }
 
 .separator::after {

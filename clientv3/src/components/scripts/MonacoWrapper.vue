@@ -2,7 +2,7 @@
   <div v-if="!scriptId" class="is-flex is-align-items-center is-justify-content-center">
     <h2 class="is-size-4">Select a script to edit.</h2>
   </div>
-  <div v-else-if="!scriptId" class="is-flex is-align-items-center is-justify-content-center">
+  <div v-else-if="isLoading" class="is-flex is-align-items-center is-justify-content-center">
     <p class="is-size-4"><span class="spinner"></span> Script is loading</p>
   </div>
   <div v-else ref="scriptEditor" class="monaco-editor"></div>
@@ -12,7 +12,7 @@
 import { Component, Prop, Vue, Watch } from 'vue-property-decorator';
 import * as monaco from 'monaco-editor';
 
-import { Script, ScriptType, scriptTypesForMonaco } from '@/store/script/types';
+import { EditorTheme, Script, ScriptType, scriptTypesForMonaco } from '@/store/script/types';
 import { AlertCategory, AlertPlacement, SgAlert } from '@/store/alert/types';
 import { ScriptShadow } from '@/store/scriptShadow/types';
 import { BindProp, BindSelectedCopy } from '@/decorator';
@@ -25,13 +25,13 @@ export default class MonacoWrapper extends Vue {
   private scriptEditor: monaco.editor.IStandaloneCodeEditor;
   private scriptShadowCopySaveInterval: any;
   public isLoading = true;
-  private theme = 'vs';
 
   public $refs: {
     scriptEditorFullScreen: HTMLDivElement;
     scriptEditor: HTMLDivElement;
   };
 
+  @Prop({ default: 'vs' }) public readonly theme: EditorTheme;
   @Prop({ default: null }) public readonly scriptId: string;
 
   @BindSelectedCopy({ storeType: StoreType.ScriptShadowStore })
@@ -46,16 +46,11 @@ export default class MonacoWrapper extends Vue {
   public created() {
     this.$store.dispatch(`${StoreType.TeamVariableStore}/fetchModelsByFilter`);
     this.fetchScript(this.scriptId);
-
-    if (localStorage.getItem('scriptEditor_theme')) {
-      this.theme = localStorage.getItem('scriptEditor_theme');
-    }
   }
 
   @Watch('theme')
   private onThemeChanged() {
     if (this.scriptEditor) {
-      localStorage.setItem('scriptEditor_theme', this.theme);
       this.onScriptShadowChanged();
     }
   }

@@ -42,7 +42,7 @@ import {
   faFileCode,
   faExpand,
   faClock,
-  faHistory
+  faHistory,
 } from '@fortawesome/free-solid-svg-icons';
 import '@/sass/index.scss';
 
