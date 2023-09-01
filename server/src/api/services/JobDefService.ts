@@ -251,13 +251,15 @@ export class JobDefService {
         const jobDefModel = new JobDefModel(jobDef_data);
         const newJobDef = await jobDefModel.save();
 
-        const actions = data.winTask.Task.Actions;
+        const actions = data.winTask.Task.Actions.Exec;
+        console.log('winTask.Task ----------> ', data.winTask.Task);
+        console.log('actions ----------> ', actions);
         for (let indexAction = 0; indexAction < actions.length; ++indexAction) {
             const action = actions[indexAction];
-            const code = SGUtils.btoa(action['Exec']['Command']);
+            const code = SGUtils.btoa(action['Command']);
             const script_data = {
                 _teamId,
-                name: `win-task-${agent.machineId}-${windowsTaskJobUniqueId}-${indexAction}`,
+                name: `win-task-${agent.machineId}-${windowsTaskJobUniqueId}-${indexAction + 1}`,
                 scriptType: ScriptType.SH,
                 code: code,
                 shadowCopyCode: code,
@@ -271,12 +273,12 @@ export class JobDefService {
                 '_id'
             );
 
-            const workingDirectory = action['Exec']['WorkingDirectory'] || '';
+            const workingDirectory = action['WorkingDirectory'] || '';
             const taskDef_data = {
                 _teamId,
                 _jobDefId: newJobDef._id,
                 target: TaskDefTarget.SINGLE_SPECIFIC_AGENT,
-                name: 'task',
+                name: `task ${indexAction + 1}`,
                 targetAgentId: agent._id.toHexString(),
                 workingDirectory,
             };
@@ -287,17 +289,25 @@ export class JobDefService {
                 '_id'
             );
 
-            const scriptArgs = '' || action['Exec']['Arguments'];
+            const scriptArgs = '' || action['Arguments'];
             const stepDef_data = {
                 _teamId,
                 _taskDefId: taskDef._id,
                 name: 'step',
                 _scriptId: script._id,
-                variables: data.envVars,
                 order: 1,
                 arguments: scriptArgs,
             };
             await stepDefService.createStepDef(_teamId, stepDef_data, correlationId, '_id');
+
+            await scheduleService.createSchedulesFromWindowsTask(
+                _teamId,
+                newJobDef._id,
+                action,
+                indexAction,
+                agent.timezone,
+                correlationId
+            );
         }
 
         await rabbitMQPublisher.publish(
@@ -308,7 +318,7 @@ export class JobDefService {
             convertData(JobDefSchema, newJobDef)
         );
 
-        return null;
+        return this.findJobDef(_teamId, newJobDef._id, responseFields);
     }
 
     public async createJobDefFromCron(

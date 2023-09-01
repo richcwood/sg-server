@@ -1,41 +1,177 @@
 import * as _ from 'lodash';
 import * as moment from 'moment';
-import * as mongodb from 'mongodb';
 
 import { ScheduleSchema } from '../api/domain/Schedule';
+import { Subset } from '../api/utils/Types';
+
+const mapWeekToOrdinal = {
+    '1': '1st',
+    '2': '2nd',
+    '3': '3rd',
+    '4': '4th',
+    '5': '5th',
+    LAST: 'last',
+};
+
+const mapLongToShortMonth = {
+    JANUARY: 'jan',
+    FEBRUARY: 'feb',
+    MARCH: 'mar',
+    APRIL: 'apr',
+    MAY: 'may',
+    JUNE: 'jun',
+    JULY: 'jul',
+    AUGUST: 'aug',
+    SEPTEMBER: 'sep',
+    OCTOBER: 'oct',
+    NOVEMBER: 'nov',
+    DECEMBER: 'dec',
+};
+
+const mapLongToShortWeekdays = {
+    SUNDAY: 'sun',
+    MONDAY: 'mon',
+    TUESDAY: 'tue',
+    WEDNESDAY: 'wed',
+    THURSDAY: 'thu',
+    FRIDAY: 'fri',
+    SATURDAY: 'sat',
+};
 
 export class WindowsTaskParser {
-    private getFirstWeekdayOfMonth(year, month, dayOfWeek): Date {
-        let m = moment().set('year', 2023).set('month', 8).set('date', 1).isoWeekday('Tuesday').add(1, 'w');
-        if (m.date() > 7) m = m.add(-1, 'w');
-        return m.toDate();
-    }
-
-    private parseScheduleByMonthDayOfWeek(schedule, startDate): any[] {
+    public parseTriggerByMonthDayOfWeek(trigger): Subset<ScheduleSchema>[] {
+        const startDate = trigger['StartBoundary'] || '';
+        const endDate = trigger['EndBoundary'] || '';
         const startDateMoment = moment(startDate);
-        let parsedSchedules = [];
-        for (let month of schedule['Months']) {
-            for (let dayOfWeek of Object.keys(schedule['DaysOfWeek'])) {
-                let weeks = [];
-                for (let week of Object.keys(schedule['Weeks'])) {
-                }
+
+        const hour = startDateMoment.hour().toString();
+        const minute = startDateMoment.minute().toString();
+        const second = startDateMoment.second().toString();
+        let schedules: Subset<ScheduleSchema>[] = [];
+        let months = [];
+        let days = [];
+        const schedule = trigger['ScheduleByMonthDayOfWeek'];
+        for (let month of Object.keys(schedule['Months'])) {
+            months.push(mapLongToShortMonth[month.toUpperCase()]);
+        }
+        for (let dayOfWeek of Object.keys(schedule['DaysOfWeek'])) {
+            const day = mapLongToShortWeekdays[dayOfWeek.toUpperCase()];
+            for (let week of schedule['Weeks']['Week']) {
+                const weekOrdinal = mapWeekToOrdinal[week.toString().toUpperCase()];
+                days.push(`${weekOrdinal} ${day}`);
             }
         }
 
-        return parsedSchedules;
+        const cron = {
+            Month: months.join(','),
+            Day: days.join(','),
+            Hour: hour,
+            Minute: minute,
+            Second: second,
+            Start_Date: startDate,
+            End_Date: endDate,
+        };
+
+        schedules.push({ TriggerType: 'cron', cron });
+
+        return schedules;
     }
 
-    public async parseCalendarTrigger(trigger): Promise<any | null> {
-        let cron: any = {};
+    public parseTriggerByWeek(trigger, now = moment()): Subset<ScheduleSchema>[] {
+        const startDate = trigger['StartBoundary'] || '';
+        const endDate = trigger['EndBoundary'] || '';
 
-        cron.Start_Date = trigger['StartBoundary'] || '';
-        cron.End_Date = trigger['EndBoundary'] || '';
+        let schedules: Subset<ScheduleSchema>[] = [];
+        const schedule = trigger['ScheduleByWeek'];
+        for (let dayOfWeek of Object.keys(schedule['DaysOfWeek'])) {
+            const day = dayOfWeek;
+            let intervalStartDate = moment(startDate).isoWeekday(day);
+            while (intervalStartDate.isBefore(now)) intervalStartDate.add(1, 'w');
+            const weeksInterval: number = schedule['WeeksInterval'];
 
-        let scheduleType;
-        if ('ScheduleByMonthDayOfWeek' in trigger) scheduleType = 'ScheduleByMonthDayOfWeek';
-        else if ('ScheduleByWeek' in trigger) scheduleType = 'ScheduleByWeek';
-        else if ('ScheduleByDay' in trigger) scheduleType = 'ScheduleByDay';
+            const interval = {
+                Weeks: weeksInterval,
+                Start_Date: intervalStartDate.toDate().toISOString(),
+                End_Date: endDate,
+            };
 
-        return cron;
+            schedules.push({ TriggerType: 'interval', interval });
+        }
+
+        return schedules;
+    }
+
+    public parseTriggerByDay(trigger): Subset<ScheduleSchema>[] {
+        const startDate = trigger['StartBoundary'] || '';
+        const endDate = trigger['EndBoundary'] || '';
+        const daysInterval = trigger['ScheduleByDay']['DaysInterval'];
+        const intervalStartDate = moment(startDate);
+        const interval = {
+            Days: daysInterval,
+            Start_Date: intervalStartDate.toDate().toISOString(),
+            End_Date: endDate,
+        };
+
+        return [{ TriggerType: 'interval', interval }];
+    }
+
+    public parseTriggerByMonth(trigger): Subset<ScheduleSchema>[] {
+        const startDate = trigger['StartBoundary'] || '';
+        const endDate = trigger['EndBoundary'] || '';
+        const startDateMoment = moment(startDate);
+
+        const hour = startDateMoment.hour().toString();
+        const minute = startDateMoment.minute().toString();
+        const second = startDateMoment.second().toString();
+        let schedules: Subset<ScheduleSchema>[] = [];
+        let months = [];
+        let days = [];
+        const schedule = trigger['ScheduleByMonth'];
+        for (let month of Object.keys(schedule['Months'])) {
+            months.push(mapLongToShortMonth[month.toUpperCase()]);
+        }
+        for (let dayOfMonth of schedule['DaysOfMonth']['Day']) {
+            const day = dayOfMonth.toString().toLowerCase();
+            days.push(day);
+        }
+
+        const cron = {
+            Month: months.join(','),
+            Day: days.join(','),
+            Hour: hour,
+            Minute: minute,
+            Second: second,
+            Start_Date: startDate,
+            End_Date: endDate,
+        };
+
+        schedules.push({ TriggerType: 'cron', cron });
+
+        return schedules;
+    }
+
+    public parseCalendarTrigger(trigger): Subset<ScheduleSchema>[] | null {
+        let schedules: Subset<ScheduleSchema>[];
+
+        if ('ScheduleByMonthDayOfWeek' in trigger) {
+            schedules = this.parseTriggerByMonthDayOfWeek(trigger);
+        } else if ('ScheduleByWeek' in trigger) {
+            schedules = this.parseTriggerByWeek(trigger);
+        } else if ('ScheduleByDay' in trigger) {
+            schedules = this.parseTriggerByDay(trigger);
+        } else if ('ScheduleByMonth' in trigger) {
+            schedules = this.parseTriggerByMonth(trigger);
+        }
+
+        return schedules;
+    }
+
+    public parseTimeTrigger(trigger): Subset<ScheduleSchema>[] | null {
+        let schedules: Subset<ScheduleSchema>[] = [];
+
+        const runDate = trigger['StartBoundary'];
+        schedules.push({ TriggerType: 'date', RunDate: runDate });
+
+        return schedules;
     }
 }

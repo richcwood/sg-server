@@ -6,6 +6,7 @@ import { convertData } from '../utils/ResponseConverters';
 import { Subset } from '../utils/Types';
 
 import { SGUtils } from '../../shared/SGUtils';
+import { WindowsTaskParser } from '../../shared/WindowsTaskParser';
 
 import * as _ from 'lodash';
 import * as mongodb from 'mongodb';
@@ -77,72 +78,69 @@ export class ScheduleService {
         return;
     }
 
-    public async createScheduleFromWindowsTask(
+    public async createSchedulesFromWindowsTask(
         _teamId: mongodb.ObjectId,
         _jobDefId: mongodb.ObjectId,
         data: any,
         index: number,
+        timezone: string,
         correlationId: string
-    ): Promise<ScheduleSchema | null> {
+    ): Promise<ScheduleSchema[] | null> {
         const task = data['Task'];
+        let newSchedules: ScheduleSchema[] = [];
+        let triggerIndex = 0;
+
+        let createScheduleData = function (partialSchedule) {
+            triggerIndex += 1;
+            const defaults = {
+                _teamId,
+                _jobDefId: _jobDefId,
+                name: `Schedule from Windows Task - ${index.toString()}.${triggerIndex}`,
+                createdBy: data.createdBy,
+                lastUpdatedBy: data.createdBy,
+                FunctionKwargs: {
+                    _teamId,
+                    targetId: _jobDefId,
+                    runtimeVars: {},
+                },
+            };
+
+            return { ...defaults, ...partialSchedule };
+        };
+
         if (task) {
+            const windowsTaskParser = new WindowsTaskParser();
             let taskEnabled = false;
             if ('Enabled' in task['Settings']) taskEnabled = task['Settings']['Enabled'];
             if ('Triggers' in task) {
                 for (let triggerType of Object.keys(task['Triggers'])) {
                     let triggers;
-                    if (_.isArray(task['Triggers'][triggerType])) triggers = [task['Triggers'][triggerType]];
-                    else triggers = task['Triggers'][triggerType];
+                    if (_.isArray(task['Triggers'][triggerType])) triggers = task['Triggers'][triggerType];
+                    else triggers = [task['Triggers'][triggerType]];
                     for (let trigger of triggers) {
-                        let schedule: ScheduleSchema;
+                        let partialSchedules: Subset<ScheduleSchema>[];
                         if (triggerType == 'CalendarTrigger') {
-                            schedule.TriggerType = 'cron';
-                            schedule.isActive = taskEnabled;
-                            if ('Enabled' in trigger) schedule.isActive = taskEnabled && trigger['Enabled'];
+                            partialSchedules = windowsTaskParser.parseCalendarTrigger(trigger);
+                            for (let partialSchedule of partialSchedules) {
+                                partialSchedule.isActive = taskEnabled;
+                                if ('Enabled' in trigger) partialSchedule.isActive = taskEnabled && trigger['Enabled'];
+                                if (timezone && partialSchedule.cron) partialSchedule.cron.Timezone = timezone;
+                                const newScheduleData = createScheduleData(partialSchedule);
+                                const newSchedule = await scheduleService.createSchedule(
+                                    _teamId,
+                                    newScheduleData,
+                                    correlationId,
+                                    '_id'
+                                );
+                                newSchedules.push(newSchedule);
+                            }
                         }
                     }
                 }
             }
         }
-        const startDate = data['StartBoundary'] || '';
-        const endDate = data['EndBoundary'] || '';
-        const isActive = data['Enabled'];
 
-        let day_of_week: string = '';
-        if (tokens[4] != '*') day_of_week = tokens[4];
-        let month: string = '';
-        if (tokens[3] != '*') month = tokens[3];
-        let day: string = '';
-        if (tokens[2] != '*') day = tokens[2];
-        let hour: string = '';
-        if (tokens[1] != '*') hour = tokens[1];
-        let minute: string = '';
-        if (tokens[0] != '*') minute = tokens[0];
-
-        const schedule_data: any = {
-            _teamId,
-            _jobDefId: _jobDefId,
-            name: `Schedule from Windows Task - ${index.toString()}`,
-            createdBy: data.createdBy,
-            lastUpdatedBy: data.createdBy,
-            isActive: true,
-            TriggerType: 'cron',
-            cron: {
-                Day_Of_Week: day_of_week,
-                Month: month,
-                Day: day,
-                Hour: hour,
-                Minute: minute,
-            },
-            FunctionKwargs: {
-                _teamId,
-                targetId: newJobDef._id,
-            },
-        };
-        if (agent.timezone) schedule_data.cron.Timezone = agent.timezone;
-        await scheduleService.createSchedule(_teamId, schedule_data, correlationId, '_id');
-
-        return this.findJobDef(_teamId, newJobDef._id, responseFields);
+        return newSchedules;
     }
 
     // Some services might need to add additional restrictions to bulk queries
