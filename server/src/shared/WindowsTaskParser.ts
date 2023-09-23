@@ -38,7 +38,56 @@ const mapLongToShortWeekdays = {
     SATURDAY: 'sat',
 };
 
+const mapRepetitionInterval = {
+    PT5M: {
+        Minutes: 5,
+    },
+    PT10M: {
+        Minutes: 10,
+    },
+    PT15M: {
+        Minutes: 15,
+    },
+    PT30M: {
+        Minutes: 30,
+    },
+    PT1H: {
+        Hours: 1,
+    },
+};
+
+const mapRepetitionDuration = {
+    P1D: {
+        Days: 1,
+    },
+    PT12H: {
+        Hours: 12,
+    },
+    PT1H: {
+        Hours: 1,
+    },
+    PT30M: {
+        Minutes: 30,
+    },
+    PT15M: {
+        Minutes: 15,
+    },
+};
+
 export class WindowsTaskParser {
+    private parseRepetition(trigger): any {
+        const defaultValue = { enabled: false };
+        if (!trigger['Repetition']) return defaultValue;
+        const repetition = trigger['Repetition'];
+        const interval = repetition['Interval'];
+        if (!(interval in mapRepetitionInterval)) return defaultValue;
+        const intervalParsed = mapRepetitionInterval[interval];
+        const duration = repetition['Duration'];
+        if (!(duration in mapRepetitionDuration)) return defaultValue;
+        const durationParsed = mapRepetitionDuration[duration];
+        return { enabled: true, interval: intervalParsed, duration: durationParsed };
+    }
+
     public parseTriggerByMonthDayOfWeek(trigger): Subset<ScheduleSchema>[] {
         const startDate = trigger['StartBoundary'] || '';
         const endDate = trigger['EndBoundary'] || '';
@@ -56,11 +105,18 @@ export class WindowsTaskParser {
         }
         for (let dayOfWeek of Object.keys(schedule['DaysOfWeek'])) {
             const day = mapLongToShortWeekdays[dayOfWeek.toUpperCase()];
-            for (let week of schedule['Weeks']['Week']) {
-                const weekOrdinal = mapWeekToOrdinal[week.toString().toUpperCase()];
+            const weeks = schedule['Weeks'];
+            if (_.isArray(weeks)) {
+                for (let week of schedule['Weeks']['Week']) {
+                    const weekOrdinal = mapWeekToOrdinal[week.toString().toUpperCase()];
+                    days.push(`${weekOrdinal} ${day}`);
+                }
+            } else {
+                const weekOrdinal = mapWeekToOrdinal[weeks.toString().toUpperCase()];
                 days.push(`${weekOrdinal} ${day}`);
             }
         }
+        const repetition = this.parseRepetition(trigger);
 
         const cron = {
             Month: months.join(','),
@@ -68,6 +124,7 @@ export class WindowsTaskParser {
             Hour: hour,
             Minute: minute,
             Second: second,
+            Repetition: repetition,
             Start_Date: startDate,
             End_Date: endDate,
         };
@@ -134,6 +191,7 @@ export class WindowsTaskParser {
             const day = dayOfMonth.toString().toLowerCase();
             days.push(day);
         }
+        const repetition = this.parseRepetition(trigger);
 
         const cron = {
             Month: months.join(','),
@@ -141,6 +199,7 @@ export class WindowsTaskParser {
             Hour: hour,
             Minute: minute,
             Second: second,
+            Repetition: repetition,
             Start_Date: startDate,
             End_Date: endDate,
         };

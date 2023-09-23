@@ -2184,7 +2184,8 @@ export default class JobDesigner extends Vue {
     Object.assign(this.editSchedule_cron, {
       Start_Date: this.convertDateStringForDisplay(this.editSchedule_cron.Start_Date),
       End_Date: this.convertDateStringForDisplay(this.editSchedule_cron.End_Date)
-    })
+    });
+    console.log("editSchedule_cron ---------> ", this.editSchedule_cron);
 
     this.editSchedule_interval = _.clone(schedule.interval);
     Object.assign(this.editSchedule_interval, {

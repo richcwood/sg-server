@@ -16,6 +16,7 @@ describe('WindowsTaskParser tests', () => {
         const parsed = parser.parseTriggerByDay(trigger);
         const expected = [
             {
+                TriggerType: 'interval',
                 interval: { Days: 2, Start_Date: '2023-08-20T01:55:35.000Z', End_Date: '' },
             },
         ];
@@ -50,6 +51,7 @@ describe('WindowsTaskParser tests', () => {
         const parsed = parser.parseTriggerByMonthDayOfWeek(trigger);
         const expected = [
             {
+                TriggerType: 'cron',
                 cron: {
                     Month: 'mar,jun',
                     Day: '1st tue,4th tue,last tue,1st fri,4th fri,last fri',
@@ -80,6 +82,7 @@ describe('WindowsTaskParser tests', () => {
         const parsed = parser.parseTriggerByWeek(trigger, now);
         const expected = [
             {
+                TriggerType: 'interval',
                 interval: { Weeks: 1, Start_Date: '2023-09-03T20:58:12.000Z', End_Date: '' },
             },
         ];
@@ -103,6 +106,7 @@ describe('WindowsTaskParser tests', () => {
         const parsed = parser.parseTriggerByWeek(trigger, now);
         const expected = [
             {
+                TriggerType: 'interval',
                 interval: {
                     Weeks: 1,
                     Start_Date: '2023-09-24T20:58:12.000Z',
@@ -131,6 +135,7 @@ describe('WindowsTaskParser tests', () => {
         const parsed = parser.parseTriggerByWeek(trigger, now);
         const expected = [
             {
+                TriggerType: 'interval',
                 interval: {
                     Weeks: 2,
                     Start_Date: '2023-09-24T20:58:12.000Z',
@@ -138,6 +143,7 @@ describe('WindowsTaskParser tests', () => {
                 },
             },
             {
+                TriggerType: 'interval',
                 interval: {
                     Weeks: 2,
                     Start_Date: '2023-09-20T20:58:12.000Z',
@@ -165,6 +171,7 @@ describe('WindowsTaskParser tests', () => {
         const parsed = parser.parseTriggerByMonth(trigger);
         const expected = [
             {
+                TriggerType: 'cron',
                 cron: {
                     Month: 'feb',
                     Day: '1,13,last',
@@ -199,6 +206,7 @@ describe('WindowsTaskParser tests', () => {
         const parsed = parser.parseTriggerByMonth(trigger);
         const expected = [
             {
+                TriggerType: 'cron',
                 cron: {
                     Month: 'feb,jun,nov',
                     Day: '1,13,21,last',
@@ -222,6 +230,7 @@ describe('WindowsTaskParser tests', () => {
         const parsed = parser.parseTimeTrigger(trigger);
         const expected = [
             {
+                TriggerType: 'date',
                 RunDate: '2023-08-20T02:08:20Z',
             },
         ];

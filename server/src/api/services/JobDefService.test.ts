@@ -188,7 +188,6 @@ describe('Saascipe service tests', () => {
             data,
             'test1_correlation_id'
         );
-        console.log('jobDef -----------> ', jobDef);
 
         const expectedJobDef: Partial<JobDefSchema> = {
             _teamId,
@@ -206,10 +205,8 @@ describe('Saascipe service tests', () => {
         const taskDefs: TaskDefSchema[] = await taskDefService.findJobDefTaskDefs(_teamId, jobDef._id);
 
         for (let taskDef of taskDefs) {
-            console.log('taskDef -----------> ', taskDef);
             const stepDefs: StepDefSchema[] = await stepDefService.findTaskDefStepDefs(_teamId, taskDef._id);
             for (let stepDef of stepDefs) {
-                console.log('stepDef -----------> ', stepDef);
             }
         }
 

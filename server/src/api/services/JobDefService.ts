@@ -251,64 +251,54 @@ export class JobDefService {
         const jobDefModel = new JobDefModel(jobDef_data);
         const newJobDef = await jobDefModel.save();
 
-        const actions = data.winTask.Task.Actions.Exec;
-        console.log('winTask.Task ----------> ', data.winTask.Task);
-        console.log('actions ----------> ', actions);
-        for (let indexAction = 0; indexAction < actions.length; ++indexAction) {
-            const action = actions[indexAction];
-            const code = SGUtils.btoa(action['Command']);
-            const script_data = {
-                _teamId,
-                name: `win-task-${agent.machineId}-${windowsTaskJobUniqueId}-${indexAction + 1}`,
-                scriptType: ScriptType.SH,
-                code: code,
-                shadowCopyCode: code,
-                teamEditable: true,
-            };
-            const script: ScriptSchema = await scriptService.createScript(
-                _teamId,
-                script_data,
-                data.createdBy,
-                correlationId,
-                '_id'
-            );
+        const action = data.winTask.Task.Actions.Exec;
+        const code = SGUtils.btoa(action['Command']);
+        const script_data = {
+            _teamId,
+            name: `win-task-${agent.machineId}-${windowsTaskJobUniqueId}`,
+            scriptType: ScriptType.SH,
+            code: code,
+            shadowCopyCode: code,
+            teamEditable: true,
+        };
+        const script: ScriptSchema = await scriptService.createScript(
+            _teamId,
+            script_data,
+            data.createdBy,
+            correlationId,
+            '_id'
+        );
 
-            const workingDirectory = action['WorkingDirectory'] || '';
-            const taskDef_data = {
-                _teamId,
-                _jobDefId: newJobDef._id,
-                target: TaskDefTarget.SINGLE_SPECIFIC_AGENT,
-                name: `task ${indexAction + 1}`,
-                targetAgentId: agent._id.toHexString(),
-                workingDirectory,
-            };
-            const taskDef: TaskDefSchema = await taskDefService.createTaskDef(
-                _teamId,
-                taskDef_data,
-                correlationId,
-                '_id'
-            );
+        const workingDirectory = action['WorkingDirectory'] || '';
+        const taskDef_data = {
+            _teamId,
+            _jobDefId: newJobDef._id,
+            target: TaskDefTarget.SINGLE_SPECIFIC_AGENT,
+            name: 'task',
+            targetAgentId: agent._id.toHexString(),
+            workingDirectory,
+        };
+        const taskDef: TaskDefSchema = await taskDefService.createTaskDef(_teamId, taskDef_data, correlationId, '_id');
 
-            const scriptArgs = '' || action['Arguments'];
-            const stepDef_data = {
-                _teamId,
-                _taskDefId: taskDef._id,
-                name: 'step',
-                _scriptId: script._id,
-                order: 1,
-                arguments: scriptArgs,
-            };
-            await stepDefService.createStepDef(_teamId, stepDef_data, correlationId, '_id');
+        const scriptArgs = '' || action['Arguments'];
+        const stepDef_data = {
+            _teamId,
+            _taskDefId: taskDef._id,
+            name: 'step',
+            _scriptId: script._id,
+            order: 1,
+            arguments: scriptArgs,
+        };
+        await stepDefService.createStepDef(_teamId, stepDef_data, correlationId, '_id');
 
-            await scheduleService.createSchedulesFromWindowsTask(
-                _teamId,
-                newJobDef._id,
-                action,
-                indexAction,
-                agent.timezone,
-                correlationId
-            );
-        }
+        await scheduleService.createSchedulesFromWindowsTask(
+            _teamId,
+            newJobDef._id,
+            data.winTask,
+            data.createdBy,
+            agent.timezone,
+            correlationId
+        );
 
         await rabbitMQPublisher.publish(
             _teamId,

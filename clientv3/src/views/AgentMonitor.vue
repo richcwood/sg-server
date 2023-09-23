@@ -49,7 +49,7 @@
                             {{ rawWindowsTask.description }}
                         </td>
                         <td class="td">
-                            <button class="button" @click="onImportRawCronClicked(index)">Import</button>
+                            <button class="button" @click="onImportWindowsTaskClicked(index)">Import</button>
                         </td>
                     </tr>
                     <tr class="tr">
@@ -345,8 +345,9 @@ export default class AgentMonitor extends Vue {
         this.selectedAgentForImport = agent;
         if (agent.winTasks) {
             this.windowsTasks = [];
-            for (let winTask of agent.winTasks) {
-                const description = winTask.Task.Actions.Exec.Command;
+            for (let i = 0; i < agent.winTasks.length; ++i) {
+                const winTask = agent.winTasks[i];
+                const description = `${i} - ${winTask.Task.Actions.Exec.Command}`;
                 this.windowsTasks.push(Object.assign(winTask, { description }));
             }
             this.$modal.show('import-win-modal');

@@ -10,6 +10,7 @@ import { WindowsTaskParser } from '../../shared/WindowsTaskParser';
 
 import * as _ from 'lodash';
 import * as mongodb from 'mongodb';
+import * as util from 'util';
 
 export class ScheduleService {
     public async createScheduleFromRepetition(
@@ -82,7 +83,7 @@ export class ScheduleService {
         _teamId: mongodb.ObjectId,
         _jobDefId: mongodb.ObjectId,
         data: any,
-        index: number,
+        createdBy: mongodb.ObjectId,
         timezone: string,
         correlationId: string
     ): Promise<ScheduleSchema[] | null> {
@@ -95,9 +96,14 @@ export class ScheduleService {
             const defaults = {
                 _teamId,
                 _jobDefId: _jobDefId,
-                name: `Schedule from Windows Task - ${index.toString()}.${triggerIndex}`,
-                createdBy: data.createdBy,
-                lastUpdatedBy: data.createdBy,
+                name: `Schedule from Windows Task - ${triggerIndex}`,
+                createdBy: createdBy,
+                lastUpdatedBy: createdBy,
+                cron: {
+                    Repetition: {
+                        enabled: false,
+                    },
+                },
                 FunctionKwargs: {
                     _teamId,
                     targetId: _jobDefId,

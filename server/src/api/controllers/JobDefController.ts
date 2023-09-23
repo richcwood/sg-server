@@ -130,6 +130,25 @@ export class JobDefController {
         }
     }
 
+    public async createJobDefFromWindowsTask(req: Request, resp: Response, next: NextFunction): Promise<void> {
+        const _teamId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._teamid);
+        req.body.createdBy = new mongodb.ObjectId(<string>req.headers.userid);
+        const response: ResponseWrapper = resp['body'];
+        try {
+            const newJobDef: JobDefSchema = await jobDefService.createJobDefFromWindowsTask(
+                _teamId,
+                convertRequestData(JobDefSchema, req.body),
+                req.header('correlationId'),
+                <string>req.query.responseFields
+            );
+            response.data = convertResponseData(JobDefSchema, newJobDef);
+            response.statusCode = ResponseCode.CREATED;
+            return next();
+        } catch (err) {
+            return next(err);
+        }
+    }
+
     public async updateJobDef(req: Request, resp: Response, next: NextFunction): Promise<void> {
         const logger: BaseLogger = (<any>req).logger;
         const amqp: AMQPConnector = (<any>req).amqp;

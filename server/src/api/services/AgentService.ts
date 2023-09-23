@@ -3,6 +3,7 @@ import { XMLParser } from 'fast-xml-parser';
 import * as config from 'config';
 import * as _ from 'lodash';
 import * as mongodb from 'mongodb';
+import * as util from 'util';
 
 import { AgentSchema, AgentModel } from '../domain/Agent';
 import { TaskDefModel } from '../domain/TaskDef';
@@ -240,7 +241,15 @@ export class AgentService {
             for (let winTask of data.winTasks) {
                 try {
                     const parsed = parser.parse(winTask);
-                    formattedWinTasks.push(JSON.parse(JSON.stringify(parsed)));
+                    const winTaskJson = JSON.parse(JSON.stringify(parsed));
+                    const actions = winTaskJson.Task.Actions.Exec;
+                    if (_.isArray(actions)) {
+                        for (let action of actions) {
+                            let task = _.cloneDeep(winTaskJson);
+                            task.Task.Actions = { Exec: action };
+                            formattedWinTasks.push(task);
+                        }
+                    } else formattedWinTasks.push(winTaskJson);
                 } catch (e) {
                     logger.LogError(`Error canceling orphaned autoRestart task: ${e}`, { winTask });
                 }
