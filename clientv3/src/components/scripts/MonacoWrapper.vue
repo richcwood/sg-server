@@ -49,9 +49,9 @@ export default class MonacoWrapper extends Vue {
   }
 
   @Watch('theme')
-  private onThemeChanged() {
+  private onThemeChanged(theme: EditorTheme) {
     if (this.scriptEditor) {
-      this.onScriptShadowChanged();
+      monaco.editor.setTheme(theme);
     }
   }
 

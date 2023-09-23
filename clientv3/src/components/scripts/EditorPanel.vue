@@ -86,7 +86,6 @@ export default class EditorPanel extends Vue {
   }
 
   private onThemeChange (theme: EditorTheme) {
-    // TODO
     this.$parent.$emit('theme:update', theme);
   }
 

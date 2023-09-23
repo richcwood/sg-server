@@ -1,5 +1,5 @@
 <template>
-  <EditorPanel :scriptId="scriptId" v-slot="{ onSave, onRun, onRunLambda, onShowLogs, onShowSettings }">
+  <EditorPanel :scriptId="scriptId" :theme="theme" v-slot="{ onSave, onRun, onRunLambda, onShowLogs, onShowSettings }" @theme:update="onThemeChange">
     <div class="panel-controls">
       <div class="buttons m-0 separator">
         <button class="button is-small mb-0" title="Undo Changes">
@@ -102,6 +102,7 @@
 <script lang="ts">
 import { Component, Vue, Prop } from 'vue-property-decorator';
 
+import { EditorTheme } from '@/store/script/types';
 import EditorPanel from './EditorPanel.vue';
 
 @Component({
@@ -109,8 +110,12 @@ import EditorPanel from './EditorPanel.vue';
   components: { EditorPanel }
 })
 export default class BasePanel extends Vue {
+  @Prop({ default: 'vs' }) public readonly theme: EditorTheme;
   @Prop({ required: true }) public readonly scriptId: string;
 
+  public onThemeChange (theme: EditorTheme) {
+    this.$emit('theme:update', theme);
+  }
 }
 </script>
 

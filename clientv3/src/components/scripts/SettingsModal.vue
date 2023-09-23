@@ -2,26 +2,34 @@
   <modal-card>
     <template #title>Editor Settings</template>
     <template #body>
-      <div>
-        <p>
-          <select class="input select button-spaced" style="width: 150px;" v-model="derivedTheme">
-            <option value="vs">Light</option>
-            <option value="vs-dark">Dark</option>
-            <option value="hc-black">Black</option>
-          </select>
-        </p>
-        <p>
-          <select :disabled="scriptTypeDisabled" class="input select button-spaced"
-            style="width: 250px; margin-bottom: 10px;" v-model="derivedScriptType">
-            <option v-for="(value, key) in scriptTypesForMonaco" :key="`scriptType${key}-${value}`" :value="key">
-              {{ value }}
-            </option>
-          </select>
-        </p>
+      <div class="field">
+        <label class="label">Theme</label>
+        <div class="control">
+          <div class="select">
+            <select v-model="derivedTheme">
+              <option value="vs">Light</option>
+              <option value="vs-dark">Dark</option>
+              <option value="hc-black">Black</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label class="label">Language</label>
+        <div class="control">
+          <div class="select">
+            <select :disabled="scriptTypeDisabled" v-model="derivedScriptType">
+              <option v-for="(value, key) in scriptTypesForMonaco" :key="`scriptType${key}-${value}`" :value="key">
+                {{ value }}
+              </option>
+            </select>
+          </div>
+        </div>
       </div>
     </template>
     <template #footer>
-      <button class="button" @click="onSave">Save</button>
+      <button class="button is-primary" @click="onSave">Save</button>
       <button class="button" @click="$emit('close')">Close</button>
     </template>
   </modal-card>
@@ -46,19 +54,17 @@ export default class SettingsModal extends Vue {
   public derivedScriptType: ScriptType = null;
   public derivedTheme: EditorTheme = null;
 
-  public created () {
+  public created() {
     this.derivedScriptType = this.scriptType;
     this.derivedTheme = this.theme;
   }
 
-  public onSave () {
+  public onSave() {
     this.$parent.$emit('save', {
-      scriptType: this.scriptType,
-      theme: this.theme,
+      scriptType: this.derivedScriptType,
+      theme: this.derivedTheme,
     });
     this.$emit('close');
   }
 }
 </script>
-
-<style lang="scss" scoped></style>

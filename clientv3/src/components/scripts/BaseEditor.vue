@@ -1,16 +1,16 @@
 <template>
   <div class="is-flex is-flex-direction-column">
-    <BasePanel :scriptId="scriptId" @theme:update="onThemeUpdate" />
-    <MonacoWrapper :scriptId="scriptId" class="is-flex-grow-1" />
+    <BasePanel :scriptId="scriptId" :theme="theme" @theme:update="onThemeChange" />
+    <MonacoWrapper :scriptId="scriptId" :theme="theme" class="is-flex-grow-1" />
   </div>
 </template>
 
 <script lang="ts">
 import { Component, Vue, Prop } from 'vue-property-decorator';
 
+import { EditorTheme } from '@/store/script/types';
 import MonacoWrapper from './MonacoWrapper.vue';
 import BasePanel from './BasePanel.vue';
-import { EditorTheme, ScriptType } from '@/store/script/types';
 
 @Component({
   name: 'BaseEditor',
@@ -19,19 +19,16 @@ import { EditorTheme, ScriptType } from '@/store/script/types';
 export default class BaseEditor extends Vue {
   @Prop() public readonly scriptId: string;
 
-  public theme: EditorTheme = 'vs';
+  public theme: EditorTheme = null;
 
-  public onThemeUpdate (theme: any) {
-    console.log(theme);
+  public created() {
+    this.theme = localStorage.getItem('scriptEditor_theme') as EditorTheme;
   }
 
-  public onSettingsChange (settings: {theme: EditorTheme, scriptType: ScriptType}) {
-    localStorage.setItem('scriptEditor_theme', settings.theme);
+  public onThemeChange (theme: EditorTheme) {
+    localStorage.setItem('scriptEditor_theme', theme);
 
-    this.theme = settings.theme;
+    this.theme = theme;
   }
 }
 </script>
-
-<style lang="scss" scoped>
-</style>
