@@ -220,6 +220,97 @@ export class JobDefService {
         return this.findJobDef(_teamId, newJobDef._id, responseFields);
     }
 
+    public async createJobDefFromWindowsTask(
+        _teamId: mongodb.ObjectId,
+        data: any,
+        correlationId: string,
+        responseFields?: string
+    ): Promise<JobDefSchema> {
+        data._teamId = _teamId;
+
+        if (!data.winTask) throw new ValidationError('Missing "winTask"');
+
+        if (!data._agentId) throw new ValidationError('Missing "_agentId"');
+
+        if (!data.createdBy) throw new ValidationError('Missing "createdBy"');
+
+        const agent = await agentService.findAgent(
+            _teamId,
+            new mongodb.ObjectId(data._agentId),
+            '_id machineId timezone'
+        );
+        if (!agent) throw new MissingObjectError(`Agent ${data._agentId} not found.`);
+
+        const windowsTaskJobUniqueId = SGUtils.makeid(5);
+
+        const jobDef_data = {
+            _teamId,
+            name: `Windows Task Job ${agent.machineId} - ${windowsTaskJobUniqueId}`,
+            createdBy: data.createdBy,
+        };
+        const jobDefModel = new JobDefModel(jobDef_data);
+        const newJobDef = await jobDefModel.save();
+
+        const action = data.winTask.Task.Actions.Exec;
+        const code = SGUtils.btoa(action['Command']);
+        const script_data = {
+            _teamId,
+            name: `win-task-${agent.machineId}-${windowsTaskJobUniqueId}`,
+            scriptType: ScriptType.SH,
+            code: code,
+            shadowCopyCode: code,
+            teamEditable: true,
+        };
+        const script: ScriptSchema = await scriptService.createScript(
+            _teamId,
+            script_data,
+            data.createdBy,
+            correlationId,
+            '_id'
+        );
+
+        const workingDirectory = action['WorkingDirectory'] || '';
+        const taskDef_data = {
+            _teamId,
+            _jobDefId: newJobDef._id,
+            target: TaskDefTarget.SINGLE_SPECIFIC_AGENT,
+            name: 'task',
+            targetAgentId: agent._id.toHexString(),
+            workingDirectory,
+        };
+        const taskDef: TaskDefSchema = await taskDefService.createTaskDef(_teamId, taskDef_data, correlationId, '_id');
+
+        const scriptArgs = '' || action['Arguments'];
+        const stepDef_data = {
+            _teamId,
+            _taskDefId: taskDef._id,
+            name: 'step',
+            _scriptId: script._id,
+            order: 1,
+            arguments: scriptArgs,
+        };
+        await stepDefService.createStepDef(_teamId, stepDef_data, correlationId, '_id');
+
+        await scheduleService.createSchedulesFromWindowsTask(
+            _teamId,
+            newJobDef._id,
+            data.winTask,
+            data.createdBy,
+            agent.timezone,
+            correlationId
+        );
+
+        await rabbitMQPublisher.publish(
+            _teamId,
+            'JobDef',
+            correlationId,
+            PayloadOperation.CREATE,
+            convertData(JobDefSchema, newJobDef)
+        );
+
+        return this.findJobDef(_teamId, newJobDef._id, responseFields);
+    }
+
     public async createJobDefFromCron(
         _teamId: mongodb.ObjectId,
         data: any,
@@ -228,11 +319,11 @@ export class JobDefService {
     ): Promise<JobDefSchema> {
         data._teamId = _teamId;
 
-        if (!data.cronString) throw new ValidationError('Request body missing "cronString"');
+        if (!data.cronString) throw new ValidationError('Missing "cronString"');
 
-        if (!data._agentId) throw new ValidationError('Request body missing "_agentId"');
+        if (!data._agentId) throw new ValidationError('Missing "_agentId"');
 
-        if (!data.createdBy) throw new ValidationError('Request body missing "createdBy"');
+        if (!data.createdBy) throw new ValidationError('Missing "createdBy"');
 
         const agent = await agentService.findAgent(
             _teamId,

@@ -1,18 +1,25 @@
-import { convertData } from '../utils/ResponseConverters';
-import { AgentSchema, AgentModel } from '../domain/Agent';
-import { rabbitMQPublisher, PayloadOperation } from '../utils/RabbitMQPublisher';
-import { MissingObjectError, ValidationError } from '../utils/Errors';
-import * as mongodb from 'mongodb';
+import { XMLParser } from 'fast-xml-parser';
+
 import * as config from 'config';
 import * as _ from 'lodash';
-import { BaseLogger } from '../../shared/SGLogger';
-import * as Enums from '../../shared/Enums';
-import { taskOutcomeService } from '../services/TaskOutcomeService';
-import { stepOutcomeService } from '../services/StepOutcomeService';
-import { taskService } from '../services/TaskService';
+import * as mongodb from 'mongodb';
+import * as util from 'util';
+
+import { AgentSchema, AgentModel } from '../domain/Agent';
 import { TaskDefModel } from '../domain/TaskDef';
-import { localRestAccess } from '../utils/LocalRestAccess';
+
+import { stepOutcomeService } from '../services/StepOutcomeService';
+import { taskOutcomeService } from '../services/TaskOutcomeService';
+import { taskService } from '../services/TaskService';
+
 import { AMQPConnector } from '../../shared/AMQPLib';
+import * as Enums from '../../shared/Enums';
+import { BaseLogger } from '../../shared/SGLogger';
+
+import { MissingObjectError, ValidationError } from '../utils/Errors';
+import { localRestAccess } from '../utils/LocalRestAccess';
+import { rabbitMQPublisher, PayloadOperation } from '../utils/RabbitMQPublisher';
+import { convertData } from '../utils/ResponseConverters';
 
 const userConfigurableProperties: string[] = [
     'maxActiveTasks',
@@ -30,6 +37,7 @@ const systemProperties: string[] = [
     'numActiveTasks',
     'sysInfo',
     'cron',
+    'winTasks',
 ];
 
 const __ACTIVE_AGENT_TIMEOUT_SECONDS = config.get('activeAgentTimeoutSeconds');
@@ -224,13 +232,30 @@ export class AgentService {
         _teamId: mongodb.ObjectId,
         id: mongodb.ObjectId,
         data: any,
+        logger: BaseLogger,
         correlationId?: string
     ): Promise<AgentSchema> {
-        // for (let i = 0; i < Object.keys(data).length; i++) {
-        //     const key = Object.keys(data)[i];
-        //     if (systemProperties.indexOf(key) < 0)
-        //         throw new ValidationError(`Invalid property - "${key}"`);
-        // }
+        if (data.winTasks) {
+            const parser = new XMLParser();
+            let formattedWinTasks = [];
+            for (let winTask of data.winTasks) {
+                try {
+                    const parsed = parser.parse(winTask);
+                    const winTaskJson = JSON.parse(JSON.stringify(parsed));
+                    const actions = winTaskJson.Task.Actions.Exec;
+                    if (_.isArray(actions)) {
+                        for (let action of actions) {
+                            let task = _.cloneDeep(winTaskJson);
+                            task.Task.Actions = { Exec: action };
+                            formattedWinTasks.push(task);
+                        }
+                    } else formattedWinTasks.push(winTaskJson);
+                } catch (e) {
+                    logger.LogError(`Error canceling orphaned autoRestart task: ${e}`, { winTask });
+                }
+            }
+            data.winTasks = formattedWinTasks;
+        }
 
         const filter = { _id: id, _teamId };
         const updatedAgent = await AgentModel.findOneAndUpdate(filter, data).select(
@@ -489,7 +514,7 @@ export class AgentService {
                     }
                 }
             }
-            await this.updateAgentHeartbeat(_teamId, agent._id, { offline: true });
+            await this.updateAgentHeartbeat(_teamId, agent._id, { offline: true }, logger);
         } catch (err) {
             result.success = false;
             result.err = err;

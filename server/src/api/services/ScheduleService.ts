@@ -1,12 +1,156 @@
-import { convertData } from '../utils/ResponseConverters';
 import { ScheduleSchema, ScheduleModel } from '../domain/Schedule';
-import { rabbitMQPublisher, PayloadOperation } from '../utils/RabbitMQPublisher';
+
 import { MissingObjectError, ValidationError } from '../utils/Errors';
+import { rabbitMQPublisher, PayloadOperation } from '../utils/RabbitMQPublisher';
+import { convertData } from '../utils/ResponseConverters';
+import { Subset } from '../utils/Types';
+
+import { SGUtils } from '../../shared/SGUtils';
+import { WindowsTaskParser } from '../../shared/WindowsTaskParser';
 
 import * as _ from 'lodash';
 import * as mongodb from 'mongodb';
+import * as util from 'util';
 
 export class ScheduleService {
+    public async createScheduleFromRepetition(
+        _teamId: mongodb.ObjectId,
+        _scheduleId: mongodb.ObjectId,
+        dateScheduled: Date,
+        correlationId: string
+    ): Promise<ScheduleSchema | null> {
+        const schedule: ScheduleSchema = await this.findSchedule(_teamId, _scheduleId);
+        if (
+            schedule &&
+            schedule.TriggerType == 'cron' &&
+            schedule.cron.Repetition &&
+            schedule.cron.Repetition.enabled
+        ) {
+            const repetition = schedule.cron.Repetition;
+            const scheduleName = `${schedule.name} - repetition`;
+            const intervalMinutes: number = SGUtils.totalMinutes(
+                repetition.interval.Weeks,
+                repetition.interval.Days,
+                repetition.interval.Hours,
+                repetition.interval.Minutes
+            );
+            const durationMinutes: number = SGUtils.totalMinutes(
+                repetition.duration.Weeks,
+                repetition.duration.Days,
+                repetition.duration.Hours,
+                repetition.duration.Minutes
+            );
+            if (durationMinutes >= intervalMinutes) {
+                const startDate = new Date(dateScheduled.getTime() + intervalMinutes * 60000).toJSON();
+                const endDate = new Date(dateScheduled.getTime() + durationMinutes * 60000).toJSON();
+                const interval = {
+                    Weeks: repetition.interval.Weeks,
+                    Days: repetition.interval.Days,
+                    Hours: repetition.interval.Hours,
+                    Minutes: repetition.interval.Minutes,
+                    Start_Date: startDate,
+                    End_Date: endDate,
+                    Jitter: undefined,
+                };
+                const cron = {
+                    Repetition: {
+                        enabled: false,
+                        interval: {},
+                        duration: {},
+                    },
+                };
+                const newSchedule: Subset<ScheduleSchema> = {
+                    _jobDefId: schedule._jobDefId,
+                    name: scheduleName,
+                    isActive: true,
+                    interval: interval,
+                    cron: cron,
+                    FunctionKwargs: schedule.FunctionKwargs,
+                    TriggerType: 'interval',
+                    createdBy: schedule.createdBy,
+                    lastUpdatedBy: schedule.lastUpdatedBy,
+                    misfire_grace_time: schedule.misfire_grace_time,
+                    coalesce: schedule.coalesce,
+                    max_instances: schedule.max_instances,
+                };
+                return this.createSchedule(_teamId, newSchedule, correlationId);
+            }
+        }
+        return;
+    }
+
+    public async createSchedulesFromWindowsTask(
+        _teamId: mongodb.ObjectId,
+        _jobDefId: mongodb.ObjectId,
+        data: any,
+        createdBy: mongodb.ObjectId,
+        timezone: string,
+        correlationId: string
+    ): Promise<ScheduleSchema[] | null> {
+        const task = data['Task'];
+        let newSchedules: ScheduleSchema[] = [];
+        let triggerIndex = 0;
+
+        let createScheduleData = function (partialSchedule) {
+            triggerIndex += 1;
+            const defaults = {
+                _teamId,
+                _jobDefId: _jobDefId,
+                name: `Schedule from Windows Task - ${triggerIndex}`,
+                createdBy: createdBy,
+                lastUpdatedBy: createdBy,
+                cron: {
+                    Repetition: {
+                        enabled: false,
+                        interval: {},
+                        duration: {},
+                    },
+                },
+                FunctionKwargs: {
+                    _teamId,
+                    targetId: _jobDefId,
+                    runtimeVars: {},
+                },
+            };
+
+            return { ...defaults, ...partialSchedule };
+        };
+
+        if (task) {
+            const windowsTaskParser = new WindowsTaskParser();
+            let taskEnabled = false;
+            if ('Enabled' in task['Settings']) taskEnabled = task['Settings']['Enabled'];
+            if ('Triggers' in task) {
+                for (let triggerType of Object.keys(task['Triggers'])) {
+                    let triggers;
+                    if (_.isArray(task['Triggers'][triggerType])) triggers = task['Triggers'][triggerType];
+                    else triggers = [task['Triggers'][triggerType]];
+                    for (let trigger of triggers) {
+                        let partialSchedules: Subset<ScheduleSchema>[];
+                        if (triggerType == 'CalendarTrigger') {
+                            partialSchedules = windowsTaskParser.parseCalendarTrigger(trigger);
+                            for (let partialSchedule of partialSchedules) {
+                                partialSchedule.isActive = taskEnabled;
+                                if ('Enabled' in trigger) partialSchedule.isActive = taskEnabled && trigger['Enabled'];
+                                if (timezone && partialSchedule.cron) partialSchedule.cron.Timezone = timezone;
+                                const newScheduleData = createScheduleData(partialSchedule);
+                                const newSchedule = await scheduleService.createSchedule(
+                                    _teamId,
+                                    newScheduleData,
+                                    correlationId,
+                                    '_id'
+                                );
+                                newSchedules.push(newSchedule);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        return newSchedules;
+    }
+
     // Some services might need to add additional restrictions to bulk queries
     // This is how they would add more to the base query (Example: fetch only non-deleted users for all queries)
     // public async updateBulkQuery(query): Promise<object> {
@@ -42,12 +186,10 @@ export class ScheduleService {
 
     public async createSchedule(
         _teamId: mongodb.ObjectId,
-        data: any,
+        data: Subset<ScheduleSchema>,
         correlationId: string,
         responseFields?: string
     ): Promise<ScheduleSchema> {
-        if (data.Seconds) throw new ValidationError('Seconds interval not supported');
-
         data._teamId = _teamId;
         const scheduleModel = new ScheduleModel(data);
         const newSchedule = await scheduleModel.save();
@@ -75,12 +217,10 @@ export class ScheduleService {
     public async updateSchedule(
         _teamId: mongodb.ObjectId,
         id: mongodb.ObjectId,
-        data: any,
+        data: Subset<ScheduleSchema>,
         correlationId: string,
         responseFields?: string
     ): Promise<object> {
-        if (data.Seconds) throw new ValidationError('Seconds interval not supported');
-
         const filter = { _id: id, _teamId };
         data.scheduleError = '';
 
@@ -115,7 +255,7 @@ export class ScheduleService {
     public async updateFromScheduler(
         _teamId: mongodb.ObjectId,
         id: mongodb.ObjectId,
-        data: any,
+        data: Subset<ScheduleSchema>,
         correlationId: string,
         responseFields?: string
     ): Promise<object> {
