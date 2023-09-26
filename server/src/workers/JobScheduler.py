@@ -8,6 +8,7 @@ import traceback
 from datetime import datetime, date, timedelta
 from dotenv import load_dotenv
 from os import environ, path
+from pprint import pprint
 from pytz import utc
 from sendgrid.helpers.mail import *
 from threading import Event, Thread
@@ -660,8 +661,19 @@ def on_message(delivery_tag, body, async_consumer):
         async_consumer.acknowledge_message(delivery_tag)
         if "_teamId" in msg:
             url = "schedule/fromscheduler/{}".format(msg["id"])
-            rest_api_call(url, "PUT", msg["_teamId"], {}, {"scheduleError": ex.message})
+            rest_api_call(
+                url,
+                "PUT",
+                msg["_teamId"],
+                {},
+                {
+                    "scheduleError": str(ex),
+                    "isActive": False,
+                    "nextScheduledRunDate": None,
+                },
+            )
         logError({"msg": str(ex), "Method": "on_message", "body": body})
+        job_scheduler.pause_job(msg["id"])
     # finally:
     #     async_consumer.start_consuming()
 

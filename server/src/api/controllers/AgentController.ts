@@ -312,6 +312,7 @@ export class AgentController {
                 _teamId,
                 _agentId,
                 convertRequestData(AgentSchema, req.body),
+                logger,
                 req.header('correlationId')
             );
 

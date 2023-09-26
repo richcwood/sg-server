@@ -341,7 +341,6 @@ describe('Test task routing', () => {
             },
         ];
         await CreateAgents(_teamId, agents);
-        console.log('agents -------------------------> ', agents);
 
         const lambdaRunnerAgentTags = config.get('awsLambdaRequiredTags');
         lambdaAgents = [
@@ -361,7 +360,6 @@ describe('Test task routing', () => {
             },
         ];
         await CreateAgents(sgAdminTeamId, lambdaAgents);
-        console.log('lambdaAgents -------------------------> ', lambdaAgents);
 
         const _jobId: mongodb.ObjectId = new mongodb.ObjectId();
         job = {

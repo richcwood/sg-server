@@ -45,6 +45,9 @@ export class TaskSchema {
     artifacts?: mongodb.ObjectId[];
 
     @prop()
+    workingDirectory?: string;
+
+    @prop()
     correlationId?: string;
 
     @prop({ default: null })

@@ -405,7 +405,22 @@
                   <ValidationProvider
                     rules="min_value:2022|required_if_empty:@Month,@Day,@Week,@WeekDay,@Hour,@Minute,@Second" name="Year"
                     tag="div" class="field is-narrow" v-slot="{ errors }">
-                    <label class="label">Year</label>
+                    <div class="field is-horizontal">
+                      <label class="label">Year</label>
+                      <v-popover class="is-inline ml-2">
+                        <a @click.prevent href="#">
+                          <font-awesome-icon icon="question-circle" />
+                        </a>
+                        <p slot="popover">Four digit year</p>
+                        <p slot="popover">Also supports:</p>
+                        <p slot="popover">'*' Fire on every value</p>
+                        <p slot="popover">'*/a' Fire every 'a' values, starting from the minimum</p>
+                        <p slot="popover">'a-b' Fire on any value within the 'a-b' range (a must be smaller than b)</p>
+                        <p slot="popover">'a-b/c' Fire every 'c' values within the 'a-b' range</p>
+                        <p slot="popover">'x,y,z' Fire on any matching expression; can combine any number of any of the
+                          above expressions</p>
+                      </v-popover>
+                    </div>
                     <div class="control" style="width: 65px;">
                       <input v-model.number="editSchedule_cron.Year" type="text" class="input" placeholder="YYYY" />
                       <p v-if="errors.length" class="help is-danger">{{ errors[0] }}</p>
@@ -414,25 +429,46 @@
                   <ValidationProvider
                     rules="between:1,12|required_if_empty:@Year,@Day,@Week,@WeekDay,@Hour,@Minute,@Second" name="Month"
                     tag="div" class="field is-narrow" v-slot="{ errors }">
-                    <label class="label">Month</label>
+                    <div class="field is-horizontal">
+                      <label class="label">Month</label>
+                      <v-popover class="is-inline ml-2">
+                        <a @click.prevent href="#">
+                          <font-awesome-icon icon="question-circle" />
+                        </a>
+                        <p slot="popover">Month (1-12)</p>
+                        <p slot="popover">Also supports:</p>
+                        <p slot="popover">'*' Fire on every value</p>
+                        <p slot="popover">'*/a' Fire every 'a' values, starting from the minimum</p>
+                        <p slot="popover">'a-b' Fire on any value within the 'a-b' range (a must be smaller than b)</p>
+                        <p slot="popover">'a-b/c' Fire every 'c' values within the 'a-b' range</p>
+                        <p slot="popover">'x,y,z' Fire on any matching expression; can combine any number of any of the
+                          above expressions</p>
+                      </v-popover>
+                    </div>
                     <div class="control" style="width: 55px;">
                       <input v-model.number="editSchedule_cron.Month" type="text" class="input" placeholder="1-12" />
                       <p v-if="errors.length" class="help is-danger">{{ errors[0] }}</p>
                     </div>
                   </ValidationProvider>
                   <ValidationProvider
-                    rules="between:1,31|required_if_empty:@Year,@Month,@Week,@WeekDay,@Hour,@Minute,@Second" name="Day"
-                    tag="div" class="field is-narrow" v-slot="{ errors }">
-                    <label class="label">Day</label>
-                    <div class="control" style="width: 55px;">
-                      <input v-model.number="editSchedule_cron.Day" type="text" class="input" placeholder="1-31" />
-                      <p v-if="errors.length" class="help is-danger">{{ errors[0] }}</p>
-                    </div>
-                  </ValidationProvider>
-                  <ValidationProvider
                     rules="between:1,53|required_if_empty:@Year,@Month,@Day,@WeekDay,@Hour,@Minute,@Second" name="Week"
                     tag="div" class="field is-narrow" v-slot="{ errors }">
-                    <label class="label">Week</label>
+                    <div class="field is-horizontal">
+                      <label class="label">Week</label>
+                      <v-popover class="is-inline ml-2">
+                        <a @click.prevent href="#">
+                          <font-awesome-icon icon="question-circle" />
+                        </a>
+                        <p slot="popover">ISO week (1-53)</p>
+                        <p slot="popover">Also supports:</p>
+                        <p slot="popover">'*' Fire on every value</p>
+                        <p slot="popover">'*/a' Fire every 'a' values, starting from the minimum</p>
+                        <p slot="popover">'a-b' Fire on any value within the 'a-b' range (a must be smaller than b)</p>
+                        <p slot="popover">'a-b/c' Fire every 'c' values within the 'a-b' range</p>
+                        <p slot="popover">'x,y,z' Fire on any matching expression; can combine any number of any of the
+                          above expressions</p>
+                      </v-popover>
+                    </div>
                     <div class="control" style="width: 60px;">
                       <input v-model.number="editSchedule_cron.Week" type="text" class="input" placeholder="1-53" />
                       <p v-if="errors.length" class="help is-danger">{{ errors[0] }}</p>
@@ -440,7 +476,22 @@
                   </ValidationProvider>
                   <ValidationProvider rules="required_if_empty:@Year,@Month,@Day,@Week,@Hour,@Minute,@Second"
                     name="WeekDay" tag="div" class="field is-narrow" v-slot="{ errors }">
-                    <label class="label">Day of Week</label>
+                    <div class="field is-horizontal">
+                      <label class="label">Day of Week</label>
+                      <v-popover class="is-inline ml-2">
+                        <a @click.prevent href="#">
+                          <font-awesome-icon icon="question-circle" />
+                        </a>
+                        <p slot="popover">Number or Name of weekday (0-6 or mon,tue,wed,thu,fri,sat,sun)</p>
+                        <p slot="popover">Also supports:</p>
+                        <p slot="popover">'*' Fire on every value</p>
+                        <p slot="popover">'*/a' Fire every 'a' values, starting from the minimum</p>
+                        <p slot="popover">'a-b' Fire on any value within the 'a-b' range (a must be smaller than b)</p>
+                        <p slot="popover">'a-b/c' Fire every 'c' values within the 'a-b' range</p>
+                        <p slot="popover">'x,y,z' Fire on any matching expression; can combine any number of any of the
+                          above expressions</p>
+                      </v-popover>
+                    </div>
                     <div class="control" style="width: 140px;">
                       <input v-model="editSchedule_cron.Day_Of_Week" type="text" class="input"
                         placeholder="0-6 or mon-sun" />
@@ -450,7 +501,22 @@
                   <ValidationProvider
                     rules="between:0,23|required_if_empty:@Year,@Month,@Day,@Week,@WeekDay,@Minute,@Second" name="Hour"
                     tag="div" class="field is-narrow" v-slot="{ errors }">
-                    <label class="label">Hour</label>
+                    <div class="field is-horizontal">
+                      <label class="label">Hour</label>
+                      <v-popover class="is-inline ml-2">
+                        <a @click.prevent href="#">
+                          <font-awesome-icon icon="question-circle" />
+                        </a>
+                        <p slot="popover">Hour (0-23)</p>
+                        <p slot="popover">Also supports:</p>
+                        <p slot="popover">'*' Fire on every value</p>
+                        <p slot="popover">'*/a' Fire every 'a' values, starting from the minimum</p>
+                        <p slot="popover">'a-b' Fire on any value within the 'a-b' range (a must be smaller than b)</p>
+                        <p slot="popover">'a-b/c' Fire every 'c' values within the 'a-b' range</p>
+                        <p slot="popover">'x,y,z' Fire on any matching expression; can combine any number of any of the
+                          above expressions</p>
+                      </v-popover>
+                    </div>
                     <div class="control" style="width: 60px;">
                       <input v-model.number="editSchedule_cron.Hour" type="text" class="input" placeholder="0-23" />
                       <p v-if="errors.length" class="help is-danger">{{ errors[0] }}</p>
@@ -459,7 +525,22 @@
                   <ValidationProvider
                     rules="between:0,59|required_if_empty:@Year,@Month,@Day,@Week,@WeekDay,@Hour,@Second" name="Minute"
                     tag="div" class="field is-narrow" v-slot="{ errors }">
-                    <label class="label">Minute</label>
+                    <div class="field is-horizontal">
+                      <label class="label">Minute</label>
+                      <v-popover class="is-inline ml-2">
+                        <a @click.prevent href="#">
+                          <font-awesome-icon icon="question-circle" />
+                        </a>
+                        <p slot="popover">Minute (0-59)</p>
+                        <p slot="popover">Also supports:</p>
+                        <p slot="popover">'*' Fire on every value</p>
+                        <p slot="popover">'*/a' Fire every 'a' values, starting from the minimum</p>
+                        <p slot="popover">'a-b' Fire on any value within the 'a-b' range (a must be smaller than b)</p>
+                        <p slot="popover">'a-b/c' Fire every 'c' values within the 'a-b' range</p>
+                        <p slot="popover">'x,y,z' Fire on any matching expression; can combine any number of any of the
+                          above expressions</p>
+                      </v-popover>
+                    </div>
                     <div class="control" style="width: 60px;">
                       <input v-model.number="editSchedule_cron.Minute" type="text" class="input" placeholder="0-59" />
                       <p v-if="errors.length" class="help is-danger">{{ errors[0] }}</p>
@@ -468,9 +549,58 @@
                   <ValidationProvider
                     rules="between:0,59|required_if_empty:@Year,@Month,@Day,@Week,@WeekDay,@Hour,@Minute" name="Second"
                     tag="div" class="field is-narrow" v-slot="{ errors }">
-                    <label class="label">Second</label>
+                    <div class="field is-horizontal">
+                      <label class="label">Second</label>
+                      <v-popover class="is-inline ml-2">
+                        <a @click.prevent href="#">
+                          <font-awesome-icon icon="question-circle" />
+                        </a>
+                        <p slot="popover">Second (0-59)</p>
+                        <p slot="popover">Also supports:</p>
+                        <p slot="popover">'*' Fire on every value</p>
+                        <p slot="popover">'*/a' Fire every 'a' values, starting from the minimum</p>
+                        <p slot="popover">'a-b' Fire on any value within the 'a-b' range (a must be smaller than b)</p>
+                        <p slot="popover">'a-b/c' Fire every 'c' values within the 'a-b' range</p>
+                        <p slot="popover">'x,y,z' Fire on any matching expression; can combine any number of any of the
+                          above expressions</p>
+                      </v-popover>
+                    </div>
                     <div class="control" style="width: 60px;">
                       <input v-model.number="editSchedule_cron.Second" type="text" class="input" placeholder="0-59" />
+                      <p v-if="errors.length" class="help is-danger">{{ errors[0] }}</p>
+                    </div>
+                  </ValidationProvider>
+                </div>
+              </div>
+              <div class="field is-horizontal">
+                <div class="field-label is-normal">
+                  <div class="label"></div>
+                </div>
+                <div class="field-body">
+                  <ValidationProvider rules="required_if_empty:@Year,@Month,@Week,@WeekDay,@Hour,@Minute,@Second"
+                    name="Day" tag="div" class="field is-narrow" v-slot="{ errors }">
+                    <div class="field is-horizontal">
+                      <label class="label">Day</label>
+                      <v-popover class="is-inline ml-2">
+                        <a @click.prevent href="#">
+                          <font-awesome-icon icon="question-circle" />
+                        </a>
+                        <p slot="popover">Day of month (1-31)</p>
+                        <p slot="popover">Also supports:</p>
+                        <p slot="popover">'*' Fire on every value</p>
+                        <p slot="popover">'*/a' Fire every 'a' values, starting from the minimum</p>
+                        <p slot="popover">'a-b' Fire on any value within the 'a-b' range (a must be smaller than b)</p>
+                        <p slot="popover">'a-b/c' Fire every 'c' values within the 'a-b' range</p>
+                        <p slot="popover">'xth y' Fire on the 'x'-th occurrence of weekday 'y' within the month</p>
+                        <p slot="popover">'last x' Fire on the last occurrence of weekday 'x' within the month</p>
+                        <p slot="popover">'last' Fire on the last day within the month</p>
+                        <p slot="popover">'x,y,z' Fire on any matching expression; can combine any number of any of the
+                          above expressions</p>
+                      </v-popover>
+                    </div>
+                    <div class="control" style="width: 610px;">
+                      <input v-model="editSchedule_cron.Day" type="text" class="input"
+                        placeholder="1-31, *, */a, a-b, a-b/c, xth y, last x, last, x,y,z" />
                       <p v-if="errors.length" class="help is-danger">{{ errors[0] }}</p>
                     </div>
                   </ValidationProvider>
@@ -534,7 +664,10 @@
               <div class="field is-horizontal mt-5">
                 <div class="field mr-5 ml-2">
                   <label class="checkbox">
-                    <input type="checkbox" v-model="editSchedule_cron.Repetition.enabled"> Repeat
+                    <ValidationProvider vid="Repetition_Enabled">
+                      <input type="checkbox" v-model="editSchedule_cron.Repetition.enabled">
+                    </ValidationProvider>
+                    Repeat
                   </label>
                   <v-popover class="is-inline ml-2">
                     <a @click.prevent href="#">
@@ -561,7 +694,7 @@
                       <th>Interval</th>
                       <td>
                         <ValidationProvider tag="div" class="field is-narrow" name="Interval_Weeks"
-                          rules="positiveNumber|required_if_empty:@Interval_Days,@Interval_Hours,@Interval_Minutes"
+                          rules="positiveNumber|required_if_checked:@Repetition_Enabled,@Interval_Days,@Interval_Hours,@Interval_Minutes"
                           v-slot="{ errors }">
                           <div class="control" style="width: 60px;">
                             <input v-model.number="editSchedule_cron.Repetition.interval.Weeks" type="text" class="input"
@@ -572,7 +705,7 @@
                       </td>
                       <td>
                         <ValidationProvider tag="div" class="field is-narrow" name="Interval_Days"
-                          rules="positiveNumber|required_if_empty:@Interval_Weeks,@Interval_Hours,@Interval_Minutes"
+                          rules="positiveNumber|required_if_checked:@Repetition_Enabled,@Interval_Weeks,@Interval_Hours,@Interval_Minutes"
                           v-slot="{ errors }">
                           <div class="control" style="width: 60px;">
                             <input v-model.number="editSchedule_cron.Repetition.interval.Days" type="text" class="input"
@@ -583,7 +716,7 @@
                       </td>
                       <td>
                         <ValidationProvider tag="div" class="field is-narrow" name="Interval_Hours"
-                          rules="positiveNumber|required_if_empty:@Interval_Days,@Interval_Weeks,@Interval_Minutes"
+                          rules="positiveNumber|required_if_checked:@Repetition_Enabled,@Interval_Days,@Interval_Weeks,@Interval_Minutes"
                           v-slot="{ errors }">
                           <div class="control" style="width: 60px;">
                             <input class="input" type="text" v-model.number="editSchedule_cron.Repetition.interval.Hours"
@@ -594,7 +727,7 @@
                       </td>
                       <td>
                         <ValidationProvider tag="div" class="field is-narrow" name="Interval_Minutes"
-                          rules="positiveNumber|required_if_empty:@Interval_Days,@Interval_Hours,@Interval_Weeks"
+                          rules="positiveNumber|required_if_checked:@Repetition_Enabled,@Interval_Days,@Interval_Hours,@Interval_Weeks"
                           v-slot="{ errors }">
                           <div class="control" style="width: 60px;">
                             <input class="input" type="text"
@@ -609,7 +742,7 @@
                       <th>Duration</th>
                       <td>
                         <ValidationProvider tag="div" class="field is-narrow" name="Duration_Weeks"
-                          rules="positiveNumber|required_if_empty:@Duration_Days,@Duration_Hours,@Duration_Minutes"
+                          rules="positiveNumber|required_if_checked:@Repetition_Enabled,@Duration_Days,@Duration_Hours,@Duration_Minutes"
                           v-slot="{ errors }">
                           <div class="control" style="width: 60px;">
                             <input v-model.number="editSchedule_cron.Repetition.duration.Weeks" type="text" class="input"
@@ -620,7 +753,7 @@
                       </td>
                       <td>
                         <ValidationProvider tag="div" class="field is-narrow" name="Duration_Days"
-                          rules="positiveNumber|required_if_empty:@Duration_Weeks,@Duration_Hours,@Duration_Minutes"
+                          rules="positiveNumber|required_if_checked:@Repetition_Enabled,@Duration_Weeks,@Duration_Hours,@Duration_Minutes"
                           v-slot="{ errors }">
                           <div class="control" style="width: 60px;">
                             <input v-model.number="editSchedule_cron.Repetition.duration.Days" type="text" class="input"
@@ -631,7 +764,7 @@
                       </td>
                       <td>
                         <ValidationProvider tag="div" class="field is-narrow" name="Duration_Hours"
-                          rules="positiveNumber|required_if_empty:@Duration_Days,@Duration_Weeks,@Duration_Minutes"
+                          rules="positiveNumber|required_if_checked:@Repetition_Enabled,@Duration_Days,@Duration_Weeks,@Duration_Minutes"
                           v-slot="{ errors }">
                           <div class="control" style="width: 60px;">
                             <input class="input" type="text" v-model.number="editSchedule_cron.Repetition.duration.Hours"
@@ -642,7 +775,7 @@
                       </td>
                       <td>
                         <ValidationProvider tag="div" class="field is-narrow" name="Duration_Minutes"
-                          rules="positiveNumber|required_if_empty:@Duration_Days,@Duration_Hours,@Duration_Weeks"
+                          rules="positiveNumber|required_if_checked:@Repetition_Enabled,@Duration_Days,@Duration_Hours,@Duration_Weeks"
                           v-slot="{ errors }">
                           <div class="control" style="width: 60px;">
                             <input class="input" type="text"
@@ -2051,7 +2184,8 @@ export default class JobDesigner extends Vue {
     Object.assign(this.editSchedule_cron, {
       Start_Date: this.convertDateStringForDisplay(this.editSchedule_cron.Start_Date),
       End_Date: this.convertDateStringForDisplay(this.editSchedule_cron.End_Date)
-    })
+    });
+    console.log("editSchedule_cron ---------> ", this.editSchedule_cron);
 
     this.editSchedule_interval = _.clone(schedule.interval);
     Object.assign(this.editSchedule_interval, {
@@ -2067,6 +2201,8 @@ export default class JobDesigner extends Vue {
       if (!(await (<any>this.$refs.editScheduleValidationObserver).validate())) {
         return;
       }
+
+      console.log("cron schedule ---------> ", this.editSchedule_cron);
 
       try {
         // todo - possibly conditional validation based on Schedule.TriggerType

@@ -4,7 +4,7 @@
         <modal name="import-cron-modal" :width="800" :height="600">
             <div class="round-popup" style="margin: 12px; width: 100%; height: 100%">
                 <div>
-                    These cron entries were extracted from your agent's machine.
+                    These Cron entries were extracted from your Agent's machine.
                     <br />
                     You can import them into SaaSGlue as Jobs.
                 </div>
@@ -31,6 +31,36 @@
             </div>
         </modal>
 
+        <modal name="import-win-modal" :width="800" :height="600">
+            <div class="round-popup" style="margin: 12px; width: 100%; height: 100%">
+                <div>
+                    These Tasks were extracted from your Agent's machine.
+                    <br />
+                    You can import them into SaaSGlue as Jobs.
+                </div>
+
+                <table class="table" style="margin-top: 12px; margin-left: 8px">
+                    <tr class="tr">
+                        <td class="td">Scheduled Tasks</td>
+                        <td class="td"></td>
+                    </tr>
+                    <tr class="tr" v-for="(rawWindowsTask, index) in windowsTasks" v-bind:key="rawWindowsTask.description">
+                        <td class="td">
+                            {{ rawWindowsTask.description }}
+                        </td>
+                        <td class="td">
+                            <button class="button" @click="onImportWindowsTaskClicked(index)">Import</button>
+                        </td>
+                    </tr>
+                    <tr class="tr">
+                        <td class="td" colspan="3">
+                            <button class="button" @click="onCloseWindowsTaskImportClicked">Close</button>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </modal>
+
         <div v-if="agents.length === 0" class="sg-container-px">
             <div class="is-size-4">
                 There are no agents created yet.
@@ -43,24 +73,16 @@
             <div class="sg-container-px has-overflow">
                 <div class="field is-grouped is-align-items-center">
                     <div class="control has-icons-left">
-                        <input
-                            class="input"
-                            type="text"
-                            style="width: 450px"
-                            v-model="filterString"
-                            placeholder="Filter by Agent Name, Tags and IP Address"
-                        />
+                        <input class="input" type="text" style="width: 450px" v-model="filterString"
+                            placeholder="Filter by Agent Name, Tags and IP Address" />
                         <span class="icon is-small is-left">
                             <font-awesome-icon icon="search" />
                         </span>
                     </div>
 
                     <div class="control">
-                        <button
-                            :disabled="!filterString.length || !filteredAgents.length"
-                            @click.prevent="onOpenTagsModal"
-                            class="button"
-                        >
+                        <button :disabled="!filterString.length || !filteredAgents.length" @click.prevent="onOpenTagsModal"
+                            class="button">
                             Manage Filtered Agents Tags
                         </button>
                     </div>
@@ -84,7 +106,18 @@
                             <th>Tags</th>
                             <th>Track Stats</th>
                             <th>Last Heartbeat</th>
-                            <th>Import Cron</th>
+                            <th>
+                                Import
+                                <v-popover class="is-inline ml-2">
+                                    <a @click.prevent href="#">
+                                        <font-awesome-icon icon="question-circle" />
+                                    </a>
+                                    <span slot="popover" class="is-inline-block" style="max-width:300px;">
+                                        Import local Cron Jobs for Linux/Macos machines and Scheduled Tasks for Windows
+                                        machines.
+                                    </span>
+                                </v-popover>
+                            </th>
                         </tr>
                     </thead>
                     <tbody>
@@ -101,17 +134,18 @@
                             <td><span v-html="tagsMapToString(agent.tags, 2)"></span></td>
                             <td class="has-text-centered">
                                 <label class="checkbox">
-                                    <input
-                                        type="checkbox"
-                                        :value="isChecked(agent.propertyOverrides.trackSysInfo)"
+                                    <input type="checkbox" :value="isChecked(agent.propertyOverrides.trackSysInfo)"
                                         @change="ontrackSysInfoChanged(agent)"
-                                        :checked="isChecked(agent.propertyOverrides.trackSysInfo)"
-                                    />
+                                        :checked="isChecked(agent.propertyOverrides.trackSysInfo)" />
                                 </label>
                             </td>
                             <td>{{ momentToStringV1(agent.lastHeartbeatTime) }}</td>
                             <td>
-                                <button class="button" :disabled="!agent.cron" @click="onImportCronClicked(agent)">
+                                <button class="button" v-if="agent.cron" @click="onImportCronClicked(agent)">
+                                    Import
+                                </button>
+                                <button class="button" v-if="agent.winTasks.length"
+                                    @click="onImportWindowsTasksClicked(agent)">
                                     Import
                                 </button>
                             </td>
@@ -249,15 +283,17 @@ export default class AgentMonitor extends Vue {
         this.$store.dispatch(`${StoreType.AgentStore}/saveSettings`, { id: agent.id, properties });
     }
 
-    private selectedAgentForCronImport: Agent | null = null;
+    private selectedAgentForImport: Agent | null = null;
     private rawCronJobs = [];
     private rawCronEnvVars = {};
+    private windowsTasks = [];
 
     private onImportCronClicked(agent: Agent) {
+        this.selectedAgentForImport = agent;
         if (agent.cron) {
+            this.rawCronJobs = [];
+            this.rawCronEnvVars = [];
             // Split and show non-empty rows
-            this.selectedAgentForCronImport = agent;
-
             const tmpCronEntries = agent.cron.split('\n').filter((entry) => entry.trim());
             for (let i = 0; i < tmpCronEntries.length; i++) {
                 const cronEntry = tmpCronEntries[i];
@@ -282,7 +318,7 @@ export default class AgentMonitor extends Vue {
             } = await axios.post('/api/v0/jobdef/cron', {
                 cronString: rawCronJob,
                 envVars: this.rawCronEnvVars,
-                _agentId: this.selectedAgentForCronImport.id,
+                _agentId: this.selectedAgentForImport.id,
             });
 
             // Result will be the newly created jobDef
@@ -290,7 +326,7 @@ export default class AgentMonitor extends Vue {
 
             window.open(`${window.location.origin}/#/jobDesigner/${jobDef.id}`);
 
-            const alertMessage = `Cron Job imported to a new SaaSGlue Job "${jobDef.name}".<br><br>Remember to remove this cron job from the Agent machine "${this.selectedAgentForCronImport.name}"<br>`;
+            const alertMessage = `Cron Job imported to a new SaaSGlue Job "${jobDef.name}".<br><br>Remember to remove this cron job from the Agent machine "${this.selectedAgentForImport.name}"<br>`;
             this.$store.dispatch(
                 `${StoreType.AlertStore}/addAlert`,
                 new SgAlert(alertMessage, AlertPlacement.WINDOW, AlertCategory.INFO)
@@ -303,6 +339,51 @@ export default class AgentMonitor extends Vue {
 
     private onCloseImportCronClicked() {
         this.$modal.hide('import-cron-modal');
+    }
+
+    private onImportWindowsTasksClicked(agent: Agent) {
+        this.selectedAgentForImport = agent;
+        if (agent.winTasks) {
+            this.windowsTasks = [];
+            for (let i = 0; i < agent.winTasks.length; ++i) {
+                const winTask = agent.winTasks[i];
+                const description = `${i} - ${winTask.Task.Actions.Exec.Command}`;
+                this.windowsTasks.push(Object.assign(winTask, { description }));
+            }
+            this.$modal.show('import-win-modal');
+        }
+    }
+
+    private async onImportWindowsTaskClicked(index: number) {
+        try {
+            const winTask = this.windowsTasks[index];
+
+            const {
+                data: { data },
+            } = await axios.post('/api/v0/jobdef/wintask', {
+                winTask,
+                envVars: this.rawCronEnvVars,
+                _agentId: this.selectedAgentForImport.id,
+            });
+
+            // Result will be the newly created jobDef
+            const jobDef = <JobDef>data;
+
+            window.open(`${window.location.origin}/#/jobDesigner/${jobDef.id}`);
+
+            const alertMessage = `Windows Task imported to a new SaaSGlue Job "${jobDef.name}".<br><br>Remember to remove or disable this task on the Agent machine "${this.selectedAgentForImport.name}"<br>`;
+            this.$store.dispatch(
+                `${StoreType.AlertStore}/addAlert`,
+                new SgAlert(alertMessage, AlertPlacement.WINDOW, AlertCategory.INFO)
+            );
+        } catch (err) {
+            console.error(err);
+            showErrors('Error importing the windows task.', err);
+        }
+    }
+
+    private onCloseWindowsTaskImportClicked() {
+        this.$modal.hide('import-win-modal');
     }
 
     public onNavigateToAgentDetails(agentId: string): void {

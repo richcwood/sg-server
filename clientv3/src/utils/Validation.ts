@@ -175,11 +175,31 @@ const initValidation = function(){
   // it validates if at least one field is set
   //
   // <ValidationProvider rules="required_if_empty:@name,@email" />
-  // Makes field under validation required if <ValidationProvider name="name" /> or <ValidationProvider name="email" />
+  // Makes field under validation required if <ValidationProvider name="name" /> and <ValidationProvider name="email" />
   // have empty values
   vee_validate_extend('required_if_empty', {
     validate (value: any, values: any[]) {
       return values.some(isValueDefined) ? true : isValueDefined(value);
+    },
+    computesRequired: true,
+    message: 'At least one field is required'
+  });
+
+  // This validator does cross-field validation,
+  //  the first value in values should be a checkbox value - 
+  //  it validates if the target field or one of the remaining values is set
+  //
+  // <ValidationProvider rules="required_if_checked:@checkbox,@name,@email" />
+  // Makes field under validation required if <ValidationProvider name="name" /> is true
+  //   and <ValidationProvider name="name" /> and <ValidationProvider name="email" />
+  // have empty values
+  vee_validate_extend('required_if_checked', {
+    validate (value: any, values: any[]) {
+      const checkbox_value = values[0];
+      const other_fields = values.slice(1);
+      if (checkbox_value)
+        return other_fields.some(isValueDefined) ? true : isValueDefined(value);
+      return true;
     },
     computesRequired: true,
     message: 'At least one field is required'
