@@ -76,7 +76,7 @@ const mapRepetitionDuration = {
 
 export class WindowsTaskParser {
     private parseRepetition(trigger): any {
-        const defaultValue = { enabled: false };
+        const defaultValue = { enabled: false, interval: {}, duration: {} };
         if (!trigger['Repetition']) return defaultValue;
         const repetition = trigger['Repetition'];
         const interval = repetition['Interval'];
@@ -106,13 +106,14 @@ export class WindowsTaskParser {
         for (let dayOfWeek of Object.keys(schedule['DaysOfWeek'])) {
             const day = mapLongToShortWeekdays[dayOfWeek.toUpperCase()];
             const weeks = schedule['Weeks'];
-            if (_.isArray(weeks)) {
-                for (let week of schedule['Weeks']['Week']) {
+            if (_.isArray(weeks['Week'])) {
+                for (let week of weeks['Week']) {
                     const weekOrdinal = mapWeekToOrdinal[week.toString().toUpperCase()];
                     days.push(`${weekOrdinal} ${day}`);
                 }
             } else {
-                const weekOrdinal = mapWeekToOrdinal[weeks.toString().toUpperCase()];
+                const week = weeks['Week'];
+                const weekOrdinal = mapWeekToOrdinal[week.toString().toUpperCase()];
                 days.push(`${weekOrdinal} ${day}`);
             }
         }

@@ -58,6 +58,15 @@ describe('WindowsTaskParser tests', () => {
                     Hour: '20',
                     Minute: '21',
                     Second: '25',
+                    Repetition: {
+                        duration: {
+                            Days: 1,
+                        },
+                        enabled: true,
+                        interval: {
+                            Minutes: 5,
+                        },
+                    },
                     Start_Date: '2023-07-27T20:21:25',
                     End_Date: '2024-07-24T21:55:25',
                 },
@@ -178,6 +187,11 @@ describe('WindowsTaskParser tests', () => {
                     Hour: '20',
                     Minute: '8',
                     Second: '20',
+                    Repetition: {
+                        enabled: false,
+                        duration: {},
+                        interval: {},
+                    },
                     Start_Date: '2023-08-20T02:08:20Z',
                     End_Date: '',
                 },
@@ -186,7 +200,7 @@ describe('WindowsTaskParser tests', () => {
         expect(parsed).toEqual(expected);
     });
 
-    test('ScheduleByMonth test 1', async () => {
+    test('ScheduleByMonth test 2', async () => {
         const parser = new WindowsTaskParser();
         const trigger = {
             StartBoundary: '2023-08-20T02:08:20Z',
@@ -213,6 +227,11 @@ describe('WindowsTaskParser tests', () => {
                     Hour: '20',
                     Minute: '8',
                     Second: '20',
+                    Repetition: {
+                        enabled: false,
+                        duration: {},
+                        interval: {},
+                    },
                     Start_Date: '2023-08-20T02:08:20Z',
                     End_Date: '2024-08-19T14:58:12',
                 },

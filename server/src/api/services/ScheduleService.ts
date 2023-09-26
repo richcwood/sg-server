@@ -102,6 +102,8 @@ export class ScheduleService {
                 cron: {
                     Repetition: {
                         enabled: false,
+                        interval: {},
+                        duration: {},
                     },
                 },
                 FunctionKwargs: {
