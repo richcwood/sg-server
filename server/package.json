@@ -44,6 +44,7 @@
         "express-jwt": "5.3.3",
         "express-session": "1.17.2",
         "express-sslify": "1.2.0",
+        "fast-xml-parser": "^4.3.1",
         "googleapis": "82.0.0",
         "html-pdf": "2.2.0",
         "ip-cidr": "2.1.5",
