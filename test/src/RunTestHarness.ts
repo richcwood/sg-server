@@ -81,6 +81,7 @@ import { AccessKeyModel } from '../../server/src/api/domain/AccessKey';
 import { teamVariableService } from '../../server/src/api/services/TeamVariableService';
 import { TeamVariableModel } from '../../server/src/api/domain/TeamVariable';
 import { MailChimpAPI } from '../../server/src/shared/MailChimp';
+const Stripe = require('stripe');
 
 const waitForAgentCreateInterval = 15000;
 const waitForAgentCreateMaxRetries = 12;
@@ -2278,18 +2279,87 @@ let PublishJobTask = async () => {
 
 let CreateStripeCompanyForTeams = async () => {
     mongoose.connect(process.env.mongoUrl, {});
+    const stripe = new Stripe(process.env.stripePrivateKey, process.env.stripeApiVersion);
+
+    const teams = await teamService.findAllTeamsInternal({ userAssigned: true, stripe_id: null });
+
+    if (_.isArray(teams) && teams.length > 0) {
+        for (let i = 0; i < teams.length; i++) {
+            let team = teams[i];
+            console.log('team - name -> ', team.name, ', stripe_id -> ', team.stripe_id);
+
+            const stripeCustomer = await stripe.customers.search({ query: `name:\"${team.name}\"` });
+            console.log('stripe customer ----> ', stripeCustomer);
+
+            if (stripeCustomer.data.length > 0) {
+                const stripeId = stripeCustomer.data[0].id;
+                let updateRes = await teamService.updateTeam(team._id, { stripe_id: stripeId }, '', 'name stripe_id');
+                console.log('existing stripe customer - team - updateRes ------> ', JSON.stringify(updateRes, null, 4));
+            } else {
+                let res: any = await stripeClientTokenService.createStripeCustomer(team);
+                console.log('new stripe customer - res -------> ', JSON.stringify(res, null, 4));
+                if (res.customer.id) {
+                    let updateRes = await teamService.updateTeam(
+                        team._id,
+                        { stripe_id: res.customer.id },
+                        '',
+                        'name stripe_id'
+                    );
+                    console.log('new stripe customer - team - updateRes -> ', JSON.stringify(updateRes, null, 4));
+                }
+            }
+        }
+    }
+
+    process.exit(0);
+};
+
+let UpdateStripeEmailAddresses = async () => {
+    mongoose.connect(process.env.mongoUrl, {});
+    const stripe = new Stripe(process.env.stripePrivateKey, process.env.stripeApiVersion);
 
     const teams = await teamService.findAllTeamsInternal({ userAssigned: true });
 
     if (_.isArray(teams) && teams.length > 0) {
         for (let i = 0; i < teams.length; i++) {
             let team = teams[i];
+            console.log('team - name -> ', team.name, ', stripe_id -> ', team.stripe_id);
 
-            let res: any = await stripeClientTokenService.createStripeCustomer(team);
-            console.log('res -> ', JSON.stringify(res, null, 4));
+            if (!team.stripe_id) {
+                console.log(`team ${team.name} doesn't have a stripe_id`);
+                continue;
+            }
 
-            let updateRes = await teamService.updateTeam(team.id, { stripe_id: res.customer.id });
-            console.log('updateRes -> ', JSON.stringify(updateRes, null, 4));
+            const stripeCustomer = await stripe.customers.search({ query: `name:\"${team.name}\"` });
+            if (stripeCustomer.data.length > 0) {
+                const stripeId = stripeCustomer.data[0].id;
+                const stripeEmail = stripeCustomer.data[0].email;
+                if (stripeEmail) {
+                    console.log('stripe customer email already assigned ---------> ', stripeCustomer.data[0]);
+                    continue;
+                }
+
+                let email = team.billing_email;
+                if (!email || email.indexOf('@') < 0) {
+                    const user: any = await userService.findUser(team.ownerId, 'email');
+                    email = user.email;
+                }
+                let res = await stripe.customers.update(stripeId, { email: email });
+                console.log('updated stripe customer - res ------> ', JSON.stringify(res, null, 4));
+            } else {
+                let res: any = await stripeClientTokenService.createStripeCustomer(team);
+                console.log('new stripe customer - res -------> ', JSON.stringify(res, null, 4));
+                if (res.customer.id) {
+                    let updateRes = await teamService.updateTeam(
+                        team._id,
+                        { stripe_id: res.customer.id },
+                        '',
+                        'name stripe_id'
+                    );
+                    console.log('new stripe customer - team - updateRes -> ', JSON.stringify(updateRes, null, 4));
+                }
+                break;
+            }
         }
     }
 
@@ -2705,6 +2775,7 @@ let MongoTest = async () => {
 // RunRepublishTasksWaitingForAgent('5f57b2f14b5da00017df0d4f');
 // CreateBrainTreeCompanyForTeams();
 // CreateStripeCompanyForTeams();
+UpdateStripeEmailAddresses();
 // FixTeamDBRecords();
 // CancelFailedJobs();
 // DeleteNotStartedJobs();
@@ -2718,7 +2789,7 @@ let MongoTest = async () => {
 // PruneJobs('605366d1d26030001713b1cc');
 // UploadFileToS3(process.argv[2]);
 // GetS3PrefixSize('production/5de95c0453162e8891f5a830/');
-// CreateTeam("saas glue admin", "5ef125b4fb07e500150507ca");
+// CreateTeam('stripe prod test', '610f33142cd7750017616bfa');
 // DumpMongoData('./production_20200615.json');
 // LoadMongoData('./testdata_1.json');
 // DumpSettingsFromMongo();
@@ -2752,7 +2823,7 @@ let MongoTest = async () => {
 // SubmitInvoicesForPayment();
 // TestBraintreeWebhook();
 // CreateInvoicePDF(0);
-GenerateToken();
+// GenerateToken();
 // AgentRestAPICall();
 // DeleteJobs({'_jobDefId': process.argv[2]});
 // DeleteJobDefs({"name": /Cron.*/});

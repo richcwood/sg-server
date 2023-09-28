@@ -47,7 +47,7 @@
         "ps-node": "0.1.6",
         "shortid": "2.2.14",
         "stompjs": "2.3.3",
-        "stripe": "8.125.0",
+        "stripe": "13.7.0",
         "systeminformation": "4.6.0",
         "tail": "2.0.3",
         "text-encoding": "0.7.0",
