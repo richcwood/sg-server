@@ -1,5 +1,7 @@
 <template>
-  <EditorPanel :scriptId="scriptId" :theme="theme" v-slot="{ onSave, onRun, onRunLambda, onShowLogs, onShowSettings }" @theme:update="onThemeChange">
+  <EditorPanel :scriptId="scriptId" :theme="theme"
+    v-slot="{ onSave, onRun, onRunLambda, onShowLogs, onShowSettings, onShowScriptInfo, isScriptEditable }"
+    @theme:update="onThemeChange">
     <div class="panel-controls">
       <div class="buttons m-0 separator">
         <button class="button is-small mb-0" title="Undo Changes">
@@ -84,12 +86,12 @@
           </span>
         </button>
 
-        <button :disabled="!scriptId" class="button is-small mb-0" title="Script Information">
+        <button :disabled="!scriptId" @click="onShowScriptInfo" class="button is-small mb-0" title="Script Information">
           <span class="icon">
             <font-awesome-icon icon="info" />
           </span>
         </button>
-        <button @click="onShowSettings" :disabled="!scriptId" class="button is-small mb-0" title="Editor Settings">
+        <button @click="onShowSettings" :disabled="!scriptId || !isScriptEditable" class="button is-small mb-0" title="Editor Settings">
           <span class="icon">
             <font-awesome-icon icon="cog" />
           </span>
@@ -113,7 +115,7 @@ export default class BasePanel extends Vue {
   @Prop({ default: 'vs' }) public readonly theme: EditorTheme;
   @Prop({ required: true }) public readonly scriptId: string;
 
-  public onThemeChange (theme: EditorTheme) {
+  public onThemeChange(theme: EditorTheme) {
     this.$emit('theme:update', theme);
   }
 }
