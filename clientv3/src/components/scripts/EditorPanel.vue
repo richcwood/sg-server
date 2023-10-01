@@ -1,6 +1,7 @@
 <script lang="ts">
 import { Component, Vue, Prop } from 'vue-property-decorator';
 
+import ExpandedEditorModal from './ExpandedEditorModal.vue';
 import { EditorTheme, Script } from '@/store/script/types';
 import SettingsModal from './SettingsModal.vue';
 import { StoreType } from '@/store/types';
@@ -19,6 +20,7 @@ export default class EditorPanel extends Vue {
       isScriptEditable: this.isScriptEditable,
       onShowScriptInfo: this.onShowScriptInfo,
       onShowSettings: this.onShowSettings,
+      onExpandEditor: this.onExpandEditor,
       onRunLambda: this.onRunLambda,
       onShowLogs: this.onShowLogs,
       onSave: this.onSave,
@@ -44,6 +46,17 @@ export default class EditorPanel extends Vue {
 
   public onShowLogs() {
     console.log('On show logs');
+  }
+
+  public onExpandEditor() {
+    this.$modal.show(ExpandedEditorModal, {
+      isScriptEditable: this.isScriptEditable,
+      theme: this.theme,
+    }, {
+      height: '100%',
+      width: '100%',
+    });
+
   }
 
   public onShowScriptInfo() {

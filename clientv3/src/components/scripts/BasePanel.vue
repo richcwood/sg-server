@@ -1,6 +1,6 @@
 <template>
   <EditorPanel :scriptId="scriptId" :theme="theme"
-    v-slot="{ onSave, onRun, onRunLambda, onShowLogs, onShowSettings, onShowScriptInfo, isScriptEditable }"
+    v-slot="{ onSave, onRun, onRunLambda, onShowLogs, onShowSettings, onShowScriptInfo, onExpandEditor, isScriptEditable }"
     @theme:update="onThemeChange">
     <div class="panel-controls">
       <div class="buttons m-0 separator">
@@ -80,18 +80,19 @@
           <span>Execution Log</span>
         </button>
 
-        <button class="button is-small mb-0" title="Expand Editor">
+        <button :disabled="!script" @click="onExpandEditor" class="button is-small mb-0" title="Expand Editor">
           <span class="icon">
             <font-awesome-icon icon="expand" />
           </span>
         </button>
 
-        <button :disabled="!scriptId" @click="onShowScriptInfo" class="button is-small mb-0" title="Script Information">
+        <button :disabled="!script" @click="onShowScriptInfo" class="button is-small mb-0" title="Script Information">
           <span class="icon">
             <font-awesome-icon icon="info" />
           </span>
         </button>
-        <button @click="onShowSettings" :disabled="!scriptId || !isScriptEditable" class="button is-small mb-0" title="Editor Settings">
+        <button @click="onShowSettings" :disabled="!script || !isScriptEditable" class="button is-small mb-0"
+          title="Editor Settings">
           <span class="icon">
             <font-awesome-icon icon="cog" />
           </span>
@@ -104,8 +105,10 @@
 <script lang="ts">
 import { Component, Vue, Prop } from 'vue-property-decorator';
 
-import { EditorTheme } from '@/store/script/types';
+import { EditorTheme, Script } from '@/store/script/types';
+import { BindSelectedCopy } from '@/decorator';
 import EditorPanel from './EditorPanel.vue';
+import { StoreType } from '@/store/types';
 
 @Component({
   name: 'BasePanel',
@@ -114,6 +117,9 @@ import EditorPanel from './EditorPanel.vue';
 export default class BasePanel extends Vue {
   @Prop({ default: 'vs' }) public readonly theme: EditorTheme;
   @Prop({ required: true }) public readonly scriptId: string;
+
+  @BindSelectedCopy({ storeType: StoreType.ScriptStore })
+  public script: Script;
 
   public onThemeChange(theme: EditorTheme) {
     this.$emit('theme:update', theme);
