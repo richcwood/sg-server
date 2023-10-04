@@ -51,6 +51,7 @@ export default class EditorPanel extends Vue {
   public onExpandEditor() {
     this.$modal.show(ExpandedEditorModal, {
       isScriptEditable: this.isScriptEditable,
+      script: this.script,
       theme: this.theme,
     }, {
       height: '100%',

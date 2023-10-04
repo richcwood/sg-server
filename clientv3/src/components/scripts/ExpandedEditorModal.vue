@@ -1,35 +1,33 @@
 <template>
-  <modal-card>
-    <template #body>
-      <div class="m-2">
-        <button type="button" class="button" @click="onClose">Exit full screen</button>
+  <div class="is-flex is-flex-direction-column" style="height:100%">
+    <header class="is-align-items-center is-flex m-2">
+      <button type="button" class="button" @click="onClose">Exit full screen</button>
 
-        <span class="variables">
-          Static variables:
-          <a href="#" @click.prevent="onSggVariablesClicked">@sgg</a>
-          &nbsp;
-          <v-popover class="help-popover">
-            <font-awesome-icon icon="question-circle" class="popup-help-question" />
-            <span slot="popover">
-              <div>
-                <b>S</b>aas <b>G</b>lue <b>G</b>lobal
-                <br>
-                @SGG variables can be defined with
-                <ul>
-                  <li>Team Vars via the <router-link :to="{ name: 'teamVars' }"> team var tab </router-link></li>
-                  <li>Job runtime variables via a Job's Runtime Variables settings</li>
-                  <li>Scripts that dyanmically output @SGG variables in your script's standard output</li>
-                </ul>
-              </div>
-            </span>
-          </v-popover>
+      <span class="variables ml-2">
+        Static variables:
+        <a href="#" @click.prevent="onSggVariablesClicked">@sgg</a>
+        &nbsp;
+        <v-popover class="help-popover">
+          <font-awesome-icon icon="question-circle" class="popup-help-question" />
+          <span slot="popover">
+            <div>
+              <b>S</b>aas <b>G</b>lue <b>G</b>lobal
+              <br>
+              @SGG variables can be defined with
+              <ul>
+                <li>Team Vars via the <router-link :to="{ name: 'teamVars' }"> team var tab </router-link></li>
+                <li>Job runtime variables via a Job's Runtime Variables settings</li>
+                <li>Scripts that dyanmically output @SGG variables in your script's standard output</li>
+              </ul>
+            </div>
+          </span>
+        </v-popover>
 
-          <a href="#" @click.prevent="onSgsVariablesClicked">@sgs</a> | <a href="#" @click.prevent>@sgo</a>
-        </span>
-      </div>
-      <div ref="scriptEditorFullScreen" style="width: 100%; height: 100%;"></div>
-    </template>
-  </modal-card>
+        <a href="#" @click.prevent="onSgsVariablesClicked">@sgs</a> | <a href="#" @click.prevent>@sgo</a>
+      </span>
+    </header>
+    <div class="is-flex-grow-2" ref="scriptEditorFullScreen"></div>
+  </div>
 </template>
 
 <script lang="ts">
@@ -38,11 +36,13 @@ import * as monaco from 'monaco-editor';
 import { VPopover } from 'v-tooltip';
 
 import { EditorTheme, Script, ScriptType, scriptTypesForMonaco } from '@/store/script/types';
+import { AlertCategory, AlertPlacement, SgAlert } from "@/store/alert/types";
 import { ScriptShadow } from "@/store/scriptShadow/types";
 import ModalCard from "@/components/core/ModalCard.vue";
 import { BindSelectedCopy } from "@/decorator";
 import { StoreType } from "@/store/types";
-import { AlertCategory, AlertPlacement, SgAlert } from "@/store/alert/types";
+import SgsModal from './SgsModal.vue';
+import SggModal from './SggModal.vue';
 
 @Component({
   name: "ExpandedEditorModal",
@@ -62,7 +62,7 @@ export default class SettingsModal extends Vue {
     scriptEditorFullScreen: HTMLDivElement;
   };
 
-  public created() {
+  public mounted() {
     this.fullScreenEditor = monaco.editor.create(this.$refs.scriptEditorFullScreen, {
       language: this.getMonacoLanguage(this.script.scriptType),
       value: atob(this.scriptShadow.shadowCopyCode),
@@ -120,11 +120,19 @@ export default class SettingsModal extends Vue {
   }
 
   public onSggVariablesClicked() {
-    this.$modal.show('sgg');
+    this.$modal.show(SggModal, {
+      editor: this.fullScreenEditor,
+    }, {
+      height: 'auto'
+    });
   }
 
   public onSgsVariablesClicked() {
-    this.$modal.show('sgs');
+    this.$modal.show(SgsModal, {
+      editor: this.fullScreenEditor,
+    }, {
+      height: 'auto'
+    });
   }
 }
 </script>
