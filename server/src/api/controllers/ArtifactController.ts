@@ -57,7 +57,7 @@ export class ArtifactController {
         const response: ResponseWrapper = resp['body'];
         const logger: BaseLogger = (<any>req).logger;
         try {
-            if (FreeTierChecks.IsTeamOnFreeTier(_teamId))
+            if (await FreeTierChecks.IsTeamOnFreeTier(_teamId))
                 throw new FreeTierLimitExceededError('Upgrade to upload artifacts');
 
             const newArtifact = await artifactService.createArtifact(

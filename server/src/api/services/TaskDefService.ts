@@ -68,7 +68,7 @@ export class TaskDefService {
         responseFields?: string
     ): Promise<TaskDefSchema> {
         if (data.target == Enums.TaskDefTarget.AWS_LAMBDA) {
-            if (FreeTierChecks.IsTeamOnFreeTier(_teamId))
+            if (await FreeTierChecks.IsTeamOnFreeTier(_teamId))
                 throw new FreeTierLimitExceededError('Upgrade to run AWS Lambda tasks');
         }
 
