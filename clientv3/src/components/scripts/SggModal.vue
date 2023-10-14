@@ -2,9 +2,9 @@
   <modal-card>
     <template #title>SGG: Saas Glue Global Variables</template>
     <template #body>
-      <div class="notification is-info is-light">
-        <p>Insert SaaSGlue variables into your script. You can also type "sgg" in the editor for auto complete.</p>
-      </div>
+      <p class="notification is-info is-light">
+        Insert SaaSGlue variables into your script. You can also type "sgg" in the editor for auto complete.
+      </p>
 
       <div class="field is-horizontal">
         <div class="field-label is-normal">
@@ -12,19 +12,26 @@
         </div>
         <div class="field-body">
           <div class="control">
-          <div class="select">
-            <select v-model="selectedJobDef">
+            <div class="select">
+              <select v-model="selectedJobDef">
+                <option :value="null">None</option>
                 <option v-for="def in jobDefs" :key="def.id" :value="def">{{ def.name }}</option>
               </select>
+            </div>
           </div>
-        </div>
         </div>
       </div>
 
       <!-- Job def variables -->
       <table class="table is-striped is-fullwidth">
-        <template
-          v-if="selectedJobDef && selectedJobDef.runtimeVars && Object.keys(selectedJobDef.runtimeVars).length > 0">
+        <tr v-if="!selectedJobDef" class="tr">
+          <td class="td">
+            <p class="notification is-info is-light">
+              Select a job to see it's available variables.
+            </p>
+          </td>
+        </tr>
+        <template v-else-if="selectedJobDef.runtimeVars && Object.keys(selectedJobDef.runtimeVars).length > 0">
           <tr class="tr">
             <td class="td" colspan="3">
               Variables available to job <strong>{{ selectedJobDef.name }}</strong>
@@ -40,14 +47,11 @@
             <td class="td">{{ varValue }}</td>
           </tr>
         </template>
-        <tr v-else-if="selectedJobDef" class="tr">
+        <tr v-else="selectedJobDef" class="tr">
           <td class="td">
-            There are no variables for the selected job.
-          </td>
-        </tr>
-        <tr v-else-if="selectedJobDef" class="tr">
-          <td class="td">
-            Select a job to see it's available variables.
+            <p class="notification is-info is-light">
+              There are no variables for the selected job.
+            </p>
           </td>
         </tr>
       </table>
@@ -102,7 +106,7 @@ export default class SggModal extends Vue {
   @BindStoreModel({ storeType: StoreType.TeamVariableStore, selectedModelName: 'models' })
   public teamVars: TeamVar[];
 
-  @BindStoreModel({storeType: StoreType.JobDefStore, selectedModelName: 'models'})
+  @BindStoreModel({ storeType: StoreType.JobDefStore, selectedModelName: 'models' })
   public jobDefs: JobDef[];
 
   @BindSelected({ storeType: StoreType.JobDefStore })
