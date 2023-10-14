@@ -1,6 +1,6 @@
 <template>
   <EditorPanel :scriptId="scriptId" :theme="theme"
-    v-slot="{ onSave, onRun, onRunLambda, onShowLogs, onShowSettings, onShowScriptInfo, onExpandEditor, isScriptEditable }"
+    v-slot="{ onSave, onRun, onRunLambda, onShowLogs, onShowSettings, onShowScriptInfo, onExpandEditor, onRevertChanges, isScriptEditable, hasCodeChanges }"
     @theme:update="onThemeChange">
     <div class="panel-controls">
       <div class="buttons m-0 separator">
@@ -22,7 +22,7 @@
           </span>
         </button>
 
-        <button class="button is-small mb-0" title="Revert Changes">
+        <button :disabled="!script || !hasCodeChanges" @click="onRevertChanges" class="button is-small mb-0" title="Revert Changes">
           <span class="icon">
             <font-awesome-icon icon="history" />
           </span>

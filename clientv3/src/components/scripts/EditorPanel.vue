@@ -3,7 +3,10 @@ import { Component, Vue, Prop } from 'vue-property-decorator';
 
 import ExpandedEditorModal from './ExpandedEditorModal.vue';
 import { EditorTheme, Script } from '@/store/script/types';
+import RevertChangesModal from './RevertChangesModal.vue';
+import { ScriptShadow } from '@/store/scriptShadow/types';
 import SettingsModal from './SettingsModal.vue';
+import { BindSelectedCopy } from '@/decorator';
 import { StoreType } from '@/store/types';
 import InfoModal from './InfoModal.vue';
 
@@ -15,10 +18,15 @@ export default class EditorPanel extends Vue {
   @Prop({ default: 'vs' }) public readonly theme: EditorTheme;
   @Prop({ required: true }) public readonly scriptId: string;
 
+  @BindSelectedCopy({ storeType: StoreType.ScriptShadowStore })
+  public scriptShadow: ScriptShadow;
+
   public render() {
     return this.$scopedSlots.default({
       isScriptEditable: this.isScriptEditable,
+      hasCodeChanges: this.hasCodeChanges,
       onShowScriptInfo: this.onShowScriptInfo,
+      onRevertChanges: this.onRevertChanges,
       onShowSettings: this.onShowSettings,
       onExpandEditor: this.onExpandEditor,
       onRunLambda: this.onRunLambda,
@@ -48,6 +56,16 @@ export default class EditorPanel extends Vue {
     console.log('On show logs');
   }
 
+  public onRevertChanges() {
+    this.$modal.show(RevertChangesModal, {
+      scriptShadow: this.scriptShadow,
+      script: this.script,
+    }, {
+      height: 'auto',
+      width: '200px',
+    });
+  }
+
   public onExpandEditor() {
     this.$modal.show(ExpandedEditorModal, {
       isScriptEditable: this.isScriptEditable,
@@ -57,7 +75,6 @@ export default class EditorPanel extends Vue {
       height: '100%',
       width: '100%',
     });
-
   }
 
   public onShowScriptInfo() {
@@ -88,6 +105,14 @@ export default class EditorPanel extends Vue {
       return true;
     } else {
       return this.script._originalAuthorUserId === loggedInUserId;
+    }
+  }
+
+  private get hasCodeChanges(): boolean {
+    if (this.script && this.scriptShadow) {
+      return this.script.code !== this.scriptShadow.shadowCopyCode;
+    } else {
+      return false;
     }
   }
 }
