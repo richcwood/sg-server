@@ -1,6 +1,6 @@
 <template>
   <div class="is-flex is-flex-direction-column">
-    <BasePanel :scriptId="scriptId" :theme="theme" @theme:update="onThemeChange" />
+    <BasePanel v-if="scriptId" :scriptId="scriptId" :theme="theme" @theme:update="onThemeChange" />
     <MonacoWrapper :scriptId="scriptId" :theme="theme" class="is-flex-grow-1" />
   </div>
 </template>

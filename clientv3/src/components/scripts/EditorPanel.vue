@@ -1,12 +1,12 @@
 <script lang="ts">
 import { Component, Vue, Prop } from 'vue-property-decorator';
+import * as monaco from 'monaco-editor';
 
 import ExpandedEditorModal from './ExpandedEditorModal.vue';
 import { EditorTheme, Script } from '@/store/script/types';
 import RevertChangesModal from './RevertChangesModal.vue';
 import { ScriptShadow } from '@/store/scriptShadow/types';
 import SettingsModal from './SettingsModal.vue';
-import { BindSelectedCopy } from '@/decorator';
 import { StoreType } from '@/store/types';
 import InfoModal from './InfoModal.vue';
 
@@ -17,9 +17,6 @@ import InfoModal from './InfoModal.vue';
 export default class EditorPanel extends Vue {
   @Prop({ default: 'vs' }) public readonly theme: EditorTheme;
   @Prop({ required: true }) public readonly scriptId: string;
-
-  @BindSelectedCopy({ storeType: StoreType.ScriptShadowStore })
-  public scriptShadow: ScriptShadow;
 
   public render() {
     return this.$scopedSlots.default({
@@ -32,12 +29,18 @@ export default class EditorPanel extends Vue {
       onRunLambda: this.onRunLambda,
       onShowLogs: this.onShowLogs,
       onSave: this.onSave,
+      onUndo: this.onUndo,
+      onRedo: this.onRedo,
       onRun: this.onRun,
     });
   }
 
   public get script(): Script {
     return this.$store.state[StoreType.ScriptStore].storeUtils.findById(this.scriptId);
+  }
+
+  public get scriptShadow(): ScriptShadow {
+    return this.$store.state[StoreType.ScriptShadowStore].storeUtils.findById(this.scriptId);
   }
 
   public onSave() {
@@ -54,6 +57,14 @@ export default class EditorPanel extends Vue {
 
   public onShowLogs() {
     console.log('On show logs');
+  }
+
+  public onUndo() {
+    monaco.editor.getEditors()[0].trigger('panel', 'undo', null);
+  }
+
+  public onRedo() {
+    monaco.editor.getEditors()[0].trigger('panel', 'redo', null);
   }
 
   public onRevertChanges() {
@@ -109,7 +120,7 @@ export default class EditorPanel extends Vue {
   }
 
   private get hasCodeChanges(): boolean {
-    if (this.script && this.scriptShadow) {
+    if (this.scriptId && this.script && this.scriptShadow) {
       return this.script.code !== this.scriptShadow.shadowCopyCode;
     } else {
       return false;
