@@ -6,8 +6,8 @@
       onRevertChanges,
       onShowSettings,
       onExpandEditor,
-      hasCodeChanges,
       onRunLambda,
+      onShowDiff,
       onShowLogs,
       onSave,
       onRun,
@@ -28,7 +28,7 @@
             </span>
           </button>
 
-          <button class="button is-small mb-0" title="Compare Changes">
+          <button @click="onShowDiff" :disabled="!hasCodeChanges" class="button is-small mb-0" title="Compare Changes">
             <span class="icon">
               <font-awesome-icon icon="file-code" />
             </span>
@@ -120,6 +120,8 @@
 import { Component, Vue, Prop } from 'vue-property-decorator';
 
 import { EditorTheme, Script } from '@/store/script/types';
+import { ScriptShadow } from '@/store/scriptShadow/types';
+import { BindSelectedCopy } from '@/decorator';
 import EditorPanel from './EditorPanel.vue';
 import { StoreType } from '@/store/types';
 
@@ -131,8 +133,19 @@ export default class BasePanel extends Vue {
   @Prop({ default: 'vs' }) public readonly theme: EditorTheme;
   @Prop({ required: true }) public readonly scriptId: string;
 
+  @BindSelectedCopy({ storeType: StoreType.ScriptShadowStore })
+  public scriptShadow: ScriptShadow;
+
   public get script(): Script {
     return this.$store.state[StoreType.ScriptStore].storeUtils.findById(this.scriptId);
+  }
+
+  public get hasCodeChanges(): boolean {
+    if (this.scriptId && this.script && this.scriptShadow) {
+      return this.script.code !== this.scriptShadow.shadowCopyCode;
+    } else {
+      return false;
+    }
   }
 
   public onThemeChange(theme: EditorTheme) {

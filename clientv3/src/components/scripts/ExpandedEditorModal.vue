@@ -48,7 +48,7 @@ import SggModal from './SggModal.vue';
   name: "ExpandedEditorModal",
   components: { ModalCard, VPopover },
 })
-export default class SettingsModal extends Vue {
+export default class ExpandedEditorModal extends Vue {
   @Prop({ required: true }) public readonly theme: EditorTheme;
   @Prop({ required: true }) public readonly script: Script;
   @Prop() public readonly isScriptEditable: boolean;
@@ -115,8 +115,8 @@ export default class SettingsModal extends Vue {
   }
 
   private close() {
-    this.$emit('close');
     this.fullScreenEditor.dispose();
+    this.$emit('close');
   }
 
   public onSggVariablesClicked() {

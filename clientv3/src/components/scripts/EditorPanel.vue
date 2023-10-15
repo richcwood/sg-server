@@ -6,7 +6,9 @@ import ExpandedEditorModal from './ExpandedEditorModal.vue';
 import { EditorTheme, Script } from '@/store/script/types';
 import RevertChangesModal from './RevertChangesModal.vue';
 import { ScriptShadow } from '@/store/scriptShadow/types';
+import DiffEditorModal from './DiffEditorModal.vue';
 import SettingsModal from './SettingsModal.vue';
+import { BindSelectedCopy } from '@/decorator';
 import { StoreType } from '@/store/types';
 import InfoModal from './InfoModal.vue';
 
@@ -18,16 +20,19 @@ export default class EditorPanel extends Vue {
   @Prop({ default: 'vs' }) public readonly theme: EditorTheme;
   @Prop({ required: true }) public readonly scriptId: string;
 
+  @BindSelectedCopy({ storeType: StoreType.ScriptShadowStore })
+  public scriptShadow: ScriptShadow;
+
   public render() {
     return this.$scopedSlots.default({
       isScriptEditable: this.isScriptEditable,
-      hasCodeChanges: this.hasCodeChanges,
       onShowScriptInfo: this.onShowScriptInfo,
       onRevertChanges: this.onRevertChanges,
       onShowSettings: this.onShowSettings,
       onExpandEditor: this.onExpandEditor,
       onRunLambda: this.onRunLambda,
       onShowLogs: this.onShowLogs,
+      onShowDiff: this.onShowDiff,
       onSave: this.onSave,
       onUndo: this.onUndo,
       onRedo: this.onRedo,
@@ -37,10 +42,6 @@ export default class EditorPanel extends Vue {
 
   public get script(): Script {
     return this.$store.state[StoreType.ScriptStore].storeUtils.findById(this.scriptId);
-  }
-
-  public get scriptShadow(): ScriptShadow {
-    return this.$store.state[StoreType.ScriptShadowStore].storeUtils.findById(this.scriptId);
   }
 
   public onSave() {
@@ -65,6 +66,17 @@ export default class EditorPanel extends Vue {
 
   public onRedo() {
     monaco.editor.getEditors()[0].trigger('panel', 'redo', null);
+  }
+
+  public onShowDiff() {
+    this.$modal.show(DiffEditorModal, {
+      scriptShadow: this.scriptShadow,
+      script: this.script,
+      theme: this.theme,
+    }, {
+      height: '100%',
+      width: '100%',
+    });
   }
 
   public onRevertChanges() {
@@ -116,14 +128,6 @@ export default class EditorPanel extends Vue {
       return true;
     } else {
       return this.script._originalAuthorUserId === loggedInUserId;
-    }
-  }
-
-  private get hasCodeChanges(): boolean {
-    if (this.scriptId && this.script && this.scriptShadow) {
-      return this.script.code !== this.scriptShadow.shadowCopyCode;
-    } else {
-      return false;
     }
   }
 }
