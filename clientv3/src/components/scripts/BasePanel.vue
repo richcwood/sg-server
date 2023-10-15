@@ -4,6 +4,7 @@
       onShowScriptInfo,
       isScriptEditable,
       onRevertChanges,
+      isSavingScript,
       onShowSettings,
       onExpandEditor,
       onRunLambda,
@@ -43,9 +44,10 @@
         </div>
 
         <div class="buttons m-0 separator">
-          <button @click="onSave" class="button is-small mb-0" title="Save Script">
+          <button @click="onSave" :disabled="!hasCodeChanges || isSavingScript" class="button is-small mb-0" title="Save Script">
             <span class="icon">
-              <font-awesome-icon icon="save" />
+              <span v-if="isSavingScript" class="spinner"></span>
+              <font-awesome-icon v-else icon="save" />
             </span>
           </button>
 
@@ -181,5 +183,11 @@ export default class BasePanel extends Vue {
 .buttons.controls-right {
   margin-left: auto;
   margin-bottom: 0;
+}
+
+.spinner {
+  @include loader;
+
+  display: inline-block;
 }
 </style>

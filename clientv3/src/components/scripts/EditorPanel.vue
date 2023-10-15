@@ -2,11 +2,13 @@
 import { Component, Vue, Prop } from 'vue-property-decorator';
 import * as monaco from 'monaco-editor';
 
+import { AlertPlacement, SgAlert } from '@/store/alert/types';
 import ExpandedEditorModal from './ExpandedEditorModal.vue';
 import { EditorTheme, Script } from '@/store/script/types';
 import RevertChangesModal from './RevertChangesModal.vue';
 import { ScriptShadow } from '@/store/scriptShadow/types';
 import DiffEditorModal from './DiffEditorModal.vue';
+import { showErrors } from '@/utils/ErrorHandler';
 import SettingsModal from './SettingsModal.vue';
 import { BindSelectedCopy } from '@/decorator';
 import { StoreType } from '@/store/types';
@@ -37,6 +39,7 @@ export default class EditorPanel extends Vue {
       onUndo: this.onUndo,
       onRedo: this.onRedo,
       onRun: this.onRun,
+      isSavingScript: this.isSavingScript,
     });
   }
 
@@ -44,8 +47,34 @@ export default class EditorPanel extends Vue {
     return this.$store.state[StoreType.ScriptStore].storeUtils.findById(this.scriptId);
   }
 
-  public onSave() {
-    console.log('On save', this.scriptId);
+  private isSavingScript: boolean = false;
+
+  public async onSave() {
+    try {
+      if(this.script && this.scriptShadow){
+        this.isSavingScript = true;
+
+        this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Saving script - ${this.script.name}`, AlertPlacement.FOOTER));
+
+        // Update the shadow copy fist, otherwise the script is selected when it's saved and it overwrites
+        // the shadow's changes
+        await this.$store.dispatch(`${StoreType.ScriptShadowStore}/save`);
+        this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Script published`, AlertPlacement.FOOTER));
+
+        // Update the original script
+        await this.$store.dispatch(`${StoreType.ScriptStore}/save`, {
+          script: {
+            id: this.script.id,
+            code: this.scriptShadow.shadowCopyCode
+          }
+        });
+      }
+    } catch(err){
+      console.error(err);
+      showErrors('Error publishing script', err);
+    } finally {
+      this.isSavingScript = false;
+    }
   }
 
   public onRun() {
