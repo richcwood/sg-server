@@ -8,6 +8,7 @@
       onShowSettings,
       onExpandEditor,
       onRenameScript,
+      onDeleteScript,
       onRunLambda,
       onShowDiff,
       onShowLogs,
@@ -58,7 +59,7 @@
             </span>
           </button>
 
-          <button class="button is-small mb-0 is-danger" title="Delete Script">
+          <button @click="onDeleteScript" class="button is-small mb-0 is-danger" title="Delete Script">
             <span class="icon">
               <font-awesome-icon icon="trash" />
             </span>
