@@ -13,6 +13,7 @@ import SettingsModal from './SettingsModal.vue';
 import { BindSelectedCopy } from '@/decorator';
 import { StoreType } from '@/store/types';
 import InfoModal from './InfoModal.vue';
+import RenameScriptModal from './RenameScriptModal.vue';
 
 @Component({
   name: 'EditorPanel',
@@ -32,6 +33,7 @@ export default class EditorPanel extends Vue {
       onRevertChanges: this.onRevertChanges,
       onShowSettings: this.onShowSettings,
       onExpandEditor: this.onExpandEditor,
+      onRenameScript: this.onRenameScript,
       onRunLambda: this.onRunLambda,
       onShowLogs: this.onShowLogs,
       onShowDiff: this.onShowDiff,
@@ -115,6 +117,15 @@ export default class EditorPanel extends Vue {
     }, {
       height: 'auto',
       width: '200px',
+    });
+  }
+
+  public onRenameScript() {
+    this.$modal.show(RenameScriptModal, {
+      script: this.script,
+    }, {
+      height: 'auto',
+      width: '650px',
     });
   }
 

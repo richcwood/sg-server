@@ -7,6 +7,7 @@
       isSavingScript,
       onShowSettings,
       onExpandEditor,
+      onRenameScript,
       onRunLambda,
       onShowDiff,
       onShowLogs,
@@ -51,7 +52,7 @@
             </span>
           </button>
 
-          <button class="button is-small mb-0" title="Rename Script">
+          <button @click="onRenameScript" class="button is-small mb-0" title="Rename Script">
             <span class="icon">
               <font-awesome-icon icon="pencil-alt" />
             </span>
