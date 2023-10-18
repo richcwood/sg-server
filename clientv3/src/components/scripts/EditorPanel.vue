@@ -15,6 +15,7 @@ import { StoreType } from '@/store/types';
 import InfoModal from './InfoModal.vue';
 import RenameScriptModal from './RenameScriptModal.vue';
 import DeleteScriptModal from './DeleteScriptModal.vue';
+import RunSettingsModal from './RunSettingsModal.vue';
 
 @Component({
   name: 'EditorPanel',
@@ -27,9 +28,14 @@ export default class EditorPanel extends Vue {
   @BindSelectedCopy({ storeType: StoreType.ScriptShadowStore })
   public scriptShadow: ScriptShadow;
 
+  public isScriptRunning: boolean = false;
+
   public render() {
     return this.$scopedSlots.default({
       isScriptEditable: this.isScriptEditable,
+      isScriptRunning: this.isScriptRunning,
+      isSavingScript: this.isSavingScript,
+
       onShowScriptInfo: this.onShowScriptInfo,
       onRevertChanges: this.onRevertChanges,
       onShowSettings: this.onShowSettings,
@@ -43,7 +49,6 @@ export default class EditorPanel extends Vue {
       onUndo: this.onUndo,
       onRedo: this.onRedo,
       onRun: this.onRun,
-      isSavingScript: this.isSavingScript,
     });
   }
 
@@ -82,7 +87,11 @@ export default class EditorPanel extends Vue {
   }
 
   public onRun() {
-    console.log('On run');
+    this.$modal.show(RunSettingsModal, {
+
+    }, {
+      height: 'auto',
+    });
   }
 
   public onRunLambda() {

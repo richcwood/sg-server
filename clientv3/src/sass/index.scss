@@ -229,3 +229,10 @@ table.sg-table {
 input:read-only {
   background-color: #e9ecef;
 }
+
+#modals-container .v--modal-box.v--modal {
+  background-color: transparent;
+  text-align: unset;
+  box-shadow: none;
+  border: 0;
+}
