@@ -262,6 +262,7 @@ export class JobService {
                         _taskId: taskModel._id,
                         name: stepDef.name,
                         order: stepDef.order,
+                        command: stepDef.command,
                         arguments: stepDef.arguments,
                         variables: stepDef.variables,
                         lambdaRuntime: stepDef.lambdaRuntime,

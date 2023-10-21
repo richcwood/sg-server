@@ -1420,6 +1420,14 @@
               </tr>
               <tr class="tr">
                 <td class="td">
+                  <label class="label">Command</label>
+                </td>
+                <td class="td">
+                  <input class="control input" style="width: 475px;" v-model="selectedStepDefForEdit.command" />
+                </td>
+              </tr>
+              <tr class="tr">
+                <td class="td">
                   <label class="label">Arguments</label>
                 </td>
                 <td class="td">
