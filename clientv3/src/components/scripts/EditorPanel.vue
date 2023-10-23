@@ -28,12 +28,12 @@ export default class EditorPanel extends Vue {
   @BindSelectedCopy({ storeType: StoreType.ScriptShadowStore })
   public scriptShadow: ScriptShadow;
 
-  public isScriptRunning: boolean = false;
+  public isJobRunning: boolean = false;
 
   public render() {
     return this.$scopedSlots.default({
       isScriptEditable: this.isScriptEditable,
-      isScriptRunning: this.isScriptRunning,
+      isJobRunning: this.isJobRunning,
       isSavingScript: this.isSavingScript,
 
       onShowScriptInfo: this.onShowScriptInfo,
@@ -88,9 +88,13 @@ export default class EditorPanel extends Vue {
 
   public onRun() {
     this.$modal.show(RunSettingsModal, {
-
+      scriptType: this.script.scriptType,
+      scriptShadow: this.scriptShadow,
     }, {
       height: 'auto',
+    }, {
+      'job:running': () => this.isJobRunning = true,
+      'job:completed': () => this.isJobRunning = false,
     });
   }
 
