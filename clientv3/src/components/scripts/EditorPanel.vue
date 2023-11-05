@@ -33,8 +33,8 @@ export default class EditorPanel extends Vue {
   public render() {
     return this.$scopedSlots.default({
       isScriptEditable: this.isScriptEditable,
-      isJobRunning: this.isJobRunning,
       isSavingScript: this.isSavingScript,
+      isJobRunning: this.isJobRunning,
 
       onShowScriptInfo: this.onShowScriptInfo,
       onRevertChanges: this.onRevertChanges,

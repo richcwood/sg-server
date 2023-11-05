@@ -150,7 +150,7 @@ export default class RunSettingsModal extends Vue {
     }
 
     try {
-      this.$emit('job:running');
+      this.$parent.$emit('job:running');
 
       console.log({
         scriptType: ScriptType[this.scriptType] as any as ScriptType,
@@ -184,7 +184,7 @@ export default class RunSettingsModal extends Vue {
       console.error(err);
       showErrors('Error running the script', err);
     } finally {
-      this.$emit('job:completed');
+      this.$parent.$emit('job:completed');
     }
 
     this.onClose();

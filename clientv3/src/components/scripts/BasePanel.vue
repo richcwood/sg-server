@@ -68,21 +68,21 @@
         </div>
 
         <div class="buttons m-0">
-          <button @click="onRun" :disabled="isJobRunning" class="button is-small mb-0 is-success" title="Run Script">
+          <button @click="onRun" :disabled="isJobRunning" :class="{'is-loading': isJobRunning}" class="button is-small mb-0 is-success" title="Run Script">
             <span class="icon">
               <font-awesome-icon icon="play" />
             </span>
             <span>Run</span>
           </button>
 
-          <button @click="onRunLambda" :disabled="isJobRunning" class="button is-small mb-0 is-warning" title="Run Script in AWS Lambda">
+          <button @click="onRunLambda" :disabled="isJobRunning" :class="{'is-loading': isJobRunning}" class="button is-small mb-0 is-warning" title="Run Script in AWS Lambda">
             <span class="icon lambda-icon">
               <img src="@/assets/icons/aws-lambda-icon.svg" />
             </span>
             <span>Run in AWS Lambda</span>
           </button>
 
-          <button :disabled="isJobRunning" class="button is-small mb-0" title="Schedule Run">
+          <button :disabled="isJobRunning" :class="{'is-loading': isJobRunning}" class="button is-small mb-0" title="Schedule Run">
             <span class="icon">
               <font-awesome-icon icon="clock" />
             </span>
