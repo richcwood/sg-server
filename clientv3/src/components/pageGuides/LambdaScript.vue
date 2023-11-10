@@ -104,7 +104,11 @@ export default class LambdaScript extends Vue {
         [ScriptType.PYTHON]: 'print("Hello World")',
         [ScriptType.NODE]: 'console.log("Hello World")',
         [ScriptType.SH]: 'echo "Hello World"',
+        [ScriptType.CMD]: 'echo "Hello World"',
+        [ScriptType.POWERSHELL]: 'echo "Hello World"',
         [ScriptType.RUBY]: 'puts "Hello World"',
+        [ScriptType.LUA]: 'print("Hello World")',
+        [ScriptType.PERL]: 'print("Hello World")',
         [ScriptType.JAVASCRIPT]: 'console.log("Hello World")',
     };
 

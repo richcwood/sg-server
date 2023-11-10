@@ -88,7 +88,6 @@ enum ScriptType {
     RUBY = 4,
     LUA = 5,
     PERL = 6,
-    PHP = 7,
     POWERSHELL = 8,
 }
 export { ScriptType };
@@ -108,9 +107,6 @@ const ScriptTypeDetails: any = {
     },
     PERL: {
         cmd: 'perl',
-    },
-    PHP: {
-        cmd: 'php',
     },
     POWERSHELL: {
         cmd: 'powershell',
