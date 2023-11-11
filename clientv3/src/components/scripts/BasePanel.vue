@@ -12,6 +12,7 @@
       onExpandEditor,
       onRenameScript,
       onDeleteScript,
+      onScheduleRun,
       onRunLambda,
       onShowDiff,
       onSave,
@@ -83,7 +84,7 @@
             <span>Run in AWS Lambda</span>
           </button>
 
-          <button :disabled="isJobRunning" :class="{'is-loading': isJobRunning}" class="button is-small mb-0" title="Schedule Run">
+          <button @click="onScheduleRun" :disabled="isJobRunning" :class="{'is-loading': isJobRunning}" class="button is-small mb-0" title="Schedule Run">
             <span class="icon">
               <font-awesome-icon icon="clock" />
             </span>

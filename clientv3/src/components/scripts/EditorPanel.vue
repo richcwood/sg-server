@@ -1,6 +1,7 @@
 <script lang="ts">
 import { Component, Vue, Prop } from 'vue-property-decorator';
 import * as monaco from 'monaco-editor';
+import axios from 'axios';
 
 import { AlertPlacement, SgAlert } from '@/store/alert/types';
 import ExpandedEditorModal from './ExpandedEditorModal.vue';
@@ -46,6 +47,7 @@ export default class EditorPanel extends Vue {
       onExpandEditor: this.onExpandEditor,
       onRenameScript: this.onRenameScript,
       onDeleteScript: this.onDeleteScript,
+      onScheduleRun: this.onScheduleRun,
       onRunLambda: this.onRunLambda,
       onShowDiff: this.onShowDiff,
       onSave: this.onSave,
@@ -109,6 +111,27 @@ export default class EditorPanel extends Vue {
 
   public onRunLambda() {
     console.log('On run lambda');
+  }
+
+  public async onScheduleRun() {
+      try {
+        this.isJobRunning = true
+
+        const {
+          data: { data },
+        } = await axios.post(`/api/v0/jobdef/script/`, { _scriptId: this.script.id });
+
+        const routeData = this.$router.resolve({
+          name: "jobDesigner",
+          params: { jobId: data.id, tabName: "schedule" },
+        });
+        window.open(routeData.href, "_blank");
+      } catch (err) {
+        console.error(err);
+        showErrors("Error scheduling script", err);
+      } finally {
+        this.isJobRunning = false;
+      }
   }
 
   public onShowExecutionLogs() {
