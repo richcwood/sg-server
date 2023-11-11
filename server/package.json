@@ -59,7 +59,7 @@
         "nodemailer": "6.7.2",
         "pkg": "5.8.0",
         "redis": "2.8.0",
-        "stripe": "8.205.0",
+        "stripe": "13.7.0",
         "text-encoding": "0.7.0",
         "ts-loader": "4.5.0",
         "un": "0.0.0",

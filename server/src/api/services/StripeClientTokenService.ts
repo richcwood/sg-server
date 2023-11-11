@@ -1,14 +1,23 @@
-import { MissingObjectError } from '../utils/Errors';
-import { TeamSchema } from '../domain/Team';
-import * as mongodb from 'mongodb';
 const Stripe = require('stripe');
+
+import * as mongodb from 'mongodb';
+
+import { TeamSchema } from '../domain/Team';
+
 import { teamService } from './TeamService';
+import { userService } from './UserService';
+
+import { MissingObjectError } from '../utils/Errors';
 
 export class StripeClientTokenService {
     public async createStripeCustomer(team: TeamSchema): Promise<object> {
-        // let merchantId = config.get('stripeMerchantId');
         const stripe = new Stripe(process.env.stripePrivateKey, process.env.stripeApiVersion);
 
+        let email = team.billing_email;
+        if (!email) {
+            const user: any = await userService.findUser(team.ownerId, 'email');
+            email = user.email;
+        }
         return await new Promise(async (resolve, reject) => {
             try {
                 let address: any = {
@@ -25,15 +34,15 @@ export class StripeClientTokenService {
                 let customer = await stripe.customers.create({
                     address: address,
                     description: team.name,
-                    email: team.billing_email,
+                    email: email,
                     metadata: metadata,
                     name: team.name,
                     phone: team.billing_phone,
                 });
 
-                resolve({ succes: true, customer });
+                resolve({ success: true, customer });
             } catch (err) {
-                reject({ succes: false, err });
+                reject({ success: false, err });
             }
         });
     }

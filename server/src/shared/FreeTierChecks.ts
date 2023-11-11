@@ -16,7 +16,7 @@ export class FreeTierChecks {
     static IsTeamOnFreeTier = async (_teamId: mongodb.ObjectId) => {
         const team = await teamService.findTeam(_teamId, 'pricingTier activationDate freeTierMaxDays');
         if (!team) throw new MissingObjectError(`Team '${_teamId.toHexString()} not found`);
-        return (team.pricingTier = TeamPricingTier.FREE);
+        return team.pricingTier == TeamPricingTier.FREE;
     };
 
     static PaidTierRequired = async (_teamId: mongodb.ObjectId, errMsg: string) => {
@@ -42,7 +42,6 @@ export class FreeTierChecks {
             if (team.cntFreeScriptsRun >= freeTierSettings.maxScripts) {
                 const msg = `You have reached the maximum number of free scripts - please upgrade to run additional scripts`;
                 rabbitMQPublisher.publishBrowserAlert(_teamId, msg);
-                console.log('throwing error --------> ', msg);
                 throw new FreeTierLimitExceededError(msg);
             }
         }
