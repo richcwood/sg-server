@@ -40,6 +40,9 @@
     </div>
 
     <div class="px-3 pt-0 pb-3 list-wrapper">
+      <div v-if="!searchTerm && filteredScripts.length === 0" class="is-flex is-align-items-center is-justify-content-center">
+        <span class="spinner"></span>
+      </div>
       <ul>
         <li v-for="script in filteredScripts"
           class="mb-1 pl-2 script-item" :key="script.id">
@@ -154,5 +157,9 @@ header {
 
 .has-unsaved-changes::before {
   content: '*';
+}
+
+.spinner {
+  @include loader;
 }
 </style>
