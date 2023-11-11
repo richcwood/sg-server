@@ -89,8 +89,8 @@
       </ValidationObserver>
     </template>
     <template #footer>
-      <button class="button is-primary" @click="onRun">Run</button>
-      <button class="button" @click="$emit('close')">Cancel</button>
+      <button :disabled="isRunning" :class="{'is-loading': isRunning}" class="button is-primary" @click="onRun">Run</button>
+      <button :disabled="isRunning" class="button" @click="$emit('close')">Cancel</button>
     </template>
   </ModalCard>
 </template>
@@ -109,7 +109,6 @@ import { ScriptType } from '@/store/script/types';
 import AgentSearch from "../AgentSearch.vue";
 import { Agent } from "@/store/agent/types";
 import { StoreType } from '@/store/types';
-import { AgentJobSettings } from './types';
 
 @Component({
   name: "RunSettingsModal",
@@ -119,6 +118,7 @@ export default class RunSettingsModal extends Vue {
   @Prop({ required: true }) public readonly scriptShadow: ScriptShadow;
   @Prop({ required: true }) public readonly scriptType: ScriptType;
 
+  public isRunning = false;
   public runAgentTarget: TaskDefTarget = TaskDefTarget.SINGLE_AGENT;
   public runScriptRuntimeVars: VariableMap = null;
   public runAgentTargetTags_string: string = '';
@@ -150,9 +150,10 @@ export default class RunSettingsModal extends Vue {
     }
 
     try {
+      this.isRunning = true;
       this.$parent.$emit('job:running');
 
-      console.log({
+      const data = await this.$store.dispatch(`${StoreType.JobStore}/runICJob`, {
         scriptType: ScriptType[this.scriptType] as any as ScriptType,
         code: this.scriptShadow.shadowCopyCode,
         runScriptCommand: this.runScriptCommand,
@@ -162,29 +163,16 @@ export default class RunSettingsModal extends Vue {
         runScriptRuntimeVars: this.runScriptRuntimeVars,
         runAgentTargetTags_string: this.runAgentTargetTags_string,
         runAgentTargetAgentId: this.runAgentTargetAgentId,
-      })
-
-      await new Promise((res) => {
-        setTimeout(() => res(true), 3000);
       });
 
-      // await this.$store.dispatch(`${StoreType.JobStore}/runICJob`, {
-      //   scriptType: ScriptType[this.scriptType] as any as ScriptType,
-      //   code: this.scriptShadow.shadowCopyCode,
-      //   runScriptCommand: this.runScriptCommand,
-      //   runScriptArguments: this.runScriptArguments,
-      //   runScriptEnvVars: this.runScriptEnvVars,
-      //   runAgentTarget: this.runAgentTarget,
-      //   runScriptRuntimeVars: this.runScriptRuntimeVars,
-      //   runAgentTargetTags_string: this.runAgentTargetTags_string,
-      //   runAgentTargetAgentId: this.runAgentTargetAgentId,
-      // });
+      this.isRunning = false;
+      this.$parent.$emit('job:completed', data.id);
     } catch (err) {
-
+      this.$parent.$emit('job:failed');
       console.error(err);
       showErrors('Error running the script', err);
     } finally {
-      this.$parent.$emit('job:completed');
+      this.isRunning = false;
     }
 
     this.onClose();

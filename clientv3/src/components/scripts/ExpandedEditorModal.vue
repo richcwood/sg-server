@@ -1,5 +1,5 @@
 <template>
-  <div class="is-flex is-flex-direction-column" style="height:100%">
+  <div class="is-flex is-flex-direction-column" style="height:100%; background: white;">
     <header class="is-align-items-center is-flex m-2">
       <button type="button" class="button" @click="onClose">Exit full screen</button>
 

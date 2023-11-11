@@ -1,33 +1,30 @@
 <template>
-  <ModalCard>
-    <template #title>{{ selectedJob ? selectedJob.name : '' }} Execution Logs</template>
+  <div class="is-flex is-flex-direction-column" style="height:100%; background: white;">
+    <header class=" p-3 is-flex is-align-items-center is-justify-content-space-between">
+      <p>{{ selectedJob ? selectedJob.name : '' }} {{ enumKeyToPretty(JobStatus, selectedJob.status) }}</p>
 
-    <template #body>
-      <div class="is-flex is-align-items-center">
-        <span class="mr-3">{{ selectedJob.name }}</span>
-        <span class="mr-3">{{ enumKeyToPretty(JobStatus, selectedJob.status) }}</span>
-
+      <div class="buttons">
+        <button class="button" type="button"
+          :disabled="selectedJob.status !== JobStatus.RUNNING && selectedJob.status !== JobStatus.INTERRUPTED"
+          @click="onCancelJobClicked">
+          Cancel Job
+        </button>
+        <button type="button" class="button" @click="onClose" @keypress.esc="onClose">Close (Esc)</button>
       </div>
-      <task-monitor-details :selectedJobId="selectedJob.id" />
-    </template>
+    </header>
 
-    <template #footer>
-      <button class="button is-ghost"
-        :disabled="selectedJob.status !== JobStatus.RUNNING && selectedJob.status !== JobStatus.INTERRUPTED"
-        @click="onCancelJobClicked">
-        Cancel
-      </button>
-    </template>
-  </ModalCard>
+    <hr class="mb-3 mt-0" />
+    <TaskMonitorDetails :selectedJobId="selectedJob.id" />
+  </div>
 </template>
 
 <script lang="ts">
 import { Component, Prop, Vue } from "vue-property-decorator";
 import axios from 'axios';
 
+import TaskMonitorDetails from "@/components/TaskMonitorDetails.vue";
 import { AlertPlacement, SgAlert } from '@/store/alert/types';
 import { JobStatus, enumKeyToPretty } from '@/utils/Enums';
-import ModalCard from "@/components/core/ModalCard.vue";
 import { momentToStringV1 } from '@/utils/DateTime';
 import { showErrors } from '@/utils/ErrorHandler';
 import { BindSelected } from '@/decorator';
@@ -36,7 +33,7 @@ import { Job } from '@/store/job/types';
 
 @Component({
   name: "JobResultsModal",
-  components: { ModalCard },
+  components: { TaskMonitorDetails },
 })
 export default class JobResultsModal extends Vue {
   @Prop({ required: true }) public readonly jobId: string;
@@ -78,6 +75,10 @@ export default class JobResultsModal extends Vue {
     } finally {
       this.$emit('close');
     }
+  }
+
+  public onClose() {
+    this.$emit('close');
   }
 }
 </script>

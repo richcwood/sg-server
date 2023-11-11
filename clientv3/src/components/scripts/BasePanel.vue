@@ -1,9 +1,11 @@
 <template>
   <fieldset :disabled="!script">
     <EditorPanel :scriptId="scriptId" :theme="theme" v-slot="{
-      onShowScriptInfo,
       isScriptEditable,
+      isLogsDisabled,
       isJobRunning,
+      onShowExecutionLogs,
+      onShowScriptInfo,
       onRevertChanges,
       isSavingScript,
       onShowSettings,
@@ -12,7 +14,6 @@
       onDeleteScript,
       onRunLambda,
       onShowDiff,
-      onShowLogs,
       onSave,
       onRun,
       onUndo,
@@ -91,7 +92,7 @@
         </div>
 
         <div class="buttons controls-right">
-          <button @click="onShowLogs" :disabled="true" class="button is-small mb-0" title="View Execution Log">
+          <button @click="onShowExecutionLogs" :disabled="isLogsDisabled" class="button is-small mb-0" title="View Execution Log">
             <span class="icon">
               <font-awesome-icon icon="file-alt" />
             </span>

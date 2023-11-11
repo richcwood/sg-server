@@ -7,15 +7,16 @@ import ExpandedEditorModal from './ExpandedEditorModal.vue';
 import { EditorTheme, Script } from '@/store/script/types';
 import RevertChangesModal from './RevertChangesModal.vue';
 import { ScriptShadow } from '@/store/scriptShadow/types';
+import RenameScriptModal from './RenameScriptModal.vue';
+import DeleteScriptModal from './DeleteScriptModal.vue';
+import RunSettingsModal from './RunSettingsModal.vue';
+import JobResultsModal from './JobResultsModal.vue';
 import DiffEditorModal from './DiffEditorModal.vue';
 import { showErrors } from '@/utils/ErrorHandler';
 import SettingsModal from './SettingsModal.vue';
 import { BindSelectedCopy } from '@/decorator';
 import { StoreType } from '@/store/types';
 import InfoModal from './InfoModal.vue';
-import RenameScriptModal from './RenameScriptModal.vue';
-import DeleteScriptModal from './DeleteScriptModal.vue';
-import RunSettingsModal from './RunSettingsModal.vue';
 
 @Component({
   name: 'EditorPanel',
@@ -28,14 +29,17 @@ export default class EditorPanel extends Vue {
   @BindSelectedCopy({ storeType: StoreType.ScriptShadowStore })
   public scriptShadow: ScriptShadow;
 
+  private latestJobResults: Record<string, string> = {};
   public isJobRunning: boolean = false;
 
   public render() {
     return this.$scopedSlots.default({
       isScriptEditable: this.isScriptEditable,
       isSavingScript: this.isSavingScript,
+      isLogsDisabled: this.isLogsDisabled,
       isJobRunning: this.isJobRunning,
 
+      onShowExecutionLogs: this.onShowExecutionLogs,
       onShowScriptInfo: this.onShowScriptInfo,
       onRevertChanges: this.onRevertChanges,
       onShowSettings: this.onShowSettings,
@@ -43,7 +47,6 @@ export default class EditorPanel extends Vue {
       onRenameScript: this.onRenameScript,
       onDeleteScript: this.onDeleteScript,
       onRunLambda: this.onRunLambda,
-      onShowLogs: this.onShowLogs,
       onShowDiff: this.onShowDiff,
       onSave: this.onSave,
       onUndo: this.onUndo,
@@ -94,7 +97,13 @@ export default class EditorPanel extends Vue {
       height: 'auto',
     }, {
       'job:running': () => this.isJobRunning = true,
-      'job:completed': () => this.isJobRunning = false,
+      'job:failed': () => this.isJobRunning = false,
+      'job:completed': (jobId: string) => {
+        this.latestJobResults[this.scriptId] = jobId;
+        this.isJobRunning = false;
+
+        this.onShowJobResults(jobId);
+      },
     });
   }
 
@@ -102,8 +111,15 @@ export default class EditorPanel extends Vue {
     console.log('On run lambda');
   }
 
-  public onShowLogs() {
-    console.log('On show logs');
+  public onShowExecutionLogs() {
+    this.onShowJobResults(this.latestJobResults[this.scriptId]);
+  }
+
+  public onShowJobResults(jobId: string) {
+    this.$modal.show(JobResultsModal, { jobId }, {
+      height: '100%',
+      width: '100%',
+    });
   }
 
   public onUndo() {
@@ -181,6 +197,10 @@ export default class EditorPanel extends Vue {
         this.$parent.$emit('theme:update', theme);
       }
     });
+  }
+
+  public get isLogsDisabled() {
+    return this.isJobRunning || !this.latestJobResults[this.scriptId];
   }
 
   private get isScriptEditable(): boolean {
