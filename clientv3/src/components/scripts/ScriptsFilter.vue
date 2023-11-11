@@ -8,7 +8,7 @@
     <div class="p-3 pb-0">
       <div class="field">
         <div class="control has-icons-left has-icons-right">
-          <input @input="onSearchKeyDown" @blur="onSearchInputBlur" :value="searchTerm" placeholder="Script name"
+          <input v-focus @input="onSearchKeyDown" @blur="onSearchInputBlur" :value="searchTerm" placeholder="Script name"
             class="input" type="text" />
           <span class="icon is-small is-left">
             <font-awesome-icon icon="search" />
@@ -63,6 +63,11 @@ import { debounce } from 'lodash';
 
 @Component({
   name: 'ScriptsFilter',
+  directives: {
+    focus: {
+      inserted: (el) => el.focus()
+    }
+  }
 })
 export default class ScriptsFilter extends Vue {
   public unsavedScripts: Record<Script['id'], Script> = {};
