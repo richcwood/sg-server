@@ -10,10 +10,10 @@ import RevertChangesModal from './RevertChangesModal.vue';
 import { ScriptShadow } from '@/store/scriptShadow/types';
 import RenameScriptModal from './RenameScriptModal.vue';
 import DeleteScriptModal from './DeleteScriptModal.vue';
-import RunSettingsModal from './RunSettingsModal.vue';
 import JobResultsModal from './JobResultsModal.vue';
 import DiffEditorModal from './DiffEditorModal.vue';
 import { showErrors } from '@/utils/ErrorHandler';
+import RunAgentModal from './RunAgentModal.vue';
 import SettingsModal from './SettingsModal.vue';
 import { BindSelectedCopy } from '@/decorator';
 import { StoreType } from '@/store/types';
@@ -92,7 +92,7 @@ export default class EditorPanel extends Vue {
   }
 
   public onRun() {
-    this.$modal.show(RunSettingsModal, {
+    this.$modal.show(RunAgentModal, {
       scriptType: this.script.scriptType,
       scriptShadow: this.scriptShadow,
     }, {
