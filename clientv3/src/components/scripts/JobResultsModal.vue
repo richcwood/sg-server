@@ -82,5 +82,3 @@ export default class JobResultsModal extends Vue {
   }
 }
 </script>
-
-<style lang="scss" scoped></style>

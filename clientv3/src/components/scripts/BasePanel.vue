@@ -49,7 +49,8 @@
         </div>
 
         <div class="buttons m-0 separator">
-          <button @click="onSave" :disabled="!hasCodeChanges || isSavingScript" class="button is-small mb-0" title="Save Script">
+          <button @click="onSave" :disabled="!hasCodeChanges || isSavingScript" class="button is-small mb-0"
+            title="Save Script">
             <span class="icon">
               <span v-if="isSavingScript" class="spinner"></span>
               <font-awesome-icon v-else icon="save" />
@@ -70,21 +71,32 @@
         </div>
 
         <div class="buttons m-0">
-          <button @click="onRun" :disabled="isJobRunning" :class="{'is-loading': isJobRunning}" class="button is-small mb-0 is-success" title="Run Script">
+          <button @click="onRun" :disabled="isJobRunning" :class="{ 'is-loading': isJobRunning }"
+            class="button is-small mb-0 is-success" title="Run Script">
             <span class="icon">
               <font-awesome-icon icon="play" />
             </span>
             <span>Run</span>
           </button>
 
-          <button @click="onRunLambda" :disabled="isJobRunning" :class="{'is-loading': isJobRunning}" class="button is-small mb-0 is-warning" title="Run Script in AWS Lambda">
+          <button @click="onRunLambda" :disabled="isFreeTier || isJobRunning" :class="{ 'is-loading': isJobRunning }"
+            class="button is-small mb-0 is-warning" title="Run Script in AWS Lambda">
             <span class="icon lambda-icon">
-              <img src="@/assets/icons/aws-lambda-icon.svg" />
+              <VPopover v-if="isFreeTier" trigger="hover" class="help-popover">
+                <font-awesome-icon icon="info" />
+                <span slot="popover">
+                  <router-link to="/invoices" activeClass="">Upgrate</router-link> to start running SaaSGlue scripts
+                  on AWS Lambda.
+                </span>
+              </VPopover>
+
+              <img v-else src="@/assets/icons/aws-lambda-icon.svg" />
             </span>
             <span>Run in AWS Lambda</span>
           </button>
 
-          <button @click="onScheduleRun" :disabled="isJobRunning" :class="{'is-loading': isJobRunning}" class="button is-small mb-0" title="Schedule Run">
+          <button @click="onScheduleRun" :disabled="isJobRunning" :class="{ 'is-loading': isJobRunning }"
+            class="button is-small mb-0" title="Schedule Run">
             <span class="icon">
               <font-awesome-icon icon="clock" />
             </span>
@@ -93,7 +105,8 @@
         </div>
 
         <div class="buttons controls-right">
-          <button @click="onShowExecutionLogs" :disabled="isLogsDisabled" class="button is-small mb-0" title="View Execution Log">
+          <button @click="onShowExecutionLogs" :disabled="isLogsDisabled" class="button is-small mb-0"
+            title="View Execution Log">
             <span class="icon">
               <font-awesome-icon icon="file-alt" />
             </span>
@@ -111,6 +124,7 @@
               <font-awesome-icon icon="info" />
             </span>
           </button>
+
           <button @click="onShowSettings" :disabled="!isScriptEditable" class="button is-small mb-0"
             title="Editor Settings">
             <span class="icon">
@@ -125,16 +139,18 @@
 
 <script lang="ts">
 import { Component, Vue, Prop } from 'vue-property-decorator';
+import { VPopover } from 'v-tooltip';
 
 import { EditorTheme, Script } from '@/store/script/types';
 import { ScriptShadow } from '@/store/scriptShadow/types';
+import { TeamPricingTier } from '@/utils/Enums';
 import { BindSelectedCopy } from '@/decorator';
 import EditorPanel from './EditorPanel.vue';
 import { StoreType } from '@/store/types';
 
 @Component({
   name: 'BasePanel',
-  components: { EditorPanel }
+  components: { EditorPanel, VPopover }
 })
 export default class BasePanel extends Vue {
   @Prop({ default: 'vs' }) public readonly theme: EditorTheme;
@@ -153,6 +169,10 @@ export default class BasePanel extends Vue {
     } else {
       return false;
     }
+  }
+
+  public get isFreeTier() {
+    return this.$store.state[StoreType.TeamStore].selected.pricingTier === TeamPricingTier.FREE;
   }
 
   public onThemeChange(theme: EditorTheme) {
