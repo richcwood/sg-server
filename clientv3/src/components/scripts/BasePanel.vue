@@ -125,8 +125,10 @@
             </span>
           </button>
 
-          <button @click="onShowSettings" :disabled="!isScriptEditable" class="button is-small mb-0"
-            title="Editor Settings">
+          <button @click="onShowSettings"
+            :title="isScriptEditable ? 'Editor Settings' : 'Only author of the script can change settings.'"
+            :disabled="!isScriptEditable"
+            class="button is-small mb-0">
             <span class="icon">
               <font-awesome-icon icon="cog" />
             </span>
