@@ -15,7 +15,8 @@
       </ValidationObserver>
     </template>
     <template #footer>
-      <button class="button is-primary" :class="{'is-loading': isSaving}" :disabled="isSaveDisabled" @click="onRenameScript">Rename Script</button>
+      <button class="button is-primary" :class="{ 'is-loading': isSaving }" :disabled="isSaveDisabled"
+        @click="onRenameScript">Rename Script</button>
       <button class="button" @click="onClose">Cancel</button>
     </template>
   </modal-card>
@@ -58,11 +59,16 @@ export default class RenameScriptModal extends Vue {
       try {
         this.isSaving = true;
 
-        await this.$store.dispatch(`${StoreType.ScriptStore}/save`, {
+        const script: Script = await this.$store.dispatch(`${StoreType.ScriptStore}/save`, {
           script: {
             id: this.script.id,
             name: this.scriptName.trim(),
           }
+        });
+
+        this.$store.commit(`${StoreType.ScriptNameStore}/update`, {
+          name: script.name,
+          id: script.id,
         });
 
         this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Script name updated`, AlertPlacement.FOOTER));
