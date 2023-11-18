@@ -32,7 +32,7 @@
         <span class="label">Team Members Can Edit</span>
         <div class="control">
           <label class="checkbox">
-            <input type="checkbox" v-model="script.teamEditable"
+            <input type="checkbox" v-model="teamEditableCopy"
               :disabled="script._originalAuthorUserId !== loggedInUserId" />
           </label>
         </div>
