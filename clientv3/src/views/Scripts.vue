@@ -2,37 +2,6 @@
   <div class="sg-container-p">
 
     <!-- todo - consolidate this with the modal in InteractiveConsole -->
-     <modal name="rename-script-modal" :classes="'round-popup'" :width="650" :height="200">
-      <validation-observer ref="renameScriptValidationObserver">
-        <table class="table" width="100%" height="100%">
-          <tr>
-            <td colspan="2">
-              Rename the script {{renameScript && renameScript.name}}
-            </td>
-          </tr>
-          <tr>
-            <td>
-              New name
-            </td>
-            <td>
-              <validation-provider name="Script Name" rules="required|object-name" v-slot="{ errors }"> 
-                <input class="input" type="text" v-model="renameScriptName">
-                <span v-if="errors && errors.length > 0" class="message validation-error is-danger">{{ errors[0] }}</span>
-              </validation-provider>
-            </td>
-          </tr>
-          <tr>
-            <td>
-            </td>
-            <td>
-              <button class="button is-primary" @click="onRenameScript">Rename Script</button>
-              <button class="button button-spaced" @click="onCancelRename">Cancel</button>
-            </td>
-          </tr>
-        </table>
-      </validation-observer>
-     </modal>
-
      <modal name="delete-script-modal" :classes="'round-popup'" :width="650" :height="200">
         <table class="table" width="100%" height="100%">
           <tr>
@@ -103,6 +72,7 @@ import { ValidationProvider, ValidationObserver } from 'vee-validate';
 import { Component, Vue } from 'vue-property-decorator';
 
 import CreateScriptModal from '@/components/scripts/CreateScriptModal.vue';
+import RenameScriptModal from '@/components/scripts/RenameScriptModal.vue';
 import { Script, scriptTypesForMonaco } from "@/store/script/types";
 import { SgAlert, AlertPlacement } from "@/store/alert/types";
 import { BindStoreModel, BindProp } from '@/decorator';
@@ -231,37 +201,13 @@ export default class Scripts extends Vue {
     }
   }
 
-  private renameScript: Script|null = null;
-  private renameScriptName = '';
-
-  private onClickedRename(script: Script){
-    this.renameScriptName = script.name;
-    this.renameScript = script;
-    this.$modal.show('rename-script-modal');
-  }
-
-  private onCancelRename(){
-    this.$modal.hide('rename-script-modal');
-  }
-
-  private async onRenameScript(){
-    if(await (<any>this).$refs.renameScriptValidationObserver.validate()){
-      try {
-        await this.$store.dispatch(`${StoreType.ScriptStore}/save`, {
-          script: {
-            id: this.renameScript.id,
-            name: this.renameScriptName
-          }});
-          this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Script name updated`, AlertPlacement.FOOTER));
-      }
-      catch(err){
-        console.error(err);
-        showErrors(`Error renaming the script.`, err);
-      }
-      finally {
-        this.$modal.hide('rename-script-modal');
-      }
-    }
+  public onClickedRename(script: Script){
+    this.$modal.show(RenameScriptModal, {
+      script: script,
+    }, {
+      height: 'auto',
+      width: '650px',
+    });
   }
 
   private deleteScript: Script|null = null;

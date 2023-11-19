@@ -7,7 +7,7 @@
           <div class="field">
             <label class="label">New name</label>
             <div class="control">
-              <input class="input" type="text" v-model="scriptName" />
+              <input class="input" type="text" v-model="scriptName" v-focus />
             </div>
           </div>
           <p v-if="errors && errors.length > 0" class="help is-danger">{{ errors[0] }}</p>
@@ -31,10 +31,12 @@ import ModalCard from "@/components/core/ModalCard.vue";
 import { showErrors } from "@/utils/ErrorHandler";
 import { Script } from '@/store/script/types';
 import { StoreType } from "@/store/types";
+import { focus } from '@/directive';
 
 @Component({
   name: "RenameScriptModal",
   components: { ModalCard, ValidationObserver, ValidationProvider },
+  directives: { focus }
 })
 export default class RenameScriptModal extends Vue {
   @Prop({ required: true }) public readonly script: Script;
