@@ -2,72 +2,6 @@
   <div class="sg-container-p">
 
     <!-- todo - consolidate this with the modal in InteractiveConsole -->
-    <!-- Create script modal -->
-    <modal name="create-script-modal" :classes="'round-popup'" :width="450" :height="250">
-      <validation-observer ref="createScriptValidationObserver">
-        <table class="table" width="100%" height="100%">
-          <tbody>
-            <tr>
-              <td></td>
-              <td>Create a new script</td>
-            </tr>
-            <tr>
-              <td>Script Name</td>
-              <td>
-                <validation-provider
-                  name="Script Name"
-                  rules="required|object-name"
-                  v-slot="{ errors }"
-                >
-                  <input
-                    class="input"
-                    id="create-script-modal-autofocus"
-                    type="text"
-                    v-on:keyup.enter="saveNewScript"
-                    v-model="newScriptName"
-                    placeholder="Enter the new script name"
-                  />
-                  <div
-                    v-if="errors && errors.length > 0"
-                    class="message validation-error is-danger"
-                  >{{ errors[0] }}</div>
-                </validation-provider>
-              </td>
-            </tr>
-            <tr>
-              <td>Script Type</td>
-              <td>
-                <validation-provider name="Script Type" rules="required" v-slot="{ errors }">
-                  <select
-                    class="input select"
-                    style="width: 250px; margin-top: 10px;"
-                    v-model="newScriptType"
-                  >
-                    <option
-                      v-for="(value, key) in scriptTypesForMonaco"
-                      v-bind:key="`scriptType${key}-${value}`"
-                      :value="key"
-                    >{{value}}</option>
-                  </select>
-                  <div
-                    v-if="errors && errors.length > 0"
-                    class="message validation-error is-danger"
-                  >{{ errors[0] }}</div>
-                </validation-provider>
-              </td>
-            </tr>
-            <tr>
-              <td></td>
-              <td>
-                <button class="button is-primary" @click="saveNewScript">Create new script</button>
-                <button class="button button-spaced" style="margin-left: 12px;" @click="cancelCreateNewScript">Cancel</button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </validation-observer>
-    </modal>
-
      <modal name="rename-script-modal" :classes="'round-popup'" :width="650" :height="200">
       <validation-observer ref="renameScriptValidationObserver">
         <table class="table" width="100%" height="100%">
@@ -165,17 +99,17 @@
 </template>
 
 <script lang="ts">
-import { Component, Vue } from 'vue-property-decorator';
-import { StoreType } from '../store/types';
-import { Script, ScriptType, scriptTypesForMonaco } from "../store/script/types";
-import { BindStoreModel, BindProp } from '../decorator';
-import { momentToStringV1 } from '../utils/DateTime';
-import { User } from '../store/user/types';
-import { focusElement } from "../utils/Shared";
-import { SgAlert, AlertPlacement } from "../store/alert/types";
-import { showErrors } from '../utils/ErrorHandler';
 import { ValidationProvider, ValidationObserver } from 'vee-validate';
-import axios from 'axios';
+import { Component, Vue } from 'vue-property-decorator';
+
+import CreateScriptModal from '@/components/scripts/CreateScriptModal.vue';
+import { Script, scriptTypesForMonaco } from "@/store/script/types";
+import { SgAlert, AlertPlacement } from "@/store/alert/types";
+import { BindStoreModel, BindProp } from '@/decorator';
+import { momentToStringV1 } from '@/utils/DateTime';
+import { showErrors } from '@/utils/ErrorHandler';
+import { User } from '@/store/user/types';
+import { StoreType } from '@/store/types';
 
 @Component({
   components: { ValidationProvider, ValidationObserver }
@@ -273,52 +207,13 @@ export default class Scripts extends Vue {
     }
   }
 
-  private newScriptName = '';
-  private newScriptType: ScriptType = ScriptType.NODE;
-
   private onCreateScriptClicked() {
-    this.newScriptName = '';
-    this.$modal.show('create-script-modal');
-    focusElement('create-script-modal-autofocus');
-  }
-
-  private async saveNewScript() {
-    if (!(await (<any>this.$refs.createScriptValidationObserver).validate())) {
-      return;
-    }
-
-    try {
-      this.$store.dispatch(
-        `${StoreType.AlertStore}/addAlert`,
-        new SgAlert(
-          `Creating script - ${this.newScriptName}`,
-          AlertPlacement.FOOTER
-        )
-      );
-      const newScript = {
-        name: this.newScriptName,
-        scriptType: this.newScriptType,
-        code: '',
-        shadowCopyCode: '',
-        lastEditedDate: new Date().toISOString()
-      };
-
-      const script = await this.$store.dispatch(`${StoreType.ScriptStore}/save`, {script: newScript});
-
-      // select the script in the interactive console
-      this.$router.push(`interactiveConsole/${script.id}`);
-    } 
-    catch (err) {
-      console.error(err);
-      showErrors('Error creating script', err);
-    } 
-    finally {
-      this.$modal.hide("create-script-modal");
-    }
-  }
-
-  private cancelCreateNewScript() {
-    this.$modal.hide("create-script-modal");
+    this.$modal.show(CreateScriptModal, null, {
+      height: 'auto',
+      width: '650px',
+    }, {
+      'script:create': (id: string) => this.$router.push(`interactiveConsole/${id}`)
+    });
   }
 
   @BindProp({storeType: StoreType.SecurityStore, selectedModelName: 'user', propName: 'id'})
