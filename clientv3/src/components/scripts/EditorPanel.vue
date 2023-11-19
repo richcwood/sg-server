@@ -189,6 +189,8 @@ export default class EditorPanel extends Vue {
     }, {
       height: 'auto',
       width: '650px',
+    }, {
+      'script:delete': () => this.$parent.$emit('script:select', null)
     });
   }
 

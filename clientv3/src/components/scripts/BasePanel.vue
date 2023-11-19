@@ -1,25 +1,28 @@
 <template>
   <fieldset :disabled="!script">
-    <EditorPanel :scriptId="scriptId" :theme="theme" v-slot="{
-      isScriptEditable,
-      isLogsDisabled,
-      isJobRunning,
-      onShowExecutionLogs,
-      onShowScriptInfo,
-      onRevertChanges,
-      isSavingScript,
-      onShowSettings,
-      onExpandEditor,
-      onRenameScript,
-      onDeleteScript,
-      onScheduleRun,
-      onRunLambda,
-      onShowDiff,
-      onSave,
-      onRun,
-      onUndo,
-      onRedo,
-    }" @theme:update="onThemeChange">
+    <EditorPanel @theme:update="onThemeChange" @script:select="onScriptSelect"
+      :scriptId="scriptId"
+      :theme="theme"
+      v-slot="{
+        isScriptEditable,
+        isLogsDisabled,
+        isJobRunning,
+        onShowExecutionLogs,
+        onShowScriptInfo,
+        onRevertChanges,
+        isSavingScript,
+        onShowSettings,
+        onExpandEditor,
+        onRenameScript,
+        onDeleteScript,
+        onScheduleRun,
+        onRunLambda,
+        onShowDiff,
+        onSave,
+        onRun,
+        onUndo,
+        onRedo,
+      }">
       <div class="panel-controls">
         <div class="buttons m-0 separator">
           <button @click="onUndo" class="button is-small mb-0" title="Undo Changes">
@@ -127,8 +130,7 @@
 
           <button @click="onShowSettings"
             :title="isScriptEditable ? 'Editor Settings' : 'Only author of the script can change settings.'"
-            :disabled="!isScriptEditable"
-            class="button is-small mb-0">
+            :disabled="!isScriptEditable" class="button is-small mb-0">
             <span class="icon">
               <font-awesome-icon icon="cog" />
             </span>
@@ -175,6 +177,10 @@ export default class BasePanel extends Vue {
 
   public get isFreeTier() {
     return this.$store.state[StoreType.TeamStore].selected.pricingTier === TeamPricingTier.FREE;
+  }
+
+  public onScriptSelect(id: string) {
+    this.$emit('script:select', id);
   }
 
   public onThemeChange(theme: EditorTheme) {

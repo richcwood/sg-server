@@ -36,8 +36,13 @@ export default class DeleteScriptModal extends Vue {
       try {
         this.isDeliting = true;
 
-        await this.$store.dispatch(`${StoreType.ScriptStore}/delete`, this.script);
+        await Promise.all([
+          this.$store.dispatch(`${StoreType.ScriptNameStore}/deleteById`, this.script.id),
+          this.$store.dispatch(`${StoreType.ScriptStore}/delete`, this.script)
+        ]);
+
         this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Script deleted`, AlertPlacement.FOOTER));
+        this.$parent.$emit('script:delete');
       } catch(err) {
         console.error(err);
         showErrors(`Error deleting the script.`, err);

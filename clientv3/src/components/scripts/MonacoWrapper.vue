@@ -60,6 +60,7 @@ export default class MonacoWrapper extends Vue {
   @Watch('scriptId')
   private async fetchScript(scriptId) {
     if (scriptId === null) {
+      this.disposeEditor();
       return;
     }
 

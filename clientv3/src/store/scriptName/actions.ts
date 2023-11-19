@@ -11,6 +11,16 @@ export const actions: ActionTree<CoreState, RootState> = {
 
   fetchModel({commit, state}: {commit: Commit, state: CoreState}, id: string): Promise<Model>{
     return coreActions.fetchModel({commit, state}, { id });
+  },
+
+  delete({commit, state}: {commit: Commit, state: CoreState}, model): Promise<void> {
+    return coreActions.delete({commit, state}, model);
+  },
+
+  deleteById({dispatch, state}, id: string): Promise<void> {
+    const model = state.storeUtils.findById(id);
+
+    return dispatch('delete', model);
   }
 };
 

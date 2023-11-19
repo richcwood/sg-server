@@ -1,7 +1,8 @@
 <template>
   <div class="is-flex is-flex-direction-column">
-    <BasePanel v-if="scriptId" @theme:update="onThemeChange" :scriptId="scriptId" :theme="theme" />
-    <MonacoWrapper @script:create="onScriptCreate" :scriptId="scriptId" :theme="theme" class="is-flex-grow-1" />
+    <BasePanel v-if="scriptId" @script:select="onScriptSelect" @theme:update="onThemeChange" :scriptId="scriptId"
+      :theme="theme" />
+    <MonacoWrapper @script:create="onScriptSelect" :scriptId="scriptId" :theme="theme" class="is-flex-grow-1" />
   </div>
 </template>
 
@@ -31,8 +32,8 @@ export default class BaseEditor extends Vue {
     this.theme = theme;
   }
 
-  public onScriptCreate(id: string) {
-    this.$emit('script:create', id);
+  public onScriptSelect(id: string) {
+    this.$emit('script:select', id);
   }
 }
 </script>

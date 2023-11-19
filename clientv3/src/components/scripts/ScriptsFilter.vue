@@ -94,6 +94,11 @@ export default class ScriptsFilter extends Vue {
 
   @Watch('scriptId')
   private async selectScript(id: string) {
+    if (id === null) {
+      this.selectedScript = null;
+      return;
+    }
+
     const [, scriptName] = await Promise.all([
       this.$store.dispatch(`${StoreType.ScriptStore}/fetchModel`, id),
       this.$store.dispatch(`${StoreType.ScriptNameStore}/fetchModel`, id)

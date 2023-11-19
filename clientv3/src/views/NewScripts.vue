@@ -1,7 +1,7 @@
 <template>
   <div class="scripts-page">
     <ScriptsFilter @script:select="onScriptSelect" :scriptId="selectedScriptId" />
-    <BaseEditor @script:create="onScriptSelect" :scriptId="selectedScriptId" />
+    <BaseEditor @script:select="onScriptSelect" :scriptId="selectedScriptId" />
   </div>
 </template>
 
