@@ -1,6 +1,7 @@
 <template>
-  <div v-if="!scriptId" class="is-flex is-align-items-center is-justify-content-center">
+  <div v-if="!scriptId" class="is-flex is-flex-direction-column is-align-items-center is-justify-content-center">
     <h2 class="is-size-4">Select a script to edit.</h2>
+    <h2 class="is-size-5 is-flex is-align-items-center">Or <button @click="onCreateScript" class="button is-ghost px-2">create</button> a new one.</h2>
   </div>
   <div v-else-if="isLoading" class="is-flex is-align-items-center is-justify-content-center">
     <p class="is-size-4"><span class="spinner"></span> Script is loading</p>
@@ -17,6 +18,7 @@ import { AlertCategory, AlertPlacement, SgAlert } from '@/store/alert/types';
 import { ScriptShadow } from '@/store/scriptShadow/types';
 import { BindProp, BindSelectedCopy } from '@/decorator';
 import { StoreType } from '@/store/types';
+import CreateScriptModal from './CreateScriptModal.vue';
 
 @Component({
   name: 'MonacoWrapper',
@@ -101,6 +103,15 @@ export default class MonacoWrapper extends Vue {
         this.tryToSaveScriptShadowCopy();
       }, 20 * 1000); // try to save shadow copy every n milliseconds
     }
+  }
+
+  public onCreateScript() {
+    this.$modal.show(CreateScriptModal, null, {
+      height: 'auto',
+      width: '650px',
+    }, {
+      'script:create': (id: string) => this.$emit('script:create', id)
+    });
   }
 
   private getMonacoLanguage (scriptType: ScriptType): string {

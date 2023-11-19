@@ -2,7 +2,7 @@
   <modal-card>
     <template #title>Rename the script {{ script.name }}</template>
     <template #body>
-      <ValidationObserver ref="renameScriptValidationObserver">
+      <ValidationObserver ref="observer">
         <ValidationProvider name="Script Name" rules="required|object-name" v-slot="{ errors }">
           <div class="field">
             <label class="label">New name</label>
@@ -43,7 +43,7 @@ export default class RenameScriptModal extends Vue {
   public scriptName: string = '';
 
   $refs: {
-    renameScriptValidationObserver: InstanceType<typeof ValidationObserver>;
+    observer: InstanceType<typeof ValidationObserver>;
   };
 
   public get isSaveDisabled() {
@@ -55,7 +55,7 @@ export default class RenameScriptModal extends Vue {
   }
 
   public async onRenameScript() {
-    if (await this.$refs.renameScriptValidationObserver.validate()) {
+    if (await this.$refs.observer.validate()) {
       try {
         this.isSaving = true;
 

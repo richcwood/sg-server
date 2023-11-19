@@ -40,14 +40,17 @@
     </div>
 
     <div class="px-3 pt-0 pb-3 list-wrapper">
-      <div v-if="!searchTerm && filteredScripts.length === 0" class="is-flex is-align-items-center is-justify-content-center">
+      <div v-if="!searchTerm && filteredScripts.length === 0"
+        class="is-flex is-align-items-center is-justify-content-center">
         <span class="spinner"></span>
       </div>
+
       <ul>
-        <li v-for="script in filteredScripts"
-          class="mb-1 pl-2 script-item" :key="script.id">
-          <a @mousedown="onScriptSelect(script)" @keypress.enter="onScriptSelect(script)" @click.prevent
-            :title="script.name" class="has-text-dark" href="#"><span class="script-name">{{ script.name }}</span></a>
+        <li v-for="script in filteredScripts" class="mb-1 pl-2 script-item" :key="script.id">
+          <a @mousedown="onScriptSelect(script.id)" @keypress.enter="onScriptSelect(script.id)" @click.prevent
+            :title="script.name" class="has-text-dark" href="#">
+            <span class="script-name">{{ script.name }}</span>
+          </a>
         </li>
       </ul>
     </div>
@@ -55,31 +58,30 @@
 </template>
 
 <script lang="ts">
-import { Component, Vue } from 'vue-property-decorator';
+import { Component, Prop, Vue, Watch } from 'vue-property-decorator';
 
-import { Script } from '@/store/script/types';
+import { ScriptName } from '@/store/scriptName/types';
 import { StoreType } from '@/store/types';
+import { focus } from '@/directive';
 import { debounce } from 'lodash';
 
 @Component({
   name: 'ScriptsFilter',
-  directives: {
-    focus: {
-      inserted: (el) => el.focus()
-    }
-  }
+  directives: { focus }
 })
 export default class ScriptsFilter extends Vue {
-  public unsavedScripts: Record<Script['id'], Script> = {};
-  public selectedScript: Script = null;
+  @Prop() public readonly scriptId: string;
+
+  public unsavedScripts: Record<ScriptName['id'], ScriptName> = {};
+  public selectedScript: ScriptName = null;
   public searchTerm = '';
 
   private mounted() {
     this.onSearchKeyDown = debounce(this.onSearchKeyDown, 400);
   }
 
-  public get filteredScripts(): Script[] {
-    let scripts: Script[] = [];
+  public get filteredScripts(): ScriptName[] {
+    let scripts: ScriptName[] = [];
 
     if (this.searchTerm) {
       scripts = scripts.concat(this.$store.getters[`${StoreType.ScriptNameStore}/searchByName`](this.searchTerm));
@@ -90,23 +92,24 @@ export default class ScriptsFilter extends Vue {
     return scripts.sort((a, b) => a.name.localeCompare(b.name));
   }
 
+  @Watch('scriptId')
+  private async selectScript(id: string) {
+    const [, scriptName] = await Promise.all([
+      this.$store.dispatch(`${StoreType.ScriptStore}/fetchModel`, id),
+      this.$store.dispatch(`${StoreType.ScriptNameStore}/fetchModel`, id)
+    ]);
+
+    return this.selectedScript = scriptName;
+  }
+
   public onSearchKeyDown(e: KeyboardEvent) {
     this.searchTerm = (e.target as HTMLInputElement).value;
   }
 
-  public async onScriptSelect(script: Script) {
-    // The scripts in this component are dynamic and might not be in the store yet
-    await this.$store.dispatch(`${StoreType.ScriptStore}/fetchModel`, script.id);
+  public async onScriptSelect(id: string) {
+    await this.selectScript(id);
 
-    this.selectScript(script);
-  }
-
-  private selectScript(script: Script) {
-    if (script !== null) {
-      this.selectedScript = script;
-    }
-
-    this.$emit('script-select', script.id);
+    this.$emit('script:select', id);
   }
 
   public onSearchInputBlur() {

@@ -1,15 +1,17 @@
-import { ActionTree } from 'vuex';
-import { actions as coreActions } from '@/store/core/actions';
-import { CoreState, RootState, Model, StoreType } from '@/store/types';
-import { stompInitialized, getStompHandler } from '../../utils/StompHandler';
-import { DomainMessage } from '../../utils/StompHandler';
+import { ActionTree, Commit } from 'vuex';
 
-export const actions: ActionTree<CoreState, RootState> = {  
-  
+import { stompInitialized, getStompHandler, DomainMessage } from '@/utils/StompHandler';
+import { CoreState, RootState, Model, StoreType } from '@/store/types';
+import { actions as coreActions } from '@/store/core/actions';
+
+export const actions: ActionTree<CoreState, RootState> = {
   fetchModelsByFilter({commit, state}, {filter, preCommit}: {filter?: string, preCommit?: Function} = {}): Promise<Model[]>{
     return coreActions.fetchModelsByFilter({commit, state}, {filter, preCommit});
   },
 
+  fetchModel({commit, state}: {commit: Commit, state: CoreState}, id: string): Promise<Model>{
+    return coreActions.fetchModel({commit, state}, { id });
+  }
 };
 
 import store from '../index';

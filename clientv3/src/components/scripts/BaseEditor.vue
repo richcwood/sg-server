@@ -1,7 +1,7 @@
 <template>
   <div class="is-flex is-flex-direction-column">
-    <BasePanel v-if="scriptId" :scriptId="scriptId" :theme="theme" @theme:update="onThemeChange" />
-    <MonacoWrapper :scriptId="scriptId" :theme="theme" class="is-flex-grow-1" />
+    <BasePanel v-if="scriptId" @theme:update="onThemeChange" :scriptId="scriptId" :theme="theme" />
+    <MonacoWrapper @script:create="onScriptCreate" :scriptId="scriptId" :theme="theme" class="is-flex-grow-1" />
   </div>
 </template>
 
@@ -25,10 +25,14 @@ export default class BaseEditor extends Vue {
     this.theme = localStorage.getItem('scriptEditor_theme') as EditorTheme;
   }
 
-  public onThemeChange (theme: EditorTheme) {
+  public onThemeChange(theme: EditorTheme) {
     localStorage.setItem('scriptEditor_theme', theme);
 
     this.theme = theme;
+  }
+
+  public onScriptCreate(id: string) {
+    this.$emit('script:create', id);
   }
 }
 </script>
