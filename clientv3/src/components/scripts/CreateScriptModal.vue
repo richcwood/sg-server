@@ -40,7 +40,8 @@
       </template>
 
       <template #footer>
-        <button class="button is-primary" :class="{'is-loading': isLoading}" :disabled="invalid || isLoading" @click="onCreate">Create</button>
+        <button class="button is-primary" :class="{ 'is-loading': isLoading }" :disabled="invalid || isLoading"
+          @click="onCreate">Create</button>
         <button class="button" @click="$emit('close')">Cancel</button>
       </template>
     </ModalCard>
@@ -69,6 +70,18 @@ export default class CreateScriptModal extends Vue {
   public scriptName: string = '';
   public isLoading = false;
 
+  private codeTemplate: Record<ScriptType, string> = {
+    [ScriptType.PYTHON]: 'print("Hello World")',
+    [ScriptType.NODE]: 'console.log("Hello World")',
+    [ScriptType.SH]: 'echo "Hello World"',
+    [ScriptType.CMD]: 'echo "Hello World"',
+    [ScriptType.POWERSHELL]: 'echo "Hello World"',
+    [ScriptType.RUBY]: 'puts "Hello World"',
+    [ScriptType.LUA]: 'print("Hello World")',
+    [ScriptType.PERL]: 'print("Hello World")',
+    [ScriptType.JAVASCRIPT]: 'console.log("Hello World")',
+  };
+
   public async onCreate() {
     this.$store.dispatch(
       `${StoreType.AlertStore}/addAlert`,
@@ -85,7 +98,7 @@ export default class CreateScriptModal extends Vue {
         script: {
           name: this.scriptName,
           scriptType: this.scriptType,
-          code: '',
+          code: btoa(this.codeTemplate[this.scriptType]),
           shadowCopyCode: '',
           lastEditedDate: new Date().toISOString()
         }
