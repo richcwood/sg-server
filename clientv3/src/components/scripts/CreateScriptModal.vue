@@ -90,6 +90,7 @@ export default class CreateScriptModal extends Vue {
           lastEditedDate: new Date().toISOString()
         }
       });
+      await this.$store.dispatch(`${StoreType.ScriptNameStore}/fetchModel`, id);
 
       this.$parent.$emit('script:create', id);
       this.$emit('close');
