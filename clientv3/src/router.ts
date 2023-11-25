@@ -209,6 +209,7 @@ const router = new Router({
         async beforeLeave(to: Route, from: Route, next: (options?: any) => {}){
           if (to.name !== 'interactiveConsole') {
             store.dispatch(`${StoreType.PageGuideStore}/select`, null);
+            store.dispatch(`${StoreType.ScriptStore}/select`, null);
           }
 
           tryToSaveScriptEdits(next);

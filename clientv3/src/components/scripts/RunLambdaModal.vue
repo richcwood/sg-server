@@ -3,16 +3,42 @@
     <template #title>Run Settings</template>
     <template #body>
       <ValidationObserver tag="div" ref="observer">
+        <IsFreeTier>
+          <template #yes>
+            <div class="notification is-warning">
+              <router-link to="/invoices" activeClass="">Upgrate</router-link> to start running SaaSGlue scripts
+              on AWS Lambda.
+            </div>
+          </template>
+          <template #no></template>
+        </IsFreeTier>
+
         <div class="field is-horizontal">
           <div class="field-label">
-            <label class="label">Target Agent(s)</label>
+            <label class="label">Lambda Runtime</label>
           </div>
           <div class="field-body">
             <div class="control">
               <div class="select">
-                <select v-model="runAgentTarget">
-                  <option v-for="(key, value) in targetAgentChoices" :key="`target-choice-${key}`" :value="key">
-                    {{ value }}
+                <ValidationProvider name="Lambda Runtime" rules="required" v-slot="{ errors }">
+                  <LambdaRuntimeSelect v-model="lambdaRuntime" :scriptType="scriptType" />
+                  <p v-if="errors && errors.length > 0" class="help is-danger">{{ errors[0] }}</p>
+                </ValidationProvider>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="field is-horizontal">
+          <div class="field-label">
+            <label class="label">Lambda Memory Size</label>
+          </div>
+          <div class="field-body">
+            <div class="control">
+              <div class="select">
+                <select v-model="lambdaMemory">
+                  <option v-for="memSize in LambdaMemorySizes" :key="memSize" :value="memSize">
+                    {{ memSize }} mb
                   </option>
                 </select>
               </div>
@@ -20,31 +46,27 @@
           </div>
         </div>
 
-        <div class="field is-horizontal" v-if="runAgentTarget === TaskDefTarget.SINGLE_SPECIFIC_AGENT">
+        <ValidationProvider tag="div" class="field is-horizontal" name="Lambda Timeout" rules="required|lambdaTimeout"
+          v-slot="{ errors }">
           <div class="field-label">
-            <label class="label">Target Agent</label>
+            <label class="label">Lambda Timeout (seconds)</label>
           </div>
           <div class="field-body">
             <div class="control">
-              <AgentSearch :agentId="runAgentTargetAgentId" @agentPicked="onTargetAgentPicked" />
+              <input class="input" v-model="lambdaTimeout" />
+              <p v-if="errors && errors.length > 0" class="help is-danger">{{ errors[0] }}</p>
             </div>
           </div>
-        </div>
+        </ValidationProvider>
 
-        <div class="field is-horizontal" v-if="runAgentTarget === TaskDefTarget.ALL_AGENTS_WITH_TAGS ||
-          runAgentTarget === TaskDefTarget.SINGLE_AGENT_WITH_TAGS">
+        <div class="field is-horizontal">
           <div class="field-label">
-            <label class="label">Target Agent Tags</label>
+            <label class="label">Lambda Dependencies</label>
           </div>
           <div class="field-body">
-            <ValidationProvider tag="div" class="control" name="Target Tags" rules="variable-map" v-slot="{ errors }">
-              <input type="text" style="width: 350px;" class="input" v-model="runAgentTargetTags_string" />
-              <input type="text" style="width: 350px;" class="input" v-model="runAgentTargetTags_string" />
-              <input type="text" style="width: 350px;" class="input" v-model="runAgentTargetTags_string" />
-              <input type="text" style="width: 350px;" class="input" v-model="runAgentTargetTags_string" />
-              <input type="text" style="width: 350px;" class="input" v-model="runAgentTargetTags_string" />
-              <p v-if="errors && errors.length > 0" class="help is-danger">{{ errors[0] }}</p>
-            </ValidationProvider>
+            <div class="control">
+              <input class="input" v-model="lambdaDependencies" placeholder="compression;axios" />
+            </div>
           </div>
         </div>
 
@@ -88,9 +110,18 @@
         <VariableList class="my-3" v-model="runScriptRuntimeVars" />
       </ValidationObserver>
     </template>
+
     <template #footer>
-      <button :disabled="isRunning" :class="{'is-loading': isRunning}" class="button is-primary" @click="onRun">Run</button>
-      <button :disabled="isRunning" class="button" @click="$emit('close')">Cancel</button>
+      <IsFreeTier>
+        <template #yes>
+          <button :disabled="true" class="button is-primary">Run</button>
+        </template>
+        <template #no>
+          <button :disabled="isRunning" :class="{ 'is-loading': isRunning }" class="button is-primary"
+            @click="onRun">Run</button>
+        </template>
+      </IsFreeTier>
+      <button :disabled="isRunning" class="button" @click="onClose">Cancel</button>
     </template>
   </ModalCard>
 </template>
@@ -99,41 +130,37 @@
 import { ValidationObserver, ValidationProvider } from 'vee-validate';
 import { Component, Prop, Vue } from "vue-property-decorator";
 
-import VariableList from "../runtimeVariable/VariableList.vue";
+import { LambdaMemorySizes, LambdaRuntimes } from '@/store/stepDef/types';
+import VariableList from "@/components/runtimeVariable/VariableList.vue";
+import LambdaRuntimeSelect from '@/components/LambdaRuntimeSelect.vue';
+import { VariableMap } from "@/components/runtimeVariable/types";
 import { ScriptShadow } from '@/store/scriptShadow/types';
 import ModalCard from "@/components/core/ModalCard.vue";
-import { VariableMap } from "../runtimeVariable/types";
 import { TaskDefTarget } from "@/store/taskDef/types";
+import IsFreeTier from '@/components/IsFreeTier.vue';
 import { showErrors } from '@/utils/ErrorHandler';
 import { ScriptType } from '@/store/script/types';
-import AgentSearch from "../AgentSearch.vue";
-import { Agent } from "@/store/agent/types";
 import { StoreType } from '@/store/types';
 
 @Component({
-  name: "RunSettingsModal",
-  components: { ModalCard, VariableList, ValidationObserver, ValidationProvider, AgentSearch },
+  name: "RunLambdaModal",
+  components: { ModalCard, VariableList, ValidationObserver, ValidationProvider, IsFreeTier, LambdaRuntimeSelect },
 })
-export default class RunSettingsModal extends Vue {
+export default class RunLambdaModal extends Vue {
   @Prop({ required: true }) public readonly scriptShadow: ScriptShadow;
   @Prop({ required: true }) public readonly scriptType: ScriptType;
 
-  public isRunning = false;
-  public runAgentTarget: TaskDefTarget = TaskDefTarget.SINGLE_AGENT;
+  public readonly LambdaMemorySizes = LambdaMemorySizes;
   public runScriptRuntimeVars: VariableMap = null;
-  public runAgentTargetTags_string: string = '';
   public readonly TaskDefTarget = TaskDefTarget;
-  public runAgentTargetAgentId: string = null;
+  public lambdaRuntime: LambdaRuntimes = null;
   public runScriptArguments: string = '';
   public runScriptCommand: string = '';
   public runScriptEnvVars: string = '';
-  public readonly targetAgentChoices = {
-    "Any Available Agent": TaskDefTarget.SINGLE_AGENT,
-    "A Specific Agent": TaskDefTarget.SINGLE_SPECIFIC_AGENT,
-    "A Single Agent With Tags": TaskDefTarget.SINGLE_AGENT_WITH_TAGS,
-    "All Active Agents": TaskDefTarget.ALL_AGENTS,
-    "All Active Agents With Tags": TaskDefTarget.ALL_AGENTS_WITH_TAGS,
-  };
+  public lambdaDependencies: string = '';
+  public lambdaTimeout: number = 3;
+  public lambdaMemory: number = 128;
+  public isRunning = false;
 
   $refs: {
     observer: InstanceType<typeof ValidationObserver>;
@@ -159,10 +186,12 @@ export default class RunSettingsModal extends Vue {
         runScriptCommand: this.runScriptCommand,
         runScriptArguments: this.runScriptArguments,
         runScriptEnvVars: this.runScriptEnvVars,
-        runAgentTarget: this.runAgentTarget,
         runScriptRuntimeVars: this.runScriptRuntimeVars,
-        runAgentTargetTags_string: this.runAgentTargetTags_string,
-        runAgentTargetAgentId: this.runAgentTargetAgentId,
+        runAgentTarget: TaskDefTarget.AWS_LAMBDA,
+        lambdaDependencies: this.lambdaDependencies,
+        lambdaMemory: this.lambdaMemory,
+        lambdaRuntime: this.lambdaRuntime,
+        lambdaTimeout: this.lambdaTimeout,
       });
 
       this.isRunning = false;
@@ -178,10 +207,6 @@ export default class RunSettingsModal extends Vue {
     this.onClose();
   }
 
-  public onTargetAgentPicked(agent: Agent) {
-    this.runAgentTargetAgentId = agent ? agent.id : null;
-  }
-
   public onClose() {
     this.$emit('close');
   }
@@ -190,7 +215,7 @@ export default class RunSettingsModal extends Vue {
 
 <style lang="scss" scoped>
 .field-label {
-  flex-basis: 130px;
+  flex-basis: 220px;
   flex-grow: 0;
 }
 

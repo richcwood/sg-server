@@ -13,6 +13,7 @@ import DeleteScriptModal from './DeleteScriptModal.vue';
 import JobResultsModal from './JobResultsModal.vue';
 import DiffEditorModal from './DiffEditorModal.vue';
 import { showErrors } from '@/utils/ErrorHandler';
+import RunLambdaModal from './RunLambdaModal.vue';
 import RunAgentModal from './RunAgentModal.vue';
 import SettingsModal from './SettingsModal.vue';
 import { BindSelectedCopy } from '@/decorator';
@@ -110,7 +111,21 @@ export default class EditorPanel extends Vue {
   }
 
   public onRunLambda() {
-    console.log('On run lambda');
+    this.$modal.show(RunLambdaModal, {
+      scriptType: this.script.scriptType,
+      scriptShadow: this.scriptShadow,
+    }, {
+      height: 'auto',
+    }, {
+      'job:running': () => this.isJobRunning = true,
+      'job:failed': () => this.isJobRunning = false,
+      'job:completed': (jobId: string) => {
+        this.latestJobResults[this.scriptId] = jobId;
+        this.isJobRunning = false;
+
+        this.onShowJobResults(jobId);
+      },
+    });
   }
 
   public async onScheduleRun() {
