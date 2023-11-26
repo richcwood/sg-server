@@ -10,6 +10,7 @@ import RevertChangesModal from './RevertChangesModal.vue';
 import { ScriptShadow } from '@/store/scriptShadow/types';
 import RenameScriptModal from './RenameScriptModal.vue';
 import DeleteScriptModal from './DeleteScriptModal.vue';
+import CreateScriptModal from './CreateScriptModal.vue';
 import JobResultsModal from './JobResultsModal.vue';
 import DiffEditorModal from './DiffEditorModal.vue';
 import { showErrors } from '@/utils/ErrorHandler';
@@ -48,6 +49,7 @@ export default class EditorPanel extends Vue {
       onExpandEditor: this.onExpandEditor,
       onRenameScript: this.onRenameScript,
       onDeleteScript: this.onDeleteScript,
+      onCreateScript: this.onCreateScript,
       onScheduleRun: this.onScheduleRun,
       onRunLambda: this.onRunLambda,
       onShowDiff: this.onShowDiff,
@@ -66,7 +68,7 @@ export default class EditorPanel extends Vue {
 
   public async onSave() {
     try {
-      if(this.script && this.scriptShadow){
+      if (this.script && this.scriptShadow) {
         this.isSavingScript = true;
 
         this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Saving script - ${this.script.name}`, AlertPlacement.FOOTER));
@@ -84,7 +86,7 @@ export default class EditorPanel extends Vue {
           }
         });
       }
-    } catch(err){
+    } catch (err) {
       console.error(err);
       showErrors('Error publishing script', err);
     } finally {
@@ -129,24 +131,33 @@ export default class EditorPanel extends Vue {
   }
 
   public async onScheduleRun() {
-      try {
-        this.isJobRunning = true
+    try {
+      this.isJobRunning = true
 
-        const {
-          data: { data },
-        } = await axios.post(`/api/v0/jobdef/script/`, { _scriptId: this.script.id });
+      const {
+        data: { data },
+      } = await axios.post(`/api/v0/jobdef/script/`, { _scriptId: this.script.id });
 
-        const routeData = this.$router.resolve({
-          name: "jobDesigner",
-          params: { jobId: data.id, tabName: "schedule" },
-        });
-        window.open(routeData.href, "_blank");
-      } catch (err) {
-        console.error(err);
-        showErrors("Error scheduling script", err);
-      } finally {
-        this.isJobRunning = false;
-      }
+      const routeData = this.$router.resolve({
+        name: "jobDesigner",
+        params: { jobId: data.id, tabName: "schedule" },
+      });
+      window.open(routeData.href, "_blank");
+    } catch (err) {
+      console.error(err);
+      showErrors("Error scheduling script", err);
+    } finally {
+      this.isJobRunning = false;
+    }
+  }
+
+  public onCreateScript() {
+    this.$modal.show(CreateScriptModal, null, {
+      height: 'auto',
+      width: '650px',
+    }, {
+      'script:create': (id: string) => this.$emit('script:select', id)
+    });
   }
 
   public onShowExecutionLogs() {
@@ -205,7 +216,7 @@ export default class EditorPanel extends Vue {
       height: 'auto',
       width: '650px',
     }, {
-      'script:delete': () => this.$parent.$emit('script:select', null)
+      'script:delete': () => this.$emit('script:select', null)
     });
   }
 

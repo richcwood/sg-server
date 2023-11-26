@@ -15,6 +15,7 @@
         onExpandEditor,
         onRenameScript,
         onDeleteScript,
+        onCreateScript,
         onScheduleRun,
         onRunLambda,
         onShowDiff,
@@ -52,6 +53,14 @@
         </div>
 
         <div class="buttons m-0 separator">
+          <button @click="onCreateScript" :disabled="hasCodeChanges || isSavingScript" class="button is-small mb-0"
+            title="Create New Script">
+            <span class="icon">
+              <span v-if="isSavingScript" class="spinner"></span>
+              <font-awesome-icon v-else icon="plus-square" />
+            </span>
+          </button>
+
           <button @click="onSave" :disabled="!hasCodeChanges || isSavingScript" class="button is-small mb-0"
             title="Save Script">
             <span class="icon">

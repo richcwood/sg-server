@@ -43,6 +43,7 @@ import {
   faExpand,
   faClock,
   faHistory,
+  faPlusSquare
 } from '@fortawesome/free-solid-svg-icons';
 import '@/sass/index.scss';
 
@@ -74,6 +75,7 @@ library.add(faFileCode);
 library.add(faExpand);
 library.add(faClock);
 library.add(faHistory);
+library.add(faPlusSquare);
 
 Vue.component('font-awesome-icon', FontAwesomeIcon);
 
