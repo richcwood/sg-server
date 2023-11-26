@@ -1,20 +1,30 @@
 <template>
   <div class="is-flex is-flex-direction-column" style="height:100%; background: white;">
-    <header class=" p-3 is-flex is-align-items-center is-justify-content-space-between">
-      <p>{{ selectedJob ? selectedJob.name : '' }} {{ enumKeyToPretty(JobStatus, selectedJob.status) }}</p>
+    <template v-if="selectedJob">
+      <header class="p-3 is-flex is-align-items-center is-justify-content-space-between">
+        <p>{{ selectedJob.name }}</p>
 
-      <div class="buttons">
-        <button class="button" type="button"
-          :disabled="selectedJob.status !== JobStatus.RUNNING && selectedJob.status !== JobStatus.INTERRUPTED"
-          @click="onCancelJobClicked">
-          Cancel Job
-        </button>
+        <div class="buttons">
+          <button class="button" type="button"
+            :disabled="selectedJob.status !== JobStatus.RUNNING && selectedJob.status !== JobStatus.INTERRUPTED"
+            @click="onCancelJobClicked">
+            Cancel Job
+          </button>
+          <button type="button" class="button" @click="onClose" @keypress.esc="onClose">Close (Esc)</button>
+        </div>
+      </header>
+
+      <hr class="mb-3 mt-0" />
+      <TaskMonitorDetails :selectedJobId="selectedJob.id" />
+    </template>
+    <div v-else>
+      <header class="p-3 is-flex is-justify-content-end">
         <button type="button" class="button" @click="onClose" @keypress.esc="onClose">Close (Esc)</button>
+      </header>
+      <div class="is-flex is-justify-content-center">
+        <p class="is-size-4"><span class="spinner"></span> Job is loading</p>
       </div>
-    </header>
-
-    <hr class="mb-3 mt-0" />
-    <TaskMonitorDetails :selectedJobId="selectedJob.id" />
+    </div>
   </div>
 </template>
 
@@ -82,3 +92,11 @@ export default class JobResultsModal extends Vue {
   }
 }
 </script>
+
+<style lang="scss" scoped>
+.spinner {
+  @include loader;
+
+  display: inline-block;
+}
+</style>
