@@ -36,17 +36,17 @@
                 "${workspaceFolder}/server/dist/**/*.js"
             ],
             "env": {
-                "KIKI_GIT_USERNAME": "richwifunds",
-                "KIKI_GIT_PASSWORD": "7d7bd8bab95c40937f8f8bfdcc336bad2d990f11",
-                "KIKI_GIT_URL": "github.com/theironcook/Kiki.git",
-                "S3_BUCKET_ORG_ARTIFACTS": "sg-team-artifacts",
-                "S3_BUCKET_AGENT_BINARIES": "sg-agent-binaries",
-                "AWS_SECRET_ACCESS_KEY": "m3xRjfURCoEgI472JvwtPz+EedS3CYLwxJ7hspmO",
-                "AWS_ACCESS_KEY_ID": "AKIATV2XO2YFWAJMQJSN",
-                "AGENT_CREATE_TIMEOUT": "240",
+                "KIKI_GIT_USERNAME": "",
+                "KIKI_GIT_PASSWORD": "",
+                "KIKI_GIT_URL": "",
+                "S3_BUCKET_ORG_ARTIFACTS": "",
+                "S3_BUCKET_AGENT_BINARIES": "",
+                "AWS_SECRET_ACCESS_KEY": "",
+                "AWS_ACCESS_KEY_ID": "",
+                "AGENT_CREATE_TIMEOUT": "",
                 "environment": "debug",
                 "NODE_ENV": "debug",
-                "SENDGRID_API_KEY": "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"
+                "SENDGRID_API_KEY": ""
             }
         },
         {
