@@ -30,6 +30,17 @@
             "program": "${workspaceFolder}/server/dist/api/StartServer.js",
             "outFiles": ["${workspaceFolder}/server/dist/**/*.js"],
             "env": {
+                "KIKI_GIT_USERNAME": "",
+                "KIKI_GIT_PASSWORD": "",
+                "KIKI_GIT_URL": "",
+                "S3_BUCKET_ORG_ARTIFACTS": "",
+                "S3_BUCKET_AGENT_BINARIES": "",
+                "AWS_SECRET_ACCESS_KEY": "",
+                "AWS_ACCESS_KEY_ID": "",
+                "AGENT_CREATE_TIMEOUT": "",
+                "environment": "debug",
+                "NODE_ENV": "debug",
+                "SENDGRID_API_KEY": ""
                 "environment": "debug",
                 "NODE_ENV": "debug"
             }
