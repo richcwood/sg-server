@@ -1,33 +1,25 @@
 <template>
-  <div style="text-align: center;">
-    <section class="hero">
-      <div class="hero-body">
-        <div class="container">
-          <h1 class="title">
-            You are invited to these Saas Glue teams
-          </h1>
-        </div>
-      </div>
-    </section>
-    <div v-if="showAcceptedGenericInviteSuccess" style="text-align: center;">
-      Success.  You've joined the team.
+  <div class="sg-container-p">
+    <h1 class="title">You are invited to these SaaSGlue teams</h1>
+    <div v-if="showAcceptedGenericInviteSuccess">
+      Success. You've joined the team.
     </div>
-    <div v-else-if="invitedOrgsCount > 0" class="invitations" style="text-align: center;"> 
+    <div v-else-if="invitedTeamsCount > 0" class="invitations"> 
       <table>
-        <tr v-if="hasLocalStorageInvitedOrgToken">
-          <td class="invitation-td" style="font-weight: 700;">{{localStorageInvitedOrgName}}</td>
+        <tr v-if="hasLocalStorageInvitedTeamToken">
+          <td class="invitation-td has-text-weight-bold">{{localStorageInvitedTeamName}}</td>
           <td class="invitation-td"><button class="button is-primary" @click="onAcceptGenericInviteClicked">Accept Invitation</button></td>
         </tr>
-        <div v-if="user && user.orgIdsInvited">
-          <tr v-for="orgIdInvited of user.orgIdsInvited" v-bind:key="orgIdInvited._orgId">
-            <td class="invitation-td">{{getOrg(orgIdInvited._orgId).name}}</td>
-            <td class="invitation-td"><button class="button" @click="onAcceptInvitationClicked(orgIdInvited._orgId)">Accept Invitation</button></td>
+        <div v-if="user && user.teamIdsInvited">
+          <tr v-for="teamIdInvited of user.teamIdsInvited" v-bind:key="teamIdInvited._teamId">
+            <td class="invitation-td">{{getTeam(teamIdInvited._teamId).name}}</td>
+            <td class="invitation-td"><button class="button is-primary" @click="onAcceptInvitationClicked(teamIdInvited._teamId)">Accept Invitation</button></td>
           </tr>
         </div>
       </table>
     </div>
-    <div v-else style="text-align: center;">
-      There are no active invitations.  <br>Contact your team lead if you need an invitation and refresh this page.
+    <div v-else>
+      There are no active invitations. <br>Contact your team lead if you need an invitation and refresh this page.
     </div>
   </div>
 </template>
@@ -36,7 +28,7 @@
 import { Component, Vue } from 'vue-property-decorator';
 import { StoreType } from '@/store/types';
 import { BindStoreModel } from '@/decorator';
-import { KikiAlert, AlertPlacement, AlertCategory } from '@/store/alert/types';
+import { SgAlert, AlertPlacement, AlertCategory } from '@/store/alert/types';
 import { parseJwt } from '@/store/security';
 import { showErrors } from '@/utils/ErrorHandler';
 import axios from 'axios';
@@ -50,29 +42,29 @@ export default class InvitationsForMe extends Vue {
 
   private showAcceptedGenericInviteSuccess = false;
   
-  private loadedOrgs: any = {};
+  private loadedTeams: any = {};
   // Immediately return a reactive object and load it async.  Once the real model 
   // is loaded the UI will be reactive
-  private getOrg(orgId: any){
-    if(!this.loadedOrgs[orgId]){
-      Vue.set(this.loadedOrgs, orgId, {id: orgId, name: '...'});
+  private getTeam(teamId: any){
+    if(!this.loadedTeams[teamId]){
+      Vue.set(this.loadedTeams, teamId, {id: teamId, name: '...'});
 
       (async () => {
-        const org = await this.$store.dispatch('orgStore/fetchModel', orgId);
-        this.loadedOrgs[orgId] = org;
+        const team = await this.$store.dispatch('teamStore/fetchModel', teamId);
+        this.loadedTeams[teamId] = team;
       })();
     }
 
-    return this.loadedOrgs[orgId];
+    return this.loadedTeams[teamId];
   }
 
-  private async onAcceptInvitationClicked(orgId: string){
+  private async onAcceptInvitationClicked(teamId: string){
     try {
-      const acceptInvitationResult = await axios.put(`api/v0/user/${this.user.id}/join/${orgId}`);
+      const acceptInvitationResult = await axios.put(`api/v0/user/${this.user.id}/join/${teamId}`);
       const user = acceptInvitationResult.data.data; // this is the user account with updated info  
       this.$store.commit('securityStore/setUser', user);
 
-      this.$store.dispatch('alertStore/addAlert', new KikiAlert(`Succesfully joined the team ${this.getOrg(orgId).name}`, AlertPlacement.WINDOW));
+      this.$store.dispatch('alertStore/addAlert', new SgAlert(`Succesfully joined the team ${this.getTeam(teamId).name}`, AlertPlacement.WINDOW));
     }
     catch(err){
       console.error(err);
@@ -80,74 +72,74 @@ export default class InvitationsForMe extends Vue {
     }
   }
 
-  private get invitedOrgsCount(){
+  private get invitedTeamsCount(){
     let count = 0;
     
-    if(this.user && this.user.orgIdsInvited){
-      count += this.user.orgIdsInvited.length;
+    if(this.user && this.user.teamIdsInvited){
+      count += this.user.teamIdsInvited.length;
     }
 
-    if(this.hasLocalStorageInvitedOrgToken){
+    if(this.hasLocalStorageInvitedTeamToken){
       count++;
     }
 
     return count;
   }
 
-  private get localStorageInvitedOrgName(){
-    const localStoreInvitedOrgToken = localStorage.getItem('sg_invited_org_token');
+  private get localStorageInvitedTeamName(){
+    const localStoreInvitedTeamToken = localStorage.getItem('sg_invited_team_token');
 
-    if(localStoreInvitedOrgToken){
-      const invitedOrgToken = parseJwt(localStoreInvitedOrgToken);
-      return invitedOrgToken.InvitedOrgName;
+    if(localStoreInvitedTeamToken){
+      const invitedTeamToken = parseJwt(localStoreInvitedTeamToken);
+      return invitedTeamToken.InvitedTeamName;
     }
     else {
       return '';
     }
   }
 
-  private get localStorageInvitedOrgId(){
-    const localStoreInvitedOrgToken = localStorage.getItem('sg_invited_org_token');
+  private get localStorageInvitedTeamId(){
+    const localStoreInvitedTeamToken = localStorage.getItem('sg_invited_team_token');
 
-    if(localStoreInvitedOrgToken){
-      const invitedOrgToken = parseJwt(localStoreInvitedOrgToken);
-      return invitedOrgToken.InvitedOrgId;
+    if(localStoreInvitedTeamToken){
+      const invitedTeamToken = parseJwt(localStoreInvitedTeamToken);
+      return invitedTeamToken.InvitedTeamId;
     }
     else {
       return '';
     }
   }
 
-  private get hasLocalStorageInvitedOrgToken(){
-    return localStorage.getItem('sg_invited_org_token') !== null;
+  private get hasLocalStorageInvitedTeamToken(){
+    return localStorage.getItem('sg_invited_team_token') !== null;
   }
 
   private async onAcceptGenericInviteClicked(){
-    const orgIdInviteToken = localStorage.getItem('sg_invited_org_token');
-    const invitedOrgToken = parseJwt(orgIdInviteToken);
+    const teamIdInviteToken = localStorage.getItem('sg_invited_team_token');
+    const invitedTeamToken = parseJwt(teamIdInviteToken);
     let user;
 
     try {
-      if(invitedOrgToken.id){
+      if(invitedTeamToken.id){
         // this is a direct invite (id is the user id for a direct invitation)
-        const acceptedInviteResult = await axios.get(`/invite/${invitedOrgToken.id}/${invitedOrgToken.InvitedOrgId}/${orgIdInviteToken}`);
+        const acceptedInviteResult = await axios.get(`api/v0/join/invite/${invitedTeamToken.id}/${invitedTeamToken.InvitedTeamId}/${teamIdInviteToken}`);
         user = acceptedInviteResult.data.data; // this is the new user account with updated info  
       }
       else {
         // else, just a generic shareable invite link
-        const acceptedInviteResult = await axios.get(`api/v0/join/shared_invite/${orgIdInviteToken}`);
+        const acceptedInviteResult = await axios.get(`api/v0/join/shared_invite/${teamIdInviteToken}`);
         user = acceptedInviteResult.data.data; // this is the new user account with updated info  
       }
       
       this.$store.commit('securityStore/setUser', user);
-      this.$store.dispatch('alertStore/addAlert', new KikiAlert(`Succesfully joined the team ${this.localStorageInvitedOrgName}`, AlertPlacement.WINDOW));
-      localStorage.removeItem('sg_invited_org_token');
+      this.$store.dispatch('alertStore/addAlert', new SgAlert(`Succesfully joined the team ${this.localStorageInvitedTeamName}`, AlertPlacement.WINDOW));
+      localStorage.removeItem('sg_invited_team_token');
       this.showAcceptedGenericInviteSuccess = true;
     }
     catch(err){
       console.error(err);
       showErrors(`Error joining the team.`, err);
-      localStorage.setItem(`failed_org_token_${orgIdInviteToken}`, 'true');
+      localStorage.setItem(`failed_team_token_${teamIdInviteToken}`, 'true');
     }
   }
 }

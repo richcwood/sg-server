@@ -1,4 +1,18 @@
 {
     "git.ignoreLimitWarning": true,
-    "python.pythonPath": "/System/Library/Frameworks/Python.framework/Versions/2.7/Resources/Python.app/Contents/MacOS/Python"
+    "python.pythonPath": "/System/Library/Frameworks/Python.framework/Versions/2.7/Resources/Python.app/Contents/MacOS/Python",
+    "python.formatting.provider": "none",
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "[typescript]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "[javascript]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "[vue]": {
+        "editor.defaultFormatter": "Vue.volar"
+    },
+    "[python]": {
+        "editor.defaultFormatter": "ms-python.black-formatter"
+    }
 }

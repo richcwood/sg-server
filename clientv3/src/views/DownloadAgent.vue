@@ -1,255 +1,442 @@
 <template>
-  <div class="main" style="margin-left: 24px; margin-right: 12px;">
+    <div class="main">
+        <section class="sg-container-p">
+            <h1 class="title">
+                Download a secure agent to run SaaSGlue scripts
+                <span class="tag is-primary is-medium">~1 Minute</span>
+            </h1>
 
-    <section class="hero">
-      <div class="hero-body">
-        <div class="container">
-          <h1 class="title">
-            Get started by downloading an agent
-          </h1>
-          <h2 class="subtitle" style="margin-left: 10px;">
-            Saas glue depends on running an agent inside of your environment.  <br>
-            Agents can run whatever scripts you'd like. <br>
-            Monitor the agents in the Agents tab.
-          </h2>
-
-          <table class="table downloads">
-            <tr class="tr" v-for="platform in Platform" v-bind:key="platform">
-              <td class="td padded">
-                <select class="select" v-model="selectedArchitecture[platform]">
-                  <option class="option" v-for="architecture in Architecture" v-bind:key="architecture" :value="architecture" >{{architecture}}</option>
-                </select>
-              </td>
-              <td clas="td padded">
-                <a class="link" @click.prevent="downloadAgent(platform)">{{Platform_inverted[platform]}}</a>
-              </td>
-              <template v-if="isCreatingAgent(platform)">
-                <td class="td animation" width="120px;" >
-                  <div class="dots left-dot">{{waitAnimationLeft}}</div>
-                </td>
-                <td class="td animation">
-                  creating an agent
-                </td>
-                <td class="td animation" width="120px;">
-                  <span class="dots">{{waitAnimationRight}}</span>
-                </td>
-              </template>
-              <template v-if="getDownload(platform).linkText">
-                <td class="td" colspan="3">
-                  <a @click="onClickedDownloadAgentLink(platform)">{{getDownload(platform).linkText}}</a>
-                </td>
-              </template>
-            </tr>
-          </table>
-
-          <table class="table">
-            <tr class="tr">
-              <td class="td" v-show="getDownload(Platform.Mac).linkText">
-                <b>{{Platform_inverted[Platform.Mac]}} instructions:</b> <br>
+            <div class="tabs">
                 <ul>
-                  <li>Download the agent</li>
-                  <li>Unzip it - just double click it</li>
-                  <li>terminal: chmod 711 file_name</li>
-                  <li>terminal: sudo ./file_name</li>
+                    <li
+                        :class="{ 'is-active': activeTab == OperatingSystem.WINDOWS }"
+                        @click="activeTab = OperatingSystem.WINDOWS"
+                    >
+                        <a>Windows</a>
+                    </li>
+                    <li
+                        :class="{ 'is-active': activeTab == OperatingSystem.LINUX }"
+                        @click="activeTab = OperatingSystem.LINUX"
+                    >
+                        <a>Linux</a>
+                    </li>
+                    <li
+                        :class="{ 'is-active': activeTab == OperatingSystem.MAC }"
+                        @click="activeTab = OperatingSystem.MAC"
+                    >
+                        <a>Mac</a>
+                    </li>
                 </ul>
-              </td>
-            </tr>
-          </table>
-        </div>
-      </div>
-    </section>
-    
-  </div>
+            </div>
+
+            <div class="content">
+                <h2 class="mb-3 has-text-weight-semibold is-size-4-desktop is-size-5-touch">
+                    1. Download the agent installer
+                </h2>
+                <a
+                    v-if="activeTab === OperatingSystem.WINDOWS"
+                    class="button is-primary"
+                    href="https://sg-agent-installer.s3.us-east-2.amazonaws.com/sg-agent-installer-win-x64.zip"
+                >
+                    <span class="icon">
+                        <img
+                            src="https://upload.wikimedia.org/wikipedia/commons/thumb/3/34/Windows_logo_-_2012_derivative.svg/25px-Windows_logo_-_2012_derivative.svg.png"
+                        />
+                    </span>
+                    <span>Download Windows x64</span>
+                </a>
+                <a
+                    v-else-if="activeTab === OperatingSystem.LINUX"
+                    class="button is-primary"
+                    href="https://sg-agent-installer.s3.us-east-2.amazonaws.com/sg-agent-installer-linux.gz"
+                >
+                    <span class="icon mr-3">
+                        <img
+                            src="https://upload.wikimedia.org/wikipedia/commons/a/ab/Linux_Logo_in_Linux_Libertine_Font.svg"
+                        />
+                    </span>
+                    <span>Download Linux</span>
+                </a>
+                <a
+                    v-else-if="activeTab === OperatingSystem.MAC"
+                    class="button is-primary"
+                    href="https://sg-agent-installer.s3.us-east-2.amazonaws.com/sg-agent-installer-mac.gz"
+                >
+                    <span class="icon mr-3">
+                        <img src="https://upload.wikimedia.org/wikipedia/commons/f/fa/Apple_logo_black.svg" />
+                    </span>
+                    <span>Download Mac</span>
+                </a>
+
+                <div class="my-6">
+                    <h2 class="mb-3 has-text-weight-semibold is-size-4-desktop is-size-5-touch">
+                        2. Unzip the agent installer
+                    </h2>
+                    <p v-if="activeTab === OperatingSystem.WINDOWS">Unzip the agent installer file.</p>
+                    <div v-else-if="activeTab === OperatingSystem.LINUX">
+                        <p>Unzip the installer zip file and make the agent installer executable.</p>
+                        <code class="p-4 my-4 code-snippet">
+                            $ gunzip sg-agent-installer-linux.gz
+                            <br />
+                            $ chmod 711 sg-agent-installer-linux
+                        </code>
+                    </div>
+                    <div v-else-if="activeTab === OperatingSystem.MAC">
+                        <p>Unzip the installer zip file and make the agent installer executable.</p>
+                        <code class="p-4 my-4 code-snippet">
+                            $ gunzip sg-agent-installer-mac.gz
+                            <br />
+                            $ chmod 711 sg-agent-installer-mac
+                        </code>
+                    </div>
+                </div>
+
+                <div class="my-6">
+                    <h2 class="mb-3 has-text-weight-semibold is-size-4-desktop is-size-5-touch">3. Get an agent security key</h2>
+
+                    <div class="is-flex is-align-items-center">
+                        <button class="button is-primary" @click="onCreateSecureKey">Create Secure Key</button>
+                        <span class="ml-3"
+                            >Or use an <router-link to="/accessKeys">existing</router-link> key.</span
+                        >
+                    </div>
+                    <div v-if="accessKeyCreated" class="notification is-success my-4">
+                        <button class="delete" @click="accessKeyCreated = false"></button>
+                        Key and secret created. Please, save them in a safe place. Key and Secret will be lost once
+                        browser session is closed.
+                        <div>
+                            <span>Access key id: <span v-html="agentAccessKey"></span></span>
+                        </div>
+                        <div>
+                            <span>Secret access key: <span v-html="agentAccessSecret"></span></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <h2 class="mb-3 has-text-weight-semibold is-size-4-desktop is-size-5-touch">
+                        4. Download and install the agent launcher
+                    </h2>
+                    <p>
+                        Run this command where you downloaded the agent installer. The command will download 
+                        the agent launcher and install the agent launcher service.
+                    </p>
+                    <div>
+                        <code v-if="activeTab === OperatingSystem.WINDOWS" class="p-4 my-4 code-snippet">
+                            > sg-agent-installer-win-x64.exe -c install -i <span v-html="agentAccessKey"></span> -s
+                            <span v-html="agentAccessSecret"></span>
+                        </code>
+                        <code v-else-if="activeTab == OperatingSystem.MAC" class="p-4 my-4 code-snippet">
+                            $ sudo ./sg-agent-installer-mac -c install -i <span v-html="agentAccessKey"></span> -s
+                            <span v-html="agentAccessSecret"></span>
+                        </code>
+                        <code
+                            v-else-if="activeTab == OperatingSystem.LINUX"
+                            class="p-4 my-4 code-snippet"
+                        >
+                            $ sudo ./sg-agent-installer-linux -c install -i <span v-html="agentAccessKey"></span> -s
+                            <span v-html="agentAccessSecret"></span>
+                        </code>
+                        <p>
+                        You should <router-link to="/agentMonitor">see</router-link> your new agent reporting for duty shortly.
+                    </p>
+                    </div>
+                </div>
+
+                <div style="margin-top: 75px">
+                    <h2 class="mb-5 has-text-weight-semibold is-size-3-desktop is-size-4-touch">
+                        Advanced instructions for agents
+                    </h2>
+                </div>
+
+                <div>
+                    <h2 class="mb-3 has-text-weight-semibold is-size-4-desktop is-size-5-touch">
+                        Start the agent service
+                    </h2>
+                    <code v-if="activeTab === OperatingSystem.WINDOWS" class="p-4 my-4 code-snippet">
+                        > sg-agent-installer-win-x64.exe -c start
+                    </code>
+                    <code v-else-if="activeTab === OperatingSystem.LINUX" class="p-4 my-4 code-snippet">
+                        $ sudo ./sg-agent-installer-linux -c start
+                    </code>
+                    <code v-else-if="activeTab === OperatingSystem.MAC" class="p-4 my-4 code-snippet">
+                        $ sudo ./sg-agent-installer-mac -c start
+                    </code>
+                </div>
+
+                <div>
+                    <h2 class="mb-3 has-text-weight-semibold is-size-4-desktop is-size-5-touch">
+                        Stop the agent service
+                    </h2>
+                    <div v-if="activeTab === OperatingSystem.WINDOWS">
+                        <code class="p-4 my-4 code-snippet"> > sg-agent-installer-win-x64.exe -c stop </code>
+                    </div>
+                    <div v-else-if="activeTab === OperatingSystem.LINUX">
+                        <code class="p-4 my-4 code-snippet"> $ sudo ./sg-agent-installer-linux -c stop </code>
+                    </div>
+                    <div v-else-if="activeTab === OperatingSystem.MAC">
+                        <code class="p-4 my-4 code-snippet"> $ sudo ./sg-agent-installer-mac -c stop </code>
+                    </div>
+                </div>
+
+                <div>
+                    <h2 class="mb-3 has-text-weight-semibold is-size-4-desktop is-size-5-touch">
+                        Uninstall the agent service
+                    </h2>
+                    <div v-if="activeTab === OperatingSystem.WINDOWS">
+                        <code class="p-4 my-4 code-snippet"> > sg-agent-installer-win-x64.exe -c uninstall </code>
+                    </div>
+                    <div v-else-if="activeTab === OperatingSystem.LINUX">
+                        <code class="p-4 my-4 code-snippet"> $ sudo ./sg-agent-installer-linux -c uninstall </code>
+                    </div>
+                    <div v-else-if="activeTab === OperatingSystem.MAC">
+                        <code class="p-4 my-4 code-snippet"> $ sudo ./sg-agent-installer-mac -c uninstall </code>
+                    </div>
+                </div>
+            </div>
+
+            <div class="is-size-5-desktop is-size-6-touch">
+                <h2 class="mb-3 has-text-weight-semibold is-size-4-desktop is-size-5-touch">Configuration file</h2>
+                <p>
+                    The SaaSGlue Agent uses Oauth2 to maintain a secure connection to the SaaSGlue API. The agent access
+                    key id and secret are stored in a config file. On startup, the agent looks for the config file in
+                    the following locations (in order):
+                </p>
+                <div class="content">
+                    <ol>
+                        <li class="ml-6">The directory where the agent launcher is located</li>
+                        <li class="ml-6 mt-3">An operating system specific location (Linux & Mac)</li>
+                        <ul class="mt-3">
+                            <li class="ml-6">Linux: /etc/saasglue/sg.cfg</li>
+                            <li class="ml-6">Mac: /home/[current user]/.saasglue/sg.cfg</li>
+                        </ul>
+                    </ol>
+                </div>
+
+                <h2 class="subtitle">The config file is formatted as follows:</h2>
+
+                <pre>
+{
+  "SG_ACCESS_KEY_ID": "********",
+  "SG_ACCESS_KEY_SECRET": "********",
+  "tags": {
+      "key": "value"
+  }
+}</pre
+                >
+            </div>
+
+            <!-- <br><br>
+      <div class="container">
+        <tabs>
+          <tab title="Windows Instructions">
+            <br><br>
+
+            <div style="font-weight: 700; font-size: 1.25rem;">
+              Get an agent access key
+            </div>
+            To run the agent you’ll need an agent access key. Click <router-link to="/accessKeys">here</router-link> if you don’t already have one. You can install the agent access key by:
+            <br><br>          
+            <ul>
+              <li>
+                Setting environment variables SG_ACCESS_KEY_ID and SG_ACCESS_KEY_SECRET to the agent access key id and secret respectively.
+              </li>
+              or
+              <li>
+                Creating a config file named sg.cfg in the same directory where the SaaSGlue agent is located.
+              </li>
+              <li>
+                Setting values for SG_ACCESS_KEY_ID and SG_ACCESS_KEY_SECRET in the config file, for example:
+              </li>           
+<pre>{
+  "SG_ACCESS_KEY_ID": "********",
+  "SG_ACCESS_KEY_SECRET": "********"
+}</pre>
+            </ul>
+            <br>
+            <div style="font-weight: 700; font-size: 1.25rem;">
+              Download and run the agent
+            </div>
+            <ul>
+              <li>Download the agent using the link above</li>
+              <li>Unzip it</li>
+              <li>Run sg-agent-launcher.exe by double clicking or run it from the command prompt</li>
+              <li>To ensure the agent is always running it's recommended to install it as a Windows Service. There are many ways to do this but NSSM provides a relatively simple solution available at <a href="https://www.nssm.cc/download">https://www.nssm.cc/download</a>.</li>
+            </ul>
+          </tab>
+
+          <tab title="Linux Instructions">
+            <br><br>
+
+            <div style="font-weight: 700; font-size: 1.25rem;">
+              Get an agent access key
+            </div>
+            To run the agent you’ll need an agent access key. Click <router-link to="/accessKeys">here</router-link> if you don’t already have one. You can install the agent access key by:
+            <br><br>          
+            <ul>
+              <li>
+                Setting environment variables SG_ACCESS_KEY_ID and SG_ACCESS_KEY_SECRET to the agent access key id and secret respectively.
+              </li>
+              or
+              <li>
+                Creating a config file named sg.cfg in the same directory where the SaaSGlue agent is located.
+              </li>
+              <li>
+                Setting values for SG_ACCESS_KEY_ID and SG_ACCESS_KEY_SECRET in the config file, for example:
+              </li>           
+<pre>{
+  "SG_ACCESS_KEY_ID": "********",
+  "SG_ACCESS_KEY_SECRET": "********"
+}</pre>
+            </ul>
+            <br>
+            <div style="font-weight: 700; font-size: 1.25rem;">
+              Download and run the agent
+            </div>
+            <ul>
+              <li>Download the agent using the link above</li>
+              <li>terminal: gunzip sg-agent-launcher.gz</li>
+              <li>terminal: chmod 711 sg-agent-launcher</li>
+              <li>terminal: sudo ./sg-agent-launcher</li>
+            </ul>
+          </tab>
+          <tab title="Mac Instructions">
+            <br><br>
+
+            <div style="font-weight: 700; font-size: 1.25rem;">
+              Get an agent access key
+            </div>
+            To run the agent you’ll need an agent access key. Click <router-link to="/accessKeys">here</router-link> if you don’t already have one. You can install the agent access key by:
+            <br><br>          
+            <ul>
+              <li>
+                Setting environment variables SG_ACCESS_KEY_ID and SG_ACCESS_KEY_SECRET to the agent access key id and secret respectively.
+              </li>
+              or
+              <li>
+                Creating a config file named sg.cfg in the same directory where the SaaSGlue agent is located.
+              </li>
+              <li>
+                Setting values for SG_ACCESS_KEY_ID and SG_ACCESS_KEY_SECRET in the config file, for example:
+              </li>           
+<pre>{
+  "SG_ACCESS_KEY_ID": "********",
+  "SG_ACCESS_KEY_SECRET": "********"
+}</pre>
+            </ul>
+            <br>
+            <div style="font-weight: 700; font-size: 1.25rem;">
+              Download and run the agent
+            </div>
+            <ul>
+              <li>Download the agent using the link above</li>
+              <li>Unzip it - just double click it</li>
+              <li>terminal: chmod 711 sg-agent-launcher</li>
+              <li>terminal: sudo ./sg-agent-launcher</li>
+            </ul>
+          </tab>
+        </tabs>
+      </div> -->
+        </section>
+    </div>
 </template>
 
 <script lang="ts">
-import { Component, Prop, Vue, Watch } from 'vue-property-decorator';
-import { BindStoreModel } from '@/decorator';
-import { StoreType } from '@/store/types';
-import { Agent, Architecture, Platform, Platform_inverted } from '../store/agent/types';
-import VueSplit from 'vue-split-panel';
+import { Component, Vue } from 'vue-property-decorator';
 import { Tabs, Tab } from 'vue-slim-tabs';
-import axios from 'axios';
-import { KikiAlert, AlertPlacement, AlertCategory } from '@/store/alert/types';
-import { showErrors } from '@/utils/ErrorHandler';
-import { momentToStringV1 } from '@/utils/DateTime';
 import _ from 'lodash';
-import moment from 'moment';
 
-enum UpdateTagType {
-  ADD, DELETE
-};
+import CreateAccessKeyModal from '@/components/CreateAccessKeyModal.vue';
+
+enum OperatingSystem {
+    WINDOWS = 1,
+    LINUX,
+    MAC,
+}
 
 @Component({
-  components: { Tabs, Tab },
-  props: { },
+    components: { Tabs, Tab, CreateAccessKeyModal },
+    name: 'DownloadAgent',
 })
 export default class DownloadAgent extends Vue {
-  // Expose to template
-  private readonly momentToStringV1 = momentToStringV1;
-  private readonly Platform = Platform;
-  private readonly Platform_inverted = Platform_inverted;
-  private readonly Architecture = Architecture;
+    public activeTab: OperatingSystem = OperatingSystem.WINDOWS;
+    public agentAccessSecret: string = 'SG_ACCESS_KEY_SECRET';
+    public agentAccessKey: string = 'SG_ACCESS_KEY_ID';
+    public accessKeyCreated: boolean = false;
+    public OperatingSystem = OperatingSystem;
 
-  private readonly selectedArchitecture: {[platform: string]: Architecture} = {};
-
-  private creatingAgentForPlatform = null;
-  private waitAnimationLeft = '';
-  private waitAnimationRight = '';
-
-  // Have to generate all of this stuff up front to be reactive
-  private readonly downloadLinks: {[platform: string]: {link: string, linkText: string, expireLinkTimer?: any}} = {
-    [this.Platform.Windows]: {link: '', linkText: ''},
-    [this.Platform.Linux]: {link: '', linkText: ''},
-    [this.Platform.Mac]: {link: '', linkText: ''},
-    [this.Platform.Alpine]: {link: '', linkText: ''},
-    [this.Platform.FreeBSD]: {link: '', linkText: ''}
-  };
-
-  private mounted(){
-    for(let platform of Object.values(Platform)){
-      // vue isn't reactive on object keys (I think vue3 will be)
-      Vue.set(this.selectedArchitecture, platform, Architecture.empty);
+    public created(): void {
+        this.detectOs();
+        this.readAgentAccessKey();
     }
-  }
 
-  private isCreatingAgent(platform: Platform): boolean {
-    return this.creatingAgentForPlatform === platform;
-  }
-
-  private getDownload(platform: Platform): any {
-    return this.downloadLinks[platform];
-  }
-
-  private async downloadAgent(platform: Platform){
-    const leftAnimationEmptySpace = '            ';
-    this.creatingAgentForPlatform = platform;
-    this.waitAnimationLeft = this.waitAnimationRight = '';
-    if(this.downloadLinks[platform] && this.downloadLinks[platform].expireLinkTimer){
-      clearTimeout(this.downloadLinks[platform].expireLinkTimer);
+    public detectOs(): void {
+        if (navigator.userAgent.includes('Win')) {
+            this.activeTab = OperatingSystem.WINDOWS;
+        } else if (navigator.userAgent.includes('Mac')) {
+            this.activeTab = OperatingSystem.MAC;
+        } else if (navigator.userAgent.includes('Linux')) {
+            this.activeTab = OperatingSystem.LINUX;
+        }
     }
-    this.downloadLinks[platform].link = null;
-    this.downloadLinks[platform].linkText = '';
-    this.downloadLinks[platform].expireLinkTimer = null;
 
-    const animationTimer = setInterval(() => {
-      this.waitAnimationRight += '.';
-      this.waitAnimationLeft = leftAnimationEmptySpace.substring(this.waitAnimationRight.length) + this.waitAnimationRight;
-      
-      if(this.waitAnimationRight.length > leftAnimationEmptySpace.length){
-        this.waitAnimationLeft = this.waitAnimationRight = '';
-      }
-    }, 250);
+    public readAgentAccessKey(): void {
+        if (sessionStorage.getItem('installAgentAccessKey')) {
+            const agent = JSON.parse(sessionStorage.getItem('installAgentAccessKey'));
 
-    const architecture = this.selectedArchitecture[platform];
-
-    this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new KikiAlert(`Creating a download package for ${platform}/${architecture}`, AlertPlacement.FOOTER, AlertCategory.INFO, 10000));
-
-    const getLinkPromise = new Promise((resolve: any, reject: any) => {
-      let getLinkTryCount = 0;
-      const tryGetLink = async () => {
-          getLinkTryCount++;
-          let response;
-
-          try {
-            response = await axios.get(`/api/v0/agentDownload/agentstub/${platform}/${architecture}`, {timeout: 3000});
-            return resolve(response.data.data);
-          }
-          catch(err){
-            console.log('still waiting for link', err);
-          }
-          
-          if(getLinkTryCount < 10){
-            setTimeout(tryGetLink, 7*1000);
-          }
-          else {
-            return reject('Timed out waiting for the agent to be built.');
-          }
-      };
-
-      tryGetLink();
-    });
-
-    try {
-      const downloadUrl:string = <string> await getLinkPromise;
-      
-      clearInterval(animationTimer);
-      this.creatingAgentForPlatform = null;
-      
-      const expireLinkTimer = setTimeout(() => {
-        this.downloadLinks[platform].link = null;
-        this.downloadLinks[platform].linkText = 'Please regenerate expired link. (faster 2nd time)';
-        this.downloadLinks[platform].expireLinkTimer = null;
-      }, (9*60*1000) + (50*1000)); // 9 minutes, 50 seconds
-
-      this.downloadLinks[platform].expireLinkTimer = expireLinkTimer;
-      this.downloadLinks[platform].link = downloadUrl;
-      this.downloadLinks[platform].linkText = 'download the agent';
-
-      this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new KikiAlert(`The download link is valid for 5 minutes.`, AlertPlacement.FOOTER, AlertCategory.INFO));
+            this.agentAccessSecret = agent.accessSecret;
+            this.agentAccessKey = agent.accessKey;
+        }
     }
-    catch(err){
-      this.creatingAgentForPlatform = null;
-      clearInterval(animationTimer);
-      this.waitAnimationLeft = this.waitAnimationRight = '';
 
-      console.error('Error', err);
-      showErrors(`Error creating an agent for ${platform}/${architecture}`, err);
+    public onCreateSecureKey(): void {
+        this.$modal.show(
+            CreateAccessKeyModal,
+            {},
+            {
+                width: 600,
+                height: 'auto',
+            },
+            {
+                'accessKey:created': (res) => {
+                    this.onAccessKeyCreated(res);
+                },
+            }
+        );
     }
-  }
 
-  private onClickedDownloadAgentLink(platform){
-    try {
-      if(this.getDownload(platform).link){
-        window.open(this.getDownload(platform).link);
-      }
+    public onAccessKeyCreated(res: { accessSecret: string; accessKey: string }): void {
+        sessionStorage.setItem(
+            'installAgentAccessKey',
+            JSON.stringify({
+                accessSecret: res.accessSecret,
+                accessKey: res.accessKey,
+            })
+        );
+        this.readAgentAccessKey();
+
+        this.accessKeyCreated = true;
     }
-    catch(err){
-      console.error('Error', err);
-      showErrors(`Error downloading the agent`, err);
-    }
-  }
 }
 </script>
 
-<!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped lang="scss">
+.code-snippet {
+    display: block;
+    white-space: nowrap;
+    border-radius: 5px;
+    color: white;
+    overflow: auto;
+    background: var(--code-background-color);
+}
 
-  .downloads {
-    border-width: 0;
+.download-section .button {
+    width: 100%;
+    max-width: 350px;
+    height: auto;
+}
 
-    .padded {
-      padding-left: 5px;
-      padding-right: 5px;
-    }
-
-    td  {
-      font-size: 28px;
-      border-width: 0 !important;
-
-      select {
-        margin-top: 7px;
-      }
-    }
-
-    .animation {
-     padding-left: 0;
-     padding-right: 0;   
-    }
-
-    .dots {
-      font-weight: 700;
-      padding-left: 0;
-      padding-right: 0;
-      margin-left: 10px;
-    }
-
-    .left-dot {
-      margin-right: 8px;
-      -webkit-transform:rotateY(180deg);
-      -moz-transform:rotateY(180deg);
-      -o-transform:rotateY(180deg);
-      -ms-transform:rotateY(180deg);
-    }
-  }
+.subtitle {
+    line-height: 26px;
+}
 </style>

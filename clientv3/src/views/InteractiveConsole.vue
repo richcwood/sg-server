@@ -1,493 +1,270 @@
 <template>
-  <div class="main" style="margin-left: 12px; margin-right: 12px;">
+  <div class="py-5">
+    <div class="sg-container-px mb-5">
+      <script-search-with-create class="block" width="400px" :scriptId="scriptId" @scriptPicked="onScriptPicked" />
 
-    <!-- Create script modal -->
-    <modal name="create-script-modal" :classes="'round-popup'" :width="450" :height="250">
-      <validation-observer ref="createScriptValidationObserver">
-        <table class="table" width="100%" height="100%">
-          <tbody class="tbody">
-            <tr class="tr">
-              <td class="td"></td>
-              <td class="td">Create a new script</td>
-            </tr>
-            <tr class="tr">
-              <td class="td">Script Name</td>
-              <td class="td">
-                <validation-provider
-                  name="Script Name"
-                  rules="required|object-name"
-                  v-slot="{ errors }"
-                >
-                  <input
-                    class="input"
-                    id="create-script-modal-autofocus"
-                    type="text"
-                    v-on:keyup.enter="saveNewScript"
-                    v-model="newScriptName"
-                    placeholder="Enter the new script name"
-                  />
-                  <div
-                    v-if="errors && errors.length > 0"
-                    class="message validation-error is-danger"
-                  >{{ errors[0] }}</div>
-                </validation-provider>
-              </td>
-            </tr>
-            <tr class="tr">
-              <td class="td">Script Type</td>
-              <td class="td">
-                <validation-provider name="Script Type" rules="required" v-slot="{ errors }">
-                  <select
-                    class="input select"
-                    style="width: 250px; margin-top: 10px;"
-                    v-model="newScriptType"
-                  >
-                    <option
-                      v-for="(value, key) in scriptTypesForMonaco"
-                      v-bind:key="`scriptType${key}-${value}`"
-                      :value="key"
-                    >{{value}}</option>
-                  </select>
-                  <div
-                    v-if="errors && errors.length > 0"
-                    class="message validation-error is-danger"
-                  >{{ errors[0] }}</div>
-                </validation-provider>
-              </td>
-            </tr>
-            <tr class="tr">
-              <td class="td"></td>
-              <td class="td">
-                <button class="button is-primary" @click="saveNewScript">Create new script</button>
-                <button class="button button-spaced" @click="cancelCreateNewScript">Cancel</button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </validation-observer>
-    </modal>
-
-
-    <!-- Pick agents modal - for running scripts -->
-    <modal name="pick-agents-modal" :classes="'round-popup'" :width="800" :height="700">
-      <validation-observer ref="runScriptValidationObserver">
-        <table class="table">
-          <tbody class="tbody">
-            <tr class="tr">
-              <td class="td"></td>
-              <td class="td">Run on single agent</td>
-              <td class="td">
-                <span style="margin-left:40px;">Run on multiple agents</span>
-              </td>
-            </tr>
-            <tr class="tr">
-              <td class="td"></td>
-              <td class="td">
-                <input
-                  type="radio"
-                  class="radio"
-                  v-model="runAgentTarget"
-                  :value="TaskDefTarget.SINGLE_SPECIFIC_AGENT"
-                /> This agent
-              </td>
-              <td class="td">
-                <input
-                  type="radio"
-                  class="radio"
-                  style="margin-left: 40px;"
-                  v-model="runAgentTarget"
-                  :value="TaskDefTarget.ALL_AGENTS_WITH_TAGS"
-                /> Active agents with tags
-              </td>
-            </tr>
-            <tr class="tr">
-              <td class="td"></td>
-              <td class="td">
-                <agent-search :agentId="runAgentTargetAgentId"  @agentPicked="onTargetAgentPicked" :disabled="runAgentTarget !== TaskDefTarget.SINGLE_SPECIFIC_AGENT"></agent-search>
-              </td>
-              <td class="td">
-                <validation-provider name="Target Tags" rules="variable-map" v-slot="{ errors }">
-                  <input
-                    type="text"
-                    class="input"
-                    style="margin-left: 60px; width: 300px;"
-                    v-model="runAgentTargetTags_string"
-                    :disabled="runAgentTarget !== TaskDefTarget.ALL_AGENTS_WITH_TAGS"
-                  />
-                  <div
-                    v-if="errors && errors.length > 0"
-                    class="message validation-error is-danger"
-                    style="margin-left: 60px;"
-                  >{{ errors[0] }}</div>
-                </validation-provider>
-              </td>
-            </tr>
-            <tr class="tr">
-              <td class="td"></td>
-              <td class="td">
-                <input
-                  type="radio"
-                  class="radio"
-                  v-model="runAgentTarget"
-                  :value="TaskDefTarget.SINGLE_AGENT_WITH_TAGS"
-                /> An agent with tags
-              </td>
-              <td class="td">
-                <input
-                  type="radio"
-                  class="radio"
-                  style="margin-left: 40px;"
-                  v-model="runAgentTarget"
-                  :value="TaskDefTarget.ALL_AGENTS"
-                /> All active agents
-              </td>
-            </tr>
-            <tr class="tr">
-              <td class="td"></td>
-              <td class="td">
-                <validation-provider name="Target Tags" rules="variable-map" v-slot="{ errors }">
-                  <input
-                    type="text"
-                    class="input"
-                    style="margin-left: 20px; width: 300px;"
-                    v-model="runAgentTargetTags_string"
-                    :disabled="runAgentTarget !== TaskDefTarget.SINGLE_AGENT_WITH_TAGS"
-                  />
-                  <div
-                    v-if="errors && errors.length > 0"
-                    class="message validation-error is-danger"
-                    style="margin-left: 20px;"
-                  >{{ errors[0] }}</div>
-                </validation-provider>
-              </td>
-            </tr>
-            <tr class="tr">
-              <td class="td"></td>
-              <td class="td">
-                <input
-                  type="radio"
-                  class="radio"
-                  v-model="runAgentTarget"
-                  :value="TaskDefTarget.SINGLE_AGENT"
-                /> Any active agent
-              </td>
-            </tr>
-            <tr class="tr">
-              <td class="td"></td>
-              <td class="td"></td>
-              <td class="td">
-                <table class="table">
-                  <tr class="tr">
-                    <td class="td">
-                      Command
-                    </td>
-                    <td class="td">
-                      <input class="input" type="text" v-model="runScriptCommand"/>
-                    </td>
-                  </tr>
-                  <tr class="tr">
-                    <td class="td">
-                      Arguments
-                    </td>
-                    <td class="td">
-                      <input class="input" type="text" v-model="runScriptArguments"/>
-                    </td>
-                  </tr>
-                  <tr class="tr">
-                    <td class="td">
-                      Env Variables
-                    </td>
-                    <td class="td">
-                      <validation-provider name="Env Vars" rules="variable-map" v-slot="{ errors }">
-                        <input class="input" type="text" v-model="runScriptEnvVars"/>
-                        <div v-if="errors && errors.length > 0" class="message validation-error is-danger">{{ errors[0] }}</div>
-                      </validation-provider>
-                    </td>
-                  </tr>
-                  <tr class="tr">
-                    <td class="td">
-                      Runtime Variables
-                    </td>
-                    <td class="td">
-                      <validation-provider name="Runtime Vars" rules="variable-map" v-slot="{ errors }">
-                        <input class="input" type="text" v-model="runScriptRuntimeVars"/>
-                        <div v-if="errors && errors.length > 0" class="message validation-error is-danger">{{ errors[0] }}</div>
-                      </validation-provider>
-                    </td>
-                  </tr>
-                </table>
-              </td>
-            </tr>
-            <tr class="tr">
-              <td class="td" colspan="2"></td>
-              <td class="td">
-                <button class="button is-primary" @click="onRunScript">Run Script</button>
-                <button class="button button-spaced" @click="onCancelRunScript">Cancel</button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </validation-observer>
-    </modal>
-
-
-    <!-- Clone script modal -->
-    <modal name="clone-script-modal" :classes="'round-popup'" :width="400" :height="200">
-      <validation-observer ref="cloneScriptValidationObserver">
-        <table class="table" width="100%" height="100%">
-          <tbody class="tbody">
-             <tr class="tr">
-              <td class="td"></td>
-              <td class="td">Clone script</td>
-            </tr>
-            <tr class="tr">
-              <td class="td">Script Name</td>
-              <td class="td">
-                <validation-provider name="Script Name" rules="required|object-name" v-slot="{ errors }">
-                  <input class="input" id="clone-script-modal-autofocus" type="text" v-on:keyup.enter="cloneScript" v-model="cloneScriptName" placeholder="Enter the new script name">
-                  <div v-if="errors && errors.length > 0" class="message validation-error is-danger">{{ errors[0] }}</div>
-                </validation-provider>
-              </td>
-            </tr>
-            <tr class="tr">
-              <td class="td"></td>
-              <td class="td">
-                <button class="button is-primary" @click="cloneScript">Clone script</button> 
-                <button class="button button-spaced" @click="cancelCloneScript">Cancel</button>
-              </td>
-            </tr>
-          </tbody> 
-        </table>
-      </validation-observer>
-    </modal>
-
-
-    <!-- Show text (script or stdout) modal -->
-    <modal name="show-script-modal" :classes="'round-popup'" :width="800" :height="650">
-      <table class="table" width="100%" height="100%">
-        <tr class="tr">
-          <td class="td">
-            <strong>script for step: {{stepOutcomeForPopup && stepOutcomeForPopup.name}}</strong>
-          </td>
-        </tr>
-        <tr class="tr">
-          <td class="td">
-            <div v-if="stepOutcomeForPopup  && stepOutcomeForPopup.runCode" 
-                 style="overflow: scroll; width: 750px; height: 525px;" 
-                 v-html="stepOutcomeForPopup.runCode.replace(/\n/g, '<br>')"></div>
-            <div v-else>
-              Code was missing
-            </div>
-          </td>
-        </tr>
-        <tr class="tr">
-          <td class="td">
-            <button class="button" @click="onCloseScriptModalClicked">Close</button>
-          </td>
-        </tr>
-      </table>
-    </modal>
-
-
-    <modal name="show-stdout-modal" :classes="'round-popup'" :width="800" :height="650">
-      <table class="table" width="100%" height="100%">
-        <tr class="tr">
-          <td class="td">
-            <strong>stdout for step: {{stepOutcomeForPopup && stepOutcomeForPopup.name}}</strong>
-          </td>
-        </tr>
-        <tr class="tr">
-          <td class="td">
-            <div v-if="stepOutcomeForPopup  && stepOutcomeForPopup.stdout" 
-                 style="overflow: scroll; width: 750px; height: 525px;" 
-                 v-html="formatStdString(stepOutcomeForPopup.stdout)"></div>
-            <div v-else>
-              No stdout available yet...
-            </div>
-          </td>
-        </tr>
-        <tr class="tr">
-          <td class="td">
-            <button class="button" @click="onCloseStdoutModalClicked">Close</button>
-          </td>
-        </tr>
-      </table>
-    </modal>
-
-
-    <modal name="show-stderr-modal" :classes="'round-popup'" :width="800" :height="650">
-      <table class="table" width="100%" height="100%">
-        <tr class="tr">
-          <td class="td">
-            <strong>stderr for step: {{stepOutcomeForPopup && stepOutcomeForPopup.name}}</strong>
-          </td>
-        </tr>
-        <tr class="tr">
-          <td class="td">
-            <div v-if="stepOutcomeForPopup  && stepOutcomeForPopup.stderr" 
-                 style="overflow: scroll; width: 750px; height: 525px;" 
-                 v-html="formatStdString(stepOutcomeForPopup.stderr)"></div>
-            <div v-else>
-              No stderr available yet...
-            </div>
-          </td>
-        </tr>
-        <tr class="tr">
-          <td class="td">
-            <button class="button" @click="onCloseStderrModalClicked">Close</button>
-          </td>
-        </tr>
-      </table>
-    </modal>
-
-
-
-
-    <table class="table" style="width: 100%;">
-      <tr class="tr">
-        <td class="td" colspan="2">
-          <button class="button" @click="onCreateScriptClicked">Create Script</button>
-          <script-search :scriptId="scriptId" @scriptPicked="onScriptPicked"></script-search>
-          <button class="button button-spaced" style="margin-left: 12px;" :disabled="!scriptCopy" @click="onCloneScriptClicked">Clone</button>
-        </td>
-      </tr>
-    </table>
-
-    <script-editor :script="scriptCopy"></script-editor>
-
-    <table class="table" style="width: 100%;">
-      <tr class="tr">
-        <td class="td">
-          <button class="button is-primary" @click="onRunScriptClicked" :disabled="!scriptCopy">Run Script</button>
-          <button class="button button-spaced" @click="onScheduleScriptClicked" :disabled="!scriptCopy">Schedule Script</button>
-        </td>
-      </tr>
-      
-      <tr class="tr">
-        <td class="td">
-          <template v-if="runningJobs.length > 0">
-            <div v-if="selectedJob">
-              <span class="spaced">{{selectedJob.name}}</span>
-              <button class="button button-spaced" :disabled="selectedJob.status!==JobStatus.RUNNING && selectedJob.status!==JobStatus.INTERRUPTED" @click="onCancelJobClicked">Cancel</button>              
-              <span class="spaced">{{enumKeyToPretty(JobStatus, selectedJob.status)}}</span>
-              <span class="spaced">{{momentToStringV1(selectedJob.dateStarted)}}</span>
- 
-              <div style="margin-left: 10px;">
-                <div v-for="taskOutcome in taskOutcomes" v-bind:key="taskOutcome.id" style="margin-top: 20px;">
-                  <span class="spaced">{{getAgent(taskOutcome._agentId).name}}</span>
-                  <button class="button button-spaced" :disabled="taskOutcome.status!==TaskStatus.RUNNING && taskOutcome.status!==TaskStatus.INTERRUPTED" @click="onCancelTaskOutcomeClicked(taskOutcome)">Cancel</button>
-                  <span class="spaced">{{enumKeyToPretty(JobStatus, taskOutcome.status)}}</span>
-                  <span class="spaced">{{enumKeyToPretty(TaskFailureCode, taskOutcome.failureCode)}}</span>
-                  <span class="spaced">{{momentToStringV1(taskOutcome.dateStarted)}}</span>
-
-                  <div v-for="stepOutcome in getStepOutcomes(taskOutcome)" v-bind:key="stepOutcome.id">
-                    <div style="margin-left: 30px; margin-top: 10px;">
-                      <span class="spaced">{{stepOutcome.name}}</span>
-                      <span class="spaced">{{enumKeyToPretty(JobStatus, stepOutcome.status)}}</span>
-                      <span class="spaced">{{enumKeyToPretty(TaskFailureCode, stepOutcome.failureCode)}}</span>
-                      <span class="spaced">{{momentToStringV1(stepOutcome.dateStarted)}}</span>
-                      <span class="spaced">{{momentToStringV1(stepOutcome.dateCompleted)}}</span>
-                      <span class="spaced">{{stepOutcome.runtimeVars}}</span>
-                      <span class="spaced"><a @click.prevent="onShowScriptClicked(stepOutcome)">script</a></span>
-                      <span class="spaced"><a @click.prevent="onShowStdoutClicked(stepOutcome)">stdout</a></span>
-                      <span class="spaced"><a @click.prevent="onShowStderrClicked(stepOutcome)">stderr</a></span>
-                    </div>
-                    <div v-if="stepOutcome.tail && stepOutcome.tail.length > 4" style="margin-left: 54px; margin-top: 10px;">
-                      {{stepOutcome.tail[4]}}
-                    </div>
-                    <div v-if="stepOutcome.tail && stepOutcome.tail.length > 3" style="margin-left: 54px; margin-top: 10px;">
-                      {{stepOutcome.tail[3]}}
-                    </div>
-                    <div v-if="stepOutcome.tail && stepOutcome.tail.length > 2" style="margin-left: 54px; margin-top: 10px;">
-                      {{stepOutcome.tail[2]}}
-                    </div>
-                    <div v-if="stepOutcome.tail && stepOutcome.tail.length > 1" style="margin-left: 54px; margin-top: 10px;">
-                      {{stepOutcome.tail[1]}}
-                    </div>
-                    <div v-if="stepOutcome.tail && stepOutcome.tail.length > 0" style="margin-left: 54px; margin-top: 10px;">
-                      {{stepOutcome.tail[0]}}
-                    </div>
-                  </div>
-                </div>
+      <div class="is-flex block">
+        <div class="mr-4">
+          <span class="has-text-weight-bold mr-3">Original Author</span>
+          <span v-if="script">{{ getUser(script._originalAuthorUserId).name }}</span>
+        </div>
+        <div class="mr-4">
+          <span class="has-text-weight-bold mr-3">Last Edited By</span>
+          <span v-if="script">{{ getUser(script._lastEditedUserId).name }} on {{ momentToStringV1(script.lastEditedDate)
+          }}</span>
+        </div>
+        <div class="is-flex">
+          <span class="has-text-weight-bold mr-3">Team Members Can Edit</span>
+          <template v-if="script">
+            <div class="control">
+              <div class="checkbox">
+                <input type="checkbox" v-model="script.teamEditable"
+                  :disabled="script._originalAuthorUserId !== loggedInUserId" @change="onTeamEditableChanged(script)" />
               </div>
             </div>
-            <div>
-              <table class="table" style="margin-top: 20px;">
-                <thead class="thead">
-                  <tr class="tr">
-                    <td class="td">
-                      Job Name
-                    </td>
-                    <td class="td">
-                      Status
-                    </td>
-                    <td class="td">
-                      Started
-                    </td>
-                    <td class="td">
-                      Completed
-                    </td>
-                  </tr>
-                </thead>
-                <tr class="tr" v-for="job in olderRunningJobs" v-bind:key="job.id">
-                  <td class="td">
-                      <a @click.prevent="onClickedJob(job)">{{job.name}}</a>
-                    </td>
-                    <td class="td">
-                      {{enumKeyToPretty(JobStatus, job.status)}}
-                    </td>
-                    <td class="td">
-                      {{momentToStringV1(job.dateStarted)}}
-                    </td>
-                    <td class="td">
-                      {{momentToStringV1(job.dateCompleted)}}
-                    </td>
+            <span v-if="script._originalAuthorUserId !== loggedInUserId" style="color:gray;">(orignal author: {{
+              getUser(script._originalAuthorUserId).name }})</span>
+          </template>
+        </div>
+      </div>
+      <script-editor :script="scriptCopy" />
+    </div>
+
+    <validation-observer tag="div" ref="runScriptValidationObserver">
+      <tabs ref="runSettingsTabs" :onSelect="onTabSelect">
+        <tab class="sg-container-p" title="Run on Agent(s)">
+          <table class="table is-fullwidth">
+            <tr>
+              <td>
+                <label class="label" style="width: 150px;">Target Agent(s)</label>
+              </td>
+              <td>
+                <select class="input" style="width: 350px;" v-model="runAgentTarget">
+                  <option v-for="(targetIndex, targetName) in TargetAgentChoices" :key="`target-choice-${targetIndex}`"
+                    :value="targetIndex">
+                    {{ targetName }}
+                  </option>
+                </select>
+              </td>
+            </tr>
+            <tr v-if="runAgentTarget === TaskDefTarget.SINGLE_SPECIFIC_AGENT">
+              <td>
+                <label class="label" style="width: 150px;">Target Agent</label>
+              </td>
+              <td>
+                <agent-search :width="'350px'" :agentId="runAgentTargetAgentId"
+                  @agentPicked="onTargetAgentPicked"></agent-search>
+              </td>
+            </tr>
+            <tr v-if="runAgentTarget === TaskDefTarget.ALL_AGENTS_WITH_TAGS ||
+              runAgentTarget === TaskDefTarget.SINGLE_AGENT_WITH_TAGS
+              ">
+              <td>
+                <label class="label" style="width: 150px;">Target Agent Tags</label>
+              </td>
+              <td>
+                <validation-provider name="Target Tags" rules="variable-map" v-slot="{ errors }">
+                  <input type="text" style="width: 350px;" class="input" v-model="runAgentTargetTags_string" />
+                  <input type="text" style="width: 350px;" class="input" v-model="runAgentTargetTags_string" />
+                  <input type="text" style="width: 350px;" class="input" v-model="runAgentTargetTags_string" />
+                  <input type="text" style="width: 350px;" class="input" v-model="runAgentTargetTags_string" />
+                  <input type="text" style="width: 350px;" class="input" v-model="runAgentTargetTags_string" />
+                  <div v-if="errors && errors.length > 0" class="message validation-error is-danger">
+                    {{ errors[0] }}
+                  </div>
+                </validation-provider>
+              </td>
+            </tr>
+          </table>
+        </tab>
+
+        <tab class="sg-container-p" title="Run on AWS Lambda">
+          <IsFreeTier>
+            <template #yes>
+              <div class="notification is-warning">
+                <router-link to="/invoices" activeClass="">Upgrate</router-link> to start running SaaSGlue scripts
+                on AWS Lambda.
+              </div>
+            </template>
+            <template #no>
+              <table class="table is-fullwidth">
+                <tr>
+                  <td>
+                    <label class="label" style="width: 150px;">Lambda Runtime</label>
+                  </td>
+                  <td>
+                    <div class="select">
+                      <validation-provider name="Lambda Runtime" rules="required" v-slot="{ errors }">
+                        <LambdaRuntimeSelect v-model="lambdaRuntime" :scriptType="scriptType" style="width: 350px;" />
+                        <div v-if="errors && errors.length > 0" class="message validation-error is-danger">
+                          {{ errors[0] }}
+                        </div>
+                      </validation-provider>
+                    </div>
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    <label class="label" style="width: 150px;">Lambda Memory Size</label>
+                  </td>
+                  <td>
+                    <div class="select">
+                      <select v-model="lambdaMemory" style="width: 350px;">
+                        <option v-for="memSize in LambdaMemorySizes" :key="memSize" :value="memSize">
+                          {{ memSize }} mb
+                        </option>
+                      </select>
+                    </div>
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    <label class="label" style="width: 150px;">Lambda Timeout (seconds)</label>
+                  </td>
+                  <td>
+                    <validation-provider name="Lambda Timeout" rules="required|lambdaTimeout" v-slot="{ errors }">
+                      <input class="input" style="width: 350px;" v-model="lambdaTimeout" />
+                      <div v-if="errors && errors.length > 0" class="message validation-error is-danger">
+                        {{ errors[0] }}
+                      </div>
+                    </validation-provider>
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    <label class="label" style="width: 150px;">Lambda Dependencies</label>
+                  </td>
+                  <td>
+                    <input class="input" style="width: 350px;" v-model="lambdaDependencies"
+                      placeholder="compression;axios" />
+                  </td>
                 </tr>
               </table>
-            </div>
-          </template>
-          <div v-else>
-            No job have ran yet
-          </div>
-        </td>
-      </tr>
-    </table>
+            </template>
+          </IsFreeTier>
+        </tab>
 
-    
+        <tab v-if="latestRanJobId && selectedJob" class="sg-container-p" titleSlot="results-title">
+          <div class="is-flex is-align-items-center">
+            <span class="mr-3">{{ selectedJob.name }}</span>
+            <button class="button is-ghost mr-3"
+              :disabled="selectedJob.status !== JobStatus.RUNNING && selectedJob.status !== JobStatus.INTERRUPTED"
+              @click="onCancelJobClicked">
+              Cancel
+            </button>
+            <span class="mr-3">{{ enumKeyToPretty(JobStatus, selectedJob.status) }}</span>
+            <span class="mr-3">{{ momentToStringV1(selectedJob.dateStarted) }}</span>
+          </div>
+          <task-monitor-details :selectedJobId="selectedJob.id" />
+        </tab>
+
+        <template #results-title>
+          <span id="ic-results-tab">
+            <span class="script-run-spinner" v-if="isScriptRunning"></span>
+            Script Results
+          </span>
+        </template>
+      </tabs>
+
+      <hr class="divider" />
+
+      <div class="sg-container-p">
+        <table class="table is-fullwidth">
+          <tr>
+            <td>
+              <label class="label" style="width: 150px;">Command</label>
+            </td>
+            <td>
+              <input class="input" style="width: 350px;" type="text" v-model="runScriptCommand" />
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <label class="label" style="width: 150px;">Arguments</label>
+            </td>
+            <td>
+              <input class="input" style="width: 350px;" type="text" v-model="runScriptArguments" />
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <label class="label" style="width: 150px;">Env Variables</label>
+            </td>
+            <td>
+              <validation-provider name="Env Vars" rules="variable-map" v-slot="{ errors }">
+                <input class="input" style="width: 350px;" type="text" v-model="runScriptEnvVars" />
+                <div v-if="errors && errors.length > 0" class="message validation-error is-danger">{{ errors[0] }}</div>
+              </validation-provider>
+            </td>
+          </tr>
+          <tr>
+            <td colspan="2">
+              <p class="has-text-left">
+                <label class="label">Runtime Variables</label>
+              </p>
+              <VariableList class="my-3" v-model="runScriptRuntimeVars" />
+            </td>
+          </tr>
+          <tr>
+            <td></td>
+            <td>
+              <button @click="onRunScript" :disabled="!scriptCopy || isJobRunning" :class="{ 'is-loading': isJobRunning }"
+                class="button is-primary mr-3">
+                Run Script
+              </button>
+              <button class="button" @click="onScheduleScriptClicked" :disabled="!scriptCopy">Schedule Script</button>
+            </td>
+          </tr>
+        </table>
+      </div>
+    </validation-observer>
   </div>
 </template>
 
 <script lang="ts">
-import { Component, Prop, Vue, Watch } from "vue-property-decorator";
-import { BindStoreModel } from "@/decorator";
-import { StoreType } from "@/store/types";
+import { Component, Vue, Watch } from "vue-property-decorator";
+import { StoreType } from "../store/types";
 import { Agent } from "../store/agent/types";
-import VueSplit from "vue-split-panel";
+import { User } from "../store/user/types";
 import axios from "axios";
-import { KikiAlert, AlertPlacement, AlertCategory } from "@/store/alert/types";
-import { focusElement } from "@/utils/Shared";
-import { Script, ScriptType, scriptTypesForMonaco } from "@/store/script/types";
-import { TaskDefTarget } from "@/store/taskDef/types";
-import ScriptSearch from "@/components/ScriptSearch.vue";
-import { BindSelected, BindSelectedCopy } from "@/decorator";
+import { SgAlert, AlertPlacement } from "../store/alert/types";
+import { Script, ScriptType, scriptTypesForMonaco } from "../store/script/types";
+import { ScriptShadow } from "../store/scriptShadow/types";
+import { TaskDefTarget } from "../store/taskDef/types";
+import { BindSelected, BindProp, BindSelectedCopy } from "../decorator";
 import { ValidationProvider, ValidationObserver } from "vee-validate";
 import _ from "lodash";
-import { momentToStringV1 } from "@/utils/DateTime";
-import { Job } from '@/store/job/types';
-import { getStompHandler } from '@/utils/StompHandler';
-import { Task } from '@/store/task/types';
-import { TaskOutcome } from '@/store/taskOutcome/types';
-import { StepOutcome } from '@/store/stepOutcome/types';
-import { JobStatus, TaskStatus, StepStatus, TaskFailureCode, enumKeyToPretty } from '@/utils/Enums.ts';
-import { stringToMap } from '@/utils/Shared';
-import AgentSearch from '@/components/AgentSearch.vue';
-import ScriptEditor from '@/components/ScriptEditor.vue';
-import { showErrors } from '@/utils/ErrorHandler';
-import moment from 'moment';
+import { momentToStringV1 } from "../utils/DateTime";
+import { ICJobSettings, Job } from "../store/job/types";
+import { TaskOutcome } from "../store/taskOutcome/types";
+import { LambdaMemorySizes, LambdaRuntimes } from "@/store/stepDef/types";
+import { JobStatus, StepStatus, TaskFailureCode, enumKeyToPretty } from "../utils/Enums";
+import AgentSearch from "../components/AgentSearch.vue";
+import ScriptEditor from "../components/ScriptEditor.vue";
+import { showErrors } from "../utils/ErrorHandler";
+import TaskMonitorDetails from "../components/TaskMonitorDetails.vue";
+import ScriptSearchWithCreate from "../components/ScriptSearchWithCreate.vue";
+import { Tabs, Tab } from "vue-slim-tabs";
+import { ScriptTarget, ICTab } from "@/store/interactiveConsole/types";
+import LambdaRuntimeSelect from "@/components/LambdaRuntimeSelect.vue";
+import { VariableMap } from "@/components/runtimeVariable/types";
+import { VariableList } from '@/components/runtimeVariable';
+import IsFreeTier from "@/components/IsFreeTier.vue";
 
 @Component({
-  components: { AgentSearch, ScriptSearch, ScriptEditor, ValidationProvider, ValidationObserver },
-  props: {}
+  components: {
+    Tabs,
+    Tab,
+    AgentSearch,
+    ScriptSearchWithCreate,
+    ScriptEditor,
+    ValidationProvider,
+    ValidationObserver,
+    TaskMonitorDetails,
+    LambdaRuntimeSelect,
+    VariableList,
+    IsFreeTier,
+  },
 })
 export default class InteractiveConsole extends Vue {
   // Expose to templates
@@ -495,84 +272,144 @@ export default class InteractiveConsole extends Vue {
   private readonly TaskDefTarget = TaskDefTarget;
   private readonly momentToStringV1 = momentToStringV1;
   private readonly JobStatus = JobStatus;
-  private readonly TaskStatus = TaskStatus;
   private readonly StepStatus = StepStatus;
   private readonly TaskFailureCode = TaskFailureCode;
   private readonly enumKeyToPretty = enumKeyToPretty;
+  private readonly LambdaMemorySizes = LambdaMemorySizes;
+  public readonly ScriptTarget = ScriptTarget;
+  private readonly TargetAgentChoices = {
+    "Any Available Agent": TaskDefTarget.SINGLE_AGENT,
+    "A Specific Agent": TaskDefTarget.SINGLE_SPECIFIC_AGENT,
+    "A Single Agent With Tags": TaskDefTarget.SINGLE_AGENT_WITH_TAGS,
+    "All Active Agents": TaskDefTarget.ALL_AGENTS,
+    "All Active Agents With Tags": TaskDefTarget.ALL_AGENTS_WITH_TAGS,
+  };
 
-  private newScriptName: string = '';
-  private newScriptType: ScriptType = ScriptType.NODE;
-  private cloneScriptName: string = '';
-
-  private runAgentTarget = TaskDefTarget.SINGLE_AGENT;
-  private runAgentTargetAgentId = '';
-  private runAgentTargetTags = {};
-  private runAgentTargetTags_string = '';
-
-  private runScriptCommand = '';
-  private runScriptArguments = '';
-  private runScriptEnvVars = '';
-  private runScriptRuntimeVars = '';
-
-  private displayedText = '';
-
+  public isScriptRunning = false;
+  public isJobRunning = false;
   private scriptId = null;
 
-  @BindSelected({ storeType: <any>StoreType.ScriptStore.toString() })
-  private script!: Script | null;
+  @BindSelected({ storeType: StoreType.ScriptStore })
+  private script: Script;
 
   @BindSelectedCopy({ storeType: StoreType.ScriptStore })
-  private scriptCopy!: Script | null;
+  public scriptCopy: Script;
+
+  @BindProp({ storeType: StoreType.ScriptStore })
+  public scriptType: ScriptType;
+
+  @BindSelected({ storeType: StoreType.ScriptShadowStore })
+  private scriptShadow: ScriptShadow;
+
+  @BindSelectedCopy({ storeType: StoreType.ScriptShadowStore })
+  private scriptShadowCopy: ScriptShadow;
 
   @BindSelected({ storeType: StoreType.JobStore })
-  private selectedJob!: Job | null;
+  private selectedJob: Job;
 
-  private runningJobs: Job[] = [];
+  @BindProp({ storeType: StoreType.SecurityStore, selectedModelName: "user", propName: "id" })
+  public loggedInUserId: string;
+
+  @BindProp({ storeType: StoreType.InteractiveConsole })
+  public scriptTarget: ScriptTarget;
+
+  @BindProp({ storeType: StoreType.InteractiveConsole })
+  public runScriptCommand: string;
+
+  @BindProp({ storeType: StoreType.InteractiveConsole })
+  public runScriptArguments: string;
+
+  @BindProp({ storeType: StoreType.InteractiveConsole })
+  public runScriptEnvVars: string;
+
+  @BindProp({ storeType: StoreType.InteractiveConsole })
+  public runScriptRuntimeVars: VariableMap;
+
+  @BindProp({ storeType: StoreType.InteractiveConsole })
+  public runAgentTarget: TaskDefTarget;
+
+  @BindProp({ storeType: StoreType.InteractiveConsole })
+  private runAgentTargetAgentId: string;
+
+  @BindProp({ storeType: StoreType.InteractiveConsole })
+  private runAgentTargetTags_string: string;
+
+  @BindProp({ storeType: StoreType.InteractiveConsole })
+  public lambdaDependencies: string;
+
+  @BindProp({ storeType: StoreType.InteractiveConsole })
+  public lambdaRuntime: LambdaRuntimes;
+
+  @BindProp({ storeType: StoreType.InteractiveConsole })
+  public lambdaMemory: number;
+
+  @BindProp({ storeType: StoreType.InteractiveConsole })
+  public lambdaTimeout: number;
+
+  @BindProp({ storeType: StoreType.InteractiveConsole })
+  public latestRanJobId: string;
 
   private async mounted() {
-    if(this.script){
+    if (this.script) {
       this.scriptId = this.script.id;
     }
   }
 
-  private beforeDestroy(){
-
-    if(this.scriptCopy){
+  private beforeDestroy() {
+    if (this.scriptCopy) {
       // update script with a version of itself to undo any unsaved changes.  If changes have already
       // been saved it won't matter
       const script = this.script;
       this.script = null;
       this.script = script;
     }
+
+    this.$store.dispatch(`${StoreType.InteractiveConsole}/updateSelectedCopy`, {
+      latestRanJobId: null
+    });
   }
 
-  private onTargetAgentPicked(agent: Agent){
-    if(agent){
+  private onTargetAgentPicked(agent: Agent) {
+    if (agent) {
       this.runAgentTargetAgentId = agent.id;
-    }
-    else {
-      console.log('reset target agent id to null');
+    } else {
+      console.log("reset target agent id to null");
       this.runAgentTargetAgentId = null;
     }
   }
 
-  @Watch('runningJobs')
-  private onRunningJobsChanged(){
-    if(this.runningJobs.length > 0){
-      this.$store.dispatch(`${StoreType.JobStore}/select`, this.runningJobs[this.runningJobs.length - 1]);
+  @Watch('selectedJob.status')
+  public onJobStatusChange(status: JobStatus): void {
+    const isRunning = status === JobStatus.RUNNING;
+
+    if (isRunning) {
+      this.selectTab(ICTab.RESULTS);
     }
-    else {
-      this.$store.dispatch(`${StoreType.JobStore}/select`, null);
+
+    this.isScriptRunning = isRunning;
+  }
+
+  public onTabSelect(e: MouseEvent, index: ICTab): void {
+    switch (index) {
+      case ICTab.LAMBDA:
+        this.scriptTarget = ScriptTarget.LAMBDA
+        break;
+      default:
+        this.scriptTarget = ScriptTarget.AGENT;
     }
   }
 
+  private selectTab(index: ICTab): void {
+    (<any>this.$refs.runSettingsTabs).selectedIndex = index;
+  }
+
   // a reactive map
-  private loadedAgents: {[key: string]: Agent} = {}; // need a reactive prop
+  private loadedAgents: { [key: string]: Agent } = {}; // need a reactive prop
 
   // return a temp object while loading the reactive one
   private getAgent(agentId: string): Agent {
-    if(!this.loadedAgents[agentId]){
-      Vue.set(this.loadedAgents, agentId, {id: agentId, name: '...'});
+    if (!this.loadedAgents[agentId]) {
+      Vue.set(this.loadedAgents, agentId, { id: agentId, name: "..." });
 
       (async () => {
         const agent = await this.$store.dispatch(`${StoreType.AgentStore}/fetchModel`, agentId);
@@ -583,22 +420,30 @@ export default class InteractiveConsole extends Vue {
     return this.loadedAgents[agentId];
   }
 
-  private get olderRunningJobs(): Job[] {
-    if(this.runningJobs.length > 1){
-      const jobClone = _.clone(this.runningJobs); // shallow reference clone
-      const olderJobs = jobClone.splice(0, jobClone.length - 1);
-      olderJobs.reverse();
-      return olderJobs;
+  // for reactivity in a template
+  private loadedUsers = {};
+  private getUser(userId: string): User {
+    if (!this.loadedUsers[userId]) {
+      Vue.set(this.loadedUsers, userId, { name: "loading..." });
+
+      (async () => {
+        this.loadedUsers[userId] = await this.$store.dispatch(`${StoreType.UserStore}/fetchModel`, userId);
+      })();
     }
-    else {
-      return [];
-    }
+
+    return this.loadedUsers[userId];
   }
 
-  private onCreateScriptClicked() {
-    this.newScriptName = '';
-    this.$modal.show('create-script-modal');
-    focusElement('create-script-modal-autofocus');
+  private async onTeamEditableChanged(script: Script) {
+    try {
+      await this.$store.dispatch(`${StoreType.ScriptStore}/save`, {
+        script: { id: script.id, teamEditable: script.teamEditable },
+      });
+      this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Script saved`, AlertPlacement.FOOTER));
+    } catch (err) {
+      console.error(err);
+      showErrors("Error saving the script", err);
+    }
   }
 
   private onScriptPicked(script: Script) {
@@ -607,262 +452,121 @@ export default class InteractiveConsole extends Vue {
 
   @Watch("scriptCopy")
   private onScriptCopyChanged() {
-    if(this.script){
+    if (this.script) {
       this.scriptId = this.script.id;
-    }
-    else {
+
+      // Update the browser's url for the newly selected script
+      if (!this.$router.currentRoute.params["scriptId"] !== this.scriptId) {
+        this.$router.replace({ name: "interactiveConsole", params: { scriptId: this.scriptId } });
+      }
+    } else {
       this.scriptId = null;
     }
   }
 
-  private async onCloneScriptClicked() {
-    if(this.script){
-      this.cloneScriptName = `${this.script.name}Copy`;
-      this.$modal.show('clone-script-modal');
-      focusElement('clone-script-modal-autofocus');
+  @Watch('latestRanJobId')
+  private async onICJobRun(id: string): Promise<void> {
+    this.isJobRunning = true;
+    const job = await this.$store.dispatch(`${StoreType.JobStore}/fetchModel`, id);
+    this.$store.dispatch(`${StoreType.JobStore}/select`, job);
+
+    await this.$nextTick();
+
+    try {
+      document.getElementById('ic-results-tab').scrollIntoView({ behavior: 'smooth' });
+    } catch (err) {
+      console.error(err);
+      showErrors('Error showing the "Script Results" tab', err);
+    } finally {
+      this.isJobRunning = false;
     }
   }
 
-  private async saveNewScript() {
-    if (!(await (<any>this.$refs.createScriptValidationObserver).validate())) {
+  private async onRunScript() {
+    if (!(await (<any>this.$refs.runScriptValidationObserver).validate())) {
       return;
     }
 
-    try {
-      this.$store.dispatch(
-        `${StoreType.AlertStore}/addAlert`,
-        new KikiAlert(
-          `Creating script - ${this.newScriptName}`,
-          AlertPlacement.FOOTER
-        )
-      );
-      const newScript = {
-        name: this.newScriptName,
-        scriptType: this.newScriptType,
-        code: '',
-        shadowCopyCode: '',
-        lastEditedDate: new Date().toISOString()
-      };
-
-      this.script = await this.$store.dispatch(
-        `${StoreType.ScriptStore}/save`,
-        newScript
-      );
-    } 
-    catch (err) {
-      console.error(err);
-      showErrors('Error creating script', err);
-    } 
-    finally {
-      this.$modal.hide("create-script-modal");
-    }
-  }
-
-  private cancelCreateNewScript() {
-    this.$modal.hide("create-script-modal");
-  }
-
-  private async onSaveScriptClicked() {
-    try {
-      if (this.scriptCopy) {
-        this.script = await this.$store.dispatch(`${StoreType.ScriptStore}/save`, this.scriptCopy);
-        this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new KikiAlert(`Script saved`, AlertPlacement.FOOTER));
-      }
-    } 
-    catch (err) {
-      console.error(err);
-      showErrors('Error saving script', err);
-    }
-  }
-
-  private async onRunScriptClicked() {
-    this.$modal.show('pick-agents-modal');
-  }
-
-  private onCancelRunScript(){
-    this.$modal.hide('pick-agents-modal');
-  }
-
-  private get envVarsAsMap(): {[key: string]: string} {
-    return stringToMap(this.runScriptEnvVars);
-  }
-
-  private get runtimeVarsAsMap(): {[key: string]: string} {
-    return stringToMap(this.runScriptRuntimeVars);
-  }
-
-  private async onRunScript(){
-    if( ! await (<any>this.$refs.runScriptValidationObserver).validate()){
+    if (!this.scriptShadow) {
+      console.error("Script shadow was not loaded so it could not be run.");
       return;
     }
 
-    const currentOrgId = this.$store.state[StoreType.OrgStore].selected.id;
+    const icJobSettings: ICJobSettings = {
+      scriptType: ScriptType[this.scriptCopy.scriptType] as any as ScriptType,
+      code: this.scriptShadowCopy.shadowCopyCode,
+      runScriptCommand: this.runScriptCommand,
+      runScriptArguments: this.runScriptArguments,
+      runScriptEnvVars: this.runScriptEnvVars,
+      runAgentTarget: this.runAgentTarget,
+      runScriptRuntimeVars: this.runScriptRuntimeVars,
+      runAgentTargetTags_string: this.runAgentTargetTags_string,
+      runAgentTargetAgentId: this.runAgentTargetAgentId,
+    };
+
+    if (this.scriptTarget === ScriptTarget.LAMBDA) {
+      Object.assign(icJobSettings, {
+        runAgentTarget: TaskDefTarget.AWS_LAMBDA,
+        lambdaDependencies: this.lambdaDependencies,
+        lambdaMemory: this.lambdaMemory,
+        lambdaRuntime: this.lambdaRuntime,
+        lambdaTimeout: this.lambdaTimeout,
+      });
+    }
 
     try {
-      const newJob = {
-        job: {
-          name: `IC-${moment().format('dddd MMM DD h:m a')}`,
-          dateCreated: (new Date()).toISOString(),
-          runtimeVars: this.runtimeVarsAsMap,
-          tasks: [
-            {
-              _orgId: currentOrgId,
-              name: `Task1`,
-              source: 0,
-              requiredTags: stringToMap(this.runAgentTargetTags_string),
-              target: this.runAgentTarget,
-              targetAgentId: this.runAgentTargetAgentId,
-              fromRoutes: [],
-              steps: [
-                {
-                  name: "Step1",
-                  script: {
-                    scriptType: ScriptType[this.scriptCopy.scriptType],
-                    code: btoa(this.scriptCopy.shadowCopyCode)
-                  },
-                  order: 0,
-                  command: this.runScriptCommand,
-                  arguments: this.runScriptArguments,
-                  variables: this.envVarsAsMap
-                }
-              ],
-              correlationId: Math.random().toString().substring(3, 12)
-            }
-          ]
-        }
-      };
+      this.isJobRunning = true;
+      const data = await this.$store.dispatch(`${StoreType.JobStore}/runICJob`, icJobSettings);
+      this.latestRanJobId = data.id;
+    } catch (err) {
+      this.isJobRunning = false;
 
-      const {data: {data}} = await axios.post("/api/v0/job/ic/", newJob);
-      // make sure to use the same object in the store or it won't be reactive to browser push events
-      this.runningJobs.push(await this.$store.dispatch(`${StoreType.JobStore}/fetchModel`, data.id));
-    } 
-    catch (err) {
       console.error(err);
       showErrors('Error running the script', err);
-    }
-    finally {
-      this.$modal.hide('pick-agents-modal');
-    }
-  }
-
-  private async cloneScript(){
-    if(this.scriptCopy){
-      if( ! await (<any>this.$refs.cloneScriptValidationObserver).validate()){
-        return;
-      }
-
-      try {
-        this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new KikiAlert(`Cloning script - ${this.cloneScriptName}`, AlertPlacement.FOOTER));      
-        const newScript = {
-          name: this.cloneScriptName, 
-          scriptType: this.scriptCopy.scriptType, 
-          code: this.scriptCopy.shadowCopyCode, 
-          shadowCopyCode: this.script.shadowCopyCode,
-          lastEditedDate: (new Date()).toISOString()
-        };
-
-        this.script = await this.$store.dispatch(`${StoreType.ScriptStore}/save`, newScript);
-      }
-      catch(err){
-        console.error(err);
-        showErrors('Error cloning script', err);
-      }
-      finally{
-        this.$modal.hide('clone-script-modal');
-      }
+    } finally {
+      this.$modal.hide('run-script-options');
     }
   }
 
-  private cancelCloneScript(){
-    this.$modal.hide('clone-script-modal');
-  }
-
-  private get taskOutcomes(): Task[]{
-    if(this.selectedJob){
-      return <Task[]> this.$store.getters[`${StoreType.TaskOutcomeStore}/getByJobId`](this.selectedJob.id);
-    }
-    else {
-      return [];
-    }
-  } 
-
-  private getStepOutcomes(taskOutcome: TaskOutcome){
-    return this.$store.getters[`${StoreType.StepOutcomeStore}/getByTaskOutcomeId`](taskOutcome.id);
-  }
-
-  private async onCancelJobClicked(){
+  private async onCancelJobClicked() {
     try {
       await axios.post(`api/v0/jobaction/cancel/${this.selectedJob.id}`);
-      this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new KikiAlert(`Job cancelled`, AlertPlacement.FOOTER));
-    }
-    catch(err){
+      this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Job cancelled`, AlertPlacement.FOOTER));
+    } catch (err) {
       console.error(err);
-      showErrors('Error cancelling job', err);
+      showErrors("Error cancelling job", err);
     }
   }
 
-  private async onCancelTaskOutcomeClicked(taskOutcome: TaskOutcome){
+  private async onCancelTaskOutcomeClicked(taskOutcome: TaskOutcome) {
     try {
       await axios.post(`/api/v0/taskoutcomeaction/cancel/${taskOutcome.id}`);
-      this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new KikiAlert(`Task cancelled`, AlertPlacement.FOOTER));
-    }
-    catch(err){
+      this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Task cancelled`, AlertPlacement.FOOTER));
+    } catch (err) {
       console.error(err);
-      showErrors('Error cancelling task', err);
+      showErrors("Error cancelling task", err);
     }
   }
 
-  private onClickedJob(job: Job){
-    const routeData = this.$router.resolve({name: 'jobDetailsMonitor', params: {jobId: job.id}});
-    window.open(routeData.href, '_blank');
+  private onClickedJob(job: Job) {
+    const routeData = this.$router.resolve({ name: "jobDetailsMonitor", params: { jobId: job.id } });
+    window.open(routeData.href, "_blank");
   }
 
-  private stepOutcomeForPopup: StepOutcome | null = null;
-
-  private onShowScriptClicked(stepOutcome: StepOutcome){
-    this.stepOutcomeForPopup = stepOutcome;
-    this.$modal.show('show-script-modal');
-  }
-
-  private onShowStdoutClicked(stepOutcome: StepOutcome){
-    this.stepOutcomeForPopup = stepOutcome;
-    this.$modal.show('show-stdout-modal');
-  }
-
-  private onShowStderrClicked(stepOutcome: StepOutcome){
-    this.stepOutcomeForPopup = stepOutcome;
-    this.$modal.show('show-stderr-modal');
-  }
-
-  private onCloseScriptModalClicked(){
-    this.stepOutcomeForPopup = null;
-    this.$modal.hide('show-script-modal');
-  }
-
-  private onCloseStdoutModalClicked(){
-    this.stepOutcomeForPopup = null;
-    this.$modal.hide('show-stdout-modal');
-  }
-
-  private onCloseStderrModalClicked(){
-    this.stepOutcomeForPopup = null;
-    this.$modal.hide('show-stderr-modal');
-  }
-
-  private formatStdString(std: string): string {
-    return std.split('\n').reverse().join('<br>');
-  }
-
-  private async onScheduleScriptClicked(){
-    if(this.script){
+  private async onScheduleScriptClicked() {
+    if (this.script) {
       try {
-        const {data: {data}} = await axios.post(`/api/v0/jobdef/script/`, {_scriptId: this.script.id});
-        const routeData = this.$router.resolve({name: 'jobDesigner', params: {jobId: data.id, tabName: 'schedule'}});
-        window.open(routeData.href, '_blank');
-      }
-      catch (err) {
+        const {
+          data: { data },
+        } = await axios.post(`/api/v0/jobdef/script/`, { _scriptId: this.script.id });
+        const routeData = this.$router.resolve({
+          name: "jobDesigner",
+          params: { jobId: data.id, tabName: "schedule" },
+        });
+        window.open(routeData.href, "_blank");
+      } catch (err) {
         console.error(err);
-        showErrors('Error scheduling script', err);
+        showErrors("Error scheduling script", err);
       }
     }
   }
@@ -881,17 +585,8 @@ td {
   border-width: 0 !important;
 }
 
-.script-button-bar {
-  display: flex;
-  justify-content: space-between;
-}
-
 .v--modal-overlay[data-modal="script-editor-fullscreen"] {
   background: white;
-}
-
-.button-spaced {
-  margin-left: 10px;
 }
 
 .validation-error {
@@ -903,11 +598,14 @@ td {
   font-size: 18px;
 }
 
-.spaced {
-  margin-left: 14px;
-  margin-right: 14px;
-  text-align: center;
-  line-height: 36px;
-  //vertical-align: middle;
+:deep(.vue-tablist) {
+  padding-left: 64px;
+  padding-right: 64px;
+}
+
+.script-run-spinner {
+  @include loader;
+
+  display: inline-block;
 }
 </style>

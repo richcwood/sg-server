@@ -1,60 +1,84 @@
 <template>
-  <div class="home">
+  <div class="sg-container-p">
     <!-- Filter -->
-    <table class="table" width="500px">
-      <tbody class="tbody">
-        <tr class="tr">
-          <td class="td">
-            <span style="position: relative;">
-              <input class="input" style="padding-left: 30px;" type="text" v-model="filterString" placeholder="Filter by Job Name and Created By">
-              <font-awesome-icon icon="search" style="position: absolute; left: 10px; top: 10px; color: #dbdbdb;" />
-            </span>
-          </td>
-        </tr>
-        <tr class="tr">
-          <td class="td"><datepicker input-class="input" v-model="filterDate" name="filterDate" :highlighted="{dates:[todaysDate]}"></datepicker></td>
-        </tr>
-        <tr class="tr">
-          <td ref="statusPopupContainer" class="td" style="width:400px">
-            <a href="" @click.prevent="hideStatusPopup = !hideStatusPopup">
-              <span v-for="(statusTypeKey, index) in filterStatus" v-bind:key="statusTypeKey"> {{enumKeyToPretty(JobStatus, statusTypeKey)}}<span v-if="index !== Object.keys(filterStatus).length-1">,</span> </span>
-            </a>
-            <div style="position:relative;" :hidden="hideStatusPopup">
-              <div class="status-popup" style="position:absolute;">
-                <div>
-                  <a @click.prevent="onSelectAllFilterStatusClicked()">select all</a>
-                </div>
-                <div>
-                  <a @click.prevent="onSelectNoneFilterStatusClicked()">select none</a>
-                </div>
-                <div v-for="statusTypeKey in enumKeys(JobStatus)" v-bind:key="statusTypeKey">
-                  <label class="checkbox">
-                    <input type="checkbox" :value="statusTypeKey" v-model="filterStatus">
-                    {{enumKeyToPretty(JobStatus, statusTypeKey)}}
-                  </label>
-                </div>
-              </div>
+
+    <div class="columns mb-0">
+      <div class="column is-half">
+
+        <div class="field">
+          <div class="control">
+            <div class="select is-fullwidth">
+              <select v-model="selectedJobFetchType">
+                <option v-for="jobFetchType in enumKeys(JobFetchType)" :key="jobFetchType" :value="jobFetchType">{{getJobFetchTypeDescription(jobFetchType)}}</option>
+              </select>
             </div>
-          </td>
-        </tr>
-      </tbody>
-    </table>
+          </div>
+        </div>
+
+        <div class="field">
+          <div class="control has-icons-left">
+            <input class="input" type="text" v-model="filterString" placeholder="Filter by Job Name and Created By">
+            <span class="icon is-small is-left">
+              <font-awesome-icon icon="search" />
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="is-relative mb-3" ref="statusPopupContainer">
+      <a href="#" @click.prevent="hideStatusPopup = !hideStatusPopup">
+        <span v-for="(statusTypeKey, index) in filterStatus" v-bind:key="statusTypeKey"> {{enumKeyToPretty(JobStatus, statusTypeKey)}}<span v-if="index !== Object.keys(filterStatus).length-1">,</span> </span>
+      </a>
+      <div class="is-relative" v-show="!hideStatusPopup">
+        <div class="status-popup" style="position:absolute;">
+          <div>
+            <a @click.prevent="onSelectAllFilterStatusClicked()">select all</a>
+          </div>
+          <div>
+            <a @click.prevent="onSelectNoneFilterStatusClicked()">select none</a>
+          </div>
+          <div v-for="statusTypeKey in enumKeys(JobStatus)" :key="statusTypeKey">
+            <label class="checkbox">
+              <input type="checkbox" :value="statusTypeKey" v-model="filterStatus">
+              {{enumKeyToPretty(JobStatus, statusTypeKey)}}
+            </label>
+          </div>
+        </div>
+      </div>
+    </div>
 
     <!-- List of jobs -->
-    <table class="table is-striped">
-      <thead class="thead">
-        <td class="td">Run Number</td>
-        <td class="td">Job Name</td>
-        <td class="td">Created By</td>
-        <td class="td">Status</td>
-        <td class="td">Started</td>
-        <td class="td">Completed</td>
+    <table class="table sg-table is-striped is-hoverable">
+      <thead>
+        <tr>
+          <th>Run Number</th>
+          <th>Job Name</th>
+          <th>Created By</th>
+          <th>Status</th>
+          <th>Started</th>
+          <th>Completed</th>
+        </tr>
       </thead>
 
-      <tbody class="tbody">
-        <tr class="tr" v-for="job in filteredJobs" v-bind:key="job.id">
-          <td class="td"><router-link :to="{name: 'jobDetailsMonitor', params: {jobId: job.id}}">Monitor {{job.runId}}</router-link></td>
-          <td class="td">
+      <tbody>
+        <tr v-if="filteredJobs.length === 0">
+          <td colspan="6" class="pl-5">
+            <p>No results</p>
+            <p class="pl-3">
+              Filter date: <span class="has-text-weight-bold">{{getJobFetchTypeDescription(selectedJobFetchType)}}</span>
+              (only jobs in the date range will be shown)
+              <br />
+              <span v-if="filterString">
+                Filter job name and created by: <span class="has-text-weight-bold">{{filterString}}</span>
+              </span>
+            </p>
+          </td>
+        </tr>
+
+        <tr v-for="job in filteredJobs" :key="job.id">
+          <td><router-link :to="{name: 'jobDetailsMonitor', params: {jobId: job.id}}">Monitor {{job.runId}}</router-link></td>
+          <td>
             <template v-if="job._jobDefId">
               <router-link :to="{name: 'jobDesigner', params: {jobId: job._jobDefId}}">{{job.name}}</router-link>
             </template>
@@ -62,10 +86,10 @@
               {{job.name}}
             </template>
           </td>
-          <td class="td">{{getUser(job.createdBy).name}}</td>
-          <td class="td">{{enumKeyToPretty(JobStatus, job.status)}}</td>
-          <td class="td">{{momentToStringV1(job.dateStarted)}}</td>
-          <td class="td">{{momentToStringV1(job.dateCompleted)}}</td>
+          <td>{{getUser(job.createdBy, job.name).name}}</td>
+          <td :style="{color: calcJobStatusColor(job.status)}" >{{enumKeyToPretty(JobStatus, job.status)}}</td>
+          <td>{{momentToStringV1(job.dateStarted)}}</td>
+          <td>{{momentToStringV1(job.dateCompleted)}}</td>
         </tr>
       </tbody>
     </table>
@@ -75,14 +99,14 @@
 <script lang="ts">
 import { Component, Vue } from 'vue-property-decorator';
 import Datepicker from 'vuejs-datepicker';
-import { StoreType } from '@/store/types';
-import { Job } from '@/store/job/types';
-import { BindStoreModel } from '@/decorator';
-import { momentToStringV1 } from '@/utils/DateTime';
+import { StoreType } from '../store/types';
+import { Job, JobFetchType, getJobFetchTypeDescription, calcJobStatusColor } from '../store/job/types';
+import { BindStoreModel } from '../decorator';
+import { momentToStringV1, momentToStringV3, getMoment } from '../utils/DateTime';
 import moment from 'moment';
-import axios from 'axios';
-import { JobStatus, TaskStatus, enumKeyToPretty, enumKeys } from '@/utils/Enums';
-import { User } from '@/store/user/types';
+import _ from 'lodash';
+import { JobStatus, enumKeyToPretty, enumKeys } from '../utils/Enums';
+import { User } from '../store/user/types';
 
 @Component({
   components: {
@@ -93,14 +117,17 @@ export default class JobMonitor extends Vue {
 
   // Expose to template
   private readonly momentToStringV1 = momentToStringV1;
+  private readonly momentToStringV3 = momentToStringV3;
   private readonly JobStatus = JobStatus;
   private readonly enumKeyToPretty = enumKeyToPretty;
   private readonly enumKeys = enumKeys;
+  private readonly JobFetchType = JobFetchType;
+  private readonly getJobFetchTypeDescription = getJobFetchTypeDescription;
+  private readonly calcJobStatusColor = calcJobStatusColor;
 
   private readonly todaysDate = new Date();
 
   // Filter inputs
-  private filterDate = (moment().startOf('day').subtract('day', 3)).toString();
   private filterString = '';
   private filterStatus = enumKeys(JobStatus); // All status included by default
 
@@ -114,21 +141,18 @@ export default class JobMonitor extends Vue {
   @BindStoreModel()
   selected!: Job;
 
-  private get filteredJobs(): Job[] {
-    const filterMoment = this.filterDate ? moment(this.filterDate) : null;
+  @BindStoreModel({storeType: StoreType.JobStore, selectedModelName: 'selectedJobFetchType', updateActionName: 'updateJobFetchType'})
+  private selectedJobFetchType?: JobFetchType;
 
+  private get filteredJobsByFetchType(): Job[] {
+    return this.$store.getters[`${StoreType.JobStore}/getBySelectedJobFetchType`]();
+  }
+
+  private get filteredJobs(): Job[] {
     const filterUCase = this.filterString.toUpperCase();
     // split by whitespace and remove empty entries
     const filterUCaseItems = filterUCase.split(' ').map(item => item.trim()).filter(item => item);
-    const filteredJobs: Job[] = this.jobs.filter((job: Job) => {
-      if(filterMoment){
-        const momentStarted = moment(job.dateStarted);
-
-        if(momentStarted < filterMoment){
-          return false;
-        }
-      }
-
+    const filteredJobs: Job[] = this.filteredJobsByFetchType.filter((job: Job) => {
       if(this.filterStatus.indexOf(''+job.status) === -1){
         return false;
       }
@@ -141,7 +165,7 @@ export default class JobMonitor extends Vue {
           if(job.name.toUpperCase().indexOf(filter) !== -1){
             return true;
           }
-          else if(this.getUser(job.createdBy).name.toUpperCase().indexOf(filter) !== -1){
+          else if(this.getUser(job.createdBy, job.name).name.toUpperCase().indexOf(filter) !== -1){
             return true;
           }
           else {
@@ -151,10 +175,25 @@ export default class JobMonitor extends Vue {
       }
     });
 
-    // sort by dateStarted
+    const statusToSortValue = (status: JobStatus) => {
+      if(status === JobStatus.COMPLETED || status === JobStatus.SKIPPED){
+        return JobStatus.COMPLETED + 100;
+      }
+      else {
+        return status;
+      }
+    }
+
+    // sort by status, dateStarted
     filteredJobs.sort((jobA: Job, jobB: Job) => {
-      if(jobA.dateStarted && jobB.dateStarted){
+      if(jobA.status != jobB.status){
+        return statusToSortValue(jobA.status) - statusToSortValue(jobB.status);
+      }
+      else if(jobA.dateStarted && jobB.dateStarted){
         return (new Date(jobB.dateStarted)).getTime() - (new Date(jobA.dateStarted)).getTime();
+      }
+      else if(jobA.dateCompleted && jobB.dateCompleted){
+        return (new Date(jobB.dateCompleted)).getTime() - (new Date(jobA.dateCompleted)).getTime();
       }
       else {
         return 0;
@@ -164,14 +203,9 @@ export default class JobMonitor extends Vue {
     return filteredJobs;
   }
 
-  private async mounted(){
+  private mounted(){
     document.addEventListener('click', this.onGlobalClicked);
     document.addEventListener('touchstart', this.onGlobalClicked);
-
-    // restore last filters if possible
-    if(localStorage.getItem('jobMonitor_filterDate')){
-      this.filterDate = localStorage.getItem('jobMonitor_filterDate');
-    }
 
     if(localStorage.getItem('jobMonitor_filterString')){
       this.filterString = localStorage.getItem('jobMonitor_filterString');
@@ -180,6 +214,8 @@ export default class JobMonitor extends Vue {
     if(localStorage.getItem('jobMonitor_filterStatus')){
       this.filterStatus = JSON.parse(localStorage.getItem('jobMonitor_filterStatus'));
     }
+
+    this.$store.dispatch(`${StoreType.JobStore}/triggerFetchByType`);
   }
 
   private beforeDestroy(){
@@ -187,7 +223,6 @@ export default class JobMonitor extends Vue {
     document.removeEventListener('touchstart', this.onGlobalClicked);
 
     // save current filters
-    localStorage.setItem('jobMonitor_filterDate', this.filterDate);
     localStorage.setItem('jobMonitor_filterString', this.filterString);
     localStorage.setItem('jobMonitor_filterStatus', JSON.stringify(this.filterStatus));
   }
@@ -201,23 +236,36 @@ export default class JobMonitor extends Vue {
 
   // for reactivity in a template
   private loadedUsers = {};
-  private getUser(userId: string): User {
+  private getUser(userId: string, jobName: string): User {
     try {
-      if(!this.loadedUsers[userId]){
-        Vue.set(this.loadedUsers, userId, {name: 'loading...'});
+      if(jobName.startsWith('Inactive agent job')) {
+        return { 
+          name: 'Error',
+          email: 'Error',
+          teamIdsInvited: [],
+          teamIds: [],
+          companyName: '' 
+        };
+      } else {
+        if(!this.loadedUsers[userId]){
+          Vue.set(this.loadedUsers, userId, {name: userId});
 
-        (async () => {
-          this.loadedUsers[userId] = await this.$store.dispatch(`${StoreType.UserStore}/fetchModel`, userId);
-        })();
+          (async () => {
+            this.loadedUsers[userId] = await this.$store.dispatch(`${StoreType.UserStore}/fetchModel`, userId);
+          })();
+        }
+
+        return this.loadedUsers[userId];
       }
-
-      return this.loadedUsers[userId];
     }
     catch(err){
       console.log('Error in loading a user.  Maybe it was deleted?', userId);
       return {
         name: 'Error',
-        email: 'Error'
+        email: 'Error',
+        teamIdsInvited: [],
+        teamIds: [],
+        companyName: ''
       }
     }
   }
@@ -233,14 +281,6 @@ export default class JobMonitor extends Vue {
 </script>
 
 <style scoped lang="scss">
-  table {
-    border-width: 0;
-  }
-
-  td {
-    border-width: 0 !important;
-  }
-
   .status-popup {
     background-color: white; 
     border-radius: 5px; 

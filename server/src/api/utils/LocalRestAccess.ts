@@ -1,29 +1,37 @@
 import axios from 'axios';
 import * as config from 'config';
 
-
 class LocalRestAccess {
-    public async RestAPICall(url: string, method: string, _orgId: string, headers: any = {}, data: any = {}, token: string = undefined) {
+    public async RestAPICall(
+        url: string,
+        method: string,
+        _teamId: string,
+        headers: any = {},
+        data: any = {},
+        token: string = undefined
+    ) {
         return new Promise(async (resolve, reject) => {
             try {
                 let authToken = token;
 
                 if (!authToken) {
-                    authToken = `${config.get('adminToken')};`;
+                    authToken = `${process.env.adminToken};`;
                 }
 
                 let apiUrl = config.get('API_BASE_URL');
                 const apiVersion = config.get('API_VERSION');
                 const apiPort = config.get('API_PORT');
 
-                if (apiPort != '')
-                    apiUrl += `:${apiPort}`
+                if (apiPort != '') apiUrl += `:${apiPort}`;
                 url = `${apiUrl}/api/${apiVersion}/${url}`;
 
-                const combinedHeaders: any = Object.assign({
-                    Cookie: `Auth=${authToken}`,
-                    _orgId: _orgId
-                }, headers);
+                const combinedHeaders: any = Object.assign(
+                    {
+                        Cookie: `Auth=${authToken}`,
+                        _teamId: _teamId,
+                    },
+                    headers
+                );
 
                 // console.log('RestAPICall -> url ', url, ', method -> ', method, ', headers -> ', combinedHeaders, ', data -> ', data, ', token -> ', this.token);
 
@@ -32,7 +40,7 @@ class LocalRestAccess {
                     method: method,
                     responseType: 'text',
                     headers: combinedHeaders,
-                    data: data
+                    data: data,
                 });
                 resolve(response);
             } catch (e) {
@@ -42,6 +50,5 @@ class LocalRestAccess {
         });
     }
 }
-
 
 export const localRestAccess = new LocalRestAccess();

@@ -4,6 +4,8 @@ import { SecurityStore } from './types'
 import { mutations } from './mutations';
 import { actions } from './actions';
 import Cookies from 'js-cookie';
+import BitSet from 'bitset';
+import { teamStore } from '../team/index';
 
 export const parseJwt = (token: string) : any => {
   const base64Url = token.split('.')[1];
@@ -25,10 +27,10 @@ export const getAuthJwtCookie = (): object|undefined => {
   }
 };
 
-// Does the user exist, have an org?
+// Does the user exist, have an team?
 export const isUserReadyToUseApp = (): boolean => {
-  if(state.user && state.user.orgIds){
-    return state.user.orgIds.length > 0;
+  if(state.user && state.user.teamIds){
+    return state.user.teamIds.length > 0;
   }
   else {
     return false;
@@ -46,3 +48,21 @@ export const securityStore: Module<SecurityStore, RootState> = {
     actions,
     mutations
 };
+
+export const getLoggedInUserRightsBitset = () => {
+  if(!state.user){
+    throw new Error('Unable to get logged in users access right bitset.  User was null');
+  }
+
+  if(!(<any>teamStore).state.selected){
+    throw new Error('Unable to get logged in users access right bitset. Selected team was null');
+  }
+
+  const selectedTeamId = (<any>teamStore).state.selected.id;
+
+  if(!state.user.teamAccessRightIds[selectedTeamId]){
+    throw new Error('Unable to get logged in users access right bitset. No rights for the team');
+  }
+
+  return BitSet.fromHexString(state.user.teamAccessRightIds[selectedTeamId]);
+}

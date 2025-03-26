@@ -1,0 +1,11 @@
+{
+    "loggingLevel": 10,
+    "environment": "dev_k8s",
+    "WEB_CONSOLE_BASE_URL": "http://server",
+    "API_BASE_URL": "http://server",
+    "noAgentAvailableFailureRetryInterval": 5000,
+    "awsLambdaRequiredTags": {
+        "cloud_platform": "aws",
+        "lambda_runner": "true"
+    }
+}

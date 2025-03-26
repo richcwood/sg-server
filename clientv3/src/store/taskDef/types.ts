@@ -3,12 +3,13 @@ import { Model } from '@/store/types'
 export enum TaskDefTarget {
   SINGLE_AGENT = 1, ALL_AGENTS = 2,
   SINGLE_AGENT_WITH_TAGS = 4, ALL_AGENTS_WITH_TAGS = 8,
-  SINGLE_SPECIFIC_AGENT = 16
+  SINGLE_SPECIFIC_AGENT = 16, 
+  AWS_LAMBDA = 32, GCP_FUNCTION = 64, AMAZON_AUTOMATION = 128
 }
 
 export interface TaskDef extends Model {
   id?: string,
-  _orgId?: string,
+  _teamId?: string,
   _jobDefId?: string,
   target: TaskDefTarget,
   name: string,

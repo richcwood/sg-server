@@ -60,11 +60,14 @@ const momentToStringV2 = function(input: moment.Moment | string | number): strin
 }
 
 // Only dates / days - no time
-const momentToStringV3 = function(input: moment.Moment | string | number): string {
+const momentToStringV3 = function(input: moment.Moment | string | number | Date): string {
   if(input){
     let momentInput: moment.Moment;
 
     if(_.isFinite(input) || _.isString(input)){
+      momentInput = moment(input);
+    }
+    else if(input instanceof Date){
       momentInput = moment(input);
     }
     else {
@@ -88,6 +91,27 @@ const momentToStringV3 = function(input: moment.Moment | string | number): strin
   }
 }
 
+const getMoment = function(input: moment.Moment | string | number | Date) {
+  if(input){
+    let returnVal: moment.Moment;
+
+    if(_.isFinite(input) || _.isString(input)){
+      returnVal = moment(input);
+    }
+    else if(input instanceof Date){
+      returnVal = moment(input);
+    }
+    else {
+      returnVal = <moment.Moment> input;
+    }
+
+    return returnVal;
+  }
+  else {
+    return moment();
+  }
+};
+
 export const timeZones = [
   {"label":"(GMT-12:00) International Date Line West","value":"Etc/GMT+12"},
   {"label":"(GMT-11:00) Midway Island, Samoa","value":"Pacific/Midway"},
@@ -110,7 +134,7 @@ export const timeZones = [
   {"label":"(GMT-04:00) Santiago","value":"America/Santiago"},
   {"label":"(GMT-03:30) Newfoundland","value":"Canada/Newfoundland"},
   {"label":"(GMT-03:00) Brasilia","value":"America/Sao_Paulo"},
-  {"label":"(GMT-03:00) Buenos Aires, Georgetown","value":"America/Argentina/Buenos_Aires"},
+  {"label":"(GMT-03:00) Buenos Aires, Geteametown","value":"America/Argentina/Buenos_Aires"},
   {"label":"(GMT-03:00) Greenland","value":"America/Godthab"},
   {"label":"(GMT-03:00) Montevideo","value":"America/Montevideo"},
   {"label":"(GMT-02:00) Mid-Atlantic","value":"America/Noronha"},
@@ -172,4 +196,4 @@ export const timeZones = [
 ];
 
 
-export { momentToStringV1, momentToStringV2, momentToStringV3 };
+export { momentToStringV1, momentToStringV2, momentToStringV3, getMoment };

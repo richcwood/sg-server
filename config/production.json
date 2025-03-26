@@ -1,31 +1,78 @@
 {
-  "loggingLevel": 10,
-  "environment": "production",
-  "API_BASE_URL": "https://kiki-go-server.herokuapp.com",
-  "API_PORT": "",
-  "API_VERSION": "v0",
-  "stompUrl": "wss://@funny-finch.rmq.cloudamqp.com/ws/stomp",
-  "amqpUrl": "amqps://bartSpikeUser:RocketDog99!@funny-finch.rmq.cloudamqp.com/bartsVHost",
-  "rmqAdminUrl": "https://bartSpikeUser:RocketDog99!@funny-finch.rmq.cloudamqp.com/api/",
-  "rmqUrl": "funny-finch.rmq.cloudamqp.com",
-  "rmqStompPort": "15674",
-  "rmqAdminPort": "15672",
-  "rmqUsername": "bartSpikeUser",
-  "rmqPassword": "RocketDog99!",
-  "rmqVhost": "bartsVHost",
-  "inactiveAgentQueueTTLHours": 168,
-  "agentCrashRestartInterval": 30000,
-  "mongoUrl": "mongodb://dbusr:D5JkSr4KkD@ds233228.mlab.com:33228/heroku_zlhlm2nm",
-  "mongoDbName": "heroku_zlhlm2nm",
-  "redisHost": "redis-17504.c73.us-east-1-2.ec2.cloud.redislabs.com",
-  "redisPort": "17504",
-  "redisPassword": "EnnqDTjhnOcnSc9qMZZc5PwLMgAOe69L",
-  "useSSL": "true",
-  "logDest": "file",
-  "adminToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjVkZTg4MTAyNzVhZDkyZTViYjhkZTc4YSIsImVtYWlsIjoiYWRtaW5Ac2Fhc2dsdWUuY29tIiwib3JnSWRzIjoiIiwiaXBSYW5nZSI6Ijk2LjYwLjc0LjE2Ni8zMiIsImlhdCI6MTU4NjQ1MTI1N30.dxq4kbSkexb_RrJdiFu1I8gPvIi2g3Z2dAIG4N2rjWo",
-  "schedulerToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjVlOTljYmNiMjMxNzk1MDAxNWVkYjY1NSIsImVtYWlsIjoic2NoZWR1bGVyQHNhYXNnbHVlLmNvbSIsIm9yZ0lkcyI6IiIsImlwVjYiOiI6OmZmZmY6MTAuNDcuMjM4LjE3NCIsImlwUmFuZ2UiOiIzNC4xOTguOTUuMzgvMzIiLCJpYXQiOjE1ODcyNzcyMTl9.8Zqqi5KoJFYXtxsazY1qxJztjwQ6DPHUiZ2MiqGfovQ",
-  "sgTestUser": "testuser@saasglue.com",
-  "sgTestUserPassword": "mypassword",
-  "sgTestOrg": "5de95c0453162e8891f5a830",
-  "sgOrg": "5e99cbcb2317950015edb655"
+    "loggingLevel": 10,
+    "environment": "production",
+    "WEB_CONSOLE_BASE_URL": "https://console.saasglue.com",
+    "WEB_CONSOLE_PORT": "",
+    "API_BASE_URL": "https://console.saasglue.com",
+    "API_PORT": "",
+    "API_VERSION": "v0",
+    "inactiveAgentQueueTTLHours": 24,
+    "agentCrashRestartInterval": 30000,
+    "useSSL": "true",
+    "logDest": "file",
+    "secrets": [
+        {
+            "name": "rabbitmq",
+            "credentials": {
+                "secretName": "arn:aws:secretsmanager:us-east-2:948032566234:secret:production/SaaSGlueAPI/RabbitMQ-6fO5Km",
+                "AWS_REGION": "us-east-2"
+            }
+        },
+        {
+            "name": "mongodb",
+            "credentials": {
+                "secretName": "arn:aws:secretsmanager:us-east-2:948032566234:secret:production/SaaSGlueAPI/MongoDBAtlas-aY1xOA",
+                "AWS_REGION": "us-east-2"
+            }
+        },
+        {
+            "name": "redis",
+            "credentials": {
+                "secretName": "arn:aws:secretsmanager:us-east-2:948032566234:secret:production/SaaSGlueAPI/Redis-nNMM7v",
+                "AWS_REGION": "us-east-2"
+            }
+        },
+        {
+            "name": "stripe",
+            "credentials": {
+                "secretName": "arn:aws:secretsmanager:us-east-2:948032566234:secret:production/SaaSGlueAPI/Stripe-hef2f4",
+                "AWS_REGION": "us-east-2"
+            }
+        },
+        {
+            "name": "sg-api",
+            "credentials": {
+                "secretName": "arn:aws:secretsmanager:us-east-2:948032566234:secret:production/SaaSGlueAPI-vhAkEr",
+                "AWS_REGION": "us-east-2"
+            }
+        },
+        {
+            "name": "send-grid",
+            "credentials": {
+                "secretName": "arn:aws:secretsmanager:us-east-2:948032566234:secret:production/SaaSGlueAPI/SendGrid-KU40T0",
+                "AWS_REGION": "us-east-2"
+            }
+        },
+        {
+            "name": "google-auth",
+            "credentials": {
+                "secretName": "arn:aws:secretsmanager:us-east-2:948032566234:secret:production/SaaSGlueAPI/GoogleAuth-bXdg7p",
+                "AWS_REGION": "us-east-2"
+            }
+        },
+        {
+            "name": "github-auth",
+            "credentials": {
+                "secretName": "arn:aws:secretsmanager:us-east-2:948032566234:secret:production/SaaSGlueAPI/GithubAuth-aPySUT",
+                "AWS_REGION": "us-east-2"
+            }
+        },
+        {
+            "name": "mailchimp",
+            "credentials": {
+                "secretName": "arn:aws:secretsmanager:us-east-2:948032566234:secret:production/SaaSGlueAPI/MailChimp-IuEoah",
+                "AWS_REGION": "us-east-2"
+            }
+        }
+    ]
 }

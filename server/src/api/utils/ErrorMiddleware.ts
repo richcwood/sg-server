@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response } from 'express';
 import { ResponseCode, ResponseWrapper } from './Types';
 import { ValidationError } from './Errors';
-import { BaseLogger } from '../../shared/KikiLogger';
+import { BaseLogger } from '../../shared/SGLogger';
 import * as _ from 'lodash';
 
 export function handleErrors(err: Error, req: Request, res: Response, next: NextFunction): void {
@@ -13,8 +13,17 @@ export function handleErrors(err: Error, req: Request, res: Response, next: Next
     }
     const transactionId: string = req['transactionId'];
 
-    if (logger)
-        logger.LogError(err.message, {Error: err, Headers: req.headers, Body: req.body, Params: req.params});
+    if (logger) {
+        if (err.message != 'The access token expired')
+            logger.LogError(err.message, {
+                Error: err,
+                Path: req.path,
+                Method: req.method,
+                Headers: req.headers,
+                Body: req.body,
+                Params: req.params,
+            });
+    }
     //console.log(buildErrorMessage(err.name, err.message, transactionId, undefined), transactionId);
     //logger.debug(buildErrorMessage(err.name, err.message, transactionId, undefined), transactionId);
 
@@ -25,7 +34,9 @@ export function handleErrors(err: Error, req: Request, res: Response, next: Next
             break;
 
         case 'SequelizeValidationError':
-            response.errors = err['errors'].map(e => buildErrorMessage('Validation Error', e.message, transactionId, e.path));
+            response.errors = err['errors'].map((e) =>
+                buildErrorMessage('Validation Error', e.message, transactionId, e.path)
+            );
             response.statusCode = ResponseCode.BAD_REQUEST;
             break;
 
@@ -54,7 +65,14 @@ export function handleErrors(err: Error, req: Request, res: Response, next: Next
                     if (!response.errors) {
                         response.errors = [];
                     }
-                    response.errors.push(buildErrorMessage(validationError.name, validationError.message, transactionId, validationError.path));
+                    response.errors.push(
+                        buildErrorMessage(
+                            validationError.name,
+                            validationError.message,
+                            transactionId,
+                            validationError.path
+                        )
+                    );
                 }
             }
             break;
@@ -91,12 +109,21 @@ export function handleErrors(err: Error, req: Request, res: Response, next: Next
             response.errors = [buildErrorMessage(err.name, err.message, transactionId, undefined)];
             break;
 
+        case 'FreeTierLimitExceededError':
+            response.statusCode = ResponseCode.UNAUTHORIZED;
+            response.errors = [
+                buildErrorMessage('FreeTierLimitExceededError', err.message, transactionId, err['path']),
+            ];
+            break;
+
         default:
             if (err['code']) {
                 response.errors = [err];
                 response.statusCode = err['code'];
             } else {
-                response.errors = [formatError(new Error('An unknown error has occurred.'), ResponseCode.UNEXPECTED_ERROR, req)];
+                response.errors = [
+                    formatError(new Error('An unknown error has occurred.'), ResponseCode.UNEXPECTED_ERROR, req),
+                ];
                 response.statusCode = ResponseCode.UNEXPECTED_ERROR;
                 //logger.error(err, req['transactionId'], req.body);
             }
@@ -106,23 +133,29 @@ export function handleErrors(err: Error, req: Request, res: Response, next: Next
 }
 
 /**
-* @deprecated use buildErrorMessage instead, which puts the error in the correct format.
-*/
+ * @deprecated use buildErrorMessage instead, which puts the error in the correct format.
+ */
 export function formatError(err: Error, statusCode: number, req: Request): object {
     const msg: string = err['parent'] ? err['parent']['message'] : err.message;
     return {
         title: err['type'] ? err['type'] : err.name,
         description: msg,
         source: `Request ID: ${req['transactionId']}`,
-        code: statusCode ? statusCode : ResponseCode.UNEXPECTED_ERROR
+        code: statusCode ? statusCode : ResponseCode.UNEXPECTED_ERROR,
     };
 }
 
-export function buildErrorMessage(title: string, description: string, transactionId: string, source?: string): object {
+export function buildErrorMessage(
+    title: string,
+    description: string,
+    transactionId: string,
+    source?: string,
+    errorCode?: string
+): object {
     return {
         code: transactionId,
         title,
         description,
-        source
+        source,
     };
 }

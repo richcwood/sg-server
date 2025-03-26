@@ -3,107 +3,106 @@ import { ResponseWrapper, ResponseCode } from '../utils/Types';
 import * as config from 'config';
 import { ValidationError } from '../utils/Errors';
 import * as compressing from 'compressing';
-
+import { verifyAccessRights } from '../utils/AccessRightsVerifier';
 
 const multer = require('multer');
 const util = require('util');
 const fs = require('fs');
 
-
 const logsPath: string = 'sumologic_logs';
 
-if (!fs.existsSync(logsPath))
-  fs.mkdirSync(logsPath);
+if (!fs.existsSync(logsPath)) fs.mkdirSync(logsPath);
 
-if (!fs.existsSync('uploads'))
-  fs.mkdirSync('uploads');
+if (!fs.existsSync('uploads')) fs.mkdirSync('uploads');
 
 var storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, 'uploads')
-  },
-  filename: function (req, file, cb) {
-    cb(null, file.fieldname + '-' + Date.now().toString() + '.gz')
-  }
+    destination: function (req, file, cb) {
+        cb(null, 'uploads');
+    },
+    filename: function (req, file, cb) {
+        cb(null, file.fieldname + '-' + Date.now().toString() + '.gz');
+    },
 });
 
-var upload = multer({ storage: storage })
+// todo - Rich,,, I think we need to put multer in a single reusable file
+export const upload = multer({ storage: storage });
 
 export class AgentLogRouter {
+    public readonly router: Router;
 
-  public readonly router: Router;
+    constructor() {
+        this.router = Router();
 
-  constructor() {
-    this.router = Router();
-
-    this.router.post('/', upload.single('logFile'), this.create.bind(this));
-  }
-
-  async create(req: Request, res: Response, next: NextFunction) {
-    const response: ResponseWrapper = res['body'];
-
-    try {
-      const file = req['file']
-      // console.log(`AgentLogRouter -> create -> ${req['file']}`);
-      if (!file) {
-        next(new ValidationError('Please upload a file'));
-      }
-
-      const uncompressedFilePath = file.path.substr(0, file.path.lastIndexOf(".")) + ".txt";
-      await new Promise((resolve, reject) => {
-        compressing.gzip.uncompress(file.path, uncompressedFilePath)
-          .then(() => { resolve(); })
-          .catch((err) => { reject(err); })
-      });
-
-
-      const size: number = fs.statSync(uncompressedFilePath).size;
-      if (size == 0) {
-        if (fs.existsSync(uncompressedFilePath))
-          fs.unlinkSync(uncompressedFilePath);
-        if (fs.existsSync(file.path))
-          fs.unlinkSync(file.path);
-        response.data = '';
-        response.statusCode = ResponseCode.OK;
-        next();
-      } else {
-        // console.log(`AgentLogRouter -> create -> file -> ${util.inspect(file, false, null)}`);
-        const readable = fs.createReadStream(uncompressedFilePath);
-        // if (logDest == 'console') {
-        readable.pipe(process.stdout);
-        // } else {
-        //   const cacheFileName = `AgentLogRouter_${new Date().toISOString().replace(/T/, '').replace(/-/g, '').replace(/:/g, '').replace(/\./g, '').substr(0, 17)}.log`;
-        //   const cacheFilePath = `${logsPath}/${cacheFileName}`;
-        //   const writeable = fs.createWriteStream(cacheFilePath);
-        //   readable.pipe(writeable);
-        // }
-
-        readable.on('end', () => {
-          // console.log(`AgentLogRouter -> create -> finished`);
-          if (fs.existsSync(uncompressedFilePath))
-            fs.unlinkSync(uncompressedFilePath);
-          if (fs.existsSync(file.path))
-            fs.unlinkSync(file.path);
-          response.data = file;
-          response.statusCode = ResponseCode.OK;
-          next();
-        });
-      }
-    } catch (err) {
-      next(err);
+        this.router.post(
+            '/',
+            verifyAccessRights(['AGENT_LOG_WRITE']),
+            upload.single('logFile'),
+            this.create.bind(this)
+        );
     }
-  }
+
+    async create(req: Request, res: Response, next: NextFunction) {
+        const response: ResponseWrapper = res['body'];
+
+        try {
+            const file = req['file'];
+            // console.log(`AgentLogRouter -> create -> file -> ${util.inspect(file, false, null)}`);
+            if (!file) {
+                return next(new ValidationError('Please upload a file'));
+            }
+
+            const uncompressedFilePath = file.path.substr(0, file.path.lastIndexOf('.')) + '.txt';
+            await new Promise<void>((resolve, reject) => {
+                compressing.gzip
+                    .uncompress(file.path, uncompressedFilePath)
+                    .then(() => {
+                        resolve();
+                    })
+                    .catch((err) => {
+                        reject(err);
+                    });
+            });
+
+            const size: number = fs.statSync(uncompressedFilePath).size;
+            if (size == 0) {
+                if (fs.existsSync(uncompressedFilePath)) fs.unlinkSync(uncompressedFilePath);
+                if (fs.existsSync(file.path)) fs.unlinkSync(file.path);
+                response.data = '';
+                response.statusCode = ResponseCode.OK;
+                next();
+            } else {
+                // console.log(`AgentLogRouter -> create -> file -> ${util.inspect(file, false, null)}`);
+                const readable = fs.createReadStream(uncompressedFilePath);
+                // if (logDest == 'console') {
+                readable.pipe(process.stdout);
+                // } else {
+                //   const cacheFileName = `AgentLogRouter_${new Date().toISOString().replace(/T/, '').replace(/-/g, '').replace(/:/g, '').replace(/\./g, '').substr(0, 17)}.log`;
+                //   const cacheFilePath = `${logsPath}/${cacheFileName}`;
+                //   const writeable = fs.createWriteStream(cacheFilePath);
+                //   readable.pipe(writeable);
+                // }
+
+                readable.on('end', () => {
+                    // console.log(`AgentLogRouter -> create -> finished`);
+                    if (fs.existsSync(uncompressedFilePath)) fs.unlinkSync(uncompressedFilePath);
+                    if (fs.existsSync(file.path)) fs.unlinkSync(file.path);
+                    response.data = file;
+                    response.statusCode = ResponseCode.OK;
+                    next();
+                });
+            }
+        } catch (err) {
+            return next(err);
+        }
+    }
 }
 
-export const agentLogRouterSingleton = new AgentLogRouter();
-export const agentLogRouter = agentLogRouterSingleton.router;
-
-
-
-
-
-
-
+export const agentLogRouterSingleton = (): AgentLogRouter | any => {
+    return new AgentLogRouter();
+};
+export const agentLogRouter = (): any => {
+    return agentLogRouterSingleton().router;
+};
 
 // export default class AgentLogRouter1 {
 //   public router: Router;
@@ -123,9 +122,9 @@ export const agentLogRouter = agentLogRouterSingleton.router;
 
 //   // really belong in a controller layer but I just don't give a poo right now, git er done
 //   //   async getAll(req: Request, res: Response, next: NextFunction){
-//   //     const _orgId:string = <string>req.headers._orgid;
+//   //     const _teamId:string = <string>req.headers._teamid;
 //   //     const mongoLib: MongoLib = (<any>req).mongoLib;
-//   //     const agents:any = await mongoLib.GetManyByQuery({_orgId: new mongodb.ObjectID(_orgId)}, 'agent');
+//   //     const agents:any = await mongoLib.GetManyByQuery({_teamId: new mongodb.ObjectId(_teamId)}, 'agent');
 //   //     for(let agent of agents){
 //   //       agent.isHeartbeatActive = (Date.now() - agent.isHeartbeatActive) < 30000;
 //   //     }

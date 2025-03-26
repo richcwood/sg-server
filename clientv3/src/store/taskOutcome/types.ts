@@ -2,7 +2,7 @@ import { Model } from '@/store/types'
 import { TaskStatus, TaskFailureCode } from '@/utils/Enums';
 
 export interface TaskOutcome extends Model {
-  _orgId: string,
+  _teamId: string,
   _jobId: string,
   _taskId: string,
   _agentId: string,

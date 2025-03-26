@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+    labels:
+        kubernetes.io/metadata.name: saasglue-server-dev
+        name: saasglue-server-dev
+        env: dev
+    name: saasglue-server-dev
+spec:
+    finalizers:
+        - kubernetes

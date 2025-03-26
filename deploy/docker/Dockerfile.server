@@ -1,0 +1,25 @@
+FROM node:16 as server
+
+ARG DIR=/home/appuser
+WORKDIR $DIR/app
+
+ENV NODE_ENV production
+
+COPY --from=server_base:v0.0.1 $DIR/app/package*.json ./
+COPY --from=server_base:v0.0.1 $DIR/app/server ./server
+COPY --from=server_base:v0.0.1 $DIR/app/node_modules ./node_modules
+COPY --from=server_base:v0.0.1 $DIR/app/config ./config
+
+# Set restrictive permissions
+RUN chmod -R 600 $DIR && \
+  find $DIR -type d -exec chmod 700 '{}' \;
+
+# Set ownership
+RUN chown -R node:node $DIR
+
+EXPOSE 3000
+
+USER node
+
+# Start application as unprivileged user
+CMD "node" "./server/dist/api/StartServer.js"

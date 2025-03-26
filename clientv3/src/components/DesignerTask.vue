@@ -1,6 +1,6 @@
 <template>
   <span class="task" :class="{ 'selected': source === selected, 'is-transparent': isTransparent }" @click.stop="$emit('clickedBody')">
-    <div class="task-title">{{source.name}}</div>
+    <div class="task-title">{{truncateString(source.name, 28)}}</div>
 
     <div v-if="taskDesignerMode==='normal'">
       <button class="button task-button" @click.stop="$emit('clickedEditOutboundTasks')">Out bound ({{source.toRoutes.length}})</button>
@@ -20,7 +20,7 @@
 
       <div v-else>
         <label class="checkbox">
-          <input type="checkbox" class="checkbox route-input" v-model="targetInboundEntryForSource_isChecked"/> <span class="route-input"> Route to {{target.name}} </span>
+          <input type="checkbox" class="checkbox route-input" v-model="targetInboundEntryForSource_isChecked"/> <span class="route-input"> Route to {{truncateString(target.name, 14)}} </span>
         </label>
         <br>
         <validation-observer ref="editRouteValidationObserver_inbound">
@@ -44,7 +44,7 @@
 
       <div v-else>
         <label class="checkbox">
-          <input type="checkbox" class="checkbox route-input" v-model="targetOutboundEntryForSource_isChecked"/> <span class="route-input"> Route from {{target.name}} </span>
+          <input type="checkbox" class="checkbox route-input" v-model="targetOutboundEntryForSource_isChecked"/> <span class="route-input"> Route from {{truncateString(target.name, 14)}} </span>
         </label>
         <br>
         <validation-observer ref="editRouteValidationObserver_outbound">
@@ -85,9 +85,10 @@
 import _ from 'lodash';
 import { Component, Prop, Vue, Watch } from 'vue-property-decorator';
 import { ValidationProvider, ValidationObserver } from 'vee-validate';
-import { TaskDef } from '@/store/taskDef/types';
-import { StoreType } from '@/store/types';
-import { KikiAlert, AlertPlacement, AlertCategory } from '@/store/alert/types';
+import { TaskDef } from '../store/taskDef/types';
+import { StoreType } from '../store/types';
+import { SgAlert, AlertPlacement, AlertCategory } from '../store/alert/types';
+import { truncateString } from '../utils/Shared';
 
 @Component({
   components: {
@@ -95,6 +96,9 @@ import { KikiAlert, AlertPlacement, AlertCategory } from '@/store/alert/types';
   }
 })
 export default class DesignerTask extends Vue {
+
+  // Expose to template
+  private readonly truncateString = truncateString;
 
   @Prop() private taskDesignerMode!: string;
   @Prop() private taskDefs!: TaskDef[];
@@ -159,11 +163,11 @@ export default class DesignerTask extends Vue {
         };
 
         await this.$store.dispatch(`${StoreType.TaskDefStore}/save`, updatedTaskDef);
-        this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new KikiAlert(`Updated dependencies for task - ${updatedTaskName}`, AlertPlacement.FOOTER));
+        this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Updated dependencies for task - ${updatedTaskName}`, AlertPlacement.FOOTER));
       }
       catch(err){
         console.error(err);
-        this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new KikiAlert(`Error updating task: ${err}`, AlertPlacement.WINDOW, AlertCategory.ERROR));
+        this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Error updating task: ${err}`, AlertPlacement.WINDOW, AlertCategory.ERROR));
       }
     }
   }
@@ -220,11 +224,11 @@ export default class DesignerTask extends Vue {
         };
 
         await this.$store.dispatch(`${StoreType.TaskDefStore}/save`, updatedTaskDef);
-        this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new KikiAlert(`Updated dependencies for task - ${updatedTaskName}`, AlertPlacement.FOOTER));
+        this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Updated dependencies for task - ${updatedTaskName}`, AlertPlacement.FOOTER));
       }
       catch(err){
         console.error(err);
-        this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new KikiAlert(`Error updating task: ${err}`, AlertPlacement.WINDOW, AlertCategory.ERROR));
+        this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Error updating task: ${err}`, AlertPlacement.WINDOW, AlertCategory.ERROR));
       }
     }
   }
@@ -304,7 +308,7 @@ export default class DesignerTask extends Vue {
     border-style: solid;
     border-width: 1px;
     border-radius: 5px;
-    border-color: lightgray;
+    border-color: #8f8a8a;
     background-color: $white-ter;
     padding-top: 2px;
     padding-bottom: 2px;
@@ -312,15 +316,17 @@ export default class DesignerTask extends Vue {
     padding-right: 10px;
     min-width: 225px;
     max-width: 225px;
-    min-height: 175px;
-    max-height: 175px;
+    min-height: 185px;
+    max-height: 185px;
     margin: 10px;
     overflow-y: auto;
     cursor: pointer;
+    box-shadow: 4px 3px 6px 0px #ccc;
+    box-sizing: border-box;
   }
 
   .task:hover {
-   border-width: 3px; 
+    border-color: #5f5e5e;
   }
 
   .task-title {

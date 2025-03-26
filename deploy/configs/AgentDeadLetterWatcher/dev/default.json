@@ -1,0 +1,15 @@
+{
+    "logDest": "console",
+    "loggingLevel": 10,
+    "environment": "debug",
+    "rmqTaskLaunchErrorQueue": "task_launch_error",
+    "rmqAgentDeadLetterQueue": "dlq-agent",
+    "rmqBrowserPushRoute": "bp",
+    "rmqBrowserAlertsRoute": "ba",
+    "rmqScheduleUpdatesQueue": "schedule_update",
+    "inactiveAgentQueueTTLHours": 25,
+    "defaultAgentUpdateMessageTTL": 10000,
+    "activeAgentTimeoutSeconds": 65,
+    "rmqDLQRoute": "dlq",
+    "noAgentAvailableFailureRetryInterval": 30000
+}

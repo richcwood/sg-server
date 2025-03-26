@@ -1,0 +1,16 @@
+version: '3.7'
+services:
+    client:
+        container_name: client
+        image: client:latest
+        hostname: client
+        ports:
+            - '8080:8080'
+            - '3000:3000'
+        environment:
+            - PORT=80
+            - SERVER_NAME=client
+            - API_NAME=docker.for.mac.localhost
+            - API_PORT=3000
+        # env_file:
+        #     - aws-credentials.env

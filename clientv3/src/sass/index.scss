@@ -1,6 +1,233 @@
-$text-color: rgb(121, 96, 81);
-$back-color: lightblue;
-$splash-color: rgb(214, 143, 12);
+@import './variables';
 
+@import '~bulma';
+@import '~bulma-divider/dist/css/bulma-divider.sass';
 
-@import '../../node_modules/bulma/bulma.sass';
+:root {
+  --grey-bg-color: #fafafa;
+  --link-color: #5CAAED;
+  --font-color-active: #5caaed;
+  --link-color-hover: #1570C0;
+  --main-background-color: #eff4fa;
+  --wetasphalt-color: #34495E;
+  --code-background-color: var(--wetasphalt-color);
+}
+
+html,
+body {
+  height: 100%;
+  width: 100%;
+}
+
+// v-tooltip styles
+.tooltip {
+  display: block !important;
+  z-index: 10000;
+
+  .tooltip-inner {
+    background: black;
+    color: white;
+    border-radius: 16px;
+    padding: 5px 10px 4px;
+  }
+
+  .tooltip-arrow {
+    width: 0;
+    height: 0;
+    border-style: solid;
+    position: absolute;
+    margin: 5px;
+    border-color: black;
+    z-index: 1;
+  }
+
+  &[x-placement^="top"] {
+    margin-bottom: 5px;
+
+    .tooltip-arrow {
+      border-width: 5px 5px 0 5px;
+      border-left-color: transparent !important;
+      border-right-color: transparent !important;
+      border-bottom-color: transparent !important;
+      bottom: -5px;
+      left: calc(50% - 5px);
+      margin-top: 0;
+      margin-bottom: 0;
+    }
+  }
+
+  &[x-placement^="bottom"] {
+    margin-top: 5px;
+
+    .tooltip-arrow {
+      border-width: 0 5px 5px 5px;
+      border-left-color: transparent !important;
+      border-right-color: transparent !important;
+      border-top-color: transparent !important;
+      top: -5px;
+      left: calc(50% - 5px);
+      margin-top: 0;
+      margin-bottom: 0;
+    }
+  }
+
+  &[x-placement^="right"] {
+    margin-left: 5px;
+
+    .tooltip-arrow {
+      border-width: 5px 5px 5px 0;
+      border-left-color: transparent !important;
+      border-top-color: transparent !important;
+      border-bottom-color: transparent !important;
+      left: -5px;
+      top: calc(50% - 5px);
+      margin-left: 0;
+      margin-right: 0;
+    }
+  }
+
+  &[x-placement^="left"] {
+    margin-right: 5px;
+
+    .tooltip-arrow {
+      border-width: 5px 0 5px 5px;
+      border-top-color: transparent !important;
+      border-right-color: transparent !important;
+      border-bottom-color: transparent !important;
+      right: -5px;
+      top: calc(50% - 5px);
+      margin-left: 0;
+      margin-right: 0;
+    }
+  }
+
+  &.popover {
+    $color: #f9f9f9;
+
+    .popover-inner {
+      background: $color;
+      color: black;
+      padding: 24px;
+      border-radius: 10px;
+      box-shadow: 0 5px 30px rgba(black, .1);
+      border-style: solid;
+      border-width: 1px;
+      border-color: rgb(243, 237, 237);
+    }
+
+    .popover-arrow {
+      border-color: $color;
+    }
+  }
+
+  &[aria-hidden='true'] {
+    visibility: hidden;
+    opacity: 0;
+    transition: opacity .15s, visibility .15s;
+  }
+
+  &[aria-hidden='false'] {
+    visibility: visible;
+    opacity: 1;
+    transition: opacity .15s;
+  }
+}
+
+.help-popover {
+  display: inline; 
+  cursor: pointer;
+}
+
+.text-ellipsis {
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.has-button-shadow {
+  box-shadow: 0 18px 20px -15px RGB(0 0 0 / 40%);
+}
+
+a,
+a:visited {
+  color: var(--link-color);
+}
+
+a:hover {
+  color: var(--link-color-hover);
+}
+
+.sg-container-p {
+  padding: 1.5rem 64px calc(1.5rem + 25px) 64px;
+}
+
+.sg-container-px {
+  padding-left: 64px;
+  padding-right: 64px;
+}
+
+.is-absolute {
+  position: absolute;
+}
+
+table.sg-table {
+  border-collapse: separate;
+  border-spacing: 0 2px;
+  background: transparent;
+
+  thead {
+    tr {
+      background: transparent;
+    }
+
+    th {
+      color: #c0c5d4;
+      font-size: 0.75rem;
+    }
+  }
+
+  tbody {
+    tr {
+      background: #ebfaff;
+
+      td:first-child {
+        border-top-left-radius: 8px;
+        border-bottom-left-radius: 8px;
+      }
+
+      td:last-child {
+        border-top-right-radius: 8px;
+        border-bottom-right-radius: 8px;
+      }
+    }
+  }
+
+  &.is-hoverable.is-striped tbody tr:not(.is-selected):hover:nth-child(odd),
+  &.is-hoverable.is-striped tbody tr:not(.is-selected):hover:nth-child(even) {
+    background: #C8F1FF;
+  }
+}
+
+.tile {
+  border-radius: 15px;
+}
+
+.box {
+  box-shadow: 0 1px 3px rgba(34, 25, 25, .4);
+}
+
+.has-text-carrot {
+  color: #E67E22;
+}
+
+.has-text-emerland {
+  color: #2ECC71;
+}
+
+.has-background-wetasphalt {
+  background: #34495E;
+}
+
+input:read-only {
+  background-color: #e9ecef;
+}

@@ -1,21 +1,14 @@
 {
-  "compilerOptions": {
-    "target": "es2017",
-    "module": "commonjs",
-    "outDir": "dist",
-    "experimentalDecorators": true,
-    "emitDecoratorMetadata": true,
-    "sourceMap": true,
-    "allowJs": true,
-    "types": [
-      "node"
-    ]
-  },
-  "include": [
-    "src/**/*.ts",
-    "src/**/*.js"
-  ],
-  "exclude": [
-    "node_modules"
-  ]
+    "compilerOptions": {
+        "target": "es2017",
+        "module": "commonjs",
+        "outDir": "dist",
+        "experimentalDecorators": true,
+        "emitDecoratorMetadata": true,
+        "sourceMap": true,
+        "allowJs": true,
+        "types": ["node", "jest"]
+    },
+    "include": ["src/**/*.ts", "src/**/*.js"],
+    "exclude": ["node_modules"]
 }

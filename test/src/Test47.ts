@@ -1,25 +1,21 @@
 import * as config from 'config';
 import * as TestBase from './TestBase';
-import { KikiUtils } from '../../server/src/shared/KikiUtils';
+import { SGUtils } from '../../server/src/shared/SGUtils';
 import { ScriptType, JobDefStatus, JobStatus } from '../../server/src/shared/Enums';
 import * as _ from 'lodash';
 
-
 const script1 = `
 import time
-print 'start'
+print('start')
 time.sleep(5)
-print 'done'
-print '@kpo{"route": "ok"}'
+print('done')
+print('@sgo{"route": "ok"}')
 `;
-const script1_b64 = KikiUtils.btoa(script1);
-
+const script1_b64 = SGUtils.btoa(script1);
 
 let self: Test47;
 
-
 export default class Test47 extends TestBase.WorkflowTestBase {
-
     constructor(testSetup) {
         super('Test47', testSetup);
         this.description = 'Misfire grace time test';
@@ -27,12 +23,11 @@ export default class Test47 extends TestBase.WorkflowTestBase {
         self = this;
     }
 
-
     public async RunTest() {
         let result: boolean;
         let resApiCall: any;
 
-        const _orgId: string = config.get('sgTestOrg');
+        const _teamId: string = process.env.sgTestTeam;
 
         const properties: any = {
             scripts: [
@@ -40,8 +35,8 @@ export default class Test47 extends TestBase.WorkflowTestBase {
                     name: 'Script 47',
                     scriptType: ScriptType.PYTHON,
                     code: script1_b64,
-                    shadowCopyCode: script1_b64
-                }
+                    shadowCopyCode: script1_b64,
+                },
             ],
             jobDefs: [
                 {
@@ -54,106 +49,108 @@ export default class Test47 extends TestBase.WorkflowTestBase {
                             stepDefs: [
                                 {
                                     name: 'Step 1',
-                                    scriptName: 'Script 47'
-                                }
-                            ]
-                        }
-                    ]
-                }
-            ]
+                                    scriptName: 'Script 47',
+                                },
+                            ],
+                        },
+                    ],
+                },
+            ],
         };
 
         const { scripts, jobDefs } = await this.CreateJobDefsFromTemplates(properties);
 
         const runDate = new Date(new Date().getTime() + 10000);
         const schedule: any = {
-            _orgId: config.get('sgTestOrg'),
+            _teamId: process.env.sgTestTeam,
             _jobDefId: jobDefs[properties.jobDefs[0].name].id,
-            name: "Schedule1",
+            name: 'Schedule1',
             isActive: true,
-            TriggerType: "date",
+            TriggerType: 'date',
             RunDate: runDate,
             FunctionKwargs: {
-                _orgId: config.get('sgTestOrg'),
-                targetId: jobDefs[properties.jobDefs[0].name].id
-            }
+                _teamId: process.env.sgTestTeam,
+                targetId: jobDefs[properties.jobDefs[0].name].id,
+            },
         };
 
-        resApiCall = await this.testSetup.RestAPICall(`schedule`, 'POST', _orgId, null, schedule);
+        resApiCall = await this.testSetup.RestAPICall(`schedule`, 'POST', _teamId, null, schedule);
         if (resApiCall.data.statusCode != 201) {
             self.logger.LogError('Failed', { Message: `schedule POST returned ${resApiCall.data.statusCode}` });
             return false;
         }
         schedule.id = resApiCall.data.data.id;
 
-
         const scheduleUpdateBP: any = {
             domainType: 'Schedule',
             operation: 2,
-            model:
-            {
+            model: {
                 id: schedule.id,
-                type: 'Schedule'
-            }
+                type: 'Schedule',
+            },
         };
         self.bpMessagesExpected.push(scheduleUpdateBP);
 
         result = await self.WaitForTestToComplete();
-        if (!result)
-            return result;
+        if (!result) return result;
         self.bpMessagesExpected.length = 0;
 
+        await SGUtils.sleep(12000);
 
-        await KikiUtils.sleep(12000);
-
-        resApiCall = await this.testSetup.RestAPICall(`jobdef/${jobDefs[properties.jobDefs[0].name].id}`, 'PUT', _orgId, null, { status: JobDefStatus.RUNNING });
+        resApiCall = await this.testSetup.RestAPICall(
+            `jobdef/${jobDefs[properties.jobDefs[0].name].id}`,
+            'PUT',
+            _teamId,
+            null,
+            { status: JobDefStatus.RUNNING }
+        );
         if (resApiCall.data.statusCode != 200) {
-            self.logger.LogError('Failed', { Message: `jobdef/${jobDefs[properties.jobDefs[0].name].id} PUT returned ${resApiCall.data.statusCode}`, status: JobDefStatus.RUNNING });
+            self.logger.LogError('Failed', {
+                Message: `jobdef/${jobDefs[properties.jobDefs[0].name].id} PUT returned ${resApiCall.data.statusCode}`,
+                status: JobDefStatus.RUNNING,
+            });
             return false;
         }
 
         const jobCreatedBP: any = {
             domainType: 'Job',
             operation: 1,
-            model:
-            {
-                _orgId: config.get('sgTestOrg'),
+            model: {
+                _teamId: process.env.sgTestTeam,
                 _jobDefId: jobDefs[properties.jobDefs[0].name].id,
                 runId: 0,
                 name: properties.jobDefs[0].name,
                 status: 0,
-                type: 'Job'
-            }
+                type: 'Job',
+            },
         };
         self.bpMessagesExpected.push(jobCreatedBP);
 
         result = await self.WaitForTestToComplete();
-        if (!result)
-            return result;
+        if (!result) return result;
         self.bpMessagesExpected.length = 0;
 
-
-        const job = _.filter(self.bpMessages, x => x.domainType == 'Job' && x.operation == 1 && x.model._jobDefId == jobDefs[properties.jobDefs[0].name].id);
+        const job = _.filter(
+            self.bpMessages,
+            (x) =>
+                x.domainType == 'Job' && x.operation == 1 && x.model._jobDefId == jobDefs[properties.jobDefs[0].name].id
+        );
 
         const jobSkippedBP: any = {
             domainType: 'Job',
             operation: 2,
-            model:
-            {
+            model: {
                 status: JobStatus.SKIPPED,
                 error: 'Exceeded misfire grace time',
                 id: job[0].model.id,
-                type: 'Job'
-            }
+                type: 'Job',
+            },
         };
         self.bpMessagesExpected.push(jobSkippedBP);
 
         result = await self.WaitForTestToComplete();
-        if (!result)
-            return result;
-
+        if (!result) return result;
 
         return true;
     }
 }
-

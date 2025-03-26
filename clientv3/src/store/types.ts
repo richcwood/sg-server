@@ -27,6 +27,7 @@ export interface CoreState {
   storeUtils?: StoreUtils;
   _storeName: string;
   _url: (action?: string) => string;
+  _responseFields?: (action?: string) => string;
   _promiseStore: PromiseStore;
   _fetchModelDebouncer?: FetchModelDebouncer;
 };
@@ -36,7 +37,7 @@ export enum ModelType {
   jobDef = 'jobDef',
   taskdef = 'taskDef',
   stepDef = 'stepDef',
-  org = 'org',
+  team = 'team',
   alert = 'alert',
   agent = 'agent'
 };
@@ -50,17 +51,24 @@ export enum StoreType {
   JobDefStore = 'jobDefStore',
   TaskDefStore = 'taskDefStore',
   StepDefStore = 'stepDefStore',
-  OrgStore = 'orgStore',
+  TeamStore = 'teamStore',
   AlertStore = 'alertStore',
   AgentStore = 'agentStore',
   SecurityStore = 'securityStore',
+  ScriptNameStore = 'scriptNameStore',
   ScriptStore = 'scriptStore',
+  ScriptShadowStore = 'userScriptShadowCopyStore',
   ScheduleStore = 'scheduleStore',
-  OrgVariableStore = 'orgVariableStore',
+  TeamVariableStore = 'teamVariableStore',
   ArtifactStore = 'artifactStore',
   InvoiceStore = 'invoiceStore',
   PaymentTransactionStore = 'paymentTransactionStore',
-  UserStore = 'userStore'
+  UserStore = 'userStore',
+  PaymentMethodStore = 'paymentMethodStore',
+  AccessKeyStore = 'accessKeyStore',
+  AccessRightStore = 'accessRightStore',
+  PageGuideStore = 'pageGuideStore',
+  InteractiveConsole = 'interactiveConsole',
 }
 
 export enum ModelBaseUrlType {
@@ -72,13 +80,17 @@ export enum ModelBaseUrlType {
   jobDef = 'jobdef',
   taskdef = 'taskdef',
   stepdef = 'stepdef',
-  org = 'org',
+  team = 'team',
   agent = 'agent',
   script = 'script',
+  scriptShadow = 'scriptshadow',
   schedule = 'schedule',
-  orgVar = 'orgvar',
+  teamVar = 'teamvar',
   artifact = 'artifact',
   invoice = 'invoice',
   paymentTransaction = 'paymenttransaction',
-  user = 'user'
+  user = 'user',
+  paymentMethod = 'paymentMethod',
+  accessKey = 'accessKey',
+  accessRight = 'accessRight'
 }

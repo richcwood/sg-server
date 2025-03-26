@@ -9,38 +9,81 @@ import { StoreType } from './store/types';
 import { isUserReadyToUseApp } from '@/store/security';
 import VModal from 'vue-js-modal';
 import { library } from '@fortawesome/fontawesome-svg-core';
-import { faSearch } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 import { initValidation } from './utils/Validation';
-import Cookies from 'js-cookie';
 import VueSplit from 'vue-split-panel';
+import bitset from 'bitset';
+import VTooltip from 'v-tooltip';
+import {
+  faSearch,
+  faSpinner,
+  faEllipsisH,
+  faQuestionCircle,
+  faAngleDown,
+  faCalendarAlt,
+  faCog,
+  faUsers,
+  faSignOutAlt,
+  faAngleUp,
+  faTimes,
+  faCode,
+  faMinusSquare,
+  faEye,
+  faEyeSlash,
+  faSave,
+  faChevronLeft,
+} from '@fortawesome/free-solid-svg-icons';
+import '@/sass/index.scss';
 
 library.add(faSearch);
+library.add(faSpinner);
+library.add(faEllipsisH);
+library.add(faQuestionCircle);
+library.add(faAngleDown);
+library.add(faCalendarAlt);
+library.add(faCog);
+library.add(faUsers);
+library.add(faSignOutAlt);
+library.add(faAngleUp);
+library.add(faTimes);
+library.add(faCode);
+library.add(faMinusSquare);
+library.add(faEye);
+library.add(faEyeSlash);
+library.add(faSave);
+library.add(faChevronLeft);
+
 Vue.component('font-awesome-icon', FontAwesomeIcon);
 
 initValidation();
 
-Vue.use(VModal);
+Vue.use(VModal, {
+  injectModalsContainer: true,
+  dynamic: true,
+  dynamicDefaults: {
+      pivotY: 0.2
+  }
+});
 Vue.use(VueSplit);
+Vue.use(VTooltip, {
+  defaultTemplate: '<span eat="shit" class="tooltip" role="tooltip"><div class="tooltip-arrow"></div><div class="tooltip-inner"></div></span>',
+  popover: {
+    defaultPlacement: 'bottom'
+  }
+});
 
 Vue.config.productionTip = false;
 
 axios.interceptors.response.use(undefined, (err) => {
   if(err.response.status === 403){
-    // If we ever get a 403 because a cookie expired, the backend should
-    // have cleared the cookie.  We should clear out the logged in user
-    // and redirect back to the landing page which should go straight to the login
-    if(! Cookies.get('Auth')){
-      store.commit(`${StoreType.SecurityStore}/setUser`, null);
-      if(router.currentRoute.name !== 'landing'){
-        router.push({name: 'landing'});
-      }
+    if(store.state[StoreType.SecurityStore].appStarted){
+      sessionStorage.setItem('sg_logged_out_403', 'true');
+      store.dispatch(`${StoreType.SecurityStore}/logout`);
     }
   }
   // todo - good error reporting / handling
   else if(err.response.status === 401){
-    // This is what we should get for an access rights violation
-    console.error('Bart, got a 401 - access rights violation', err);
+    // Should be handled by the global ErrorHandler
   }
   else if(err.response.status === 400){
     //console.error('Bart, got a 400 ', err);
@@ -67,17 +110,19 @@ if(resetPasswordToken && userId){
   sessionStorage.setItem('sg_reset_password_user_id', userId);
 }
 
-const invitedOrgToken = urlParams.get('invitedOrgToken');
-if(invitedOrgToken){ // direct or generic
-  localStorage.setItem('sg_invited_org_token', invitedOrgToken);
+const invitedTeamToken = urlParams.get('invitedTeamToken');
+if(invitedTeamToken){ // direct or generic
+  localStorage.setItem('sg_invited_team_token', invitedTeamToken);
 }
 
 // login and load data via the api
 (async () => {
+  // console.log('main entry -> 1 -> ', window.location);
+  // console.log('main entry -> 2 -> ', window.location.hash);
+  // console.log('main entry -> 3 -> ', window.location.href);
   try {
     // store what deep link the user was trying to get to for a redirect after login if necessary
     sessionStorage.setItem('deep_link_hash', window.location.hash);
-
     await store.dispatch('securityStore/checkSecurity');
   }
   catch(err){
@@ -89,7 +134,7 @@ if(invitedOrgToken){ // direct or generic
   }
   else {
     // make sure we hit the landing page (might have been redirected via a 403)
-    if(router.currentRoute.name !== 'landing'){
+    if(router.currentRoute.name !== 'landing' && !(window.location.hash.startsWith('#/oauthCallback/'))){
       router.push({name: 'landing'});
     }
   }
@@ -103,11 +148,13 @@ if(invitedOrgToken){ // direct or generic
 })();
 
 
+(<any>window).store = store;
+
 // If is local development - include this stuff in console for easy debugging / testing
 if((<any>window).webpackHotUpdate){
-  (<any>window).store = store;
   (<any>window).axios = axios;
   (<any>window).moment = moment;
   (<any>window)._ = _;
+  (<any>window).bitset = bitset;
 }
 

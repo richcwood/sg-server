@@ -3,8 +3,6 @@ import { ResponseWrapper, ResponseCode } from '../utils/Types';
 import * as config from 'config';
 import * as braintree from 'braintree';
 
-
-const env = config.get('environment');
 let merchantId = config.get('braintreeMerchantId');
 let publicKey = config.get('braintreePublicKey');
 let privateKey = config.get('braintreePrivateKey');
@@ -20,7 +18,7 @@ export default class BraintreeHookRouter {
             environment: braintree.Environment.Sandbox,
             merchantId: merchantId,
             publicKey: publicKey,
-            privateKey: privateKey
+            privateKey: privateKey,
         });
 
         this.setRoutes();

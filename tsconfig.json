@@ -8,12 +8,16 @@
     "sourceMap": false,
     "allowJs": true,
     "types": [
-      "node"
+      "node",
+      "jest"
+    ],
+    "lib": [
+      "ES2021.String"
     ]
   },
   "include": [
     "src/**/*.ts",
-    "src/**/*.js",
+    "src/**/*.js"
   ],
   "exclude": [
     "node_modules"

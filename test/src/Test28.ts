@@ -1,9 +1,9 @@
 import * as util from 'util';
 import * as TestBase from './TestBase';
 import * as Enums from '../../server/src/shared/Enums';
-import { KikiUtils } from '../../server/src/shared/KikiUtils';
-import { KikiStrings } from '../../server/src/shared/KikiStrings';
-import { OrgSchema } from '../../server/src/api/domain/Org';
+import { SGUtils } from '../../server/src/shared/SGUtils';
+import { SGStrings } from '../../server/src/shared/SGStrings';
+import { TeamSchema } from '../../server/src/api/domain/Team';
 import { JobDefSchema } from '../../server/src/api/domain/JobDef';
 import { TaskDefSchema } from '../../server/src/api/domain/TaskDef';
 import { StepDefSchema } from '../../server/src/api/domain/StepDef';
@@ -11,80 +11,95 @@ import { ScriptSchema } from '../../server/src/api/domain/Script';
 
 const script = `
 import time
-print 'start'
+print('start')
 time.sleep(2)
-print '@kpo{"globalParam1": "@kpg("globalParam1")"}'
-print 'done'
+print('@sgo{"globalParam1": "@sgg("globalParam1")"}')
+print('done')
 `;
-const script_b64 = KikiUtils.btoa(script);
+const script_b64 = SGUtils.btoa(script);
 
 let self: Test28;
 
-
 export default class Test28 extends TestBase.default {
-
     constructor(testSetup) {
         super('Test28', testSetup);
         this.description = 'Default job def script parameters test';
 
         self = this;
     }
-    
+
     public async CreateTest() {
         await super.CreateTest();
 
-        // /// Create org
-        // let org: any = {'name': 'TestOrg28', 'isActive': true, 'rmqPassword': KikiUtils.makeid(10)};
-        // org = await self.CreateOrg(org);
-        // self.orgs.push(org);
-
-        // /// Create agents
-        // let agent;
-        // agent = { '_orgId': _orgId, 'machineId': KikiUtils.makeid(), 'ipAddress': '10.10.0.90', 'tags': [], 'numActiveTasks': 0, 'lastHeartbeatTime': new Date().getTime(), 'rmqPassword': org['rmqPassword']};
-        // self.agents.push(agent);
-        
-        const orgName = 'TestOrg';
-        const _orgId = self.testSetup.orgs[orgName].id;
+        const teamName = 'TestTeam';
+        const _teamId = self.testSetup.teams[teamName].id;
 
         /// Create job def
         let jobDef: JobDefSchema = {
-            _orgId: _orgId,
+            _teamId: _teamId,
             name: 'Job 28',
             createdBy: this.sgUser.id,
             lastRunId: 0,
             dateCreated: new Date(),
-            runtimeVars: { globalParam1: 'globalParam1_val'},
-            expectedValues: { 'type': 'job', 'matchCount': 1, 'cntPartialMatch': 0, 'cntFullMatch': 0, 'values': { [KikiStrings.status]: Enums.JobStatus.COMPLETED } }
-        }
-        jobDef = await self.CreateJobDef(jobDef, _orgId);
+            runtimeVars: { globalParam1: { sensitive: false, value: 'globalParam1_val' } },
+            expectedValues: {
+                type: 'job',
+                matchCount: 1,
+                cntPartialMatch: 0,
+                cntFullMatch: 0,
+                values: { [SGStrings.status]: Enums.JobStatus.COMPLETED },
+            },
+        };
+        jobDef = await self.CreateJobDef(jobDef, _teamId);
         self.jobDefs.push(jobDef);
-    
+
         /// Create job def tasks
-        let taskDef: TaskDefSchema = {'_orgId': _orgId, 'name': 'Task1', '_jobDefId': jobDef.id, 'target': Enums.TaskDefTarget.SINGLE_AGENT, 'requiredTags': {}, 'fromRoutes': []};
-        taskDef = await self.CreateTaskDef(taskDef, _orgId);
+        let taskDef: TaskDefSchema = {
+            _teamId: _teamId,
+            name: 'Task1',
+            _jobDefId: jobDef.id,
+            target: Enums.TaskDefTarget.SINGLE_AGENT,
+            requiredTags: {},
+            fromRoutes: [],
+        };
+        taskDef = await self.CreateTaskDef(taskDef, _teamId);
 
         /// Create scripts
-        let script_obj: ScriptSchema = {'_orgId': _orgId, 'name': 'Script 28', 'scriptType': Enums.ScriptType.PYTHON, 'code': script_b64, _originalAuthorUserId: this.sgUser.id, _lastEditedUserId: this.sgUser.id, lastEditedDate: new Date(), shadowCopyCode: script_b64 };
-        script_obj = await self.CreateScript(script_obj, _orgId);
-        self.scripts.push(script_obj);    
-        let step2: StepDefSchema = {'_orgId': _orgId, '_taskDefId': taskDef.id, 'name': 'step2', '_scriptId': script_obj['id'], 'order': 0, 'arguments': ''};
-        step2 = await self.CreateStepDef(step2, _orgId, jobDef.id);
-     
-        taskDef.expectedValues = {
-            'type': 'task', 
-            'matchCount': 5, 
-            'tagsMatch': true, 
-            'values': {[KikiStrings.status]: Enums.TaskStatus.SUCCEEDED},
-            'runtimeVars': {'globalParam1': 'globalParam1_val'}, 
-            'step': [
-                {'name': step2.name, 'values': {'status': Enums.TaskStatus.SUCCEEDED, 'stderr': '', 'exitCode': 0}}
-            ], 
-            'cntPartialMatch': 0, 
-            'cntFullMatch': 0
+        let script_obj: ScriptSchema = {
+            _teamId: _teamId,
+            name: 'Script 28',
+            scriptType: Enums.ScriptType.PYTHON,
+            code: script_b64,
+            _originalAuthorUserId: this.sgUser.id,
+            _lastEditedUserId: this.sgUser.id,
+            lastEditedDate: new Date(),
+            shadowCopyCode: script_b64,
         };
-        // taskDef2 = await self.UpdateTaskDef(taskDef2.id, {expectedValues: taskDef2.expectedValues}, _orgId);
+        script_obj = await self.CreateScript(script_obj, _teamId);
+        self.scripts.push(script_obj);
+        let step2: StepDefSchema = {
+            _teamId: _teamId,
+            _taskDefId: taskDef.id,
+            name: 'step2',
+            _scriptId: script_obj['id'],
+            order: 0,
+            arguments: '',
+        };
+        step2 = await self.CreateStepDef(step2, _teamId, jobDef.id);
+
+        taskDef.expectedValues = {
+            type: 'task',
+            matchCount: 5,
+            tagsMatch: true,
+            values: { [SGStrings.status]: Enums.TaskStatus.SUCCEEDED },
+            runtimeVars: { globalParam1: { sensitive: false, value: 'globalParam1_val' } },
+            step: [{ name: step2.name, values: { status: Enums.TaskStatus.SUCCEEDED, stderr: '', exitCode: 0 } }],
+            cntPartialMatch: 0,
+            cntFullMatch: 0,
+        };
+        // taskDef2 = await self.UpdateTaskDef(taskDef2.id, {expectedValues: taskDef2.expectedValues}, _teamId);
         self.taskDefs.push(taskDef);
 
         // console.log(util.inspect(this, false, 4, true));
-    };
+    }
 }

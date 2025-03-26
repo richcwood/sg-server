@@ -1,6 +1,25 @@
 import { extend as vee_validate_extend } from 'vee-validate';
+import { between, min_value } from 'vee-validate/dist/rules';
+import enMessages from 'vee-validate/dist/locale/en.json';
 import _ from 'lodash';
 
+function isValueDefined (val: unknown): boolean {
+  if (_.isString(val)) {
+    return !_.isEmpty(val);
+  }
+
+  return !_.isNull(val) && !_.isUndefined(val);
+}
+
+vee_validate_extend('between', {
+  ...between,
+  message: enMessages.messages['between']
+});
+
+vee_validate_extend('min_value', {
+  ...min_value,
+  message: enMessages.messages['min_value']
+});
 
 vee_validate_extend('required', {
   validate (value) {
@@ -9,11 +28,20 @@ vee_validate_extend('required', {
       valid: ['', null, undefined].indexOf(value) === -1
     };
   },
+  computesRequired: true,
+  message: enMessages.messages['required']
+});
+
+vee_validate_extend('required_checkbox', {
+  validate (value: any[]): boolean {
+    return value.length > 0;
+  },
+  message: 'At least one {_field_} must be selected.',
   computesRequired: true
 });
 
 const initValidation = function(){
-  // custom validation rules for saas glue
+  // custom validation rules for SaaSGlue
   const objectNameRegex = /^[\.a-zA-Z0-9 _-]{3,}$/;
 
   vee_validate_extend('object-name', value => {
@@ -26,10 +54,8 @@ const initValidation = function(){
   });
 
   vee_validate_extend('valid-regex', value => {
-    console.log('called valid-regex', value);
     try {
       const re = new RegExp(value);
-      console.log('returning true yo');
       return true;
     }
     catch(err){
@@ -94,6 +120,90 @@ const initValidation = function(){
     }
   });
 
+  vee_validate_extend('datetime', value => {
+    if(value && value.trim()){
+      const date = new Date(value.trim());
+      return ! isNaN(date.getTime());
+    }
+    else {
+      return true;
+    }
+  });
+
+  vee_validate_extend('agent-name', value => {
+    if( _.isString(value) && value.match(objectNameRegex) !== null){
+      return true;
+    }
+    else {
+      return 'The {_field_} field is not valid.';
+    }
+  });
+
+  vee_validate_extend('agent-positiveNumber', value => {
+    if(!_.isNaN(value)){
+      value = value+'';
+    }
+    
+    if( _.isString(value) && value.match(positiveNumberRegex) !== null){
+      return true;
+    }
+    else {
+      return '{_field_} should be in a positive number';
+    }
+  });
+
+  vee_validate_extend('lambdaTimeout', value => {
+    if( value >= 1 && value <= 900){
+      return true;
+    }
+    else {
+      return '{_field_} should be in a number between 1 and 900';
+    }
+  });
+
+  // Validates if object has a specific property
+  // <ValidationProvider rules="required_field:myKey" /> - this will check if object under validation has 'myKey' property
+  vee_validate_extend('required_field', {
+    validate (value: Record<string, any>, { field }: any): boolean {
+      return Boolean(value && value[field]);
+    },
+    computesRequired: true,
+    params: ['field']
+  });
+
+  // This validator does cross-field validation,
+  // it validates if at least one field is set
+  //
+  // <ValidationProvider rules="required_if_empty:@name,@email" />
+  // Makes field under validation required if <ValidationProvider name="name" /> and <ValidationProvider name="email" />
+  // have empty values
+  vee_validate_extend('required_if_empty', {
+    validate (value: any, values: any[]) {
+      return values.some(isValueDefined) ? true : isValueDefined(value);
+    },
+    computesRequired: true,
+    message: 'At least one field is required'
+  });
+
+  // This validator does cross-field validation,
+  //  the first value in values should be a checkbox value - 
+  //  it validates if the target field or one of the remaining values is set
+  //
+  // <ValidationProvider rules="required_if_checked:@checkbox,@name,@email" />
+  // Makes field under validation required if <ValidationProvider name="name" /> is true
+  //   and <ValidationProvider name="name" /> and <ValidationProvider name="email" />
+  // have empty values
+  vee_validate_extend('required_if_checked', {
+    validate (value: any, values: any[]) {
+      const checkbox_value = values[0];
+      const other_fields = values.slice(1);
+      if (checkbox_value)
+        return other_fields.some(isValueDefined) ? true : isValueDefined(value);
+      return true;
+    },
+    computesRequired: true,
+    message: 'At least one field is required'
+  });
 }
 
 export { initValidation };

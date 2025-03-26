@@ -1,9 +1,8 @@
 import { Request, Response, NextFunction } from 'express';
 import { ResponseWrapper, ResponseCode } from '../utils/Types';
 import { forgotPasswordService } from '../services/ForgotPasswordService';
-import { BaseLogger } from '../../shared/KikiLogger';
+import { BaseLogger } from '../../shared/SGLogger';
 import * as _ from 'lodash';
-
 
 export class ForgotPasswordController {
     public async requestReset(req: Request, resp: Response, next: NextFunction): Promise<void> {
@@ -13,10 +12,9 @@ export class ForgotPasswordController {
             const res = await forgotPasswordService.requestReset(req.body, logger);
             response.data = res;
             response.statusCode = ResponseCode.CREATED;
-            next();
-        }
-        catch (err) {
-            next(err);
+            return next();
+        } catch (err) {
+            return next(err);
         }
     }
 }

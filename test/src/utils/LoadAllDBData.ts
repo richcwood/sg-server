@@ -1,12 +1,12 @@
 import * as fs from 'fs';
 import * as config from 'config';
 import { MongoRepo } from '../../../server/src/shared/MongoLib';
-import { BaseLogger } from '../../../server/src/shared/KikiLogger';
+import { BaseLogger } from '../../../server/src/shared/SGLogger';
 import { agentService } from '../../../server/src/api/services/AgentService';
 import { jobDefService } from '../../../server/src/api/services/JobDefService';
 import { jobService } from '../../../server/src/api/services/JobService';
-import { orgService } from '../../../server/src/api/services/OrgService';
-import { orgVariableService } from '../../../server/src/api/services/OrgVariableService';
+import { teamService } from '../../../server/src/api/services/TeamService';
+import { teamVariableService } from '../../../server/src/api/services/TeamVariableService';
 import { scheduleService } from '../../../server/src/api/services/ScheduleService';
 import { scriptService } from '../../../server/src/api/services/ScriptService';
 import { stepDefService } from '../../../server/src/api/services/StepDefService';
@@ -19,11 +19,13 @@ import { userService } from '../../../server/src/api/services/UserService';
 import { invoiceService } from '../../../server/src/api/services/InvoiceService';
 import { paymentMethodService } from '../../../server/src/api/services/PaymentMethodService';
 import { paymentTransactionService } from '../../../server/src/api/services/PaymentTransactionService';
+import { accessRightService } from '../../../server/src/api/services/AccessRightService';
+import { accessKeyService } from '../../../server/src/api/services/AccessKeyService';
 import { AgentSchema } from '../../../server/src/api/domain/Agent';
 import { JobDefSchema } from '../../../server/src/api/domain/JobDef';
 import { JobSchema } from '../../../server/src/api/domain/Job';
-import { OrgSchema } from '../../../server/src/api/domain/Org';
-import { OrgVariableSchema } from '../../../server/src/api/domain/OrgVariable';
+import { TeamSchema } from '../../../server/src/api/domain/Team';
+import { TeamVariableSchema } from '../../../server/src/api/domain/TeamVariable';
 import { ScheduleSchema } from '../../../server/src/api/domain/Schedule';
 import { ScriptSchema } from '../../../server/src/api/domain/Script';
 import { StepDefSchema } from '../../../server/src/api/domain/StepDef';
@@ -36,23 +38,24 @@ import { UserSchema } from '../../../server/src/api/domain/User';
 import { InvoiceSchema } from '../../../server/src/api/domain/Invoice';
 import { PaymentMethodSchema } from '../../../server/src/api/domain/PaymentMethod';
 import { PaymentTransactionSchema } from '../../../server/src/api/domain/PaymentTransaction';
+import { AccessRightSchema } from '../../../server/src/api/domain/AccessRight';
+import { AccessKeySchema } from '../../../server/src/api/domain/AccessKey';
 import { convertData as convertRequestData } from '../../../server/src/api/utils/RequestConverters';
 import * as mongoose from 'mongoose';
 
-
+import * as dotenv from 'dotenv';
+dotenv.config();
 
 let LoadMongoData = async (path: string) => {
-    if (config.get("environment") == 'production')
-        throw new Error('Attempted to load to production')
+    if (config.get('environment') == 'production') throw new Error('Attempted to load to production');
 
-    console.log(`Loading data to ${config.get('mongoUrl')}`);
-    mongoose.connect(config.get('mongoUrl'), { useNewUrlParser: true });
+    console.log(`Loading data to ${process.env.mongoUrl}`);
+    mongoose.connect(process.env.mongoUrl, {});
 
-    const mongoUrl = config.get('mongoUrl');
-    const mongoDbname = config.get('mongoDbName');
+    const mongoUrl = process.env.mongoUrl;
+    const mongoDbname = process.env.mongoDbName;
 
     let logger = new BaseLogger('RunTestHarness');
-    logger.Start();
 
     let rawdata: any = fs.readFileSync(path);
     let allTestObjects = JSON.parse(rawdata);
@@ -60,6 +63,7 @@ let LoadMongoData = async (path: string) => {
     let mongoRepo = new MongoRepo('RunTestHarness', mongoUrl, mongoDbname, logger);
 
     await mongoRepo.DeleteByQuery({}, 'user');
+    await mongoRepo.DeleteByQuery({}, 'artifact');
     await mongoRepo.DeleteByQuery({}, 'agent');
     await mongoRepo.DeleteByQuery({}, 'job');
     await mongoRepo.DeleteByQuery({}, 'jobDef');
@@ -70,12 +74,14 @@ let LoadMongoData = async (path: string) => {
     await mongoRepo.DeleteByQuery({}, 'task');
     await mongoRepo.DeleteByQuery({}, 'taskDef');
     await mongoRepo.DeleteByQuery({}, 'taskOutcome');
-    await mongoRepo.DeleteByQuery({}, 'org');
-    await mongoRepo.DeleteByQuery({}, 'orgVariable');
+    await mongoRepo.DeleteByQuery({}, 'team');
+    await mongoRepo.DeleteByQuery({}, 'teamVariable');
     await mongoRepo.DeleteByQuery({}, 'schedule');
     await mongoRepo.DeleteByQuery({}, 'invoice');
     await mongoRepo.DeleteByQuery({}, 'paymentMethod');
     await mongoRepo.DeleteByQuery({}, 'paymentTransaction');
+    await mongoRepo.DeleteByQuery({}, 'accessRight');
+    await mongoRepo.DeleteByQuery({}, 'accessKey');
 
     if (allTestObjects.user.length > 0) {
         for (let i = 0; i < allTestObjects.user.length; i++) {
@@ -154,17 +160,17 @@ let LoadMongoData = async (path: string) => {
         }
     }
 
-    if (allTestObjects.org.length > 0) {
-        for (let i = 0; i < allTestObjects.org.length; i++) {
-            const org = allTestObjects.org[i];
-            await orgService.createOrgInternal(convertRequestData(OrgSchema, org));
+    if (allTestObjects.team.length > 0) {
+        for (let i = 0; i < allTestObjects.team.length; i++) {
+            const team = allTestObjects.team[i];
+            await teamService.createTeamInternal(convertRequestData(TeamSchema, team));
         }
     }
 
-    if (allTestObjects.orgVariable && allTestObjects.orgVariable.length > 0) {
-        for (let i = 0; i < allTestObjects.orgVariable.length; i++) {
-            const orgVariable = allTestObjects.orgVariable[i];
-            await orgVariableService.createOrgVariableInternal(convertRequestData(OrgVariableSchema, orgVariable));
+    if (allTestObjects.teamVariable && allTestObjects.teamVariable.length > 0) {
+        for (let i = 0; i < allTestObjects.teamVariable.length; i++) {
+            const teamVariable = allTestObjects.teamVariable[i];
+            await teamVariableService.createTeamVariableInternal(convertRequestData(TeamVariableSchema, teamVariable));
         }
     }
 
@@ -185,19 +191,36 @@ let LoadMongoData = async (path: string) => {
     if (allTestObjects.paymentMethod && allTestObjects.paymentMethod.length > 0) {
         for (let i = 0; i < allTestObjects.paymentMethod.length; i++) {
             const paymentMethod = allTestObjects.paymentMethod[i];
-            await paymentMethodService.createPaymentMethodInternal(convertRequestData(PaymentMethodSchema, paymentMethod));
+            await paymentMethodService.createPaymentMethodInternal(
+                convertRequestData(PaymentMethodSchema, paymentMethod)
+            );
         }
     }
 
     if (allTestObjects.paymentTransaction && allTestObjects.paymentTransaction.length > 0) {
         for (let i = 0; i < allTestObjects.paymentTransaction.length; i++) {
             const paymentTransaction = allTestObjects.paymentTransaction[i];
-            await paymentTransactionService.createPaymentTransactionInternal(convertRequestData(PaymentTransactionSchema, paymentTransaction));
+            await paymentTransactionService.createPaymentTransactionInternal(
+                convertRequestData(PaymentTransactionSchema, paymentTransaction)
+            );
+        }
+    }
+
+    if (allTestObjects.accessRight && allTestObjects.accessRight.length > 0) {
+        for (let i = 0; i < allTestObjects.accessRight.length; i++) {
+            const accessRight = allTestObjects.accessRight[i];
+            await accessRightService.createAccessRightInternal(convertRequestData(AccessRightSchema, accessRight));
+        }
+    }
+
+    if (allTestObjects.accessKey && allTestObjects.accessKey.length > 0) {
+        for (let i = 0; i < allTestObjects.accessKey.length; i++) {
+            const accessKey = allTestObjects.accessKey[i];
+            await accessKeyService.createAccessKeyInternal(convertRequestData(AccessKeySchema, accessKey));
         }
     }
 
     process.exit();
-}
-
+};
 
 LoadMongoData(process.argv[2]);

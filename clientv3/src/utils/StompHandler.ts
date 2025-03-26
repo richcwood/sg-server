@@ -2,7 +2,7 @@ import axios from 'axios';
 import { Model } from '../store/types';
 import { Client } from '@stomp/stompjs';
 import { StoreType } from '@/store/types';
-import { KikiAlert, AlertPlacement } from '@/store/alert/types';
+import { SgAlert, AlertPlacement } from '@/store/alert/types';
 import store from '@/store/index';
 
 export interface DomainMessage {
@@ -105,18 +105,21 @@ class StompHandler {
     }
   }
 
-  private defaultMessageHandler(message: DomainMessage){
+  public defaultMessageHandler(message: DomainMessage){
     const storeName = `${message.domainType.substring(0, 1).toLowerCase()}${message.domainType.substring(1)}Store`;
+
+    if ( !this.store.state[storeName])
+      return;
 
     if(message.operation === 1){ // create
       if(!localStorage.getItem('silence_bp')){
-        console.log('adding a model ', storeName, message.model);
+        console.log('Browser Push, adding a model ', storeName, message.model);
       }
       this.store.commit(`${storeName}/addModels`, [message.model]);
     }
     else if(message.operation === 2){ // update
       if(!localStorage.getItem('silence_bp')){
-        console.log('updating a model ', storeName, message.model);
+        console.log('Browser push, updating a model ', storeName, message.model);
       }
 
       // only provide an update for models already in the store
@@ -126,7 +129,7 @@ class StompHandler {
         // alert the user if the selected model is the one that was updated
         if(correlationId !== message.correlationId){
           if(this.store.state[storeName].selected && this.store.state[storeName].selected.id === message.model.id){
-            store.dispatch(`${StoreType.AlertStore}/addAlert`, new KikiAlert(`The selected ${message.domainType} was modified by ${message.userEmail}`, AlertPlacement.FOOTER));      
+            store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`The selected ${message.domainType} was modified`, AlertPlacement.FOOTER_RIGHT, 10000));      
           }
         }
 
@@ -139,7 +142,11 @@ class StompHandler {
       }
     }
     else if(message.operation === 3){ // delete
-      console.warn('Handle a delete in the stream API handler -- ', message);
+      if(!localStorage.getItem('silence_bp')){
+        console.warn('Browser Push, deleting a model ', storeName, message);
+      }
+      
+      this.store.commit(`${storeName}/delete`, message.model);
     }
   }
 
@@ -182,5 +189,6 @@ const getCorrelationId = function(): string {
 // add the correlation id for every single request so I can compare the stomp message and see if my
 // app instance was the author of the change
 axios.defaults.headers.common['correlationId'] = correlationId;
+axios.defaults.withCredentials = true;
 
 export { StompHandler, initStompHandler, stompInitialized, getStompHandler, getCorrelationId };

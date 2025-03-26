@@ -1,25 +1,21 @@
 import * as config from 'config';
 import * as TestBase from './TestBase';
-import { KikiUtils } from '../../server/src/shared/KikiUtils';
-import { ScriptType } from '../../server/src/shared/Enums';
+import { SGUtils } from '../../server/src/shared/SGUtils';
+import { ScriptType, JobDefStatus } from '../../server/src/shared/Enums';
 import * as _ from 'lodash';
-
 
 const script1 = `
 import time
-print 'start'
+print('start')
 time.sleep(5)
-print 'done'
-print '@kpo{"route": "ok"}'
+print('done')
+print('@sgo{"route": "ok"}')
 `;
-const script1_b64 = KikiUtils.btoa(script1);
-
+const script1_b64 = SGUtils.btoa(script1);
 
 let self: Test41;
 
-
 export default class Test41 extends TestBase.WorkflowTestBase {
-
     constructor(testSetup) {
         super('Test41', testSetup);
         this.description = 'Coalesce test';
@@ -27,12 +23,11 @@ export default class Test41 extends TestBase.WorkflowTestBase {
         self = this;
     }
 
-
     public async RunTest() {
         let result: boolean;
         let resApiCall: any;
 
-        const _orgId: string = config.get('sgTestOrg');
+        const _teamId: string = process.env.sgTestTeam;
 
         const properties: any = {
             scripts: [
@@ -40,88 +35,89 @@ export default class Test41 extends TestBase.WorkflowTestBase {
                     name: 'Script 41',
                     scriptType: ScriptType.PYTHON,
                     code: script1_b64,
-                    shadowCopyCode: script1_b64
-                }
+                    shadowCopyCode: script1_b64,
+                },
             ],
             jobDefs: [
                 {
                     name: 'Job 41',
                     coalesce: true,
                     maxInstances: 1,
+                    status: JobDefStatus.PAUSED,
                     taskDefs: [
                         {
                             name: 'Task 1',
                             stepDefs: [
                                 {
                                     name: 'Step 1',
-                                    scriptName: 'Script 41'
-                                }
-                            ]
-                        }
-                    ]
-                }
-            ]
+                                    scriptName: 'Script 41',
+                                },
+                            ],
+                        },
+                    ],
+                },
+            ],
         };
 
         const { scripts, jobDefs } = await this.CreateJobDefsFromTemplates(properties);
 
         let startedJobId;
         for (let i = 0; i < 5; i++) {
-            resApiCall = await this.testSetup.RestAPICall(`job`, 'POST', _orgId, { _jobDefId: jobDefs['Job 41'].id });
+            resApiCall = await this.testSetup.RestAPICall(`job`, 'POST', _teamId, { _jobDefId: jobDefs['Job 41'].id });
             if (resApiCall.data.statusCode != 201) {
-                self.logger.LogError('Failed', { Message: `job POST returned ${resApiCall.data.statusCode}`, _jobDefId: jobDefs['Job 41'].id });
+                self.logger.LogError('Failed', {
+                    Message: `job POST returned ${resApiCall.data.statusCode}`,
+                    _jobDefId: jobDefs['Job 41'].id,
+                });
                 return false;
             }
 
-            if (i == 0)
-                startedJobId = resApiCall.data.data.id;
+            if (i == 4) startedJobId = resApiCall.data.data.id;
         }
+
+        resApiCall = await this.testSetup.RestAPICall(`jobdef/${jobDefs['Job 41'].id}`, 'PUT', _teamId, null, {
+            status: JobDefStatus.RUNNING,
+        });
 
         const jobStartedBP: any = {
             domainType: 'Job',
             operation: 1,
-            model:
-            {
-                _orgId: config.get('sgTestOrg'),
+            model: {
+                _teamId: process.env.sgTestTeam,
                 _jobDefId: jobDefs[properties.jobDefs[0].name].id,
-                runId: 0,
+                runId: 4,
                 name: properties.jobDefs[0].name,
                 status: 0,
                 id: startedJobId,
-                type: 'Job'
-            }
-        }
+                type: 'Job',
+            },
+        };
         self.bpMessagesExpected.push(jobStartedBP);
 
         const jobCompletedBP: any = {
             domainType: 'Job',
             operation: 2,
-            model:
-            {
+            model: {
                 status: 20,
                 id: startedJobId,
-                type: 'Job'
-            }
+                type: 'Job',
+            },
         };
-        for (let i = 0; i < 2; i++)
-            self.bpMessagesExpected.push(_.clone(jobCompletedBP));
+        for (let i = 0; i < 2; i++) self.bpMessagesExpected.push(_.clone(jobCompletedBP));
 
         const jobSkippedBP: any = {
             domainType: 'Job',
             operation: 2,
-            model:
-            {
+            model: {
                 status: 23,
                 error: 'Job skipped due to coalesce',
-                type: 'Job'
-            }
+                type: 'Job',
+            },
         };
-        for (let i = 0; i < 3; i++)
-            self.bpMessagesExpected.push(_.clone(jobSkippedBP));
+        for (let i = 0; i < 3; i++) self.bpMessagesExpected.push(_.clone(jobSkippedBP));
 
         result = await self.WaitForTestToComplete();
-        if (!result)
-            return result;
+        if (!result) return result;
 
         return true;
     }

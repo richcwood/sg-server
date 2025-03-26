@@ -1,5 +1,11 @@
+.DS_Store
+github_credentials*
+
 #dist
 dist
+
+#tmp
+tmp
 
 # mongo db data
 docker/mongodb/data/
@@ -61,12 +67,14 @@ typings/
 .yarn-integrity
 
 # dotenv environment variables file
-.env
+.env*
 
 # python files
 *.pyc
 
 .idea
 
-kiki-agent-launcher
+sg-agent-launcher
 
+# deploy packages
+deploy/package

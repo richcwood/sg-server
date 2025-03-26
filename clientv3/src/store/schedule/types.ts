@@ -7,32 +7,48 @@ export enum ScheduleTriggerType {
 };
 
 export interface Schedule extends Model {
-  _orgId: string;
+  _teamId: string;
   _jobDefId: string;
+  FunctionKwargs?: any;
   name: string;
   createdBy: string;
   lastUpdatedBy: string;
   lastScheduledRunDate?: Date;
   nextScheduledRunDate?: Date;
   isActive?: boolean; 
-  TriggerType: string;
+  TriggerType: ScheduleTriggerType;
   misfire_grace_time?: number;
   coalesce?: boolean;
   max_instances?: number;
   RunDate?: string;
   cron?: {
-      Year: number,
-      Month: number,
-      Day: number,
-      Week: number,
-      Day_Of_Week: number,
-      Hour: number,
-      Minute: number,
-      Second: number,
+      Year: number | string,
+      Month: number | string,
+      Day: number | string,
+      Week: number | string,
+      Day_Of_Week: number | string,
+      Hour: number | string,
+      Minute: number | string,
+      Second: number | string,
       Start_Date: string,
       End_Date: string,
       Timezone: string,
-      Jitter: number
+      Jitter: number,
+      Repetition: {
+        enabled: boolean,
+        interval: {
+            Weeks: number,
+            Days: number,
+            Hours: number,
+            Minutes: number,
+        },
+        duration: {
+            Weeks: number,
+            Days: number,
+            Hours: number,
+            Minutes: number,
+        }
+    }
   };
 
   interval?: {
@@ -40,7 +56,6 @@ export interface Schedule extends Model {
       Days: number,
       Hours: number,
       Minutes: number,
-      Seconds: number,
       Start_Date: string,
       End_Date: string,
       Jitter: number

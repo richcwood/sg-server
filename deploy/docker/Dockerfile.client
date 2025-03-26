@@ -1,0 +1,55 @@
+FROM node:16 as app
+
+ARG DIR=/home/appuser
+WORKDIR $DIR/app
+
+COPY --from=server_base:v0.0.1 $DIR/app/clientv3/package*.json ./
+COPY --from=server_base:v0.0.1 $DIR/app/clientv3/dist ./dist
+COPY --from=server_base:v0.0.1 $DIR/app/clientv3/node_modules ./node_modules
+
+
+FROM nginx as client
+
+ARG DIR=/home/appuser
+
+# Create app user and group
+# See:
+# https://medium.com/@mccode/processes-in-containers-should-not-run-as-root-2feae3f0df3b
+# https://medium.com/@mccode/understanding-how-uid-and-gid-work-in-docker-containers-c37a01d01cf
+RUN groupadd -g 999 appuser && \
+    useradd -r -m -u 999 -g appuser -s /usr/sbin/nologin appuser
+
+# Copy front-end code and back-end configuration
+RUN mkdir $DIR/app
+COPY --from=app /home/appuser/app /home/appuser/app
+
+# Configure nginx and copy back-end code
+COPY nginx.conf /etc/nginx/nginx.conf
+
+# Set restrictive permissions
+RUN chmod -R 600 $DIR && \
+    find $DIR -type d -exec chmod 700 '{}' \;
+
+# Allow nginx to serve web comment
+RUN chmod 755 $DIR && \
+    chmod -R 644 $DIR/app && \
+    find $DIR/app -type d -exec chmod 755 '{}' \;
+
+# Set ownership
+RUN chown -R appuser:appuser $DIR
+
+EXPOSE 80
+EXPOSE 3000
+
+# Conditionally install debugging conveniences
+ARG DEBUG
+RUN if [ -n "$DEBUG" ]; then \
+    apt-get install procps vim less -y; \
+    fi
+
+# Configure and start nginx
+CMD sed -i -e 's/$PORT/'"$PORT"'/g' /etc/nginx/nginx.conf && \
+    sed -i -e 's/$SERVER_NAME/'"$SERVER_NAME"'/g' /etc/nginx/nginx.conf && \
+    sed -i -e 's/$API_PORT/'"$API_PORT"'/g' /etc/nginx/nginx.conf && \
+    sed -i -e 's/$API_NAME/'"$API_NAME"'/g' /etc/nginx/nginx.conf && \
+    nginx -g 'daemon off;'

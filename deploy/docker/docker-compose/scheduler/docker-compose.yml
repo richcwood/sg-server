@@ -1,0 +1,7 @@
+version: '3.7'
+services:
+    scheduler:
+        container_name: scheduler
+        image: scheduler:v0.0.1
+        environment:
+            - NODE_ENV=dev_k8s

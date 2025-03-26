@@ -1,41 +1,32 @@
 import * as config from 'config';
 import { MongoRepo } from '../../../server/src/shared/MongoLib';
-import { BaseLogger } from '../../../server/src/shared/KikiLogger';
+import { BaseLogger } from '../../../server/src/shared/SGLogger';
 import * as _ from 'lodash';
 
-
 let UpdateAgentVersion = async () => {
-  const mongoUrl = config.get('mongoUrl');
-  const mongoDbname = config.get('mongoDbName');
-  const redisHost = config.get('redisHost');
-  const redisPort = config.get('redisPort');
-  const redisPassword = config.get('redisPassword');
+    const mongoUrl = process.env.mongoUrl;
+    const mongoDbname = process.env.mongoDbName;
 
-  let logger = new BaseLogger('RunTestHarness');
-  logger.Start();
+    let logger = new BaseLogger('RunTestHarness');
 
-  let mongoRepo = new MongoRepo('RunTestHarness', mongoUrl, mongoDbname, logger);
+    let mongoRepo = new MongoRepo('RunTestHarness', mongoUrl, mongoDbname, logger);
 
-  const version = process.argv[2];
+    const version = process.argv[2];
 
-  let _orgId = mongoRepo.ObjectIdFromString('5de95c0453162e8891f5a830');
-  if (process.argv.length > 3)
-    _orgId = mongoRepo.ObjectIdFromString(process.argv[3]);
+    let _teamId = mongoRepo.ObjectIdFromString('5de95c0453162e8891f5a830');
+    if (process.argv.length > 3) _teamId = mongoRepo.ObjectIdFromString(process.argv[3]);
 
-  let _agentId: any = undefined;
-  if (process.argv.length > 4)
-    _agentId = mongoRepo.ObjectIdFromString(process.argv[4]);
+    let _agentId: any = undefined;
+    if (process.argv.length > 4) _agentId = mongoRepo.ObjectIdFromString(process.argv[4]);
 
-  console.log('version -> ', version);
-  console.log('_orgId -> ', _orgId);
-  console.log('_agentId -> ', _agentId);
+    console.log('version -> ', version);
+    console.log('_teamId -> ', _teamId);
+    console.log('_agentId -> ', _agentId);
 
-  let filter: any = { _orgId };
-  if (_agentId)
-    filter['_id'] = _agentId;
-  let res = await mongoRepo.UpdateMany('agent', filter, { $set: { 'targetVersion': version } });
-  console.log(res);
-}
-
+    let filter: any = { _teamId };
+    if (_agentId) filter['_id'] = _agentId;
+    let res = await mongoRepo.UpdateMany('agent', filter, { $set: { targetVersion: version } });
+    console.log(res);
+};
 
 UpdateAgentVersion();

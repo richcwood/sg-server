@@ -14,14 +14,27 @@ interface SaveTagsOptions {
   tags: string[]
 };
 
+interface SaveNameOptions {
+  id: string,
+  name: string
+};
+
 export const actions: ActionTree<CoreState, RootState> = {  
   
-  save({commit, state}, model?: Agent) : Promise<Model> {
-    return coreActions.save({commit, state}, model);
+  // The agent save isn't really used.
+  save({commit, state, dispatch}, model?: Agent) : Promise<Model> {
+    return coreActions.save({commit, state, dispatch}, model);
   },
 
   async saveSettings({commit, state}, {id, properties}: SaveSettingsOptions) : Promise<Model> {
     const response = await axios.put(`api/v0/agent/properties/${id}`, properties);
+    // The api might have added calculated fields so it's best to update the store
+    commit(`${state._storeName}/update`, response.data.data, {root: true});
+    return coreActions.fetchModel({commit, state}, {id});
+  },
+
+  async saveName({commit, state}, {id, name}: SaveNameOptions) : Promise<Model> {
+    const response = await axios.put(`api/v0/agent/name/${id}`, {name});
     // The api might have added calculated fields so it's best to update the store
     commit(`${state._storeName}/update`, response.data.data, {root: true});
     return coreActions.fetchModel({commit, state}, {id});

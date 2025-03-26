@@ -3,42 +3,43 @@ import Router, { Route } from 'vue-router';
 import { StoreType } from '@/store/types';
 import store from '@/store';
 import Landing from '@/views/Landing.vue';
+import Dashboard from '@/views/Dashboard.vue';
 import InviteTeammates from '@/views/InviteTeammates.vue';
 import InvitationsForMe from '@/views/InvitationsForMe.vue';
 import JobMonitor from '@/views/JobMonitor.vue';
 import JobDetailsMonitor from '@/views/JobDetailsMonitor.vue';
 import AgentMonitor from '@/views/AgentMonitor.vue';
+import AgentDetails from '@/views/AgentDetails.vue';
+import JobList from '@/views/JobList.vue';
 import JobDesigner from '@/views/JobDesigner.vue';
 import InteractiveConsole from '@/views/InteractiveConsole.vue';
 import DownloadAgent from '@/views/DownloadAgent.vue';
-import OrgVars from '@/views/OrgVars.vue';
+import TeamVars from '@/views/TeamVars.vue';
 import Artifacts from '@/views/Artifacts.vue';
-import Invoices from '@/views/Invoices.vue';
-import OrgAlerts from '@/views/OrgAlerts.vue';
+import InvoicesStripe from '@/views/InvoicesStripe.vue';
+import TeamAlerts from '@/views/TeamAlerts.vue';
 import Scripts from '@/views/Scripts.vue';
+import Settings from '@/views/Settings.vue';
+import AccessKeys from '@/views/AccessKeys.vue';
+import AuthCallback from '@/views/AuthCallback.vue';
 import _ from 'lodash';
-import { KikiAlert, AlertPlacement, AlertCategory } from "@/store/alert/types";
+import { SgAlert, AlertPlacement, AlertCategory } from "@/store/alert/types";
+import LambdaScript from '@/components/pageGuides/LambdaScript.vue';
 
 Vue.use(Router);
 
 // helper to auto-save the selected script copy shadow code if it's changed
-const saveScriptEdits = async (next: (options?: any) => {}) => {
+const tryToSaveScriptEdits = async (next: (options?: any) => {}) => {
   try {
-      if(store.state[StoreType.ScriptStore].selectedCopy){
+    if(store.state[StoreType.ScriptShadowStore].storeUtils.hasSelectedCopyChanged()){
       // try to save the script's shadow copy
-      const scriptCopy = store.state[StoreType.ScriptStore].selectedCopy;
-      const scriptForSave = {
-        id: scriptCopy.id,
-        shadowCopyCode: scriptCopy.shadowCopyCode
-      };
-      await store.dispatch(`${StoreType.ScriptStore}/save`, scriptForSave);
-      scriptCopy.code = scriptCopy.shadowCopyCode;
-      store.dispatch(`${StoreType.AlertStore}/addAlert`, new KikiAlert(`Saved a backup of script - ${scriptCopy.name}`, AlertPlacement.FOOTER));
+      await store.dispatch(`${StoreType.ScriptShadowStore}/save`);
+      store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Saved a backup of script`, AlertPlacement.FOOTER));
     }
   }
   catch(err){
     console.error(err);
-    store.dispatch(`${StoreType.AlertStore}/addAlert`, new KikiAlert(`Failed to save a backup of your script`, AlertPlacement.FOOTER, AlertCategory.ERROR));
+    store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Failed to save a backup of script`, AlertPlacement.FOOTER, AlertCategory.ERROR));
   }
   finally {
     return next(true);
@@ -51,9 +52,19 @@ const router = new Router({
   base: process.env.BASE_URL,
   routes: [
     {
+      path: '/',
+      name: 'dashboard',
+      component: Dashboard
+    },
+    {
       path: '/landing',
       name: 'landing',
       component: Landing
+    },
+    {
+      path: '/oauthCallback/:method/:oauthProvider/:authHashKey',
+      name: 'oauthCallback',
+      component: AuthCallback
     },
     {
       path: '/downloadAgent',
@@ -71,7 +82,7 @@ const router = new Router({
       component: InvitationsForMe
     },
     {
-      path: '/',
+      path: '/jobMonitor',
       name: 'jobMonitor',
       component: JobMonitor
     },
@@ -88,13 +99,27 @@ const router = new Router({
           catch(err){
             console.error(`Unable to fetch job ${to.params.jobId}`);
             router.push({name: 'jobMonitor'}); // no id
-            store.dispatch(`${StoreType.AlertStore}/addAlert`, new KikiAlert(`Unable to load the job ${to.params.jobId}`, AlertPlacement.FOOTER));
+            store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Unable to load the job ${to.params.jobId}`, AlertPlacement.FOOTER));
           }
         }
       }
     },
     {
-      path: '/jobDesigner/:jobId?/:tabName?',
+      path: '/jobList/:action?',
+      name: 'jobList',
+      component: JobList,
+      meta: {
+        beforeEnter: async (to: Route, from: Route) => {
+          if(to.params.action && to.params.action === 'create'){
+            setTimeout(() => {
+              (<any>document.getElementsByClassName('action-create')[0]).click();
+            }, 50);
+          }
+        }
+      }
+    },
+    {
+      path: '/jobDesigner/:jobId/:tabName?',
       name: 'jobDesigner',
       component: JobDesigner,
       meta: {
@@ -107,14 +132,14 @@ const router = new Router({
               if(to.params.tabName === 'schedule'){
                 setTimeout(() => {
                   // silly vue-slim-tabs has no easy way to programatically click a tab
-                  (<any>document.getElementsByClassName('vue-tab')[4]).click();
+                  (<any>document.getElementsByClassName('px-1')[0]).click();
                 }, 50);
               }
             }
             catch(err){
               console.error(`Unable to fetch job ${to.params.jobId}`);
-              router.push({name: 'jobDesigner'}); // no id
-              store.dispatch(`${StoreType.AlertStore}/addAlert`, new KikiAlert(`Unable to load the job ${to.params.jobId}`, AlertPlacement.FOOTER));
+              router.push({name: 'jobList'});
+              store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Unable to load the job ${to.params.jobId}`, AlertPlacement.FOOTER));
             }
           }
           else {
@@ -122,16 +147,34 @@ const router = new Router({
           }
         },
         async beforeLeave(to: Route, from: Route, next: (options?: any) => {}){
-          if(store.state[StoreType.ScriptStore].storeUtils.hasSelectedCopyChanged()){
-            await saveScriptEdits(next);
-          }
+
+          tryToSaveScriptEdits(next);
         }
       }
     },
     {
       path: '/agentMonitor',
       name: 'agentMonitor',
-      component: AgentMonitor
+      component: AgentMonitor,
+    },
+    {
+      path: '/agentMonitor/:agentId',
+      name: 'agentMonitorDetails',
+      component: AgentDetails,
+      meta: {
+        async beforeEnter (to: Route, from: Route, next: Function) {
+          const { agentId } = to.params;
+
+          try {
+            const agent = await store.dispatch(`${StoreType.AgentStore}/fetchModel`, agentId);
+
+            store.dispatch(`${StoreType.AgentStore}/select`, agent);
+          } catch (e) {
+            console.error('Failed to fetch agent model with id:', agentId);
+            next({ name: 'agentMonitor' });
+          }
+        }
+      }
     },
     {
       path: '/interactiveConsole/:scriptId?',
@@ -139,15 +182,23 @@ const router = new Router({
       component: InteractiveConsole,
       meta: {
         beforeEnter: async (to: Route, from: Route) => {
+          if (from.name !== 'interactiveConsole') {
+            store.dispatch(`${StoreType.PageGuideStore}/select`, LambdaScript);
+          }
+
           if(to.params.scriptId){
             try {
+              if(store.state[StoreType.ScriptStore].selected && store.state[StoreType.ScriptStore].selected.id === to.params.scriptId){
+                return; // the script is already selected, avoid infinite loop
+              } 
+
               const script = await store.dispatch(`${StoreType.ScriptStore}/fetchModel`, to.params.scriptId);
               store.dispatch(`${StoreType.ScriptStore}/select`, script);
             }
             catch(err){
               console.error(`Unable to fetch script ${to.params.scriptId}`);
               router.push({name: 'interactiveConsole'}); // no id
-              store.dispatch(`${StoreType.AlertStore}/addAlert`, new KikiAlert(`Unable to load the script ${to.params.scriptId}`, AlertPlacement.FOOTER));
+              store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Unable to load the script ${to.params.scriptId}`, AlertPlacement.FOOTER));
             }
           }
           else {
@@ -155,16 +206,18 @@ const router = new Router({
           }
         },
         async beforeLeave(to: Route, from: Route, next: (options?: any) => {}){
-          if(store.state[StoreType.ScriptStore].storeUtils.hasSelectedCopyChanged()){
-            await saveScriptEdits(next);
+          if (to.name !== 'interactiveConsole') {
+            store.dispatch(`${StoreType.PageGuideStore}/select`, null);
           }
+
+          tryToSaveScriptEdits(next);
         }
       } 
     },
     {
       path: '/teamVars',
       name: 'teamVars',
-      component: OrgVars
+      component: TeamVars
     },
     {
       path: '/artifacts',
@@ -174,18 +227,38 @@ const router = new Router({
     {
       path: '/invoices',
       name: 'invoices',
-      component: Invoices
+      component: InvoicesStripe
     },
     {
-      path: '/orgAlerts',
-      name: 'orgAlerts',
-      component: OrgAlerts
+      path: '/teamAlerts',
+      name: 'teamAlerts',
+      component: TeamAlerts
     },
     {
-      path: '/scripts',
+      path: '/scripts/:action?',
       name: 'scripts',
-      component: Scripts
-    }
+      component: Scripts,
+      meta: {
+        beforeEnter: async (to: Route, from: Route) => {
+          if(to.params.action && to.params.action === 'create'){
+            setTimeout(() => {
+              (<any>document.getElementsByClassName('action-create')[0]).click();
+            }, 50);
+          }
+        }
+      }
+    },
+    {
+      path: '/settings',
+      name: 'settings',
+      component: Settings
+    },
+    {
+      path: '/accessKeys',
+      name: 'accessKeys',
+      component: AccessKeys
+    },
+    
   ]
 });
 
@@ -193,11 +266,13 @@ router.beforeEach(async (to: Route, from: Route, next: (options?: any) => void) 
   let shouldCancel = false;
 
   if(!store.state[StoreType.SecurityStore].appStarted){
+    console.log('router.beforeEach -> to -> ', to);
+    console.log('router.beforeEach -> from -> ', from);
     // in a single page app, users can get into weird situations with the back button or when 
     // deep linking back somewhere into the application.
     // If the app hasn't started and users are trying to go somewhere else besides the landing page
     // then redirect them back to the landing page
-    if(to.name !== 'landing'){
+    if(to.name !== 'landing' && to.name !== 'oauthCallback'){
       console.log('redirecting back to landing.  User not logged in and app has not started yet.');
       shouldCancel = true;
     }
@@ -232,7 +307,8 @@ router.afterEach(async (to: Route, from: Route) => {
     const gtagFunction = (<any>window).gtag;
     // do not use the full route because it will include variables like ids
     // that will not aggregate nicely and don't really matter
-    gtagFunction('config', 'UA-34147266-3', {'page_path': to.name});
+    // This key only works with console.saasglue.com
+    gtagFunction('config', 'UA-181507791-1', {'page_path': to.name});
   }
   
 

@@ -1,144 +1,242 @@
-import * as util from 'util';
+import * as config from 'config';
 import * as TestBase from './TestBase';
-import * as Enums from '../../server/src/shared/Enums';
-import { KikiUtils } from '../../server/src/shared/KikiUtils';
-import { KikiStrings } from '../../server/src/shared/KikiStrings';
-import { OrgSchema } from '../../server/src/api/domain/Org';
-import { JobDefSchema } from '../../server/src/api/domain/JobDef';
-import { TaskDefSchema } from '../../server/src/api/domain/TaskDef';
-import { StepDefSchema } from '../../server/src/api/domain/StepDef';
-import { ScriptSchema } from '../../server/src/api/domain/Script';
+import { SGUtils } from '../../server/src/shared/SGUtils';
+import { ScriptType, TaskDefTarget, StepStatus } from '../../server/src/shared/Enums';
 import * as _ from 'lodash';
-
 
 const script1 = `
 import time
-print 'start'
-time.sleep(2)
-print 'done'
-print '@kpo{"route": "ok"}'
+print('start')
+time.sleep(5)
+print('done')
+print('@sgo{"route": "ok"}')
 `;
-const script1_b64 = KikiUtils.btoa(script1);
+const script1_b64 = SGUtils.btoa(script1);
 
 const script2 = `
 import time
-print 'start'
+print('start')
 time.sleep(2)
-print 'done'
-print '@kpo{"outVal": "val"}'
+print('done')
+print('@sgo{"rtKey": "@sgg("rtKey")"}')
+print('@sgo{"agentId": "@sgg("_agentId")"}')
+print('@sgo{"outVal": "val"}')
 `;
-const script2_b64 = KikiUtils.btoa(script2);
+const script2_b64 = SGUtils.btoa(script2);
 
 let self: Test20;
 
-
-export default class Test20 extends TestBase.default {
-
+export default class Test20 extends TestBase.WorkflowTestBase {
     constructor(testSetup) {
         super('Test20', testSetup);
-        this.description = 'Run task after period of agent inactivity test';
+        this.description = 'Inactive agent job';
 
-        this.maxWaitTimeAfterJobComplete = 20000;
         self = this;
     }
 
-    public async CreateTest() {
-        await super.CreateTest();
+    public async RunTest() {
+        let result: boolean;
+        let resApiCall: any;
 
-        // /// Create org
-        // let org: any = { 'name': 'TestOrg20', 'isActive': true, 'rmqPassword': KikiUtils.makeid(10) };
-        // org = await self.CreateOrg(org);
-        // self.orgs.push(org);
+        const _teamId: string = process.env.sgTestTeam;
 
-        const orgName = 'TestOrg';
-        const _orgId = self.testSetup.orgs[orgName].id;
-
-        /// Create job defs
-        let jobDef: JobDefSchema = {
-            _orgId: _orgId,
-            name: 'Job 20',
-            createdBy: this.sgUser.id,
-            lastRunId: 0,
-            dateCreated: new Date(),
-            expectedValues: { 'type': 'job', 'matchCount': 1, 'cntPartialMatch': 0, 'cntFullMatch': 0, 'values': { [KikiStrings.status]: Enums.JobStatus.COMPLETED } },
-        }
-        jobDef = await self.CreateJobDef(jobDef, _orgId);
-        self.jobDefs.push(jobDef);
-
-        let script_obj2: ScriptSchema = {'_orgId': _orgId, 'name': 'Stop instance', 'scriptType': Enums.ScriptType.PYTHON, 'code': script2_b64, _originalAuthorUserId: this.sgUser.id, _lastEditedUserId: this.sgUser.id, lastEditedDate: new Date(), shadowCopyCode: script1_b64 };
-        script_obj2 = await self.CreateScript(script_obj2, _orgId);
-        self.scripts.push(script_obj2);
-        let taskDefInactiveAgent: any = { 'name': 'InactiveAgentTask', 'script': { '_id': script_obj2['id'], }, 'arguments': '' };
-
-
-        let agent = _.filter(self.testSetup.agents, a => a.machineId == 'TestAgent1')[0];
-        // const restAPICallRes: any = await this.RestAPICall('job', 'POST', jobDef._orgId, { _jobDefId: jobDef.id });
-        await self.testSetup.RestAPICall(`agent/properties/${agent.instanceId}`, 'PUT', _orgId, {}, {'inactiveAgentTask': taskDefInactiveAgent, 'inactivePeriodWaitTime': 15000});
-        
-        // /// Create agents
-        // let agent;
-        // agent = {
-        //     '_orgId': _orgId,
-        //     'machineId': KikiUtils.makeid(),
-        //     'ipAddress': '10.10.0.90',
-        //     'tags': [],
-        //     'numActiveTasks': 0,
-        //     'lastHeartbeatTime': new Date().getTime(),
-        //     'rmqPassword': org['rmqPassword'],
-        //     'inactivePeriodWaitTime': 15000,
-        //     'inactiveAgentTask': taskDefInactiveAgent
-        // };
-        // self.agents.push(agent);
-
-        /// Create job def tasks
-        let taskDef: TaskDefSchema = { '_orgId': _orgId, 'name': 'Task1', '_jobDefId': jobDef.id, 'target': Enums.TaskDefTarget.SINGLE_AGENT, 'requiredTags': {}, 'fromRoutes': [] };
-        taskDef = await self.CreateTaskDef(taskDef, _orgId);
-
-        /// Create script
-        let script_obj1: ScriptSchema = { '_orgId': _orgId, 'name': 'Script 20', 'scriptType': Enums.ScriptType.PYTHON, 'code': script1_b64, _originalAuthorUserId: this.sgUser.id, _lastEditedUserId: this.sgUser.id, lastEditedDate: new Date(), shadowCopyCode: script1_b64 };
-        script_obj1 = await self.CreateScript(script_obj1, _orgId);
-        self.scripts.push(script_obj1);
-        let step: StepDefSchema = { '_orgId': _orgId, '_taskDefId': taskDef.id, 'name': 'step1', '_scriptId': script_obj1['id'], 'order': 0, 'arguments': '' };
-        step = await self.CreateStepDef(step, _orgId, jobDef.id);
-
-        taskDef.expectedValues = {
-            'type': 'task',
-            'matchCount': 5,
-            'tagsMatch': true,
-            'values': { [KikiStrings.status]: Enums.TaskStatus.SUCCEEDED },
-            'runtimeVars': { [KikiStrings.route]: 'ok' },
-            'step': [
-                { 'name': step.name, 'values': { 'status': Enums.TaskStatus.SUCCEEDED, 'stderr': '', 'exitCode': 0 } }
+        const properties: any = {
+            scripts: [
+                {
+                    name: 'Script 20',
+                    scriptType: ScriptType.PYTHON,
+                    code: script1_b64,
+                    shadowCopyCode: script1_b64,
+                },
+                {
+                    name: 'Inactive Agent Script',
+                    scriptType: ScriptType.PYTHON,
+                    code: script2_b64,
+                    shadowCopyCode: script2_b64,
+                },
             ],
-            'cntPartialMatch': 0,
-            'cntFullMatch': 0
+            jobDefs: [
+                {
+                    name: 'Job 20',
+                    taskDefs: [
+                        {
+                            name: 'Task 1',
+                            stepDefs: [
+                                {
+                                    name: 'Step 1',
+                                    scriptName: 'Script 20',
+                                },
+                            ],
+                        },
+                    ],
+                },
+                {
+                    name: 'Inactive Agent Job',
+                    taskDefs: [
+                        {
+                            name: 'Task 1',
+                            target: TaskDefTarget.SINGLE_SPECIFIC_AGENT,
+                            targetAgentId: '@sgg("_agentId")',
+                            stepDefs: [
+                                {
+                                    name: 'Step 1',
+                                    scriptName: 'Inactive Agent Script',
+                                },
+                            ],
+                        },
+                    ],
+                },
+            ],
         };
-        self.taskDefs.push(taskDef);
 
-        taskDefInactiveAgent.expectedValues = {
-            'type': 'task',
-            'matchCount': 5,
-            'tagsMatch': true,
-            'values': { [KikiStrings.status]: Enums.TaskStatus.SUCCEEDED },
-            'runtimeVars': { 'outVal': 'val' },
-            'step': [
-                { 'name': 'Step1', 'values': { 'status': Enums.TaskStatus.SUCCEEDED, 'stderr': '', 'exitCode': 0 } }
-            ],
-            'cntPartialMatch': 0,
-            'cntFullMatch': 0
+        const { scripts, jobDefs } = await this.CreateJobDefsFromTemplates(properties);
+
+        let agentMachineId: string = self.testSetup.agents[0].machineId;
+        let agentId: string;
+        resApiCall = await self.testSetup.RestAPICall(
+            `agent?filter=machineId==${agentMachineId}&responseFields=id`,
+            'GET',
+            _teamId,
+            null
+        );
+        if (resApiCall.data.statusCode != 200) {
+            self.logger.LogError('Failed', {
+                Message: `agent/name/${agentMachineId}?responseFields=id GET returned ${resApiCall.data.statusCode}`,
+            });
+            return false;
         }
-        self.taskDefs.push(taskDefInactiveAgent);
+        agentId = resApiCall.data.data[0].id;
+        let inactiveJobName: string = `Inactive agent job - ${agentMachineId}`;
 
-        console.log(util.inspect(this, false, 5, true));
-    };
+        resApiCall = await self.testSetup.RestAPICall(`agent/properties/${agentId}`, 'PUT', _teamId, null, {
+            inactiveAgentJob: {
+                id: jobDefs['Inactive Agent Job'].id,
+                runtimeVars: { rtKey: { sensitive: false, value: 'rtVal' } },
+            },
+            inactivePeriodWaitTime: 15000,
+        });
+        if (resApiCall.data.statusCode != 200) {
+            self.logger.LogError('Failed', {
+                Message: `agent/properties/${agentId} PUT returned ${resApiCall.data.statusCode}`,
+            });
+            return false;
+        }
 
+        resApiCall = await this.testSetup.RestAPICall(`job`, 'POST', _teamId, { _jobDefId: jobDefs['Job 20'].id });
+        if (resApiCall.data.statusCode != 201) {
+            self.logger.LogError('Failed', {
+                Message: `job POST returned ${resApiCall.data.statusCode}`,
+                _jobDefId: jobDefs['Job 20'].id,
+            });
+            return false;
+        }
+        let startedJobId = resApiCall.data.data.id;
 
-    public async CleanupTest(testSetup: any) {
-        await super.CleanupTest(testSetup);
+        const jobStartedBP: any = {
+            domainType: 'Job',
+            operation: 1,
+            model: {
+                _teamId: process.env.sgTestTeam,
+                _jobDefId: jobDefs[properties.jobDefs[0].name].id,
+                runId: 0,
+                name: properties.jobDefs[0].name,
+                status: 0,
+                id: startedJobId,
+                type: 'Job',
+            },
+        };
+        self.bpMessagesExpected.push(jobStartedBP);
 
-        const orgName = 'TestOrg';
-        const _orgId = self.testSetup.orgs[orgName].id;
-        let agent = _.filter(self.testSetup.agents, a => a.machineId == 'TestAgent1')[0];
-        await self.testSetup.RestAPICall(`agent/properties/${agent.instanceId}`, 'PUT', _orgId, {}, {'inactiveAgentTask': null, 'inactivePeriodWaitTime': null});
-    };
+        const jobCompletedBP: any = {
+            domainType: 'Job',
+            operation: 2,
+            model: {
+                status: 20,
+                id: startedJobId,
+                type: 'Job',
+            },
+        };
+        self.bpMessagesExpected.push(_.clone(jobCompletedBP));
+
+        const inactiveAgentJobStartedBP: any = {
+            domainType: 'Job',
+            operation: 1,
+            model: {
+                _teamId: process.env.sgTestTeam,
+                _jobDefId: jobDefs[properties.jobDefs[1].name].id,
+                runId: 0,
+                name: inactiveJobName,
+                status: 0,
+                type: 'Job',
+            },
+        };
+        self.bpMessagesExpected.push(inactiveAgentJobStartedBP);
+
+        result = await self.WaitForTestToComplete();
+        if (!result) return result;
+        self.bpMessagesExpected.length = 0;
+
+        const inactiveJobQuery = _.filter(
+            self.bpMessages,
+            (x) =>
+                x.domainType == 'Job' &&
+                x.operation == 1 &&
+                x.model._jobDefId == jobDefs[properties.jobDefs[1].name].id &&
+                x.model.name == inactiveJobName
+        );
+        if (inactiveJobQuery.length < 1) {
+            throw new Error(
+                `Unable to find Inactive Job - {operation: 1, _jobDefId: ${
+                    jobDefs[properties.jobDefs[1].name].id
+                }, name: ${inactiveJobName}}`
+            );
+        }
+        const inactiveJob: any = inactiveJobQuery[0].model;
+
+        const inactiveAgentJobCompletedBP: any = {
+            domainType: 'Job',
+            operation: 2,
+            model: {
+                status: 20,
+                id: inactiveJob.id,
+                type: 'Job',
+            },
+        };
+        self.bpMessagesExpected.push(_.clone(inactiveAgentJobCompletedBP));
+
+        const inactiveAgentStepOutcomeCompletedBP: any = {
+            domainType: 'StepOutcome',
+            operation: 2,
+            model: {
+                status: StepStatus.SUCCEEDED,
+                runtimeVars: {
+                    rtKey: { sensitive: false, value: 'rtVal' },
+                    agentId: { sensitive: false, value: agentId },
+                    outVal: { sensitive: false, value: 'val' },
+                },
+                stdout: `start\ndone\n@sgo{"rtKey": "rtVal"}\n@sgo{"agentId": "${agentId}"}\n@sgo{"outVal": "val"}\n`,
+                stderr: '',
+                exitCode: 0,
+                lastUpdateId: 1,
+                type: 'StepOutcome',
+            },
+        };
+        self.bpMessagesExpected.push(_.clone(inactiveAgentStepOutcomeCompletedBP));
+
+        result = await self.WaitForTestToComplete();
+        if (!result) return result;
+
+        resApiCall = await self.testSetup.RestAPICall(`agent/properties/${agentId}`, 'PUT', _teamId, null, {
+            inactiveAgentJob: {},
+            inactivePeriodWaitTime: 60000,
+        });
+        if (resApiCall.data.statusCode != 200) {
+            self.logger.LogError('Failed', {
+                Message: `agent/properties/${agentId} PUT returned ${resApiCall.data.statusCode}`,
+            });
+            return false;
+        }
+
+        return true;
+    }
 }

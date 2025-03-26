@@ -14,7 +14,7 @@
     </div>
 
     <div class="select is-multiple" style="margin-top: 8px; margin-left: 10px;"> 
-      <select multiple size="8" style="width: 600px;" v-model="selectedArtifacts">
+      <select :multiple="allowMultiple" size="10" style="width: 600px; height: 350px;" v-model="selectedArtifacts">
         <option v-for="result in searchResults" v-bind:key="result.id" :value="result.id">
           {{result.prefix}}{{result.name}}
         </option>
@@ -28,13 +28,14 @@ import _ from 'lodash';
 import { Component, Prop, Vue, Watch } from 'vue-property-decorator';
 import { Artifact } from '@/store/artifact/types';
 import { LinkedModel, StoreType } from '@/store/types';
-import { KikiAlert, AlertPlacement, AlertCategory } from '@/store/alert/types';
+import { SgAlert, AlertPlacement, AlertCategory } from '@/store/alert/types';
 import axios from 'axios';
 
 @Component
 export default class ArtifactSearch extends Vue {
 
   @Prop() private disabled!: boolean;
+  @Prop({default: true}) private allowMultiple!: boolean;
   
   private searchPrefix = '';
   private searchName = '';
@@ -55,7 +56,7 @@ export default class ArtifactSearch extends Vue {
       this.searchResults = data;
     }
     catch(err){
-      this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new KikiAlert(`Error searching artifacts: ${err}`, AlertPlacement.WINDOW, AlertCategory.ERROR));
+      this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Error searching artifacts: ${err}`, AlertPlacement.WINDOW, AlertCategory.ERROR));
     }
   }
 

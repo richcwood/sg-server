@@ -2,7 +2,9 @@ import { FontAwesomeLayersTextProps } from '@fortawesome/vue-fontawesome';
 
 export interface User {
   email: string;
-  orgIds?: string[];
+  teamIds?: string[];
+  name: string;
+  teamAccessRightIds: {[key: string]: string}; // map from team ids to bitmaps in hex
 }
 
 

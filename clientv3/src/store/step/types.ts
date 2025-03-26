@@ -2,7 +2,7 @@ import { Model } from '@/store/types'
 import { StepStatus } from '@/utils/Enums';
 
 export interface Step extends Model {
-  _orgId: string,
+  _teamId: string,
   _jobId: string,
   _taskId: string, 
   name: string,
@@ -11,6 +11,6 @@ export interface Step extends Model {
   command?: string,
   arguments: string,
   variables: {[key: string]: string},
-  script: {id: string, name: string, scriptType: number, code: string},
+  script: {id?: string, name?: string, scriptType: number, code: string},
   version: number
 };

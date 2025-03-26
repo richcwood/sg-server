@@ -1,12 +1,11 @@
-import { Commit } from 'vuex';
+import { Commit, Dispatch } from 'vuex';
 import { CoreState, Model } from '@/store/types';
 import axios from 'axios';
 import lodash from 'lodash';
-import store from '..';
 
 // For pagination, what are the defaults for max models loaded, the default page size etc.
-const DEFAULT_MAX_PAGE_TOTAL = 2500;
-const DEFAULT_MAX_PAGE_SIZE = 128;
+const DEFAULT_MAX_PAGE_TOTAL = 10000;
+const DEFAULT_MAX_PAGE_SIZE = 1000;
 
 
 // Helper functions
@@ -28,7 +27,13 @@ const createFilterUrlParams = function(filter?: string, lastId?: string): string
 const loadPaginatedModels = async function({state, commit, preCommit, filter}: {state: CoreState, commit: Commit, preCommit?: Function, filter?: string}): Promise<object[]>{  
   const fetchedModels = [];
 
-  const firstResponse: any = await axios.get(`${state._url('GET')}?${createFilterUrlParams(filter)}`);
+  let baseUrl = `${state._url('GET')}?`;
+
+  if(state._responseFields){
+    baseUrl += `responseFields=${state._responseFields()}&`;
+  }
+
+  const firstResponse: any = await axios.get(`${baseUrl}${createFilterUrlParams(filter)}`);
   fetchedModels.push(...firstResponse.data.data);
   // Allow a handler to perform a bulk load before data is commited to the store
   if(preCommit){
@@ -39,32 +44,29 @@ const loadPaginatedModels = async function({state, commit, preCommit, filter}: {
   commit(`${state._storeName}/addModels`, firstResponse.data.data, {root: true});
 
   // some models don't support pagination
-  if(firstResponse.data.meta && firstResponse.data.meta.pagination){  
-    const paginationTotal = firstResponse.data.meta.pagination.total;
+  if(firstResponse.data.meta && firstResponse.data.meta.count){  
+    const paginationTotal = firstResponse.data.meta.count;
 
     if(paginationTotal > DEFAULT_MAX_PAGE_TOTAL){
-      console.error(`Oops, looks like you tried to bulk load a model type with more than the default limit of ${DEFAULT_MAX_PAGE_TOTAL}. url=${state._url('GET')}, totalModelCount=${paginationTotal}`);
+      console.warn(`Oops, looks like you tried to bulk load a model type with more than the default limit of ${DEFAULT_MAX_PAGE_TOTAL}. url=${baseUrl}, totalModelCount=${paginationTotal}`);
     }
-    else if(paginationTotal > DEFAULT_MAX_PAGE_SIZE) {
-      const paginatedPromises = []; 
+    
+    if(paginationTotal > DEFAULT_MAX_PAGE_SIZE) {
 
-      // Kick off all of the bulk model loads to happen in parallel
-      // uh oh - figure out how we did this - hard to do with lastId in parallel... poop
+      let lastId = firstResponse.data.data[firstResponse.data.data.length - 1].id;
       for(let pageIndex = 1; pageIndex * DEFAULT_MAX_PAGE_SIZE < paginationTotal; pageIndex++){
-        paginatedPromises.push(axios.get(`${state._url('GET')}?${createFilterUrlParams(filter)}`).then((response) => {            
-          fetchedModels.push(...response.data.data);
-          if(preCommit){
-            // Do not await on the preCommit - it should immediately generate promises before invoking any await code to not block main thread
-            preCommit(response);
-          }                        
-          commit(`${state._storeName}/addModels`, response.data.data, {root: true});
-        }));
-      }
-      
-      // Even though we loaded all of the data in parallel, we can't return from this entire function until all promises have completed
-      await Promise.all(paginatedPromises);
+        const response = await axios.get(`${baseUrl}${createFilterUrlParams(filter)}&lastId=${lastId}`);            
+        fetchedModels.push(...response.data.data);
+        if(preCommit){
+          // Do not await on the preCommit - it should immediately generate promises before invoking any await code to not block main thread
+          preCommit(response);
+        }                        
+        commit(`${state._storeName}/addModels`, response.data.data, {root: true});
+        lastId = response.data.data[response.data.data.length - 1].id;
+      };
     }
   }
+  
 
   return fetchedModels;
 };
@@ -99,12 +101,12 @@ export class FetchModelDebouncer {
 
 export const actions = {  
   
-  async save({commit, state}: {commit: Commit, state: CoreState}, model: Model|undefined = state.selectedCopy) : Promise<Model> {
+  async save({commit, state, dispatch}, model: Model|undefined = state.selectedCopy) : Promise<Model> {
     if(!model){
       throw 'Tried to save a model but the stores selected copy was not set';
     }
 
-    const isSelectedNewModel = !model.id && model === state.selectedCopy;
+    const isSelectedNewModel = state.selectedCopy && model.id === state.selectedCopy.id;
     let response: any;
     if(model.id){
       response = await axios.put(`${state._url('UPDATE')}/${model.id}`, model);
@@ -124,7 +126,7 @@ export const actions = {
     // In any case, you can't use the old object that was selected - that reference is dead
     if(isSelectedNewModel){
       // This code simply updates the selected model with the real value that is now in the store
-      commit('select', updatedModel);
+      await dispatch('select', updatedModel);
     }
 
     return updatedModel;
@@ -331,7 +333,7 @@ export const actions = {
                 state._promiseStore.get(promiseKey).resolve(model);
               }
               else {
-                debugger;
+                // debugger;
                 // Not sure how this could happen but just to be safe
                 state._promiseStore.get(promiseKey).reject(`Model ${id} was not found in the store. this.getUrl=${state._url('GET')}`);
               }

@@ -13,28 +13,22 @@
         },
         {
             "type": "node",
+            "runtimeVersion": "16",
             "request": "attach",
             "name": "Attach to Server",
             "processId": "${command:PickProcess}",
-            "skipFiles": [
-                "<node_internals>/**"
-            ],
-            "outFiles": [
-                "${workspaceFolder}/server/dist/server/**/*.js"
-            ]
+            "skipFiles": ["<node_internals>/**"],
+            "outFiles": ["${workspaceFolder}/server/dist/server/**/*.js"]
         },
         {
             "type": "node",
+            "runtimeVersion": "16",
             "request": "launch",
             "sourceMaps": true,
             "name": "Debug Server",
-            "skipFiles": [
-                "<node_internals>/**"
-            ],
+            "skipFiles": ["<node_internals>/**"],
             "program": "${workspaceFolder}/server/dist/api/StartServer.js",
-            "outFiles": [
-                "${workspaceFolder}/server/dist/**/*.js"
-            ],
+            "outFiles": ["${workspaceFolder}/server/dist/**/*.js"],
             "env": {
                 "KIKI_GIT_USERNAME": "",
                 "KIKI_GIT_PASSWORD": "",
@@ -47,20 +41,19 @@
                 "environment": "debug",
                 "NODE_ENV": "debug",
                 "SENDGRID_API_KEY": ""
+                "environment": "debug",
+                "NODE_ENV": "debug"
             }
         },
         {
             "type": "node",
+            "runtimeVersion": "16",
             "request": "launch",
             "sourceMaps": true,
             "name": "Debug Server Workers",
-            "skipFiles": [
-                "<node_internals>/**"
-            ],
+            "skipFiles": ["<node_internals>/**"],
             "program": "${workspaceFolder}/server/dist/RunServerWorkers.js",
-            "outFiles": [
-                "${workspaceFolder}/server/dist/*.js"
-            ],
+            "outFiles": ["${workspaceFolder}/server/dist/*.js"],
             "env": {
                 "environment": "debug",
                 "NODE_ENV": "debug"
@@ -68,22 +61,29 @@
         },
         {
             "type": "node",
+            "runtimeVersion": "16",
             "request": "launch",
             "sourceMaps": true,
             "name": "Debug Tests",
-            "skipFiles": [
-                "<node_internals>/**"
-            ],
-            "program": "${workspaceFolder}/test/dist/test/src/RunUnitTestsHarness.js",
-            "args": [
-                "Test46.js"
-            ],
-            "outFiles": [
-                "${workspaceFolder}/test/dist/test/**/*.js"
-            ],
+            "skipFiles": ["<node_internals>/**"],
+            "program": "${workspaceFolder}/test/dist/sg-server/test/src/RunUnitTestsHarness.js",
+            "args": ["Test1.js"],
+            "outFiles": ["${workspaceFolder}//test/dist/sg-server/test/**/*.js"],
             "env": {
                 "NODE_ENV": "debug"
             }
+        },
+        {
+            "type": "node",
+            "runtimeVersion": "16",
+            "name": "vscode-jest-tests",
+            "request": "launch",
+            "console": "integratedTerminal",
+            "internalConsoleOptions": "neverOpen",
+            "disableOptimisticBPs": true,
+            "program": "${workspaceFolder}/node_modules/.bin/jest",
+            "cwd": "${workspaceFolder}",
+            "args": ["--detectOpenHandles", "--runInBand", "--watchAll=false"]
         }
     ]
 }

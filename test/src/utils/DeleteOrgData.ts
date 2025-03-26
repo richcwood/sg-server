@@ -1,31 +1,28 @@
 import * as config from 'config';
 import { MongoRepo } from '../../../server/src/shared/MongoLib';
-import { BaseLogger } from '../../../server/src/shared/KikiLogger';
+import { BaseLogger } from '../../../server/src/shared/SGLogger';
 import * as mongodb from 'mongodb';
 import * as mongoose from 'mongoose';
 const readline = require('readline');
 
-
 const rl = readline.createInterface({
     input: process.stdin,
-    output: process.stdout
+    output: process.stdout,
 });
 
+let DeleteTeamJobData = async (teamId: string) => {
+    mongoose.connect(process.env.mongoUrl, {});
 
-let DeleteOrgJobData = async (orgId: string) => {
-    mongoose.connect(config.get('mongoUrl'), { useNewUrlParser: true });
-
-    const mongoUrl = config.get('mongoUrl');
-    const mongoDbname = config.get('mongoDbName');
+    const mongoUrl = process.env.mongoUrl;
+    const mongoDbname = process.env.mongoDbName;
 
     let logger = new BaseLogger('RunTestHarness');
-    logger.Start();
 
     let mongoRepo = new MongoRepo('RunTestHarness', mongoUrl, mongoDbname, logger);
 
-    console.log('mongo url -> ', config.get('mongoUrl'));
+    console.log('mongo url -> ', process.env.mongoUrl);
 
-    const filter: any = { "_orgId": new mongodb.ObjectId(orgId) };
+    const filter: any = { _teamId: new mongodb.ObjectId(teamId) };
 
     let res;
     res = await mongoRepo.DeleteByQuery(filter, 'job');
@@ -48,21 +45,21 @@ let DeleteOrgJobData = async (orgId: string) => {
     console.log(`deleted ${res} schedules`);
 
     process.exit();
-}
+};
 
-const orgId = process.argv[2];
+const teamId = process.argv[2];
 
-console.log(`Deleting data for org ${orgId} from ${config.get('mongoUrl')}`);
+console.log(`Deleting data for team ${teamId} from ${process.env.mongoUrl}`);
 
-rl.question("continue? (y/n) ", function (yesno) {
+rl.question('continue? (y/n) ', function (yesno) {
     if (yesno != 'y') {
-        rl.close()
+        rl.close();
         process.exit();
     } else {
         rl.close();
     }
 });
 
-DeleteOrgJobData(orgId);
+DeleteTeamJobData(teamId);
 
 // node test/dist/test/src/utils/LoadMongoData.js './demo.json' '5e99cbcb2317950015edb655'

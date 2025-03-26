@@ -1,7 +1,7 @@
 <template>
   <span class="auto-complete">
     <span style="position: relative;">
-      <input :disabled="disabled" class="control input search-input" style="padding-left: 30px;" @focus="onSearchInputFocus" @blur="onSearchInputBlur" @keydown="onSearchKeyDown" v-model="search" placeholder="Script name">
+      <input :disabled="disabled" class="control input search-input" style="padding-left: 30px;" :style="{width: width}" @focus="onSearchInputFocus" @blur="onSearchInputBlur" @keydown="onSearchKeyDown" v-model="search" placeholder="Script name">
       <font-awesome-icon icon="search" style="position: absolute; left: 20px; top: 10px; color: #dbdbdb;" />
     </span>
     <div class="search-choices" v-if="choices.length > 0">
@@ -15,7 +15,7 @@ import _ from 'lodash';
 import { Component, Prop, Vue, Watch } from 'vue-property-decorator';
 import { Script } from '@/store/script/types';
 import { LinkedModel, StoreType } from '@/store/types';
-import { KikiAlert, AlertPlacement, AlertCategory } from '@/store/alert/types';
+import { SgAlert, AlertPlacement, AlertCategory } from '@/store/alert/types';
 import axios from 'axios';
 
 @Component
@@ -24,6 +24,8 @@ export default class ScriptSearch extends Vue {
   @Prop() private scriptId!: string;
 
   @Prop() private disabled!: boolean;
+
+  @Prop({default: '250px'}) private width!: string;
 
   private search = '';
   private choices: Script[] = [];
@@ -74,11 +76,14 @@ export default class ScriptSearch extends Vue {
     }
   }
 
-  private async onSearchKeyDown(){
+  private async onSearchKeyDown(keyboardEvent?: KeyboardEvent){
     try {
       if(this.search.trim().length > 0){
-        const {data: {data}} = await axios.get(`/api/v0/script?filter=${encodeURIComponent('name~='+this.search)}`);
-        const scripts = data;
+        
+        // ScriptNames are a subset of scripts and are the same names and ids
+        // so you can just use them as scripts in this component
+        const scripts = this.$store.getters[`${StoreType.ScriptNameStore}/searchByName`](this.search);
+
         scripts.sort((scriptA: Script, scriptB: Script) => scriptA.name.localeCompare(scriptB.name));
         if(scripts.length > 8){
           scripts.splice(8);
@@ -86,9 +91,12 @@ export default class ScriptSearch extends Vue {
         
         this.choices = scripts;
       }
+      else if(keyboardEvent && keyboardEvent.code === 'Enter'){
+        this.$emit('scriptPicked'); // Clear the choice
+      }
     }
     catch(err){
-      this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new KikiAlert(`Error searching scripts: ${err}`, AlertPlacement.WINDOW, AlertCategory.ERROR));
+      this.$store.dispatch(`${StoreType.AlertStore}/addAlert`, new SgAlert(`Error searching scripts: ${err}`, AlertPlacement.WINDOW, AlertCategory.ERROR));
     }
   }
 
@@ -112,8 +120,7 @@ export default class ScriptSearch extends Vue {
     if(this.finishedMounting && !this.search){
       this.$emit('scriptPicked');
     }
-
-    if(this.script && this.script.name !== this.search){
+    else if(this.script && this.script.name !== this.search){
       this.search = this.script.name;
     }
   }

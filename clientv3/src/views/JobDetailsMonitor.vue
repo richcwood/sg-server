@@ -1,282 +1,264 @@
 <template>
-  <div class="home">
+  <div class="sg-container-p">
 
     <!-- Modals -->
-    <modal name="show-script-modal" :classes="'round-popup'" :width="800" :height="650">
-      <table class="table" width="100%" height="100%">
-        <tr class="tr">
-          <td class="td">
-            <strong>script for step: {{stepOutcomeForPopup && stepOutcomeForPopup.name}}</strong>
-          </td>
-        </tr>
-        <tr class="tr">
-          <td class="td">
-            <div v-if="stepOutcomeForPopup  && stepOutcomeForPopup.runCode" 
-                 style="overflow: scroll; width: 750px; height: 525px;" 
-                 v-html="stepOutcomeForPopup.runCode.replace(/\n/g, '<br>')"></div>
-            <div v-else>
-              Code was missing
-            </div>
-          </td>
-        </tr>
-        <tr class="tr">
-          <td class="td">
-            <button class="button" @click="onCloseScriptModalClicked">Close</button>
-          </td>
-        </tr>
-      </table>
-    </modal>
-
-    <modal name="show-stdout-modal" :classes="'round-popup'" :width="800" :height="650">
-      <table class="table" width="100%" height="100%">
-        <tr class="tr">
-          <td class="td">
-            <strong>stdout for step: {{stepOutcomeForPopup && stepOutcomeForPopup.name}}</strong>
-          </td>
-        </tr>
-        <tr class="tr">
-          <td class="td">
-            <div v-if="stepOutcomeForPopup  && stepOutcomeForPopup.stdout" 
-                 style="overflow: scroll; width: 750px; height: 525px;" 
-                 v-html="formatStdString(stepOutcomeForPopup.stdout)"></div>
-            <div v-else>
-              No stdout available yet...
-            </div>
-          </td>
-        </tr>
-        <tr class="tr">
-          <td class="td">
-            <button class="button" @click="onCloseStdoutModalClicked">Close</button>
-          </td>
-        </tr>
-      </table>
-    </modal>
-
-    <modal name="show-stderr-modal" :classes="'round-popup'" :width="800" :height="650">
-      <table class="table" width="100%" height="100%">
-        <tr class="tr">
-          <td class="td">
-            <strong>stderr for step: {{stepOutcomeForPopup && stepOutcomeForPopup.name}}</strong>
-          </td>
-        </tr>
-        <tr class="tr">
-          <td class="td">
-            <div v-if="stepOutcomeForPopup  && stepOutcomeForPopup.stderr" 
-                 style="overflow: scroll; width: 750px; height: 525px;" 
-                 v-html="formatStdString(stepOutcomeForPopup.stderr)"></div>
-            <div v-else>
-              No stderr available yet...
-            </div>
-          </td>
-        </tr>
-        <tr class="tr">
-          <td class="td">
-            <button class="button" @click="onCloseStderrModalClicked">Close</button>
-          </td>
-        </tr>
-      </table>
-    </modal>
-
-    <modal name="runtime-vars-modal" :classes="'round-popup'" :width="800" :height="650">
+    <modal name="runtime-vars-modal" :classes="'round-popup'" :width="800" :height="750">
       <table class="table" width="100%" height="100%" v-if="taskToShowRuntimeVars">
-        <tr class="tr">
-          <td class="td">
-            <strong>Runtime vars for task: {{taskToShowRuntimeVars.name}}</strong>
+        <tr>
+          <td>
+            <div class="container ml-3 my-3">
+              <div class="columns is-desktop is-vcentered">
+                <strong>Runtime vars for task: {{taskToShowRuntimeVars.name}}</strong>
+                <div v-if="hideSensitiveRuntimeVars" style="display: inline">
+                  <button class="button ml-4" @click="toggleHideSensitiveRuntimeVars">Show Sensitive Values</button>
+                </div>
+                <div v-else style="display: inline">
+                  <button class="button ml-4" @click="toggleHideSensitiveRuntimeVars">Hide Sensitive Values</button>
+                </div>
+              </div>
+            </div>
           </td>
         </tr>
-        <tr class="tr">
-          <td class="td">
+        <tr>
+          <td>
             <div v-if="taskToShowRuntimeVars.runtimeVars" 
-                 style="overflow: scroll; width: 750px; height: 525px;" 
-                 v-html="formatRuntimeVars(taskToShowRuntimeVars.runtimeVars)"></div>
+                 style="overflow: scroll; width: 750px; height: 525px;">
+              <table class="table">
+                <tr v-for="runtimeVarKey in Object.keys(taskToShowRuntimeVars.runtimeVars)" v-bind:key="runtimeVarKey">
+                  <td>{{runtimeVarKey}}</td>
+                  <td> = </td>
+                  <td v-if="hideSensitiveRuntimeVars && taskToShowRuntimeVars.runtimeVars[runtimeVarKey]['sensitive']">**{{runtimeVarKey}}**</td>
+                  <td v-else>{{taskToShowRuntimeVars.runtimeVars[runtimeVarKey]['value']}}</td>
+                </tr>
+              </table>     
+            </div>
             <div v-else>
               No runtime vars {{taskToShowRuntimeVars.runtimeVars}}
             </div>
           </td>
         </tr>
-        <tr class="tr">
-          <td class="td">
+        <tr>
+          <td>
             <button class="button" @click="onCloseRuntimeVarsModalClicked">Close</button>
           </td>
         </tr>
       </table>
     </modal>
 
-    
-
-
-
-    Job Details: {{filterTaskOutcomeStatus}}
-    <table class="table">
-      <tbody class="tbody">
+    <modal name="inbound-routes-modal" :classes="'round-popup'" :width="800" :height="650">
+      <table class="table" width="100%" height="100%" v-if="taskToShowInboundRoutes">
         <tr class="tr">
-          <td class="td">Job Name</td>
-          <td class="td">
-            <template v-if="selectedJob._jobDefId">
-              <router-link :to="{name: 'jobDesigner', params: {jobId: selectedJob._jobDefId}}">{{selectedJob.name}}</router-link>
-            </template>
-            <template v-else>
-              {{selectedJob.name}}
-            </template>
-          </td>
-          <td style="width: 100px"> </td>
-          <td class="td">Status</td>
-          <td class="td">
-            {{enumKeyToPretty(JobStatus, selectedJob.status)}}
-            <template v-if="selectedJob.status < JobStatus.CANCELING || selectedJob.status === JobStatus.FAILED">
-              <button class="button button-spaced" @click="onCancelJobClicked(selectedJob)">Cancel</button>
-            </template>
-            <template v-if="selectedJob.status == TaskStatus.RUNNING">
-              <button class="button button-spaced" @click="onInterruptJobClicked(selectedJob)">Interrupt</button>
-            </template>
-            <template v-if="selectedJob.status == TaskStatus.INTERRUPTED">
-              <button class="button button-spaced" @click="onRestartJobClicked(selectedJob)">Restart</button>
-            </template>
+          <td>
+            <strong>Inbound Routes for task: {{taskToShowInboundRoutes.name}}</strong>
           </td>
         </tr>
         <tr class="tr">
-          <td class="td">Run Number</td><td class="td">{{selectedJob.runId}}</td>
-          <td style="width: 100px"> </td>
-          <td class="td">Started</td><td class="td">{{momentToStringV1(selectedJob.dateStarted)}}</td>
+          <td>
+            <div v-if="taskToShowInboundRoutes.fromRoutes" 
+                 style="overflow: scroll; width: 750px; height: 525px;">
+              <table class="table">
+                <tr class="tr" v-for="fromRoute in taskToShowInboundRoutes.fromRoutes" v-bind:key="fromRoute[0]">
+                  <td>{{fromRoute[0]}}</td>
+                  <td> | </td>
+                  <td>
+                    <span v-if="fromRoute.length > 1">
+                      {{fromRoute[1]}}
+                    </span>
+                  </td>
+                </tr>
+              </table>     
+            </div>
+            <div v-else>
+              No inbound routes
+            </div>
+          </td>
         </tr>
         <tr class="tr">
-          <td class="td">Created By</td><td class="td">{{getUser(selectedJob.createdBy).name}}</td>
-          <td style="width: 100px"> </td>
-          <td class="td">Completed</td><td class="td">{{momentToStringV1(selectedJob.dateCompleted)}}</td>
+          <td>
+            <button class="button" @click="onCloseInboundRoutesModalClicked">Close</button>
+          </td>
         </tr>
-      </tbody>
-    </table>
+      </table>
+    </modal>
+
+    <modal name="outbound-routes-modal" :classes="'round-popup'" :width="800" :height="650">
+      <table class="table" width="100%" height="100%" v-if="taskToShowOutboundRoutes">
+        <tr class="tr">
+          <td>
+            <strong>Outbound Routes for task: {{taskToShowOutboundRoutes.name}}</strong>
+          </td>
+        </tr>
+        <tr class="tr">
+          <td>
+            <div v-if="taskToShowOutboundRoutes.toRoutes" 
+                 style="overflow: scroll; width: 750px; height: 525px;">
+              <table class="table">
+                <tr class="tr" v-for="toRoute in taskToShowOutboundRoutes.toRoutes" v-bind:key="toRoute[0]">
+                  <td>{{toRoute[0]}}</td>
+                  <td> | </td>
+                  <td>
+                    <span v-if="toRoute.length > 1">
+                      {{toRoute[1]}}
+                    </span>
+                  </td>
+                </tr>
+              </table>     
+            </div>
+            <div v-else>
+              No outbound routes
+            </div>
+          </td>
+        </tr>
+        <tr class="tr">
+          <td>
+            <button class="button" @click="onCloseOutboundRoutesModalClicked">Close</button>
+          </td>
+        </tr>
+      </table>
+    </modal>
+
+    <modal name="artifacts-modal" :classes="'round-popup'" :width="800" :height="650">
+      <table class="table" width="100%" height="100%" v-if="taskToShowArtifacts">
+        <tr class="tr">
+          <td>
+            <strong>Artifacts for task: {{taskToShowArtifacts.name}}</strong>
+          </td>
+        </tr>
+        <tr class="tr">
+          <td>
+            <div v-if="taskToShowArtifacts.artifacts" 
+                 style="overflow: scroll; width: 750px; height: 525px;">
+              <table class="table">
+                <tr class="tr" v-for="artifactName in getArtifactNames(taskToShowArtifacts)" v-bind:key="artifactName">
+                  <td>{{artifactName}}</td>
+                </tr>
+              </table>     
+            </div>
+            <div v-else>
+              No artifacts
+            </div>
+          </td>
+        </tr>
+        <tr class="tr">
+          <td>
+            <button class="button" @click="onCloseArtifactsModalClicked">Close</button>
+          </td>
+        </tr>
+      </table>
+    </modal>
 
 
-     <table class="table">
-      <thead class="thead" style="font-weight: 700;">
-        <td class="td">Task Name</td>
-        <td class="td">Agents</td>
-        <td class="td">Status</td>
-        <td class="td">Failure</td>
-        <td class="td">Tags</td>
-        <td class="td">No Agent</td>
-        <td class="td">Depends On</td>
-        <td class="td">Runtime Vars</td>
-        <td class="td">Multi Agent</td>
-        <td class="td">Artifacts</td>
+    <div class="box is-inline-block mb-5">
+      <h2 class="title is-size-4">Job Details: {{ filterTaskOutcomeStatus }}</h2>
+      <table class="table job-details-table">
+        <tbody>
+          <tr>
+            <td class="has-text-weight-bold has-text-dark">Job Name</td>
+            <td>
+              <template v-if="selectedJob._jobDefId">
+                <router-link :to="{name: 'jobDesigner', params: {jobId: selectedJob._jobDefId}}">{{selectedJob.name}}</router-link>
+              </template>
+              <template v-else>
+                {{selectedJob.name}}
+              </template>
+            </td>
+            <td class="px-6"></td>
+            <td class="has-text-weight-bold has-text-dark">Status</td>
+            <td>
+              {{enumKeyToPretty(JobStatus, selectedJob.status)}}
+              <template v-if="selectedJob.status < JobStatus.CANCELING || selectedJob.status === JobStatus.FAILED">
+                <button class="button button-spaced" @click="onCancelJobClicked(selectedJob)">Cancel</button>
+              </template>
+              <template v-if="selectedJob.status == TaskStatus.RUNNING">
+                <button class="button button-spaced" @click="onInterruptJobClicked(selectedJob)">Interrupt</button>
+              </template>
+              <template v-if="selectedJob.status == TaskStatus.INTERRUPTED || selectedJob.status == TaskStatus.FAILED">
+                <button class="button button-spaced" @click="onRestartJobClicked(selectedJob)">Restart</button>
+              </template>
+            </td>
+          </tr>
+          <tr>
+            <td class="has-text-weight-bold has-text-dark">Run Number</td>
+            <td>{{selectedJob.runId}}</td>
+            <td class="px-6"></td>
+            <td class="has-text-weight-bold has-text-dark">Error</td>
+            <td>{{selectedJob.error}}</td>
+          </tr>
+          <tr>
+            <td class="has-text-weight-bold has-text-dark">Started</td>
+            <td>{{momentToStringV1(selectedJob.dateStarted)}}</td>
+            <td class="px-6"></td>
+            <td class="has-text-weight-bold has-text-dark">Completed</td>
+            <td>{{momentToStringV1(selectedJob.dateCompleted)}}</td>
+          </tr>
+          <tr>
+            <td class="has-text-weight-bold has-text-dark">Created By</td>
+            <td>{{getUser(selectedJob.createdBy, selectedJob.name).name}}</td>
+            <td class="px-6"></td>
+            <td colspan="2"></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+
+
+    <table class="table sg-table is-striped is-hoverable">
+      <thead>
+        <tr>
+          <th>Task Name</th>
+          <th>Status</th>
+          <th>Task Outcomes</th>
+          <th>Failure</th>
+          <th>Runtime Vars</th>
+          <th>Inbound Routes</th>
+          <th>Outbound Routes</th>
+          <th>Artifacts</th>
+        </tr>
       </thead>
 
-      <tbody class="tbody">
-        <tr v-if="tasks.length === 0">
-          <td colspan="9">
+      <tbody v-if="tasks.length === 0">
+        <tr class="has-background-white">
+          <td colspan="8">
             There are no tasks yet for the job
           </td>
         </tr>
-        <tr v-else v-for="task in tasks" class="tr" v-bind:key="task.id">
-          <template v-if="!selectedTask || selectedTask === task">
-            <td class="td"><a @click.prevent="onClickedTask(task)">{{task.name}}</a></td>
-            <td class="td">
-              <span v-html="formatTaskOutcomes(task)"></span>
-            </td>
-            <td class="td">{{enumKeyToPretty(TaskStatus, task.status)}}</td>
-            <td class="td">{{enumKeyToPretty(TaskFailureCode, task.failureCode)}}</td>
-            <td class="td">{{mapToString(task.requiredTags)}}</td>
-            <td class="td"><input class="checkbox" type="checkbox" :checked="task.noAgent" disabled></td>
-            <td class="td">{{task.fromRoutes}}</td>
-            <td class="td">
-              <a v-if="task.runtimeVars && Object.keys(task.runtimeVars).length > 3" 
-                 v-html="formatRuntimeVars_summary(task.runtimeVars)"
-                 @click.prevent="onClickedRuntimeVarsSummary(task)">
-              </a>
-              <span v-else v-html="formatRuntimeVars_summary(task.runtimeVars)">
-              </span>
-            </td>
-            <td class="td"><input class="checkbox" type="checkbox" :checked="task.runOnAllAgents" disabled></td>
-            <td class="td">{{task.artifacts}}</td>
-          </template>
+      </tbody>
+      <tbody v-else>
+        <tr v-for="task in tasks" :class="{'is-selected': selectedTask === task}" :key="task.id">
+          <td><a @click.prevent="onClickedTask(task)">{{task.name}}</a></td>
+          <td>{{enumKeyToPretty(TaskStatus, task.status)}}</td>
+          <td><span v-html="formatTaskOutcomes(task)"></span></td>
+          <td>{{enumKeyToPretty(TaskFailureCode, task.failureCode)}}</td>
+          <td><a @click.prevent="onClickedRuntimeVarsSummary(task)" v-html="formatRuntimeVars(task)"></a></td>
+          <td><a @click.prevent="onClickedInboundRoutesSummary(task)" v-html="formatInboundRoutes(task)"></a></td>
+          <td><a @click.prevent="onClickedOutboundRoutesSummary(task)" v-html="formatOutboundRoutes(task)"></a></td>
+          <td><a @click.prevent="onClickedArtifactsSummary(task)" v-html="formatArtifacts(task)"></a></td>
         </tr>
       </tbody>
     </table>
 
     <template v-if="selectedTask">
-      <div style="margin-bottom: 15px;">
-        <input class="input" v-model="filterTaskOutcomeStatus" type="text" placeholder="Filter status" style="width: 150px;"/>
-        <input class="input" v-model="filterTaskOutcomeAgent" type="text" placeholder="Filter agents" style="width: 150px; margin-left: 10px;"/>
-        <input class="input" v-model="filterStepOutcome" type="text" placeholder="Filter steps" style="width: 150px; margin-left: 10px;"/>
-        <a style="margin-left: 10px;" @click.prevent="onCloseSelectedTaskDetails">close</a>
+      <div class="field is-grouped mb-4">
+        <div class="control">
+          <input class="input" v-model="filterTaskOutcomeStatus" type="text" placeholder="Filter status" style="width: 150px;"/>
+        </div>
+        <div class="control">
+          <input class="input" v-model="filterTaskOutcomeAgent" type="text" placeholder="Filter agents" style="width: 150px;"/>
+        </div>
+        <div class="control">
+          <input class="input" v-model="filterStepOutcome" type="text" placeholder="Filter steps" style="width: 150px;"/>
+        </div>
+        <div class="control">
+          <a href="#" class="button is-ghost" @click.prevent="onCloseSelectedTaskDetails">Close</a>
+        </div>
       </div>
-      <table class="table" style="margin-left: 10px;">
-        <thead class="thead" style="font-weight: 700;">
-          <td class="td">Agent Name</td>
-          <td class="td">Status</td>
-          <td class="td">Failure</td>
-          <td class="td">Actions</td>
-          <td class="td">Started</td>
-          <td class="td">Completed</td>
-        </thead>
 
-
-        <tbody class="tbody">
-          <template v-for="taskOutcome in getTaskOutcomes(selectedTask)">
-            <tr class="tr" v-bind:key="taskOutcome.id+'main'">
-              <td class="td">{{getAgentName(taskOutcome._agentId)}}</td>
-              <td class="td">{{enumKeyToPretty(TaskStatus, taskOutcome.status)}}</td>
-              <td class="td">{{enumKeyToPretty(TaskFailureCode, taskOutcome.failureCode)}}</td>
-              <td class="td">
-                <template v-if="taskOutcome.status < TaskStatus.CANCELING || taskOutcome.status === TaskStatus.FAILED">
-                  <button class="button" @click="onCancelTaskOutcomeClicked(taskOutcome)">Cancel</button>
-                </template>
-                <template v-if="taskOutcome.status == TaskStatus.RUNNING">
-                  <button class="button button-spaced" @click="onInterruptTaskOutcomeClicked(taskOutcome)">Interrupt</button>
-                </template>
-                <template v-if="taskOutcome.status == TaskStatus.INTERRUPTED || (taskOutcome.status == TaskStatus.FAILED && (taskOutcome.failureCode == TaskFailureCode.AGENT_EXEC_ERROR || taskOutcome.failureCode == TaskFailureCode.LAUNCH_TASK_ERROR || taskOutcome.failureCode == TaskFailureCode.TASK_EXEC_ERROR ))">
-                  <button class="button button-spaced" @click="onRestartTaskOutcomeClicked(taskOutcome)">Restart</button>
-                </template>
-              </td>
-              <td class="td">{{momentToStringV1(taskOutcome.dateStarted)}}</td>
-              <td class="td">{{momentToStringV1(taskOutcome.dateCompleted)}}</td>
-            </tr>
-            <tr class="tr" v-bind:key="taskOutcome.id+'steps'">
-              <td class="td" colspan="4">
-                <table class="table" style="margin-left: 10px;">
-                  <tbody class="tbody">
-                    <template v-for="stepOutcome in getStepOutcomes(taskOutcome)">
-                      <tr class="tr" v-bind:key="'one_'+stepOutcome.id">
-                        <td class="td" style="padding-bottom: 0px;">{{stepOutcome.name}}</td>
-                        <td class="td" style="padding-bottom: 0px;">{{stepOutcome && enumKeyToPretty(TaskStatus, stepOutcome.status)}}</td>
-                        <td class="td" style="padding-bottom: 0px;">{{momentToStringV1(stepOutcome.dateStarted)}}</td>
-                        <td class="td" style="padding-bottom: 0px;">
-                          <span class="spaced"><a @click.prevent="onShowScriptClicked(stepOutcome)">script</a></span>
-                          <span class="spaced"><a @click.prevent="onShowStdoutClicked(stepOutcome)">stdout</a></span>
-                          <span class="spaced"><a @click.prevent="onShowStderrClicked(stepOutcome)">stderr</a></span>
-                        </td>
-                      </tr>
-                      <tr v-bind:key="'two_'+stepOutcome.id">
-                        <td class="td" style="padding-top: 0px;">
-                        </td>
-                        <td class="td" style="padding-top: 0px;" colspan="3">
-                          <div v-if="stepOutcome.tail && stepOutcome.tail.length > 4">
-                            {{stepOutcome.tail[4]}}
-                          </div>
-                          <div v-if="stepOutcome.tail && stepOutcome.tail.length > 3">
-                            {{stepOutcome.tail[3]}}
-                          </div>
-                          <div v-if="stepOutcome.tail && stepOutcome.tail.length > 2">
-                            {{stepOutcome.tail[2]}}
-                          </div>
-                          <div v-if="stepOutcome.tail && stepOutcome.tail.length > 1">
-                            {{stepOutcome.tail[1]}}
-                          </div>
-                          <div v-if="stepOutcome.tail && stepOutcome.tail.length > 0">
-                            {{stepOutcome.tail[0]}}
-                          </div>
-                        </td>
-                      </tr>
-                    </template>
-                  </tbody>
-                </table>
-              </td>
-            </tr>
-          </template>
-        </tbody>
-      </table>
-
+      <task-monitor-details :selectedTaskId="selectedTask.id" 
+                            :filterTaskOutcomeStatus="filterTaskOutcomeStatus"
+                            :filterTaskOutcomeAgent="filterTaskOutcomeAgent"
+                            :filterStepOutcome="filterStepOutcome" >
+      </task-monitor-details>
     </template>
   </div>
 </template>
@@ -290,18 +272,22 @@ import { StoreType } from '@/store/types';
 import { Job } from '@/store/job/types';
 import { Task } from '@/store/task/types';
 import { TaskOutcome } from '@/store/taskOutcome/types';
+import { TaskDefTarget } from "@/store/taskDef/types";
 import { StepOutcome } from '@/store/stepOutcome/types';
 import { BindStoreModel } from '@/decorator';
-import { JobStatus, TaskStatus, StepStatus, TaskFailureCode, enumKeyToPretty } from '@/utils/Enums.ts';
-import { mapToString } from '@/utils/Shared';
+import { JobStatus, TaskStatus, StepStatus, TaskFailureCode, enumKeyToPretty } from '@/utils/Enums';
+import { mapToString, truncateString } from '@/utils/Shared';
 import { Agent } from "../store/agent/types";
-import { KikiAlert, AlertPlacement, AlertCategory } from '@/store/alert/types';
+import { SgAlert, AlertPlacement, AlertCategory } from '@/store/alert/types';
 import { User } from '@/store/user/types';
 import { showErrors } from '@/utils/ErrorHandler';
+import { Artifact } from '@/store/artifact/types';
+import { TaskDef } from '../store/taskDef/types';
+import TaskMonitorDetails from '../components/TaskMonitorDetails.vue';
 
 @Component({
   components: {
-    
+    TaskMonitorDetails
   },
 })
 export default class JobDetailsMonitor extends Vue {
@@ -316,7 +302,9 @@ export default class JobDetailsMonitor extends Vue {
   private readonly TaskFailureCode = TaskFailureCode;
   private readonly enumKeyToPretty = enumKeyToPretty;
   private readonly mapToString = mapToString;
-
+  private readonly TaskDefTarget = TaskDefTarget;
+  private readonly truncateString = truncateString;
+  
   private get defaultStoreType(){return StoreType.JobStore};
 
   private mounted(){
@@ -343,24 +331,55 @@ export default class JobDetailsMonitor extends Vue {
     return tasks;
   }
 
-  private formatRuntimeVars_summary(runtimeVars: any): string {
-    if(runtimeVars){
-      const runtimeVarKeys = Object.keys(runtimeVars);
-      const moreThanThree = runtimeVarKeys.length > 3;
-      let summary = runtimeVarKeys.splice(0, 3).map(k => `${k}=${runtimeVars[k]}`).join('<br>');
-      if(moreThanThree){
-        summary += ' ...';
-      }
-      return summary;
+  private formatRuntimeVars(task: Task): string {
+    if(task.runtimeVars){
+      const runtimeVarKeys = Object.keys(task.runtimeVars);
+      const summary = runtimeVarKeys.map(k => (task.runtimeVars[k]['sensitive'] ? `${k}=**${k}**` : `${k}=${task.runtimeVars[k]['value']}`)).join(', ');
+      return truncateString(summary, 24);
     }
     else {
       return '';
     }
   }
 
-  private formatRuntimeVars(runtimeVars: any): string {
-    if(runtimeVars){
-      return Object.keys(runtimeVars).map(k => `${k}=${runtimeVars[k]}`).join('<br>');
+  private formatInboundRoutes(task: Task): string {
+    if(task.fromRoutes){
+      let summary = task.fromRoutes.map((route: any) => {
+        let returnVal = `${route[0]} | `;
+        if(route.length > 1){
+          returnVal += route[1];
+        }
+        return returnVal;
+      }).join(', ');
+
+      return truncateString(summary, 24);
+    }
+    else {
+      return '';
+    }
+  }
+
+  private formatOutboundRoutes(task: Task): string {
+    if(task.fromRoutes){
+      let summary = task.toRoutes.map((route: any) => {
+        let returnVal = `${route[0]} | `;
+        if(route.length > 1){
+          returnVal += route[1];
+        }
+        return returnVal;
+      }).join(', ');
+      
+      return truncateString(summary, 24);
+    }
+    else {
+      return '';
+    }
+  }
+
+  private formatArtifacts(task: Task): string {
+    if(task.artifacts){
+      const summary = this.getArtifactNames(task).join(', ');
+      return truncateString(summary, 24);
     }
     else {
       return '';
@@ -429,19 +448,36 @@ export default class JobDetailsMonitor extends Vue {
   private formatTaskOutcomes(task: Task): string {
     const taskOutcomes = this.getTaskOutcomes(task);
     if(taskOutcomes.length > 0) {
-      const statusCounts:any = {};
+      const statusCounts: any = {};
       // @ts-ignore
-      taskOutcomes.map((to: TaskOutcome) => {
-        const prettyStatusName = enumKeyToPretty(TaskStatus, to.status);
-        if(statusCounts[prettyStatusName]){
-          statusCounts[prettyStatusName]++;
+      taskOutcomes.map((taskOutcome: TaskOutcome) => {
+        if(statusCounts[taskOutcome.status]){
+          statusCounts[taskOutcome.status]++;
         }
         else {
-          statusCounts[prettyStatusName] = 1;
+          statusCounts[taskOutcome.status] = 1;
         }
       });
 
-      return Object.keys(statusCounts).map(k => `${k}=${statusCounts[k]}`).join('<br>');
+      return Object.keys(statusCounts).map((taskStatus: any) => {
+        let color;
+
+        switch(taskStatus){
+          case ''+TaskStatus.NOT_STARTED: color = 'blue'; break;
+          case ''+TaskStatus.WAITING_FOR_AGENT: color = 'red'; break;
+          case ''+TaskStatus.PUBLISHED: color = 'blue'; break;
+          case ''+TaskStatus.RUNNING: color = 'green'; break;
+          case ''+TaskStatus.INTERRUPTING: color = 'red'; break;
+          case ''+TaskStatus.INTERRUPTED: color = 'red'; break;
+          case ''+TaskStatus.CANCELING: color = 'red'; break;
+          case ''+TaskStatus.SUCCEEDED: color = ''; break;
+          case ''+TaskStatus.FAILED: color = 'red'; break;
+          case ''+TaskStatus.SKIPPED: color = ''; break;
+        }
+
+        const prettyStatusName = enumKeyToPretty(TaskStatus, taskStatus);        
+        return `<span style="color:${color};">${prettyStatusName}=${statusCounts[taskStatus]}</span>`;
+      }).join('<br>');
     }
     else {
       return 'none';
@@ -540,66 +576,38 @@ export default class JobDetailsMonitor extends Vue {
     }
   }
 
-  private stepOutcomeForPopup: StepOutcome | null = null;
-
-  private onShowScriptClicked(stepOutcome: StepOutcome){
-    this.stepOutcomeForPopup = stepOutcome;
-    this.$modal.show('show-script-modal');
-  }
-
-  private onShowStdoutClicked(stepOutcome: StepOutcome){
-    this.stepOutcomeForPopup = stepOutcome;
-    this.$modal.show('show-stdout-modal');
-  }
-
-  private onShowStderrClicked(stepOutcome: StepOutcome){
-    this.stepOutcomeForPopup = stepOutcome;
-    this.$modal.show('show-stderr-modal');
-  }
-
-  private onCloseScriptModalClicked(){
-    this.stepOutcomeForPopup = null;
-    this.$modal.hide('show-script-modal');
-  }
-
-  private onCloseStdoutModalClicked(){
-    this.stepOutcomeForPopup = null;
-    this.$modal.hide('show-stdout-modal');
-  }
-
-  private onCloseStderrModalClicked(){
-    this.stepOutcomeForPopup = null;
-    this.$modal.hide('show-stderr-modal');
-  }
-D
-  private formatStdString(std: string|undefined): string {
-    if(std){
-      return std.split('\n').reverse().join('<br>');
-    }
-    else {
-      return '';
-    }
-  }
-
   // for reactivity in a template
   private loadedUsers = {};
-  private getUser(userId: string): User {
+  private getUser(userId: string, jobName: string): User {
     try {
-      if(!this.loadedUsers[userId]){
-        Vue.set(this.loadedUsers, userId, {name: 'loading...'});
+      if(jobName.startsWith('Inactive agent job')) {
+        return { 
+          name: 'Error',
+          email: 'Error',
+          teamIdsInvited: [],
+          teamIds: [],
+          companyName: ''
+        };
+      } else {
+        if(!this.loadedUsers[userId]){
+          Vue.set(this.loadedUsers, userId, {name: 'loading...'});
 
-        (async () => {
-          this.loadedUsers[userId] = await this.$store.dispatch(`${StoreType.UserStore}/fetchModel`, userId);
-        })();
+          (async () => {
+            this.loadedUsers[userId] = await this.$store.dispatch(`${StoreType.UserStore}/fetchModel`, userId);
+          })();
+        }
+
+        return this.loadedUsers[userId];
       }
-
-      return this.loadedUsers[userId];
     }
     catch(err){
       console.log('Error in loading a user.  Maybe it was deleted?', userId);
       return {
         name: 'Error',
-        email: 'Error'
+        email: 'Error',
+        teamIdsInvited: [],
+        teamIds: [],
+        companyName: ''
       }
     }
   }
@@ -613,39 +621,91 @@ D
   private onCloseRuntimeVarsModalClicked(){
     this.$modal.hide('runtime-vars-modal');
     this.taskToShowRuntimeVars = null;
+    this.hideSensitiveRuntimeVars = true;
+  }
+
+  private taskToShowInboundRoutes: Task | null = null;
+  private onClickedInboundRoutesSummary(task: Task){
+    this.taskToShowInboundRoutes = task;
+    this.$modal.show('inbound-routes-modal');
+  }
+
+  private onCloseInboundRoutesModalClicked(){
+    this.$modal.hide('inbound-routes-modal');
+    this.taskToShowInboundRoutes = null;
+  }
+
+  private taskToShowOutboundRoutes: Task | null = null;
+  private onClickedOutboundRoutesSummary(task: Task){
+    this.taskToShowOutboundRoutes = task;
+    this.$modal.show('outbound-routes-modal');
+  }
+
+  private onCloseOutboundRoutesModalClicked(){
+    this.$modal.hide('outbound-routes-modal');
+    this.taskToShowOutboundRoutes = null;
+  }
+
+  private taskToShowArtifacts: Task | null = null;
+  private onClickedArtifactsSummary(task: Task){
+    this.taskToShowArtifacts = task;
+    this.$modal.show('artifacts-modal');
+  }
+
+  private onCloseArtifactsModalClicked(){
+    this.$modal.hide('artifacts-modal');
+    this.taskToShowArtifacts = null;
+  }
+
+  private hideSensitiveRuntimeVars: boolean = true;
+  private toggleHideSensitiveRuntimeVars(){
+    this.hideSensitiveRuntimeVars = !this.hideSensitiveRuntimeVars;
+  }
+
+  private getArtifactNames(task: Task): string[] {
+    if(task.artifacts){
+      return task.artifacts.map((artifactId: string) => this.getArtifact(artifactId).name);
+    } 
+    else {
+      return [];
+    }
+  }
+
+  // for reactivity in a template
+  private loadedArtifacts = {};
+  private getArtifact(artifactId: string): Artifact {
+    try {
+      if(!this.loadedArtifacts[artifactId]){
+        Vue.set(this.loadedArtifacts, artifactId, {name: 'loading...'});
+
+        (async () => {
+          this.loadedArtifacts[artifactId] = await this.$store.dispatch(`${StoreType.ArtifactStore}/fetchModel`, artifactId);
+        })();
+      }
+
+      return this.loadedArtifacts[artifactId];
+    }
+    catch(err){
+      console.log('Error in loading an artifact.  Maybe it was deleted?', artifactId);
+      return {
+        prefix: 'Error',
+        name: 'Error',
+        _teamId: 'Error',
+        s3Path: 'Error'
+      }
+    }
   }
 }
 </script>
 
 <style scoped lang="scss">
-.home {
-  margin-left: 12px;
-}
-
-table {
-
-  // The borders just make things really ugly
-  td  {
-    border-width: 0 !important;
-  }
-
-  td .agent-details {
-    margin-left: 30px;
-  }
-
-  td .script-tail {
-    padding-left: 40px;
-  }
-}
-
 .button-spaced {
   margin-left: 12px;
 }
 
-.spaced {
-  margin-left: 14px;
-  margin-right: 14px;
-  text-align: center;
-  line-height: 36px;
+.job-details-table {
+  tr {
+    background: inherit !important;
+  }
 }
 </style>

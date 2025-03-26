@@ -1,0 +1,30 @@
+kind: Pod
+apiVersion: v1
+metadata:
+  name: server-test
+  namespace: saasglue-server-dev
+spec:
+  serviceAccountName: saasglue-service
+  containers:
+    - name: server-test
+      image: server:v0.0.1
+      command: ["sleep", "infinity"]
+      securityContext:
+        allowPrivilegeEscalation: false
+        runAsUser: 0
+      env:
+        - name: NODE_ENV
+          value: dev_k8s
+        - name: HOST
+          value: "0.0.0.0"
+      imagePullPolicy: IfNotPresent
+  restartPolicy: Never
+  tolerations:
+    - effect: NoSchedule
+      key: duration
+      operator: Equal
+      value: static
+    - effect: NoSchedule
+      key: processorType
+      operator: Equal
+      value: cpu

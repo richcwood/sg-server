@@ -1,0 +1,21 @@
+FROM scheduler_base:v0.0.1 as scheduler
+
+ARG DIR=/home/appuser
+WORKDIR $DIR/app
+
+COPY server/src/workers/JobScheduler.py ./src/
+COPY server/src/workers/rmq_comm.py ./src/
+COPY config ./config
+
+RUN groupadd -g 999 appuser && \
+  useradd -r -m -u 999 -g appuser -s /usr/sbin/nologin appuser
+
+# Set restrictive permissions
+RUN chmod -R 600 $DIR && \
+  find $DIR -type d -exec chmod 700 '{}' \;
+
+# Set ownership
+RUN chown -R appuser:appuser $DIR
+
+# Start application as unprivileged user
+CMD runuser -u appuser -- "python" "src/JobScheduler.py"

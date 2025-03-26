@@ -1,0 +1,7 @@
+version: '3.7'
+services:
+    server_base:
+        container_name: server_base
+        image: server_base:v0.0.1
+        environment:
+            - NODE_ENV=dev_k8s

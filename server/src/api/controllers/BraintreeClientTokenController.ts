@@ -5,19 +5,16 @@ import { convertData as convertResponseData } from '../utils/ResponseConverters'
 import * as _ from 'lodash';
 import * as mongodb from 'mongodb';
 
-
 export class BraintreeClientTokenController {
-
     public async createBraintreeClientToken(req: Request, resp: Response, next: NextFunction): Promise<void> {
-        const _orgId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._orgid);
+        const _teamId: mongodb.ObjectId = new mongodb.ObjectId(<string>req.headers._teamid);
         const response: ResponseWrapper = resp['body'];
         try {
-            response.data = await braintreeClientTokenService.createBraintreeClientToken(_orgId);
+            response.data = await braintreeClientTokenService.createBraintreeClientToken(_teamId);
             response.statusCode = ResponseCode.CREATED;
-            next();
-        }
-        catch (err) {
-            next(err);
+            return next();
+        } catch (err) {
+            return next(err);
         }
     }
 }

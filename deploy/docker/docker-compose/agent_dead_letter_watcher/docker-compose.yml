@@ -1,0 +1,7 @@
+version: '3.7'
+services:
+    agent_deadletter_watcher:
+        container_name: agent_deadletter_watcher
+        image: agent_deadletter_watcher:v0.0.1
+        environment:
+            - NODE_ENV=dev_k8s

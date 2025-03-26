@@ -3,7 +3,7 @@ import * as config from 'config';
 import { agentService } from '../../../server/src/api/services/AgentService';
 import { jobDefService } from '../../../server/src/api/services/JobDefService';
 import { jobService } from '../../../server/src/api/services/JobService';
-import { orgService } from '../../../server/src/api/services/OrgService';
+import { teamService } from '../../../server/src/api/services/TeamService';
 import { scheduleService } from '../../../server/src/api/services/ScheduleService';
 import { scriptService } from '../../../server/src/api/services/ScriptService';
 import { stepDefService } from '../../../server/src/api/services/StepDefService';
@@ -19,7 +19,7 @@ import { paymentTransactionService } from '../../../server/src/api/services/Paym
 import { AgentSchema } from '../../../server/src/api/domain/Agent';
 import { JobDefSchema } from '../../../server/src/api/domain/JobDef';
 import { JobSchema } from '../../../server/src/api/domain/Job';
-import { OrgSchema } from '../../../server/src/api/domain/Org';
+import { TeamSchema } from '../../../server/src/api/domain/Team';
 import { ScheduleSchema } from '../../../server/src/api/domain/Schedule';
 import { ScriptSchema } from '../../../server/src/api/domain/Script';
 import { StepDefSchema } from '../../../server/src/api/domain/StepDef';
@@ -37,13 +37,16 @@ import * as mongoose from 'mongoose';
 import * as mongodb from 'mongodb';
 import * as _ from 'lodash';
 
+let CopyJobDefToNewTeam = async (
+    sourceTeam: mongodb.ObjectId,
+    destTeam: mongodb.ObjectId,
+    _jobDefId: mongodb.ObjectId
+) => {
+    mongoose.connect(process.env.mongoUrl, {});
 
-let CopyJobDefToNewOrg = async (sourceOrg: mongodb.ObjectId, destOrg: mongodb.ObjectId, _jobDefId: mongodb.ObjectId) => {
-    mongoose.connect(config.get('mongoUrl'), { useNewUrlParser: true });
+    console.log('mongo url -> ', process.env.mongoUrl);
 
-    console.log('mongo url -> ', config.get('mongoUrl'));
-
-    const userId = new mongodb.ObjectId("5e99cbcb2317950015edb655");
+    const userId = new mongodb.ObjectId('5e99cbcb2317950015edb655');
 
     const filter = { _jobDefId };
 
@@ -61,13 +64,13 @@ let CopyJobDefToNewOrg = async (sourceOrg: mongodb.ObjectId, destOrg: mongodb.Ob
     //   allTestObjects['schedule'] = convertRequestData(ScheduleSchema, schedule);
 
     if (!_.isArray(jobDefs) && jobDefs.length === 0) {
-        console.log(`No jobdef in org ${sourceOrg} with id ${jobDefId}`);
+        console.log(`No jobdef in team ${sourceTeam} with id ${jobDefId}`);
         process.exit();
     }
 
     let jobDef: any = JSON.parse(JSON.stringify(jobDefs[0]));
     delete jobDef._id;
-    jobDef._orgId = destOrg;
+    jobDef._teamId = destTeam;
     jobDef.createdBy = userId;
     jobDef = await jobDefService.createJobDefInternal(jobDef);
 
@@ -75,7 +78,7 @@ let CopyJobDefToNewOrg = async (sourceOrg: mongodb.ObjectId, destOrg: mongodb.Ob
         const oldTaskDefId = taskDefs[i]._id;
         let taskDef = JSON.parse(JSON.stringify(taskDefs[i]));
         delete taskDef._id;
-        taskDef._orgId = destOrg;
+        taskDef._teamId = destTeam;
         taskDef._jobDefId = jobDef._id;
         taskDef = await taskDefService.createTaskDefInternal(taskDef);
         let stepDefs: any = await stepDefService.findAllStepDefsInternal({ _taskDefId: oldTaskDefId });
@@ -83,14 +86,16 @@ let CopyJobDefToNewOrg = async (sourceOrg: mongodb.ObjectId, destOrg: mongodb.Ob
             let stepDef = stepDefs[i];
             stepDef = JSON.parse(JSON.stringify(stepDef));
 
-            let script: any = await scriptService.findAllScriptsInternal({ _id: new mongodb.ObjectId(stepDef._scriptId) });
+            let script: any = await scriptService.findAllScriptsInternal({
+                _id: new mongodb.ObjectId(stepDef._scriptId),
+            });
             script = JSON.parse(JSON.stringify(script[0]));
             delete script._id;
-            script._orgId = destOrg;
+            script._teamId = destTeam;
             script = await scriptService.createScriptInternal(script);
 
             delete stepDef._id;
-            stepDef._orgId = destOrg;
+            stepDef._teamId = destTeam;
             stepDef._taskDefId = taskDef._id;
             stepDef._scriptId = script._id;
             stepDef = await stepDefService.createStepDefInternal(stepDef);
@@ -100,16 +105,16 @@ let CopyJobDefToNewOrg = async (sourceOrg: mongodb.ObjectId, destOrg: mongodb.Ob
     for (let i = 0; i < schedules.length; i++) {
         let schedule = schedules[i];
         delete schedule._id;
-        schedule._orgId = destOrg;
+        schedule._teamId = destTeam;
         schedule._jobDefId = jobDef._id;
         await scheduleService.createScheduleInternal(schedule);
     }
 
     process.exit();
-}
+};
 
-const sourceOrg = new mongodb.ObjectId('5de95c0453162e8891f5a830');
-const destOrg = new mongodb.ObjectId('5e99cbcb2317950015edb655');
+const sourceTeam = new mongodb.ObjectId('5de95c0453162e8891f5a830');
+const destTeam = new mongodb.ObjectId('5e99cbcb2317950015edb655');
 const jobDefId = new mongodb.ObjectId('5ed5c53c759b110015403a1b');
 
-CopyJobDefToNewOrg(sourceOrg, destOrg, jobDefId);
+CopyJobDefToNewTeam(sourceTeam, destTeam, jobDefId);

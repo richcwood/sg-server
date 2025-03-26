@@ -1,110 +1,112 @@
-import { modelOptions, prop, getModelForClass } from '@typegoose/typegoose';
+import { modelOptions, prop, getModelForClass, Severity } from '@typegoose/typegoose';
 import { FilterOperator } from '../utils/BulkGet';
 import { JobDefStatus } from '../../shared/Enums';
 import * as mongodb from 'mongodb';
 
-
 // Example of a schema / domain in Mongoose
-@modelOptions({schemaOptions: {collection: 'jobDef', minimize: false}})
+@modelOptions({ schemaOptions: { collection: 'jobDef', minimize: false }, options: { allowMixed: Severity.ALLOW } })
 export class JobDefSchema {
+    _id?: mongodb.ObjectId;
 
-  _id?: mongodb.ObjectId;
+    @prop()
+    id?: mongodb.ObjectId;
 
-  @prop()
-  id?: mongodb.ObjectId;
+    @prop({ required: true })
+    _teamId: mongodb.ObjectId;
 
-  @prop({required: true})
-  _orgId: mongodb.ObjectId;
+    @prop({ required: true })
+    name: string;
 
-  @prop({required: true}) 
-  name: string;
+    @prop({ default: JobDefStatus.RUNNING })
+    status?: number;
 
-  @prop({ default: JobDefStatus.RUNNING })
-  status?: number;
+    @prop({ default: 0 })
+    lastRunId: number;
 
-  @prop({default: 0}) 
-  lastRunId: number; 
+    @prop({ default: 1 })
+    maxInstances?: number;
 
-  @prop({ default: 1 })
-  maxInstances?: number;
+    @prop({ required: false })
+    misfireGraceTime?: number;
 
-  @prop({ required: false })
-  misfireGraceTime?: number;
+    @prop({ required: false })
+    coalesce?: boolean;
 
-  @prop({ required: false })
-  coalesce?: boolean;
+    @prop({ required: true })
+    createdBy: mongodb.ObjectId;
 
-  @prop({ required: true })
-  createdBy: mongodb.ObjectId;
+    @prop({ default: new Date().toISOString() })
+    dateCreated: Date;
 
-  @prop({default: new Date().toISOString()})
-  dateCreated: Date;
+    @prop()
+    expectedValues?: any;
 
-  @prop()
-  expectedValues?: any;
+    @prop({ default: {} })
+    runtimeVars?: any;
 
-  @prop({ default: {} })
-  runtimeVars?: any;
+    @prop({ default: false })
+    pauseOnFailedJob?: boolean;
 
-  @prop({ default: false })
-  pauseOnFailedJob?: boolean;
+    @prop()
+    onJobTaskFailAlertEmail?: string;
 
-  @prop()
-  onJobTaskFailAlertEmail?: string;
+    @prop()
+    onJobCompleteAlertEmail?: string;
 
-  @prop()
-  onJobCompleteAlertEmail?: string;
+    @prop()
+    onJobTaskInterruptedAlertEmail?: string;
 
-  @prop()
-  onJobTaskInterruptedAlertEmail?: string;
+    @prop()
+    onJobTaskFailAlertSlackURL?: string;
 
-  @prop()
-  onJobTaskFailAlertSlackURL?: string;
+    @prop()
+    onJobCompleteAlertSlackURL?: string;
 
-  @prop()
-  onJobCompleteAlertSlackURL?: string;
+    @prop()
+    onJobTaskInterruptedAlertSlackURL?: string;
 
-  @prop()
-  onJobTaskInterruptedAlertSlackURL?: string;
+    @prop({ default: false })
+    launchingJobs?: boolean;
 
-  // https://hooks.slack.com/services/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
+    @prop({ default: '# Job Description' })
+    description?: string;
 
-  // Define which filters are legal for which props (including nested props (not sure about nested arrays))
-  public static readonly validFilters = {
-    'name': [FilterOperator.LIKE]
-    // 'dog.name': [FilterOperator.IN, FilterOperator.EQUALS, FilterOperator.NOT_EQUALS, FilterOperator.LIKE
-    // ],
-    // 'dog.smell': [FilterOperator.LIKE],
-    // firstName: [FilterOperator.IN, FilterOperator.LIKE, FilterOperator.EQUALS, FilterOperator.NOT_EQUALS],
-    // lastName: [FilterOperator.IN, FilterOperator.EQUALS, FilterOperator.NOT_EQUALS],
-    // id: [FilterOperator.EQUALS, FilterOperator.IN]
-  };
-  
-  // 2 way map between field values the API client sees and what is stored in the database.  Allows client to use 'id' and database to use '_id'
-  public static readonly propAliases = {
-    '_id': 'id',
-    'id': '_id',
-    '__v': 'version'
-  };
+    @prop({ default: 'IyBKb2IgZGVzY3JpcHRpb24=' })
+    descriptionb64?: string;
 
-  // Converters for values to/from the database.  Converter functions take the entire model
-  public static readonly dataConverters = {
-    // This isn't hooked up yet until needed - if it does, then call this in the controller layer on data before passing to service
-    toDB: {
-      _id: (data) => {
-        return new mongodb.ObjectID(data._id);
-      },
-      _orgId: (data) => {
-        return new mongodb.ObjectID(data._orgId);
-      }
-    },
+    // https://hooks.slack.com/services/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
 
-    fromDB: {
-      // version: (data) => {
-      //   return undefined; // remove the version field - api users won't see it
-      // }
-    }
-  }
-};
+    // Define which filters are legal for which props (including nested props (not sure about nested arrays))
+    public static readonly validFilters = {
+        id: [FilterOperator.IN],
+        name: [FilterOperator.LIKE],
+    };
+
+    // 2 way map between field values the API client sees and what is stored in the database.  Allows client to use 'id' and database to use '_id'
+    public static readonly propAliases = {
+        _id: 'id',
+        id: '_id',
+        __v: 'version',
+    };
+
+    // Converters for values to/from the database.  Converter functions take the entire model
+    public static readonly dataConverters = {
+        // This isn't hooked up yet until needed - if it does, then call this in the controller layer on data before passing to service
+        toDB: {
+            _id: (data) => {
+                return new mongodb.ObjectId(data._id);
+            },
+            _teamId: (data) => {
+                return new mongodb.ObjectId(data._teamId);
+            },
+        },
+
+        fromDB: {
+            // version: (data) => {
+            //   return undefined; // remove the version field - api users won't see it
+            // }
+        },
+    };
+}
 
 export const JobDefModel = getModelForClass(JobDefSchema);
